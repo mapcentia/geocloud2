@@ -36,9 +36,10 @@ class Database extends Controller
      * @return array
      * 
      * @OA\Get(
-     *   path="/v2/database/schemas",
-     *   tags={"database"},
+     *   path="/api/v2/database/schemas",
+     *   tags={"Database"},
      *   summary="Returns available schemas",
+     *   security={{"cookieAuth":{}}},
      *   @OA\Response(
      *     response="200",
      *     description="Operation status"
@@ -63,11 +64,11 @@ class Database extends Controller
      * @return array
      * 
      * @OA\Get(
-     *   path="/v2/database/search",
-     *   tags={"database"},
+     *   path="/api/v2/database/search",
+     *   tags={"Database"},
      *   summary="Returns databases found according to provided filters",
      *   @OA\Parameter(
-     *     name="userName",
+     *     name="userIdentifier",
      *     in="query",
      *     required=false,
      *     description="Filters databases that have user with specified name registered",
@@ -93,7 +94,9 @@ class Database extends Controller
             ];
         } else {
             $model = new UserModel();
-            return $model->getDatabasesForUser($queryParameters['userIdentifier']);
+            $res = $model->getDatabasesForUser($queryParameters['userIdentifier']);
+            $res["success"] = true;
+            return $res;
         }
     }
 

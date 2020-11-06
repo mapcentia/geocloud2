@@ -6,7 +6,9 @@
  *
  */
 
-ini_set("display_errors", "off");
+ini_set("display_errors", "no");
+error_reporting(E_ERROR | E_WARNING | E_PARSE);
+//error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 ob_start("ob_gzhandler");
 
 use \app\inc\Input;
@@ -14,15 +16,15 @@ use \app\inc\Session;
 use \app\inc\Route;
 use \app\inc\Util;
 use \app\inc\Response;
+use \app\inc\Cache;
+use \app\inc\Jwt;
 use \app\conf\Connection;
 use \app\conf\App;
 use \app\models\Database;
-use Phpfastcache\CacheManager;
-use Phpfastcache\Drivers\Files\Config;
 
 include_once('../app/vendor/autoload.php');
-
 include_once("../app/conf/App.php");
+include_once("../app/inc/Globals.php");
 
 new \app\conf\App();
 
@@ -30,9 +32,23 @@ $memoryLimit = isset(App::$param["memoryLimit"]) ? App::$param["memoryLimit"] : 
 ini_set('memory_limit', $memoryLimit);
 ini_set('max_execution_time', 30);
 
-//ini_set('session.save_handler', 'redis');
-//ini_set('session.save_path', "tcp://172.18.0.4:6379");
+// Set session back-end. PHP will use default port if not set explicit
 
+if (!empty(App::$param["sessionHandler"]["type"]) && App::$param["sessionHandler"]["type"] != "files") {
+    if (!empty(App::$param['sessionHandler']["host"])) {
+        ini_set('session.save_handler', App::$param['sessionHandler']["type"]);
+        // If Redis then set the database
+        if (App::$param["sessionHandler"]["type"] == "redis") {
+            ini_set('session.save_path', "tcp://" . App::$param['sessionHandler']["host"] . "?database=" .
+                (!empty(App::$param["sessionHandler"]["db"]) ? App::$param["sessionHandler"]["db"] : "0")
+            );
+        } else {
+            ini_set('session.save_path', App::$param['sessionHandler']["host"]);
+        }
+    } else {
+        die("Session handler host not set");
+    }
+}
 
 // Get start time of script
 $executionStartTime = microtime(true);
@@ -50,8 +66,8 @@ register_shutdown_function(function () {
         $response = new Response();
         $body = [
             "message" => $err["message"],
-//            "file" => $err["file"],
-//            "line" => $err["line"],
+            "file" => $err["file"],
+            "line" => $err["line"],
             "code" => $code . " " . Util::httpCodeText($code),
             "execute_time" => microtime(true) - $executionStartTime,
             "memory_peak_usage" => round(memory_get_peak_usage() / 1024) . " KB",
@@ -64,17 +80,8 @@ register_shutdown_function(function () {
     return false;
 });
 
-$globalInstanceCache = null;
-try {
-    $globalInstanceCache = CacheManager::getInstance('Files',
-        new Config([
-            'securityKey' => "phpfastcache",
-            'path' => '/var/www/geocloud2/app/tmp',
-            'itemDetailedDate' => true
-        ])
-    );
-} catch (\Exception $exception) {
-}
+// Setup Cache
+Cache::setInstance();
 
 // Setup host
 App::$param['protocol'] = isset(App::$param['protocol']) ? App::$param['protocol'] : Util::protocol();
@@ -99,69 +106,80 @@ if (Input::getPath()->part(1) == "api") {
 
     Database::setDb(Input::getPath()->part(4)); // Default
 
+    //======================
+    // V1
+    //======================
+    Route::add("api/v1/extent");
+    Route::add("api/v1/schema");
+    Route::add("api/v1/setting");
+    Route::add("api/v1/user");
+    Route::add("api/v1/legend", function () {
+        Session::start();
+        Database::setDb(Input::getPath()->part(5));
+    });
+    Route::add("api/v1/baselayerjs");
+    Route::add("api/v1/staticmap");
+    Route::add("api/v1/getheader");
+    Route::add("api/v1/decodeimg");
+    Route::add("api/v1/loriot");
+    Route::add("api/v1/session/[action]", function () {
+        Session::start();
+        Database::setDb("mapcentia");
+    });
     Route::add("api/v1/sql", function () {
         if (empty(Input::get("key"))) {
-               Session::start();
-        }        $db = Input::getPath()->part(4);
+            Session::start();
+        }
+        $db = Input::getPath()->part(4);
         $dbSplit = explode("@", $db);
         if (sizeof($dbSplit) == 2) {
             $db = $dbSplit[1];
-            //$_SESSION['subuser'] = $dbSplit[0];
         }
         Database::setDb($db);
     });
-
-    Route::add("api/v2/sql/{user}/[method]",
-
-        function () {
-            if (empty(Input::get("key"))) { // Only start session if no API key is provided
-                Session::start();
-            }
-            $r = func_get_arg(0);
-            $db = $r["user"];
-            $dbSplit = explode("@", $db);
-            if (sizeof($dbSplit) == 2) {
-                $db = $dbSplit[1];
-            }
-            Database::setDb($db);
-        });
-
-    Route::add("api/v1/elasticsearch/{action}/{user}/[indices]/[type]",
-
-        function () {
-            $r = func_get_arg(0);
-            if ($r["action"] == "river") { // Only start session if no API key is provided
-                Session::start();
-            }
-            Database::setDb($r["user"]);
+    Route::add("api/v1/elasticsearch/{action}/{user}/[indices]/[type]", function () {
+        $r = func_get_arg(0);
+        if ($r["action"] == "river") { // Only start session if no API key is provided
+            Session::start();
         }
+        Database::setDb($r["user"]);
+    });
+    Route::add("api/v1/meta/{user}/[query]", function () {
+        Session::start();
+    });
+    Route::add("api/v1/ckan", function () {
+        Session::start();
+    });
 
-    );
-
-    Route::add("api/v2/elasticsearch/{action}/{user}/{schema}/[rel]/[id]",
-
-        function () {
-            if (Route::getParam("action") == "river") {
-                Session::start(); // So we can create a session log from the indexing
-            }
-            Database::setDb(Route::getParam("user"));
+    //======================
+    // V2
+    //======================
+    Route::add("api/v2/sql/{user}/[method]", function () {
+        if (empty(Input::get("key"))) { // Only start session if no API key is provided
+            Session::start();
         }
-
-    );
-
-    Route::add("api/v2/feature/{user}/{layer}/{srid}/[key]",
-
-        function () {
-            $db = Route::getParam("user");
-            $dbSplit = explode("@", $db);
-            if (sizeof($dbSplit) == 2) {
-                $db = $dbSplit[1];
-            }
-            Database::setDb($db);
+        $r = func_get_arg(0);
+        $db = $r["user"];
+        $dbSplit = explode("@", $db);
+        if (sizeof($dbSplit) == 2) {
+            $db = $dbSplit[1];
         }
-
-    );
-
+        Database::setDb($db);
+    });
+    Route::add("api/v2/elasticsearch/{action}/{user}/{schema}/[rel]/[id]", function () {
+        if (Route::getParam("action") == "river") {
+            Session::start(); // So we can create a session log from the indexing
+        }
+        Database::setDb(Route::getParam("user"));
+    });
+    Route::add("api/v2/feature/{user}/{layer}/{srid}/[key]", function () {
+        $db = Route::getParam("user");
+        $dbSplit = explode("@", $db);
+        if (sizeof($dbSplit) == 2) {
+            $db = $dbSplit[1];
+        }
+        Database::setDb($db);
+    });
     Route::add("api/v2/keyvalue/{user}/[key]", function () {
         $db = Route::getParam("user");
         $dbSplit = explode("@", $db);
@@ -170,7 +188,6 @@ if (Input::getPath()->part(1) == "api") {
         }
         Database::setDb($db);
     });
-
     Route::add("api/v2/preparedstatement/{user}", function () {
         $db = Route::getParam("user");
         $dbSplit = explode("@", $db);
@@ -179,38 +196,22 @@ if (Input::getPath()->part(1) == "api") {
         }
         Database::setDb($db);
     });
-
     Route::add("api/v2/qgis/{action}/{user}", function () {
         Database::setDb(Route::getParam("user"));
     });
-
     Route::add("api/v2/mapfile/{action}/{user}/{schema}", function () {
         Database::setDb(Route::getParam("user"));
     });
-
     Route::add("api/v2/mapcachefile/{action}/{user}", function () {
         Database::setDb(Route::getParam("user"));
     });
-
     Route::add("api/v2/sqlwrapper/{user}", function () {
         Database::setDb(Route::getParam("user"));
     });
-
     Route::add("api/v2/session", function () {
         Session::start();
         Database::setDb("mapcentia");
     });
-
-    Route::add("api/v1/meta/{user}/[query]", function () {
-        Session::start();
-    });
-
-
-    Route::add("api/v1/ckan", function () {
-        Session::start();
-    });
-
-    // User API
     Route::add("api/v2/user/[userId]/[action]", function () {
         Session::start();
     });
@@ -220,46 +221,61 @@ if (Input::getPath()->part(1) == "api") {
     Route::add("api/v2/user", function () {
         Session::start();
     });
-
-    // Database API
     Route::add("api/v2/database", function () {
         Session::start();
     });
-
-    // Configuration API
     Route::add("api/v2/configuration/[userId]/[configurationId]", function () {
         Session::start();
     });
 
-    // Admin API
-    Route::add("api/v2/admin/{action}/{user}", function () {
-        $db = Route::getParam("user");
-        Database::setDb($db);
-    });
-    //Route::add("api/v2/configuration", function () { Session::start(); });
-
-    Route::add("api/v1/extent");
-    Route::add("api/v1/schema");
-    Route::add("api/v1/setting");
-    Route::add("api/v1/twitter");
-    Route::add("api/v1/cartomobile", null, true); // Returns xml
-    Route::add("api/v1/user");
-    Route::add("api/v1/legend", function () {
-        Session::start();
-        Database::setDb(Input::getPath()->part(5));
-    });
-    Route::add("api/v1/baselayerjs");
-    Route::add("api/v1/staticmap");
-    Route::add("api/v1/getheader");
-    Route::add("api/v1/collector");
-    Route::add("api/v1/decodeimg");
-    Route::add("api/v1/senti");
-    Route::add("api/v1/loriot");
-    Route::add("api/v1/session/[action]", function () {
-        Session::start();
+    //======================
+    // V3 with OAuth
+    //======================
+    Route::add("api/v3/oauth", function () {
         Database::setDb("mapcentia");
     });
+    Route::add("api/v3/admin/{action}/", function () {
+        $jwt = Jwt::validate();
+        if ($jwt["success"]) {
+            if (!$jwt["data"]["superUser"]) {
+                echo Response::toJson(Response::SUPER_USER_ONLY);
+                exit();
+            }
+            Database::setDb($jwt["data"]["database"]);
+        } else {
+            echo Response::toJson($jwt);
+            exit();
+        }
+    });
+    Route::add("api/v3/tileseeder/[uuid]", function () {
+        $jwt = Jwt::validate();
+        if ($jwt["success"]) {
+            if (!$jwt["data"]["superUser"]) {
+                echo Response::toJson(Response::SUPER_USER_ONLY);
+                exit();
+            }
+            Database::setDb($jwt["data"]["database"]);
+        } else {
+            echo Response::toJson($jwt);
+            exit();
+        }
+    });
+    Route::add("api/v3/scheduler/{id}", function () {
+        $jwt = Jwt::validate();
+        if ($jwt["success"]) {
+            if (!$jwt["data"]["superUser"]) {
+                echo Response::toJson(Response::SUPER_USER_ONLY);
+                exit();
+            }
+            Database::setDb("gc2scheduler");
+        } else {
+            echo Response::toJson($jwt);
+            exit();
+        }
+    });
+
     Route::miss();
+
 } elseif (Input::getPath()->part(1) == "admin") {
     Session::start();
     Session::authenticate(App::$param['userHostName'] . "/dashboard/");
@@ -320,7 +336,7 @@ if (Input::getPath()->part(1) == "api") {
     Route::miss();
 
 } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
-    if (!empty(Input::getCookies()["PHPSESSID"])){ // Do not start session if no cookie is set
+    if (!empty(Input::getCookies()["PHPSESSID"])) { // Do not start session if no cookie is set
         Session::start();
     }
     $db = Input::getPath()->part(2);
@@ -343,7 +359,7 @@ if (Input::getPath()->part(1) == "api") {
 //    $cache->fetch();
 
 } elseif (Input::getPath()->part(1) == "wfs") {
-    if (!empty(Input::getCookies()["PHPSESSID"])){
+    if (!empty(Input::getCookies()["PHPSESSID"])) {
         Session::start();
     }
     $db = Input::getPath()->part(2);

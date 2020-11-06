@@ -38,12 +38,12 @@ function explodeGeom($str) {
 }
 
 function writeTag($type,$ns,$tag,$atts,$ind,$n){
-  global $depth;
-  if($ind!=False){
+  //global $depth;
+ /* if($ind!=False){
     for($i=0;$i<$depth;$i++){
       echo "  ";
     }
-  }
+  }*/
   if($ns!=null){
     $tag=$ns.":".$tag;
   }
@@ -61,9 +61,9 @@ function writeTag($type,$ns,$tag,$atts,$ind,$n){
     echo "/";
   }
   echo ">";
-  if($n==True){
+  /*if($n==True){
     echo "\n";
-  }
+  }*/
 }
 
 function convertCoordinatesToGML($str){

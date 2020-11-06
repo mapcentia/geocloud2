@@ -31,9 +31,6 @@ The GC2 project aims to make it easy for organizations to use open source softwa
 ## How to use GC2?
 Online manual [here](http://mapcentia.screenstepslive.com/s/en)
 
-## How to try GC2
-Head over to [gc2.mapcentia.com](https://gc2.mapcentia.com/user/login), create a PostGIS database and start uploading data.
-
 ## How to install GC2 (and Vidi)?
 GC2 uses [Docker](https://docs.docker.com/) to orchestra all the software needed. You can run Docker at Windows, MacOS or Linux. You can get the full stack up and running by using a [docker-compose](https://docs.docker.com/compose/install/) file.
 

@@ -34,10 +34,10 @@ while ($row = $conn->fetchRow($result)) {
             }
         } else {
             $uuid = $layer->getUuid($row["_key_"]);
-            print_r($layer->deleteCkan($uuid["uuid"]));
+            print_r($layer::deleteCkan($uuid["uuid"]));
         }
     } else {
         $uuid = $layer->getUuid($row["_key_"]);
-        print_r($layer->deleteCkan($uuid["uuid"]));
+        print_r($layer::deleteCkan($uuid["uuid"]));
     }
 }

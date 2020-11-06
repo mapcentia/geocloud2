@@ -183,7 +183,7 @@ class Elasticsearch extends \app\inc\Controller
             $arr[] = $db . ($v ? "_" . $v : "") . ($type ? "_" . $type : "_*");
         }
         $index = implode(",", $arr);
-        $searchUrl = $this->host . ":{$this->port}/{$index}/{$type}/_search?pretty={$pretty}{$size}{$from}";
+        $searchUrl = $this->host . "/{$index}/_search?pretty={$pretty}{$size}{$from}";
         $ch = curl_init($searchUrl);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $q);

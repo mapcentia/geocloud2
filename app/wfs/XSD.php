@@ -76,7 +76,11 @@ foreach ($tables as $table) {
     // Start sorting the fields by sort_id
     $arr = array();
     foreach ($fieldsArr[$table] as $value) {
-        $arr[] = array($fieldConfArr[$value]["sort_id"], $value);
+        if (!empty($fieldConfArr[$value]["sort_id"])) {
+            $arr[] = array($fieldConfArr[$value]["sort_id"], $value);
+        } else {
+            $arr[] = array(0, $value);
+        }
     }
     usort($arr, function ($a, $b) {
         return $a[0] - $b[0];
@@ -88,8 +92,8 @@ foreach ($tables as $table) {
     foreach ($fieldsArr[$table] as $hello) {
         $atts["nillable"] = $tableObj->metaData[$hello]["is_nullable"] ? "true" : "false";
         $atts["name"] = $hello;
-        $properties = $fieldConf->{$atts["name"]};
-        $atts["label"] = $properties->alias ?: $atts["name"];
+        $properties = !empty($fieldConf->{$atts["name"]}) ? $fieldConf->{$atts["name"]} : null;
+        //$atts["label"] = !empty($properties->alias) ? $properties->alias : $atts["name"];
         if ($gmlUseAltFunctions[$table]['changeFieldName']) {
             $atts["name"] = changeFieldName($atts["name"]);
         }
@@ -148,13 +152,24 @@ foreach ($tables as $table) {
                 $atts["type"] = "xsd:string";
             }
             elseif ($tableObj->metaData[$atts["name"]]['type'] == "timestamp") {
-                $atts["type"] = "xsd:dateTime";
+                //$atts["type"] = "xsd:dateTime";
+                $atts["type"] = "xsd:string";
+            }
+            elseif ($tableObj->metaData[$atts["name"]]['type'] == "timestamptz") {
+                //$atts["type"] = "xsd:dateTime";
+                $atts["type"] = "xsd:string";
             }
             elseif ($tableObj->metaData[$atts["name"]]['type'] == "date") {
-                $atts["type"] = "xsd:date";
+                //$atts["type"] = "xsd:date";
+                $atts["type"] = "xsd:string";
             }
             elseif ($tableObj->metaData[$atts["name"]]['type'] == "time") {
-                $atts["type"] = "xsd:time";
+                //$atts["type"] = "xsd:time";
+                $atts["type"] = "xsd:string";
+            }
+            elseif ($tableObj->metaData[$atts["name"]]['type'] == "timetz") {
+                //$atts["type"] = "xsd:time";
+                $atts["type"] = "xsd:string";
             }
             elseif ($tableObj->metaData[$atts["name"]]['type'] == "bytea") {
                 $atts["type"] = "xsd:base64Binary";
@@ -162,8 +177,15 @@ foreach ($tables as $table) {
             elseif ($tableObj->metaData[$atts["name"]]['type'] == "json") {
                 $atts["type"] = "xsd:string";
             }
+            elseif ($tableObj->metaData[$atts["name"]]['type'] == "uuid") {
+                $atts["type"] = "xsd:string";
+            }
             else {
-                $atts["type"] = "xsd:" . $tableObj->metaData[$atts["name"]]['type'];
+                if ($tableObj->metaData[$atts["name"]]['isArray']) {
+                    $atts["type"] = "xsd:string";
+                } else {
+                    $atts["type"] = "xsd:" . $tableObj->metaData[$atts["name"]]['type'];
+                }
             }
             $simpleType = true;
         }
@@ -172,7 +194,6 @@ foreach ($tables as $table) {
         if ($simpleType) {
             $minLength = "0";
             $maxLength = "256";
-
             if ($tableObj->metaData[$atts["name"]]['type'] == "number") {
                 $tableObj->metaData[$atts["name"]]['type'] = "decimal";
             }
@@ -186,10 +207,12 @@ foreach ($tables as $table) {
             if ($tableObj->metaData[$atts["name"]]['type'] == "timestamp") {
                 $tableObj->metaData[$atts["name"]]['type'] = "datetime";
             }
+            if ($tableObj->metaData[$atts["name"]]['type'] == "timestamptz") {
+                $tableObj->metaData[$atts["name"]]['type'] = "datetime";
+            }
             if ($tableObj->metaData[$atts["name"]]['type'] == "date") {
                 $tableObj->metaData[$atts["name"]]['type'] = "date";
                 $maxLength = "256";
-
             }
             if ($tableObj->metaData[$atts["name"]]['type'] == "bytea") {
                 $tableObj->metaData[$atts["name"]]['type'] = "base64Binary";
@@ -197,7 +220,7 @@ foreach ($tables as $table) {
             if ($atts["name"] == $primeryKey['attname']) {
                 $tableObj->metaData[$atts["name"]]['type'] = "string";
             }
-            if ($fieldConf->{$atts["name"]}->properties) {
+            if (!empty($fieldConf->{$atts["name"]}->properties)) {
                 echo '<xsd:simpleType><xsd:restriction base="xsd:' . $tableObj->metaData[$atts["name"]]['type'] . '">';
 
                 if ($fieldConf->{$atts["name"]}->properties == "*") {

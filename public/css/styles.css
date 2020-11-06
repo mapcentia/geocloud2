@@ -129,7 +129,7 @@ q:after, q:before {
 }
 
 .x-tree-node-collapsed, .x-tree-node-expanded, .x-grid3-check-col-on, .x-grid3-check-col, .x-tool-collapse-west, .x-tool-collapse-east, .x-tool-collapse-south,
-.x-tool-expand-east, .x-tool-expand-west, .x-tool-expand-south, .x-window-dlg .ext-mb-question,.ext-mb-error, .x-tool {
+.x-tool-expand-east, .x-tool-expand-west, .x-tool-expand-south, .x-window-dlg .ext-mb-question,.ext-mb-error, .x-tool, .property-grid-check-on {
     font: normal normal normal 14px/1 FontAwesome;
     font-size: inherit;
     text-rendering: auto;
@@ -187,10 +187,15 @@ q:after, q:before {
     content: "\f147";
 }
 
-.x-grid3-check-col-on, .x-grid3-check-col {
+.x-grid3-check-col-on, .x-grid3-check-col, property-grid-check-on {
     background-image: none !important;
     line-height: 19px;
     padding-left: 5px;
+
+}
+
+.property-grid-check-on:before {
+    content: "\f00c";
 
 }
 

@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -13,6 +13,7 @@ namespace app\models;
 ini_set('max_execution_time', 0);
 
 use app\inc\Model;
+use app\inc\Util;
 
 /**
  * Class Stream
@@ -42,10 +43,11 @@ class Stream extends Model
     public function runSql($q): string
     {
         $i = 0;
-        $geometries = [];
-        $features = [];
+        $geometries = null;
+        $bulkSize = 1000;
+        $json = "";
         $name = "_" . rand(1, 999999999) . microtime();
-        $view = $this->toAscii($name, null, "_");
+        $view = self::toAscii($name, null, "_");
         $sqlView = "CREATE TEMPORARY VIEW {$view} as {$q}";
 
         try {
@@ -84,6 +86,7 @@ class Stream extends Model
             return serialize($response);
         }
 
+        Util::disableOb();
         header('Content-type: text/plain; charset=utf-8');
         try {
             while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement, "assoc")) {
@@ -97,24 +100,29 @@ class Stream extends Model
                         $arr = $this->array_push_assoc($arr, $key, $value);
                     }
                 }
-                if (sizeof($geometries) > 1) {
-                    $features = array("geometry" => array("type" => "GeometryCollection", "geometries" => $geometries), "type" => "Feature", "properties" => $arr);
-                }
-                if (sizeof($geometries) == 1) {
-                    $features = array("type" => "Feature", "properties" => $arr, "geometry" => $geometries[0]);
-                }
-                if (sizeof($geometries) == 0) {
+
+                if ($geometries == null) {
                     $features = array("type" => "Feature", "properties" => $arr);
+                } elseif (count($geometries) == 1) {
+                    $features = array("type" => "Feature", "properties" => $arr, "geometry" => $geometries[0]);
+                } else {
+                    $features = array("type" => "Feature", "properties" => $arr, "geometry" => array("type" => "GeometryCollection", "geometries" => $geometries));
                 }
-                unset($geometries);
-                $json = json_encode($features);
+                $geometries = null;
+
+                $json .= json_encode($features);
                 $json .= "\n";
-                $json .= $i . " " . memory_get_usage(true) ."\n";
-                echo $json;
+                $i++;
+                if (is_int($i/$bulkSize)) {
+                    echo str_pad($json, 4096);
+                    $json = "";
+                }
                 flush();
                 ob_flush();
-                $i++;
             }
+            if ($json) {
+                echo str_pad($json, 4096);
+            };
             $this->execQuery("CLOSE curs");
             $this->commit();
 

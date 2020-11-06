@@ -94,7 +94,7 @@ class Sql_to_es extends Model
         $errors_in = [];
         $index = $db . "_" . $schema . "_" . $rel;
         $name = "_" . rand(1, 999999999) . microtime();
-        $view = $this->toAscii($name, null, "_");
+        $view = self::toAscii($name, null, "_");
         $sqlView = "CREATE TEMPORARY VIEW {$view} as {$q}";
         $res = $this->prepare($sqlView);
 

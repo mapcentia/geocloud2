@@ -35,9 +35,9 @@ Ext.ux.grid.CheckColumn = Ext.extend(
 /**
  *
  * @param record
- * @param screenName
+ * @param db
  */
-tableStructure.init = function (record, screenName) {
+tableStructure.init = function (record, db) {
     tableStructure.reader = new Ext.data.JsonReader({
         totalProperty: 'total',
         successProperty: 'success',
@@ -78,6 +78,10 @@ tableStructure.init = function (record, screenName) {
             allowBlank: true
         },
         {
+            name: 'autocomplete',
+            allowBlank: true
+        },
+        {
             name: 'conflict',
             allowBlank: true
         },
@@ -99,6 +103,10 @@ tableStructure.init = function (record, screenName) {
         },
         {
             name: 'linkprefix',
+            allowBlank: true
+        },
+        {
+            name: 'linksuffix',
             allowBlank: true
         },
         {
@@ -292,7 +300,7 @@ tableStructure.init = function (record, screenName) {
                     xtype: 'checkcolumn',
                     header: __("Show in mouse-over"),
                     dataIndex: 'mouseover',
-                    //width: 40
+                    hidden: true
                 },
                 {
                     id: "searchable",
@@ -304,16 +312,24 @@ tableStructure.init = function (record, screenName) {
                 {
                     id: "filter",
                     xtype: 'checkcolumn',
-                    header: __("Enable filtering"),
+                    header: __("Disable filtering"),
                     dataIndex: 'filter',
                     //width: 40
-                }, {
+                },
+                {
+                    id: "autocomplete",
+                    xtype: 'checkcolumn',
+                    header: __("Autocomplete"),
+                    dataIndex: 'autocomplete',
+                    //width: 40
+                },
+                {
                     id: "conflict",
                     xtype: 'checkcolumn',
                     header: __("Show in conflict"),
                     dataIndex: 'conflict',
                     //width: 40,
-                    hidden: (window.gc2Options.showConflictOptions !== null && window.gc2Options.showConflictOptions[screenName] === true) ? false : true
+                    hidden: (window.gc2Options.showConflictOptions !== null && window.gc2Options.showConflictOptions[db] === true) ? false : true
                 },
                 {
                     id: "link",
@@ -334,6 +350,16 @@ tableStructure.init = function (record, screenName) {
                     id: "linkprefix",
                     header: __("Link prefix"),
                     dataIndex: "linkprefix",
+                    sortable: true,
+                    //width: 60,
+                    editor: new Ext.form.TextField({
+                        allowBlank: true
+                    })
+                },
+                {
+                    id: "linksuffix",
+                    header: __("Link suffix"),
+                    dataIndex: "linksuffix",
                     sortable: true,
                     //width: 60,
                     editor: new Ext.form.TextField({
@@ -632,7 +658,7 @@ tableStructure.onIndexInElasticsearch = function (record) {
                 var param = "&key=" + settings.api_key + (record.data.triggertable ? "&ts=" + record.data.triggertable.split(".")[0] + "&tt=" + record.data.triggertable.split(".")[1] + "&tp=" + record.data.triggertable.split(".")[2] : "");
                 Ext.Ajax.request(
                     {
-                        url: '/api/v2/elasticsearch/river/' + screenName + '/' + record.data.f_table_schema + '/' + record.data.f_table_name,
+                        url: '/api/v2/elasticsearch/river/' + (subUser ? screenName + "@" + parentdb : screenName) + '/' + record.data.f_table_schema + '/' + record.data.f_table_name,
                         method: 'post',
                         params: param,
                         headers: {
@@ -681,7 +707,7 @@ tableStructure.onDeleteFromElasticsearch = function (record) {
                 var param = "&key=" + settings.api_key;
                 Ext.Ajax.request(
                     {
-                        url: '/api/v2/elasticsearch/delete/' + screenName + '/' + record.data.f_table_schema + '/' + record.data.f_table_name,
+                        url: '/api/v2/elasticsearch/delete/' + (subUser ? screenName + "@" + parentdb : screenName) + '/' + record.data.f_table_schema + '/' + record.data.f_table_name,
                         method: 'delete',
                         params: param,
                         headers: {

@@ -45,6 +45,7 @@ class Feature extends \app\inc\Controller
     private $field;
     private $key;
     private $user;
+    private $client;
 
     /**
      * Feature constructor.
@@ -53,6 +54,10 @@ class Feature extends \app\inc\Controller
     {
 
         parent::__construct();
+
+        $this->client = new Client([
+            'timeout' => 100.0,
+        ]);
 
         // Set properties
         $this->wfsUrl = "http://127.0.0.1/wfs/%s/%s/%s";
@@ -119,14 +124,9 @@ class Feature extends \app\inc\Controller
 
         $url = sprintf($this->wfsUrl, $this->user, $this->schema, $this->sourceSrid);
 
-        // Init the Guzzle client
-        $client = new Client([
-            'timeout' => 10.0,
-        ]);
-
         // GET the transaction
         try {
-            $res = $client->get($url . "?request=GetFeature&typeName={$this->table}&FEATUREID={$this->table}.{$this->key}");
+            $res = $this->client->get($url . "?request=GetFeature&typeName={$this->table}&FEATUREID={$this->table}.{$this->key}");
         } catch (\Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -134,7 +134,7 @@ class Feature extends \app\inc\Controller
             return $response;
         }
 
-        $xml = $res->getBody();
+        $xml = (string)$res->getBody();
 
         // Unserialize the transaction response
         $status = $unserializer->unserialize($xml);
@@ -358,14 +358,9 @@ class Feature extends \app\inc\Controller
 
         $url = sprintf($this->wfsUrl, $this->user, $this->schema, $this->sourceSrid);
 
-        // Init the Guzzle client
-        $client = new Client([
-            'timeout' => 10.0,
-        ]);
-
         // POST the transaction
         try {
-            $res = $client->post($url, ['body' => $xml]);
+            $res = $this->client->post($url, ['body' => $xml]);
         } catch (\Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();

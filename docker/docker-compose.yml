@@ -1,0 +1,72 @@
+version: '3.3'
+
+networks:
+  internal:
+    external: false
+
+services:
+  base:
+    build: ./base
+    image: mapcentia/gc2core:base
+  ecw:
+    build: ./ecw
+    image: mapcentia/gc2core:ecw
+    depends_on:
+      - base
+  gdal:
+    build: ./gdal
+    image: mapcentia/gc2core:gdal
+    depends_on:
+      - ecw
+  mapserver:
+    build: ./mapserver
+    image: mapcentia/gc2core:mapserver
+    depends_on:
+      - gdal
+  gc2core:
+    build: ./stable
+    image: mapcentia/gc2core
+    depends_on:
+      - mapserver
+    privileged: true
+    volumes:
+      - ../../geocloud2:/var/www/geocloud2
+    networks:
+      - default
+      - internal
+    ports:
+      - "8080:80"
+
+  redis:
+    image: redis
+    networks:
+      - default
+      - internal
+    ports:
+      - "6379:6379"
+
+  postgis:
+    image: mapcentia/postgis
+    volumes:
+      - postgis_var_lib_postgresql:/var/lib/postgresql
+      - postgis_var_log:/var/log
+      - postgis_etc_postgresql:/etc/postgresql
+      - postgis_etc_pgbouncer:/etc/pgbouncer
+    env_file:
+      - env
+    networks:
+      - default
+      - internal
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgis_var_log:
+  postgis_etc_postgresql:
+  postgis_var_lib_postgresql:
+  postgis_etc_pgbouncer:
+
+
+
+
+

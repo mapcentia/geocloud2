@@ -9,7 +9,9 @@
 namespace app\models;
 
 use \app\conf\App;
-use app\inc\Model;
+use \app\inc\Model;
+use \Postmark\PostmarkClient;
+use \Postmark\Models\PostmarkException;
 
 define('VDAEMON_PARSE', false);
 define('VD_E_POST_SECURITY', false);
@@ -57,7 +59,7 @@ class User extends Model
     public function getDatabasesForUser($userIdentifier): array
     {
         if (empty($userIdentifier)) {
-            throw new Exception('User name or email should not be empty');
+            throw new \Exception('User name or email should not be empty');
         }
 
         $data = [];
@@ -91,7 +93,7 @@ class User extends Model
      */
     public function getData(): array
     {
-        $query = "SELECT email, parentdb, usergroup, screenname as userid, zone FROM users WHERE screenname = :sUserID AND (parentdb = :parentDb OR parentDB IS NULL)";
+        $query = "SELECT email, parentdb, usergroup, screenname as userid, zone FROM users WHERE (screenname = :sUserID OR email = :sUserID) AND (parentdb = :parentDb OR parentDB IS NULL)";
         $res = $this->prepare($query);
         $res->execute(array(":sUserID" => $this->userId, ":parentDb" => $this->parentdb));
         $row = $this->fetchRow($res);
@@ -100,6 +102,9 @@ class User extends Model
             $response['message'] = "User identifier $this->userId was not found (parent database: " . ($this->parentdb ? $this->parentdb : 'null') . ")";
             $response['code'] = 404;
             return $response;
+        }
+        if (!empty($row['properties'])) {
+            $row['properties'] = json_decode($row['properties']);
         }
         if (!$this->PDOerror) {
             $response['success'] = true;
@@ -133,6 +138,30 @@ class User extends Model
         $password = VDFormat($data['password'], true);
         $group = (empty($data['usergroup']) ? null : VDFormat($data['usergroup'], true));
         $zone = (empty($data['zone']) ? null : VDFormat($data['zone'], true));
+        $parentDb = (empty($data['parentdb']) ? null : VDFormat($data['parentdb'], true));
+        $properties = (empty($data['properties']) ? null : $data['properties']);
+        if ($parentDb) {
+            $sql = "SELECT 1 from pg_database WHERE datname=:sDatabase";
+            try {
+                $res = $this->prepare($sql);
+                $res->execute([":sDatabase" => $parentDb]);
+                $row = $this->fetchRow($res, "assoc");
+            } catch (\Exception $e) {
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['code'] = 400;
+                return $response;
+            }
+            if (!$row) {
+                $response['success'] = false;
+                $response['message'] = "Database '{$parentDb}' doesn't exist";
+                $response['code'] = 400;
+                return $response;
+            }
+        }
+        if ($properties) {
+            $properties = json_encode($properties);
+        }
 
         // Generate user identifier from the name
         $userId = Model::toAscii($name, NULL, "_");
@@ -175,7 +204,7 @@ class User extends Model
 
         // Check if such email already exists in the database - there can not be two super-user with the same email,
         // but there can be tow sub-users with the same email in different databases
-        $sql = false;
+        // TODO use parentDb instead of $this->userID if allowUnauthenticatedClientsToCreateSubUsers and no session is started
         if (empty($this->userId)) {
             $sql = "SELECT COUNT(*) AS count FROM users WHERE email = '$email'";
         } else {
@@ -217,7 +246,7 @@ class User extends Model
             }
         }
 
-        $sQuery = "INSERT INTO users (screenname,pw,email,parentdb,usergroup,zone) VALUES(:sUserID, :sPassword, :sEmail, :sParentDb, :sUsergroup, :zone) RETURNING screenname,parentdb,email,usergroup,zone";
+        $sQuery = "INSERT INTO users (screenname,pw,email,parentdb,usergroup,zone,properties) VALUES(:sUserID, :sPassword, :sEmail, :sParentDb, :sUsergroup, :sZone, :sProperties) RETURNING screenname,parentdb,email,usergroup,zone,properties";
 
         try {
             $res = $this->prepare($sQuery);
@@ -225,9 +254,10 @@ class User extends Model
                 ":sUserID" => $userId,
                 ":sPassword" => $encryptedPassword,
                 ":sEmail" => $email,
-                ":sParentDb" => $this->userId,
+                ":sParentDb" => $parentDb ?: $this->userId,
                 ":sUsergroup" => $group,
-                ":zone" => $zone
+                ":sZone" => $zone,
+                ":sProperties" => $properties,
             ));
 
             $row = $this->fetchRow($res, "assoc");
@@ -239,6 +269,43 @@ class User extends Model
             return $response;
         }
 
+        // Start email notification
+        if (!empty(App::$param["signupNotification"])) {
+            $client = new PostmarkClient(App::$param["signupNotification"]["key"]);
+            $messages = [];
+            // For the new user
+            $messages[] = [
+                'To' => $email,
+                'From' => App::$param["signupNotification"]["user"]["from"],
+                'TrackOpens' => false,
+                'Subject' => App::$param["signupNotification"]["user"]["subject"],
+                'HtmlBody' => App::$param["signupNotification"]["user"]["htmlBody"],
+            ];
+            // Notification of others
+            if (!empty(App::$param["signupNotification"]["others"])) {
+                $messages[] = [
+                    'Bcc' => implode(",", App::$param["signupNotification"]["others"]["bcc"]),
+                    'From' => App::$param["signupNotification"]["others"]["from"],
+                    'TrackOpens' => false,
+                    'Subject' => App::$param["signupNotification"]["others"]["subject"],
+                    'HtmlBody' => "<p>
+                                        Navn: {$userId}<br>
+                                        E-mail: {$email}
+                                   </p>",
+                ];
+            }
+
+            try {
+                $sendResult = $client->sendEmailBatch($messages);
+            } catch (PostmarkException $ex) {
+//                echo $ex->httpStatusCode . "\n";
+//                echo $ex->postmarkApiErrorCode . "\n";
+
+            } catch (Exception $generalException) {
+//                 A general exception is thown if the API
+            }
+        }
+        $row["properties"] = json_decode($row["properties"]);
         $response['success'] = true;
         $response['message'] = 'User was created';
         $response['data'] = $row;
@@ -285,16 +352,18 @@ class User extends Model
         }
 
         $userGroup = isset($data["usergroup"]) ? $data["usergroup"] : null;
+        $properties = isset($data["properties"]) ? json_encode($data["properties"]) : null;
 
         $sQuery = "UPDATE users SET screenname=screenname";
         if ($password) $sQuery .= ", pw=:sPassword";
         if ($email) $sQuery .= ", email=:sEmail";
+        if ($properties) $sQuery .= ", properties=:sProperties";
         if ($userGroup) {
             $sQuery .= ", usergroup=:sUsergroup";
             $obj[$user] = $userGroup;
 
             Database::setDb($this->parentdb);
-            $settings = new \app\models\Setting();
+            $settings = new Setting();
             if (!$settings->updateUserGroups((object)$obj)['success']) {
                 $response['success'] = false;
                 $response['message'] = "Could not update settings.";
@@ -306,9 +375,9 @@ class User extends Model
         }
 
         if (!empty($data["parentdb"])) {
-            $sQuery .= " WHERE screenname=:sUserID AND parentdb=:sParentDb RETURNING screenname,email,usergroup";
+            $sQuery .= " WHERE screenname=:sUserID AND parentdb=:sParentDb RETURNING screenname,email,usergroup,properties";
         } else {
-            $sQuery .= " WHERE screenname=:sUserID RETURNING screenname,email,usergroup";
+            $sQuery .= " WHERE screenname=:sUserID RETURNING screenname,email,usergroup,properties";
         }
 
         try {
@@ -316,6 +385,7 @@ class User extends Model
             if ($password) $res->bindParam(":sPassword", $password);
             if ($email) $res->bindParam(":sEmail", $email);
             if ($userGroup) $res->bindParam(":sUsergroup", $userGroup);
+            if ($properties) $res->bindParam(":sProperties", $properties);
             $res->bindParam(":sUserID", $user);
             if (!empty($data["parentdb"])) $res->bindParam(":sParentDb", $data["parentdb"]);
 
@@ -329,7 +399,7 @@ class User extends Model
             $response['code'] = 400;
             return $response;
         }
-
+        $row["properties"] = json_decode($row["properties"]);
         $response['success'] = true;
         $response['message'] = "User was updated";
         $response['data'] = $row;

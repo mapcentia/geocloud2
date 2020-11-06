@@ -8,7 +8,9 @@
 
 namespace app\api\v2;
 
+use app\inc\Cache;
 use app\inc\Input;
+use app\inc\Session;
 
 /**
  * Class Sql
@@ -57,11 +59,6 @@ class Sql extends \app\inc\Controller
     const USEDRELSKEY = "checked_relations";
 
     /**
-     * @var \Phpfastcache\Core\Pool\ExtendedCacheItemPoolInterface
-     */
-    private $InstanceCache;
-
-    /**
      * @var
      */
     private $cacheInfo;
@@ -71,19 +68,15 @@ class Sql extends \app\inc\Controller
      */
     private $streamFlag;
 
+    private $db;
+
     function __construct()
     {
-        global $globalInstanceCache;
-
         parent::__construct();
-
-        $this->InstanceCache = $globalInstanceCache;
     }
 
     /**
      * @return array
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheLogicException
      */
     public function get_index(): array
     {
@@ -91,20 +84,19 @@ class Sql extends \app\inc\Controller
         // /{user}
         $r = func_get_arg(0);
 
-        if (isset($r["method"]) && $r["method"] == "stream") {
-            $this->streamFlag = true;
-
-        }
 
         $db = $r["user"];
         $dbSplit = explode("@", $db);
 
         if (sizeof($dbSplit) == 2) {
             $this->subUser = $dbSplit[0];
+            $this->db = $dbSplit[1];
         } elseif (!empty($_SESSION["subuser"])) {
             $this->subUser = $_SESSION["screen_name"];
+            $this->db = Session::getDatabase();
         } else {
             $this->subUser = null;
+            $this->db = $db;
         }
 
         // Check if body is JSON
@@ -120,19 +112,23 @@ class Sql extends \app\inc\Controller
             // ==========================
             Input::setParams(
                 [
-                    "q" => $json["q"],
-                    "client_encoding" => $json["client_encoding"],
-                    "srs" => $json["srs"],
-                    "format" => $json["format"],
-                    "geoformat" => $json["geoformat"],
-                    "key" => $json["key"],
-                    "geojson" => $json["geojson"],
-                    "allstr" => $json["allstr"],
-                    "alias" => $json["alias"],
-                    "lifetime" => $json["lifetime"],
-                    "base64" => $json["base64"],
+                    "q" => !empty($json["q"]) ? $json["q"] : null,
+                    "client_encoding" => !empty($json["client_encoding"]) ? $json["client_encoding"] : null,
+                    "srs" => !empty($json["srs"]) ? $json["srs"] : null,
+                    "format" => !empty($json["format"]) ? $json["format"] : null,
+                    "geoformat" => !empty($json["geoformat"]) ? $json["geoformat"] : null,
+                    "key" => !empty($json["key"]) ? $json["key"] : null,
+                    "geojson" => !empty($json["geojson"]) ? $json["geojson"] : null,
+                    "allstr" => !empty($json["allstr"]) ? $json["allstr"] : null,
+                    "alias" => !empty($json["alias"]) ? $json["alias"] : null,
+                    "lifetime" => !empty($json["lifetime"]) ? $json["lifetime"] : null,
+                    "base64" => !empty($json["base64"]) ? $json["base64"] : null,
                 ]
             );
+        }
+
+        if (Input::get('format') == "ndjson") {
+            $this->streamFlag = true;
         }
 
         if (Input::get('base64') === true || Input::get('base64') === "true") {
@@ -170,22 +166,33 @@ class Sql extends \app\inc\Controller
         }
         $response = unserialize($this->data);
         if ($this->cacheInfo) {
-            $response["cache_hit"] = $this->cacheInfo;
+            $response["cache"] = $this->cacheInfo;
         }
         $response["peak_memory_usage"] = round(memory_get_peak_usage() / 1024) . " KB";
-
         return $response;
     }
 
     /**
      * @return array
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheLogicException
      */
     public function post_index(): array
     {
+        $r = func_get_arg(0);
+
         // Use bulk if content type is text/plain
         if (Input::getContentType() == Input::TEXT_PLAIN) {
+            $db = $r["user"];
+            $dbSplit = explode("@", $db);
+            if (sizeof($dbSplit) == 2) {
+                $this->subUser = $dbSplit[0];
+                $this->db = $dbSplit[1];
+            } elseif (!empty($_SESSION["subuser"])) {
+                $this->subUser = $_SESSION["screen_name"];
+                $this->db = Session::getDatabase();
+            } else {
+                $this->subUser = null;
+                $this->db = $db;
+            }
 
             // Set API key from headers
             Input::setParams(
@@ -207,8 +214,18 @@ class Sql extends \app\inc\Controller
             $this->api->connect();
             $this->apiKey = $res['data']->api_key;
 
+
+            if (empty(Input::getBody())) {
+                return [
+                    "success" => false,
+                    "message" => "Empty text body",
+                    "code" => "400"
+                ];
+            }
+
             $sqls = explode("\n", Input::getBody());
             $this->api->begin(); // Start transaction
+            $res = [];
             foreach ($sqls as $q) {
                 $this->q = $q;
                 if ($this->q != "") {
@@ -223,14 +240,8 @@ class Sql extends \app\inc\Controller
             return $res;
 
         } else {
-            return $this->get_index(func_get_arg(0));
+            return $this->get_index($r);
         }
-    }
-
-    public function get_stream()
-    {
-        $this->streamFlag = true;
-        return $this->get_index(func_get_arg(0));
     }
 
     /**
@@ -288,24 +299,10 @@ class Sql extends \app\inc\Controller
      * @param string $sql
      * @param string|null $clientEncoding
      * @return string
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheLogicException
      */
     private function transaction(string $sql, string $clientEncoding = null)
     {
         $response = [];
-        if (strpos($sql, ';') !== false) {
-            $this->response['success'] = false;
-            $this->response['code'] = 403;
-            $this->response['message'] = "You can't use ';'. Use the bulk transaction API instead";
-            return serialize($this->response);
-        }
-        if (strpos($sql, '--') !== false) {
-            $this->response['success'] = false;
-            $this->response['code'] = 403;
-            $this->response['message'] = "SQL comments '--' are not allowed";
-            return serialize($this->response);
-        }
         require_once dirname(__FILE__) . '/../../libs/PHP-SQL-Parser/src/PHPSQLParser.php';
         try {
             $parser = new \PHPSQLParser($sql, false);
@@ -432,25 +429,22 @@ class Sql extends \app\inc\Controller
 
             $lifetime = (Input::get('lifetime')) ?: 0;
 
-            // If ttl is set to 0. when clear cache, because 0 secs means cache will life for ever.
-            if ($lifetime == 0) {
-               try {
-                   $this->InstanceCache->clear();
-               } catch (\Exception $e) {
-                   // Pass
-               } catch (\Error $e) {
-                   // Pass
-               }
-            }
+            $key = md5(\app\conf\Connection::$param["postgisdb"] . "_" . $this->q . "_" . $lifetime);
 
             if ($lifetime > 0) {
-                $CachedString = $this->InstanceCache->getItem(md5($this->q));
+                $CachedString = Cache::getItem($key);
             }
 
-            if ($lifetime > 0 && $CachedString->isHit()) {
+            if ($lifetime > 0 && !empty($CachedString) && $CachedString->isHit()) {
                 $this->data = $CachedString->get();
-                $this->cacheInfo["cache_hit"] = $CachedString->getCreationDate();
-                $this->cacheInfo["cache_signature"] = md5(serialize($this->data));
+                try {
+                    $CreationDate = $CachedString->getCreationDate();
+                } catch (\Exception $e) {
+                    $CreationDate = $e->getMessage();
+                }
+                $this->cacheInfo["hit"] = $CreationDate;
+                $this->cacheInfo["tags"] = $CachedString->getTags();
+                $this->cacheInfo["signature"] = md5(serialize($this->data));
 
             } else {
                 ob_start();
@@ -476,8 +470,9 @@ class Sql extends \app\inc\Controller
                 $this->data = ob_get_contents();
                 if ($lifetime > 0) {
                     $CachedString->set($this->data)->expiresAfter($lifetime ?: 1);// Because 0 secs means cache will life for ever, we set cache to one sec
-                    $this->InstanceCache->save($CachedString); // Save the cache item just like you do with doctrine and entities
-                    $this->cacheInfo["cache_hit"] = false;
+                    $CachedString->addTags(["sql", \app\conf\Connection::$param["postgisdb"]]);
+                    Cache::save($CachedString); // Save the cache item just like you do with doctrine and entities
+                    $this->cacheInfo["hit"] = false;
                 }
                 ob_get_clean();
             }

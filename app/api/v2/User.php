@@ -1,8 +1,7 @@
 <?php
-
 /**
  * @author     Aleksandr Shumilov <shumsan1011@gmail.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -67,21 +66,24 @@ class User extends Controller
      * @return array
      *
      * @OA\Post(
-     *   path="/v2/user",
-     *   tags={"user"},
+     *   path="/api/v2/user",
+     *   tags={"User"},
      *   summary="Creates user",
+     *   security={{"cookieAuth":{}}},
      *   @OA\RequestBody(
      *     description="User data",
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
      *         type="object",
-     *         @OA\Property(property="name",type="string"),
-     *         @OA\Property(property="email",type="string"),
-     *         @OA\Property(property="password",type="string"),
-     *         @OA\Property(property="subuser",type="boolean"),
-     *         @OA\Property(property="usergroup",type="string"),
-     *         @OA\Property(property="zone",type="string")
+     *         required={"name","email","password"},
+     *         @OA\Property(property="name",type="string",example="user"),
+     *         @OA\Property(property="email",type="string",example="user@example.com"),
+     *         @OA\Property(property="password",type="string",example="1234Luggage"),
+     *         @OA\Property(property="subuser",type="boolean",example=true),
+     *         @OA\Property(property="usergroup",type="string",example="My group"),
+     *         @OA\Property(property="parentdb",type="string",example="mydatabase"),
+     *         @OA\Property(property="properties",type="object",example={"org":"Ajax Inc."})
      *       )
      *     )
      *   ),
@@ -97,19 +99,35 @@ class User extends Controller
         if ((empty($data['subuser']) || filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN) === false)
             || Session::isAuth() && filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN)) {
             $data['subuser'] = filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN) || Session::isAuth();
-
+            if (!empty($data['parentdb'])) {
+                return [
+                    'success' => false,
+                    'message' => "'parentdb' can't be set while client is authenticated or 'subuser' is set to false",
+                    'code' => 400
+                ];
+            }
             $response = $this->user->createUser($data);
             if (Session::isAuth()) {
                 Database::setDb(Session::getUser());
                 $database = new Database();
                 $database->createSchema($response['data']['screenname']);
             }
+            return $response;
+        } elseif (!empty($data['parentdb']) && filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN) === true && !Session::isAuth()) {
+            if (empty(\app\conf\App::$param["allowUnauthenticatedClientsToCreateSubUsers"])) {
+                return [
+                    'success' => false,
+                    'message' => "Unauthenticated clients are not allowed to create sub users.",
+                    'code' => 400
+                ];
+            }
 
+            $response = $this->user->createUser($data);
             return $response;
         } else {
             return [
                 'success' => false,
-                'message' => "Sub users should be created only by authenticated clients and 'subuser' parameter set to 'true'",
+                'message' => "Sub users should be created only by authenticated clients and 'subuser' parameter set to 'true'. Or by unauthenticated clients and 'parentdb' set to an existing super user'",
                 'code' => 400
             ];
         }
@@ -119,9 +137,10 @@ class User extends Controller
      * @return array
      *
      * @OA\Get(
-     *   path="/v2/user/{userId}",
-     *   tags={"user"},
+     *   path="/api/v2/user/{userId}",
+     *   tags={"User"},
      *   summary="Returns extended information about user (meta, schemas, groups). User data is available only for the actual user and his superuser",
+     *   security={{"cookieAuth":{}}},
      *   @OA\Parameter(
      *     name="userId",
      *     in="path",
@@ -166,9 +185,10 @@ class User extends Controller
      * @return array
      *
      * @OA\Put(
-     *   path="/v2/user/{userId}",
-     *   tags={"user"},
+     *   path="/api/v2/user/{userId}",
+     *   tags={"User"},
      *   summary="Updates user information. User can only update himself or its subuser.",
+     *   security={{"cookieAuth":{}}},
      *   @OA\Parameter(
      *     name="userId",
      *     in="path",
@@ -184,10 +204,11 @@ class User extends Controller
      *       mediaType="application/json",
      *       @OA\Schema(
      *         type="object",
-     *         @OA\Property(property="currentPassword",type="string"),
-     *         @OA\Property(property="password",type="string"),
-     *         @OA\Property(property="email",type="string"),
-     *         @OA\Property(property="usergroup",type="string"),
+     *         @OA\Property(property="currentPassword",type="string",example="1234Luggage"),
+     *         @OA\Property(property="password",type="string",example="1234Luggage"),
+     *         @OA\Property(property="email",type="string",example="user@example.com"),
+     *         @OA\Property(property="usergroup",type="string",example="My group"),
+     *         @OA\Property(property="properties",type="object",example={"org":"Ajax Inc."})
      *       )
      *     )
      *   ),
@@ -257,9 +278,10 @@ class User extends Controller
      * @return array
      *
      * @OA\Delete(
-     *   path="/v2/user/{userId}",
-     *   tags={"user"},
+     *   path="/api/v2/user/{userId}",
+     *   tags={"User"},
      *   summary="Deletes user. User can only delete himself or be deleted by its superuser.",
+     *   security={{"cookieAuth":{}}},
      *   @OA\Parameter(
      *     name="userId",
      *     in="path",
@@ -308,8 +330,9 @@ class User extends Controller
      *
      * @OA\Get(
      *   path="/api/v2/user/{userId}/subusers",
-     *   tags={"user"},
+     *   tags={"User"},
      *   summary="Returns subusers",
+     *   security={{"cookieAuth":{}}},
      *   @OA\Parameter(
      *     name="userId",
      *     in="path",

@@ -13,6 +13,8 @@
  * Do NOT hand edit this file.
  */
 
+Ext.override(Ext.data.proxy.Ajax, { timeout: 600000 });
+
 // @require @packageOverrides
 Ext.Loader.setConfig({
     enabled: true

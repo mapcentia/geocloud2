@@ -275,7 +275,7 @@ class Osm extends \app\inc\Model
             tags               hstore,
             gid                integer
         )";
-        $safeName = $this->toAscii($conf->data->name, array(), "_");
+        $safeName = self::toAscii($conf->data->name, array(), "_");
         if ($safeName == "state") {
             $safeName = "_state";
         }

@@ -4,7 +4,154 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [Unreleased]
+## [UNRELEASED]
+### Added
+- OAuth API added with password grant: api/v3/oauth/token. Token is not longer returned using `/api/v2/session/start`.
+- Settings in `\app\conf\App.php` for PostgreSQL settings:
+```php
+[
+    "SqlApiSettings" => [
+        "work_mem" => "2000 MB",
+        "statement_timeout" => 60000,
+    ]
+];
+```
+- New `Autocomplete` boolean property in Structure tab. This will instruct Vidi in activating autocomplete in filtering for the specific field.
+- The User API has now full support (create, read and update) of the `properties` field in the user object. This field can be used to added custom properties to a (sub)user.
+- New table in the `mapcentia` database called `logins`. Each login wil be stamped in this table with database, user and timestamp.
+- Email notification for new users and for a list of predefined emails. The email body for others contains username and email of the new user. "Others" can be omitted. Add this to `\app\conf\App.php`:
+```php
+[
+    "signupNotification" => [
+                "key" => "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxx", // Postmark key. Only email service supported for now
+                "user" => [
+                    "from" => "info@mapcentia.com",
+                    "subject" => "Welcome to GC2!",
+                    "htmlBody" => "<body>Welcome to GC2!</body>",
+                ],
+                "others" => [
+                    "bcc" => [
+                        "mh@example.com",
+                        "info@mapcentia.com",
+                    ],
+                    "from" => "info@mapcentia.com",
+                    "subject" => "New user has signed up",
+                ]
+            ]
+];
+```
+- The color palettes in the GUI can now be customized in `app/conf/App.php`. Add something like this:
+```php
+[
+    "colorPalette" => [
+        "fab400", "999a9a", "2a6d42", "b2d235", "1a506d", "0072bb", "67B15B", "0276ba"
+    ]
+];
+``` 
+
+### Changed
+- Updated PhpFastCache to V8, so PHP 7.3+ is required.
+- JWT token removed from api/v2/session/start response. Moved to new OAuth API.
+- Admin and Scheduler API moved to api/v3 and now requires OAuth.
+- The `Enable filtering` property of the Structure tab is now called `Disable filtering` and will if check omit the field in Vidi filtering. The property was not used before.
+- WFS-T now uses a database cursor and flushes GML, so huge datasets can be opened in e.g. QGIS without draining the memory.
+- Format `ndjson` (http://ndjson.org/) is added as a `format` option in the SQL API. This will stream NDJSON (Newline delimited JSON).
+- It's now possible to create a subuser with an unauthenticated client. The property `allowUnauthenticatedClientsToCreateSubUsers` must be set to `true` in `\app\conf\App.php`
+- Legend API is now using MapScript, which is much faster for creation of legend icons. PHP MapScript is needed.
+- In MapFiles the `wfs_extent` and `wms_extent` will always be set from the GC2 schema extent instead of leaving these properties out and let MapServer calculate the extent. The latter can be very inefficient.
+- A WMS request can now have a parameter called `labels`, which can be either `true` or `false`. If `false` the labels will be switched off Mapserver and QGIS backed layers.
+- A WMS request can now have a `qgs` parameter for QGIS backed layers. The value is the path to the qgs file for the layer (base64 encoded). The path will be used to send the request directly to qgis_serv instead of cascading it through MapServer. Used by Vidi.
+- The Keyvalue API will output newest keys. The field `id` is ordered DESC.
+
+### Fixed
+- Bug in the scheduler get.php script regarding gridded download.
+- app/phpfastcache dir added with .gitignore file.
+- SQL Bulk API now works with sub-user.
+- Legend API will no longer fail if the client requests a vector representation of a layer (prefixed `v:`). The MapServer/QGIS Server legend will be returned.
+
+## [2020.5.0]
+### Added
+- Limits for SQL API can now be set in `\app\conf\App.php` like this: (`sqlJson` will also set limit for CSV)
+```php
+[
+    "limits" => [
+        "sqlExcel" => 1000,
+        "sqlJson" => 10000,
+    ]
+];
+```
+- JWT support. 
+    - A JWT bearer token is now return when using `/api/v2/session/start` 
+    - A token can be set in the header like: `Authorization: Bearer eyJ0eXAiOi....`
+    - A token can be validated in the front controller `index.php` and the database can be set from it like this:
+```php
+Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
+    $jwt = Jwt::validate();
+    if ($jwt["success"]){
+        Database::setDb($jwt["data"]["database"]);
+    } else {
+        echo Response::toJson($jwt);
+        exit();
+    }
+});
+```
+- New API for starting, stopping and monitoring mapcache_seed processes. This API is located at `/api/v3/tileseeder` and is the first v3 API which is JWT token based. Take a look above.
+- The Swagger API file is split in two for v2 and v3: `public/swagger/v2/api.json` and `public/swagger/v3/api.json`
+
+### Changed
+- It's now possible to set the Redis database for appCache and session. Use `"db" => 1` in the `sessionHandler` and `appCache` settings.
+
+### Fixed
+- In `/api/v2/keyvalue` filters with and/or will now work. Like `filter='{userId}'='137180100000543' or '{browserId}'='d5d8c138-99dc-4254-850a-8a6d548cb6ce'`
+- Timeouts in both Scheduler client and server are removed.
+- Bugs regarding http basic auth of sub-users in WMS.
+
+## [2020.2.0]
+### Added
+- Tentative Disk API. Can return free disk space and delete temporary files. For use in a cluster or serverless environment.
+- Tentative AppCache API. For getting stats and clear cache.
+- User table now has a JSONB field called `properties`. The content in this field will be added to the returned object when starting a session (or checking status). This field can be used to added custom properties to a (sub)user.
+- In Table Structure tab, its now possible to set a link suffix in addition to link prefix. The suffix will be added to the end of the link. E.g ".pdf".
+
+### Changed
+- CalVer is now used with month identifier like this: YYYY.MM.Minor.Modifier.
+- The default primary key can now be set with `defaultPrimaryKey` in `\app\conf\App.php`. Before this was hardcoded to `gid` which still is the default if `defaultPrimaryKey` is empty.
+- Memcached added as an option for session handling and AppCache. The setup in `\app\conf\App.php` is changed too, so session handling and AppCache be set up independently:
+```php
+[        
+    "sessionHandler" => [
+     "type" => "memcached", // or redis
+     "host" => "localhost:11211", // without tcp:
+    ],
+    "appCache" => [
+     "type" => "memcached", // or redis
+     "host" => "localhost:11211", // without tcp:
+     "ttl" => "100",
+    ]
+];
+```
+- MapServer max map size set to 16384px, so its possible to create A0 single tile print.
+
+## [2019.1.0] - 2019-20-12
+### Added
+- LABEL_NO_CLIP and POLYLINE_NO_CLIP processing directives added to GUI.
+- Allowed minimum size of scaled symbols setting added to GUI.
+- More fine grained caching in Layer, Setting and Model, so look-ups of primary keys, table schemata and more are cached. This is called AppCache
+- Redis added as backend for Phpfastcache and session control:
+    - Just set `redisHost` in `\app\conf\App.php` to enable Redis for sessions.
+    - And add this `"appCache" => ["type" => "redis", "ttl" => "3600"]` to enable Redis for Phpfastcache.
+- `"wfs_geomtype" "[type]"25d` is added in MapFiles for layers with three dimensions, so WFS returns 3D data. MapServer needs to be build with `DWITH_POINT_Z_M=ON`, which is done in [3134fc9](https://github.com/mapcentia/dockerfiles/commit/610382d42bfdb6a5ee74244cc3f30b8c9b73419a)
+- Dimensions of a layer are now displayed in the Database tab footer in Admin.
+
+### Changed
+- The schema select widget in Admin is now ordered by schema name.
+- Boolean fields in Settings property grids are now rendered as check icons and the widget is a standard checkbox.
+- General optimization by reducing SELECTs in Layer.php.
+
+### Fixed
+- Bugs regarding sub-users
+
+## [2019.1.0.rc1] - 2019-06-10
 ### Added
 - Phpfastcache added to speed up Meta API.
 - MapServer/MapCache now exposes layers as Mapbox Vector tiles. In MapServer just use `format=mvt` and in MapCache MVT layers are prefixed with `.mvt` like public.foo.mvt.
@@ -26,13 +173,14 @@ and this project adheres to [CalVer](https://calver.org/).
 - Support of time, date and timestamp fields. In Admin editor and data grid, all types are handled as strings, so different PG formats doesn't need to be handled.
 
 ### Changed
-- Change how cached/not-cached layer work in the Map tab:
+- Change how cached/not-cached layers works in the Map tab:
     - Default is now to display layers as not-cached.
     - Button in layer tree to switch between cached and not-cached display.
     - Both cached and not-cached layers are displayed as "single tiled". Cached version is using MapCache ability to assemble tiles server side. 
 - Can now set port on Elasticsearch end-point. If non specified, it will default to 9200.
 - Optimized non-geometry meta VIEWs in database.
-   
+- Support of Elasticsearch 7.x
+
 ### Fixed
 - Limit of 100 classes in sorting algorithms is increased.
 - Style issue in Firefox for color picker in class property grid.

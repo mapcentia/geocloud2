@@ -77,6 +77,7 @@ class Sql
                     )";
         $sqls[] = "CREATE UNIQUE INDEX key_value_key_uindex ON settings.key_value (key)";
         $sqls[] = "UPDATE settings.geometry_columns_join SET wmssource = replace(wmssource, '127.0.0.1', 'gc2core')";
+       // $sqls[] = "UPDATE settings.geometry_columns_join SET wmssource = replace(wmssource, 'gc2core', '127.0.0.1')";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER COLUMN authentication TYPE VARCHAR(255) USING authentication::VARCHAR(255)";
         $sqls[] = "CREATE INDEX geometry_columns_join_authentication_idx ON settings.geometry_columns_join (authentication)";
         $sqls[] = "CREATE INDEX geometry_columns_join_baselayer_idx ON settings.geometry_columns_join (baselayer)";
@@ -89,6 +90,15 @@ class Sql
                       CONSTRAINT name_unique UNIQUE (name)
                     )";
         $sqls[] = "ALTER TABLE settings.qgis_files ADD COLUMN old BOOLEAN DEFAULT FALSE";
+        $sqls[] = "CREATE TABLE settings.seed_jobs
+                    (
+                      uuid      UUID                      NOT NULL  DEFAULT uuid_generate_v4()  PRIMARY KEY,
+                      name      CHARACTER VARYING(255)    NOT NULL,
+                      pid       INTEGER                   NOT NULL,
+                      host      CHARACTER VARYING(255)    NOT NULL,
+                      created   TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE
+                    )";
+
 
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
@@ -596,6 +606,14 @@ class Sql
         $sqls[] = "ALTER TABLE users ALTER COLUMN pw SET NOT NULL";
         $sqls[] = "ALTER TABLE users DROP CONSTRAINT user_unique";
         $sqls[] = "ALTER TABLE users ADD CONSTRAINT user_unique UNIQUE (screenname, parentdb)";
+        $sqls[] = "ALTER TABLE users ADD COLUMN properties JSONB";
+        $sqls[] = "CREATE TABLE logins
+                    (
+                      id SERIAL NOT NULL,
+                      db VARCHAR(255) NOT NULL,
+                      \"user\" VARCHAR(255) NOT NULL,
+                      timestamp TIMESTAMP DEFAULT now() NOT NULL
+                    )";
         return $sqls;
     }
 

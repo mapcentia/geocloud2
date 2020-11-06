@@ -1,165 +1,99 @@
 <?php
-/**
- * Long description for file
- *
- * Long description for file (if any)...
- *  
- * @category   API
- * @package    app\api\v1
+/*
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- * @since      File available since Release 2013.1
- *  
+ *
  */
 
 namespace app\api\v1;
 
-use \app\conf\App;
-use \app\inc\Session;
-use \app\models\Layer;
-use \GuzzleHttp\Client;
+use app\conf\App;
+use app\inc\Controller;
+use app\inc\Input;
 
-class Legend extends \app\inc\Controller
+class Legend extends Controller
 {
     private $legendArr;
 
     function __construct()
     {
         parent::__construct();
-
-    }
-
-    /**
-     * @return array
-     * @throws \PDOException
-     */
-    private function createLegendObj()
-    {
-
-        $response = [];
-
         $path = App::$param['path'] . "/app/wms/mapfiles/";
-
-        $client = new Client([
-            'timeout' => 10,
-        ]);
-
-        if (\app\inc\Input::get("l")) {
-
-            $layerNames = explode(";", \app\inc\Input::get("l"));
-
+        if (Input::get("l")) {
+            $layerNames = explode(";", Input::get("l"));
             $layerNames = array_reverse($layerNames);
-
-            $meta = new Layer();
-
-            try {
-
-                $layers = $meta->getAll(implode(",", $layerNames), Session::isAuth(), false, false,  false, \app\inc\Session::getUser())["data"];
-
-            } catch (\PDOException $e) {
-
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = $e->getCode();
-                return $response;
-
-            }
-
-            foreach ($layers as $layer) {
-
-                $layerName = $layer["f_table_schema"] . "." . $layer["f_table_name"];
-
-                // Sort classes
-                $classes = json_decode($layer['class'], true);
-
-                foreach ($classes as $key => $row) {
-                    $sortid[$key] = $row['sortid'];
+            $temp = $layerNames;
+            $newLayerNames = $arr = array();
+            // Check if schema is given as param and get the layer names
+            foreach ($temp as $layerName) {
+                $splitName = explode(".", $layerName);
+                if ($splitName[0] !== "gc2_group") {
+                    if (sizeof($splitName) < 2) {
+                        $mapFile = Input::getPath()->part(5) . "_" . $splitName[0] . "_wms.map";
+                        if (file_exists($path . $mapFile)) {
+                            $map = ms_newMapobj($path . $mapFile);
+                            $arr = $map->getAllLayerNames();
+                        }
+                    } else {
+                        $newLayerNames[] = $layerName;
+                    }
+                    $newLayerNames = array_merge($newLayerNames, $arr);
                 }
-                array_multisort($sortid, SORT_ASC, $classes);
+            }
+            foreach ($newLayerNames as $layerName) {
+                $layerNameWithOutPrefix = str_replace("v:", "", $layerName);
+                $splitName = explode(".", $layerNameWithOutPrefix);
+                $mapFile = Input::getPath()->part(5) . "_" . $splitName[0] . "_wms.map";
+                $map = ms_newMapobj($path . $mapFile);
+                $layer = $map->getLayerByName($layerNameWithOutPrefix);
+                if ($layer) {
 
-                $numClass = sizeof($classes);
+                    $this->legendArr[$layerName]['title'] = $layer->getMetaData("ows_title");
 
-                $mapFile = $path . \app\inc\Input::getPath()->part(5) . "_" . $layer["f_table_schema"] . "_wms.map";
-
-                $this->legendArr[$layerName]['title'] = $layer["wms_title"];
-
-                if (isset($layer["wmssource"])) {
-
-                    $wmsCon = str_replace(array("layers", "LAYERS"), "LAYER", $layer['wmssource']);
-
-                    $icon = imagecreatefrompng($wmsCon . "&REQUEST=getlegendgraphic");
-                    imagecolortransparent($icon, imagecolorallocatealpha($icon, 0, 0, 0, 127));
-                    imagealphablending($icon, false);
-                    imagesavealpha($icon, true);
-                    ob_start();
-                    imagepng($icon);
-                    imagedestroy($icon);
-                    $data = base64_encode(ob_get_clean());
-                    $this->legendArr[$layerName]['classes'][0]['img'] = $data;
-                    $this->legendArr[$layerName]['classes'][0]['name'] = "_gc2_wms_legend";
-                    $this->legendArr[$layerName]['classes'][0]['expression'] = null;
-
-                } else {
-
-                    for ($i = 0; $i < $numClass; $i++) {
-
-                        $iconUrl = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=" . $mapFile . "&MODE=legendicon&icon=" . $layerName . "," . $i;
-
-                        try {
-
-                            $content = $client->get($iconUrl);
-
-                        } catch (\Exception $e) {
-
-                            $response['success'] = false;
-                            $response['message'] = $e->getMessage();
-                            $response['code'] = $e->getCode();
-                            return $response;
+                    if ($layer->getMetaData("wms_get_legend_url")) {
+                        $icon = imagecreatefrompng($layer->getMetaData("wms_get_legend_url"));
+                        imagecolortransparent($icon, imagecolorallocatealpha($icon, 0, 0, 0, 127));
+                        imagealphablending($icon, false);
+                        imagesavealpha($icon, true);
+                        ob_start();
+                        imagepng($icon);
+                        imagedestroy($icon);
+                        $data = base64_encode(ob_get_clean());
+                        $this->legendArr[$layerName]['classes'][0]['img'] = $data;
+                        $this->legendArr[$layerName]['classes'][0]['name'] = "_gc2_wms_legend";
+                        $this->legendArr[$layerName]['classes'][0]['expression'] = null;
+                    } else {
+                        for ($i = 0; $i < $layer->numclasses; $i++) {
+                            $class = $layer->getClass($i);
+                            $icon = $class->createLegendIcon(17, 17);
+                            ob_start();
+                            $icon->saveImage("", $map);
+                            $data = base64_encode(ob_get_clean());
+                            $this->legendArr[$layerName]['classes'][$i]['img'] = $data;
+                            $this->legendArr[$layerName]['classes'][$i]['name'] = $class->name;
+                            $this->legendArr[$layerName]['classes'][$i]['expression'] = $class->getExpressionString();
 
                         }
-
-                        $data = base64_encode($content->getBody());
-
-                        $this->legendArr[$layerName]['classes'][$i]['img'] = $data;
-                        $this->legendArr[$layerName]['classes'][$i]['name'] = $classes[$i]["name"];
-                        $this->legendArr[$layerName]['classes'][$i]['expression'] = $classes[$i]["expression"];
-
                     }
                 }
-
             }
-
         }
-
-        $response['success'] = true;
-        $response['message'] = "";
-        return $response;
     }
 
-    /**
-     * @return array
-     */
     public function get_png()
     {
-        $res = $this->createLegendObj();
-
-        if (!$res["success"]) {
-            return $res;
-        }
-
         $path = App::$param['path'] . "/app/wms/mapfiles/";
-        if (!\app\inc\Input::getPath()->part(6)) {
+        if (!Input::getPath()->part(6)) {
             $response['success'] = false;
             $response['message'] = "Need to specify schema when using PNG";
             $response['code'] = 400;
             return $response;
         }
-
-        if (\app\inc\Input::get("l")) {
-            $layerNames = explode(";", \app\inc\Input::get("l"));
-            $mapFile = \app\inc\Input::getPath()->part(5) . "_" . \app\inc\Input::getPath()->part(6) . "_wms.map";
-            $map = ms_newMapobj($path . $mapFile);
+        $mapFile = Input::getPath()->part(5) . "_" . Input::getPath()->part(6) . "_wms.map";
+        $map = ms_newMapobj($path . $mapFile);
+        if (Input::get("l")) {
+            $layerNames = explode(";", Input::get("l"));
             foreach ($layerNames as $layerName) {
                 $layer = $map->getLayerByName($layerName);
                 if ($layer) {
@@ -175,19 +109,9 @@ class Legend extends \app\inc\Controller
         exit($data);
     }
 
-    /**
-     * @return array
-     */
     public function get_html()
     {
-        $res = $this->createLegendObj();
-
-        if (!$res["success"]) {
-            return $res;
-        }
-
         $html = "";
-
         if (is_array($this->legendArr)) {
             foreach ($this->legendArr as $layer) {
                 //$html .= "<div class=\"legend legend-container\"><div class=\"legend legend-header\"><b>" . $layer['title'] . "<b></div>";
@@ -195,7 +119,7 @@ class Legend extends \app\inc\Controller
                 if (is_array($layer['classes'])) {
                     foreach ($layer['classes'] as $class) {
                         if ($class['name']) {
-                            $html .= "<tr><td style=\"padding: 3px\" class=\"legend img\"><img src=\"data:image/png;base64, {$class['img']}\"></td>";
+                            $html .= "<tr><td style=\"padding: 3px\" class=\"legend img\"><img alt=\"\" src=\"data:image/png;base64, {$class['img']}\"></td>";
                             $html .= "<td style=\"padding: 3px\" class=\"legend legend-text\">" . (($class['name'] == "_gc2_wms_legend") ? "" : htmlentities($class['name'])) . "</td></tr>";
                         }
                     }
@@ -203,24 +127,12 @@ class Legend extends \app\inc\Controller
                 $html .= "</table>";
             }
         }
-
         $response['html'] = $html;
-
         return $response;
-
     }
 
-    /**
-     * @return array
-     */
     public function get_json()
     {
-        $res = $this->createLegendObj();
-
-        if (!$res["success"]) {
-            return $res;
-        }
-
         $json = array();
         $classes = array();
         if (is_array($this->legendArr)) {

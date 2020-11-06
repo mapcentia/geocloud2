@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -30,6 +30,8 @@ class Wms extends \app\inc\Controller
     function __construct()
     {
         parent::__construct();
+
+        header("Cache-Control: no-store");
 
         $this->layers = [];
         $postgisschema = \app\inc\Input::getPath()->part(3);
@@ -71,6 +73,8 @@ class Wms extends \app\inc\Controller
             // If IP not trusted, when check auth on layers
             if (!$trusted) {
                 foreach ($this->layers as $layer) {
+                    // Strip name space if any
+                    $layer = sizeof(explode(":", $layer)) > 1 ? explode(":", $layer)[1] : $layer;
                     $this->basicHttpAuthLayer($layer, $db, $subUser);
                 }
             }
@@ -89,8 +93,17 @@ class Wms extends \app\inc\Controller
             // Get service. Only WFS for now
             $this->service = strtolower($arr["service"]);
 
-            // Get the layer name
-            $layer = sizeof(explode(":", $arr["wfs:Query"]["typeName"])) > 1 ? explode(":", $arr["wfs:Query"]["typeName"])[1] : $arr["wfs:Query"]["typeName"];
+            $typeName = !empty($arr["wfs:Query"]["typeName"]) ? $arr["wfs:Query"]["typeName"] : $arr["Query"]["typeName"];
+            if (empty($typeName)) {
+                $typeName = !empty($arr["wfs:Query"]["typeNames"]) ? $arr["wfs:Query"]["typeNames"] : $arr["Query"]["typeNames"];
+            }
+            if (empty($typeName)) {
+                \app\wfs\ServiceException::report("Could not get the typeName from the requests");
+                exit();
+            }
+
+            // Strip name space if any
+            $layer = sizeof(explode(":", $typeName)) > 1 ? explode(":", $typeName)[1] : $typeName;
 
             // If IP not trusted, when check auth on layer
             if (!$trusted) {
@@ -108,32 +121,26 @@ class Wms extends \app\inc\Controller
     {
         $model = new \app\inc\Model();
         $useFilters = false;
-
+        $qgs =  isset($_GET["qgs"]) ? base64_decode($_GET["qgs"]) : false;
         // Check if WMS filters are set
-        if ((isset($_GET["filters"]) || isset($_GET["FILTERS"])) && $this->service == "wms") {
+        if ((isset($_GET["filters"]) || (isset($_GET["labels"]) && $_GET["labels"] == "false")) && $this->service == "wms") {
             // Parse filter
-            $filters = json_decode(base64_decode($_GET["filters"]), true);
+            $filters = isset($_GET["filters"]) ? json_decode(base64_decode($_GET["filters"]), true) : null;
             $layer = $this->layers[0];
             $split = explode(".", $layer);
-            $wmsUrl = $model->getGeometryColumns($layer, "*")["wmssource"];
+            $name = md5(rand(1, 999999999) . microtime());
+            $disableLabels = isset($_GET["labels"]) && $_GET["labels"] == "false";
 
             // If QGIS is used
-            if ($wmsUrl) {
-                // Get the url for qgis_mapserv
-                // Parse query part and get "map" parameter
-                parse_str(parse_url($wmsUrl)["query"], $query);
-                $e = $query["map"];
-
+            if ($qgs) {
+                $e = $qgs;
                 if ($e) {
-                    $useFilters = true;
-
                     // Read the file
                     $file = fopen($e, "r");
                     $str = fread($file, filesize($e));
                     fclose($file);
 
                     // Write out a tmp MapFile
-                    $name = md5(rand(1, 999999999) . microtime());
                     $mapFile = "/var/www/geocloud2/app/tmp/{$name}.qgs";
                     $newMapFile = fopen($mapFile, "w");
                     fwrite($newMapFile, $str);
@@ -141,25 +148,28 @@ class Wms extends \app\inc\Controller
 
                     $versionWhere = $model->doesColumnExist("{$split[0]}.{$split[1]}", "gc2_version_gid")["exists"] ? "gc2_version_end_date IS NULL" : "";
 
-                    // Use sed to replace sql= parameter
-                    $where = implode(" OR ", $filters[$layer]);
-                    if ($versionWhere) {
-                        $where = "({$where} AND {$versionWhere})";
+                    if ($filters) {
+                        $useFilters = true;
+                        $where = implode(" OR ", $filters[$layer]);
+                        if ($versionWhere) {
+                            $where = "({$where} AND {$versionWhere})";
+                        }
+                        $sedCmd = 'sed -i "/table=\"' . $split[0] . '\".\"' . $split[1] . '\"/s/sql=.*</sql=' . $where . '</g" ' . $mapFile;
+                        $res = shell_exec($sedCmd);
                     }
-                    $sedCmd = 'sed -i "/table=\"' . $split[0] . '\".\"' . $split[1] . '\"/s/sql=.*</sql=' . $where . '</g" ' . $mapFile;
-                    $res = shell_exec($sedCmd);
-                    //die($res);
+                    if ($disableLabels) {
+                        $useFilters = true;
+                        $sedCmd = 'sed -i "s/labelsEnabled=\"1\"/labelsEnabled=\"0\"/g" ' . $mapFile;
+                        $res = shell_exec($sedCmd);
+                    }
+
                     $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map={$mapFile}&" . $_SERVER["QUERY_STRING"];
                 }
+            }
 
-                // MapServer is used
-            } else {
-                $useFilters = true;
+            // MapServer is used
+            else {
                 switch ($this->service) {
-                    case "wms":
-                        $mapFile = $db . "_" . $postgisschema . "_wms.map";
-                        break;
-
                     case "wfs":
                         $mapFile = $db . "_" . $postgisschema . "_wfs.map";
                         break;
@@ -177,40 +187,44 @@ class Wms extends \app\inc\Controller
                 fclose($file);
 
                 // Write out a tmp MapFile
-                $name = md5(rand(1, 999999999) . microtime());
                 $tmpMapFile = "/var/www/geocloud2/app/tmp/{$name}.map";
                 $newMapFile = fopen($tmpMapFile, "w");
                 fwrite($newMapFile, $str);
                 fclose($newMapFile);
-
-                // Use sed to replace sql= parameter
-                $where = implode(" OR ", $filters[$layer]);
-                $sedCmd = 'sed -i "s;/\*FILTER_' . $split[0] . '.' . $split[1] . '\*/;WHERE ' . $where . ';g" ' . $tmpMapFile;
-                $res = shell_exec($sedCmd);
+                if ($filters) {
+                    $useFilters = true;
+                    // Use sed to replace sql= parameter
+                    $where = implode(" OR ", $filters[$layer]);
+                    $sedCmd = 'sed -i "s;/\*FILTER_' . $split[0] . '.' . $split[1] . '\*/;WHERE ' . $where . ';g" ' . $tmpMapFile;
+                    $res = shell_exec($sedCmd);
+                }
+                if ($disableLabels) {
+                    $useFilters = true;
+                    $sedCmd = 'sed -i "/#START_LABEL1_' . $split[0] . '.' . $split[1] . '/,/#END_LABEL1_' . $split[0] . '.' . $split[1] . '/c\ " ' . $tmpMapFile;
+                    $res = shell_exec($sedCmd);
+                    $sedCmd = 'sed -i "/#START_LABEL2_' . $split[0] . '.' . $split[1] . '/,/#END_LABEL2_' . $split[0] . '.' . $split[1] . '/c\ " ' . $tmpMapFile;
+                    $res = shell_exec($sedCmd);
+                }
                 $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map={$tmpMapFile}&" . $_SERVER["QUERY_STRING"];
             }
         }
 
         if (!$useFilters) {
             // Set MapFile for either WMS or WFS
-            switch ($this->service) {
-                case "wms":
-                    $mapFile = $db . "_" . $postgisschema . "_wms.map";
-                    break;
+            if ($qgs) {
+                $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map={$qgs}&" . $_SERVER["QUERY_STRING"];
+            } else {
+                switch ($this->service) {
+                    case "wfs":
+                        $mapFile = $db . "_" . $postgisschema . "_wfs.map";
+                        break;
 
-                case "wfs":
-                    $mapFile = $db . "_" . $postgisschema . "_wfs.map";
-                    break;
-
-                case "utfgrid":
-                    $mapFile = $db . "_" . $postgisschema . "_wfs.map";
-                    break;
-
-                default:
-                    $mapFile = $db . "_" . $postgisschema . "_wms.map";
-                    break;
+                    default:
+                        $mapFile = $db . "_" . $postgisschema . "_wms.map";
+                        break;
+                }
+                $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/{$mapFile}&" . $_SERVER["QUERY_STRING"];
             }
-            $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/{$mapFile}&" . $_SERVER["QUERY_STRING"];
         }
 
         header("X-Powered-By: GC2 WMS");
@@ -224,9 +238,9 @@ class Wms extends \app\inc\Controller
                 $this->type = trim($bits[1]);
             }
             // Send text/xml instead of application/vnd.ogc.se_xml
-            if ($bits[0] == "Content-Type" && trim($bits[1]) == "application/vnd.ogc.se_xml") {
+            if (sizeof($bits) > 1 && $bits[0] == "Content-Type" && trim($bits[1]) == "application/vnd.ogc.se_xml") {
                 header("Content-Type: text/xml");
-            } elseif ($bits[0] != "Content-Encoding" && trim($bits[1]) != "chunked") {
+            } elseif (sizeof($bits) > 1 && $bits[0] != "Content-Encoding" && trim($bits[1]) != "chunked") {
                 header($header_line);
             }
             return strlen($header_line);
@@ -235,8 +249,6 @@ class Wms extends \app\inc\Controller
         curl_close($ch);
         echo $content;
         exit();
-
-
     }
 
     private function post($db, $postgisschema, $data)

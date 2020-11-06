@@ -4,6 +4,7 @@ class DatabaseManagementCest
 {
     private $date;
     private $userName;
+    private $password;
     private $userEmail;
     private $userAuthCookie;
     private $userApiKey;
@@ -38,6 +39,7 @@ class DatabaseManagementCest
         $this->date = new DateTime();
 
         $this->userName = 'Database test super user name ' . $this->date->getTimestamp();
+        $this->password = 'A1abcabcabc';
         $this->userEmail = 'databasetest' . $this->date->getTimestamp() . '@example.com';
         $this->subUserName = 'Database test sub user name ' . $this->date->getTimestamp();
         $this->subUserEmail = 'databasesubtest' . $this->date->getTimestamp() . '@example.com';
@@ -60,7 +62,7 @@ class DatabaseManagementCest
         $I->sendPOST('/api/v2/user', json_encode([
             'name' => $this->userName,
             'email' => $this->userEmail,
-            'password' => 'A1abcabcabc',
+            'password' => $this->password,
         ]));
         $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
         $response = json_decode($I->grabResponse());
@@ -68,7 +70,7 @@ class DatabaseManagementCest
 
         $I->sendPOST('/api/v2/session/start', json_encode([
             'user' => $this->userId,
-            'password' => 'A1abcabcabc',
+            'password' => $this->password,
             'schema' => 'public',
         ]));
         $sessionCookie = $I->capturePHPSESSID();
@@ -83,7 +85,7 @@ class DatabaseManagementCest
         $I->sendPOST('/api/v2/user', json_encode([
             'name' => $this->subUserName,
             'email' => $this->subUserEmail,
-            'password' => 'A1abcabcabc',
+            'password' => $this->password,
             'subuser' => true,
             'createschema' => true
         ]));
@@ -98,7 +100,7 @@ class DatabaseManagementCest
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->sendPOST('/api/v2/session/start', json_encode([
             'user' => $this->subUserId,
-            'password' => 'A1abcabcabc',
+            'password' => $this->password,
             'schema' => 'public',
         ]));
 
@@ -117,7 +119,7 @@ class DatabaseManagementCest
         $I->sendPOST('/api/v2/user', json_encode([
             'name' => $this->userName1,
             'email' => $this->userEmail1,
-            'password' => 'A1abcabcabc',
+            'password' => $this->password,
         ]));
 
         $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
@@ -126,7 +128,7 @@ class DatabaseManagementCest
 
         $I->sendPOST('/api/v2/session/start', json_encode([
             'user' => $this->userId1,
-            'password' => 'A1abcabcabc',
+            'password' => $this->password,
         ]));
 
         $sessionCookie = $I->capturePHPSESSID();
@@ -138,7 +140,7 @@ class DatabaseManagementCest
         $I->sendPOST('/api/v2/user', json_encode([
             'name' => $this->subUserName1,
             'email' => $this->subUserEmail1,
-            'password' => 'A1abcabcabc',
+            'password' => $this->password,
             'subuser' => true,
             'createschema' => true
         ]));
@@ -149,7 +151,7 @@ class DatabaseManagementCest
 
         $I->sendPOST('/api/v2/session/start', json_encode([
             'user' => $this->subUserId1,
-            'password' => 'A1abcabcabc',
+            'password' => $this->password,
         ]));
 
         $sessionCookie = $I->capturePHPSESSID();
@@ -164,7 +166,7 @@ class DatabaseManagementCest
         $I->sendPOST('/api/v2/user', json_encode([
             'name' => $this->userName2,
             'email' => $this->userEmail2,
-            'password' => 'A1abcabcabc',
+            'password' => $this->password,
         ]));
 
         $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
@@ -173,7 +175,7 @@ class DatabaseManagementCest
 
         $I->sendPOST('/api/v2/session/start', json_encode([
             'user' => $this->userId2,
-            'password' => 'A1abcabcabc',
+            'password' => $this->password,
         ]));
 
         $sessionCookie = $I->capturePHPSESSID();
@@ -185,7 +187,7 @@ class DatabaseManagementCest
         $I->sendPOST('/api/v2/user', json_encode([
             'name' => $this->subUserName2,
             'email' => $this->subUserEmail2,
-            'password' => 'A1abcabcabc',
+            'password' => $this->password,
             'subuser' => true,
             'createschema' => true
         ]));
@@ -196,7 +198,7 @@ class DatabaseManagementCest
 
         $I->sendPOST('/api/v2/session/start', json_encode([
             'user' => $this->subUserId2,
-            'password' => 'A1abcabcabc',
+            'password' => $this->password,
         ]));
 
         $sessionCookie = $I->capturePHPSESSID();
@@ -245,6 +247,28 @@ class DatabaseManagementCest
 
         $I->assertEquals($response->databases[0]->parentdb, $this->userId1);
         $I->assertEquals($response->databases[1]->parentdb, $this->userId2);
+    }
+
+    public function shouldSetBasicAuthPasswordForSubUser(\ApiTester $I) {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
+        $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
+        $I->sendPUT('/controllers/setting/pw', "pw=" . $this->password);
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'message' => 'Password saved',
+        ]);
+    }
+
+    public function shouldSetBasicAuthPasswordForSuperUser(\ApiTester $I) {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
+        $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
+        $I->sendPUT('/controllers/setting/pw', "pw=" . $this->password);
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'message' => 'Password saved',
+        ]);
     }
 
     public function shouldUploadGmlFile(\ApiTester $I)
@@ -296,6 +320,15 @@ class DatabaseManagementCest
         ]);
     }
 
+    // Super user SQL API request to unprotected data source from outside session
+    public function shouldGetDataFromWfstAsSuperUserOutsideSession(\ApiTester $I)
+    {
+        $I->sendGET('/wfs/' . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsXml();
+        $I->seeXmlResponseMatchesXpath('/wfs:FeatureCollection/gml:featureMember');
+    }
+
     // Set Read and Write protection on the layer
     public function shouldChangeTheAuthenticationLevelFromWriteToReadwrite(\ApiTester $I)
     {
@@ -332,6 +365,13 @@ class DatabaseManagementCest
         ]);
     }
 
+    // Super user WFS-t request to protected data source from outside session
+    public function shouldNotGetDataFromWfstAsSuperUserOutsideSession(\ApiTester $I)
+    {
+        $I->sendGET('/wfs/' . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::UNAUTHORIZED);
+    }
+
     // Super user SQL API request to protected data source with API key
     public function shouldGetDataFromSqlApiAsSuperUserWithApiKey(\ApiTester $I)
     {
@@ -366,6 +406,16 @@ class DatabaseManagementCest
         ]);
     }
 
+    // Super user WFS-t request to protected data source from inside session
+    public function shouldGetDataFromWfstAsSuperUserInsideSession(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
+        $I->sendGET('/wfs/' . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsXml();
+        $I->seeXmlResponseMatchesXpath('/wfs:FeatureCollection/gml:featureMember');
+    }
+
     // Sub user SQL API request to protected data source from outside session
     public function shouldNotGetDataFromSqlApiAsSubUserOutsideSession(\ApiTester $I)
     {
@@ -383,6 +433,15 @@ class DatabaseManagementCest
         ]);
     }
 
+    // Sub user WFS-t request to protected data source from outside session
+    public function shouldNotGetDataFromWfstAsSubUserOutsideSession(\ApiTester $I)
+    {
+        $I->sendGET('/wfs/' . $this->subUserId . "@" . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsXml();
+        $I->canSeeResponseContains('ServiceExceptionReport');
+    }
+
     // Sub user SQL API request to protected data source from inside session
     public function shouldNotGetDataFromSqlApiAsSubUserInsideSession(\ApiTester $I)
     {
@@ -398,6 +457,16 @@ class DatabaseManagementCest
         $I->seeResponseContainsJson([
             'success' => false,
         ]);
+    }
+
+    // Sub user WFS-t request to protected data source from inside session
+    public function shouldNotGetDataFromWfstAsSubUserInsideSession(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
+        $I->sendGET('/wfs/' . $this->subUserId . "@" . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsXml();
+        $I->canSeeResponseContains('ServiceExceptionReport');
     }
 
     // Set read privileges on data source to sub user
@@ -471,6 +540,7 @@ class DatabaseManagementCest
             'success' => true,
         ]);
     }
+
 
     // *************************************
     // End of testing read/write access

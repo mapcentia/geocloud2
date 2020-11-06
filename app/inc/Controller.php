@@ -40,7 +40,7 @@ class Controller
             if (sizeof($dbSplit) == 2) {
                 $this->sUser = $dbSplit[0];
             } elseif (isset($_SESSION["subuser"])) {
-                $this->sUser = $_SESSION["screen_name"];
+                $this->sUser = !empty($_SESSION["screen_name"]) ? $_SESSION["screen_name"] : null;
             } else {
                 $this->sUser = null;
             }
@@ -182,34 +182,28 @@ class Controller
             } else {
                 $apiKey = $response['data']->api_key;
             }
-            $sql = "SELECT * FROM settings.getColumns('f_table_schema = ''{$schema}'' AND f_table_name = ''{$unQualifiedName}''','raster_columns.r_table_schema = ''{$schema}'' AND raster_columns.r_table_name = ''{$unQualifiedName}''')";
-            $res = $postgisObject->prepare($sql);
-            try {
-                $res->execute();
-            } catch (\PDOException $e) {
-                $response = array();
-                $response2['success'] = false;
-                $response2['message'] = $e->getMessage();
-                $response2['code'] = 401;
-                die(Response::toJson($response));
-            }
-            while ($row = $postgisObject->fetchRow($res, "assoc")) {
+
+            $rows = $postgisObject->getColumns($schema, $unQualifiedName);
+
+            foreach ($rows as $row){
                 // Check if we got the right layer from the database
                 if (!$row["f_table_schema"] == $schema || !$row["f_table_name"] == $unQualifiedName) {
                     continue;
                 }
                 if ($subUser) {
                     $privileges = (array)json_decode($row["privileges"]);
-                    if (($apiKey == $inputApiKey && $apiKey != false) || $_SESSION["auth"]) {
+                    if (($apiKey == $inputApiKey && $apiKey != false) || !empty($_SESSION["auth"])) {
                         $response = array();
                         $response['auth_level'] = $auth;
-                        $response['privileges'] = $privileges[$subUser];
-                        $response[\app\api\v1\Sql::USEDRELSKEY] = $rels;
+                        $response['privileges'] = !empty($privileges[$subUser]) ? $privileges[$subUser] : null;
+                        $response['session'] = $_SESSION['subuser'] ? $_SESSION["screen_name"] . '@' . $_SESSION["parentdb"] : null;
+                        $response[\app\api\v2\Sql::USEDRELSKEY] = $rels;
                         switch ($transaction) {
                             case false:
-                                if (($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none") && $subUser != $schema) {
+//                              if (($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none") && $subUser != $schema) {
+                                if ((empty($privileges[$userGroup ?: $subUser]) || (!empty($privileges[$userGroup ?: $subUser]) && $privileges[$userGroup ?: $subUser] == "none")) && $subUser != $schema) {
                                     // Always let suusers read from layers open to all
-                                    if($auth == "None"  || $auth == "Write") {
+                                    if ($auth == "None" || $auth == "Write") {
                                         $response['success'] = true;
                                         $response['code'] = 200;
                                         break;
@@ -239,9 +233,9 @@ class Controller
                     } else {
                         $response = array();
                         $response['auth_level'] = $auth;
-                        $response[\app\api\v1\Sql::USEDRELSKEY] = $rels;
-                        $response['privileges'] = $privileges[$subUser];
-                        $response['session'] = $_SESSION["screen_name"];
+                        $response[\app\api\v2\Sql::USEDRELSKEY] = $rels;
+                        $response['privileges'] = !empty($privileges[$subUser]) ? $privileges[$subUser] : null;
+                        $response['session'] = !empty($_SESSION["screen_name"]) ? $_SESSION["screen_name"] : null;
 
                         if ($auth == "Read/write" || ($transaction)) {
                             $response['success'] = false;
@@ -257,11 +251,11 @@ class Controller
                 } else {
                     $response = array();
                     $response['auth_level'] = $auth;
-                    $response[\app\api\v1\Sql::USEDRELSKEY] = $rels;
-                    $response['session'] = $_SESSION["screen_name"];
+                    $response[\app\api\v2\Sql::USEDRELSKEY] = $rels;
+                    $response['session'] = !empty($_SESSION["screen_name"]) ? $_SESSION["screen_name"] : null;
 
                     if ($auth == "Read/write" || ($transaction)) {
-                        if (($apiKey == $inputApiKey && $apiKey != false) || $_SESSION["auth"]) {
+                        if (($apiKey == $inputApiKey && $apiKey != false) || !empty($_SESSION["auth"])) {
                             $response['success'] = true;
                             $response['code'] = 200;
                             return $response;
@@ -279,9 +273,10 @@ class Controller
                 }
             }
         } else {
-            $response3["success"] = true;
-            $response3['session'] = $_SESSION["screen_name"];
+            $response3['success'] = true;
+            $response3['session'] = !empty($_SESSION["screen_name"]) ? $_SESSION["screen_name"] : null;
             $response3['auth_level'] = $auth;
+            $response3[\app\api\v2\Sql::USEDRELSKEY] = $rels;
             return $response3;
         }
     }

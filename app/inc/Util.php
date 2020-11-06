@@ -291,4 +291,40 @@ class Util
         exec($cmd, $output, $exit);
         return $exit == 0;
     }
+
+    static public function guid()
+    {
+        if (function_exists('com_create_guid') === true)
+        {
+            return trim(com_create_guid(), '{}');
+        }
+
+        return sprintf('%04X%04X-%04X-%04X-%04X-%04X%04X%04X', mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
+    }
+
+    static public function disableOb()
+    {
+        // Turn off output buffering
+        ini_set('output_buffering', 'off');
+        // Turn off PHP output compression
+        ini_set('zlib.output_compression', false);
+        // Implicitly flush the buffer(s)
+        ini_set('implicit_flush', true);
+        ob_implicit_flush(true);
+        // Clear, and turn off output buffering
+        while (ob_get_level() > 0) {
+            // Get the curent level
+            $level = ob_get_level();
+            // End the buffering
+            ob_end_clean();
+            // If the current level has not changed, abort
+            if (ob_get_level() == $level) break;
+        }
+        // Disable apache output buffering/compression
+        if (function_exists('apache_setenv')) {
+            apache_setenv('no-gzip', '1');
+            apache_setenv('dont-vary', '1');
+        }
+    }
+
 }

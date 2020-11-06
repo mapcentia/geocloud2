@@ -1,9 +1,9 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- *  
+ *
  */
 
 use \app\conf\App;
@@ -13,22 +13,27 @@ use \app\models\Table;
 use \app\models\Layer;
 use \app\conf\Connection;
 
+Util::disableOb();
+
+const FEATURE_LIMIT = 1000000;
+
+ini_set('max_execution_time', 0);
+
 header('Content-Type:text/xml; charset=UTF-8', TRUE);
 header('Connection:close', TRUE);
 
 include "libs/phpgeometry_class.php";
-include "models/versions.php";
 include "libs/PEAR/XML/Unserializer.php";
 include "libs/PEAR/XML/Serializer.php";
 include "libs/PEAR/Cache_Lite/Lite.php";
 include 'convertgeom.php';
 include 'explodefilter.php';
 
-if (!$gmlNameSpace) {
+if (empty($gmlNameSpace)) {
     $gmlNameSpace = Connection::$param["postgisdb"];
 }
 
-if (!$gmlNameSpaceUri) {
+if (empty($gmlNameSpaceUri)) {
     $gmlNameSpaceUri = "http://mapcentia.com/" . Connection::$param["postgisdb"];
 }
 
@@ -92,9 +97,11 @@ $unserializer_options = array(
 );
 $unserializer = new XML_Unserializer($unserializer_options);
 
-$sessionComment = "<!-- subuser: {$_SESSION["subuser"]} -->\n<!-- screenname: {$_SESSION["screen_name"]} -->\n<!-- usergroup: {$_SESSION["usergroup"]} -->\n<!-- schema: {$_SESSION["postgisschema"]} -->\n";
+$sessionComment = "";
 
 $specialChars = "/['^£$%&*()}{@#~?><>,|=+¬]/";
+
+$logFile = fopen("/var/www/geocloud2/public/logs/wfs_transactions.log", "a");
 
 // Post method is used
 // ===================
@@ -158,6 +165,11 @@ if ($HTTP_RAW_POST_DATA) {
             $HTTP_FORM_VARS["REQUEST"] = "GetCapabilities";
             break;
         case "Transaction":
+            fwrite($logFile, \app\inc\Input::getPath()->part(2) . "\n");
+            fwrite($logFile, $HTTP_RAW_POST_DATA);
+            fwrite($logFile, "\n");
+            fwrite($logFile, "--------------");
+            fwrite($logFile, "\n\n");
             $transaction = true;
             $HTTP_FORM_VARS["REQUEST"] = "Transaction";
             if (isset($arr["Insert"])) {
@@ -180,7 +192,7 @@ if ($HTTP_RAW_POST_DATA) {
         $HTTP_FORM_VARS = array_change_key_case($HTTP_FORM_VARS, CASE_UPPER); // Make keys case insensative
         $HTTP_FORM_VARS["TYPENAME"] = dropAllNameSpaces($HTTP_FORM_VARS["TYPENAME"]); // We remove name space, so $where will get key without it.
 
-        if ($HTTP_FORM_VARS['FILTER']) {
+        if (!empty($HTTP_FORM_VARS['FILTER'])) {
             @$checkXml = simplexml_load_string($HTTP_FORM_VARS['FILTER']);
             if ($checkXml === FALSE) {
                 makeExceptionReport("Filter is not valid");
@@ -199,10 +211,10 @@ if ($HTTP_RAW_POST_DATA) {
 $HTTP_FORM_VARS = array_change_key_case($HTTP_FORM_VARS, CASE_UPPER); // Make keys case
 $HTTP_FORM_VARS["TYPENAME"] = dropAllNameSpaces($HTTP_FORM_VARS["TYPENAME"]);
 $tables = explode(",", $HTTP_FORM_VARS["TYPENAME"]);
-$properties = explode(",", dropAllNameSpaces($HTTP_FORM_VARS["PROPERTYNAME"]));
-$featureids = explode(",", $HTTP_FORM_VARS["FEATUREID"]);
-$bbox = explode(",", $HTTP_FORM_VARS["BBOX"]);
-$resultType = $HTTP_FORM_VARS["RESULTTYPE"];
+$properties = !empty($HTTP_FORM_VARS["PROPERTYNAME"]) ? explode(",", dropAllNameSpaces($HTTP_FORM_VARS["PROPERTYNAME"])) : null;
+$featureids = !empty($HTTP_FORM_VARS["FEATUREID"]) ? explode(",", $HTTP_FORM_VARS["FEATUREID"]) : null;
+$bbox = !empty($HTTP_FORM_VARS["BBOX"]) ? explode(",", $HTTP_FORM_VARS["BBOX"]) : null;
+$resultType = !empty($HTTP_FORM_VARS["RESULTTYPE"]) ? $HTTP_FORM_VARS["RESULTTYPE"] : null;
 
 
 // Start HTTP basic authentication
@@ -214,7 +226,6 @@ if (!$trusted) {
 }
 // End HTTP basic authentication
 
-print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 if (!(empty($properties[0]))) {
     foreach ($properties as $property) {
         $__u = explode(".", $property); // Is it "/" for get method?
@@ -240,7 +251,7 @@ if (!(empty($featureids[0]))) {
         foreach ($tables as $table) {
             $primeryKey = $postgisObject->getPrimeryKey($postgisschema . "." . $table);
             if ($table == $__u[0]) {
-                $wheresArr[$table][] = "{$primeryKey['attname']}={$__u[1]}";
+                $wheresArr[$table][] = "{$primeryKey['attname']}='{$__u[1]}'";
             }
             $wheres[$table] = implode(" OR ", $wheresArr[$table]);
         }
@@ -280,7 +291,8 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
         getCapabilities($postgisObject);
         break;
     case "GETFEATURE":
-        if (!$gmlFeatureCollection) {
+        print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        if (empty($gmlFeatureCollection)) {
             $gmlFeatureCollection = "wfs:FeatureCollection";
         }
         print "<" . $gmlFeatureCollection . "\n";
@@ -290,7 +302,7 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
         print "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n";
         print "xmlns:{$gmlNameSpace}=\"{$gmlNameSpaceUri}\"\n";
 
-        if ($gmlSchemaLocation) {
+        if (!empty($gmlSchemaLocation)) {
             print "xsi:schemaLocation=\"{$gmlSchemaLocation}\"";
         } else {
             print "xsi:schemaLocation=\"{$gmlNameSpaceUri} {$thePath}?REQUEST=DescribeFeatureType&amp;TYPENAME=" . $HTTP_FORM_VARS["TYPENAME"] .
@@ -309,7 +321,7 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
         doParse($arr);
         break;
     default:
-        makeExceptionReport("Don't know that request");
+        makeExceptionReport("Unknown request");
         break;
 }
 
@@ -320,6 +332,7 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
  */
 function getCapabilities($postgisObject)
 {
+    print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
     global $srs;
     global $thePath;
     global $db;
@@ -338,6 +351,7 @@ function getCapabilities($postgisObject)
  */
 function getXSD($postgisObject)
 {
+    print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
     global $server;
     global $depth;
     global $db;
@@ -397,12 +411,13 @@ function doQuery($queryType)
         case "Select":
             foreach ($tables as $table) {
                 $HTTP_FORM_VARS["TYPENAME"] = $table;
-                if (!$trusted) {
-                    include_once("inc/http_basic_authen_subuser.php");
-                }
                 $tableObj = new table($postgisschema . "." . $table);
+                if (!$tableObj->exits) {
+                    makeExceptionReport("Relation doesn't exist");
+                }
                 $primeryKey = $tableObj->getPrimeryKey($postgisschema . "." . $table);
-                $fieldConfArr = (array)json_decode($geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.the_geom", "fieldconf"));
+                $geomField = $tableObj->getGeometryColumns($postgisschema . "." . $table, "f_geometry_column");
+                $fieldConfArr = (array)json_decode($geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.{$geomField}", "fieldconf"));
                 $sql = "SELECT ";
                 if ($resultType != "hits") {
                     if (!(empty($fields[$table]))) {
@@ -418,6 +433,24 @@ function doQuery($queryType)
                             }
                         }
                     }
+
+                    // Start sorting the fields by sort_id
+                    $arr = array();
+                    foreach ($fieldsArr[$table] as $value) {
+                        if (!empty($fieldConfArr[$value]->sort_id)) {
+                            $arr[] = array($fieldConfArr[$value]->sort_id, $value);
+                        } else {
+                            $arr[] = array(0, $value);
+                        }
+                    }
+                    usort($arr, function ($a, $b) {
+                        return $a[0] - $b[0];
+                    });
+                    $fieldsArr[$table] = array();
+                    foreach ($arr as $value) {
+                        $fieldsArr[$table][] = $value[1];
+                    }
+
                     // We add "" around field names in sql, so sql keywords don't mess things up
                     foreach ($fieldsArr[$table] as $key => $value) {
                         $fieldsArr[$table][$key] = "\"{$value}\"";
@@ -564,6 +597,8 @@ function doSelect($table, $sql, $sql2, $from)
     global $resultType;
     global $server;
 
+
+
     if (!$gmlFeature[$table]) {
         $gmlFeature[$table] = $table;
     }
@@ -586,27 +621,29 @@ function doSelect($table, $sql, $sql2, $from)
     } else {
         print $defaultBoundedBox;
     }
-    //die($sql . $from);
-    $result = $postgisObject->execQuery($sql . $from . " LIMIT 50000");
-    if ($postgisObject->numRows($result) < 1) {
-        $sql = str_replace(",public.ST_AsText(public.ST_Transform(the_geom,25832)) as the_geom", "", $sql);
-        $from = str_replace("view", "join", $from);
-        $result = $postgisObject->execQuery($sql . $from);
-    }
-    Log::write("SQL fired\n\n");
-    Log::write($sql . $from . "\n");
-    $totalTime = microtime_float() - $startTime;
-    Log::write("\nQuery time {$totalTime}\n");
-    if ($postgisObject->PDOerror) {
-        makeExceptionReport($postgisObject->PDOerror);
-    }
+
+    $fullSql = $sql . $from . " LIMIT " . FEATURE_LIMIT;
+
     if ($resultType == "hits") {
+        $result = $postgisObject->execQuery($sql . $from . " LIMIT " . FEATURE_LIMIT);
+        if ($postgisObject->numRows($result) < 1) {
+            $sql = str_replace(",public.ST_AsText(public.ST_Transform(the_geom,25832)) as the_geom", "", $sql);
+            $from = str_replace("view", "join", $from);
+            $result = $postgisObject->execQuery($sql . $from);
+        }
         $myrow = $postgisObject->fetchRow($result);
         print "\nnumberOfFeatures=\"{$myrow['count']}\"\n";
         // Close the GeometryCollection tag
         print ">\n";
     } else {
-        while ($myrow = $postgisObject->fetchRow($result)) {
+        $postgisObject->begin();
+        try {
+            $postgisObject->prepare("DECLARE curs CURSOR FOR {$fullSql}")->execute();
+            $innerStatement = $postgisObject->prepare("FETCH 1 FROM curs");
+        } catch (\PDOException $e) {
+            makeExceptionReport($e->getMessage());
+        }
+        while ($innerStatement->execute() && $myrow = $postgisObject->fetchRow($innerStatement, "assoc")) {
             writeTag("open", "gml", "featureMember", null, True, True);
             $depth++;
             writeTag("open", $gmlNameSpace, $gmlFeature[$table], array("fid" => "{$table}.{$myrow["fid"]}"), True, True);
@@ -617,20 +654,17 @@ function doSelect($table, $sql, $sql2, $from)
             for ($i = 0; $i < $numFields; $i++) {
                 $FieldName = $keys[$i];
                 $FieldValue = $myrow[$FieldName];
-                if (($tableObj->metaData[$FieldName]['type'] != "geometry") && ($FieldName != "txmin") && ($FieldName != "tymin") && ($FieldName != "txmax") && ($FieldName != "tymax") && ($FieldName != "tymax") && ($FieldName != "oid")) {
-                    if ($gmlUseAltFunctions['altFieldValue']) {
+                if ((!empty($tableObj->metaData[$FieldName]) && $tableObj->metaData[$FieldName]['type'] != "geometry") && ($FieldName != "txmin") && ($FieldName != "tymin") && ($FieldName != "txmax") && ($FieldName != "tymax") && ($FieldName != "tymax") && ($FieldName != "oid")) {
+                    if (!empty($gmlUseAltFunctions['altFieldValue'])) {
                         $FieldValue = altFieldValue($FieldName, $FieldValue);
                     }
-                    if ($gmlUseAltFunctions['altFieldNameToUpper']) {
+                    if (!empty($gmlUseAltFunctions['altFieldNameToUpper'])) {
                         $FieldName = altFieldNameToUpper($FieldName);
                     }
-                    if ($gmlUseAltFunctions['changeFieldName']) {
+                    if (!empty($gmlUseAltFunctions['changeFieldName'])) {
                         $FieldName = changeFieldName($FieldName);
                     }
-                    $fieldProperties = ((array)json_decode($fieldConfArr[$FieldName]->properties));
-                    if ($fieldProperties['cartomobilePictureUrl']) {
-                        $FieldValue = getCartoMobilePictureUrl($table, $FieldName, $fieldProperties['cartomobilePictureUrl'], $myrow["fid"]);
-                    }
+                    $fieldProperties = !empty($fieldConfArr[$FieldName]->properties) ? (array)json_decode($fieldConfArr[$FieldName]->properties) : null;
 
                     // Important to use $FieldValue !== or else will int 0 evaluate to false
                     if ($FieldValue !== false && ($FieldName != "fid" && $FieldName != "FID")) {
@@ -638,15 +672,18 @@ function doSelect($table, $sql, $sql2, $from)
                             //$imageAttr = array("width" => $fieldProperties["width"], "height" => $fieldProperties["height"]);
                         } else {
                             $imageAttr = null;
-                            $FieldValue = altUseCdataOnStrings($FieldValue, $FieldName);
+                            if (!empty($FieldValue) && ($tableObj->metaData[$FieldName]["type"] === "string" || $tableObj->metaData[$FieldName]["type"] === "text")) {
+                                $FieldValue = "<![CDATA[" . $FieldValue . "]]>";
+                                $FieldValue = str_replace("&", "&#38;", $FieldValue);
+                            }
                         }
                         writeTag("open", $gmlNameSpace, $FieldName, $imageAttr, True, False);
                         echo (string)$FieldValue;
                         writeTag("close", $gmlNameSpace, $FieldName, null, False, True);
                     }
-                } elseif ($tableObj->metaData[$FieldName]['type'] == "geometry") {
+                } elseif (!empty($tableObj->metaData[$FieldName]) && $tableObj->metaData[$FieldName]['type'] == "geometry") {
                     // Check if the geometry field use another name space and element name
-                    if (!$gmlGeomFieldName[$table]) {
+                    if (empty($gmlGeomFieldName[$table])) {
                         $gmlGeomFieldName[$table] = $FieldName;
                     }
                     if ($gmlNameSpaceGeom) {
@@ -672,13 +709,13 @@ function doSelect($table, $sql, $sql2, $from)
             writeTag("close", $gmlNameSpace, $gmlFeature[$table], null, True, True);
             $depth--;
             writeTag("close", "gml", "featureMember", null, True, True);
-            $postgisObject->free($result);
             flush();
             ob_flush();
         }
+        $postgisObject->execQuery("CLOSE curs");
+        $postgisObject->commit();
     }
     $totalTime = microtime_float() - $startTime;
-    $postgisObject->execQuery("ROLLBACK");
 }
 
 /**
@@ -812,7 +849,7 @@ function altFieldValue($field, $value)
  */
 function altUseCdataOnStrings($value, $name)
 {
-    if (!is_numeric($value) && ($value)) {
+    if (!empty($value) && !is_numeric($value)) {
         $value = "<![CDATA[" . $value . "]]>";
         $value = str_replace("&", "&#38;", $value);
         $result = $value;
@@ -847,6 +884,10 @@ function doParse($arr)
     global $transaction;
     global $db;
     global $trusted;
+    global $rowIdsChanged;
+    global $logFile;
+
+    ob_start();
 
     $serializer_options = array(
         'indent' => '  ',
@@ -883,8 +924,9 @@ function doParse($arr)
                         /**
                          * Load pre-processors
                          */
-                        foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/classes/pre/*.php") as $filename) {
-                            $class = "app\\conf\\wfsprocessors\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
+                        foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/*/classes/pre/*.php") as $filename) {
+                            $class = "app\\conf\\wfsprocessors\\" . array_reverse(explode("/", $filename))[3] .
+                                "\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
                             $preProcessor = new $class($postgisObject);
                             $preRes = $preProcessor->processInsert($feature, $typeName);
                             if (!$preRes["success"]) {
@@ -901,9 +943,10 @@ function doParse($arr)
                         if (!array_key_exists("gc2_status", $feature) && $tableObj->workflow) $feature["gc2_status"] = null;
                         if (!array_key_exists("gc2_workflow", $feature) && $tableObj->workflow) $feature["gc2_workflow"] = null;
 
+                        $roleObj = $layerObj->getRole($postgisschema, $typeName, $user);
+
                         foreach ($feature as $field => $value) {
                             $fields[] = $field;
-                            $roleObj = $layerObj->getRole($postgisschema, $typeName, $user);
                             $role = $roleObj["data"][$user];
                             if ($tableObj->workflow && ($role == "none" && $parentUser == false)) {
                                 makeExceptionReport("You don't have a role in the workflow of '{$typeName}'");
@@ -967,7 +1010,7 @@ function doParse($arr)
                         // Start HTTP basic authentication
                         if (!$trusted) {
                             $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $typeName, "authentication");
-                            if ($auth == "Write" OR $auth == "Read/write") {
+                            if ($auth == "Write" or $auth == "Read/write") {
                                 $HTTP_FORM_VARS["TYPENAME"] = $typeName;
                                 include('inc/http_basic_authen.php');
                             }
@@ -988,8 +1031,6 @@ function doParse($arr)
             }
             $fid = 0;
             foreach ($featureMember as $hey) {
-
-
                 $hey["typeName"] = dropAllNameSpaces($hey["typeName"]);
                 if (!is_array($hey['Property'][0]) && isset($hey['Property'])) {
                     $hey['Property'] = array(0 => $hey['Property']);
@@ -998,8 +1039,9 @@ function doParse($arr)
                 /**
                  * Load pre-processors
                  */
-                foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/classes/pre/*.php") as $filename) {
-                    $class = "app\\conf\\wfsprocessors\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
+                foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/*/classes/pre/*.php") as $filename) {
+                    $class = "app\\conf\\wfsprocessors\\" . array_reverse(explode("/", $filename))[3] .
+                        "\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
                     $preProcessor = new $class($postgisObject);
                     $preRes = $preProcessor->processUpdate($hey, $hey["typeName"]);
                     if (!$preRes["success"]) {
@@ -1021,6 +1063,8 @@ function doParse($arr)
                 if (!$gc2_status_flag && $tableObj->workflow) $hey["Property"][] = array("Name" => "gc2_status", "Value" => null);
                 if (!$gc2_workflow_flag && $tableObj->workflow) $hey["Property"][] = array("Name" => "gc2_workflow", "Value" => null);
 
+                $roleObj = $layerObj->getRole($postgisschema, $hey['typeName'], $user);
+
                 foreach ($hey['Property'] as $pair) {
                     // Some clients use ns in the Name element, so it must be stripped
                     $split = explode(":", $pair['Name']);
@@ -1028,7 +1072,6 @@ function doParse($arr)
                         $pair['Name'] = dropAllNameSpaces($pair['Name']);
                     }
                     $fields[$fid][] = $pair['Name'];
-                    $roleObj = $layerObj->getRole($postgisschema, $hey['typeName'], $user);
                     $role = $roleObj["data"][$user];
                     if ($tableObj->workflow && ($role == "none" && $parentUser == false)) {
                         makeExceptionReport("You don't have a role in the workflow of '{$hey['typeName']}'");
@@ -1055,7 +1098,7 @@ function doParse($arr)
                 // Start HTTP basic authentication
                 if (!$trusted) {
                     $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
-                    if ($auth == "Write" OR $auth == "Read/write") {
+                    if ($auth == "Write" or $auth == "Read/write") {
                         $HTTP_FORM_VARS["TYPENAME"] = $hey['typeName'];
                         include('inc/http_basic_authen.php');
                     }
@@ -1080,8 +1123,9 @@ function doParse($arr)
                 /**
                  * Load pre-processors
                  */
-                foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/classes/pre/*.php") as $filename) {
-                    $class = "app\\conf\\wfsprocessors\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
+                foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/*/classes/pre/*.php") as $filename) {
+                    $class = "app\\conf\\wfsprocessors\\" . array_reverse(explode("/", $filename))[3] .
+                        "\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
                     $preProcessor = new $class($postgisObject);
                     $preRes = $preProcessor->processDelete($hey, $hey['typeName']);
                     if (!$preRes["success"]) {
@@ -1102,7 +1146,7 @@ function doParse($arr)
                 // Start HTTP basic authentication
                 if (!$trusted) {
                     $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
-                    if ($auth == "Write" OR $auth == "Read/write") {
+                    if ($auth == "Write" or $auth == "Read/write") {
                         $HTTP_FORM_VARS["TYPENAME"] = $hey['typeName'];
                         include('inc/http_basic_authen.php');
                     }
@@ -1111,6 +1155,8 @@ function doParse($arr)
             }
         }
     }
+
+    print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 
     echo '<wfs:WFS_TransactionResponse version="1.0.0" xmlns:wfs="http://www.opengis.net/wfs"
   xmlns:ogc="http://www.opengis.net/ogc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -1136,7 +1182,7 @@ function doParse($arr)
                 if ($forSql['fields'][$i][$key] != "gc2_version_uuid" && $forSql['fields'][$i][$key] != "gc2_version_start_date" && $forSql['fields'][$i][$key] != "gc2_version_gid") {
                     if (is_array($value)) {
                         $values[] = "public.ST_Transform(public.ST_GeometryFromText('" . current($value) . "'," . next($value) . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $forSql['tables'][$i], "srid") . ")";
-                    } elseif (!$value) {
+                    } elseif (empty($value) && !is_numeric($value)) {
                         $values[] = "NULL";
                     } elseif ($forSql['fields'][$i][$key] == "gc2_workflow") { // Don't quote a hstore
                         $values[] = $value;
@@ -1245,7 +1291,7 @@ function doParse($arr)
                     }
                 } elseif ($field == "gc2_version_start_date") {
                     $value = "now()";
-                } elseif (!$forSql2['values'][$i][$key]) {
+                } elseif (empty($forSql2['values'][$i][$key]) && !is_numeric($forSql2['values'][$i][$key])) {
                     $value = "NULL";
                 } else {
                     $value = $postgisObject->quote($forSql2['values'][$i][$key]); // We need to escape the string
@@ -1347,13 +1393,17 @@ function doParse($arr)
         }
     }
     // We fire the sqls
-    if (isset($sqls)) foreach ($sqls as $operation => $sql) {
-        foreach ($sql as $singleSql) {
-            $results[$operation][] = $postgisObject->execQuery($singleSql, "PDO", "select"); // Returning PDOStatement object
-            Log::write("Sqls fired\n");
-            Log::write("{$singleSql}\n");
+    if (isset($sqls)) {
+        foreach ($sqls as $operation => $sql) {
+            foreach ($sql as $singleSql) {
+                $results[$operation][] = $postgisObject->execQuery($singleSql, "PDO", "select"); // Returning PDOStatement object
+                Log::write("Sqls fired\n");
+                Log::write("{$singleSql}\n");
+                fwrite($logFile, "{$singleSql}\n\n\n");
+            }
         }
     }
+
     // If a layer is not editable, PDOerror is set.
     if (sizeof($notEditable) > 0) {
         $postgisObject->PDOerror[0] = "Layer not editable";
@@ -1364,6 +1414,7 @@ function doParse($arr)
     echo '</wfs:Message>';
 
     // TransactionResult
+    $rowIdsChanged = []; // Global Array that holds ids from all affected rows. Can be used in post-processes
     if (sizeof($postgisObject->PDOerror) == 0) {
         echo '<wfs:TransactionResult handle="mygeocloud-WFS-default-handle"><wfs:Status><wfs:SUCCESS/></wfs:Status></wfs:TransactionResult>';
     } else {
@@ -1389,7 +1440,7 @@ function doParse($arr)
             echo '<ogc:FeatureId fid="';
             if (isset($forSql['tables'])) echo current($forSql['tables']) . ".";
             $row = $postgisObject->fetchRow($res);
-
+            $rowIdsChanged[] = $row['gid'];
             if ($row['gid']) {
                 echo $row['gid'];
                 $numOfInserts++;
@@ -1425,7 +1476,7 @@ function doParse($arr)
             echo '<ogc:FeatureId fid="';
             if (isset($forSql2['tables'])) echo current($forSql2['tables']) . ".";
             $row = $postgisObject->fetchRow($res);
-
+            $rowIdsChanged[] = $row['gid'];
             if ($row['gid']) {
                 echo $row['gid'];
                 $numOfUpdates++;
@@ -1458,7 +1509,7 @@ function doParse($arr)
         if (isset($forSql3['tables'])) reset($forSql3['tables']);
         foreach ($results['delete'] as $res) {
             $row = $postgisObject->fetchRow($res);
-
+            $rowIdsChanged[] = $row['gid'];
             if ($row['gid']) {
                 echo $row['gid'];
                 $numOfDeletes++;
@@ -1519,8 +1570,9 @@ function doParse($arr)
     /**
      * Load post-processors
      */
-    foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/classes/post/*.php") as $filename) {
-        $class = "app\\conf\\wfsprocessors\\classes\\post\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
+    foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/*/classes/post/*.php") as $filename) {
+        $class = "app\\conf\\wfsprocessors\\" . array_reverse(explode("/", $filename))[3] .
+            "\\classes\\post\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
         $postProcessor = new $class($postgisObject);
         $postRes = $postProcessor->process();
         if (!$postRes["success"]) {
@@ -1528,14 +1580,19 @@ function doParse($arr)
         }
     }
     $postgisObject->commit();
+
+    $data = ob_get_clean();
+    echo $data;
 }
 
 function makeExceptionReport($value)
 {
     global $sessionComment;
     global $postgisObject;
+
     ob_get_clean();
     ob_start();
+    header("HTTP/1.0 200 " . \app\inc\Util::httpCodeText("200"));
     //$postgisObject->rollback();
     echo '<ServiceExceptionReport
 	   version="1.2.0"
@@ -1555,7 +1612,6 @@ function makeExceptionReport($value)
     echo '</ServiceException>
 	</ServiceExceptionReport>';
     $data = ob_get_clean();
-    header("HTTP/1.0 500 " . \app\inc\Util::httpCodeText("500"));
     echo $data;
     print("\n" . $sessionComment);
     Log::write($data);
@@ -1564,5 +1620,7 @@ function makeExceptionReport($value)
 
 print("<!-- Memory used: " . round(memory_get_peak_usage() / 1024) . " KB -->\n");
 print($sessionComment);
-print ("<!--\n");
-print ("\n-->\n");
+// Make sure all is flushed
+echo str_pad("", 4096);
+flush();
+ob_flush();

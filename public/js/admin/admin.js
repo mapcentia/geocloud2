@@ -49,7 +49,7 @@ var form, store, writeFiles, writeMapCacheFile, clearTileCache, updateLegend, ac
     extentRestricted = false, spinner, styleWizardWin, workflowStore, workflowStoreLoaded = false,
     subUserGroups = {},
     dataStore, dataGrid, tableDataLoaded = false, dataPanel, esPanel, esGrid,
-    enableWorkflow = (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow[screenName] !== "undefined" && window.gc2Options.enableWorkflow[screenName] === true) || (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow["*"] !== "undefined" && window.gc2Options.enableWorkflow["*"] === true);
+    enableWorkflow = (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow[parentdb] !== "undefined" && window.gc2Options.enableWorkflow[parentdb] === true) || (window.gc2Options.enableWorkflow !== null && typeof window.gc2Options.enableWorkflow["*"] !== "undefined" && window.gc2Options.enableWorkflow["*"] === true);
 
 var cloud, gc2, layer, grid, featureStore, map, viewport, drawControl, gridPanel, modifyControl, tree,
     viewerSettings,
@@ -112,7 +112,7 @@ $(document).ready(function () {
         ];
     }
 
-    cloud = new mygeocloud_ol.map(null, screenName, {
+    cloud = new mygeocloud_ol.map(null, parentdb, {
         controls: [
             new OpenLayers.Control.Navigation({}),
             new OpenLayers.Control.Zoom(),
@@ -145,11 +145,10 @@ $(document).ready(function () {
         clicktimer = undefined;
     });
     gc2.on("click", function (e) {
-        var layers, count = 0, hit = false, event = new geocloud.clickEvent(e, cloud), distance, db = screenName;
+        var layers, count = 0, hit = false, event = new geocloud.clickEvent(e, cloud), distance, db = parentdb;
         if (clicktimer) {
             clearTimeout(clicktimer);
-        }
-        else {
+        } else {
             clicktimer = setTimeout(function (e) {
                 clicktimer = undefined;
                 var coords = event.getCoordinate();
@@ -157,8 +156,7 @@ $(document).ready(function () {
                     try {
                         st.reset();
                         gc2.removeGeoJsonStore(st);
-                    }
-                    catch (e) {
+                    } catch (e) {
 
                     }
                 });
@@ -240,8 +238,7 @@ $(document).ready(function () {
                                                                 });
                                                                 return false;
 
-                                                            }
-                                                            else {
+                                                            } else {
                                                                 var filter = new OpenLayers.Filter.Comparison({
                                                                     type: OpenLayers.Filter.Comparison.EQUAL_TO,
                                                                     property: "\"" + pkey + "\"",
@@ -275,8 +272,7 @@ $(document).ready(function () {
                             if (!hit) {
                                 try {
                                     queryWin.hide();
-                                }
-                                catch (e) {
+                                } catch (e) {
                                 }
                             }
                             count++;
@@ -291,8 +287,7 @@ $(document).ready(function () {
                             sql = sql + " AND gc2_version_end_date IS NULL";
                         }
                         sql = sql + " ORDER BY round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857)))";
-                    }
-                    else {
+                    } else {
                         sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + "),\"" + f_geometry_column + "\")";
                         if (versioning) {
                             sql = sql + " AND gc2_version_end_date IS NULL";
@@ -402,7 +397,7 @@ $(document).ready(function () {
                         y: 175
                     });
                 }
-                if (typeof(objRef) === "object") {
+                if (typeof (objRef) === "object") {
                     searchWin.show(objRef);
                 } else {
                     searchWin.show();
@@ -423,8 +418,7 @@ $(document).ready(function () {
                             var dest = new Proj4js.Proj(d);
                             p = new Proj4js.Point(lat, lon);
                             Proj4js.transform(source, dest, p);
-                        }
-                        else {
+                        } else {
                             p.x = null;
                             p.y = null;
                         }
@@ -503,8 +497,7 @@ $(document).ready(function () {
                 extentRestricted = this.pressed;
                 if (extentRestricted) {
                     extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(cloud.map.getExtent().toGeometry()));
-                }
-                else {
+                } else {
                     extentRestrictLayer.destroyFeatures();
                 }
                 Ext.Ajax.request({
@@ -854,11 +847,11 @@ $(document).ready(function () {
                     }
                 },
                 {
-                    header: (window.gc2Options.extraLayerPropertyName !== null && window.gc2Options.extraLayerPropertyName[screenName]) ? window.gc2Options.extraLayerPropertyName[screenName] : "Extra",
+                    header: (window.gc2Options.extraLayerPropertyName !== null && window.gc2Options.extraLayerPropertyName[parentdb]) ? window.gc2Options.extraLayerPropertyName[parentdb] : "Extra",
                     dataIndex: "extra",
                     sortable: true,
                     width: 60,
-                    hidden: (window.gc2Options.showExtraLayerProperty !== null && window.gc2Options.showExtraLayerProperty[screenName] === true) ? false : true
+                    hidden: (window.gc2Options.showExtraLayerProperty !== null && window.gc2Options.showExtraLayerProperty[parentdb] === true) ? false : true
 
                 },
                 {
@@ -905,7 +898,7 @@ $(document).ready(function () {
                     xtype: 'checkcolumn',
                     header: __("Skip conflict"),
                     dataIndex: 'skipconflict',
-                    hidden: (window.gc2Options.showConflictOptions !== null && window.gc2Options.showConflictOptions[screenName] === true) ? false : true,
+                    hidden: (window.gc2Options.showConflictOptions !== null && window.gc2Options.showConflictOptions[parentdb] === true) ? false : true,
                     width: 40
                 }
             ]
@@ -1049,17 +1042,17 @@ $(document).ready(function () {
                                                 padding: '7px'
                                             },
                                             html: "<ul>" +
-                                            "<li>" + "<b>" + __("None") + "</b>: " + __("The layer doesn't exist for the sub-user.") + "</li>" +
-                                            "<li>" + "<b>" + __("Only read") + "</b>: " + __("The sub-user can see and query the layer.") + "</li>" +
-                                            "<li>" + "<b>" + __("Read and write") + "</b>: " + __("The sub-user can edit the layer.") + "</li>" +
-                                            "<li>" + "<b>" + __("All") + "</b>: " + __("The sub-user change properties like style and alter table structure.") + "</li>" +
-                                            "<ul>" +
-                                            "<br><p>" +
-                                            __("If a sub-user is set to inherit the privileges of another sub-user, you can't change the privileges of the sub-user.") +
-                                            "</p>" +
-                                            "<br><p>" +
-                                            __("The privileges are granted for both Admin and external services like WMS and WFS.") +
-                                            "</p>"
+                                                "<li>" + "<b>" + __("None") + "</b>: " + __("The layer doesn't exist for the sub-user.") + "</li>" +
+                                                "<li>" + "<b>" + __("Only read") + "</b>: " + __("The sub-user can see and query the layer.") + "</li>" +
+                                                "<li>" + "<b>" + __("Read and write") + "</b>: " + __("The sub-user can edit the layer.") + "</li>" +
+                                                "<li>" + "<b>" + __("All") + "</b>: " + __("The sub-user change properties like style and alter table structure.") + "</li>" +
+                                                "<ul>" +
+                                                "<br><p>" +
+                                                __("If a sub-user is set to inherit the privileges of another sub-user, you can't change the privileges of the sub-user.") +
+                                                "</p>" +
+                                                "<br><p>" +
+                                                __("The privileges are granted for both Admin and external services like WMS and WFS.") +
+                                                "</p>"
                                         }
                                     )
                                 ]
@@ -1216,13 +1209,13 @@ $(document).ready(function () {
                                                                         padding: '7px'
                                                                     },
                                                                     html: "<ul>" +
-                                                                    "<li>" + "<b>" + __("None") + "</b>: " + __("The layer doesn't exist for the sub-user.") + "</li>" +
-                                                                    "<li>" + "<b>" + __("Only read") + "</b>: " + __("The sub-user can see and query the layer.") + "</li>" +
-                                                                    "<li>" + "<b>" + __("Read and write") + "</b>: " + __("The sub-user can edit the layer.") + "</li>" +
-                                                                    "<ul>" +
-                                                                    "<br><p>" +
-                                                                    __("The privileges are granted for both Admin and external services like WMS and WFS.") +
-                                                                    "</p>"
+                                                                        "<li>" + "<b>" + __("None") + "</b>: " + __("The layer doesn't exist for the sub-user.") + "</li>" +
+                                                                        "<li>" + "<b>" + __("Only read") + "</b>: " + __("The sub-user can see and query the layer.") + "</li>" +
+                                                                        "<li>" + "<b>" + __("Read and write") + "</b>: " + __("The sub-user can edit the layer.") + "</li>" +
+                                                                        "<ul>" +
+                                                                        "<br><p>" +
+                                                                        __("The privileges are granted for both Admin and external services like WMS and WFS.") +
+                                                                        "</p>"
                                                                 }
                                                             )
                                                         ]
@@ -1967,7 +1960,7 @@ $(document).ready(function () {
             },
             {
                 text: '<i class="fa fa-remove"></i> ' + __('Clear tile cache'),
-                disabled: (subUser === schema || subUser === false) ? false : true,
+                disabled: (screenName === schema || subUser === false) ? false : true,
                 handler: function () {
                     Ext.MessageBox.confirm(__('Confirm'), __('You are about to delete the tile cache for the whole schema. Are you sure?'), function (btn) {
                         if (btn === "yes") {
@@ -2001,7 +1994,7 @@ $(document).ready(function () {
             '->',
             {
                 text: '<i class="fa fa-plus-circle"></i> ' + __('New layer'),
-                disabled: (subUser === schema || subUser === false) ? false : true,
+                disabled: (screenName === schema || subUser === false) ? false : true,
                 handler: function () {
                     onAdd();
                 }
@@ -2021,8 +2014,8 @@ $(document).ready(function () {
                         title: '<i class="fa fa-arrow-right"></i> ' + __("Move") + " " + records.length + " " + __("selected to another schema"),
                         modal: true,
                         layout: 'fit',
-                        width: 270,
-                        height: 80,
+                        width: 300,
+                        height: 67,
                         closeAction: 'close',
                         plain: true,
                         border: false,
@@ -2053,7 +2046,7 @@ $(document).ready(function () {
                                                         triggerAction: 'all',
                                                         value: schema,
                                                         name: 'schema',
-                                                        width: 150
+                                                        width: 200
                                                     }
                                                 ]
                                             }
@@ -2143,7 +2136,7 @@ $(document).ready(function () {
                         modal: true,
                         layout: 'fit',
                         width: 270,
-                        height: 80,
+                        height: 67,
                         closeAction: 'close',
                         plain: true,
                         border: false,
@@ -2307,8 +2300,8 @@ $(document).ready(function () {
                         title: '<i class="fa fa-copy"></i> ' + __("Copy all properties from another layer"),
                         modal: true,
                         layout: 'fit',
-                        width: 350,
-                        height: 120,
+                        width: 580,
+                        height: 67,
                         closeAction: 'close',
                         plain: true,
                         border: false,
@@ -2334,7 +2327,7 @@ $(document).ready(function () {
                                                 triggerAction: 'all',
                                                 lazyRender: true,
                                                 name: 'schema',
-                                                width: 150,
+                                                width: 200,
                                                 allowBlank: false,
                                                 emptyText: __('Schema'),
                                                 listeners: {
@@ -2342,7 +2335,7 @@ $(document).ready(function () {
                                                         Ext.getCmp('copyMetaFormKeys').clearValue();
                                                         (function () {
                                                             Ext.Ajax.request({
-                                                                url: '/api/v1/meta/' + screenName + '/' + combo.getValue(),
+                                                                url: '/api/v1/meta/' + parentdb + '/' + combo.getValue(),
                                                                 method: 'GET',
                                                                 headers: {
                                                                     'Content-Type': 'application/json; charset=utf-8'
@@ -2389,51 +2382,52 @@ $(document).ready(function () {
                                                 mode: 'local',
                                                 triggerAction: 'all',
                                                 name: 'key',
-                                                width: 150,
+                                                width: 300,
                                                 allowBlank: false,
                                                 emptyText: __('Layer')
-                                            }
-
-                                        ]
-                                    },
-                                    {
-                                        layout: 'form',
-                                        bodyStyle: 'padding: 10px',
-                                        items: [
+                                            },
                                             {
-                                                xtype: 'button',
-                                                text: __('Copy'),
-                                                handler: function () {
-                                                    var f = Ext.getCmp('copyMetaForm');
-                                                    if (f.form.isValid()) {
-                                                        Ext.Ajax.request({
-                                                            url: '/controllers/layer/copymeta/' + record.data._key_ + "/" + Ext.getCmp('copyMetaFormKeys').value,
-                                                            method: 'put',
-                                                            headers: {
-                                                                'Content-Type': 'application/json; charset=utf-8'
-                                                            },
-                                                            success: function () {
-                                                                reLoadTree();
-                                                                App.setAlert(App.STATUS_OK, __("Layer properties copied"));
-                                                            },
-                                                            failure: function (response) {
-                                                                Ext.MessageBox.show({
-                                                                    title: __('Failure'),
-                                                                    msg: __(Ext.decode(response.responseText).message),
-                                                                    buttons: Ext.MessageBox.OK,
-                                                                    width: 400,
-                                                                    height: 300,
-                                                                    icon: Ext.MessageBox.ERROR
+                                                layout: 'form',
+                                                bodyStyle: 'padding-left: 10px',
+
+                                                items: [
+                                                    {
+                                                        xtype: 'button',
+                                                        text: __('Copy'),
+
+                                                        handler: function () {
+                                                            var f = Ext.getCmp('copyMetaForm');
+                                                            if (f.form.isValid()) {
+                                                                Ext.Ajax.request({
+                                                                    url: '/controllers/layer/copymeta/' + record.data._key_ + "/" + Ext.getCmp('copyMetaFormKeys').value,
+                                                                    method: 'put',
+                                                                    headers: {
+                                                                        'Content-Type': 'application/json; charset=utf-8'
+                                                                    },
+                                                                    success: function () {
+                                                                        reLoadTree();
+                                                                        App.setAlert(App.STATUS_OK, __("Layer properties copied"));
+                                                                    },
+                                                                    failure: function (response) {
+                                                                        Ext.MessageBox.show({
+                                                                            title: __('Failure'),
+                                                                            msg: __(Ext.decode(response.responseText).message),
+                                                                            buttons: Ext.MessageBox.OK,
+                                                                            width: 400,
+                                                                            height: 300,
+                                                                            icon: Ext.MessageBox.ERROR
+                                                                        });
+                                                                    }
                                                                 });
+                                                            } else {
+                                                                var s = '';
+                                                                Ext.iterate(f.form.getValues(), function (key, value) {
+                                                                    s += String.format("{0} = {1}<br />", key, value);
+                                                                }, this);
                                                             }
-                                                        });
-                                                    } else {
-                                                        var s = '';
-                                                        Ext.iterate(f.form.getValues(), function (key, value) {
-                                                            s += String.format("{0} = {1}<br />", key, value);
-                                                        }, this);
+                                                        }
                                                     }
-                                                }
+                                                ]
                                             }
                                         ]
                                     }
@@ -2514,7 +2508,7 @@ $(document).ready(function () {
                                                                         params: param,
                                                                         success: function (response) {
                                                                             var data = eval('(' + response.responseText + ')');
-                                                                            window.location = "/admin/" + screenName + "/" + data.data.name;
+                                                                            window.location = "/admin/" + parentdb + "/" + data.data.name;
                                                                         },
                                                                         failure: function (response) {
                                                                             winSchemaRename.close();
@@ -2556,7 +2550,7 @@ $(document).ready(function () {
                                                 'Content-Type': 'application/json; charset=utf-8'
                                             },
                                             success: function (response) {
-                                                window.location = "/admin/" + screenName + "/public";
+                                                window.location = "/admin/" + parentdb + "/public";
                                             },
                                             failure: function (response) {
                                                 Ext.MessageBox.show({
@@ -2801,13 +2795,13 @@ $(document).ready(function () {
             detailPanel = Ext.getCmp('detailPanel'),
             detailPanelTemplate = new Ext.Template(['<table border="0">' +
             '<tr class="x-grid3-row"><td class="bottom-info-bar-param"><b>' + __('Srid') + '</b></td><td >{srid}</td><td class="bottom-info-bar-pipe">|</td><td class="bottom-info-bar-param"><b>' + __('Key') + '</b></td><td >{_key_}</td><td class="bottom-info-bar-pipe">|</td><td class="bottom-info-bar-param"><b>' + __('Tags') + '</b></td><td>{tags}</td></tr>' +
-            '<tr class="x-grid3-row"><td class="bottom-info-bar-param"><b>' + __('Geom field') + '</b></td><td>{f_geometry_column}</td><td class="bottom-info-bar-pipe">|</td><td class="bottom-info-bar-param"><b>' + __('Created') + '</b></td><td>{created}</td><td class="bottom-info-bar-pipe">|</td></td><td class="bottom-info-bar-param"><b>' + __('Guid') + '</b></td><td>{uuid}</td></tr>' +
+            '<tr class="x-grid3-row"><td class="bottom-info-bar-param"><b>' + __('Geom field') + '</b></td><td>{f_geometry_column}</td><td class="bottom-info-bar-pipe">|</td><td class="bottom-info-bar-param"><b>' + __('Dimensions') + '</b></td><td>{coord_dimension}</td><td class="bottom-info-bar-pipe">|</td></td><td class="bottom-info-bar-param"><b>' + __('Guid') + '</b></td><td>{uuid}</td></tr>' +
             '</table>']);
         if (records.length === 1) {
             detailPanelTemplate.overwrite(detailPanel.body, records[0].data);
             tableStructure.grid = null;
             Ext.getCmp("tablepanel").activate(0);
-            tableStructure.init(records[0], screenName);
+            tableStructure.init(records[0], parentdb);
             s.removeAll();
             s.add(tableStructure.grid);
             s.doLayout();
@@ -2902,6 +2896,15 @@ $(document).ready(function () {
                     name: 'offsite'
                 },
                 {
+                    name: 'label_no_clip',
+                    type: 'boolean'
+
+                },
+                {
+                    name: 'polyline_no_clip',
+
+                },
+                {
                     name: 'bands'
                 },
                 {
@@ -2955,6 +2958,8 @@ $(document).ready(function () {
                                 "symbolscaledenom": store.getAt(0).data.symbolscaledenom,
                                 "geotype": store.getAt(0).data.geotype,
                                 "offsite": store.getAt(0).data.offsite,
+                                "label_no_clip": store.getAt(0).data.label_no_clip,
+                                "polyline_no_clip": store.getAt(0).data.polyline_no_clip,
                                 "bands": store.getAt(0).data.bands
                             });
                         }
@@ -3285,7 +3290,7 @@ $(document).ready(function () {
                                                     tbar: [
                                                         {
                                                             text: '<i class="fa fa-plus-circle"></i> ' + __('New layer'),
-                                                            disabled: (subUser === schema || subUser === false) ? false : true,
+                                                            disabled: (screenName === schema || subUser === false) ? false : true,
                                                             handler: function () {
                                                                 onAdd();
                                                             }
@@ -3341,8 +3346,7 @@ $(document).ready(function () {
                                                             handler: function (thisBtn, event) {
                                                                 try {
                                                                     stopEdit();
-                                                                }
-                                                                catch (e) {
+                                                                } catch (e) {
                                                                 }
                                                                 var node = tree.getSelectionModel().getSelectedNode();
                                                                 var id = node.id.split(".");
@@ -3358,13 +3362,11 @@ $(document).ready(function () {
                                                                         height: 300,
                                                                         icon: Ext.MessageBox.ERROR
                                                                     });
-                                                                }
-                                                                else {
+                                                                } else {
                                                                     var poll = function () {
                                                                         if (typeof filter.win === "object") {
                                                                             filter.win.show();
-                                                                        }
-                                                                        else {
+                                                                        } else {
                                                                             setTimeout(poll, 10);
                                                                         }
                                                                     };
@@ -3390,8 +3392,7 @@ $(document).ready(function () {
                                                                         icon: Ext.MessageBox.ERROR
                                                                     });
                                                                     return false;
-                                                                }
-                                                                else {
+                                                                } else {
                                                                     var filter = new OpenLayers.Filter.Comparison({
                                                                         type: OpenLayers.Filter.Comparison.EQUAL_TO,
                                                                         property: "\"dummy\"",
@@ -3675,8 +3676,7 @@ $(document).ready(function () {
                                                                     triggerAction: 'all'
                                                                 });
                                                                 validProperties = false;
-                                                            }
-                                                            catch (e) {
+                                                            } catch (e) {
                                                                 alert('There is invalid properties on field ' + columnsForGrid[i].dataIndex);
                                                             }
                                                         } else if (columnsForGrid[i].typeObj.type === "int") {
@@ -3853,7 +3853,7 @@ $(document).ready(function () {
                                                 console.log(ex.message)
                                             }
                                             elasticsearch.grid = null;
-                                            elasticsearch.init(grid.getSelectionModel().getSelected(), screenName);
+                                            elasticsearch.init(grid.getSelectionModel().getSelected(), parentdb);
                                             esPanel.add(elasticsearch.grid);
                                             esPanel.doLayout();
                                         }
@@ -3867,7 +3867,7 @@ $(document).ready(function () {
                 {
                     xtype: "panel",
                     title:
-                    '<i class="fa fa-users"></i> ' + __('Workflow'),
+                        '<i class="fa fa-users"></i> ' + __('Workflow'),
                     layout:
                         'border',
                     id:
@@ -4018,7 +4018,7 @@ $(document).ready(function () {
                                             App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
                                         }
                                         Ext.Ajax.request({
-                                            url: '/api/v1/meta/' + screenName + '/' + records[0].get("f_schema_name") + "." + records[0].get("f_table_name"),
+                                            url: '/api/v1/meta/' + parentdb + '/' + records[0].get("f_schema_name") + "." + records[0].get("f_table_name"),
                                             method: 'GET',
                                             headers: {
                                                 'Content-Type': 'application/json; charset=utf-8'
@@ -4100,7 +4100,7 @@ $(document).ready(function () {
                 {
                     xtype: "panel",
                     title:
-                    '<i class="fa fa-clock-o"></i> ' + __('Scheduler'),
+                        '<i class="fa fa-clock-o"></i> ' + __('Scheduler'),
                     layout:
                         'border',
                     id:
@@ -4119,7 +4119,7 @@ $(document).ready(function () {
                 {
                     xtype: "panel",
                     title:
-                    '<i class="fa fa-list"></i> ' + __('Log'),
+                        '<i class="fa fa-list"></i> ' + __('Log'),
                     layout:
                         'border',
                     border:
@@ -4231,8 +4231,7 @@ $(document).ready(function () {
                         l.redraw();
                     }, 500);
 
-                }
-                else {
+                } else {
                     App.setAlert(App.STATUS_NOTICE, __(response.message));
                 }
             }
@@ -4273,7 +4272,7 @@ $(document).ready(function () {
         var b = Ext.getCmp("wizardLegend");
         if (activeLayer !== undefined) {
             $.ajax({
-                url: '/api/v1/legend/html/' + screenName + '/' + activeLayer.split(".")[0] + '?l=' + activeLayer,
+                url: '/api/v1/legend/html/' + parentdb + '/' + activeLayer.split(".")[0] + '?l=' + activeLayer,
                 dataType: 'jsonp',
                 jsonp: 'jsonp_callback',
                 success: function (response) {
@@ -4282,8 +4281,7 @@ $(document).ready(function () {
                     try {
                         b.update(response.html);
                         b.doLayout();
-                    }
-                    catch (e) {
+                    } catch (e) {
                     }
                 }
             });
@@ -4317,7 +4315,7 @@ $(document).ready(function () {
      * Add listener on schema select box
      */
     Ext.getCmp("schemabox").on('select', function (e) {
-        window.location = "/admin/" + screenName + "/" + e.value;
+        window.location = "/admin/" + parentdb + "/" + e.value;
     });
 
     /**
@@ -4327,14 +4325,13 @@ $(document).ready(function () {
         var records = sm.getSelections();
         if (records.length === 1) {
             Ext.getCmp('advanced-btn').setDisabled(false);
-            if (subUser === false || subUser === schema) {
+            if (subUser === false || screenName === schema) {
                 Ext.getCmp('privileges-btn').setDisabled(false);
                 Ext.getCmp('workflow-btn').setDisabled(false);
                 Ext.getCmp('renamelayer-btn').setDisabled(false);
                 Ext.getCmp('copy-properties-btn').setDisabled(false);
             }
-        }
-        else {
+        } else {
             Ext.getCmp('advanced-btn').setDisabled(true);
             Ext.getCmp('privileges-btn').setDisabled(true);
             Ext.getCmp('workflow-btn').setDisabled(true);
@@ -4344,7 +4341,7 @@ $(document).ready(function () {
         if (records.length > 0 && subUser === false) {
             Ext.getCmp('movelayer-btn').setDisabled(false);
         }
-        if (records.length > 0 && (subUser === false || subUser === schema)) {
+        if (records.length > 0 && (subUser === false || screenName === schema)) {
             Ext.getCmp('deletelayer-btn').setDisabled(false);
         }
         onEdit();
@@ -4354,7 +4351,7 @@ $(document).ready(function () {
      * Hide tab if scheduler is not available for the db
      */
     if (window.gc2Options.gc2scheduler !== null) {
-        if (window.gc2Options.gc2scheduler.hasOwnProperty(screenName) === false || window.gc2Options.gc2scheduler[screenName] === false) {
+        if (window.gc2Options.gc2scheduler.hasOwnProperty(parentdb) === false || window.gc2Options.gc2scheduler[parentdb] === false) {
             tabs.hideTabStripItem(Ext.getCmp('schedulerPanel'));
         }
     } else {
@@ -4397,11 +4394,11 @@ $(document).ready(function () {
                     cloud.removeTileLayerByName([
                         [response.data[u].f_table_schema + "." + response.data[u].f_table_name]
                     ]);
-                }
-                catch (e) {
+                } catch (e) {
                 }
                 if (response.data[u].type) {
                     layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
+                        db: subUser ? screenName + "@" + parentdb : screenName,
                         singleTile: true,
                         //isBaseLayer: isBaseLayer,
                         visibility: false,
@@ -4497,12 +4494,11 @@ $(document).ready(function () {
 
                         try {
                             stopEdit();
-                        }
-                        catch (error) {
+                        } catch (error) {
                         }
 
                         if (typeof filter.win !== "undefined") {
-                            if (typeof  filter.win.hide !== "undefined") {
+                            if (typeof filter.win.hide !== "undefined") {
                                 filter.win.hide();
                             }
                             filter.win = false;
@@ -4522,8 +4518,7 @@ $(document).ready(function () {
                         $("#edit-" + id).on("click", function () {
                             try {
                                 stopEdit();
-                            }
-                            catch (e) {
+                            } catch (e) {
                             }
                             var node = tree.getSelectionModel().getSelectedNode();
                             var id = node.id.split(".");
@@ -4539,13 +4534,11 @@ $(document).ready(function () {
                                     height: 300,
                                     icon: Ext.MessageBox.ERROR
                                 });
-                            }
-                            else {
+                            } else {
                                 var poll = function () {
                                     if (typeof filter.win === "object") {
                                         filter.win.show();
-                                    }
-                                    else {
+                                    } else {
                                         setTimeout(poll, 10);
                                     }
                                 };
@@ -4569,8 +4562,7 @@ $(document).ready(function () {
                                     icon: Ext.MessageBox.ERROR
                                 });
                                 return false;
-                            }
-                            else {
+                            } else {
                                 var filter = new OpenLayers.Filter.Comparison({
                                     type: OpenLayers.Filter.Comparison.EQUAL_TO,
                                     property: "\"dummy\"",
@@ -4600,7 +4592,7 @@ $(document).ready(function () {
                                 return false;
                             }
                             Ext.Ajax.request({
-                                url: '/api/v1/extent/' + screenName + '/' + e.id + '/900913',
+                                url: '/api/v1/extent/' + parentdb + '/' + e.id + '/900913',
                                 method: 'get',
                                 headers: {
                                     'Content-Type': 'application/json; charset=utf-8'
@@ -4778,7 +4770,7 @@ $(document).ready(function () {
                 }
             });
         }
-        if (typeof(objRef) === "object") {
+        if (typeof (objRef) === "object") {
             measureWin.show(objRef);
         } else {
             measureWin.show();
@@ -4880,8 +4872,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
                                 triggerAction: 'all'
                             });
                             validProperties = false;
-                        }
-                        catch (e) {
+                        } catch (e) {
                             alert('There is invalid properties on field ' + columnsForGrid[i].dataIndex);
                         }
                     } else if (columnsForGrid[i].typeObj.type === "int") {
@@ -4915,11 +4906,9 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     });
     if (type === "Point") {
         handlerType = OpenLayers.Handler.Point;
-    }
-    else if (type === "Polygon") {
+    } else if (type === "Polygon") {
         handlerType = OpenLayers.Handler.Polygon;
-    }
-    else if (type === "Path") {
+    } else if (type === "Path") {
         handlerType = OpenLayers.Handler.Path;
     }
     south.expand(true);
@@ -4997,11 +4986,11 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     layer = new OpenLayers.Layer.Vector("vector", {
         strategies: [new OpenLayers.Strategy.Fixed(), saveStrategy],
         protocol: new OpenLayers.Protocol.WFS.v1_0_0({
-            url: "/wfs/" + (subUser ? subUser + "@" + screenName : screenName) + "/" + schema + "/900913" + (timeSlice ? "/" + timeSlice : "") + "?",
+            url: "/wfs/" + (subUser ? screenName + "@" + parentdb : screenName) + "/" + schema + "/900913" + (timeSlice ? "/" + timeSlice : "") + "?",
             version: "1.0.0",
             featureType: layerName,
-            featureNS: "http://mapcentia.com/" + screenName,
-            featurePrefix: screenName,
+            featureNS: "http://mapcentia.com/" + parentdb,
+            featurePrefix: parentdb,
             srsName: "EPSG:900913",
             geometryName: geomField, // must be dynamamic
             defaultFilter: wfsFilter
@@ -5143,8 +5132,7 @@ function stopEdit() {
     try {
         filter.win.hide();
         filter.win = false;
-    }
-    catch (e) {
+    } catch (e) {
     }
     Ext.getCmp('editcreatebutton').toggle(false);
     Ext.getCmp('editcreatebutton').setDisabled(true);

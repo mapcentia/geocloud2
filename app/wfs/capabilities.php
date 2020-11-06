@@ -69,35 +69,6 @@
                     </HTTP>
                 </DCPType>
             </Transaction>
-            <!--<LockFeature>
-				<DCPType>
-					<HTTP>
-						<Get onlineResource="<?php echo $thePath ?>"/>
-					</HTTP>
-				</DCPType>
-				<DCPType>
-					<HTTP>
-
-						<Post onlineResource="<?php echo $thePath ?>"/>
-					</HTTP>
-				</DCPType>
-	</LockFeature>
-	<GetFeatureWithLock>
-				<ResultFormat>
-					<GML2/>
-				</ResultFormat>
-				<DCPType>
-
-					<HTTP>
-						<Get onlineResource="<?php echo $thePath ?>"/>
-					</HTTP>
-				</DCPType>
-				<DCPType>
-					<HTTP>
-						<Post onlineResource="<?php echo $thePath ?>"/>
-					</HTTP>
-				</DCPType>
-	</GetFeatureWithLock>-->
         </Request>
         <VendorSpecificCapabilities>
         </VendorSpecificCapabilities>
@@ -112,7 +83,6 @@
         <Insert/>
         <Update/>
         <Delete/>
-        <!--<Lock/>-->
     </Operations>
     <?php
     $sql = "SELECT * from settings.getColumns('f_table_schema=''{$postgisschema}''','raster_columns.r_table_schema=''{$postgisschema}''') order by sort_id";
@@ -121,6 +91,11 @@
     if ($postgisObject->PDOerror) {
         makeExceptionReport($postgisObject->PDOerror);
     }
+
+    $settings = new \app\models\Setting();
+    $extents = $settings->get()["data"]->extents;
+    $bbox = property_exists($extents, $postgisschema) ? $extents->$postgisschema : [-20037508.34, -20037508.34, 20037508.34, 20037508.34]; // Is in EPSG:3857
+
     while ($row = $postgisObject->fetchRow($result)) {
         if ($row['type'] != "RASTER" && $row['type'] != null) {
 
@@ -161,19 +136,31 @@
 
                 // Estimated extent
                 $sql2 = "WITH bb AS (SELECT ST_astext(ST_Transform(ST_setsrid(ST_EstimatedExtent('" . $postgisschema . "', '" . $TableName . "', '" . $row['f_geometry_column'] . "')," . $row['srid'] . ")," . $latLongBoundingBoxSrs . ")) as geom) ";
-                $sql2.= "SELECT ST_Xmin(ST_Extent(geom)) AS TXMin,ST_Xmax(ST_Extent(geom)) AS TXMax, ST_Ymin(ST_Extent(geom)) AS TYMin,ST_Ymax(ST_Extent(geom)) AS TYMax  FROM bb";
+                $sql2 .= "SELECT ST_Xmin(ST_Extent(geom)) AS TXMin,ST_Xmax(ST_Extent(geom)) AS TXMax, ST_Ymin(ST_Extent(geom)) AS TYMin,ST_Ymax(ST_Extent(geom)) AS TYMax  FROM bb";
 
                 $result2 = $postgisObject->prepare($sql2);
                 try {
                     $result2->execute();
                     $row2 = $postgisObject->fetchRow($result2);
-                    writeTag("open", null, "LatLongBoundingBox", array("minx" => $row2['txmin'], "miny" => $row2['tymin'], "maxx" => $row2['txmax'], "maxy" => $row2['tymax']), True, False);
-                    writeTag("close", null, "LatLongBoundingBox", null, False, True);
+                    list($x1, $x2, $y1, $y2) = [$row2['txmin'], $row2['tymin'], $row2['txmax'], $row2['tymax']];
+
+                    if (empty($row2['txmin'])) {
+                        throw new PDOException('No estimated extent');
+                    }
                 } catch (\PDOException $e) {
+
+                    $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$bbox[0]},{$bbox[1]},{$bbox[2]},{$bbox[3]},3857),4326)) AS a) select ST_xmin(a) as txmin,ST_ymin(a) as tymin,ST_xmax(a) as txmax,ST_ymax(a) as tymax  from box";
+                    $resultExtent = $postgisObject->execQuery($sql);
+                    $rowExtent = $postgisObject->fetchRow($resultExtent);
+                    list($x1, $x2, $y1, $y2) = [$rowExtent['txmin'], $rowExtent['tymin'], $rowExtent['txmax'], $rowExtent['tymax']];
+
+
                     echo "<!--";
-                    echo "WARNING: Optional LatLongBoundingBox could not be established for this layer.";
+                    echo "WARNING: Optional LatLongBoundingBox could not be established for this layer - using extent set for schema";
                     echo "-->";
                 }
+                writeTag("open", null, "LatLongBoundingBox", array("minx" => $x1, "miny" => $x2, "maxx" => $y1, "maxy" => $y2), True, False);
+                writeTag("close", null, "LatLongBoundingBox", null, False, True);
             }
             writeTag("open", null, "Abstract", null, True, False);
             echo $row["f_table_abstract"] ? "<![CDATA[" . $row["f_table_abstract"] . "]]>" : "";
