@@ -65,48 +65,24 @@ addScratch.init = function () {
                             value: 'POINT'
                         },
                         {
-                            name: 'POINTZ',
-                            value: 'POINTZ'
-                        },
-                        {
                             name: 'LINESTRING',
                             value: 'LINESTRING'
-                        },
-                        {
-                            name: 'LINESTRING',
-                            value: 'LINESTRINGZ'
                         },
                         {
                             name: 'POLYGON',
                             value: 'POLYGON'
                         },
                         {
-                            name: 'POLYGON',
-                            value: 'POLYGONZ'
-                        },
-                        {
                             name: 'MULTIPOINT',
                             value: 'MULTIPOINT'
-                        },
-                        {
-                            name: 'MULTIPOINT',
-                            value: 'MULTIPOINTZ'
                         },
                         {
                             name: 'MULTILINESTRING',
                             value: 'MULTILINESTRING'
                         },
                         {
-                            name: 'MULTILINESTRING',
-                            value: 'MULTILINESTRINGZ'
-                        },
-                        {
                             name: 'MULTIPOLYGON',
                             value: 'MULTIPOLYGON'
-                        },
-                        {
-                            name: 'MULTIPOLYGON',
-                            value: 'MULTIPOLYGONZ'
                         }
                     ]
                 })
