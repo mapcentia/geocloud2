@@ -77,6 +77,8 @@ class Tileseeder extends Controller
         $startZoom = $arr["start"];
         $endZoom = $arr["end"];
         $extentLayer = $arr["extent"];
+        $grid = $arr["grid"];
+        $nthreads = !empty($arr["threads"]) ? $arr["threads"] : 1;
 
         $pgHost = Connection::$param["postgishost"];
         $pgUser = Connection::$param["postgisuser"];
@@ -85,7 +87,7 @@ class Tileseeder extends Controller
 
         $uuid = \app\inc\Util::guid();
 
-        $cmd = "/usr/bin/nohup /usr/local/bin/mapcache_seed -c /var/www/geocloud2/app/wms/mapcache/{$db}.xml -t {$layer} -g 25832 -z {$startZoom},{$endZoom} -d PG:'host={$pgHost} port={$pgPort} user={$pgUser} dbname={$db} password={$pgPassword}' -l '{$extentLayer}' -n 1";
+        $cmd = "/usr/bin/nohup /usr/local/bin/mapcache_seed -c /var/www/geocloud2/app/wms/mapcache/{$db}.xml -v -t {$layer} -g {$grid} -z {$startZoom},{$endZoom} -d PG:'host={$pgHost} port={$pgPort} user={$pgUser} dbname={$db} password={$pgPassword}' -l '{$extentLayer}' -n {$nthreads}";
         $pid = exec("{$cmd} > /var/www/geocloud2/public/logs/seeder_{$uuid}.log & echo $!");
 
         $res = $this->tileSeeder->insert(["uuid" => $uuid, "name" => $name, "pid" => $pid, "host" => "test"]);
@@ -96,7 +98,7 @@ class Tileseeder extends Controller
         return [
             "uuid" => $uuid,
             "pid" => $pid,
-//            "cmd" => $cmd
+            "cmd" => $cmd,
         ];
     }
 
@@ -166,6 +168,7 @@ class Tileseeder extends Controller
     public function deleteAll(): array
     {
         $pids = $this->get_index()["pids"];
+        //TODO check if it's a mapache_seed pid
         foreach ($pids as $pid) {
             $this->kill($pid["pid"]);
         }
@@ -212,11 +215,39 @@ class Tileseeder extends Controller
 
     /**
      * @return array
+     * @throws \Exception
+     *
+     * @OA\Get(
+     *   path="/api/v3/tileseeder/log/{uuid}",
+     *   tags={"Tileseeder"},
+     *   summary="Get staus of a running job",
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="uuid",
+     *     in="path",
+     *     required=true,
+     *     description="Job identifier",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Operation status"
+     *   )
+     * )
      */
-    public function get_log(): array
+    public function get_log():array
     {
-        $uuid = Route::getParam("uuid");
-        $log = file_get_contents("/var/www/geocloud2/public/logs/seeder_{$uuid}.log");
-        return ["log" => $log];
+        $uuid = strtoupper(Route::getParam("uuid"));
+        $file = "/var/www/geocloud2/public/logs/seeder_{$uuid}.log";
+        $handle = fopen($file, "r");
+        $data = explode("\r", fgets($handle));
+        // There is a carrier return in both end of the string
+        $line = $data[count($data)-2];
+        pclose($handle);
+        return [
+            "data" => $line
+        ];
     }
 }

@@ -541,6 +541,36 @@
                     }
                 ]
             }
+        },
+        "/api/v3/tileseeder/log": {
+            "get": {
+                "tags": [
+                    "Tileseeder"
+                ],
+                "summary": "Stream log of a running job",
+                "operationId": "app\\api\\v3\\Tileseeder::get_log",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "description": "Job identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operation status"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
