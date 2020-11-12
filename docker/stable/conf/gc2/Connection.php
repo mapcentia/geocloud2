@@ -9,6 +9,6 @@ class Connection
         "postgisuser" => "POSTGISUSER_CONFIGURATION",
         "postgisport" => "POSTGISPORT_CONFIGURATION",
         "postgispw" => "POSTGISPW_CONFIGURATION",
-        "pgbouncer" => "PGBOUNCER_CONFIGURATION",
+        "pgbouncer" => PGBOUNCER_CONFIGURATION,
     );
 }
