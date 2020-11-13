@@ -34,6 +34,8 @@ class Model
 
     function __construct()
     {
+        // TODO check env vars and set them
+        // TODO check custom connect file in /app/conf/connect.d called mydb.php
         $this->postgishost = Connection::$param['postgishost'];
         $this->postgisport = Connection::$param['postgisport'];
         $this->postgisuser = Connection::$param['postgisuser'];
