@@ -320,7 +320,7 @@ class DatabaseManagementCest
         ]);
     }
 
-    // Super user SQL API request to unprotected data source from outside session
+    // Super user WFS-t request to unprotected data source from outside session
     public function shouldGetDataFromWfstAsSuperUserOutsideSession(\ApiTester $I)
     {
         $I->sendGET('/wfs/' . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
@@ -365,12 +365,43 @@ class DatabaseManagementCest
         ]);
     }
 
+    // WFS-t tests start on protected layers
+
     // Super user WFS-t request to protected data source from outside session
     public function shouldNotGetDataFromWfstAsSuperUserOutsideSession(\ApiTester $I)
     {
         $I->sendGET('/wfs/' . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
         $I->seeResponseCodeIs(\Codeception\Util\HttpCode::UNAUTHORIZED);
     }
+    // Sub user WFS-t request to protected data source from outside session
+    public function shouldNotGetDataFromWfstAsSubUserOutsideSession(\ApiTester $I)
+    {
+        $I->sendGET('/wfs/' . $this->subUserId . "@" . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsXml();
+        $I->canSeeResponseContains('ServiceExceptionReport');
+    }
+    // Super user WFS-t request to protected data source from inside session
+    public function shouldGetDataFromWfstAsSuperUserInsideSession(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
+        $I->sendGET('/wfs/' . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsXml();
+        $I->seeXmlResponseMatchesXpath('/wfs:FeatureCollection/gml:featureMember');
+    }
+
+    // Sub user WFS-t request to protected data source from inside session
+    public function shouldNotGetDataFromWfstAsSubUserInsideSession(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
+        $I->sendGET('/wfs/' . $this->subUserId . "@" . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsXml();
+        $I->canSeeResponseContains('ServiceExceptionReport');
+    }
+
+    // WFS-t tests end
 
     // Super user SQL API request to protected data source with API key
     public function shouldGetDataFromSqlApiAsSuperUserWithApiKey(\ApiTester $I)
@@ -406,15 +437,6 @@ class DatabaseManagementCest
         ]);
     }
 
-    // Super user WFS-t request to protected data source from inside session
-    public function shouldGetDataFromWfstAsSuperUserInsideSession(\ApiTester $I)
-    {
-        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
-        $I->sendGET('/wfs/' . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
-        $I->seeResponseIsXml();
-        $I->seeXmlResponseMatchesXpath('/wfs:FeatureCollection/gml:featureMember');
-    }
 
     // Sub user SQL API request to protected data source from outside session
     public function shouldNotGetDataFromSqlApiAsSubUserOutsideSession(\ApiTester $I)
@@ -433,14 +455,6 @@ class DatabaseManagementCest
         ]);
     }
 
-    // Sub user WFS-t request to protected data source from outside session
-    public function shouldNotGetDataFromWfstAsSubUserOutsideSession(\ApiTester $I)
-    {
-        $I->sendGET('/wfs/' . $this->subUserId . "@" . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
-        $I->seeResponseIsXml();
-        $I->canSeeResponseContains('ServiceExceptionReport');
-    }
 
     // Sub user SQL API request to protected data source from inside session
     public function shouldNotGetDataFromSqlApiAsSubUserInsideSession(\ApiTester $I)
@@ -459,15 +473,6 @@ class DatabaseManagementCest
         ]);
     }
 
-    // Sub user WFS-t request to protected data source from inside session
-    public function shouldNotGetDataFromWfstAsSubUserInsideSession(\ApiTester $I)
-    {
-        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
-        $I->sendGET('/wfs/' . $this->subUserId . "@" . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
-        $I->seeResponseIsXml();
-        $I->canSeeResponseContains('ServiceExceptionReport');
-    }
 
     // Set read privileges on data source to sub user
     public function shouldGiveReadPrivilegesToSubUser(\ApiTester $I)
@@ -541,6 +546,15 @@ class DatabaseManagementCest
         ]);
     }
 
+    // Sub user WFS-t request to protected data source from inside session
+    public function shouldGetDataFromWfstAsSubUserInsideSession(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
+        $I->sendGET('/wfs/' . $this->subUserId . "@" . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsXml();
+        $I->seeXmlResponseMatchesXpath('/wfs:FeatureCollection/gml:featureMember');
+    }
 
     // *************************************
     // End of testing read/write access
