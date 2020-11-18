@@ -27,6 +27,9 @@ RUN git clone https://github.com/mapserver/mapserver.git --branch branch-7-6 &&\
     -DWITH_ORACLESPATIAL=0 \
     -DWITH_RSVG=ON \
     -DWITH_POINT_Z_M=ON \
+    -DWITH_KML=ON \
+    -DWITH_LIBKML=ON \
+    -DWITH_KMZ=ON \
     -DWITH_SVGCAIRO=0 .. &&\
     make && make install &&\
     cp /mapserver/build/mapserv /usr/lib/cgi-bin/mapserv.fcgi

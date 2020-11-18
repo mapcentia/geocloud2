@@ -10,9 +10,10 @@ RUN wget http://download.osgeo.org/gdal/2.4.4/gdal244.zip && \
     cd gdal-2.4.4 &&\
     ./configure \
     --with-python=yes \
+    --with-libkml=yes \
     --with-ecw=/usr/local \
     --with-java=/usr/lib/jvm/adoptopenjdk-8-hotspot-amd64 \
-    --with-jvm=/usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/lib/amd64/server/ \
+    --with-jvm=/usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/lib/amd64 \
     --with-mdb=yes \
     --with-jvm-lib-add-rpath=yes
 
