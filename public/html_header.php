@@ -3,10 +3,29 @@ header('Content-Type: text/html; charset=utf-8');
 ?>
 <!DOCTYPE html>
 <!--
+
+     .----------------.  .----------------.  .----------------.
+    | .--------------. || .--------------. || .--------------. |
+    | |    ______    | || |     ______   | || |    _____     | |
+    | |  .' ___  |   | || |   .' ___  |  | || |   / ___ `.   | |
+    | | / .'   \_|   | || |  / .'   \_|  | || |  |_/___) |   | |
+    | | | |    ____  | || |  | |         | || |   .'____.'   | |
+    | | \ `.___]  _| | || |  \ `.___.'\  | || |  / /____     | |
+    | |  `._____.'   | || |   `._____.'  | || |  |_______|   | |
+    | |              | || |              | || |              | |
+    | '--------------' || '--------------' || '--------------' |
+     '----------------'  '----------------'  '----------------'
+    Ring the bells that still can ring
+    Forget your perfect offering
+    There is a crack, a crack in everything
+    That's how the light gets in
+
+
   ~ @author     Martin Høgh <mh@mapcentia.com>
   ~ @copyright  2013-2019 MapCentia ApS
   ~ @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
   ~ @version    2020.2.0
+
   -->
 <html lang="en">
 <head>
