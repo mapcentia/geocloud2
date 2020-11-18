@@ -39,7 +39,7 @@ RUN cd ~ &&\
 RUN sed 's/;daemonize = yes/daemonize = no/' -i /etc/php/7.3/fpm/php-fpm.conf
 
 # Make sure env bars set in container is available for PHP
-RUN "clear_env=no" >> /etc/php/7.3/fpm/pool.d/www.conf
+RUN echo "clear_env=no" >> /etc/php/7.3/fpm/pool.d/www.conf
 
 # Install Node.js, Grunt and Forever
 RUN curl -sL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh &&\
