@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED]
+### Fixed
+- Using `PROCESSING 'NATIVE_FILTER=id=234'` instead of `FILTER` in MapFile.
+
 ## [2020.11.0]
 ### Added
 - OAuth API added with password grant: api/v3/oauth/token. Token is not longer returned using `/api/v2/session/start`.

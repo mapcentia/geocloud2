@@ -378,7 +378,7 @@ class Mapfile extends \app\inc\Controller
                 STATUS off
                 GROUP "<?php echo $postgisObject::toAscii($row['layergroup']) ?>"
                 <?php if ($row['filter']) { ?>
-                    FILTER "<?php echo $row['filter']; ?>"
+                    PROCESSING "NATIVE_FILTER=<?php echo $row['filter']; ?>"
                 <?php } ?>
                 <?php
                 if (!empty($layerArr['data'][0]['geotype']) && $layerArr['data'][0]['geotype'] != "Default") {
