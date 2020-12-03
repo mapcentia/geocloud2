@@ -240,7 +240,7 @@ class Elasticsearch extends \app\inc\Controller
     public function get_map()
     {
         if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key') ?: "")) {
-           // return $response;
+            // return $response;
         }
         $schema = Input::getPath()->part(6);
         $table = Input::getPath()->part(7);
@@ -336,7 +336,7 @@ class Elasticsearch extends \app\inc\Controller
 
         $relationCheck = $model->isTableOrView($triggerSchema . "." . $triggerTable);
         if (!$relationCheck["success"]) {
-            return Array
+            return array
             (
                 "success" => false,
                 "message" => "Trigger table doesn't exists",
@@ -480,8 +480,6 @@ class Elasticsearch extends \app\inc\Controller
         ];
 
         $map = [
-            "geometry_columns_view" =>
-                [
                     "properties" =>
                         [
                             "properties" =>
@@ -493,30 +491,22 @@ class Elasticsearch extends \app\inc\Controller
                                                 [
                                                     "type" => "keyword"
                                                 ],
-
                                             "f_table_name" => $typeahead,
-
                                             "f_table_abstract" => $typeahead,
-
                                             "f_table_title" => $typeahead,
-
                                             "created" =>
                                                 [
                                                     "type" => "text"
                                                 ],
-
                                             "lastmodified" =>
                                                 [
                                                     "type" => "text"
                                                 ],
-
                                             "layergroup" => $typeahead,
-
                                             "uuid" =>
                                                 [
                                                     "type" => "text"
                                                 ],
-
                                             "tags" =>
                                                 [
                                                     "type" => "text"
@@ -526,15 +516,7 @@ class Elasticsearch extends \app\inc\Controller
                                                 [
                                                     "type" => "object",
                                                     "properties" => [
-                                                        "meta_desc" => [
-
-                                                            "type" => "text",
-                                                            "analyzer" => "auto_complete_analyzer",
-                                                            "search_analyzer" => "auto_complete_search_analyzer",
-                                                            "fielddata" => true
-
-
-                                                        ],
+                                                        "meta_desc" => $typeahead,
                                                         "layer_search_include" => [
                                                             "type" => "boolean"
                                                         ]
@@ -543,13 +525,9 @@ class Elasticsearch extends \app\inc\Controller
                                         ]
                                 ]
                         ]
-                ]
         ];
 
-        // Check if Es is online
-        // =====================
-        $url = $this->host;
-        $ch = curl_init($url);
+        $ch = curl_init($this->host);
         curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
         curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -648,7 +626,7 @@ class Elasticsearch extends \app\inc\Controller
 
         // Create mapping
         // ==============
-        $res = $es->map($fullIndex, $type, json_encode($map));
+        $res = $es->map($fullIndex, json_encode($map));
         $obj = json_decode($res["json"], true);
         if (isset($obj["error"]) && $obj["error"] != false) {
             $response['success'] = false;
@@ -706,7 +684,6 @@ class Elasticsearch extends \app\inc\Controller
         $id = Route::getParam("id");
         $fullTable = $schema . "." . $rel;
         $index = $db . "_" . $schema . "_" . $rel;
-
 
 
         $sql = "SELECT * FROM {$fullTable} WHERE gid='{$id}'";
