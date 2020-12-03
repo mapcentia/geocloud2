@@ -961,7 +961,7 @@ class Mapfile extends \app\inc\Controller
             IMAGEMODE FEATURE
             EXTENSION "kml"
             FORMATOPTION "FORM=simple"
-            FORMATOPTION 'FILENAME=gmap75.kml'
+            FORMATOPTION 'FILENAME=igmap75.kml'
             FORMATOPTION "maxfeaturestodraw=1000"
         END
 
@@ -1033,8 +1033,31 @@ class Mapfile extends \app\inc\Controller
                     }
                 }
                 $layerArr = array("data" => array($arr));
+                $sortedArr = array();
+
+                // Sort classes
+                $arr = $arr2 = (array)json_decode($row['class']);
+                for ($i = 0; $i < sizeof($arr); $i++) {
+                    $last = 100000;
+                    foreach ($arr2 as $key => $value) {
+                        if ($value->sortid < $last) {
+                            $temp = $value;
+                            $del = $key;
+                            $last = $value->sortid;
+                        }
+                    }
+                    array_push($sortedArr, $temp);
+                    unset($arr2[$del]);
+                    $temp = null;
+                }
+                $arr = $sortedArr;
+                for ($i = 0; $i < sizeof($arr); $i++) {
+                    $arrNew[$i] = (array)\app\inc\Util::casttoclass('stdClass', $arr[$i]);
+                    $arrNew[$i]['id'] = $i;
+                }
+                $classArr = array("data" => !empty($arrNew) ? $arrNew : null);
                 $primeryKey = $postgisObject->getPrimeryKey("{$row['f_table_schema']}.{$row['f_table_name']}");
-                unset($arrNew);
+                if (!empty($arrNew)) unset($arrNew);
                 ?>
                 LAYER
                 <?php $layerName = $row['f_table_schema'] . "." . $row['f_table_name']; ?>
@@ -1125,12 +1148,364 @@ class Mapfile extends \app\inc\Controller
                 END
 
                 TEMPLATE "test"
-                CLASS
-                NAME 'Unnamed class'
-                STYLE
-                COLOR 0 0 0
-                END # style
-                END # Class
+                <?php
+                if (is_array($classArr['data']) and (!$row['wmssource'])) {
+//                    print_r($classArr['data']);
+//                    die();
+                    foreach ($classArr['data'] as $class) {
+                        ?>
+                        CLASS
+                        #NAME
+                        <?php if (!empty($class['name'])) echo "NAME '" . addslashes($class['name']) . "'\n"; ?>
+
+                        #EXPRESSION
+                        <?php if (!empty($class['expression'])) {
+                            if (!empty($layerArr['data'][0]['theme_column'])) echo "EXPRESSION \"" . $class['expression'] . "\"\n";
+                            else echo "EXPRESSION (" . $class['expression'] . ")\n";
+                        } elseif (empty($class['expression']) and !empty($layerArr['data'][0]['theme_column'])) echo "EXPRESSION ''\n";
+                        ?>
+
+                        #MAXSCALEDENOM
+                        <?php if (!empty($class['class_maxscaledenom'])) echo "MAXSCALEDENOM {$class['class_maxscaledenom']}\n"; ?>
+
+                        #MINSCALEDENOM
+                        <?php if (!empty($class['class_minscaledenom'])) echo "MINSCALEDENOM {$class['class_minscaledenom']}\n"; ?>
+
+                        STYLE
+                        #SYMBOL
+                        <?php if (!empty($class['symbol'])) echo "SYMBOL '" . $class['symbol'] . "'\n"; ?>
+
+                        #PATTERN
+                        <?php if (!empty($class['pattern'])) echo "PATTERN " . $class['pattern'] . " END\n"; ?>
+
+                        #LINECAP
+                        <?php if (!empty($class['linecap'])) echo "LINECAP " . $class['linecap'] . "\n"; ?>
+
+                        #WIDTH
+                        <?php if (!empty($class['width'])) echo "WIDTH " . $class['width'] . "\n"; ?>
+
+                        #COLOR
+                        <?php if (!empty($class['color'])) echo "COLOR " . Util::hex2RGB($class['color'], true, " ") . "\n"; ?>
+
+                        #OUTLINECOLOR
+                        <?php if (!empty($class['outlinecolor'])) echo "OUTLINECOLOR " . Util::hex2RGB($class['outlinecolor'], true, " ") . "\n"; ?>
+
+                        #OPACITY
+                        <?php if (!empty($class['style_opacity'])) echo "OPACITY " . $class['style_opacity'] . "\n"; ?>
+
+                        #SIZE
+                        <?php
+                        if (!empty($class['size'])) {
+                            if (is_numeric($class['size']))
+                                echo "SIZE " . $class['size'];
+                            else
+                                echo "SIZE [{$class['size']}]";
+                        }
+                        echo "\n";
+                        ?>
+
+                        #ANGLE
+                        <?php
+                        if (!empty($class['angle'])) {
+                            if (is_numeric($class['angle']) || strtolower($class['angle']) == "auto")
+                                echo "ANGLE " . $class['angle'];
+                            else
+                                echo "ANGLE [{$class['angle']}]";
+                        }
+                        echo "\n";
+                        ?>
+                        #GEOMTRANSFORM
+                        <?php
+                        if (!empty($class['geomtransform'])) {
+
+                            echo "GEOMTRANSFORM '{$class['geomtransform']}'";
+                        }
+                        echo "\n";
+                        ?>
+
+                        #MINSIZE
+                        <?php
+                        if (!empty($class['minsize'])) {
+
+                            echo "MINSIZE {$class['minsize']}";
+                        }
+                        echo "\n";
+                        ?>
+
+                        #MAXSIZE
+                        <?php
+                        if (!empty($class['maxsize'])) {
+
+                            echo "MAXSIZE {$class['maxsize']}";
+                        }
+                        echo "\n";
+                        ?>
+
+                        #OFFSET
+                        <?php
+                        echo "OFFSET " . (!empty($class['style_offsetx']) ? is_numeric($class['style_offsetx']) ? $class['style_offsetx'] : "[" . $class['style_offsetx'] . "]" : "0") . " " .
+                            (!empty($class['style_offsety']) ? is_numeric($class['style_offsety']) ? $class['style_offsety'] : "[" . $class['style_offsety'] . "]" : "0") . "\n"
+                        ?>
+
+                        #POLAROFFSET
+                        <?php
+                        echo "POLAROFFSET " . (!empty($class['style_polaroffsetr']) ? is_numeric($class['style_polaroffsetr']) ? $class['style_polaroffsetr'] : "[" . $class['style_polaroffsetr'] . "]" : "0") . " " .
+                            (!empty($class['style_polaroffsetd']) ? is_numeric($class['style_polaroffsetd']) ? $class['style_polaroffsetd'] : "[" . $class['style_polaroffsetd'] . "]" : "0") . "\n"
+                        ?>
+
+
+                        END # style
+
+                        STYLE
+                        #SYMBOL
+                        <?php if (!empty($class['overlaysymbol'])) echo "SYMBOL '" . $class['overlaysymbol'] . "'\n"; ?>
+
+                        #PATTERN
+                        <?php if (!empty($class['overlaypattern'])) echo "PATTERN " . $class['overlaypattern'] . " END\n"; ?>
+
+                        #LINECAP
+                        <?php if (!empty($class['overlaylinecap'])) echo "LINECAP " . $class['overlaylinecap'] . "\n"; ?>
+
+                        #WIDTH
+                        <?php if (!empty($class['overlaywidth'])) echo "WIDTH " . $class['overlaywidth'] . "\n"; ?>
+
+                        #COLOR
+                        <?php if (!empty($class['overlaycolor'])) echo "COLOR " . Util::hex2RGB($class['overlaycolor'], true, " ") . "\n"; ?>
+
+                        #OUTLINECOLOR
+                        <?php if (!empty($class['overlayoutlinecolor'])) echo "OUTLINECOLOR " . Util::hex2RGB($class['overlayoutlinecolor'], true, " ") . "\n"; ?>
+
+                        #OPACITY
+                        <?php if (!empty($class['overlaystyle_opacity'])) echo "OPACITY " . $class['overlaystyle_opacity'] . "\n"; ?>
+                        #SIZE
+                        <?php
+                        if (!empty($class['overlaysize'])) {
+                            if (is_numeric($class['overlaysize']))
+                                echo "SIZE " . $class['overlaysize'];
+                            else
+                                echo "SIZE [{$class['overlaysize']}]";
+                        }
+                        echo "\n";
+                        ?>
+                        #ANGLE
+                        <?php
+                        if (!empty($class['overlayangle'])) {
+                            if (is_numeric($class['overlayangle']) || strtolower($class['overlayangle']) == "auto")
+                                echo "ANGLE " . $class['overlayangle'];
+                            else
+                                echo "ANGLE [{$class['overlayangle']}]";
+                        }
+                        echo "\n";
+                        ?>
+                        #GEOMTRANSFORM
+                        <?php
+                        if (!empty($class['overlaygeomtransform'])) {
+                            echo "GEOMTRANSFORM '{$class['overlaygeomtransform']}'";
+                        }
+                        echo "\n";
+                        ?>
+
+                        #OFFSET
+                        <?php
+                        echo "OFFSET " . (!empty($class['overlaystyle_offsetx']) ? is_numeric($class['overlaystyle_offsetx']) ? $class['overlaystyle_offsetx'] : "[" . $class['overlaystyle_offsetx'] . "]" : "0") . " " .
+                            (!empty($class['overlaystyle_offsety']) ? is_numeric($class['overlaystyle_offsety']) ? $class['overlaystyle_offsety'] : "[" . $class['overlaystyle_offsety'] . "]" : "0") . "\n"
+                        ?>
+
+                        #POLAROFFSET
+                        <?php
+                        echo "POLAROFFSET " . (!empty($class['overlaystyle_polaroffsetr']) ? is_numeric($class['overlaystyle_polaroffsetr']) ? $class['overlaystyle_polaroffsetr'] : "[" . $class['overlaystyle_polaroffsetr'] . "]" : "0") . " " .
+                            (!empty($class['overlaystyle_polaroffsetd']) ? is_numeric($class['overlaystyle_polaroffsetd']) ? $class['overlaystyle_polaroffsetd'] : "[" . $class['overlaystyle_polaroffsetd'] . "]" : "0") . "\n"
+                        ?>
+
+                        END # style
+
+                        #TEMPLATE "ttt"
+                        <?php if (!empty($class['label'])) { ?>
+
+                            #START_LABEL1_<?php echo $layerName . "\n" ?>
+
+                            LABEL
+                            <?php if (!empty($class['label_text'])) echo "TEXT '" . $class['label_text'] . "'\n"; ?>
+                            TYPE truetype
+                            FONT <?php echo ($class['label_font'] ?: "arial") . ($class['label_fontweight'] ?: "normal") . "\n" ?>
+                            SIZE <?php
+                            if (!empty($class['label_size'])) {
+                                if (is_numeric($class['label_size']))
+                                    echo $class['label_size'];
+                                else
+                                    echo "[{$class['label_size']}]";
+                            } else {
+                                echo "11";
+                            }
+                            echo "\n";
+                            ?>
+                            COLOR <?php echo (!empty($class['label_color'])) ? Util::hex2RGB($class['label_color'], true, " ") : "1 1 1";
+                            echo "\n"; ?>
+                            OUTLINECOLOR <?php echo (!empty($class['label_outlinecolor'])) ? Util::hex2RGB($class['label_outlinecolor'], true, " ") : "255 255 255";
+                            echo "\n"; ?>
+                            SHADOWSIZE 2 2
+                            ANTIALIAS true
+                            FORCE <?php echo (!empty($class['label_force'])) ? "true" : "false";
+                            echo "\n"; ?>
+                            POSITION <?php echo (!empty($class['label_position'])) ? $class['label_position'] : "auto";
+                            echo "\n"; ?>
+                            PARTIALS false
+                            MINSIZE 1
+
+                            #MAXSIZE
+                            <?php
+                            if (!empty($class['label_maxsize'])) {
+
+                                echo "MAXSIZE {$class['label_maxsize']}";
+                            }
+                            echo "\n";
+                            ?>
+                            <?php if (!empty($class['label_maxscaledenom'])) echo "MAXSCALEDENOM {$class['label_maxscaledenom']}\n"; ?>
+                            <?php if (!empty($class['label_minscaledenom'])) echo "MINSCALEDENOM {$class['label_minscaledenom']}\n"; ?>
+                            <?php if (!empty($class['label_buffer'])) echo "BUFFER {$class['label_buffer']}\n"; ?>
+                            <?php if (!empty($class['label_repeatdistance'])) echo "REPEATDISTANCE {$class['label_repeatdistance']}\n"; ?>
+                            <?php if (!empty($class['label_minfeaturesize'])) echo "MINFEATURESIZE {$class['label_minfeaturesize']}\n"; ?>
+
+                            <?php if (!empty($class['label_expression'])) {
+                                echo "EXPRESSION (" . $class['label_expression'] . ")\n";
+                            }
+                            ?>
+                            #ANGLE
+                            <?php
+                            if (!empty($class['label_angle'])) {
+                                if (is_numeric($class['label_angle']) or $class['label_angle'] == 'auto' or $class['label_angle'] == 'auto2'
+                                    or $class['label_angle'] == 'follow'
+                                )
+                                    echo "ANGLE " . $class['label_angle'];
+                                else
+                                    echo "ANGLE [{$class['label_angle']}]";
+                            }
+                            echo "\n";
+                            ?>
+                            WRAP "\n"
+
+                            OFFSET <?php echo (!empty($class['label_offsetx']) ? $class['label_offsetx'] : "0") . " " . (!empty($class['label_offsety']) ? $class['label_offsety'] : "0") . "\n" ?>
+
+
+                            STYLE
+                            <?php if (!empty($class['label_backgroundcolor'])) {
+                                $labelBackgroundColor = Util::hex2RGB($class['label_backgroundcolor'], true, " ");
+                                echo
+                                    "GEOMTRANSFORM 'labelpoly'\n" .
+                                    "COLOR {$labelBackgroundColor}\n";
+
+                                echo
+                                    "OUTLINECOLOR {$labelBackgroundColor}\n" .
+                                    "WIDTH " . ($class['label_backgroundpadding'] ?: "1") . "\n";
+
+                            }
+                            ?>
+                            END # STYLE
+                            END
+                            #END_LABEL1_<?php echo $layerName . "\n" ?>
+                        <?php } ?>
+                        #LABEL2
+                        <?php if (!empty($class['label2'])) { ?>
+                            #START_LABEL2_<?php echo $layerName . "\n" ?>
+                            LABEL
+                            <?php if (!empty($class['label2_text'])) echo "TEXT '" . $class['label2_text'] . "'\n"; ?>
+                            TYPE truetype
+                            FONT <?php echo ($class['label2_font'] ?: "arial") . ($class['label2_fontweight'] ?: "normal") . "\n" ?>
+                            SIZE <?php
+                            if ($class['label2_size']) {
+                                if (is_numeric($class['label2_size']))
+                                    echo $class['label2_size'];
+                                else
+                                    echo "[{$class['label2_size']}]";
+                            } else {
+                                echo "11";
+                            }
+                            echo "\n";
+                            ?>
+                            COLOR <?php echo !empty($class['label2_color']) ? Util::hex2RGB($class['label2_color'], true, " ") : "1 1 1";
+                            echo "\n"; ?>
+                            OUTLINECOLOR <?php echo ($class['label2_outlinecolor']) ? Util::hex2RGB($class['label2_outlinecolor'], true, " ") : "255 255 255";
+                            echo "\n"; ?>
+                            SHADOWSIZE 2 2
+                            ANTIALIAS true
+                            FORCE <?php echo ($class['label2_force']) ? "true" : "false";
+                            echo "\n"; ?>
+                            POSITION <?php echo ($class['label2_position']) ?: "auto";
+                            echo "\n"; ?>
+                            PARTIALS false
+                            MINSIZE 1
+                            #MAXSIZE
+                            <?php
+                            if (!empty($class['label2_maxsize'])) {
+
+                                echo "MAXSIZE {$class['label2_maxsize']}";
+                            }
+                            echo "\n";
+                            ?>
+                            <?php if (!empty($class['label2_maxscaledenom'])) echo "MAXSCALEDENOM {$class['label2_maxscaledenom']}\n"; ?>
+                            <?php if (!empty($class['label2_minscaledenom'])) echo "MINSCALEDENOM {$class['label2_minscaledenom']}\n"; ?>
+                            <?php if (!empty($class['label2_buffer'])) echo "BUFFER {$class['label2_buffer']}\n"; ?>
+                            <?php if (!empty($class['label2_repeatdistance'])) echo "REPEATDISTANCE {$class['label2_repeatdistance']}\n"; ?>
+                            <?php if (!empty($class['label2_minfeaturesize'])) echo "MINFEATURESIZE {$class['label2_minfeaturesize']}\n"; ?>
+
+                            <?php if (!empty($class['label2_expression'])) {
+                                echo "EXPRESSION (" . $class['label2_expression'] . ")\n";
+                            }
+                            ?>
+                            #ANGLE
+                            <?php
+                            if (!empty($class['label2_angle'])) {
+                                if (is_numeric($class['label2_angle']) or $class['label2_angle'] == 'auto' or $class['label2_angle'] == 'auto2'
+                                    or $class['label2_angle'] == 'follow'
+                                )
+                                    echo "ANGLE " . $class['label2_angle'];
+                                else
+                                    echo "ANGLE [{$class['label2_angle']}]";
+                            }
+                            echo "\n";
+                            ?>
+                            WRAP "\n"
+
+                            OFFSET <?php echo (!empty($class['label2_offsetx']) ? $class['label2_offsetx'] : "0") . " " . ($class['label2_offsety'] ?: "0") . "\n" ?>
+
+                            STYLE
+                            <?php if (!empty($class['label2_backgroundcolor'])) {
+                                $labelBackgroundColor = Util::hex2RGB($class['label2_backgroundcolor'], true, " ");
+                                echo
+                                    "GEOMTRANSFORM 'labelpoly'\n" .
+                                    "COLOR {$labelBackgroundColor}\n";
+
+                                if (!empty($class['label2_backgroundpadding'])) {
+                                    echo
+                                        "OUTLINECOLOR {$labelBackgroundColor}\n" .
+                                        "WIDTH {$class['label2_backgroundpadding']}\n";
+                                }
+                            }
+                            ?>
+                            END # STYLE
+                            END
+                            #END_LABEL2_<?php echo $layerName . "\n" ?>
+
+                        <?php } ?>
+
+                        <?php if (!empty($class['leader'])) { ?>
+                            LEADER
+                            GRIDSTEP <?php echo ($class['leader_gridstep']) ? $class['leader_gridstep'] : "5";
+                            echo "\n"; ?>
+                            MAXDISTANCE <?php echo ($class['leader_maxdistance']) ? $class['leader_maxdistance'] : "30";
+                            echo "\n"; ?>
+                            STYLE
+                            COLOR <?php echo ($class['leader_color']) ? Util::hex2RGB($class['leader_color'], true, " ") : "1 1 1";
+                            echo "\n"; ?>
+                            WIDTH 1
+                            END
+                            END
+                        <?php } ?>
+                        END # Class
+                        <?php
+                    }
+                }
+                ?>
                 END #Layer
             <?php } ?>
         <?php } ?>
