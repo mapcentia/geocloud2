@@ -1680,7 +1680,7 @@ geocloud = (function () {
                     o = this.addYandex("publicMapHybrid");
                     break;
                 case "dtkSkaermkort":
-                    o = this.addDtkSkaermkort("dtkSkaermkort", "dtk_skaermkort");
+                    o = this.addDtkSkaermkort("dtkSkaermkort", "kortforsyningen.dtk_skaermkort");
                     break;
                 case "dtkSkaermkortDaempet":
                     o = this.addDtkSkaermkort("dtkSkaermkortDaempet", "kortforsyningen.dtk_skaermkort_daempet");
