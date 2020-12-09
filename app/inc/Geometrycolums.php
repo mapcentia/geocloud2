@@ -358,5 +358,13 @@ class Geometrycolums
                 'is_nullable' => true,
                 'restriction' => NULL,
             ),
+        'legend_url' =>
+            array(
+                'num' => 16,
+                'type' => 'text',
+                'full_type' => 'text',
+                'is_nullable' => true,
+                'restriction' => NULL,
+            ),
     );
 }
