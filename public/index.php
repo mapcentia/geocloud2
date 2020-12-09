@@ -294,9 +294,6 @@ if (Input::getPath()->part(1) == "api") {
     Session::authenticate(App::$param['userHostName'] . "/dashboard/");
     $_SESSION['postgisschema'] = Input::getPath()->part(3) ?: "public";
     include_once("admin.php");
-    if (\app\conf\App::$param['intercom_io']) {
-        include_once("../app/conf/intercom.js.inc");
-    }
 } elseif (Input::getPath()->part(1) == "editor") {
     Session::start();
     Session::authenticate(App::$param['userHostName'] . "/dashboard/");
