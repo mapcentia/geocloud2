@@ -38,9 +38,6 @@ RUN cd ~ &&\
 # Make php-fpm run in the foreground
 RUN sed 's/;daemonize = yes/daemonize = no/' -i /etc/php/7.3/fpm/php-fpm.conf
 
-# Make sure env vars set in container is available for PHP
-RUN echo "clear_env=no" >> /etc/php/7.3/fpm/pool.d/www.conf
-
 # Install Node.js, Grunt and Forever
 RUN curl -sL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh &&\
     bash nodesource_setup.sh &&\

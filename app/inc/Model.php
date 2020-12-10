@@ -34,11 +34,11 @@ class Model
 
     function __construct()
     {
-        $this->postgishost = !empty(Connection::$param['postgishost']) ? Connection::$param['postgishost'] : getenv('POSTGIS_HOST');
-        $this->postgisport = !empty(Connection::$param['postgisport']) ? Connection::$param['postgisport'] : getenv('POSTGIS_PORT');
-        $this->postgisuser = !empty(Connection::$param['postgisuser']) ? Connection::$param['postgisuser'] : getenv('POSTGIS_USER');
-        $this->postgisdb = !empty(Connection::$param['postgisdb']) ? Connection::$param['postgisdb'] : getenv('POSTGIS_DB');
-        $this->postgispw = !empty(Connection::$param['postgispw']) ? Connection::$param['postgispw'] : getenv('POSTGIS_PW');
+        $this->postgishost = Connection::$param['postgishost'];
+        $this->postgisport = Connection::$param['postgisport'];
+        $this->postgisuser = Connection::$param['postgisuser'];
+        $this->postgisdb = Connection::$param['postgisdb'];
+        $this->postgispw = Connection::$param['postgispw'];
         $this->postgisschema = isset(Connection::$param['postgisschema']) ? Connection::$param['postgisschema'] : null;
     }
 
