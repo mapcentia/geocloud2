@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNRELEASED]
+### Added
+- A custom PNG can now be used as legend for a layer. The URL pointing to the PNG is set in the Legend tab. Must run database migrations.
+
 ### Fixed
 - Using `PROCESSING 'NATIVE_FILTER=id=234'` instead of `FILTER` in MapFile.
 

@@ -527,9 +527,12 @@ class Mapfile extends \app\inc\Controller
                 "gml_types" "auto"
                 "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
                 "gml_<?php echo $row['f_geometry_column'] ?>_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
-                <?php if ($row['wmssource']) {
+                <?php if ($row['wmssource'] && empty($row['legend_url'])) {
                     $wmsCon = str_replace(array("layers", "LAYERS"), "LAYER", $row['wmssource']);
                     echo "\"wms_get_legend_url\" \"{$wmsCon}&REQUEST=getlegendgraphic\"\n";
+                } ?>
+                <?php if (!empty($row['legend_url'])) {
+                    echo "\"wms_get_legend_url\" \"{$row['legend_url']}\"\n";
                 } ?>
                 <?php if (!empty($layerArr['data'][0]['query_buffer'])) echo "\"appformap_query_buffer\" \"" . $layerArr['data'][0]['query_buffer'] . "\"\n"; ?>
                 END
