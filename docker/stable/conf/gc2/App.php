@@ -79,12 +79,6 @@ class App
         // If true, low layer sort id puts the layer on top
         "reverseLayerOrder" => false,
 
-        // Use Intercom.io for messaging MapCentia
-        "intercom_io" => true,
-
-        // Hero text on log in / sign up page
-        "heroText" => "<h2>GC2 is a geospatial platform built on powerful open source software</h2><p>PostGIS, MapServer, TileCache, Elasticsearch, WMS, WFS-T, SQL API, JavaScript API, OpenLayers, Leaflet and more in one integrated platform.</p>",
-
         // OSM server
         //"osmConfig" => array(
         //    "server" => "hostaddr=127.0.0.1 port=5432 dbname=osm user=postgres password=1234",
