@@ -114,8 +114,59 @@ class App
             "*"
         ],
 
-        // Meta properties
         "metaConfig" => [
+            [
+                "fieldsetName" => "Konflikt",
+                "fields" => [
+                    [
+                        "name" => "short_conflict_meta_desc",
+                        "type" => "text",
+                        "title" => "Kort beskrivelse",
+                    ],
+                    [
+                        "name" => "long_conflict_meta_desc",
+                        "type" => "textarea",
+                        "title" => "Lang beskrivelse",
+                    ],
+                ]
+            ],
+            [
+                "fieldsetName" => "Info pop-up",
+                "fields" => [
+                    [
+                        "name" => "info_template",
+                        "type" => "textarea",
+                        "title" => "Pop-up template",
+                    ],
+                    [
+                        "name" => "info_element_selector",
+                        "type" => "text",
+                        "title" => "Element selector",
+                    ],
+                    [
+                        "name" => "info_function",
+                        "type" => "textarea",
+                        "title" => "Function",
+                    ],
+                    [
+                        "name" => "select_function",
+                        "type" => "textarea",
+                        "title" => "Select function",
+                    ],
+                    [
+                        "name" => "accordion_summery_prefix",
+                        "type" => "text",
+                        "title" => "Accordion summery prefix",
+                    ],
+                    [
+                        "name" => "accordion_summery",
+                        "type" => "text",
+                        "title" => "Accordion summery",
+                    ],
+
+                ]
+
+            ],
             [
                 "fieldsetName" => "Layer type",
                 "fields" => [
@@ -131,8 +182,31 @@ class App
                         ],
                         "default" => "t",
                     ],
+                    [
+                        "name" => "default_layer_type",
+                        "type" => "combo",
+                        "title" => "Default",
+                        "values" => [
+                            ["name" => "Tile", "value" => "t"],
+                            ["name" => "Vector", "value" => "v"],
+                            ["name" => "WebGL", "value" => "w"],
+                            ["name" => "MVT", "value" => "mvt"],
+                        ],
+                        "default" => "t",
+                    ],
                 ]
 
+            ],
+            [
+                "fieldsetName" => "Tables",
+                "fields" => [
+                    [
+                        "name" => "zoom_on_table_click",
+                        "type" => "checkbox",
+                        "title" => "Zoom on select",
+                        "default" => false,
+                    ],
+                ]
             ],
             [
                 "fieldsetName" => "Editor",
@@ -159,7 +233,12 @@ class App
                         "name" => "tiles_service_uri",
                         "type" => "text",
                         "title" => "Tiles service uri",
-                    ]
+                    ],
+                    [
+                        "name" => "tiles_selected_style",
+                        "type" => "textarea",
+                        "title" => "Selected style",
+                    ],
                 ]
 
             ],
@@ -180,7 +259,40 @@ class App
                         "name" => "max_features",
                         "type" => "text",
                         "title" => "Max features",
-                        "default" => "100",
+                        "default" => "500",
+                    ],
+                    [
+                        "name" => "use_clustering",
+                        "type" => "checkbox",
+                        "title" => "Use clustering",
+                        "default" => false,
+                    ],
+                    [
+                        "name" => "point_to_layer",
+                        "type" => "textarea",
+                        "title" => "Point to layer",
+                    ],
+                    [
+                        "name" => "vector_style",
+                        "type" => "textarea",
+                        "title" => "Style function",
+                    ],
+                    [
+                        "name" => "show_table_on_side",
+                        "type" => "checkbox",
+                        "title" => "Show table",
+                        "default" => false,
+                    ],
+                    [
+                        "name" => "reload_interval",
+                        "type" => "text",
+                        "title" => "Reload Interval",
+                    ],
+                    [
+                        "name" => "disable_vector_feature_info",
+                        "type" => "checkbox",
+                        "title" => "Disable feature info",
+                        "default" => false,
                     ],
                 ]
 
@@ -208,6 +320,12 @@ class App
                         ],
                         "default" => "any",
                     ],
+                    [
+                        "name" => "filter_immutable",
+                        "type" => "checkbox",
+                        "title" => "Immutable",
+                        "default" => false,
+                    ],
                 ]
 
             ],
@@ -229,10 +347,21 @@ class App
                         "type" => "text",
                         "title" => "Sub group",
                     ],
-                ]
-
+                    [
+                        "name" => "default_open_tools",
+                        "type" => "textarea",
+                        "title" => "Open tools",
+                    ],
+                    [
+                        "name" => "disable_check_box",
+                        "type" => "checkbox",
+                        "title" => "Disable check box",
+                        "default" => false,
+                    ],
+                ],
             ],
         ],
+        // Meta properties
         "vidiUrl" => "http://127.0.0.1:3000",
 
     );
