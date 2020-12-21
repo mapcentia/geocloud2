@@ -426,10 +426,8 @@ function doQuery($queryType)
                         $fieldsArr[$table] = explode(",", $fields[$table]);
                     } else {
                         foreach ($postgisObject->getMetaData($table) as $key => $value) {
-                            if ($key != $primeryKey['attname']) {
-                                if (!preg_match($specialChars, $key)) {
-                                    $fieldsArr[$table][] = $key;
-                                }
+                            if (!preg_match($specialChars, $key)) {
+                                $fieldsArr[$table][] = $key;
                             }
                         }
                     }
@@ -596,7 +594,6 @@ function doSelect($table, $sql, $sql2, $from)
     global $fieldConfArr;
     global $resultType;
     global $server;
-
 
 
     if (!$gmlFeature[$table]) {
@@ -1249,6 +1246,9 @@ function doParse($arr)
             $role = $roleObj["data"][$user];
 
             foreach ($forSql2['fields'][$i] as $key => $field) {
+                if ($field == $primeryKey['attname']) {
+                    makeExceptionReport("It's not possible to update the primary key: {$primeryKey['attname']}");
+                }
                 if (is_array($forSql2['values'][$i][$key])) { // is geometry
                     $value = "public.ST_Transform(public.ST_GeometryFromText('" . current($forSql2['values'][$i][$key]) . "'," . next($forSql2['values'][$i][$key]) . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $forSql2['tables'][$i], "srid") . ")";
                 } elseif ($field == "gc2_version_user") {

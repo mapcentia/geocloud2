@@ -3,7 +3,7 @@
  * @author     Martin Høgh <mh@mapcentia.com>
  * @copyright  2013-2019 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- *  
+ *
  */
 
 $atts["targetNamespace"] = $gmlNameSpaceUri;
@@ -42,9 +42,7 @@ foreach ($tables as $table) {
     $simpleType = false;
 
     foreach ($tableObj->metaData as $key => $value) {
-        if ($key != $primeryKey['attname']) {
-            $fieldsArr[$table][] = $key;
-        }
+        $fieldsArr[$table][] = $key;
     }
     $fields = implode(",", $fieldsArr[$table]);
     $sql = "SELECT '{$fields}' FROM " . $postgisschema . "." . $table . " LIMIT 1";
@@ -134,11 +132,11 @@ foreach ($tables as $table) {
             if (isset($properties->image) && $properties->image == true) {
                 $atts["type"] = "gc2:imageType";
                 if (isset($fieldConf->$atts["name"]->properties)) {
-                 $pJson = json_decode($fieldConf->$atts["name"]->properties, true);
-                    if ($pJson["width"]){
+                    $pJson = json_decode($fieldConf->$atts["name"]->properties, true);
+                    if ($pJson["width"]) {
                         $atts["width"] = $pJson["width"];
                     }
-                    if ($pJson["quality"]){
+                    if ($pJson["quality"]) {
                         $atts["quality"] = $pJson["quality"];
                     }
                 }
@@ -147,40 +145,30 @@ foreach ($tables as $table) {
 
             if ($tableObj->metaData[$atts["name"]]['type'] == "number") {
                 $atts["type"] = "xsd:decimal";
-            }
-            elseif ($tableObj->metaData[$atts["name"]]['type'] == "text") {
+            } elseif ($tableObj->metaData[$atts["name"]]['type'] == "text") {
                 $atts["type"] = "xsd:string";
-            }
-            elseif ($tableObj->metaData[$atts["name"]]['type'] == "timestamp") {
+            } elseif ($tableObj->metaData[$atts["name"]]['type'] == "timestamp") {
                 //$atts["type"] = "xsd:dateTime";
                 $atts["type"] = "xsd:string";
-            }
-            elseif ($tableObj->metaData[$atts["name"]]['type'] == "timestamptz") {
+            } elseif ($tableObj->metaData[$atts["name"]]['type'] == "timestamptz") {
                 //$atts["type"] = "xsd:dateTime";
                 $atts["type"] = "xsd:string";
-            }
-            elseif ($tableObj->metaData[$atts["name"]]['type'] == "date") {
+            } elseif ($tableObj->metaData[$atts["name"]]['type'] == "date") {
                 //$atts["type"] = "xsd:date";
                 $atts["type"] = "xsd:string";
-            }
-            elseif ($tableObj->metaData[$atts["name"]]['type'] == "time") {
+            } elseif ($tableObj->metaData[$atts["name"]]['type'] == "time") {
                 //$atts["type"] = "xsd:time";
                 $atts["type"] = "xsd:string";
-            }
-            elseif ($tableObj->metaData[$atts["name"]]['type'] == "timetz") {
+            } elseif ($tableObj->metaData[$atts["name"]]['type'] == "timetz") {
                 //$atts["type"] = "xsd:time";
                 $atts["type"] = "xsd:string";
-            }
-            elseif ($tableObj->metaData[$atts["name"]]['type'] == "bytea") {
+            } elseif ($tableObj->metaData[$atts["name"]]['type'] == "bytea") {
                 $atts["type"] = "xsd:base64Binary";
-            }
-            elseif ($tableObj->metaData[$atts["name"]]['type'] == "json") {
+            } elseif ($tableObj->metaData[$atts["name"]]['type'] == "json") {
                 $atts["type"] = "xsd:string";
-            }
-            elseif ($tableObj->metaData[$atts["name"]]['type'] == "uuid") {
+            } elseif ($tableObj->metaData[$atts["name"]]['type'] == "uuid") {
                 $atts["type"] = "xsd:string";
-            }
-            else {
+            } else {
                 if ($tableObj->metaData[$atts["name"]]['isArray']) {
                     $atts["type"] = "xsd:string";
                 } else {
