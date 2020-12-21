@@ -1246,9 +1246,6 @@ function doParse($arr)
             $role = $roleObj["data"][$user];
 
             foreach ($forSql2['fields'][$i] as $key => $field) {
-                if ($field == $primeryKey['attname']) {
-                    makeExceptionReport("It's not possible to update the primary key: {$primeryKey['attname']}");
-                }
                 if (is_array($forSql2['values'][$i][$key])) { // is geometry
                     $value = "public.ST_Transform(public.ST_GeometryFromText('" . current($forSql2['values'][$i][$key]) . "'," . next($forSql2['values'][$i][$key]) . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $forSql2['tables'][$i], "srid") . ")";
                 } elseif ($field == "gc2_version_user") {
@@ -1296,8 +1293,18 @@ function doParse($arr)
                 } else {
                     $value = $postgisObject->quote($forSql2['values'][$i][$key]); // We need to escape the string
                 }
+                if ($field == $primeryKey['attname']) {
+                    // We need the original feature so, we can se if the pri key is changed
+                    $query = "SELECT * FROM {$postgisschema}.{$forSql2['tables'][$i]} WHERE {$forSql2['wheres'][$i]}";
+                    $res = $postgisObject->execQuery($query);
+                    $originalFeature = $postgisObject->fetchRow($res);
+                    $oldValue = (string)$forSql2['values'][$i][$key];
+                    $newValue = (string)$originalFeature[$primeryKey['attname']];
+                    if ($oldValue != $newValue) {
+                        makeExceptionReport("It's not possible to update the primary key ({$primeryKey['attname']}). The value of the key is {$oldValue} and new value is {$newValue}");
+                    }
+                }
                 $pairs[] = "\"" . $field . "\" =" . $value;
-
             }
             $sql .= implode(",", $pairs);
             $sql .= " WHERE {$forSql2['wheres'][$i]} RETURNING {$primeryKey['attname']} as gid";

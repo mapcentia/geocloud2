@@ -4857,7 +4857,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
 
     }
     $.ajax({
-        url: '/controllers/table/columns/' + layerName,
+        url: '/controllers/table/columns/' + layerName + '?i=1',
         async: false,
         dataType: 'json',
         type: 'GET',
