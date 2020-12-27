@@ -14,7 +14,8 @@
         "predis/predis": "^1.1",
         "league/flysystem": "^1.0",
         "league/flysystem-aws-s3-v3": "^1.0",
-        "guzzlehttp/guzzle": "^6.5"
+        "guzzlehttp/guzzle": "^6.5",
+        "ext-pdo": "*"
     },
     "require-dev": {
         "codeception/module-asserts": "^1.3",
