@@ -21,7 +21,9 @@ use \app\inc\Session;
  */
 class User extends Controller
 {
-
+    /**
+     * @var UserModel
+     */
     private $user;
 
     /**
@@ -34,7 +36,7 @@ class User extends Controller
     }
 
     /**
-     * API section GET router
+     * @return array<mixed>
      */
     function get_index(): array
     {
@@ -51,19 +53,15 @@ class User extends Controller
                 ];
             }
         } else {
-            if ($action === "databases") {
-                return $this->get_databases();
-            } else {
-                return [
-                    'success' => false,
-                    'code' => 401
-                ];
-            }
+            return [
+                'success' => false,
+                'code' => 401
+            ];
         }
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      *
      * @OA\Post(
      *   path="/api/v2/user",
@@ -134,7 +132,7 @@ class User extends Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      *
      * @OA\Get(
      *   path="/api/v2/user/{userId}",
@@ -182,7 +180,7 @@ class User extends Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      *
      * @OA\Put(
      *   path="/api/v2/user/{userId}",
@@ -275,7 +273,7 @@ class User extends Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      *
      * @OA\Delete(
      *   path="/api/v2/user/{userId}",
@@ -326,7 +324,7 @@ class User extends Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      *
      * @OA\Get(
      *   path="/api/v2/user/{userId}/subusers",

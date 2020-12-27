@@ -14,6 +14,7 @@ and this project adheres to [CalVer](https://calver.org/).
   - POSTGIS_PORT=5432
   - POSTGIS_PW=1234
   - POSTGIS_PGBOUNCER=false
+- PHPStan added to project for static code analysis. A lot of type issues fixed.
   
 ### Changed
 - Intercom.io widget is removed.
