@@ -8,11 +8,12 @@
 
 namespace app\inc;
 
-use \app\conf\App;
+use app\conf\App;
+use app\conf\Connection;
 use Exception;
 use PDO;
+use PDOException;
 use PDOStatement;
-use \app\conf\Connection;
 
 /**
  * Class Model
@@ -45,8 +46,8 @@ class Model
     /**
      * @param PDOStatement $result
      * @param string $result_type
-     * @return array
-     * @throws \PDOException
+     * @return array<mixed>
+     * @throws PDOException
      */
     public function fetchRow(PDOStatement $result, $result_type = "assoc")
     {
@@ -55,8 +56,8 @@ class Model
             case "assoc" :
                 try {
                     $row = $result->fetch(PDO::FETCH_ASSOC);
-                } catch (\PDOException $e) {
-                    throw new \PDOException($e->getMessage());
+                } catch (PDOException $e) {
+                    throw new PDOException($e->getMessage());
                 }
                 break;
             case "both" :
@@ -198,23 +199,23 @@ class Model
     /**
      * @param $sql
      * @return mixed
-     * @throws \PDOException
+     * @throws PDOException
      */
     public function prepare($sql)
     {
         if (!$this->db) {
             try {
                 $this->connect("PDO");
-            } catch (\PDOException $e) {
-                throw new \PDOException($e->getMessage());
+            } catch (PDOException $e) {
+                throw new PDOException($e->getMessage());
             }
         }
         $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         try {
             $stmt = $this->db->prepare($sql);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->PDOerror[] = $e->getMessage();
-            throw new \PDOException($e->getMessage());
+            throw new PDOException($e->getMessage());
         }
         return $stmt;
     }
@@ -240,8 +241,8 @@ class Model
                 if (!$this->db) {
                     try {
                         $this->connect("PDO");
-                    } catch (\PDOException $e) {
-                        throw new \PDOException($e->getMessage());
+                    } catch (PDOException $e) {
+                        throw new PDOException($e->getMessage());
                     }
                 }
                 if ($this->connectionFailed) {
@@ -258,7 +259,7 @@ class Model
                             // Return interger
                             $result = $this->db->exec($query);
                     }
-                } catch (\PDOException $e) {
+                } catch (PDOException $e) {
                     $this->PDOerror[] = $e->getMessage();
                 }
                 break;
@@ -340,7 +341,7 @@ class Model
                 } else {
                     $res->execute(array("table" => $_schema . "." . $_table));
                 }
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
                 $response['code'] = 401;
@@ -356,7 +357,7 @@ class Model
                                 $resC = $this->prepare($sql);
                                 $resC->execute();
 
-                            } catch (\PDOException $e) {
+                            } catch (PDOException $e) {
                                 $response['success'] = false;
                                 $response['message'] = $e->getMessage();
                                 $response['code'] = 401;
@@ -375,7 +376,7 @@ class Model
                         $resC = $this->prepare($sql);
                         $resC->execute();
 
-                    } catch (\PDOException $e) {
+                    } catch (PDOException $e) {
                         $response['success'] = false;
                         $response['message'] = $e->getMessage();
                         $response['code'] = 401;
@@ -437,10 +438,10 @@ class Model
                 try {
                     $this->db = new PDO("pgsql:dbname={$this->postgisdb};host={$this->postgishost};" . (($this->postgisport) ? "port={$this->postgisport}" : ""), "{$this->postgisuser}", "{$this->postgispw}");
                     $this->execQuery("set client_encoding='UTF8'", "PDO");
-                } catch (\PDOException $e) {
+                } catch (PDOException $e) {
                     $this->db = NULL;
                     $this->connectionFailed = true;
-                    throw new \PDOException($e->getMessage());
+                    throw new PDOException($e->getMessage());
                 }
                 break;
         }
@@ -582,7 +583,7 @@ class Model
         $res = $this->prepare($sql);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -601,7 +602,7 @@ class Model
         $res = $this->prepare($sql);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -620,7 +621,7 @@ class Model
         $res = $this->prepare($sql);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -639,7 +640,7 @@ class Model
         $res = $this->prepare($sql);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 401;
@@ -668,7 +669,7 @@ class Model
         $res = $this->prepare($sql);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 401;
@@ -702,7 +703,7 @@ class Model
 
             try {
                 $res->execute();
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
                 $response['code'] = 401;
@@ -771,7 +772,7 @@ class Model
             $res = $this->prepare($sql);
             try {
                 $res->execute(["table" => $table, "schema" => $schema]);
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
                 $response['code'] = 401;
@@ -824,7 +825,7 @@ class Model
             $res = $this->prepare($sql);
             try {
                 $res->execute(["table" => $table, "schema" => $schema]);
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
                 $response['code'] = 401;
@@ -875,7 +876,7 @@ class Model
             try {
                 $res->execute();
                 $rows = $this->fetchAll($res);
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 die($e->getMessage());
             }
             try {

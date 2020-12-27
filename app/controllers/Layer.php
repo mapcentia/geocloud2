@@ -1,37 +1,51 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- *  
+ *
  */
 
 namespace app\controllers;
 
-use \app\inc\Input;
-use \app\conf\Connection;
+use app\inc\Controller;
+use app\inc\Input;
 
 /**
  * Class Layer
  * @package app\controllers
  */
-class Layer extends \app\inc\Controller
+class Layer extends Controller
 {
+    /**
+     * @var \app\models\Layer
+     */
     private $table;
+
+    /**
+     * @var \app\models\Table
+     */
+    private $geometryJoinTable;
 
     function __construct()
     {
         parent::__construct();
-
         $this->table = new \app\models\Layer();
+        $this->geometryJoinTable = new \app\models\Table("settings.geometry_columns_join");
     }
 
-    public function get_records()
+    /**
+     * @return array<mixed>
+     */
+    public function get_records(): array
     {
-        return $this->table->getRecords(true, "*", $whereClause = Connection::$param["postgisschema"]);
+        return $this->table->getRecords(true);
     }
 
-    public function get_groups()
+    /**
+     * @return array<string>
+     */
+    public function get_groups(): array
     {
         $groups = $this->table->getGroups("layergroup");
         if (array_search(array("group" => ""), $groups["data"]) !== false) unset($groups["data"][array_search(array("group" => ""), $groups["data"])]);
@@ -40,104 +54,138 @@ class Layer extends \app\inc\Controller
         return $groups;
     }
 
-    public function put_records()
+    /**
+     * @return array<mixed>
+     */
+    public function put_records(): array
     {
-        $this->table = new \app\models\table("settings.geometry_columns_join");
         $data = (array)json_decode(urldecode(Input::get(null, true)));
         $response = $this->auth($data["data"]->_key_);
-        return (!$response['success']) ? $response : $this->table->updateRecord($data, "_key_", false, Input::getPath()->part(5));
+        return (!$response['success']) ? $response : $this->geometryJoinTable->updateRecord($data, "_key_", false, false);
     }
 
-    public function delete_records()
+    /**
+     * @return array<mixed>
+     */
+    public function delete_records(): array
     {
         $input = json_decode(Input::get());
         $response = $this->auth(null, array());
         return (!$response['success']) ? $response : $this->table->delete($input->data);
     }
 
-    public function get_columns()
+    /**
+     * @return array<mixed>
+     */
+    public function get_columns(): array
     {
-        $this->response = $this->table->getColumnsForExtGridAndStore();
+        return $this->response = $this->table->getColumnsForExtGridAndStore();
     }
 
-    public function get_columnswithkey()
+    /**
+     * @return array<mixed>
+     */
+    public function get_columnswithkey(): array
     {
         return $this->table->getColumnsForExtGridAndStore(true);
     }
 
-    public function get_cartomobile()
-    {
-        $response = $this->auth(Input::getPath()->part(4), array("read" => true, "write" => true, "all" => true));
-        return (!$response['success']) ? $response : $this->table->getCartoMobileSettings(Input::getPath()->part(4));
-    }
-
-    public function put_cartomobile()
-    {
-        $response = $this->auth(Input::getPath()->part(5));
-        return (!$response['success']) ? $response : $this->table->updateCartoMobileSettings(json_decode(Input::get())->data, Input::getPath()->part(5));
-    }
-
-    public function get_elasticsearch()
+    /**
+     * @return array<mixed>
+     */
+    public function get_elasticsearch(): array
     {
         $response = $this->auth(Input::getPath()->part(4), array("read" => true, "write" => true, "all" => true));
         return (!$response['success']) ? $response : $this->table->getElasticsearchMapping(Input::getPath()->part(4));
     }
 
-    public function put_elasticsearch()
+    /**
+     * @return array<mixed>
+     */
+    public function put_elasticsearch(): array
     {
         $response = $this->auth(Input::getPath()->part(5));
         return (!$response['success']) ? $response : $this->table->updateElasticsearchMapping(json_decode(Input::get())->data, Input::getPath()->part(5));
     }
 
-    public function getValueFromKey($_key_, $column)
+    /**
+     * @param string $_key_
+     * @param string $column
+     * @return string|null
+     */
+    public function getValueFromKey(string $_key_, string $column): ?string
     {
         return $this->table->getValueFromKey($_key_, $column);
     }
 
-    public function put_name()
+    /**
+     * @return array<mixed>
+     */
+    public function put_name(): array
     {
         $response = $this->auth(null, array());
         return (!$response['success']) ? $response : $this->table->rename(urldecode(Input::getPath()->part(4)), json_decode(Input::get())->data);
     }
 
-    public function put_schema()
+    /**
+     * @return array<mixed>
+     */
+    public function put_schema(): array
     {
         $input = json_decode(Input::get());
         $response = $this->auth(null, array(), true); // Never sub-user
         return (!$response['success']) ? $response : $this->table->setSchema($input->data->tables, $input->data->schema);
     }
 
-    public function get_privileges()
+    /**
+     * @return array<mixed>
+     */
+    public function get_privileges(): array
     {
         $response = $this->auth(null, array());
         return (!$response['success']) ? $response : $this->table->getPrivileges(Input::getPath()->part(4));
     }
 
-    public function put_privileges()
+    /**
+     * @return array<mixed>
+     */
+    public function put_privileges(): array
     {
         $response = $this->auth(null, array());
         return (!$response['success']) ? $response : $this->table->updatePrivileges(json_decode(Input::get())->data);
     }
 
-    public function put_copymeta()
+    /**
+     * @return array<mixed>
+     */
+    public function put_copymeta(): array
     {
         $response = $this->auth(Input::getPath()->part(4));
         return (!$response['success']) ? $response : $this->table->copyMeta(Input::getPath()->part(4), Input::getPath()->part(5));
     }
 
-    public function get_roles()
+    /**
+     * @return array<mixed>
+     */
+    public function get_roles(): array
     {
         $response = $this->auth(null, array());
         return (!$response['success']) ? $response : $this->table->getRoles(Input::getPath()->part(4));
     }
 
-    public function put_roles()
+    /**
+     * @return array<mixed>
+     */
+    public function put_roles(): array
     {
         $response = $this->auth(null, array());
         return (!$response['success']) ? $response : $this->table->updateRoles(json_decode(Input::get(), true)->data);
     }
 
-    public function get_tags()
+    /**
+     * @return array<mixed>
+     */
+    public function get_tags(): array
     {
         return $this->table->getTags();
     }

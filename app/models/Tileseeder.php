@@ -87,10 +87,10 @@ class Tileseeder extends Model
     }
 
     /**
-     * @param string $uuid
-     * @return array
+     * @param string|null $uuid
+     * @return array<mixed>
      */
-    public function getByUuid(string $uuid): array
+    public function getByUuid(string $uuid = null): array
     {
         $response = [];
         $sql = "SELECT * FROM settings.seed_jobs WHERE uuid=:uuid";

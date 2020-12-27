@@ -14,9 +14,13 @@ use app\inc\Route;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\conf\Connection;
+use Exception;
 
 class Tileseeder extends Controller
 {
+    /**
+     * @var \app\models\Tileseeder
+     */
     private $tileSeeder;
 
     /**
@@ -29,7 +33,7 @@ class Tileseeder extends Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      *
      * @OA\Post(
      *   path="/api/v3/tileseeder",
@@ -88,7 +92,7 @@ class Tileseeder extends Controller
         $uuid = \app\inc\Util::guid();
 
         $cmd = "/usr/bin/nohup /usr/local/bin/mapcache_seed -c /var/www/geocloud2/app/wms/mapcache/{$db}.xml -v -t {$layer} -g {$grid} -z {$startZoom},{$endZoom} -d PG:'host={$pgHost} port={$pgPort} user={$pgUser} dbname={$db} password={$pgPassword}' -l '{$extentLayer}' -n {$nthreads}";
-        $pid = exec("{$cmd} > /var/www/geocloud2/public/logs/seeder_{$uuid}.log & echo $!");
+        $pid = (int)exec("{$cmd} > /var/www/geocloud2/public/logs/seeder_{$uuid}.log & echo $!");
 
         $res = $this->tileSeeder->insert(["uuid" => $uuid, "name" => $name, "pid" => $pid, "host" => "test"]);
         if (!$res["success"]) {
@@ -103,8 +107,8 @@ class Tileseeder extends Controller
     }
 
     /**
-     * @return array
-     * @throws \Exception
+     * @return array<mixed>
+     * @throws Exception
      *
      * @OA\Delete(
      *   path="/api/v3/tileseeder/{uuid}",
@@ -162,8 +166,8 @@ class Tileseeder extends Controller
     }
 
     /**
-     * @return array
-     * @throws \Exception
+     * @return array<int>
+     * @throws Exception
      */
     public function deleteAll(): array
     {
@@ -176,8 +180,8 @@ class Tileseeder extends Controller
     }
 
     /**
-     * @return array
-     * @throws \Exception
+     * @return array<mixed>
+     * @throws Exception
      *
      * @OA\Get(
      *   path="/api/v3/tileseeder",
@@ -206,16 +210,16 @@ class Tileseeder extends Controller
     }
 
     /**
-     * @param $pid
+     * @param int $pid
      */
-    private function kill($pid)
+    private function kill(int $pid): void
     {
         exec("/bin/kill -9 {$pid}");
     }
 
     /**
-     * @return array
-     * @throws \Exception
+     * @return array<string|null>
+     * @throws Exception
      *
      * @OA\Get(
      *   path="/api/v3/tileseeder/log/{uuid}",
@@ -237,17 +241,33 @@ class Tileseeder extends Controller
      *   )
      * )
      */
-    public function get_log():array
+    public function get_log(): array
     {
-        $uuid = strtoupper(Route::getParam("uuid"));
-        $file = "/var/www/geocloud2/public/logs/seeder_{$uuid}.log";
-        $handle = fopen($file, "r");
-        $data = explode("\r", fgets($handle));
-        // There is a carrier return in both end of the string
-        $line = $data[count($data)-2];
-        pclose($handle);
-        return [
-            "data" => $line
-        ];
+        $uuid = Route::getParam("uuid");
+        if ($uuid) {
+            $uuid = strtoupper($uuid);
+            $file = "/var/www/geocloud2/public/logs/seeder_{$uuid}.log";
+            $handle = fopen($file, "r");
+            if ($handle) {
+                $str = fgets($handle);
+                if ($str) {
+                    $data = explode("\r", $str);
+                    // There is a carrier return in both end of the string
+                    $line = $data[count($data) - 2];
+                    pclose($handle);
+                } else {
+                    $line = null;
+                }
+            } else {
+                $line = null;
+            }
+            return [
+                "data" => $line
+            ];
+        } else {
+            return [
+                "data" => null
+            ];
+        }
     }
 }

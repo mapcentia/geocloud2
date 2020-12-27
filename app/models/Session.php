@@ -58,10 +58,11 @@ class Session extends Model
      * @param string $pw
      * @param string $schema
      * @param bool $parentdb
-     * @return array
+     * @param bool $tokenOnly
+     * @return array<string, array<string, mixed>|bool|string>
      * @throws \Exception
      */
-    public function start(string $sUserID, string $pw, $schema = "public", $parentdb = false, $tokenOnly = false): array
+    public function start(string $sUserID, string $pw, $schema = "public", $parentdb = false, bool $tokenOnly = false): array
     {
         $response = [];
         $pw = $this->VDFormat($pw, true);
@@ -95,6 +96,7 @@ class Session extends Model
             $rows = $this->fetchAll($res);
         }
 
+        $row = [];
         if (sizeof($rows) === 1) {
             $row = $rows[0];
             if ($row['pw'] === $sPassword || password_verify($pw, $row['pw'])) {

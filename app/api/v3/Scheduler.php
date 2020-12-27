@@ -18,6 +18,11 @@ use app\models\Job;
 class Scheduler extends Controller
 {
     /**
+     * @var \app\models\Tileseeder
+     */
+    public $tileSeeder;
+
+    /**
      * Tileseeder constructor.
      */
     public function __construct()

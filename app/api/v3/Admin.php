@@ -8,10 +8,10 @@
 
 namespace app\api\v3;
 
-ini_set('max_execution_time', 0);
+ini_set('max_execution_time', '0');
 
-use app\inc\Cache;
 use app\inc\Controller;
+use app\inc\Cache;
 use app\inc\Input;
 use app\models\Database;
 use app\conf\App;
@@ -19,10 +19,6 @@ use app\conf\Connection;
 use app\conf\migration\Sql;
 
 
-/**
- * Class Admin
- * @package app\api\v3
- */
 class Admin extends Controller
 {
 
@@ -35,7 +31,7 @@ class Admin extends Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      *
      * @OA\Get(
      *   path="/api/v3/admin/mapfiles",
@@ -72,7 +68,7 @@ class Admin extends Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      *
      * @OA\Get(
      *   path="/api/v3/admin/mapcachefile",
@@ -105,7 +101,7 @@ class Admin extends Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      *
      * @OA\Get(
      *   path="/api/v3/admin/qgisfiles",
@@ -133,7 +129,7 @@ class Admin extends Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      *
      * @OA\Get(
      *   path="/api/v3/admin/migrations",
@@ -206,7 +202,7 @@ class Admin extends Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      *
      * DEPRECATED
      */
@@ -221,7 +217,7 @@ class Admin extends Controller
         } else {
             $files = glob(App::$param['path'] . "app/wms/qgsfiles/*.{qgs}", GLOB_BRACE);
         }
-        if (sizeof($files) == 0) {
+        if ($files && sizeof($files) == 0) {
             $response["code"] = 400;
             $response["success"] = false;
             $response["message"] = "No files";
@@ -230,38 +226,43 @@ class Admin extends Controller
         $qgis = new \app\models\Qgis();
         $processqgis = new \app\controllers\upload\Processqgis();
 
-        usort($files, function ($a, $b) {
-            return filemtime($b) < filemtime($a);
-        });
+        if ($files) {
+            usort($files, function ($a, $b) {
+                return filemtime($b) < filemtime($a);
+            });
+            foreach ($files as $file) {
+                $bits1 = explode("/", $file);
+                $bits2 = explode("_", $bits1[$index]);
+                if ($bits2[0] == "parsed") {
+                    if (strlen($bits2[sizeof($bits2) - 1]) == 36) {
+                        $arr = [];
+                        $size = sizeof($bits2);
+                        for ($i = 1; $i < $size - 1; $i++) {
+                            $arr[] = $bits2[$i];
+                        }
+                        $orgFileName = implode("_", $arr) . ".qgs";
+                        $qgis->flagAsOld($bits1[$index]);
 
-        foreach ($files as $file) {
-            $bits1 = explode("/", $file);
-            $bits2 = explode("_", $bits1[$index]);
-            if ($bits2[0] == "parsed") {
-                if (strlen($bits2[sizeof($bits2) - 1]) == 36) {
-                    $arr = [];
-                    for ($i = 1; $i < sizeof($bits2) - 1; $i++) {
-                        $arr[] = $bits2[$i];
+                    } else {
+                        continue;
                     }
-                    $orgFileName = implode("_", $arr) . ".qgs";
-                    $qgis->flagAsOld($bits1[$index]);
-
                 } else {
-                    continue;
+                    $orgFileName = $bits1[$index];
                 }
-            } else {
-                $orgFileName = $bits1[$index];
-            }
 
-            $tmpFile = App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"] . "/__qgis/" . $orgFileName;
+                $tmpFile = App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"] . "/__qgis/" . $orgFileName;
 
-            if (copy($file, $tmpFile)) {
-                touch($tmpFile, filemtime($file));
-                $res = $processqgis->get_index($orgFileName);
-                if ($res["success"]) {
-                    unlink($file);
+                if (copy($file, $tmpFile)) {
+                    $time = filemtime($file);
+                    if ($time) {
+                        touch($tmpFile, $time);
+                    }
+                    $res = $processqgis->get_index($orgFileName);
+                    if ($res["success"]) {
+                        unlink($file);
+                    }
+                    $response["data"][] = $res["ch"];
                 }
-                $response["data"][] = $res["ch"];
             }
         }
         $response["success"] = true;
@@ -269,7 +270,7 @@ class Admin extends Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      *
      * @OA\Get(
      *   path="/api/v3/admin/schema",
@@ -293,11 +294,11 @@ class Admin extends Controller
     public function get_schema(): array
     {
         $admin = new \app\models\Admin();
-        return $admin->install();
+        return ["data" => $admin->install()];
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      *
      * @OA\Get(
      *   path="/api/v3/admin/diskcleanup",
@@ -321,32 +322,40 @@ class Admin extends Controller
     public function get_diskcleanup(): array
     {
         $result = [];
-        function rrmdir($dir, &$result)
-        {
-            if (is_dir($dir)) {
-                $objects = scandir($dir);
+        $dirs = [App::$param["path"] . 'app/tmp'];
+        foreach ($dirs as $dir) {
+            $this->rrmdir($dir, $result);
+        }
+        return ["success" => true, "message" => "Unlinked files", "data" => $result];
+    }
+
+    /**
+     *
+     * @param string $dir
+     * @param array<string> $result
+     */
+    private function rrmdir(string $dir, array &$result): void
+    {
+        if (is_dir($dir)) {
+            $objects = scandir($dir);
+            if ($objects) {
                 foreach ($objects as $object) {
                     if ($object != "." && $object != ".." && $object != ".gitignore") {
                         if (is_dir($dir . "/" . $object) && !is_link($dir . "/" . $object)) {
-                            rrmdir($dir . "/" . $object, $result);
+                            $this->rrmdir($dir . "/" . $object, $result);
                         } else {
                             unlink($dir . "/" . $object);
                         }
                         $result[] = $dir . "/" . $object;
                     }
                 }
-                rmdir($dir);
             }
+            rmdir($dir);
         }
-        $dirs = [App::$param["path"] . 'app/tmp'];
-        foreach ($dirs as $dir) {
-            rrmdir($dir, $result);
-        }
-        return ["success" => true, "message" => "Unlinked files", "data" => $result];
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      *
      * @OA\Get(
      *   path="/api/v3/admin/cachestats",
@@ -371,7 +380,7 @@ class Admin extends Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      *
      * @OA\Get(
      *   path="/api/v3/admin/cachecleanup",

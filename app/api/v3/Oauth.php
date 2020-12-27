@@ -11,22 +11,23 @@ namespace app\api\v3;
 
 use app\inc\Controller;
 use app\inc\Input;
+use app\models\Session;
 
 class Oauth extends Controller
 {
     /**
-     * @var \app\models\Session
+     * @var Session
      */
     private $session;
 
     public function __construct()
     {
         parent::__construct();
-        $this->session = new \app\models\Session();
+        $this->session = new Session();
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      *
      * @OA\Post(
      *   path="/api/v3/oauth/token",
@@ -64,11 +65,12 @@ class Oauth extends Controller
      *   )
      * )
      */
-    public function post_token() {
-        $data = json_decode(Input::getBody(), true) ? : [];
+    public function post_token(): array
+    {
+        $data = json_decode(Input::getBody(), true) ?: [];
         if (!empty($data["username"]) && !empty($data["password"])) {
             try {
-                return $this->session->start($data["username"], $data["password"], null, $data["database"], true);
+                return $this->session->start($data["username"], $data["password"], "public", $data["database"], true);
             } catch (\TypeError $exception) {
                 return [
                     "error" => "invalid_request",

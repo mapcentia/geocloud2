@@ -89,7 +89,7 @@ abstract class Cache
     }
 
     /**
-     *
+     * @return array<mixed>
      */
     static public function clear()
     {

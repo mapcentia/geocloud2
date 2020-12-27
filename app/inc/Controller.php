@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -17,12 +17,12 @@ use app\conf\App;
 class Controller
 {
     /**
-     * @var array
+     * @var array<mixed>
      */
     public $response;
 
     /**
-     * @var null
+     * @var string|null
      */
     protected $sUser;
 
@@ -45,6 +45,7 @@ class Controller
                 $this->sUser = null;
             }
         }
+        $this->response = [];
     }
 
     /**

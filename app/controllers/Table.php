@@ -3,7 +3,7 @@
  * @author     Martin Høgh <mh@mapcentia.com>
  * @copyright  2013-2018 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- *  
+ *
  */
 
 namespace app\controllers;
@@ -40,7 +40,7 @@ class Table extends \app\inc\Controller
 
     public function get_columns()
     {
-        return $this->table->getColumnsForExtGridAndStore(null, Input::get("i"));
+        return $this->table->getColumnsForExtGridAndStore(false, Input::get("i") ? true : false);
     }
 
     public function get_columnswithkey()

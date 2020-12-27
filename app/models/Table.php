@@ -35,11 +35,11 @@ class Table extends Model
 
     /**
      * Table constructor.
-     * @param $table
+     * @param string $table
      * @param bool $temp
      * @param bool $addGeomType
      */
-    function __construct($table, $temp = false, $addGeomType = false)
+    function __construct(string $table, $temp = false, $addGeomType = false)
     {
         parent::__construct();
 
@@ -224,10 +224,10 @@ class Table extends Model
     // TODO Move to layer model. This may belong to the Layer class
 
     /**
-     * @param null $createKeyFrom
-     * @return mixed
+     * @param boolean $createKeyFrom
+     * @return array<mixed>
      */
-    public function getRecords($createKeyFrom = NULL)
+    public function getRecords($createKeyFrom = false): array
     {
         $response['success'] = true;
         $response['message'] = "Layers loaded";
@@ -638,11 +638,11 @@ class Table extends Model
 
     /**
      * Creates an array with layers
-     * @param null $createKeyFrom
-     * @param bool $includePriKey
-     * @return array
+     * @param boolean $createKeyFrom
+     * @param boolean $includePriKey
+     * @return array<mixed>
      */
-    public function getColumnsForExtGridAndStore($createKeyFrom = NULL, $includePriKey = false)
+    public function getColumnsForExtGridAndStore(bool $createKeyFrom = false, bool $includePriKey = false): array
     {
         $response = [];
         $fieldsArr = [];

@@ -9,17 +9,19 @@
 namespace app\api\v2;
 
 use app\inc\Cache;
+use app\inc\Controller;
 use app\inc\Input;
+use app\inc\Response;
 use app\inc\Session;
 
 /**
  * Class Sql
  * @package app\api\v1
  */
-class Sql extends \app\inc\Controller
+class Sql extends Controller
 {
     /**
-     * @var array
+     * @var array<mixed>
      */
     public $response;
 
@@ -34,12 +36,12 @@ class Sql extends \app\inc\Controller
     private $apiKey;
 
     /**
-     * @var array
+     * @var string
      */
     private $data;
 
     /**
-     * @var string
+     * @var string|null
      */
     private $subUser;
 
@@ -49,7 +51,7 @@ class Sql extends \app\inc\Controller
     private $api;
 
     /**
-     * @var array
+     * @var array<string>
      */
     private $usedRelations;
 
@@ -59,15 +61,18 @@ class Sql extends \app\inc\Controller
     const USEDRELSKEY = "checked_relations";
 
     /**
-     * @var
+     * @var array<mixed>
      */
     private $cacheInfo;
 
     /**
-     * @var
+     * @var boolean
      */
     private $streamFlag;
 
+    /**
+     * @var string
+     */
     private $db;
 
     function __construct()
@@ -76,7 +81,7 @@ class Sql extends \app\inc\Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      */
     public function get_index(): array
     {
@@ -158,11 +163,11 @@ class Sql extends \app\inc\Controller
         $this->api->connect();
         $this->apiKey = $res['data']->api_key;
 
-        $this->response = $this->transaction($this->q, Input::get('client_encoding'));
+        $serializedResponse = $this->transaction($this->q, Input::get('client_encoding'));
 
         // Check if $this->data is set in SELECT section
         if (!$this->data) {
-            $this->data = $this->response;
+            $this->data = $serializedResponse;
         }
         $response = unserialize($this->data);
         if ($this->cacheInfo) {
@@ -173,7 +178,7 @@ class Sql extends \app\inc\Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      */
     public function post_index(): array
     {
@@ -245,9 +250,9 @@ class Sql extends \app\inc\Controller
     }
 
     /**
-     * @param array $array
+     * @param array<mixed> $array
      * @param string $needle
-     * @return array
+     * @return array<mixed>
      */
     private function recursiveFind(array $array, string $needle): array
     {
@@ -263,9 +268,9 @@ class Sql extends \app\inc\Controller
     }
 
     /**
-     * @param array $fromArr
+     * @param array<mixed>|null $fromArr
      */
-    private function parseSelect(array $fromArr = null)
+    private function parseSelect(array $fromArr = null): void
     {
         if (is_array($fromArr)) {
             foreach ($fromArr as $table) {
@@ -285,7 +290,7 @@ class Sql extends \app\inc\Controller
                     $this->response['success'] = false;
                     $this->response['message'] = "Can't complete the query";
                     $this->response['code'] = 403;
-                    die(\app\inc\Response::toJson($this->response));
+                    die(Response::toJson($this->response));
                 }
                 if ($table["no_quotes"]) {
                     $this->usedRelations[] = $table["no_quotes"];
@@ -300,7 +305,7 @@ class Sql extends \app\inc\Controller
      * @param string|null $clientEncoding
      * @return string
      */
-    private function transaction(string $sql, string $clientEncoding = null)
+    private function transaction(string $sql, string $clientEncoding = null): string
     {
         $response = [];
         require_once dirname(__FILE__) . '/../../libs/PHP-SQL-Parser/src/PHPSQLParser.php';
@@ -468,7 +473,7 @@ class Sql extends \app\inc\Controller
 
                 echo serialize($this->response);
                 $this->data = ob_get_contents();
-                if ($lifetime > 0) {
+                if ($lifetime > 0 && !empty($CachedString)) {
                     $CachedString->set($this->data)->expiresAfter($lifetime ?: 1);// Because 0 secs means cache will life for ever, we set cache to one sec
                     $CachedString->addTags(["sql", \app\conf\Connection::$param["postgisdb"]]);
                     Cache::save($CachedString); // Save the cache item just like you do with doctrine and entities
@@ -485,9 +490,9 @@ class Sql extends \app\inc\Controller
     }
 
     /**
-     * @param $arr
+     * @param array<string> $arr
      */
-    private function addAttr(array $arr)
+    private function addAttr(array $arr): void
     {
         foreach ($arr as $key => $value) {
             if ($key != "code") {

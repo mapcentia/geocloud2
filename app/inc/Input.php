@@ -8,6 +8,8 @@
 
 namespace app\inc;
 
+use phpDocumentor\Reflection\Types\Integer;
+
 class Input
 {
     /**
@@ -187,16 +189,16 @@ class GetPart
     }
 
     /**
-     * @param string $e
+     * @param int $e
      * @return string|null
      */
-    function part(string $e)
+    function part(int $e)
     {
         return isset($this->parts[$e]) ? $this->parts[$e] : null;
     }
 
     /**
-     * @return array
+     * @return array<string>
      */
     function parts(): array
     {
