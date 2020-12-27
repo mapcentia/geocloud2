@@ -1,16 +1,23 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
-namespace app\conf\migration;
+namespace app\migration;
 
+/**
+ * Class Sql
+ * @package app\conf\migration
+ */
 class Sql
 {
-    public static function get()
+    /**
+     * @return array<string>
+     */
+    public static function get(): array
     {
         $sqls[] = "DROP VIEW settings.geometry_columns_view CASCADE";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN filter TEXT";
@@ -607,7 +614,10 @@ class Sql
         return $sqls;
     }
 
-    public static function mapcentia()
+    /**
+     * @return array<string>
+     */
+    public static function mapcentia(): array
     {
         $sqls[] = "ALTER TABLE users ADD COLUMN parentdb VARCHAR(255)";
         $sqls[] = "ALTER TABLE users ADD COLUMN usergroup VARCHAR(255)";
@@ -626,7 +636,10 @@ class Sql
         return $sqls;
     }
 
-    public static function gc2scheduler()
+    /**
+     * @return array<string>
+     */
+    public static function gc2scheduler(): array
     {
         $sqls[] = "ALTER TABLE jobs ALTER url TYPE TEXT";
         $sqls[] = "ALTER TABLE jobs ADD COLUMN delete_append BOOL DEFAULT FALSE";

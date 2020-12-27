@@ -20,6 +20,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Intercom.io widget is removed.
 - Some unused files are removed.
 - The primary key will now be exposed as an ordinary element in the WFS-t service. Before it was only exposed as the GML FID. It can not be updated and an exception will be thrown if tried.  
+- Migration code moved to `app\migration`.
 
 ### Fixed
 - Using `PROCESSING 'NATIVE_FILTER=id=234'` instead of `FILTER` in MapFile.

@@ -13,10 +13,12 @@ ini_set('max_execution_time', '0');
 use app\inc\Controller;
 use app\inc\Cache;
 use app\inc\Input;
+use app\inc\Model;
 use app\models\Database;
 use app\conf\App;
 use app\conf\Connection;
-use app\conf\migration\Sql;
+use app\migration\Sql;
+use PDOException;
 
 
 class Admin extends Controller
@@ -58,10 +60,12 @@ class Admin extends Controller
         $database = new Database();
         $schemas = $database->listAllSchemas();
         $mapfile = new \app\controllers\Mapfile();
-        if (!empty($schemas["data"])) foreach ($schemas["data"] as $schema) {
-            Connection::$param['postgisschema'] = $schema["schema"];
-            $res = $mapfile->get_index();
-            $response["data"][] = [$res[0]["ch"], $res[1]["ch"]];
+        if (!empty($schemas["data"])) {
+            foreach ($schemas["data"] as $schema) {
+                Connection::$param['postgisschema'] = $schema["schema"];
+                $res = $mapfile->get_index();
+                $response["data"][] = [$res[0]["ch"], $res[1]["ch"]];
+            }
         }
         $response["success"] = true;
         return $response;
@@ -157,8 +161,8 @@ class Admin extends Controller
 
         $arr = [Database::getDb(), "mapcentia", "gc2scheduler"];
         foreach ($arr as $db) {
-            \app\models\Database::setDb($db);
-            $conn = new \app\inc\Model();
+            Database::setDb($db);
+            $conn = new Model();
 
             switch ($db) {
                 case "mapcentia":
@@ -175,7 +179,7 @@ class Admin extends Controller
             foreach ($sqls as $sql) {
                 try {
                     $conn->execQuery($sql, "PDO", "transaction");
-                } catch (\PDOException $e) {
+                } catch (PDOException $e) {
                     $response["success"] = false;
                     $response["message"] = $e->getMessage();
                     return $response;
