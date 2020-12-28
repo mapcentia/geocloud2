@@ -12,6 +12,8 @@ namespace app\api\v3;
 use app\inc\Controller;
 use app\inc\Input;
 use app\models\Session;
+use Exception;
+use TypeError;
 
 class Oauth extends Controller
 {
@@ -27,7 +29,7 @@ class Oauth extends Controller
     }
 
     /**
-     * @return array<mixed>
+     * @return array<string, array<string, mixed>|bool|string|int>
      *
      * @OA\Post(
      *   path="/api/v3/oauth/token",
@@ -71,13 +73,13 @@ class Oauth extends Controller
         if (!empty($data["username"]) && !empty($data["password"])) {
             try {
                 return $this->session->start($data["username"], $data["password"], "public", $data["database"], true);
-            } catch (\TypeError $exception) {
+            } catch (TypeError $exception) {
                 return [
                     "error" => "invalid_request",
                     "error_description" => $exception->getMessage(),
                     "code" => 500
                 ];
-            } catch (\Exception $exception) {
+            } catch (Exception $exception) {
                 return [
                     "error" => "invalid_request",
                     "error_description" => $exception->getMessage(),

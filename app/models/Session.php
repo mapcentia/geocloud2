@@ -8,10 +8,10 @@
 
 namespace app\models;
 
-use \app\inc\Model;
-use \app\conf\App;
-use app\inc\Util;
-use \Firebase\JWT\JWT;
+use app\conf\App;
+use app\inc\Model;
+use Exception;
+use PDOException;
 
 class Session extends Model
 {
@@ -20,20 +20,26 @@ class Session extends Model
         parent::__construct();
     }
 
-    private function VDFormat($sValue, $bQuotes = false)
+    /**
+     * @param string $sValue
+     * @param bool $bQuotes
+     * @return string
+     */
+    private function VDFormat(string $sValue, bool $bQuotes = false): string
     {
         $sValue = trim($sValue);
         if ($bQuotes xor get_magic_quotes_gpc()) {
             $sValue = $bQuotes ? addslashes($sValue) : stripslashes($sValue);
         }
-
         return $sValue;
     }
 
-    public function check()
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    public function check() : array
     {
         $response = [];
-
         if (isset($_SESSION['auth']) && $_SESSION['auth'] == true) {
             $response['data']['message'] = "Session is active";
             $response['data']['session'] = true;
@@ -49,7 +55,6 @@ class Session extends Model
             $response['data']['message'] = "Session not started";
             $response['data']['session'] = false;
         }
-
         return $response;
     }
 
@@ -59,8 +64,8 @@ class Session extends Model
      * @param string $schema
      * @param bool $parentdb
      * @param bool $tokenOnly
-     * @return array<string, array<string, mixed>|bool|string>
-     * @throws \Exception
+     * @return array<string, array<string, mixed>|bool|string|int>
+     * @throws Exception
      */
     public function start(string $sUserID, string $pw, $schema = "public", $parentdb = false, bool $tokenOnly = false): array
     {
@@ -92,7 +97,6 @@ class Session extends Model
                 ":sEmail" => $sUserIDNotConverted,
                 ":parentDb" => $parentdb
             ]);
-
             $rows = $this->fetchAll($res);
         }
 
@@ -101,7 +105,7 @@ class Session extends Model
             $row = $rows[0];
             if ($row['pw'] === $sPassword || password_verify($pw, $row['pw'])) {
                 $isAuthenticated = true;
-            } elseif (!empty(\app\conf\App::$param['masterPw']) && $sPassword == \app\conf\App::$param['masterPw']) {
+            } elseif (!empty(App::$param['masterPw']) && $sPassword == App::$param['masterPw']) {
                 $isAuthenticated = true;
             }
         }
@@ -170,7 +174,6 @@ class Session extends Model
                 ];
             }
             // Insert into logins
-            //die(Util::clientIp());
             $sql = "INSERT INTO logins (db, \"user\") VALUES(:parentDb, :sUserID)";
             $res = $this->prepare($sql);
             try {
@@ -178,7 +181,7 @@ class Session extends Model
                     ":sUserID" => $sUserID,
                     ":parentDb" => $parentdb
                 ]);
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 // We do not stop login in case of error
             }
         } else {
@@ -199,7 +202,7 @@ class Session extends Model
     }
 
     /**
-     * @return array
+     * @return array<string,bool|string>
      */
     public function stop(): array
     {
