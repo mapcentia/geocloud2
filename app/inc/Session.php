@@ -29,10 +29,10 @@ class Session
     }
 
     /**
-     * @param string $redirect
+     * @param string|null $redirect
      * @return bool|void
      */
-    static function authenticate($redirect = " / ")
+    static function authenticate(?string $redirect = " / ")
     {
         if (isset($_SESSION['auth']) && $_SESSION['auth'] == true) {
             return true;
@@ -40,7 +40,6 @@ class Session
             Redirect::to($redirect);
             exit();
         } else {
-            //\app\inc\Redirect::to("/nosession.php");
             exit();
         }
     }

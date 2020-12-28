@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -11,22 +11,24 @@ error_reporting(E_ERROR | E_WARNING | E_PARSE);
 //error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 ob_start("ob_gzhandler");
 
-use \app\inc\Input;
-use \app\inc\Session;
-use \app\inc\Route;
-use \app\inc\Util;
-use \app\inc\Response;
-use \app\inc\Cache;
-use \app\inc\Jwt;
-use \app\conf\Connection;
-use \app\conf\App;
-use \app\models\Database;
+use app\controllers\Wms;
+use app\inc\Input;
+use app\inc\Session;
+use app\inc\Route;
+use app\inc\Util;
+use app\inc\Response;
+use app\inc\Cache;
+use app\inc\Jwt;
+use app\inc\Redirect;
+use app\conf\Connection;
+use app\conf\App;
+use app\models\Database;
 
 include_once('../app/vendor/autoload.php');
 include_once("../app/conf/App.php");
 include_once("../app/inc/Globals.php");
 
-new \app\conf\App();
+new App();
 
 // If Connection::$params are not set, when set them from environment variables
 Connection::$param['postgishost'] = !empty(Connection::$param['postgishost']) ? Connection::$param['postgishost'] : getenv('POSTGIS_HOST');
@@ -37,21 +39,21 @@ Connection::$param['postgispw'] = !empty(Connection::$param['postgispw']) ? Conn
 
 
 $memoryLimit = isset(App::$param["memoryLimit"]) ? App::$param["memoryLimit"] : "128M";
-ini_set('memory_limit', $memoryLimit);
-ini_set('max_execution_time', 30);
+ini_set("memory_limit", $memoryLimit);
+ini_set("max_execution_time", "30");
 
 // Set session back-end. PHP will use default port if not set explicit
 
 if (!empty(App::$param["sessionHandler"]["type"]) && App::$param["sessionHandler"]["type"] != "files") {
     if (!empty(App::$param['sessionHandler']["host"])) {
-        ini_set('session.save_handler', App::$param['sessionHandler']["type"]);
+        ini_set("session.save_handler", App::$param['sessionHandler']["type"]);
         // If Redis then set the database
         if (App::$param["sessionHandler"]["type"] == "redis") {
-            ini_set('session.save_path', "tcp://" . App::$param['sessionHandler']["host"] . "?database=" .
+            ini_set("session.save_path", "tcp://" . App::$param['sessionHandler']["host"] . "?database=" .
                 (!empty(App::$param["sessionHandler"]["db"]) ? App::$param["sessionHandler"]["db"] : "0")
             );
         } else {
-            ini_set('session.save_path', App::$param['sessionHandler']["host"]);
+            ini_set("session.save_path", App::$param["sessionHandler"]["host"]);
         }
     } else {
         die("Session handler host not set");
@@ -89,7 +91,11 @@ register_shutdown_function(function () {
 });
 
 // Setup Cache
-Cache::setInstance();
+try {
+    Cache::setInstance();
+} catch (Exception $e) {
+    throw new Error("Could not init caching system");
+}
 
 // Setup host
 App::$param['protocol'] = isset(App::$param['protocol']) ? App::$param['protocol'] : Util::protocol();
@@ -302,10 +308,6 @@ if (Input::getPath()->part(1) == "api") {
     Session::authenticate(App::$param['userHostName'] . "/dashboard/");
     $_SESSION['postgisschema'] = Input::getPath()->part(3) ?: "public";
     include_once("admin.php");
-} elseif (Input::getPath()->part(1) == "editor") {
-    Session::start();
-    Session::authenticate(App::$param['userHostName'] . "/dashboard/");
-    include_once("editor.php");
 } elseif (Input::getPath()->part(1) == "controllers") {
     Session::start();
 
@@ -368,13 +370,7 @@ if (Input::getPath()->part(1) == "api") {
         $parentUser = true;
     }
     Database::setDb($db);
-    new \app\controllers\Wms();
-
-} elseif (Input::getPath()->part(1) == "mapcache") {
-// Is not in use. Apache redirects all request to MapCache CGI
-//    Session::start();
-//    $cache = new \app\controllers\Mapcache();
-//    $cache->fetch();
+    new Wms();
 
 } elseif (Input::getPath()->part(1) == "wfs") {
     if (!empty(Input::getCookies()["PHPSESSID"])) {
@@ -396,9 +392,9 @@ if (Input::getPath()->part(1) == "api") {
 
 } elseif (!Input::getPath()->part(1)) {
     if (!empty(App::$param["redirectTo"])) {
-        \app\inc\Redirect::to(App::$param["redirectTo"]);
+        Redirect::to(App::$param["redirectTo"]);
     } else {
-        \app\inc\Redirect::to("/dashboard/");
+        Redirect::to("/dashboard/");
     }
 } else {
     Route::miss();

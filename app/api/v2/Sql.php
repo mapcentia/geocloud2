@@ -1,18 +1,27 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\api\v2;
 
+use app\conf\Connection;
 use app\inc\Cache;
 use app\inc\Controller;
 use app\inc\Input;
 use app\inc\Response;
 use app\inc\Session;
+use app\models\Setting;
+use app\models\Stream;
+use Exception;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use PHPSQLParser;
+use RecursiveArrayIterator;
+use RecursiveIteratorIterator;
+
 
 /**
  * Class Sql
@@ -82,6 +91,7 @@ class Sql extends Controller
 
     /**
      * @return array<mixed>
+     * @throws PhpfastcacheInvalidArgumentException
      */
     public function get_index(): array
     {
@@ -149,7 +159,7 @@ class Sql extends Controller
             return $response;
         }
 
-        $settings_viewer = new \app\models\Setting();
+        $settings_viewer = new Setting();
         $res = $settings_viewer->get();
 
         // Check if success
@@ -179,6 +189,7 @@ class Sql extends Controller
 
     /**
      * @return array<mixed>
+     * @throws PhpfastcacheInvalidArgumentException
      */
     public function post_index(): array
     {
@@ -206,7 +217,7 @@ class Sql extends Controller
                 ]
             );
 
-            $settings_viewer = new \app\models\Setting();
+            $settings_viewer = new Setting();
             $res = $settings_viewer->get();
 
             // Check if success
@@ -256,8 +267,8 @@ class Sql extends Controller
      */
     private function recursiveFind(array $array, string $needle): array
     {
-        $iterator = new \RecursiveArrayIterator($array);
-        $recursive = new \RecursiveIteratorIterator($iterator, \RecursiveIteratorIterator::SELF_FIRST);
+        $iterator = new RecursiveArrayIterator($array);
+        $recursive = new RecursiveIteratorIterator($iterator, RecursiveIteratorIterator::SELF_FIRST);
         $aHitList = [];
         foreach ($recursive as $key => $value) {
             if ($key === $needle) {
@@ -270,7 +281,7 @@ class Sql extends Controller
     /**
      * @param array<mixed>|null $fromArr
      */
-    private function parseSelect(array $fromArr = null): void
+    private function parseSelect(?array $fromArr = null): void
     {
         if (is_array($fromArr)) {
             foreach ($fromArr as $table) {
@@ -304,19 +315,13 @@ class Sql extends Controller
      * @param string $sql
      * @param string|null $clientEncoding
      * @return string
+     * @throws PhpfastcacheInvalidArgumentException
      */
-    private function transaction(string $sql, string $clientEncoding = null): string
+    private function transaction(string $sql, ?string $clientEncoding = null): string
     {
         $response = [];
         require_once dirname(__FILE__) . '/../../libs/PHP-SQL-Parser/src/PHPSQLParser.php';
-        try {
-            $parser = new \PHPSQLParser($sql, false);
-        } catch (\UnableToCalculatePositionException $e) {
-            $this->response['success'] = false;
-            $this->response['code'] = 403;
-            $this->response['message'] = $e->getMessage();
-            return serialize($this->response);
-        }
+        $parser = new PHPSQLParser($sql, false);
         $parsedSQL = $parser->parsed ?: []; // Make its an array
         $this->usedRelations = array();
 
@@ -427,14 +432,14 @@ class Sql extends Controller
             $this->addAttr($response);
         } elseif (!empty($parsedSQL['SELECT']) || !empty($parsedSQL['UNION'])) {
             if ($this->streamFlag) {
-                $stream = new \app\models\Stream();
+                $stream = new Stream();
                 $res = $stream->runSql($this->q);
                 return ($res);
             }
 
             $lifetime = (Input::get('lifetime')) ?: 0;
 
-            $key = md5(\app\conf\Connection::$param["postgisdb"] . "_" . $this->q . "_" . $lifetime);
+            $key = md5(Connection::$param["postgisdb"] . "_" . $this->q . "_" . $lifetime);
 
             if ($lifetime > 0) {
                 $CachedString = Cache::getItem($key);
@@ -444,7 +449,7 @@ class Sql extends Controller
                 $this->data = $CachedString->get();
                 try {
                     $CreationDate = $CachedString->getCreationDate();
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $CreationDate = $e->getMessage();
                 }
                 $this->cacheInfo["hit"] = $CreationDate;
@@ -475,7 +480,7 @@ class Sql extends Controller
                 $this->data = ob_get_contents();
                 if ($lifetime > 0 && !empty($CachedString)) {
                     $CachedString->set($this->data)->expiresAfter($lifetime ?: 1);// Because 0 secs means cache will life for ever, we set cache to one sec
-                    $CachedString->addTags(["sql", \app\conf\Connection::$param["postgisdb"]]);
+                    $CachedString->addTags(["sql", Connection::$param["postgisdb"]]);
                     Cache::save($CachedString); // Save the cache item just like you do with doctrine and entities
                     $this->cacheInfo["hit"] = false;
                 }
