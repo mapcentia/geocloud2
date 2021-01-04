@@ -1,18 +1,23 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\models;
 
-use \app\conf\App;
+use app\conf\App;
+use app\controllers\Mapcache;
+use app\inc\Controller;
 
-class Baselayerjs extends \app\inc\Controller
+class Baselayerjs extends Controller
 {
-    public function getSettings()
+    /**
+     * @return array<mixed>
+     */
+    public function getSettings(): array
     {
         $settingsRawJSON = '';
         $settingsRawJSON .= "{";
@@ -46,7 +51,8 @@ class Baselayerjs extends \app\inc\Controller
             $settingsRawJSON .= "\"es_settings\": " . $settings . ",\n";
         }
 
-        foreach (\app\controllers\Mapcache::getGrids() as $k => $v) {
+        $gridNames = [];
+        foreach (Mapcache::getGrids() as $k => $v) {
             $gridNames[] = $k;
         }
 

@@ -1,28 +1,40 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\controllers;
 
-use \app\conf\App;
+use app\conf\App;
+use app\inc\Controller;
+use app\inc\Input;
 
-class Mapcache extends \app\inc\Controller
+class Mapcache extends Controller
 {
+    /**
+     * @var string|null
+     */
     private $db;
+
+    /**
+     * @var string
+     */
     private $host;
+
+    /**
+     * @var string|null
+     */
     private $subUser;
-    private $type;
 
     function __construct()
     {
         parent::__construct();
 
-        $this->db = \app\inc\Input::getPath()->part(2);
-        $this->host = \app\conf\App::$param["mapCache"]["host"];
+        $this->db = Input::getPath()->part(2);
+        $this->host = App::$param["mapCache"]["host"];
 
         $dbSplit = explode("@", $this->db);
         if (sizeof($dbSplit) == 2) {
@@ -33,114 +45,10 @@ class Mapcache extends \app\inc\Controller
         }
     }
 
-    public function fetch()
-    {
-        $uriParts = array();
-        $parts = explode("/", $_SERVER['REQUEST_URI']);
-        for ($i = 0; $i < sizeof($parts); $i++) {
-            if ($i == 2) {
-                $b = explode("@", $parts[$i]);
-                if (sizeof($b) > 1) {
-                    $parts[$i] = $b[1];
-                }
-            }
-            $uriParts[] = $parts[$i];
-        }
-        $url = null;
-        $uri = implode("/", $uriParts);
-        $layer = null;
-        switch (explode("?", $parts[3])[0]) {
-            case "tms";
-                $layer = explode("@", $parts[5])[0];
-                break;
-            case "wmts";
-                if ($_SERVER["QUERY_STRING"]) {
-                    $get = array_change_key_case($_GET, CASE_UPPER);
-                    $layer = $get["LAYER"];
-                } else {
-                    $layer = explode("@", $parts[5])[0];
-                    die($layer);
-                }
-                break;
-            case "wms";
-                $get = array_change_key_case($_GET, CASE_UPPER);
-                if (
-                    strtolower($get["REQUEST"]) == "getlegendgraphic" ||
-                    strtolower($get["REQUEST"]) == "getfeatureinfo" ||
-                    strtolower($get["REQUEST"]) == "describefeaturetype" ||
-                    isset($get["FORMAT_OPTIONS"]) == true
-                ) {
-                    $url = "http://127.0.0.1" . "/wms/" . $this->db . "/" . $parts[4] . "?" . explode("?", explode("?", $uri)[1])[1];
-                    $url = rtrim($url, '?');
-
-                } else {
-                    $layer = $get["LAYERS"];
-                }
-                break;
-            case "gmaps";
-                die("gmaps");
-                break;
-            case "kml";
-                die("kml");
-                break;
-            case "ve";
-                die("ve");
-                break;
-            case "mapguide";
-                die("mapguide");
-                break;
-            default:
-                die("What");
-                break;
-        }
-        //die(print_r($layer, true));
-        $url = $url ?: $this->host . $uri;
-
-        header("X-Powered-By: GC2 MapCache");
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header_line) {
-            $bits = explode(":", $header_line);
-            if ($bits[0] == "Content-Type") {
-                $this->type = trim($bits[1]);
-            }
-            // Send text/xml instead of application/vnd.ogc.se_xml
-            if ($bits[0] == "Content-Type" && trim($bits[1]) == "application/vnd.ogc.se_xml"){
-                header("Content-Type: text/xml");
-            } elseif ($bits[0] != "Content-Encoding" && trim($bits[1]) != "chunked") {
-                header($header_line);
-            }
-            return strlen($header_line);
-        });
-        $content = curl_exec($ch);
-        curl_close($ch);
-
-        // Check authentication level if image
-        if (explode("/", $this->type)[0] == "image") {
-            $this->basicHttpAuthLayer($layer, $this->db, $this->subUser);
-        }
-
-        // Return content
-        echo $content;
-        exit();
-    }
-
-    public function get_add()
-    {
-        //echo \app\inc\Util::wget(App::$param["mapCache"]["api"] . "/add?db=" . \app\inc\Input::getPath()->part(4));
-        exit();
-    }
-
-    public static function reload()
-    {
-        //$res = \app\inc\Util::wget(App::$param["mapCache"]["api"] . "/reload");
-        return [];
-    }
-
-    public static function getGrids()
+    /**
+     * @return array<string>
+     */
+    public static function getGrids(): array
     {
         $gridNames = array();
         $pathToGrids = App::$param['path'] . "app/conf/grids/";
@@ -157,7 +65,11 @@ class Mapcache extends \app\inc\Controller
         }
         return $gridNames;
     }
-    public static function getSources()
+
+    /**
+     * @return array<string>
+     */
+    public static function getSources(): array
     {
         $arr = array();
         $pathToSources = App::$param['path'] . "app/conf/mapcache/sources/";
@@ -176,7 +88,10 @@ class Mapcache extends \app\inc\Controller
         return $arr;
     }
 
-    public static function getTileSets()
+    /**
+     * @return array<string>
+     */
+    public static function getTileSets(): array
     {
         $arr = array();
         $pathToTilesets = App::$param['path'] . "app/conf/mapcache/tilesets/";

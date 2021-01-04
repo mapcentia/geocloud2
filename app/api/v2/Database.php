@@ -1,18 +1,19 @@
 <?php
 /**
  * @author     Aleksandr Shumilov <shumsan1011@gmail.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\api\v2;
 
-use \app\inc\Route;
-use \app\inc\Controller;
-use \app\models\User as UserModel;
-use \app\models\Database as DatabaseModel;
-use \app\inc\Session;
+use app\inc\Controller;
+use app\models\User as UserModel;
+use app\models\Database as DatabaseModel;
+use app\inc\Session;
+use Exception;
+
 
 /**
  * Class Database
@@ -21,6 +22,9 @@ use \app\inc\Session;
 class Database extends Controller
 {
 
+    /**
+     * @var UserModel
+     */
     private $user;
 
     /**
@@ -33,7 +37,7 @@ class Database extends Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      * 
      * @OA\Get(
      *   path="/api/v2/database/schemas",
@@ -61,8 +65,8 @@ class Database extends Controller
     }
 
     /**
-     * @return array
-     * 
+     * @return array<mixed>
+     *
      * @OA\Get(
      *   path="/api/v2/database/search",
      *   tags={"Database"},
@@ -81,6 +85,7 @@ class Database extends Controller
      *     description="Operation status"
      *   )
      * )
+     * @throws Exception
      */
     function get_search(): array
     {

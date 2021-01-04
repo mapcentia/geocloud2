@@ -11,7 +11,6 @@ and this project adheres to [CalVer](https://calver.org/).
 ### Changed
 - Migration code moved to `app\migration`.
 
-
 ## [2020.12.0] - 2020-21-12
 ### Added
 - A custom PNG can now be used as legend for a layer. The URL pointing to the PNG is set in the Legend tab. Must run database migrations.

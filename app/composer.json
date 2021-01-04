@@ -20,7 +20,8 @@
         "ext-pgsql": "*",
         "ext-iconv": "*",
         "ext-curl": "*",
-        "ext-apache": "*"
+        "ext-apache": "*",
+        "ext-simplexml": "*"
     },
     "require-dev": {
         "codeception/module-asserts": "^1.3",

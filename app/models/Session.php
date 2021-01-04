@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -9,10 +9,16 @@
 namespace app\models;
 
 use app\conf\App;
+use app\inc\Jwt;
 use app\inc\Model;
 use Exception;
 use PDOException;
 
+
+/**
+ * Class Session
+ * @package app\models
+ */
 class Session extends Model
 {
     function __construct()
@@ -73,7 +79,7 @@ class Session extends Model
         $pw = $this->VDFormat($pw, true);
 
         $isAuthenticated = false;
-        $setting = new \app\models\Setting();
+        $setting = new Setting();
         $sPassword = $setting->encryptPw($pw);
 
         $sUserIDNotConverted = $sUserID;
@@ -132,7 +138,7 @@ class Session extends Model
             $response['data']['screen_name'] = $_SESSION['screen_name'];
             $response['data']['session_id'] = session_id();
             $response['data']['parentdb'] = $_SESSION['parentdb'];
-            $response['data']['subuser'] = $row['parentdb'] ? true : false;;
+            $response['data']['subuser'] = $row['parentdb'] ? true : false;
             $response['data']['email'] = $row['email'];
             $response['data']['properties'] = $properties;
 
@@ -146,7 +152,7 @@ class Session extends Model
                 while ($rowSubUSers = $this->fetchRow($res)) {
                     $_SESSION['subusers'][] = $rowSubUSers["screenname"];
                     $_SESSION['subuserEmails'][$rowSubUSers["screenname"]] = $rowSubUSers["email"];
-                };
+                }
 
                 // Check if user has secure password (bcrypt hash)
                 if (preg_match('/^\$2y\$.{56}$/', $row['pw'])) {
@@ -157,14 +163,14 @@ class Session extends Model
                     $_SESSION['passwordExpired'] = true;
                 }
                 Database::setDb($response['data']['parentdb']);
-                $settings_viewer = new \app\models\Setting();
+                $settings_viewer = new Setting();
                 $response['data']['api_key'] = $settings_viewer->get()['data']->api_key;
             } else {
                 // Get super user key, which are used for JWT secret
                 Database::setDb($response['data']['parentdb']);
-                $settings_viewer = new \app\models\Setting();
+                $settings_viewer = new Setting();
                 $superUserApiKey = $settings_viewer->getApiKeyForSuperUser();
-                $token = \app\inc\Jwt::createJWT($superUserApiKey, $response['data']['parentdb'], $response['data']['screen_name'], !$response['data']['subuser']);
+                $token = Jwt::createJWT($superUserApiKey, $response['data']['parentdb'], $response['data']['screen_name'], !$response['data']['subuser']);
                 return [
                     "access_token" => $token['token'],
                     "token_type" => "bearer",

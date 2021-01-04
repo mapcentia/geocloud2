@@ -1,26 +1,31 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\api\v2;
 
-use \app\inc\Input;
-use \app\inc\Util;
-use \app\inc\Route;
-use \app\conf\App;
-use \GuzzleHttp\Client;
+use app\inc\Controller;
+use app\inc\Input;
+use app\inc\Model;
+use app\inc\Util;
+use app\inc\Route;
+use app\conf\App;
+use app\models\Sql_to_es;
+use Exception;
+use GuzzleHttp\Client;
 
-ini_set('max_execution_time', 0);
+ini_set('max_execution_time', '0');
+
 
 /**
  * Class Elasticsearch
  * @package app\api\v2
  */
-class Elasticsearch extends \app\inc\Controller
+class Elasticsearch extends Controller
 {
     /**
      * @var string
@@ -43,7 +48,7 @@ class Elasticsearch extends \app\inc\Controller
     protected $settings;
 
     /**
-     * @var \GuzzleHttp\Client
+     * @var Client
      */
     protected $client;
 
@@ -109,7 +114,7 @@ class Elasticsearch extends \app\inc\Controller
             )
         );
         // Check if there are custom settings
-        if (!$this->settings = @file_get_contents(\app\conf\App::$param["path"] . "/app/conf/elasticsearch_settings.json")) {
+        if (!$this->settings = @file_get_contents(App::$param["path"] . "/app/conf/elasticsearch_settings.json")) {
             $this->settings = json_encode($defaultSettings);
         }
 
@@ -141,7 +146,7 @@ class Elasticsearch extends \app\inc\Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      */
     public function get_search(): array
     {
@@ -221,7 +226,7 @@ class Elasticsearch extends \app\inc\Controller
                 }
             }
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = $e->getCode();
@@ -250,7 +255,7 @@ class Elasticsearch extends \app\inc\Controller
     }
 
     /**
-     * @return mixed
+     * @return array<mixed>
      */
     public function delete_delete(): array
     {
@@ -329,7 +334,7 @@ class Elasticsearch extends \app\inc\Controller
         }
 
         $es = new \app\models\Elasticsearch();
-        $model = new \app\inc\Model();
+        $model = new Model();
 
         // Check which relation type we are dealing with
         // =============================================
@@ -356,7 +361,7 @@ class Elasticsearch extends \app\inc\Controller
         // Create or replace notify function in PG
         // =======================================
 
-        $pl = file_get_contents(\app\conf\App::$param["path"] . "/app/scripts/sql/notify_transaction.sql");
+        $pl = file_get_contents(App::$param["path"] . "/app/scripts/sql/notify_transaction.sql");
         // TODO check if sprintf is needed
         $pl = sprintf($pl, $priKey, $priKey, $priKey);
         $result = $model->execQuery($pl, "PG");
@@ -431,7 +436,7 @@ class Elasticsearch extends \app\inc\Controller
 
         if ($insert == "t") {
             $sql = "SELECT * FROM {$fullTable}";
-            $api = new \app\models\Sql_to_es("4326");
+            $api = new Sql_to_es("4326");
             $api->execQuery("set client_encoding='UTF8'", "PDO");
             $res = $api->runSql($sql, $index, $type, $priKey, $db);
             if (!$res["success"]) {
@@ -565,13 +570,13 @@ class Elasticsearch extends \app\inc\Controller
         $installTrigger = false;
 
         $es = new \app\models\Elasticsearch();
-        $model = new \app\inc\Model();
+        $model = new Model();
 
         $priKey = "_key_";
 
         // Create or replace notify function in PG
         // =======================================
-        $pl = file_get_contents(\app\conf\App::$param["path"] . "/app/scripts/sql/notify_transaction.sql");
+        $pl = file_get_contents(App::$param["path"] . "/app/scripts/sql/notify_transaction.sql");
         // TODO check if sprintf is needed
         $pl = sprintf($pl, $priKey, $priKey, $priKey);
         $result = $model->execQuery($pl, "PG");
@@ -639,7 +644,7 @@ class Elasticsearch extends \app\inc\Controller
         // ===========
         if (1 == 1) {
             $sql = "SELECT * FROM {$fullTable}";
-            $api = new \app\models\Sql_to_es("4326");
+            $api = new Sql_to_es("4326");
             $api->execQuery("set client_encoding='UTF8'", "PDO");
             $res = $api->runSql($sql, $index, $type, $priKey, $db);
             if (!$res["success"]) {
@@ -687,7 +692,7 @@ class Elasticsearch extends \app\inc\Controller
 
 
         $sql = "SELECT * FROM {$fullTable} WHERE gid='{$id}'";
-        $api = new \app\models\Sql_to_es("4326");
+        $api = new Sql_to_es("4326");
         $api->execQuery("set client_encoding='UTF8'", "PDO");
         $res = $api->runSql($sql, $schema, $rel, "gid", $db);
         if (!$res["success"]) {

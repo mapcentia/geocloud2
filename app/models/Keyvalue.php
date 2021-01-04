@@ -9,6 +9,7 @@
 namespace app\models;
 
 use app\inc\Model;
+use PDOException;
 
 class Keyvalue extends Model
 {
@@ -76,7 +77,7 @@ class Keyvalue extends Model
 
             $res->execute($params);
 
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 401;
@@ -106,7 +107,7 @@ class Keyvalue extends Model
         try {
             $res = $this->prepare($sql);
             $res->execute(["key" => $key, "value" => $json]);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 401;
@@ -130,7 +131,7 @@ class Keyvalue extends Model
         try {
             $res = $this->prepare($sql);
             $res->execute(["key" => $key, "value" => $json]);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 401;
@@ -154,7 +155,7 @@ class Keyvalue extends Model
         try {
             $res = $this->prepare($sql);
             $res->execute(["key" => $key]);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 401;
