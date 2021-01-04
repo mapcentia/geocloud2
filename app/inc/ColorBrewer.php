@@ -1,16 +1,25 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\inc;
 
+
+/**
+ * Class ColorBrewer
+ * @package app\inc
+ */
 class ColorBrewer
 {
-    static function getQualitative($n = null)
+    /**
+     * @param int $n
+     * @return array<string|array<string>>
+     */
+    static function getQualitative(int $n): array
     {
         $r = array(
             array(
@@ -124,27 +133,6 @@ class ColorBrewer
                 "#fccde5",
             )
         );
-        if ($n == null) {
-            return $r;
-        } else {
-            return $r[$n];
-        }
-    }
-
-    static function getJavaScript()
-    {
-        $r = self::getQualitative();
-        foreach ($r as $k=>$v) {
-            echo "{";
-            echo "  name: '' +";
-            foreach ($v as $c) {
-                echo "
-                     '<span class=\"color-ramp\" style=\"background-color:{$c};\"></span>' +";
-            }
-            echo ",\n  value: '{$k}'";
-            echo "\n},\n";
-        }
+        return $r[$n];
     }
 }
-
-//ColorBrewer::getJavaScript();

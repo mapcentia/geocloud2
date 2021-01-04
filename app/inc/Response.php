@@ -19,10 +19,10 @@ class Response
     ];
 
     /**
-     * @param string $response
-     * @return string
+     * @param array<mixed> $response
+     * @return array<mixed>
      */
-    static function json(string $response): string
+    static function json(array $response): array
     {
         return $response;
     }

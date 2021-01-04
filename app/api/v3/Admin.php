@@ -10,6 +10,9 @@ namespace app\api\v3;
 
 ini_set('max_execution_time', '0');
 
+use app\controllers\Mapcachefile;
+use app\controllers\Mapfile;
+use app\controllers\upload\Processqgis;
 use app\inc\Controller;
 use app\inc\Cache;
 use app\inc\Input;
@@ -18,9 +21,13 @@ use app\models\Database;
 use app\conf\App;
 use app\conf\Connection;
 use app\migration\Sql;
+use app\models\Qgis;
 use PDOException;
 
-
+/**
+ * Class Admin
+ * @package app\api\v3
+ */
 class Admin extends Controller
 {
 
@@ -59,7 +66,7 @@ class Admin extends Controller
         $response = [];
         $database = new Database();
         $schemas = $database->listAllSchemas();
-        $mapfile = new \app\controllers\Mapfile();
+        $mapfile = new Mapfile();
         if (!empty($schemas["data"])) {
             foreach ($schemas["data"] as $schema) {
                 Connection::$param['postgisschema'] = $schema["schema"];
@@ -96,7 +103,7 @@ class Admin extends Controller
     public function get_mapcachefile(): array
     {
         $response = [];
-        $mapcachefile = new \app\controllers\Mapcachefile();
+        $mapcachefile = new Mapcachefile();
         $res = $mapcachefile->get_index();
         $response["data"] = $res["ch"];
         $response["success"] = true;
@@ -128,7 +135,7 @@ class Admin extends Controller
      */
     public function get_qgisfiles(): array
     {
-        $qgis = new \app\models\Qgis();
+        $qgis = new Qgis();
         return $qgis->writeAll(Database::getDb());
     }
 
@@ -227,8 +234,8 @@ class Admin extends Controller
             $response["message"] = "No files";
             return $response;
         }
-        $qgis = new \app\models\Qgis();
-        $processqgis = new \app\controllers\upload\Processqgis();
+        $qgis = new Qgis();
+        $processqgis = new Processqgis();
 
         if ($files) {
             usort($files, function ($a, $b) {

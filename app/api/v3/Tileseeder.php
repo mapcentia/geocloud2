@@ -6,7 +6,6 @@
  *
  */
 
-
 namespace app\api\v3;
 
 use app\inc\Controller;
@@ -14,8 +13,14 @@ use app\inc\Route;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\conf\Connection;
+use app\inc\Util;
 use Exception;
 
+
+/**
+ * Class Tileseeder
+ * @package app\api\v3
+ */
 class Tileseeder extends Controller
 {
     /**
@@ -89,7 +94,7 @@ class Tileseeder extends Controller
         $pgPassword = Connection::$param["postgispw"];
         $pgPort = Connection::$param["postgisport"];
 
-        $uuid = \app\inc\Util::guid();
+        $uuid = Util::guid();
 
         $cmd = "/usr/bin/nohup /usr/local/bin/mapcache_seed -c /var/www/geocloud2/app/wms/mapcache/{$db}.xml -v -t {$layer} -g {$grid} -z {$startZoom},{$endZoom} -d PG:'host={$pgHost} port={$pgPort} user={$pgUser} dbname={$db} password={$pgPassword}' -l '{$extentLayer}' -n {$nthreads}";
         $pid = (int)exec("{$cmd} > /var/www/geocloud2/public/logs/seeder_{$uuid}.log & echo $!");

@@ -376,7 +376,7 @@ class Mapfile extends \app\inc\Controller
                 <?php $layerName = $row['f_table_schema'] . "." . $row['f_table_name']; ?>
                 NAME "<?php echo $layerName; ?>"
                 STATUS off
-                GROUP "<?php echo $postgisObject::toAscii($row['layergroup']) ?>"
+                GROUP "<?php echo !empty($row['layergroup']) ? $postgisObject::toAscii($row['layergroup']) : "" ?>"
                 <?php if ($row['filter']) { ?>
                     PROCESSING "NATIVE_FILTER=<?php echo $row['filter']; ?>"
                 <?php } ?>

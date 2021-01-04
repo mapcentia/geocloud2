@@ -1,16 +1,22 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\inc;
 
-
+/**
+ * Class Geometrycolums
+ * @package app\inc
+ */
 class Geometrycolums
 {
+    /**
+     * @var array[]
+     */
     static public $geometry = array(
         'f_table_schema' =>
             array(
@@ -61,6 +67,9 @@ class Geometrycolums
                 'restriction' => NULL,
             ),
     );
+    /**
+     * @var array[]
+     */
     static public $join = array(
         '_key_' =>
             array(
@@ -360,7 +369,7 @@ class Geometrycolums
             ),
         'legend_url' =>
             array(
-                'num' => 16,
+                'num' => 44,
                 'type' => 'text',
                 'full_type' => 'text',
                 'is_nullable' => true,

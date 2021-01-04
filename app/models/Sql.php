@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -9,12 +9,19 @@
 namespace app\models;
 
 use app\conf\App;
+use app\inc\Model;
+use Exception;
+use PDOException;
+use PHPExcel_Reader_CSV;
+use PHPExcel_Writer_Excel2007;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+
 
 /**
  * Class Sql
  * @package app\models
  */
-class Sql extends \app\inc\Model
+class Sql extends Model
 {
     /**
      * @var string
@@ -33,19 +40,20 @@ class Sql extends \app\inc\Model
 
     /**
      * @param string $q
-     * @param null $clientEncoding
-     * @param string $format
-     * @param string $geoformat
-     * @param bool $csvAllToStr
-     * @param null $aliasesFrom
-     * @return mixed
+     * @param string|null $clientEncoding
+     * @param string|null $format
+     * @param string|null $geoformat
+     * @param bool|null $csvAllToStr
+     * @param string|null $aliasesFrom
+     * @return array<mixed>
+     * @throws PhpfastcacheInvalidArgumentException
      */
-    public function sql($q, $clientEncoding = null, $format = "geojson", $geoformat = "wkt", $csvAllToStr = false, $aliasesFrom = null)
+    public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null): array
     {
         if ($format == "excel") {
             $limit = !empty(App::$param["limits"]["sqlExcel"]) ? App::$param["limits"]["sqlExcel"] : 10000;
         } else {
-            $limit = !empty(App::$param["limits"]["sqlJson"]) ? App::$param["limits"]["sqlJson"] : 100000;;
+            $limit = !empty(App::$param["limits"]["sqlJson"]) ? App::$param["limits"]["sqlJson"] : 100000;
         }
         $name = "_" . rand(1, 999999999) . microtime();
         $view = self::toAscii($name, null, "_");
@@ -53,7 +61,7 @@ class Sql extends \app\inc\Model
         $res = $this->prepare($sqlView);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 400;
@@ -98,12 +106,12 @@ class Sql extends \app\inc\Model
         }
 
         if ($clientEncoding) {
-            $this->execQuery("set client_encoding='{$clientEncoding}'", "PDO");
+            $this->execQuery("set client_encoding='{$clientEncoding}'");
         }
         try {
             $result = $this->prepare($sql);
             $result->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 410;
@@ -121,7 +129,7 @@ class Sql extends \app\inc\Model
 
         if ($format == "geojson") {
             try {
-                while ($row = $this->fetchRow($result, "assoc")) {
+                while ($row = $this->fetchRow($result)) {
                     $arr = array();
                     foreach ($row as $key => $value) {
                         if ($arrayWithFields[$key]['type'] == "geometry") {
@@ -141,7 +149,7 @@ class Sql extends \app\inc\Model
                     }
                     $geometries = null;
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
                 $response['code'] = 410;
@@ -175,7 +183,7 @@ class Sql extends \app\inc\Model
             }
 
             try {
-                while ($row = $this->fetchRow($result, "assoc")) {
+                while ($row = $this->fetchRow($result)) {
                     $arr = array();
                     $fields = array();
 
@@ -219,20 +227,20 @@ class Sql extends \app\inc\Model
                 // ================
 
                 if ($format == "excel") {
-                    include '../app/vendor/phpoffice/phpexcel/Classes/PHPExcel/IOFactory.php';
+                    include __DIR__ . '../vendor/phpoffice/phpexcel/Classes/PHPExcel/IOFactory.php';
                     $file = tempnam(sys_get_temp_dir(), 'excel_');
                     $handle = fopen($file, "w");
                     fwrite($handle, $csv);
                     $csv = null;
 
-                    $objReader = new \PHPExcel_Reader_CSV();
+                    $objReader = new PHPExcel_Reader_CSV();
                     $objReader->setDelimiter($separator);
                     $objPHPExcel = $objReader->load($file);
 
                     fclose($handle);
                     unlink($file);
 
-                    $objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
+                    $objWriter = new PHPExcel_Writer_Excel2007($objPHPExcel);
 
                     // We'll be outputting an excel file
                     header('Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -244,23 +252,27 @@ class Sql extends \app\inc\Model
                     $objWriter->save('php://output');
                     die();
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
                 $response['code'] = 410;
                 return $response;
             }
             $this->free($result);
+            $response['success'] = true;
             $response['csv'] = $csv;
             return $response;
         }
+        return [
+            "success" => false,
+        ];
     }
 
     /**
-     * @param $q
-     * @return mixed
+     * @param string $q
+     * @return array<mixed>
      */
-    public function transaction($q)
+    public function transaction(string $q): array
     {
         $result = $this->execQuery($q, "PDO", "transaction");
         if (!$this->PDOerror) {
@@ -274,7 +286,13 @@ class Sql extends \app\inc\Model
         return $response;
     }
 
-    private function array_push_assoc($array, $key, $value)
+    /**
+     * @param array<mixed> $array
+     * @param string $key
+     * @param mixed $value
+     * @return array<mixed>
+     */
+    private function array_push_assoc(array $array, string $key, $value): array
     {
         $array[$key] = $value;
         return $array;

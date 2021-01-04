@@ -122,7 +122,7 @@ class Route
      * @param string $parameter
      * @return string|null
      */
-    static public function getParam(string $parameter)
+    static public function getParam(string $parameter): ?string
     {
         return isset(self::$params[$parameter]) ? self::$params[$parameter] : null;
     }

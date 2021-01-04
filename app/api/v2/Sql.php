@@ -458,24 +458,21 @@ class Sql extends Controller
 
             } else {
                 ob_start();
-
                 $format = Input::get('format') ?: "geojson";
-                if (!in_array($format, ["geojson", "csv", "excel"])) {
-                    die("{$format} is not a supported format.");
-                }
-
                 $geoformat = Input::get('geoformat') ?: null;
-                if (!in_array($geoformat, [null, "geojson", "wkt"])) {
-                    die("{$geoformat} is not a supported geom format.");
-                }
                 $csvAllToStr = Input::get('allstr') ?: null;
-
                 $alias = Input::get('alias') ?: null;
-
-
                 $this->response = $this->api->sql($this->q, $clientEncoding, $format, $geoformat, $csvAllToStr, $alias);
+                if (!$this->response["success"]) {
+                    return serialize([
+                        "success" => false,
+                        "code" => 500,
+                        "format" => $format,
+                        "geoformat" => $geoformat,
+                        "message" => "Check formats",
+                    ]);
+                }
                 $this->addAttr($response);
-
                 echo serialize($this->response);
                 $this->data = ob_get_contents();
                 if ($lifetime > 0 && !empty($CachedString)) {

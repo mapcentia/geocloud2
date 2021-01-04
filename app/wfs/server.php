@@ -891,7 +891,7 @@ function doParse($arr)
     );
 
     // We start sql BEGIN block
-    $postgisObject->connect("PDO");
+    $postgisObject->connect();
     $postgisObject->begin();
 
     $Serializer = new XML_Serializer($serializer_options);

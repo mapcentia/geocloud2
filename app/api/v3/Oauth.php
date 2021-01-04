@@ -6,7 +6,6 @@
  *
  */
 
-
 namespace app\api\v3;
 
 use app\inc\Controller;
@@ -15,6 +14,11 @@ use app\models\Session;
 use Exception;
 use TypeError;
 
+
+/**
+ * Class Oauth
+ * @package app\api\v3
+ */
 class Oauth extends Controller
 {
     /**

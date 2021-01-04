@@ -63,7 +63,7 @@ class Table extends \app\inc\Controller
     public function delete_columns()
     {
         $response = $this->auth(Input::getPath()->part(5));
-        return (!$response['success']) ? $response : $this->table->deleteColumn(json_decode(Input::get())->data, null, Input::getPath()->part(5));
+        return (!$response['success']) ? $response : $this->table->deleteColumn(json_decode(Input::get())->data, Input::getPath()->part(5));
     }
 
     public function get_structure()
@@ -104,8 +104,8 @@ class Table extends \app\inc\Controller
     {
         $response = $this->auth(Input::getPath()->part(5), array("read" => true, "write" => true, "all" => true));
         return (!$response['success']) ? $response : $this->table->getData(Input::getPath()->part(4),
-            Input::get("start") ?: 0,
-            Input::get("limit") ?: 100
+            Input::get("start") ?: "0",
+            Input::get("limit") ?: "100"
         );
     }
 

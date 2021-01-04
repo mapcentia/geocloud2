@@ -37,7 +37,7 @@ if (!$tables[0]) {
 }
 foreach ($tables as $table) {
     $tableObj = new \app\models\table($postgisschema . "." . $table);
-    $primeryKey = $tableObj->primeryKey;
+    $primeryKey = $tableObj->primaryKey;
 
     $simpleType = false;
 

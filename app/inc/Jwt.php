@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -10,13 +10,21 @@ namespace app\inc;
 
 use app\conf\App;
 use app\models\Database;
+use app\models\Setting;
+use Exception;
+use PDOException;
 
+
+/**
+ * Class Jwt
+ * @package app\inc
+ */
 class Jwt
 {
     const TOKEN_TTL = 3600;
 
     /**
-     * @return array
+     * @return array<mixed>
      */
     public static function validate(): array
     {
@@ -31,7 +39,7 @@ class Jwt
 
     /**
      * @param string $token
-     * @return array
+     * @return array<mixed>
      */
     public static function parse(string $token): array
     {
@@ -44,9 +52,9 @@ class Jwt
         // Get super user key, which are used for secret
         Database::setDb($arr["data"]["database"]);
         try {
-            $settings_viewer = new \app\models\Setting();
+            $settings_viewer = new Setting();
             $secret = $settings_viewer->getApiKeyForSuperUser();
-        } catch (\PDOException $exception) {
+        } catch (PDOException $exception) {
             $response["success"] = false;
             $response["message"] = $exception->getMessage();
             return $response;
@@ -54,7 +62,7 @@ class Jwt
 
         try {
             $decoded = (array)\Firebase\JWT\JWT::decode($token, $secret, ['HS256']);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $response["success"] = false;
             $response["message"] = $exception->getMessage();
             return $response;
@@ -67,7 +75,7 @@ class Jwt
 
     /**
      * @param string $token
-     * @return array
+     * @return array<mixed>
      */
     public static function extractPayload(string $token): array
     {
@@ -86,12 +94,12 @@ class Jwt
 
     /**
      * @param string $secret
-     * @param $db
+     * @param string $db
      * @param string $userId
      * @param bool $isSubUser
-     * @return string
+     * @return array<mixed>
      */
-    public static function createJWT(string $secret, $db, string $userId, bool $isSubUser): array
+    public static function createJWT(string $secret, string $db, string $userId, bool $isSubUser): array
     {
         $token = [
             "iss" => App::$param["host"],

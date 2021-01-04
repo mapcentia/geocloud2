@@ -1,35 +1,37 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\inc;
 
+use Exception;
+
 class Util
 {
     /**
-     * @param $class
-     * @param $object
+     * @param string $class
+     * @param object $object
      * @return mixed
      */
-    static function casttoclass($class, $object)
+    static function casttoclass(string $class, object $object)
     {
         return unserialize(preg_replace('/^O:\d+:"[^"]++"/', 'O:' . strlen($class) . ':"' . $class . '"', serialize($object)));
     }
 
     /**
-     * @param $dir
+     * @param string $dir
      */
-    static function rrmdir($dir)
+    static function rrmdir(string $dir): void
     {
         if (is_dir($dir)) {
             $objects = scandir($dir);
             foreach ($objects as $object) {
                 if ($object != "." && $object != "..") {
-                    if (filetype($dir . "/" . $object) == "dir") rrmdir($dir . "/" . $object); else unlink($dir . "/" . $object);
+                    if (filetype($dir . "/" . $object) == "dir") self::rrmdir($dir . "/" . $object); else unlink($dir . "/" . $object);
                 }
             }
             reset($objects);
@@ -47,13 +49,15 @@ class Util
     }
 
     /**
-     * @param $hexStr
+     * @param string $hexStr
      * @param bool $returnAsString
      * @param string $seperator
-     * @return array|bool|string
+     * @return array<string>|bool|string
      */
-    static function hex2RGB($hexStr, $returnAsString = false, $seperator = ',')
+    static function hex2RGB($hexStr, bool $returnAsString = false, string $seperator = ',')
     {
+        error_log(print_r($hexStr, true));
+
         $hexStr = preg_replace("/[^0-9A-Fa-f]/", '', $hexStr);
         // Gets a proper hex string
         $rgbArray = array();
@@ -77,16 +81,16 @@ class Util
     /**
      * @return string
      */
-    static function randHexColor()
+    static function randHexColor(): string
     {
         return sprintf('#%06X', mt_rand(0, 0xFFFFFF));
     }
 
     /**
-     * @param $code
-     * @return mixed
+     * @param int|string $code
+     * @return string|null
      */
-    static function httpCodeText($code)
+    static function httpCodeText($code): ?string
     {
         $codes = array(
             200 => "OK",
@@ -105,7 +109,7 @@ class Util
             503 => "Service Unavailable",
             504 => "Gateway timeout"
         );
-        return $codes[$code];
+        return $codes[$code] ?? null;
     }
 
     /**
@@ -259,7 +263,7 @@ class Util
      * @param int $connectTimeout
      * @param int $timeout
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     static function wget($url, $connectTimeout = 10, $timeout = 0)
     {
@@ -272,8 +276,8 @@ class Util
         $buffer = curl_exec($ch);
         curl_close($ch);
 
-        if (isset($buffer['curl_error'])) throw new \Exception($buffer['curl_error']);
-        if (isset($buffer['http_code']) && $buffer['http_code'] != '200') throw new \Exception("HTTP Code = " . $buffer['http_code']);
+        if (isset($buffer['curl_error'])) throw new Exception($buffer['curl_error']);
+        if (isset($buffer['http_code']) && $buffer['http_code'] != '200') throw new Exception("HTTP Code = " . $buffer['http_code']);
 
         return $buffer;
     }
@@ -307,10 +311,10 @@ class Util
         // Turn off output buffering
         ini_set('output_buffering', 'off');
         // Turn off PHP output compression
-        ini_set('zlib.output_compression', false);
+        ini_set('zlib.output_compression', 'false');
         // Implicitly flush the buffer(s)
-        ini_set('implicit_flush', true);
-        ob_implicit_flush(true);
+        ini_set('implicit_flush', 'true');
+        ob_implicit_flush(1);
         // Clear, and turn off output buffering
         while (ob_get_level() > 0) {
             // Get the curent level
