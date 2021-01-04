@@ -6,6 +6,14 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNRELEASED]
 ### Added
+- PHPStan added to project for static code analysis. A lot of type issues fixed.
+  
+### Changed
+- Migration code moved to `app\migration`.
+
+
+## [2020.12.0] - 2020-21-12
+### Added
 - A custom PNG can now be used as legend for a layer. The URL pointing to the PNG is set in the Legend tab. Must run database migrations.
 - PostgreSQL connection parameters can now be set using environment variables. If the parameters are set in `app/conf/Connection.php` they will have precedence:
   - POSTGIS_HOST=127.0.0.1
@@ -14,13 +22,11 @@ and this project adheres to [CalVer](https://calver.org/).
   - POSTGIS_PORT=5432
   - POSTGIS_PW=1234
   - POSTGIS_PGBOUNCER=false
-- PHPStan added to project for static code analysis. A lot of type issues fixed.
-  
+    
 ### Changed
 - Intercom.io widget is removed.
 - Some unused files are removed.
-- The primary key will now be exposed as an ordinary element in the WFS-t service. Before it was only exposed as the GML FID. It can not be updated and an exception will be thrown if tried.  
-- Migration code moved to `app\migration`.
+- The primary key will now be exposed as an ordinary element in the WFS-t service. Before it was only exposed as the GML FID. It can not be updated and an exception will be thrown if tried.
 
 ### Fixed
 - Using `PROCESSING 'NATIVE_FILTER=id=234'` instead of `FILTER` in MapFile.
