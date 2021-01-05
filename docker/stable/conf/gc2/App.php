@@ -1,8 +1,16 @@
 <?php
 namespace app\conf;
 
+
+/**
+ * Class App
+ * @package app\conf
+ */
 class App
 {
+    /**
+     * @var array<mixed>
+     */
     static $param = array(
         // The hostname of the server
         "host" => "",

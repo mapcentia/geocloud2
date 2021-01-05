@@ -2,6 +2,7 @@
 
 namespace app\conf;
 
+
 /**
  * Connection params should be set through the environment.
  * If set in this file, the environment will be ignored.
@@ -20,6 +21,9 @@ namespace app\conf;
  */
 class Connection
 {
+    /**
+     * @var array<string|bool>
+     */
     static $param = array(
 //        "postgishost" => "POSTGISHOST_CONFIGURATION",
 //        "postgisdb" => "POSTGISDB_CONFIGURATION",
