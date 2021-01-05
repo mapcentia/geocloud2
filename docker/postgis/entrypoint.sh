@@ -107,7 +107,7 @@ WARNING: No locale has been set for the GC2
 
       # Pull from GitHub and run database migration
       cd /var/www/geocloud2 && git pull &&
-      cd /var/www/geocloud2/app/conf/migration/ && ./run &&
+      php /var/www/geocloud2/app/migration/run.php &&
       service postgresql stop
 
     #Add gc2 user to pgbouncer user list
