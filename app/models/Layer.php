@@ -81,14 +81,15 @@ class Layer extends Table
 
     /**
      * @param string|null $query
-     * @param $auth
-     * @param bool $includeExtent
-     * @param bool $parse
-     * @param bool $es
-     * @param $db
+     * @param bool|null $auth
+     * @param bool|null $includeExtent
+     * @param bool|null $parse
+     * @param bool|null $es
+     * @param string $db
      * @return array
+     * @throws PhpfastcacheInvalidArgumentException
      */
-    public function getAll(string $query = null, $auth, $includeExtent = false, $parse = false, $es = false, $db): array
+    public function getAll(?string $query = null, ?bool $auth, ?bool $includeExtent = false, ?bool $parse = false, ?bool $es = false, string $db): array
     {
         // If user is signed in with another user than the requested,
         // when consider the user as not signed in.

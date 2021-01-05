@@ -29,6 +29,7 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ### Fixed
 - Using `PROCESSING 'NATIVE_FILTER=id=234'` instead of `FILTER` in MapFile.
+- Workflow is fixed.
 
 ## [2020.11.0] - 2020-18-11
 ### Added
