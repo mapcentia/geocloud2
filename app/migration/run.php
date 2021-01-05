@@ -1,4 +1,3 @@
-
 <?php
 use app\migration\Sql;
 header("Content-type: text/plain");
