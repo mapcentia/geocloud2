@@ -55,9 +55,6 @@ services:
     image: mapcentia/postgis
     volumes:
       - postgis_var_lib_postgresql:/var/lib/postgresql
-      - postgis_var_log:/var/log
-      - postgis_etc_postgresql:/etc/postgresql
-      - postgis_etc_pgbouncer:/etc/pgbouncer
     networks:
       - default
       - internal
@@ -68,10 +65,7 @@ services:
       - GC2_PASSWORD=1234
 
 volumes:
-  postgis_var_log:
   postgis_etc_postgresql:
-  postgis_var_lib_postgresql:
-  postgis_etc_pgbouncer:
 
 
 
