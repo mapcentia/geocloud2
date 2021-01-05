@@ -565,7 +565,7 @@ class Table extends Model
      * @param string $keyName
      * @param bool $raw
      * @param bool $append
-     * @return array<mixed>
+     * @return array<bool|string|int>
      */
     public function updateRecord($data, string $keyName, bool $raw = false, bool $append = false): array
     {
@@ -686,7 +686,7 @@ class Table extends Model
                     $response['message'] = "Row updated";
                 } else {
                     $response['success'] = false;
-                    $response['message'] = $this->PDOerror;
+                    $response['message'] = $this->PDOerror[0];
                     $response['code'] = 406;
                     return $response;
                 }
@@ -862,7 +862,7 @@ class Table extends Model
      */
     public function updateColumn($data, string $key): array // Only geometry tables
     {
-        //$this->clearCacheOnSchemaChanges();
+        $this->clearCacheOnSchemaChanges();
         $response = [];
         $this->purgeFieldConf($key);
         $data = $this->makeArray($data);

@@ -75,8 +75,9 @@ class Controller
      * @param array<bool> $level
      * @param bool $neverAllowSubUser
      * @return array<mixed>
+     * @throws PhpfastcacheInvalidArgumentException
      */
-    public function auth(string $key = null, array $level = ["all" => true], bool $neverAllowSubUser = false): array
+    public function auth(?string $key = null, array $level = ["all" => true], bool $neverAllowSubUser = false): array
     {
         $response = [];
         if (($_SESSION["subuser"] == true && $_SESSION['screen_name'] == Connection::$param['postgisschema']) && $neverAllowSubUser == false) {
@@ -110,6 +111,7 @@ class Controller
      * @param string $user
      * @param string $key
      * @return bool
+     * @throws PhpfastcacheInvalidArgumentException
      */
     public function authApiKey(string $user, string $key): bool
     {

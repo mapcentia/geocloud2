@@ -1,50 +1,67 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\models;
 
-use \app\conf\App;
-use \app\inc\Cache;
+use app\conf\App;
+use app\conf\Connection;
+use app\inc\Cache;
 use app\inc\Globals;
-use \app\inc\Session;
+use Error;
+use PDOException;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Phpfastcache\Exceptions\PhpfastcacheLogicException;
 
 
-class Layer extends \app\models\Table
+/**
+ * Class Layer
+ * @package app\models
+ */
+class Layer extends Table
 {
+    /**
+     * @var array<mixed>
+     */
     private static $recordStore = [];
 
     function __construct()
     {
         try {
             parent::__construct("settings.geometry_columns_view");
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
         }
     }
 
-    private function clearCacheOnSchemaChanges()
-    {
-        // We clear all cache, because it can take long time to clear by tag
-        Cache::clear();
-    }
-
-    private function clearCacheOfColumns($relName)
+    /**
+     *
+     */
+    private function clearCacheOnSchemaChanges(): void
     {
         // We clear all cache, because it can take long time to clear by tag
         Cache::clear();
     }
 
     /**
-     * Secure. Using now user input.
+     *
+     */
+    private function clearCacheOfColumns(): void
+    {
+        // We clear all cache, because it can take long time to clear by tag
+        Cache::clear();
+    }
+
+    /**
      * @param string $_key_
      * @param string $column
-     * @return mixed
+     * @return string|null
+     * @throws PhpfastcacheInvalidArgumentException
      */
-    public function getValueFromKey(string $_key_, string $column)
+    public function getValueFromKey(string $_key_, string $column): ?string
     {
         if (isset(self::$recordStore[$_key_][$column])) {
             return self::$recordStore[$_key_][$column];
@@ -59,7 +76,7 @@ class Layer extends \app\models\Table
                 }
             }
         }
-        return false;
+        return null;
     }
 
     /**
@@ -90,7 +107,7 @@ class Layer extends \app\models\Table
             try {
                 $response["cache"]["hit"] = $CachedString->getCreationDate();
                 $response["cache"]["tags"] = $CachedString->getTags();
-            } catch (\Phpfastcache\Exceptions\PhpfastcacheLogicException $exception) {
+            } catch (PhpfastcacheLogicException $exception) {
                 $response["cache"] = $exception->getMessage();
             }
             $response["cache"]["signature"] = md5(serialize($data));
@@ -124,7 +141,7 @@ class Layer extends \app\models\Table
                 "(authentication=''Write'' OR authentication=''None'')";
             $case = "CASE WHEN ((layergroup = '' OR layergroup IS NULL) AND baselayer != true) THEN 9999999 else sort_id END";
             $sort = "sort";
-            $sort .= (\app\conf\App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
+            $sort .= (App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
             $sort .= ",f_table_name DESC";
 
             if (sizeof($schemata) > 0) {
@@ -155,7 +172,7 @@ class Layer extends \app\models\Table
             try {
                 $res = $this->prepare($sql);
                 $res->execute();
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
                 $response['code'] = 401;
@@ -198,7 +215,7 @@ class Layer extends \app\models\Table
                     $resExtent = $this->prepare($sqls);
                     try {
                         $resExtent->execute();
-                    } catch (\PDOException $e) {
+                    } catch (PDOException $e) {
                         $response['success'] = false;
                         $response['message'] = $e->getMessage();
                         $response['code'] = 401;
@@ -222,7 +239,7 @@ class Layer extends \app\models\Table
                         if (is_array($obj)) {
                             foreach ($obj as $k => $val) {
                                 if ($obj[$k]["properties"] == "*") {
-                                    $table = new \app\models\Table($row['f_table_schema'] . "." . $row['f_table_name']);
+                                    $table = new Table($row['f_table_schema'] . "." . $row['f_table_name']);
                                     $distinctValues = $table->getGroupByAsArray($k);
                                     $obj[$k]["properties"] = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK);
                                 } elseif (isset(json_decode(str_replace("'", '"', $obj[$k]["properties"]), true)["_rel"])) {
@@ -354,7 +371,7 @@ class Layer extends \app\models\Table
                 return $a['sort_id'] <=> $b['sort_id'];
             });
 
-            if (\app\conf\App::$param["reverseLayerOrder"]) {
+            if (App::$param["reverseLayerOrder"]) {
                 $response['data'] = array_reverse($response['data']);
             }
 
@@ -371,7 +388,7 @@ class Layer extends \app\models\Table
             try {
                 $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
                 $CachedString->addTags([$cacheType, $this->postgisdb]);
-            } catch (\Error $exception) {
+            } catch (Error $exception) {
                 // Pass
             }
             Cache::save($CachedString);
@@ -408,7 +425,7 @@ class Layer extends \app\models\Table
     public function getElasticsearchMapping($_key_) // Only geometry tables
     {
         $hasGeom = false;
-        $elasticsearch = new \app\models\Elasticsearch();
+        $elasticsearch = new Elasticsearch();
         $response['success'] = true;
         $response['message'] = "Map loaded";
 
@@ -521,7 +538,7 @@ class Layer extends \app\models\Table
                 $resUpdate = $this->prepare($query);
                 try {
                     $resUpdate->execute();
-                } catch (\PDOException $e) {
+                } catch (PDOException $e) {
                     $this->rollback();
                     $response['success'] = false;
                     $response['message'] = $e->getMessage();
@@ -533,14 +550,14 @@ class Layer extends \app\models\Table
             $res = $this->prepare($sql);
             try {
                 $res->execute();
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 $this->rollback();
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
                 $response['code'] = 400;
                 return $response;
             }
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -570,7 +587,7 @@ class Layer extends \app\models\Table
             $res = $this->prepare($query);
             try {
                 $res->execute();
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 $this->rollback();
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
@@ -583,7 +600,7 @@ class Layer extends \app\models\Table
                 $resDelete = $this->prepare($query);
                 try {
                     $resDelete->execute();
-                } catch (\PDOException $e) {
+                } catch (PDOException $e) {
                     $this->rollback();
                     $response['success'] = false;
                     $response['message'] = $e->getMessage();
@@ -594,7 +611,7 @@ class Layer extends \app\models\Table
                 $resUpdate = $this->prepare($query);
                 try {
                     $resUpdate->execute();
-                } catch (\PDOException $e) {
+                } catch (PDOException $e) {
                     $this->rollback();
                     $response['success'] = false;
                     $response['message'] = $e->getMessage();
@@ -606,7 +623,7 @@ class Layer extends \app\models\Table
             $res = $this->prepare($query);
             try {
                 $res->execute();
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 $this->rollback();
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
@@ -650,7 +667,7 @@ class Layer extends \app\models\Table
             }
             try {
                 $res->execute();
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 $this->rollback();
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
@@ -674,7 +691,7 @@ class Layer extends \app\models\Table
         $privileges = json_decode($this->getValueFromKey($_key_, "privileges") ?: "{}");
         foreach ($_SESSION['subusers'] as $subuser) {
             $privileges->$subuser = ($privileges->$subuser) ?: "none";
-            if ($subuser != \app\conf\Connection::$param['postgisschema']) {
+            if ($subuser != Connection::$param['postgisschema']) {
                 $response['data'][] = array("subuser" => $subuser, "privileges" => $privileges->$subuser);
             }
         }
@@ -736,15 +753,16 @@ class Layer extends \app\models\Table
     }
 
     /**
-     * @param $_key_
-     * @return array
+     * @param string $_key_
+     * @return array<array<mixed>|bool|string>
+     * @throws PhpfastcacheInvalidArgumentException
      */
-    public function getRoles($_key_)
+    public function getRoles(string $_key_): array
     {
         $roles = json_decode($this->getValueFromKey($_key_, "roles") ?: "{}");
         foreach ($_SESSION['subusers'] as $subuser) {
             $roles->$subuser = $roles->$subuser ?: "none";
-            if ($subuser != \app\conf\Connection::$param['postgisschema']) {
+            if ($subuser != Connection::$param['postgisschema']) {
                 $response['data'][] = array("subuser" => $subuser, "roles" => $roles->$subuser);
             }
         }
@@ -757,18 +775,18 @@ class Layer extends \app\models\Table
     }
 
     /**
-     * @param $data
-     * @return mixed
+     * @param object $data
+     * @return array<bool|string|int>
+     * @throws PhpfastcacheInvalidArgumentException
      */
-    public function updateRoles($data)
+    public function updateRoles(object $data): array
     {
         $this->clearCacheOnSchemaChanges();
-        $data = (array)$data;
         $table = new Table("settings.geometry_columns_join");
-        $role = json_decode($this->getValueFromKey($data['_key_'], "roles") ?: "{}");
-        $role->$data['subuser'] = $data['roles'];
+        $role = json_decode($this->getValueFromKey($data->_key_, "roles") ?: "{}");
+        $role->{$data->subuser} = $data->roles;
         $roles['roles'] = json_encode($role);
-        $roles['_key_'] = $data['_key_'];
+        $roles['_key_'] = $data->_key_;
         $res = $table->updateRecord(json_decode(json_encode($roles)), "_key_");
         if ($res['success'] == true) {
             $response['success'] = true;
@@ -789,7 +807,7 @@ class Layer extends \app\models\Table
         $resExtent = $this->prepare($sql);
         try {
             $resExtent->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 403;
@@ -812,7 +830,7 @@ class Layer extends \app\models\Table
             $result->execute();
             $row = $this->fetchRow($result);
             $extent = array("xmin" => $row['txmin'], "ymin" => $row['tymin'], "xmax" => $row['txmax'], "ymax" => $row['tymax']);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();;
             $response['code'] = 403;
@@ -833,7 +851,7 @@ class Layer extends \app\models\Table
             $result->execute();
             $row = $this->fetchRow($result);
             $extent = $row["geojson"];
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e;
             $response['code'] = 403;
@@ -853,7 +871,7 @@ class Layer extends \app\models\Table
             $result->execute();
             $row = $this->fetchRow($result);
             $count = $row['count'];
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e;
             $response['code'] = 403;
@@ -876,7 +894,7 @@ class Layer extends \app\models\Table
         $res = $this->prepare($query);
         try {
             $res->execute(array("from" => $from));
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 400;
@@ -903,34 +921,24 @@ class Layer extends \app\models\Table
         return $res;
     }
 
-    public function getRole($schema, $table, $user)
+    /**
+     * @param string $schema
+     * @param string $table
+     * @return array<bool|array<string>>
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public function getRole(string $schema, string $table): array
     {
         $row = $this->getColumns($schema, $table);
         $response['success'] = true;
-        $response['data'] = json_decode($row['roles'], true);
-        return $response;
-    }
-
-    public function registerWorkflow($schema, $_table, $gid, $status, $user)
-    {
-        $sql = "INSERT INTO settings.workflow(schema, _table, gid, status, user) VALUES(':schema',':_table',:gid,:status,':user')";
-        $res = $this->prepare($sql);
-        try {
-            $res->execute(array("schema" => $schema, "_table" => $_table, "gid" => $gid, "status" => $status, "user" => $user,));
-        } catch (\PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e;
-            $response['code'] = 403;
-            return $response;
-        }
-        $response['success'] = true;
+        $response['data'] = json_decode($row[0]['roles'], true);
         return $response;
     }
 
     public function updateCkan($key, $gc2Host)
     {
-        $gc2Host = $gc2Host ?: \app\conf\App::$param["host"];
-        $metaConfig = \app\conf\App::$param["metaConfig"];
+        $gc2Host = $gc2Host ?: App::$param["host"];
+        $metaConfig = App::$param["metaConfig"];
         $ckanApiUrl = App::$param["ckan"]["host"];
 
         $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ =:key";
@@ -939,7 +947,7 @@ class Layer extends \app\models\Table
 
             $res->execute(array("key" => $key));
 
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 401;
@@ -1190,7 +1198,7 @@ class Layer extends \app\models\Table
         $res = $this->prepare($sql);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 401;
@@ -1219,7 +1227,7 @@ class Layer extends \app\models\Table
         $res = $this->prepare($sql);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 401;

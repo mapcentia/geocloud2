@@ -996,13 +996,8 @@ class Model
             } catch (Exception $e) {
                 die($e->getMessage());
             }
-            try {
-                $CachedString->set($rows)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-                $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
-
-            } catch (Error $exception) {
-                // Pass
-            }
+            $CachedString->set($rows)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
+            $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $rows;
         }
