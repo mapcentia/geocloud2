@@ -1,31 +1,46 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\controllers;
 
-use \app\conf\App;
-use \app\conf\Connection;
-use \app\inc\Util;
+use app\conf\App;
+use app\conf\Connection;
+use app\inc\Controller;
+use app\inc\Model;
+use app\inc\Util;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+
 
 /**
  * Class Mapfile
  * @package app\controllers
  */
-class Mapfile extends \app\inc\Controller
+class Mapfile extends Controller
 {
-    private $fonts;
+
+    /**
+     * @var Model
+     */
     private $postgisObject;
+
+    /**
+     * @var float[]
+     */
     private $bbox;
 
+    /**
+     * Mapfile constructor.
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     function __construct()
     {
         parent::__construct();
-        $this->postgisObject = new \app\inc\Model();
+        $this->postgisObject = new Model();
         $settings = new \app\models\Setting();
         $extents = $settings->get()["data"]->extents;
 
@@ -33,7 +48,11 @@ class Mapfile extends \app\inc\Controller
         $this->bbox = property_exists($extents, $schema) ? $extents->$schema : [-20037508.34, -20037508.34, 20037508.34, 20037508.34]; // Is in EPSG:3857
     }
 
-    public function get_index()
+    /**
+     * @return array<array<bool|string>>
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public function get_index(): array
     {
         $res = [];
         $res[] = $this->writeWms();
@@ -41,9 +60,13 @@ class Mapfile extends \app\inc\Controller
         return $res;
     }
 
+    /**
+     * @return array<bool|string>
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     private function writeWms()
     {
-        $postgisObject = new \app\inc\Model();
+        $postgisObject = new Model();
         $user = Connection::$param['postgisdb'];
 
         $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),4326)) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
@@ -365,7 +388,7 @@ class Mapfile extends \app\inc\Controller
                 }
                 $arr = $sortedArr;
                 for ($i = 0; $i < sizeof($arr); $i++) {
-                    $arrNew[$i] = (array)\app\inc\Util::casttoclass('stdClass', $arr[$i]);
+                    $arrNew[$i] = (array)Util::casttoclass('stdClass', $arr[$i]);
                     $arrNew[$i]['id'] = $i;
                 }
                 $classArr = array("data" => !empty($arrNew) ? $arrNew : null);
@@ -925,9 +948,13 @@ class Mapfile extends \app\inc\Controller
         return array("success" => true, "message" => "Mapfile written", "ch" => $path . $name);
     }
 
+    /**
+     * @return array<bool|string>
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     private function writeWfs()
     {
-        $postgisObject = new \app\inc\Model();
+        $postgisObject = new Model();
         $user = Connection::$param['postgisdb'];
 
         $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),4326)) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
