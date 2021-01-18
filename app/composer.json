@@ -21,7 +21,8 @@
         "ext-iconv": "*",
         "ext-curl": "*",
         "ext-apache": "*",
-        "ext-simplexml": "*"
+        "ext-simplexml": "*",
+        "ext-xml": "*"
     },
     "require-dev": {
         "codeception/module-asserts": "^1.3",
