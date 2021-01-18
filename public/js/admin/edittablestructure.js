@@ -420,7 +420,11 @@ tableStructure.init = function (record, db) {
                                 },
                                 {
                                     name: 'Decimal',
-                                    value: 'float'
+                                    value: 'decimal'
+                                },
+                                {
+                                    name: 'Double',
+                                    value: 'double'
                                 },
                                 {
                                     name: 'Text',

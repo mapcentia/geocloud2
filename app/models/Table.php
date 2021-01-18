@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -131,7 +131,7 @@ class Table extends Model
             if ($CachedString != null && $CachedString->isHit()) {
                 $this->exits = $CachedString->get();
             } else {
-                $sql = "SELECT 1 FROM {$table} LIMIT 1";
+                $sql = "SELECT 1 FROM " . $this->doubleQuoteQualifiedName($table) . " LIMIT 1";
                 try {
                     $this->execQuery($sql);
                 } catch (PDOException $e) {
@@ -211,13 +211,17 @@ class Table extends Model
         ) {
             $field['typeObj'] = array("type" => "int");
             $field['type'] = "int";
-        } elseif (preg_match("/numeric/", $field['type']) ||
+        } elseif (
+            preg_match("/numeric/", $field['type']) ||
             preg_match("/real/", $field['type']) ||
-            preg_match("/double/", $field['type']) ||
-            preg_match("/float/", $field['type'])
+            preg_match("/float/", $field['type']) ||
+            preg_match("/decimal/", $field['type'])
         ) {
             $field['typeObj'] = array("type" => "decimal", "precision" => 3, "scale" => 10);
-            $field['type'] = "number"; // SKAL ændres
+            $field['type'] = "decimal"; // SKAL ændres
+        } elseif (preg_match("/double/", $field['type'])) {
+            $field['typeObj'] = array("type" => "double");
+            $field['type'] = "double"; // SKAL ændres
         } elseif (preg_match("/bool/", $field['type'])) {
             $field['typeObj'] = array("type" => "boolean");
             $field['type'] = "boolean";
@@ -1001,8 +1005,11 @@ class Table extends Model
             case "Integer":
                 $type = "integer";
                 break;
-            case "Decimal":
+            case "Double":
                 $type = "double precision";
+                break;
+            case "Decimal":
+                $type = "decimal";
                 break;
             case "Text":
                 $type = "text";
@@ -1355,7 +1362,7 @@ class Table extends Model
         $response = [];
         $arrayWithFields = $this->getMetaData($table);
         foreach ($arrayWithFields as $key => $arr) {
-             if ($arr['type'] == "bytea") {
+            if ($arr['type'] == "bytea") {
                 $fieldsArr[] = "'binary' AS \"{$key}\"";
             } else {
                 $fieldsArr[] = "\"{$key}\"";
@@ -1366,7 +1373,7 @@ class Table extends Model
         } else {
             $sql = "*";
         }
-        $sql = "SELECT {$sql} FROM {$table} LIMIT {$limit} OFFSET {$offset}";
+        $sql = "SELECT {$sql} FROM " . $this->doubleQuoteQualifiedName($table) . " LIMIT {$limit} OFFSET {$offset}";
         $res = $this->prepare($sql);
         try {
             $res->execute();
@@ -1390,7 +1397,7 @@ class Table extends Model
             $response['data'] = array();
         }
         // Get the total count
-        $sql = "SELECT count(*) AS count FROM {$table}";
+        $sql = "SELECT count(*) AS count FROM " . $this->doubleQuoteQualifiedName($table);
         $res = $this->prepare($sql);
         try {
             $res->execute();
@@ -1414,7 +1421,7 @@ class Table extends Model
     public function insertRecord(): array
     {
         $response = [];
-        $sql = "INSERT INTO " . $this->table . " DEFAULT VALUES";
+        $sql = "INSERT INTO " . $this->doubleQuoteQualifiedName($this->table) . " DEFAULT VALUES";
         $res = $this->prepare($sql);
         try {
             $res->execute();
@@ -1445,7 +1452,7 @@ class Table extends Model
         }
         $data = $this->makeArray($data);
 
-        $sql = "DELETE FROM " . $this->table . " WHERE \"{$keyName}\" =:key";
+        $sql = "DELETE FROM " . $this->doubleQuoteQualifiedName($this->table) . " WHERE \"{$keyName}\" =:key";
         $res = $this->prepare($sql);
         try {
             $res->execute(array("key" => $data["data"]));
