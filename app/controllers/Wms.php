@@ -1,31 +1,38 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\controllers;
 
-use \app\conf\App;
-use \app\inc\Util;
-use \app\inc\Input;
+use app\conf\App;
+use app\inc\Controller;
+use app\inc\Model;
+use app\inc\Util;
+use app\inc\Input;
+use app\wfs\ServiceException;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use XML_Unserializer;
 
-include "libs/PEAR/XML/Unserializer.php";
+include __DIR__ . "/../libs/PEAR/XML/Unserializer.php";
+
 
 /**
  * Class Wms
  * @package app\controllers
  */
-class Wms extends \app\inc\Controller
+class Wms extends Controller
 {
-
     public $service;
     private $layers;
+    private $type;
 
     /**
      * Wms constructor.
+     * @throws PhpfastcacheInvalidArgumentException
      */
     function __construct()
     {
@@ -34,8 +41,8 @@ class Wms extends \app\inc\Controller
         header("Cache-Control: no-store");
 
         $this->layers = [];
-        $postgisschema = \app\inc\Input::getPath()->part(3);
-        $db = \app\inc\Input::getPath()->part(2);
+        $postgisschema = Input::getPath()->part(3);
+        $db = Input::getPath()->part(2);
         $dbSplit = explode("@", $db);
         $this->service = null;
         if (sizeof($dbSplit) == 2) {
@@ -54,6 +61,7 @@ class Wms extends \app\inc\Controller
         }
 
         // Both WMS and WFS can use GET
+
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             foreach ($_GET as $k => $v) {
                 // Get the layer names from either WMS (layer) or WFS (typename)
@@ -85,9 +93,9 @@ class Wms extends \app\inc\Controller
         // Only WFS uses POST
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Parse the XML request
-            $unserializer = new \XML_Unserializer(['parseAttributes' => TRUE, 'typeHints' => FALSE]);
+            $unserializer = new XML_Unserializer(['parseAttributes' => TRUE, 'typeHints' => FALSE]);
             $request = Input::get(null, true);
-            $status = $unserializer->unserialize($request);
+            $unserializer->unserialize($request);
             $arr = $unserializer->getUnserializedData();
 
             // Get service. Only WFS for now
@@ -98,7 +106,7 @@ class Wms extends \app\inc\Controller
                 $typeName = !empty($arr["wfs:Query"]["typeNames"]) ? $arr["wfs:Query"]["typeNames"] : $arr["Query"]["typeNames"];
             }
             if (empty($typeName)) {
-                \app\wfs\ServiceException::report("Could not get the typeName from the requests");
+                ServiceException::report("Could not get the typeName from the requests");
                 exit();
             }
 
@@ -116,10 +124,11 @@ class Wms extends \app\inc\Controller
     /**
      * @param $db string
      * @param $postgisschema string
+     * @throws PhpfastcacheInvalidArgumentException
      */
     private function get($db, $postgisschema)
     {
-        $model = new \app\inc\Model();
+        $model = new Model();
         $useFilters = false;
         $qgs =  isset($_GET["qgs"]) ? base64_decode($_GET["qgs"]) : false;
         // Check if WMS filters are set
@@ -155,12 +164,12 @@ class Wms extends \app\inc\Controller
                             $where = "({$where} AND {$versionWhere})";
                         }
                         $sedCmd = 'sed -i "/table=\"' . $split[0] . '\".\"' . $split[1] . '\"/s/sql=.*</sql=' . $where . '</g" ' . $mapFile;
-                        $res = shell_exec($sedCmd);
+                        shell_exec($sedCmd);
                     }
                     if ($disableLabels) {
                         $useFilters = true;
                         $sedCmd = 'sed -i "s/labelsEnabled=\"1\"/labelsEnabled=\"0\"/g" ' . $mapFile;
-                        $res = shell_exec($sedCmd);
+                        shell_exec($sedCmd);
                     }
 
                     $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map={$mapFile}&" . $_SERVER["QUERY_STRING"];
@@ -196,14 +205,14 @@ class Wms extends \app\inc\Controller
                     // Use sed to replace sql= parameter
                     $where = implode(" OR ", $filters[$layer]);
                     $sedCmd = 'sed -i "s;/\*FILTER_' . $split[0] . '.' . $split[1] . '\*/;WHERE ' . $where . ';g" ' . $tmpMapFile;
-                    $res = shell_exec($sedCmd);
+                    shell_exec($sedCmd);
                 }
                 if ($disableLabels) {
                     $useFilters = true;
                     $sedCmd = 'sed -i "/#START_LABEL1_' . $split[0] . '.' . $split[1] . '/,/#END_LABEL1_' . $split[0] . '.' . $split[1] . '/c\ " ' . $tmpMapFile;
-                    $res = shell_exec($sedCmd);
+                    shell_exec($sedCmd);
                     $sedCmd = 'sed -i "/#START_LABEL2_' . $split[0] . '.' . $split[1] . '/,/#END_LABEL2_' . $split[0] . '.' . $split[1] . '/c\ " ' . $tmpMapFile;
-                    $res = shell_exec($sedCmd);
+                    shell_exec($sedCmd);
                 }
                 $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map={$tmpMapFile}&" . $_SERVER["QUERY_STRING"];
             }
