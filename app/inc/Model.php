@@ -366,11 +366,10 @@ class Model
         } else {
             $arr = [];
             $foreignConstrains = [];
-            preg_match("/^[\w'-]*\./", $table, $matches);
-            $_schema = !empty($matches[0]) ? $matches[0] : null;
 
-            preg_match("/[\w'-]*$/", $table, $matches);
-            $_table = $matches[0];
+            $_schema = sizeof(explode(".", $table)) > 1 ? explode(".", $table)[0] : null;
+
+            $_table = sizeof(explode(".", $table)) > 1 ? explode(".", $table)[1] : $table;
 
             if (!$_schema) {
                 $_schema = $this->postgisschema;
@@ -382,7 +381,6 @@ class Model
                 $foreignConstrains = $this->getForeignConstrains($_schema, $_table)["data"];
                 $primaryKey = $this->getPrimeryKey($table)['attname'];
             }
-
             $sql = "SELECT
                   attname                          AS column_name,
                   attnum                           AS ordinal_position,
@@ -393,13 +391,12 @@ class Model
                 WHERE attrelid = :table :: REGCLASS
                         AND attnum > 0
                         AND NOT attisdropped";
-
             try {
                 $res = $this->prepare($sql);
                 if ($temp) {
-                    $res->execute(array("table" => $table));
+                    $res->execute(array("table" => "\"" . $table . "\""));
                 } else {
-                    $res->execute(array("table" => $_schema . "." . $_table));
+                    $res->execute(array("table" => "\"" . $_schema . "\".\"" . $_table . "\""));
                 }
             } catch (PDOException $e) {
                 $response['success'] = false;
@@ -633,7 +630,7 @@ class Model
      * @param string|null $table
      * @return array<string,string|null>
      */
-    public function explodeTableName(?string $table): array
+    public static function explodeTableName(?string $table): array
     {
         if (!isset(explode(".", $table)[1])) {
             return ["schema" => null, "table" => $table];
@@ -652,7 +649,7 @@ class Model
      */
     public function doubleQuoteQualifiedName(string $name): string
     {
-        $split = $this->explodeTableName($name);
+        $split = self::explodeTableName($name);
         return "\"" . $split["schema"] . "\".\"" . $split["table"] . "\"";
     }
 
