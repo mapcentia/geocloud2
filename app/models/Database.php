@@ -8,7 +8,12 @@
 
 namespace app\models;
 
+use app\conf\App;
+use app\conf\Connection;
 use app\inc\Model;
+use Exception;
+use PDOException;
+
 
 /**
  * Class Database
@@ -16,21 +21,29 @@ use app\inc\Model;
  */
 class Database extends Model
 {
-    private function createUser($name)
+    /**
+     * @param string $name
+     * @return bool
+     */
+    private function createUser(string $name): bool
     {
         $sql = "CREATE USER {$name}";
         $this->execQuery($sql);
         try {
             $this->execQuery($sql);
             return true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return false;
         }
     }
 
-    public function createSchema($name)
+    /**
+     * @param string $name
+     * @return array<bool|string>
+     */
+    public function createSchema(string $name): array
     {
-        $sql = "CREATE SCHEMA " . self::toAscii($name, NULL, "_");
+        $sql = "CREATE SCHEMA " . self::toAscii($name, null, "_");
         $this->execQuery($sql);
         if (!$this->PDOerror) {
             $response['success'] = true;
@@ -42,7 +55,14 @@ class Database extends Model
         return $response;
     }
 
-    public function createdb($screenName, $template, $encoding = "UTF8")
+    /**
+     * @param string $screenName
+     * @param string $template
+     * @param string $encoding
+     * @return bool
+     * @throws Exception
+     */
+    public function createdb(string $screenName, string $template, string $encoding = "UTF8"): bool
     {
         $this->createUser($screenName);
 
@@ -74,10 +94,14 @@ class Database extends Model
         }
     }
 
-    public function doesDbExist($name)
+    /**
+     * @param string $name
+     * @return array<bool>
+     */
+    public function doesDbExist(string $name): array
     {
         $sql = "SELECT 1 AS check FROM pg_database WHERE datname='{$name}'";
-        $row = $this->fetchRow($this->execQuery($sql), "assoc");
+        $row = $this->fetchRow($this->execQuery($sql));
         if ($row['check']) {
             $response['success'] = true;
         } else {
@@ -86,12 +110,16 @@ class Database extends Model
         return $response;
     }
 
-    public function listAllDbs()
+    /**
+     * @return array<bool|string|array<string>>
+     */
+    public function listAllDbs(): array
     {
         $sql = "SELECT datname FROM pg_catalog.pg_database";
         $result = $this->execQuery($sql);
+        $arr = [];
         if (!$this->PDOerror) {
-            while ($row = $this->fetchRow($result, "assoc")) {
+            while ($row = $this->fetchRow($result)) {
                 $arr[] = $row['datname'];
             }
             $response['success'] = true;
@@ -103,20 +131,23 @@ class Database extends Model
         return $response;
     }
 
-    public function listAllSchemas()
+    /**
+     * @return array<bool|string|int|array<mixed>>
+     */
+    public function listAllSchemas(): array
     {
         $arr = [];
         $sql = "SELECT count(*) AS count,f_table_schema FROM geometry_columns GROUP BY f_table_schema";
         $res = $this->prepare($sql);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 401;
             return $response;
         }
-        while ($row = $this->fetchRow($res, "assoc")) {
+        while ($row = $this->fetchRow($res)) {
             $count[$row['f_table_schema']] = $row['count'];
         }
 
@@ -124,13 +155,13 @@ class Database extends Model
         $res = $this->prepare($sql);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 401;
             return $response;
         }
-        while ($row = $this->fetchRow($res, "assoc")) {
+        while ($row = $this->fetchRow($res)) {
             $arr[] = array("schema" => $row['schema_name'], "count" => isset($count[$row['schema_name']]) ? $count[$row['schema_name']] : 0);
         }
         $response['success'] = true;
@@ -138,7 +169,13 @@ class Database extends Model
         return $response;
     }
 
-    public function changeOwner($db, $newOwner)
+    /**
+     * @param string $db
+     * @param string $newOwner
+     * @return array<bool|string>
+     * @throws Exception
+     */
+    public function changeOwner(string $db, string $newOwner): array
     {
         $this->db = null;
         $this->postgisdb = $db;
@@ -148,7 +185,7 @@ class Database extends Model
 
         //Database
         $sql = "ALTER DATABASE {$db} OWNER TO {$newOwner}";
-        $res = $this->execQuery($sql);
+        $this->execQuery($sql);
 
         // Schema
         $sql = "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name<>'information_schema'";
@@ -205,17 +242,28 @@ class Database extends Model
         return $response;
     }
 
-    static function setDb($db)
+    /**
+     * @param string|null $db
+     */
+    static function setDb(?string $db): void
     {
-        \app\conf\Connection::$param["postgisdb"] = $db;
+        Connection::$param["postgisdb"] = $db;
     }
 
-    static function getDb()
+    /**
+     * @return string
+     */
+    static function getDb(): string
     {
-        return \app\conf\Connection::$param["postgisdb"];
+        return Connection::$param["postgisdb"];
     }
 
-    public function renameSchema($schema, $name)
+    /**
+     * @param string $schema
+     * @param string $name
+     * @return array<bool|int|string|array<string>>
+     */
+    public function renameSchema(string $schema, string $name): array
     {
         if ($schema == "public") {
             $response['success'] = false;
@@ -232,7 +280,7 @@ class Database extends Model
         $res = $this->prepare($query);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -244,7 +292,7 @@ class Database extends Model
             $resUpdate = $this->prepare($query);
             try {
                 $resUpdate->execute();
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 $this->rollback();
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
@@ -256,14 +304,14 @@ class Database extends Model
         $res = $this->prepare($query);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 401;
             return $response;
         }
-        $setObj = new \app\models\Setting();
+        $setObj = new Setting();
         $settings = $setObj->getArray();
         $extents = $settings->extents->$schema;
         $center = $settings->center->$schema;
@@ -272,8 +320,8 @@ class Database extends Model
             $settings->extents->$newName = $extents;
             $settings->center->$newName = $center;
             $settings->zoom->$newName = $zoom;
-            if (\app\conf\App::$param["encryptSettings"]) {
-                $pubKey = file_get_contents(\app\conf\App::$param["path"] . "app/conf/public.key");
+            if (App::$param["encryptSettings"]) {
+                $pubKey = file_get_contents(App::$param["path"] . "app/conf/public.key");
                 $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($settings) . "', dearmor('{$pubKey}'))";
             } else {
                 $sql = "UPDATE settings.viewer SET viewer='" . json_encode($settings) . "'";
@@ -281,7 +329,7 @@ class Database extends Model
             $res = $this->prepare($sql);
             try {
                 $res->execute();
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 $this->rollback();
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
@@ -296,7 +344,11 @@ class Database extends Model
         return $response;
     }
 
-    public function deleteSchema($schema)
+    /**
+     * @param string $schema
+     * @return array<bool|string|int>
+     */
+    public function deleteSchema(string $schema): array
     {
         if ($schema == "public") {
             $response['success'] = false;
@@ -310,7 +362,7 @@ class Database extends Model
         $res = $this->prepare($query);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -321,7 +373,7 @@ class Database extends Model
         $res = $this->prepare($query);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
