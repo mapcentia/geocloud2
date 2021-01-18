@@ -105,6 +105,10 @@ class User extends Controller
                 ];
             }
             $response = $this->user->createUser($data);
+            if (!$response["success"]) {
+                return $response;
+            }
+
             if (Session::isAuth()) {
                 Database::setDb(Session::getUser());
                 $database = new Database();

@@ -17,6 +17,7 @@ define('VDAEMON_PARSE', false);
 define('VD_E_POST_SECURITY', false);
 require(__DIR__ . '/../../public/user/vdaemon/vdaemon.php');
 
+
 /**
  * Class User
  * @package app\models
@@ -117,8 +118,8 @@ class User extends Model
     }
 
     /**
-     * @param array $data
-     * @return array
+     * @param array<string|bool> $data
+     * @return array<mixed>
      */
     public function createUser(array $data): array
     {
