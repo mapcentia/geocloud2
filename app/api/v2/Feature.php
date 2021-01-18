@@ -23,7 +23,7 @@ use \app\models\Layer;
 use \GuzzleHttp\Client;
 
 include_once(__DIR__ . "../../../vendor/phayes/geophp/geoPHP.inc");
-include_once(__DIR__ . "../../../libs/phpgeometry_class_namespace.php");
+include_once(__DIR__ . "../../../libs/phpgeometry_class.php");
 include_once(__DIR__ . "../../../libs/gmlparser.php");
 include_once(__DIR__ . "../../../libs/PEAR/XML/Unserializer.php");
 include_once(__DIR__ . "../../../libs/PEAR/XML/Serializer.php");
@@ -95,7 +95,7 @@ class Feature extends \app\inc\Controller
         $this->field = $layer->getAll(Route::getParam("layer"), true, false, false, false, $this->db)["data"][0]["pkey"];
 
         // Init geometryfactory
-        $this->geometryfactory = new \mapcentia\geometryfactory();
+        $this->geometryfactory = new \app\libs\GeometryFactory();
 
         // Set transaction xml header
         $this->transactionHeader = "<wfs:Transaction xmlns:wfs=\"http://www.opengis.net/wfs\" service=\"WFS\" version=\"1.0.0\"
@@ -228,7 +228,7 @@ class Feature extends \app\inc\Controller
                 // Get GML from WKT geom and catch error if geom is missing
                 $wkt = \geoPHP::load(json_encode($feature), 'json')->out('wkt');
                 $xml .= "<feature:{$this->geom}>\n";
-                $xml .= $this->geometryfactory->createGeometry($wkt, "EPSG:" . $this->sourceSrid)->getGML();
+                $xml .= $this->geometryfactory->createGeometry($wkt, "EPSG:" . $this->sourceSrid)->toGML();
                 $xml .= "</feature:{$this->geom}>\n";
             } catch (\Exception $e) {
                 // Pass. Geom is not required
@@ -290,7 +290,7 @@ class Feature extends \app\inc\Controller
                 $xml .= "<wfs:Property>\n";
                 $xml .= "<wfs:Name>{$this->geom}</wfs:Name>\n";
                 $xml .= "<wfs:Value>\n";
-                $xml .= $this->geometryfactory->createGeometry($wkt, "EPSG:" . $this->sourceSrid)->getGML();
+                $xml .= $this->geometryfactory->createGeometry($wkt, "EPSG:" . $this->sourceSrid)->toGML();
                 $xml .= "</wfs:Value>\n";
                 $xml .= "</wfs:Property>\n";
             } catch (\Exception $e) {
@@ -344,7 +344,7 @@ class Feature extends \app\inc\Controller
 
     /**
      * @param $xml
-     * @return array
+     * @return array<mixed>
      */
     private function commit(string $xml) : array
     {

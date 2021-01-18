@@ -1,42 +1,83 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
-class geometryfactory
+namespace app\libs;
+
+use Exception;
+
+
+/**
+ * Class GeometryFactory
+ * @package app\libs
+ */
+class GeometryFactory
 {
     /**
-     * @return Geometry object
+     * @var string
+     */
+    public $srid;
+
+    /**
+     * @var string
+     */
+    public $wkt;
+
+    /**
+     * @var array<bool>
+     */
+    public $isIsland;
+
+    /**
+     * @var array<string>
+     */
+    public $shapeArray;
+
+    /**
+     * @var string
+     */
+    public $geomType;
+
+    function __construct()
+    {
+    }
+
+    /**
      * @param string $wkt test
-     * @param int $srid
+     * @param string|null $srid
+     * @return Point|LineString|MultiLineString|MultiPoint|MultiPolygon|Polygon|null
      * @desc Creates a new geometry object from a wkt string
      */
-    function createGeometry($wkt, $srid = NULL)//creates a new geometry object. Factory function
+    function createGeometry(string $wkt, string $srid = null): ?object //creates a new geometry object. Factory function
     {
         $wkt = str_replace(", ", ",", $wkt);// replace " ," with ","
         preg_match_all("/[a-z]*[A-Z]*/", $wkt, $__typeArray);//Match the type of the geometry
         $__type = $__typeArray[0][0];
         switch ($__type) {
             case "MULTIPOLYGON":
-                $geometryObject = new multipolygon($wkt, $srid);
+                $geometryObject = new MultiPolygon($wkt, $srid);
                 break;
             case "MULTILINESTRING":
-                $geometryObject = new multilinestring($wkt, $srid);
+                $geometryObject = new MultiLineString($wkt, $srid);
                 break;
             case "MULTIPOINT":
-                $geometryObject = new multipoint($wkt, $srid);
+                $geometryObject = new MultiPoint($wkt, $srid);
                 break;
             case "POINT":
-                $geometryObject = new _point($wkt, $srid); //point is a key word
+                $geometryObject = new Point($wkt, $srid); //point is a key word
                 break;
             case "LINESTRING":
-                $geometryObject = new linestring($wkt, $srid);
+                $geometryObject = new LineString($wkt, $srid);
                 break;
             case "POLYGON":
-                $geometryObject = new polygon($wkt, $srid);
+                $geometryObject = new Polygon($wkt, $srid);
+                break;
+            default:
+                $geometryObject = null;
                 break;
         }
         return ($geometryObject);
@@ -45,16 +86,20 @@ class geometryfactory
     /**
      * Enter description here...
      *
-     * @param unknown_type $wktArray
-     * @return unknown
+     * @param array<string> $wktArray
+     * @return GeometryCollection
+     * @throws Exception
      */
-    function createGeometryCollection($wktArray)
+    function createGeometryCollection(array $wktArray): GeometryCollection
     {
-        $geometryCollection = new geometryCollection($wktArray);
-        return ($geometryCollection);
+        return new GeometryCollection($wktArray);
     }
 
-    function deconstructionOfWKT() // Take a WKT string and returns a array with coords(string) for shapes. Called from a child object
+    /**
+     * Take a WKT string and returns a array with coords(string) for shapes. Called from a child object
+     * @return array<string>
+     */
+    function deconstructionOfWKT(): array
     {
         preg_match_all("/[^a-z|(*]*[0-9]/", $this->wkt, $__wktArray); // regex is used exstract coordinates
         $wktArray = $__wktArray[0];
@@ -76,238 +121,69 @@ class geometryfactory
         return ($wktArray);
     }
 
-    function snapCoords($coordStr, $snapTolerance, $snapLayerStr, $shapeArray = array())
+    /**
+     * @return string
+     */
+    function getWKT(): string
     {
-        $__snap = false;
-        $__newCoordStr = explode(",", $coordStr);
-        $__snapLayerArray = explode(",", $snapLayerStr);
-        $i = 0;
-        foreach ($__newCoordStr as $__v)// each point from the coordStr string is looped
-        {
-            $__snapToleranceTmp = $snapTolerance;// asign the value to a tmp var, so it can be restored
-            $__oneCoord = explode(" ", $__v);
-            $__oneCoordTmp = explode(" ", $__v);// save the original coord in a tmp for line snap
-            $u = 0;
-            // first check for vertex snap
-            if (sizeof($__snapLayerArray)) {
-                foreach ($__snapLayerArray as $__u)// each possible pointsnap point is evaluated
-                {
-                    $__snapLayerCoord = explode(" ", $__u);
-                    $diffX = $__snapLayerCoord[0] - $__oneCoord[0];
-                    $diffY = $__snapLayerCoord[1] - $__oneCoord[1];
-                    $diff = sqrt(pow($diffX, 2) + pow($diffY, 2));
-                    //calculation of distance between the two point
-                    if ($diff <= $__snapToleranceTmp)// true if in snap tolerance
-                    {
-                        //echo "snap"."<br>";
-                        $__snapToleranceTmp = $diff;
-                        //decrease of snap tolerance, so only the nearest point is used
-                        $__snap = true; // point is snapped
-                        $__newSnapLayerCoord[0] = $__snapLayerCoord[0];
-                        $__newSnapLayerCoord[1] = $__snapLayerCoord[1];
-                    }
-                }
-            }
-            if ($__snap == true) //true if evaluated point is snapped
-            {
-                $__oneCoord[0] = $__newSnapLayerCoord[0];
-                //New value of digi point
-                $__oneCoord[1] = $__newSnapLayerCoord[1];
-                $__snap = false; // so the next digi point is not snapped
-            }
-            // second check for line snap
-            if (sizeof($shapeArray)) {
-                foreach ($shapeArray as $__u)// each possible line snap is evaluated
-                {
-                    //echo "<script>alert('$__u');</script>";
-                    $__lineSegments = explode(",", $__u);
-                    for ($__i = 0; $__i < (sizeof($__lineSegments) - 1); $__i++) {
-                        $__l1 = explode(" ", $__lineSegments[$__i]);// first coord in line segment
-                        $__l2 = explode(" ", $__lineSegments[$__i + 1]);// second coord in line segment
-                        $diff = $this->distancePointToLine($__oneCoordTmp, $__l1, $__l2);
-                        //echo "<script>alert('tmp ".$__snapToleranceTmp."');</script>";
-                        //echo "<script>alert('lineafstand ".$diff[0]."');</script>";
-                        if ($diff[0] < $__snapToleranceTmp && $diff[0] != FALSE)// true if in snap tolerance
-                        {
-                            //echo "<script>alert('".$diff[0]."');</script>"."<br>";
-                            $__snapToleranceTmp = $diff[0];
-                            //decrease of snap tolerance, so only the nearest point is used
-                            $__snap = true; // point is snapped
-                            $newCoord = $diff[1];
-                            $__newSnapLayerCoord[0] = $newCoord[0];
-                            $__newSnapLayerCoord[1] = $newCoord[1];
-                        }
-                    }
-                }
-                if ($__snap == true) //true if evaluated point is snapped
-                {
-                    $__oneCoord[0] = $__newSnapLayerCoord[0];
-                    //New value of digi point
-                    $__oneCoord[1] = $__newSnapLayerCoord[1];
-                    $__snap = false; // so the next digi point is not snapped
-                }
-            }
-            $__newCoordStr[$i] = implode(" ", $__oneCoord);
-            $i++;
-        }
-        $coordStr = implode(",", $__newCoordStr);
-        return ($coordStr);
+        return $this->wkt;
     }
 
     /**
-     * Enter description here...
-     *
-     * @return unknown
+     * @return string
      */
-    function getVertices()//get a string with all vertices of geometry
+    function getGeomType(): string
     {
-        $verticeStr = "";
-        foreach ($this->shapeArray as $__value) {
-            $verticeStr = $verticeStr . $__value . ",";
-        }
-        // remove the last comma
-        $verticeStr = substr($verticeStr, 0, strlen($verticeStr) - 1);
-        return ($verticeStr);
+        return $this->geomType;
     }
 
-    function updateShape($coorStr, $shapeId)// updates the geometry on shape level. Takes a string with coords and a shape id
+    /**
+     * @param string $type
+     * @param string|null $ns
+     * @param string|null $tag
+     * @param array<string>|null $atts
+     * @param bool|null $ind
+     * @param bool|null $n
+     * @return string
+     */
+    function writeTag(string $type, ?string $ns, ?string $tag, ?array $atts, ?bool $ind, ?bool $n): string
     {
-        for ($__i = 0; $__i < sizeof($this->shapeArray); $__i++) {
-            if ($__i == $shapeId) {
-                $this->shapeArray[$__i] = $coorStr;
-                $__check = true;
-            }
-        }
-        //echo "<script>alert(\"".$coorStr."\")</script>";
-        if (!$__check) {
-            $this->shapeArray[$this->getNumOfShapes()] = $coorStr;
-        }
-        $this->construction();
-    }
-
-    function snapShape($shapeId, $snapTolerance, $snapLayerStr, $shapeArray = array())// snaps one shape with shapeId of multifeature
-    {
-        $__newShape = $this->snapCoords($this->shapeArray[$shapeId], $snapTolerance, $snapLayerStr, $shapeArray);
-        $this->updateShape($__newShape, $shapeId);
-    }
-
-    function snapAllShapes($snapTolerance, $snapLayerStr, $shapeArray = array())// snaps all shapes of multifeature or just like snap the hole geometry
-    {
-        foreach ($this->shapeArray as $__key => $__shape) {
-            $__newShape = $this->snapCoords($this->shapeArray[$__key], $snapTolerance, $snapLayerStr, $shapeArray);
-            $this->updateShape($__newShape, $__key);
-        }
-    }
-
-    function getWKT()
-    {
-        return ($this->wkt);
-    }
-
-    function getGML($ver = "2")
-    {
-        switch ($ver) {
-            case "2":
-                $_gml = $this->toGML();
-                break;
-            case "3":
-                $_gml = $this->toGML3();
-                break;
-
-        }
-        return ($_gml);
-    }
-
-    function getShapeArray()
-    {
-        return ($this->shapeArray);
-    }
-
-    function getGeomType()
-    {
-        return ($this->geomType[$count]);
-    }
-
-    function getNumOfShapes()
-    {
-        return sizeOf($this->getShapeArray());
-    }
-
-    function writeTag($type, $ns, $tag, $atts, $ind, $n)
-    {
-        $_str = "";
+        $str = "";
         global $depth;
-        if ($ind != False) {
+        if ($ind) {
             for ($i = 0; $i < $depth; $i++) {
-                $_str = $_str . "  ";
+                $str = $str . "  ";
             }
         }
         if ($ns != null) {
             $tag = $ns . ":" . $tag;
         }
-        $_str .= "<";
+        $str .= "<";
         if ($type == "close") {
-            $_str = $_str . "/";
+            $str = $str . "/";
         }
-        $_str = $_str . $tag;
+        $str = $str . $tag;
         if (!empty($atts)) {
             foreach ($atts as $key => $value) {
-                $_str = $_str . ' ' . $key . '="' . $value . '"';
+                $str = $str . ' ' . $key . '="' . $value . '"';
             }
         }
         if ($type == "selfclose") {
-            $_str = $_str . "/";
+            $str = $str . "/";
         }
-        $_str = $_str . ">";
-        if ($n == True) {
-            $_str = $_str . "\n";
+        $str = $str . ">";
+        if ($n) {
+            $str = $str . "\n";
         }
-        return ($_str);
+        return ($str);
     }
 
     /**
-     * @return array
-     * @param array $p
-     * @param array $l1
-     * @param array $l2
-     * @desc Caculate the distance between a point and a line with two points and the point of perpendicular projection
+     * @param string $geom
+     * @param bool $hasSrid
+     * @return string
      */
-    function distancePointToLine($p, $l1, $l2)
-    {
-        $u = ((($l2[0] - $l1[0]) * ($l1[1] - $p[1])) - (($l1[0] - $p[0]) * ($l2[1] - $l1[1])));
-        $l = sqrt(pow(($l2[0] - $l1[0]), 2) + pow(($l2[1] - $l1[1]), 2));
-        if ($l) $a = ($u / $l);
-        if ($a < 0) $a = $a * -1;
-        $diffX = $l1[0] - $l2[0];
-        $diffY = $l1[1] - $l2[1];
-        $l = sqrt(pow($diffX, 2) + pow($diffY, 2));
-        if ($l) $r = (($p[0] - $l1[0]) * ($l2[0] - $l1[0]) + ($p[1] - $l1[1]) * ($l2[1] - $l1[1])) / pow($l, 2);
-        $newCoord[0] = $l1[0] + $r * ($l2[0] - $l1[0]);
-        $newCoord[1] = $l1[1] + $r * ($l2[1] - $l1[1]);
-        //Set the bounding box of line segment
-        if ($l1[0] >= $l2[0]) {
-            $__maxX = $l1[0];
-            $__minX = $l2[0];
-        } else {
-            $__maxX = $l2[0];
-            $__minX = $l1[0];
-        }
-        if ($l1[1] >= $l2[1]) {
-            $__maxY = $l1[1];
-            $__minY = $l2[1];
-        } else {
-            $__maxY = $l2[1];
-            $__minY = $l1[1];
-        }
-        // If the point of perpendicular projection is outside bbox then set distance to FALSE
-        if ($newCoord[0] > $__maxX || $newCoord[0] < $__minX || $newCoord[1] > $__maxY || $newCoord[1] < $__minY) {
-            $a = FALSE;
-            //echo "<script>alert('outside');</script>";
-        }
-        return (array($a, $newCoord));
-    }
-
-    function convertPoint($geom, $hasSrid = TRUE)
+    function convertPoint(string $geom, bool $hasSrid = true): string
     {
         global $depth;
         if (($hasSrid) && ($this->srid != NULL)) $srid = array("srsName" => $this->srid);
@@ -323,31 +199,12 @@ class geometryfactory
         return ($_str);
     }
 
-    function convertPointToKml($geom, $extrude, $tessellate, $altitudeMode)
-    {
-        global $depth;
-        $_str .= $this->writeTag("open", null, "Point", null, true, true);
-        $depth++;
-        $_str .= $this->writeTag("open", null, "extrude", null, true, false);
-        $_str .= $extrude;
-        $_str .= $this->writeTag("close", null, "extrude", null, false, true);
-        $_str .= $this->writeTag("open", null, "tessellate", null, true, false);
-        $_str .= $tessellate = 1;
-        $_str .= $this->writeTag("close", null, "tessellate", null, false, true);
-        $_str .= $this->writeTag("open", null, "altitudeMode", null, true, false);
-        $_str .= $altitudeMode;
-        $_str .= $this->writeTag("close", null, "altitudeMode", null, false, true);
-        $_str .= $this->writeTag("open", null, "coordinates", null, true, false);
-        $depth++;
-        $_str .= $this->convertCoordinatesToKML($geom);
-        $depth--;
-        $_str .= $this->writeTag("close", null, "coordinates", null, false, true);
-        $depth--;
-        $_str .= $this->writeTag("close", null, "Point", null, true, true);
-        return ($_str);
-    }
-
-    function convertLineString($geom, $hasSrid = TRUE)
+    /**
+     * @param string $geom
+     * @param bool $hasSrid
+     * @return string
+     */
+    function convertLineString(string $geom, $hasSrid = true): string
     {
         global $depth;
         if (($hasSrid) && ($this->srid != NULL)) $srid = array("srsName" => $this->srid);
@@ -363,31 +220,12 @@ class geometryfactory
         return ($_str);
     }
 
-    function convertLineStringToKML($geom, $extrude, $tessellate, $altitudeMode)
-    {
-        global $depth;
-        $_str .= $this->writeTag("open", null, "LineString", null, true, true);
-        $depth++;
-        $_str .= $this->writeTag("open", null, "extrude", null, true, false);
-        $_str .= $extrude;
-        $_str .= $this->writeTag("close", null, "extrude", null, false, true);
-        $_str .= $this->writeTag("open", null, "tessellate", null, true, false);
-        $_str .= $tessellate = 1;
-        $_str .= $this->writeTag("close", null, "tessellate", null, false, true);
-        $_str .= $this->writeTag("open", null, "altitudeMode", null, true, false);
-        $_str .= $altitudeMode;
-        $_str .= $this->writeTag("close", null, "altitudeMode", null, false, true);
-        $_str .= $this->writeTag("open", null, "coordinates", null, true, false);
-        $depth++;
-        $_str .= $this->convertCoordinatesToKML($geom);
-        $depth--;
-        $_str .= $this->writeTag("close", null, "coordinates", null, false, true);
-        $depth--;
-        $_str .= $this->writeTag("close", null, "LineString", null, true, true);
-        return ($_str);
-    }
-
-    function convertLineStringGML3($geom, $hasSrid = TRUE)
+    /**
+     * @param string $geom
+     * @param bool $hasSrid
+     * @return string
+     */
+    function convertLineStringToGML3(string $geom, bool $hasSrid = true): string
     {
         global $depth;
         if (($hasSrid) && ($this->srid != NULL)) $srid = array("srsName" => $this->srid);
@@ -404,12 +242,11 @@ class geometryfactory
     }
 
     /**
-     * @return unknown
-     * @param unknown $rings
-     * @param unknown $hasSrid
-     * @desc Enter description here...
+     * @param array<string> $rings
+     * @param bool $hasSrid
+     * @return string
      */
-    function convertPolygon($rings, $hasSrid = TRUE)
+    function convertPolygon(array $rings, bool $hasSrid = true): string
     {
         global $depth;
         if (($hasSrid) && ($this->srid != NULL)) $srid = array("srsName" => $this->srid);
@@ -442,256 +279,144 @@ class geometryfactory
         return ($_str);
     }
 
-    function convertPolygonToKML($rings, $extrude, $tessellate, $altitudeMode)
-    {
-        global $depth;
-        $_str = "";
-        $_str = $_str . $this->writeTag("open", NULL, "Polygon", $srid, True, True);
-        $depth++;
-        $pass = 0;
-        foreach ($rings as $ring) {
-            if ($pass == 0) {
-                $boundTag = "outer";
-            } else {
-                $boundTag = "inner";
-            }
-            $_str = $_str . $this->writeTag("open", NULL, "" . $boundTag . "BoundaryIs", Null, True, True);
-            $depth++;
-            $_str .= $this->writeTag("open", null, "extrude", null, true, false);
-            $_str .= $extrude;
-            $_str .= $this->writeTag("close", null, "extrude", null, false, true);
-            $_str .= $this->writeTag("open", null, "tessellate", null, true, false);
-            $_str .= $tessellate = 1;
-            $_str .= $this->writeTag("close", null, "tessellate", null, false, true);
-            $_str .= $this->writeTag("open", null, "altitudeMode", null, true, false);
-            $_str .= $altitudeMode;
-            $_str .= $this->writeTag("close", null, "altitudeMode", null, false, true);
-            $_str = $_str . $this->writeTag("open", NULL, "LinearRing", Null, True, True);
-            $depth++;
-            $_str = $_str . $this->writeTag("open", NULL, "coordinates", Null, True, False);
-            $_str = $_str . $this->convertCoordinatesToKML($ring);
-            $_str = $_str . $this->writeTag("close", NULL, "coordinates", Null, False, True);
-            $depth--;
-            $_str = $_str . $this->writeTag("close", NULL, "LinearRing", Null, True, True);
-            $depth--;
-            $_str = $_str . $this->writeTag("close", NULL, "" . $boundTag . "BoundaryIs", Null, True, True);
-            $pass++;
-        }
-        $depth--;
-        $_str = $_str . $this->writeTag("close", NULL, "Polygon", Null, True, True);
-        return ($_str);
-    }
-
-    function convertCoordinatesToGML($_str)
+    /**
+     * @param string $_str
+     * @return string
+     */
+    function convertCoordinatesToGML(string $_str): string
     {
         $_str = str_replace(" ", "&", $_str);
         $_str = str_replace(",", " ", $_str);
         $_str = str_replace("&", ",", $_str);
         $_str = str_replace("(", "", $_str);
         $_str = str_replace(")", "", $_str);
-        return ($_str);
+        return $_str;
     }
 
-    function convertCoordinatesToGML3($_str)
+    /**
+     * @param string $_str
+     * @return string
+     */
+    function convertCoordinatesToGML3(string $_str): string
     {
         $_str = str_replace(",", " ", $_str);
         return ($_str);
     }
-
-    function convertCoordinatesToKML($_str)
-    {
-        $_str = str_replace(" ", "&", $_str);
-        $_str = str_replace(",", " ", $_str);
-        $_str = str_replace("&", ",", $_str);
-        $_str = str_replace("(", "", $_str);
-        $_str = str_replace(")", "", $_str);
-        return ($_str);
-    }
-
-    function getExtent()
-    {
-        $__coordArray = explode(",", $this->getVertices());
-        $__max_x = 0;
-        $__max_y = 0;
-        $__min_x = 0;
-        $__min_y = 0;
-
-        foreach ($__coordArray as $value) {
-            $__coord = explode(" ", $value);
-            if ($__max_x == 0)
-                $__max_x = $__coord[0];
-            if ($__max_y == 0)
-                $__max_y = $__coord[1];
-            if ($__min_x == 0)
-                $__min_x = $__coord[0];
-            if ($__min_y == 0)
-                $__min_y = $__coord[1];
-            if ($__max_x < $__coord[0])
-                $__max_x = $__coord[0];
-            if ($__min_x > $__coord[0])
-                $__min_x = $__coord[0];
-            if ($__max_y < $__coord[1])
-                $__max_y = $__coord[1];
-            if ($__min_y > $__coord[1])
-                $__min_y = $__coord[1];
-        }
-        $__width = $__max_x - $__min_x;
-        $__height = $__max_y - $__min_y;
-        $wkt = "POLYGON(($__min_x $__min_y,$__min_x $__max_y,$__max_x $__max_y,$__max_x $__min_y,$__min_x $__min_y))";
-        $extentObj = geometryfactory::createGeometry($wkt, $this->srid);
-        return ($extentObj);
-    }
-
-    function getMinX()
-    {
-        $__extent = $this->getExtent();
-        $__coordArray = explode(",", $__extent->getVertices());
-        $__pointArray = explode(" ", $__coordArray[0]);
-        return ($__pointArray[0]);
-    }
-
-    function getMaxX()
-    {
-        $__extent = $this->getExtent();
-        $__coordArray = explode(",", $__extent->getVertices());
-        $__pointArray = explode(" ", $__coordArray[2]);
-        return ($__pointArray[0]);
-    }
-
-    function getMinY()
-    {
-        $__extent = $this->getExtent();
-        $__coordArray = explode(",", $__extent->getVertices());
-        $__pointArray = explode(" ", $__coordArray[0]);
-        return ($__pointArray[1]);
-    }
-
-    function getMaxY()
-    {
-        $__extent = $this->getExtent();
-        $__coordArray = explode(",", $__extent->getVertices());
-        $__pointArray = explode(" ", $__coordArray[2]);
-        return ($__pointArray[1]);
-    }
-
-    function getCenter()
-    {
-        $__coordX = $this->getMinX() + (($this->getMaxX() - $this->getMinX()) / 2);
-        $__coordY = $this->getMinY() + (($this->getMaxY() - $this->getMinY()) / 2);
-        $wkt = "POINT(" . $__coordX . " " . $__coordY . ")";
-        $pointObj = geometryfactory::createGeometry($wkt, $this->srid);
-        return ($pointObj);
-    }
-
 }
 
-class _point extends geometryfactory
+class Point extends GeometryFactory
 {
-    var $wkt;
-    var $srid;
-    var $shapeArray;
-    var $geomType;
 
-    function _point($wkt, $srid)// constructor. wkt is set
+    function __construct(string $wkt, string $srid)// constructor. wkt is set
     {
+        parent::__construct();
         $this->wkt = $wkt;
         $this->srid = $srid;
-        $this->geomType[$count] = 'POINT';
-        $this->shapeArray = parent::deconstructionOfWKT($this->wkt);
+        $this->geomType = "POINT";
+        $this->shapeArray = parent::deconstructionOfWKT();
 
     }
 
-    function construction()// puts the deconstructed wkt together again and sets the wkt
+    /**
+     *
+     */
+    function construction(): void// puts the deconstructed wkt together again and sets the wkt
     {
-        $__newWkt = $this->geomType[$count] . "(" . $this->shapeArray[0] . ")";
+        $__newWkt = $this->geomType . "(" . $this->shapeArray[0] . ")";
         $this->wkt = $__newWkt;
     }
 
-    function getAsMulti()// return wkt as multi feature
+    /**
+     * @return string
+     */
+    function getAsMulti(): string// return wkt as multi feature
     {
-        $__newWkt = "MULTI" . $this->geomType[$count] . "(";
-        $__newWkt = $__newWkt . "(" . $this->shapeArray[0] . ")";
-        $__newWkt = $__newWkt . ")";
-        $wkt = $__newWkt;
-        return ($wkt);
+        $wkt = "MULTI" . $this->geomType . "(";
+        $wkt = $wkt . "(" . $this->shapeArray[0] . ")";
+        $wkt = $wkt . ")";
+        return $wkt;
     }
 
-    function toGML()
+    /**
+     * @return string
+     */
+    function toGML(): string
     {
-        global $depth;
         $_str = "";
         $_str .= $this->convertPoint($this->shapeArray[0]);
-        return ($_str);
-    }
-
-    function toKML($extrude = 0, $tessellate = 1, $altitudeMode = "clampToGround")
-    {
-        global $depth;
-        $_str = "";
-        $_str .= $this->convertPointToKml($this->shapeArray[0], $extrude, $tessellate, $altitudeMode);
-        return ($_str);
+        return $_str;
     }
 }
 
-class linestring extends geometryfactory
+class LineString extends GeometryFactory
 {
-    var $wkt;
-    var $srid;
-    var $shapeArray;
-    var $geomType;
-
-    function linestring($wkt, $srid)// constructor. wkt is set
+    /**
+     * LineString constructor.
+     * @param string $wkt
+     * @param string $srid
+     */
+    function __construct(string $wkt, string $srid)
     {
+        parent::__construct();
         $this->wkt = $wkt;
         $this->srid = $srid;
-        $this->geomType[$count] = 'LINESTRING';
-        $this->shapeArray = parent::deconstructionOfWKT($this->wkt);
+        $this->geomType = 'LINESTRING';
+        $this->shapeArray = parent::deconstructionOfWKT();
 
     }
 
-    function construction()// puts the deconstructed wkt together again and sets the wkt
+    function construction(): void
     {
-        $__newWkt = $this->geomType[$count] . "(" . $this->shapeArray[0] . ")";
+        $__newWkt = $this->geomType . "(" . $this->shapeArray[0] . ")";
         $this->wkt = $__newWkt;
     }
 
-    function getAsMulti()// return wkt as multi feature
+    /**
+     * @return string
+     */
+    function getAsMulti(): string
     {
-        $__newWkt = "MULTI" . $this->geomType[$count] . "(";
-        $__newWkt = $__newWkt . "(" . $this->shapeArray[0] . ")";
-        $__newWkt = $__newWkt . ")";
-        $wkt = $__newWkt;
-        return ($wkt);
+        $wkt = "MULTI" . $this->geomType . "(";
+        $wkt = $wkt . "(" . $this->shapeArray[0] . ")";
+        $wkt = $wkt . ")";
+        return $wkt;
     }
 
-    function toGML()
+    /**
+     * @return string
+     */
+    function toGML(): string
     {
-        global $depth;
         $_str = "";
         $_str .= $this->convertLineString($this->shapeArray[0]);
-        return ($_str);
+        return $_str;
     }
 }
 
-class polygon extends geometryfactory
+class Polygon extends GeometryFactory
 {
-    var $wkt;
-    var $srid;
-    var $shapeArray;
-    var $geomType;
-
-    function polygon($wkt, $srid)// constructor. wkt is set
+    /**
+     * polygon constructor.
+     * @param string $wkt
+     * @param string $srid
+     */
+    function __construct(string $wkt, string $srid)// constructor. wkt is set
     {
+        parent::__construct();
         $this->wkt = $wkt;
         $this->srid = $srid;
-        $this->geomType[$count] = 'POLYGON';
-        $this->shapeArray = parent::deconstructionOfWKT($this->wkt);
+        $this->geomType = 'POLYGON';
+        $this->shapeArray = parent::deconstructionOfWKT();
 
     }
 
-    function construction()// puts the deconstructed wkt together again and sets the wkt
+    /**
+     *
+     */
+    function construction(): void// puts the deconstructed wkt together again and sets the wkt
     {
-        $__newWkt = $this->geomType[$count] . "(";
+        $__wktArray = [];
+        $__newWkt = $this->geomType . "(";
         for ($__i = 0; $__i < (sizeof($this->shapeArray)); $__i++) {
             $__wktArray[$__i] = "(" . $this->shapeArray[$__i] . ")";
         }
@@ -700,46 +425,53 @@ class polygon extends geometryfactory
         $this->wkt = $__newWkt;
     }
 
-    function getAsMulti()// return wkt as multi feature
+    /**
+     * @return string
+     */
+    function getAsMulti(): string
     {
-        $__newWkt = "MULTI" . $this->geomType[$count] . "(";
-        for ($__i = 0; $__i < (sizeof($this->shapeArray)); $__i++) {
-            $__wktArray[$__i] = "((" . $this->shapeArray[$__i] . "))";
+        $wktArray = [];
+        $wkt = "MULTI" . $this->geomType . "(";
+        for ($i = 0; $i < (sizeof($this->shapeArray)); $i++) {
+            $wktArray[$i] = "((" . $this->shapeArray[$i] . "))";
         }
-        $__newWkt = $__newWkt . implode(",", $__wktArray);
-        $__newWkt = $__newWkt . ")";
-        $wkt = $__newWkt;
-        return ($wkt);
+        $wkt = $wkt . implode(",", $wktArray);
+        $wkt = $wkt . ")";
+        return $wkt;
     }
 
-    function toGML()
+    /**
+     * @return string
+     */
+    function toGML(): string
     {
-        global $depth;
         $_str = "";
         $_str .= $this->convertPolygon($this->shapeArray);
-        return ($_str);
+        return $_str;
     }
 }
 
-class multipoint extends geometryfactory
+class MultiPoint extends GeometryFactory
 {
-    var $wkt;
-    var $srid;
-    var $shapeArray;
-    var $geomType;
-
-    function multipoint($wkt, $srid)// constructor. wkt is set
+    /**
+     * multipoint constructor.
+     * @param string $wkt
+     * @param string $srid
+     */
+    function __construct(string $wkt, string $srid)// constructor. wkt is set
     {
+        parent::__construct();
         $this->wkt = $wkt;
         $this->srid = $srid;
-        $this->geomType[$count] = 'MULTIPOINT';
-        $this->shapeArray = parent::deconstructionOfWKT($this->wkt);
+        $this->geomType = 'MULTIPOINT';
+        $this->shapeArray = parent::deconstructionOfWKT();
 
     }
 
-    function construction()// puts the deconstructed wkt together again and sets the wkt
+    function construction(): void
     {
-        $__newWkt = $this->geomType[$count] . "(";
+        $__wktArray = [];
+        $__newWkt = $this->geomType . "(";
         for ($__i = 0; $__i < (sizeof($this->shapeArray)); $__i++) {
             $__wktArray[$__i] = $this->shapeArray[$__i];
         }
@@ -748,127 +480,138 @@ class multipoint extends geometryfactory
         $this->wkt = $__newWkt;
     }
 
-    function toGML()
+    /**
+     * @return string
+     */
+    function toGML(): string
     {
         global $depth;
-        if ($this->srid) $srid = array("srsName" => $this->srid);
-        else $srid = NULL;
-        $_str = "";
-        $_str .= $this->writeTag("open", "gml", "MultiPoint", $srid, True, True);
+        if ($this->srid) {
+            $srid = array("srsName" => $this->srid);
+        } else {
+            $srid = null;
+        }
+        $str = "";
+        $str .= $this->writeTag("open", "gml", "MultiPoint", $srid, True, True);
         $depth++;
         for ($__i = 0; $__i < (sizeof($this->shapeArray)); $__i++) {
-            $_str .= $this->writeTag("open", "gml", "pointMember", Null, True, True);
+            $str .= $this->writeTag("open", "gml", "pointMember", Null, True, True);
             $depth++;
-            $_str .= $this->convertPoint($this->shapeArray[$__i], FALSE);
+            $str .= $this->convertPoint($this->shapeArray[$__i], FALSE);
             $depth--;
-            $_str .= $this->writeTag("close", "gml", "pointMember", Null, True, True);
+            $str .= $this->writeTag("close", "gml", "pointMember", Null, True, True);
         }
         $depth--;
-        $_str .= $this->writeTag("close", "gml", "MultiPoint", Null, True, True);
-        return ($_str);
+        $str .= $this->writeTag("close", "gml", "MultiPoint", Null, True, True);
+        return $str;
     }
 }
 
-class multilinestring extends geometryfactory
+class MultiLineString extends GeometryFactory
 {
-    var $wkt;
-    var $srid;
-    var $shapeArray;
-    var $geomType;
 
-    function multilinestring($wkt, $srid)// constructor. wkt is set
+    /**
+     * MultiLineString constructor.
+     * @param string $wkt
+     * @param string $srid
+     */
+    function __construct(string $wkt, string $srid)
     {
+        parent::__construct();
         $this->wkt = $wkt;
         $this->srid = $srid;
-        $this->geomType[$count] = 'MULTILINESTRING';
-        $this->shapeArray = parent::deconstructionOfWKT($this->wkt);
+        $this->geomType = 'MULTILINESTRING';
+        $this->shapeArray = parent::deconstructionOfWKT();
     }
 
-    function construction()// puts the deconstructed wkt together again and sets the wkt
+    /**
+     *
+     */
+    function construction(): void
     {
-        $__newWkt = $this->geomType[$count] . "(";
-        for ($__i = 0; $__i < (sizeof($this->shapeArray)); $__i++) {
-            $__wktArray[$__i] = "(" . $this->shapeArray[$__i] . ")";
+        $__wktArray = [];
+        $wkt = $this->geomType . "(";
+        for ($i = 0; $i < (sizeof($this->shapeArray)); $i++) {
+            $__wktArray[$i] = "(" . $this->shapeArray[$i] . ")";
         }
-        $__newWkt = $__newWkt . implode(",", $__wktArray);
-        $__newWkt = $__newWkt . ")";
-        $this->wkt = $__newWkt;
+        $wkt = $wkt . implode(",", $__wktArray);
+        $wkt = $wkt . ")";
+        $this->wkt = $wkt;
     }
 
-    function toGML()
+    /**
+     * @return string
+     */
+    function toGML(): string
     {
         global $depth;
-        if ($this->srid) $srid = array("srsName" => $this->srid);
-        else $srid = NULL;
-        $_str = "";
-        $_str .= $this->writeTag("open", "gml", "MultiLineString", $srid, True, True);
+        if ($this->srid) {
+            $srid = array("srsName" => $this->srid);
+        } else $srid = NULL;
+        $str = "";
+        $str .= $this->writeTag("open", "gml", "MultiLineString", $srid, True, True);
         $depth++;
         for ($__i = 0; $__i < (sizeof($this->shapeArray)); $__i++) {
-            $_str .= $this->writeTag("open", "gml", "lineStringMember", Null, True, True);
+            $str .= $this->writeTag("open", "gml", "lineStringMember", Null, True, True);
             $depth++;
-            $_str .= $this->convertLineString($this->shapeArray[$__i], FALSE);
+            $str .= $this->convertLineString($this->shapeArray[$__i], FALSE);
             $depth--;
-            $_str .= $this->writeTag("close", "gml", "lineStringMember", Null, True, True);
+            $str .= $this->writeTag("close", "gml", "lineStringMember", Null, True, True);
         }
         $depth--;
-        $_str .= $this->writeTag("close", "gml", "MultiLineString", Null, True, True);
-        return ($_str);
+        $str .= $this->writeTag("close", "gml", "MultiLineString", Null, True, True);
+        return $str;
     }
 
-    function toGML3()
+    /**
+     * @return string
+     */
+    function toGML3(): string
     {
         global $depth;
-        if ($this->srid) $srid = array("srsName" => $this->srid);
-        else $srid = NULL;
-        $_str = "";
-        $_str .= $this->writeTag("open", "gml", "MultiLineString", $srid, True, True);
+        if ($this->srid) {
+            $srid = array("srsName" => $this->srid);
+        } else $srid = NULL;
+        $str = "";
+        $str .= $this->writeTag("open", "gml", "MultiLineString", $srid, True, True);
         $depth++;
-        for ($__i = 0; $__i < (sizeof($this->shapeArray)); $__i++) {
-            $_str .= $this->writeTag("open", "gml", "lineStringMember", Null, True, True);
+        for ($i = 0; $i < (sizeof($this->shapeArray)); $i++) {
+            $str .= $this->writeTag("open", "gml", "lineStringMember", Null, True, True);
             $depth++;
-            $_str .= $this->convertLineStringGML3($this->shapeArray[$__i], FALSE);
+            $str .= $this->convertLineStringToGML3($this->shapeArray[$i], FALSE);
             $depth--;
-            $_str .= $this->writeTag("close", "gml", "lineStringMember", Null, True, True);
+            $str .= $this->writeTag("close", "gml", "lineStringMember", Null, True, True);
         }
         $depth--;
-        $_str .= $this->writeTag("close", "gml", "MultiLineString", Null, True, True);
-        return ($_str);
-    }
-
-    function toKML($extrude = 0, $tessellate = 1, $altitudeMode = "clampToGround")
-    {
-        global $depth;
-        $_str .= $this->writeTag("open", null, "MultiGeometry", null, true, true);
-        $depth++;
-        for ($__i = 0; $__i < (sizeof($this->shapeArray)); $__i++) {
-            $_str .= $this->convertLineStringToKml($this->shapeArray[$__i], $extrude, $tessellate, $altitudeMode);
-        }
-        $depth--;
-        $_str .= $this->writeTag("close", null, "MultiGeometry", null, true, true);
-        return ($_str);
+        $str .= $this->writeTag("close", "gml", "MultiLineString", Null, True, True);
+        return $str;
     }
 }
 
-class multipolygon extends geometryfactory
+class MultiPolygon extends GeometryFactory
 {
-    var $wkt;
-    var $srid;
-    var $shapeArray;
-    var $geomType;
-    var $isIsland;
-    var $gml;
 
-    function multipolygon($wkt, $srid)// constructor. wkt is set
+    /**
+     * MultiPolygon constructor.
+     * @param string $wkt
+     * @param string $srid
+     */
+    function __construct(string $wkt, string $srid)
     {
+        parent::__construct();
         $this->wkt = $wkt;
         $this->srid = $srid;
-        $this->geomType[$count] = 'MULTIPOLYGON';
-        $this->shapeArray = parent::deconstructionOfWKT($this->wkt);
+        $this->geomType = 'MULTIPOLYGON';
+        $this->shapeArray = parent::deconstructionOfWKT();
     }
 
-    function construction()// puts the deconstructed wkt together again and sets the wkt
+    /**
+     *
+     */
+    function construction(): void
     {
-        $__newWkt = $this->geomType[$count] . "(";
+        $__wktArray = [];
+        $__newWkt = $this->geomType . "(";
         for ($__i = 0; $__i < (sizeof($this->shapeArray)); $__i++) {
             switch ($this->isIsland[$__i])//check if a shape is an island of another
             {
@@ -891,141 +634,125 @@ class multipolygon extends geometryfactory
         $this->wkt = $__newWkt;
     }
 
-    function toGML()
+    /**
+     * @return string
+     */
+    function toGML(): string
     {
         global $depth;
         if ($this->srid) $srid = array("srsName" => $this->srid);
         else $srid = NULL;
-        $_str = "";
-        $_polys = array();
-        $__i = 0;
-        while ($this->shapeArray[$__i]) {
-            if ($this->isIsland[$__i + 1]) {
-                $_rings = array($this->shapeArray[$__i]);
-                while ($this->isIsland[$__i + 1]) {
-                    array_push($_rings, $this->shapeArray[$__i + 1]);
-                    $__i++;
+        $str = "";
+        $polys = array();
+        $i = 0;
+        while ($this->shapeArray[$i]) {
+            if ($this->isIsland[$i + 1]) {
+                $_rings = array($this->shapeArray[$i]);
+                while ($this->isIsland[$i + 1]) {
+                    array_push($_rings, $this->shapeArray[$i + 1]);
+                    $i++;
                 }
-                array_push($_polys, $_rings);
-                $__i++;
+                array_push($polys, $_rings);
+                $i++;
             } else {
-                array_push($_polys, array($this->shapeArray[$__i]));
-                $__i++;
+                array_push($polys, array($this->shapeArray[$i]));
+                $i++;
             }
         }
-        $_str = $_str . $this->writeTag("open", "gml", "MultiPolygon", $srid, True, True);
+        $str = $str . $this->writeTag("open", "gml", "MultiPolygon", $srid, True, True);
         $depth++;
-        foreach ($_polys as $__array) {
-            $_str = $_str . $this->writeTag("open", "gml", "polygonMember", Null, True, True);
+        foreach ($polys as $__array) {
+            $str = $str . $this->writeTag("open", "gml", "polygonMember", Null, True, True);
             $depth++;
-            $_str = $_str . $this->convertPolygon($__array, FALSE);
+            $str = $str . $this->convertPolygon($__array, FALSE);
             $depth--;
-            $_str = $_str . $this->writeTag("close", "gml", "polygonMember", Null, True, True);
+            $str = $str . $this->writeTag("close", "gml", "polygonMember", Null, True, True);
         }
         $depth--;
-        $_str = $_str . $this->writeTag("close", "gml", "MultiPolygon", Null, True, True);
-        return ($_str);
-    }
-
-    function toKML($extrude = 0, $tessellate = 1, $altitudeMode = "clampToGround")
-    {
-        global $depth;
-        $_str = "";
-        $_polys = array();
-        $__i = 0;
-        while ($this->shapeArray[$__i]) {
-            if ($this->isIsland[$__i + 1]) {
-                $_rings = array($this->shapeArray[$__i]);
-                while ($this->isIsland[$__i + 1]) {
-                    array_push($_rings, $this->shapeArray[$__i + 1]);
-                    $__i++;
-                }
-                array_push($_polys, $_rings);
-                $__i++;
-            } else {
-                array_push($_polys, array($this->shapeArray[$__i]));
-                $__i++;
-            }
-        }
-        $_str = $_str .= $this->writeTag("open", null, "MultiGeometry", null, true, true);
-        $depth++;
-        foreach ($_polys as $__array) {
-            //$_str=$_str.$this->writeTag("open","gml","polygonMember",Null,True,True);
-            //$depth++;
-            $_str = $_str . $this->convertPolygonToKML($__array, $extrude, $tessellate, $altitudeMode);
-            //$depth--;
-            //$_str=$_str.$this->writeTag("close","gml","polygonMember",Null,True,True);
-        }
-        $depth--;
-        $_str = $_str . $this->writeTag("close", NULL, "MultiGeometry", Null, True, True);
-        return ($_str);
+        $str = $str . $this->writeTag("close", "gml", "MultiPolygon", Null, True, True);
+        return $str;
     }
 }
 
-class geometryCollection extends geometryfactory
+class GeometryCollection extends GeometryFactory
 {
-    var $geometryArray;
+    /**
+     * @var array<mixed>
+     */
+    public $geometryArray;
 
-    function geometryCollection($wktArray)
+    /**
+     * GeometryCollection constructor.
+     * @param array<mixed> $wktArray
+     */
+    function __construct(array $wktArray)
     {
-        foreach ($wktArray as $__key => $__value) {
-            $this->geometryArray[$__key] = parent::createGeometry($__value);
+        parent::__construct();
+        foreach ($wktArray as $key => $value) {
+            $this->geometryArray[$key] = parent::createGeometry($value);
         }
     }
 
-    function getVertices()
+    /**
+     * @return array<mixed>
+     */
+    function getGeometryArray(): array
     {
-        foreach ($this->geometryArray as $__geometry) {
-            $__verticeStr = "";
-
-            foreach ($__geometry->getShapeArray() as $__value) {
-                $__verticeStr = $__verticeStr . $__value . ",";
-            }
-            $verticeStr = $verticeStr . $__verticeStr;
-        }
-        // remove the last comma
-        $verticeStr = substr($verticeStr, 0, strlen($verticeStr) - 1);
-        return ($verticeStr);
-    }
-
-    function getShapes()
-    {
-        $__shapeArray = array();
-        foreach ($this->geometryArray as $__geometry) {
-
-
-            foreach ($__geometry->getShapeArray() as $__value) {
-                array_push($__shapeArray, $__value);
-            }
-        }
-        $shapeArray = $__shapeArray;
-        return ($shapeArray);
-    }
-
-    function getGeometryArray()
-    {
-        return ($this->geometryArray);
+        return $this->geometryArray;
     }
 }
 
 class gmlConverter
 {
-    var $parser;
-    var $geomType;
-    var $wkt;
-    var $isIsland;
-    var $wktCoords;
-    var $isPreviousIsland;
-    var $splitTag;
-    var $srid;
-    var $axisOrder;
+    /**
+     * @var resource
+     */
+    public $parser;
 
-    function gmlConverter()
-    {
-        $this->xml();
-    }
+    /**
+     * @var string
+     */
+    public $geomType;
 
-    function xml()
+    /**
+     * @var string
+     */
+    public $wkt;
+
+    /**
+     * @var bool
+     */
+    public $isIsland;
+
+    /**
+     * @var array<string>
+     */
+    public $wktCoords;
+
+    /**
+     * @var bool
+     */
+    public $isPreviousIsland;
+
+    /**
+     * @var array|string[]|null
+     */
+    public $splitTag;
+
+    /**
+     * @var string
+     */
+    public $srid;
+
+    /**
+     * @var string
+     */
+    public $axisOrder;
+
+    /**
+     * gmlConverter constructor.
+     */
+    function __construct()
     {
         $this->parser = xml_parser_create();
         xml_set_object($this->parser, $this);
@@ -1034,23 +761,17 @@ class gmlConverter
     }
 
     /**
-     * @return array
      * @param string $gml
-     * @param string $splitTag
-     * @desc Enter description here...
+     * @param array|string[]|null $splitTag
+     * @return array<mixed>
      */
-    function gmlToWKT($gml, $splitTag = array("FEATUREMEMBER"))
+    public function gmlToWKT(string $gml, ?array $splitTag = array("FEATUREMEMBER")): array
     {
         $gml = preg_replace("/^(?!urn:).+:/", "", $gml, 1); // This strips name spaces except urn:x-ogc:def:crs:epsg
-
         global $count;
-        // Clean up messy gml. Remove spaces and tabs.
-        //$gml= oneLineGML($gml);
         $this->splitTag = $splitTag;
         $count = 0;
-        $currentTag = "";
         xml_parse($this->parser, $gml);
-        // clean up
         xml_parser_free($this->parser);
         for ($__i = 0; $__i < sizeof($this->wktCoords); $__i++) {
             if ($this->geomType[$__i] == "MULTIPOINT" || $this->geomType[$__i] == "MULTIPOLYGON" || $this->geomType[$__i] == "MULTILINESTRING") {
@@ -1058,10 +779,15 @@ class gmlConverter
             }
             $this->wktCoords[$__i] = $this->geomType[$__i] . "(" . $this->wktCoords[$__i] . ")";
         }
-        return (array($this->wktCoords, $this->srid));
+        return array($this->wktCoords, $this->srid);
     }
 
-    function startElement($parser, $name, $attrs)
+    /**
+     * @param resource $parser
+     * @param string $name
+     * @param array<string> $attrs
+     */
+    private function startElement($parser, string $name, array $attrs): void
     {
         global $currentTag;    //used by function characterData when parsing xml data
         global $lastTag; // Last tag parsed
@@ -1069,7 +795,6 @@ class gmlConverter
         global $count;
 
         $currentTag = $name;
-        //echo $count;
         if ($attrs['SRSNAME'] != "") {
             //$this->srid[$count]=$this->parseEpsgCode($attrs['SRSNAME']);
             //$this->axisOrder = $this->getAxisOrderFromEpsg($attrs['SRSNAME']);
@@ -1093,10 +818,8 @@ class gmlConverter
             case "MULTICURVE" : // GML3
                 $this->geomType[$count] = "MULTILINESTRING";
                 break;
+            case "MULTISURFACE":
             case "MULTIPOLYGON" :
-                $this->geomType[$count] = "MULTIPOLYGON";
-                break;
-            case "MULTISURFACE" :
                 $this->geomType[$count] = "MULTIPOLYGON";
                 break;
             case "MULTIGEOMETRY" :
@@ -1110,11 +833,8 @@ class gmlConverter
                 $this->wktCoords[$count] .= "(";
                 $tagFlag = "POINTMEMBER";
                 break;
-            case "POLYGONMEMBER":
-                $this->wktCoords[$count] .= "(";
-                $tagFlag = "POLYGONMEMBER";
-                break;
             case "SURFACEMEMBER":
+            case "POLYGONMEMBER":
                 $this->wktCoords[$count] .= "(";
                 $tagFlag = "POLYGONMEMBER";
                 break;
@@ -1126,18 +846,13 @@ class gmlConverter
                 $this->wktCoords[$count] .= "(";
                 $tagFlag = "LINESTRINGMEMBER";
                 break;
+            case "INTERIOR":
             case "INNERBOUNDARYIS":
                 $this->isIsland = true;
                 $tagFlag = "INNERBOUNDARYIS";
                 break;
-            case "INTERIOR":
-                $this->isIsland = true;
-                $tagFlag = "INNERBOUNDARYIS";
-                break;
-            case "OUTERBOUNDARYIS":
-                $this->isIsland = false;
-                break;
             case "EXTERIOR":
+            case "OUTERBOUNDARYIS":
                 $this->isIsland = false;
                 break;
             case "XML_SERIALIZER_TAG":
@@ -1161,7 +876,11 @@ class gmlConverter
         $lastTag = $currentTag;
     }
 
-    function endElement($parser, $name)
+    /**
+     * @param resource $parser
+     * @param string $name
+     */
+    private function endElement($parser, string $name): void
     {
         global $concatCoords;
         global $currentTag;
@@ -1170,44 +889,21 @@ class gmlConverter
         global $count;
 
         $currentTag = $name;
-        //echo $currentTag."\n";
-        //
         switch ($currentTag) {
+            case "INTERIOR":
             case "INNERBOUNDARYIS": // Flag set back to POLYGONMEMBER
                 $tagFlag = "POLYGONMEMBER";
                 break;
-
-            case "INTERIOR": // Flag set back to POLYGONMEMBER
-                $tagFlag = "POLYGONMEMBER";
-                break;
-
+            case "SURFACEMEMBER":
+            case "LINESTRINGMEMBER":
+            case "POINTMEMBER":
             case "POLYGONMEMBER":
                 if ($lastTag != "XML_SERIALIZER_TAG") {
                     $this->wktCoords[$count] .= "),";
                 }
                 $tagFlag = "";
                 break;
-
-            case "SURFACEMEMBER":
-                if ($lastTag != "XML_SERIALIZER_TAG") {
-                    $this->wktCoords[$count] .= "),";
-                }
-                $tagFlag = "";
-                break;
-
-            case "LINESTRINGMEMBER":
-                if ($lastTag != "XML_SERIALIZER_TAG") {
-                    $this->wktCoords[$count] .= "),";
-                }
-                $tagFlag = "";
-                break;
             case "CURVEMEMBER": // GML3
-                if ($lastTag != "XML_SERIALIZER_TAG") {
-                    $this->wktCoords[$count] .= "),";
-                }
-                $tagFlag = "";
-                break;
-            case "POINTMEMBER":
                 if ($lastTag != "XML_SERIALIZER_TAG") {
                     $this->wktCoords[$count] .= "),";
                 }
@@ -1238,20 +934,14 @@ class gmlConverter
             case "MULTICURVE" : // GML3
                 $this->geomType[$count] = "MULTILINESTRING";
                 break;
+            case "MULTISURFACE":
             case "MULTIPOLYGON" :
-                $this->geomType[$count] = "MULTIPOLYGON";
-                break;
-            case "MULTISURFACE" :
                 $this->geomType[$count] = "MULTIPOLYGON";
                 break;
             case "MULTIGEOMETRY" :
                 $this->geomType[$count] = "MULTIGEOMETRY";
                 break;
-            //case $this->splitTag :
-            //$count++;
-            //break;
             case "COORDINATES":
-
                 if ($this->geomType[$count] == "POINT") {
                     $this->wktCoords[$count] .= $this->convertCoordinatesToWKT($concatCoords);
                 } else if ($this->geomType[$count] == "LINESTRING") {
@@ -1260,11 +950,9 @@ class gmlConverter
                     if ($this->isIsland == true) $this->wktCoords[$count] .= ",";
                     $this->wktCoords[$count] .= "(" . $this->convertCoordinatesToWKT($concatCoords) . ")";
                 }
-                //echo "test: ".($concatCoords)."\n";
                 $concatCoords = "";
                 break;
             case "POSLIST": //GML3 Hvis epsg kode i tag, skal den være _CONTENT
-
                 if ($this->geomType[$count] == "POINT") {
                     $this->wktCoords[$count] .= $this->convertPostListToWKT($concatCoords);
                 } else if ($this->geomType[$count] == "LINESTRING") {
@@ -1273,7 +961,6 @@ class gmlConverter
                     if ($this->isIsland == true) $this->wktCoords[$count] .= ",";
                     $this->wktCoords[$count] .= "(" . $this->convertPostListToWKT($concatCoords) . ")";
                 }
-                //echo "test: ".($concatCoords)."\n";
                 $concatCoords = "";
                 break;
             case "POS": //GML3 Hvis epsg kode i tag, skal den være _CONTENT
@@ -1293,7 +980,11 @@ class gmlConverter
         $currentTag = null;
     }
 
-    function characterData($parser, $data)
+    /**
+     * @param resource $parser
+     * @param string $data
+     */
+    private function characterData($parser, string $data): void
     {
         global $concatCoords;
         global $currentTag;
@@ -1302,28 +993,26 @@ class gmlConverter
             case "COORDINATES" :
                 $concatCoords .= $data; // concat the data in case of the 1024 char limit is exceeded
                 break;
+            case "POS":
             case "POSLIST" : //GML3 Hvis epsg kode i tag, skal den være _CONTENT
                 $concatCoords .= $data; // concat the data in case of the 1024 char limit is exceeded
                 break;
-            case "POS" : //GML3 Hvis epsg kode i tag, skal den være _CONTENT
-                $concatCoords .= $data; // concat the data in case of the 1024 char limit is exceeded
-                break;
             case "PROPERTYNAME";
-                $this->filterPropertyName[$data] = $count;
                 break;
             case "SRSNAME"; // not normal. Used when serializing array to xml
-                $this->srid[$count] = $this->parseEpsgCode($data);
-                $this->axisOrder[$count] = $this->getAxisOrderFromEpsg($data);
+                $this->srid[$count] = self::parseEpsgCode($data);
+                $this->axisOrder[$count] = self::getAxisOrderFromEpsg($data);
                 break;
         }
     }
 
-    function convertCoordinatesToWKT($_str)
+    /**
+     * @param string $_str
+     * @return string
+     */
+    private function convertCoordinatesToWKT(string $_str): string
     {
         global $count;
-        ob_start();
-        print_r($this->axisOrder);
-        $data = ob_get_clean();
         $_str = str_replace(" ", "&", $_str);
         $_str = str_replace(",", " ", $_str);
         $_str = str_replace("&", ",", $_str);
@@ -1340,14 +1029,16 @@ class gmlConverter
         return ($_str);
     }
 
-    function convertPostListToWKT($_str)
+    /**
+     * @param string $_str
+     * @return string
+     */
+    private function convertPostListToWKT(string $_str): string
     {
         global $count;
-        ob_start();
-        print_r($this->axisOrder);
-        $data = ob_get_clean();
         $arr = explode(" ", trim($_str));
         $i = 1;
+        $newStr = "";
         foreach ($arr as $value) {
             $newStr .= $value;
             if (is_int($i / 2)) {
@@ -1371,22 +1062,23 @@ class gmlConverter
         return ($newStr);
     }
 
-    function parseEpsgCode($epsg)
+    /**
+     * @param string $epsg
+     * @return string
+     */
+    public static function parseEpsgCode(string $epsg): string
     {
-        //if (strtoupper(substr($epsg, 0, 5)=="EPSG:")) $epsg=substr($epsg, 5,strlen($epsg));
-        //preg_match_all("/[0-9]*$/",$epsg,$arr);
-        //$clean=$arr[0][0];
-
         $split = explode(":", $epsg);
-        ob_start();
-        print_r($split);
-        $data = ob_get_clean();
         $clean = end($split);
         $clean = preg_replace("/[\w]\./", "", $clean);
         return $clean;
     }
 
-    function getAxisOrderFromEpsg($epsg)
+    /**
+     * @param string $epsg
+     * @return string
+     */
+    public static function getAxisOrderFromEpsg(string $epsg): string
     {
         $split = explode(":", $epsg);
         if ($split[0] == "urn") {
@@ -1395,16 +1087,6 @@ class gmlConverter
             $first = "longitude";
         }
 
-        return ($first);
-    }
-
-    function oneLineXML($gml)
-    {
-        $gml = ereg_replace("\t", " ", $gml);
-        $gml = ereg_replace("\r", " ", $gml);
-        $gml = ereg_replace("\n", " ", $gml);
-        $gml = ereg_replace(">[[:space:]]+", ">", $gml);
-        $gml = ereg_replace("[[:space:]]+<", "<", $gml);
-        return ($gml);
+        return $first;
     }
 }
