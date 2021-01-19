@@ -23,6 +23,7 @@ class Wms extends \app\inc\Controller
 
     public $service;
     private $layers;
+    private $user;
 
     /**
      * Wms constructor.
@@ -36,6 +37,7 @@ class Wms extends \app\inc\Controller
         $this->layers = [];
         $postgisschema = \app\inc\Input::getPath()->part(3);
         $db = \app\inc\Input::getPath()->part(2);
+        $this->user = $db;
         $dbSplit = explode("@", $db);
         $this->service = null;
         if (sizeof($dbSplit) == 2) {
@@ -119,9 +121,10 @@ class Wms extends \app\inc\Controller
      */
     private function get($db, $postgisschema)
     {
+        global $setUserInCapabilities;
         $model = new \app\inc\Model();
         $useFilters = false;
-        $qgs =  isset($_GET["qgs"]) ? base64_decode($_GET["qgs"]) : false;
+        $qgs = isset($_GET["qgs"]) ? base64_decode($_GET["qgs"]) : false;
         // Check if WMS filters are set
         if ((isset($_GET["filters"]) || (isset($_GET["labels"]) && $_GET["labels"] == "false")) && $this->service == "wms") {
             // Parse filter
@@ -165,9 +168,7 @@ class Wms extends \app\inc\Controller
 
                     $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map={$mapFile}&" . $_SERVER["QUERY_STRING"];
                 }
-            }
-
-            // MapServer is used
+            } // MapServer is used
             else {
                 switch ($this->service) {
                     case "wfs":
@@ -227,12 +228,14 @@ class Wms extends \app\inc\Controller
             }
         }
 
+        $setUserInCapabilities = false;
         header("X-Powered-By: GC2 WMS");
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header_line) {
+            global $setUserInCapabilities;
             $bits = explode(":", $header_line);
             if ($bits[0] == "Content-Type") {
                 $this->type = trim($bits[1]);
@@ -240,12 +243,19 @@ class Wms extends \app\inc\Controller
             // Send text/xml instead of application/vnd.ogc.se_xml
             if (sizeof($bits) > 1 && $bits[0] == "Content-Type" && trim($bits[1]) == "application/vnd.ogc.se_xml") {
                 header("Content-Type: text/xml");
+                $setUserInCapabilities = true;
+            } elseif (sizeof($bits) > 1 && $bits[0] == "Content-Type" && trim($bits[1]) == "text/xml; charset=UTF-8") {
+                header("Content-Type: text/xml");
+                $setUserInCapabilities = true;
             } elseif (sizeof($bits) > 1 && $bits[0] != "Content-Encoding" && trim($bits[1]) != "chunked") {
                 header($header_line);
             }
             return strlen($header_line);
         });
         $content = curl_exec($ch);
+        if ($setUserInCapabilities) {
+            $content = str_replace("__USER__", $this->user , $content);
+        }
         curl_close($ch);
         echo $content;
         exit();
