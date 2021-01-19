@@ -11,6 +11,9 @@ and this project adheres to [CalVer](https://calver.org/).
 ### Changed
 - Migration code moved to `app\migration`.
 
+### Fixed
+- The correct online resources are now set in OWS GetCapabilities when using sub-users. This will fix authication issues in QGIS, which always uses online resource URLs from GetCapabilities in WFS. 
+
 ## [2020.12.0] - 2020-21-12
 ### Added
 - A custom PNG can now be used as legend for a layer. The URL pointing to the PNG is set in the Legend tab. Must run database migrations.

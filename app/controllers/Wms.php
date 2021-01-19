@@ -29,6 +29,7 @@ class Wms extends Controller
     public $service;
     private $layers;
     private $type;
+    private $user;
 
     /**
      * Wms constructor.
@@ -43,6 +44,7 @@ class Wms extends Controller
         $this->layers = [];
         $postgisschema = Input::getPath()->part(3);
         $db = Input::getPath()->part(2);
+        $this->user = $db;
         $dbSplit = explode("@", $db);
         $this->service = null;
         if (sizeof($dbSplit) == 2) {
@@ -126,11 +128,12 @@ class Wms extends Controller
      * @param $postgisschema string
      * @throws PhpfastcacheInvalidArgumentException
      */
-    private function get($db, $postgisschema)
+    private function get(string $db, string $postgisschema): void
     {
+        global $setUserInCapabilities;
         $model = new Model();
         $useFilters = false;
-        $qgs =  isset($_GET["qgs"]) ? base64_decode($_GET["qgs"]) : false;
+        $qgs = isset($_GET["qgs"]) ? base64_decode($_GET["qgs"]) : false;
         // Check if WMS filters are set
         if ((isset($_GET["filters"]) || (isset($_GET["labels"]) && $_GET["labels"] == "false")) && $this->service == "wms") {
             // Parse filter
@@ -236,12 +239,19 @@ class Wms extends Controller
             }
         }
 
+        if (!isset($url)) {
+            echo "Could not create internal URL to MapServer";
+            exit();
+        }
+
+        $setUserInCapabilities = false;
         header("X-Powered-By: GC2 WMS");
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header_line) {
+            global $setUserInCapabilities;
             $bits = explode(":", $header_line);
             if ($bits[0] == "Content-Type") {
                 $this->type = trim($bits[1]);
@@ -249,12 +259,19 @@ class Wms extends Controller
             // Send text/xml instead of application/vnd.ogc.se_xml
             if (sizeof($bits) > 1 && $bits[0] == "Content-Type" && trim($bits[1]) == "application/vnd.ogc.se_xml") {
                 header("Content-Type: text/xml");
+                $setUserInCapabilities = true;
+            } elseif (sizeof($bits) > 1 && $bits[0] == "Content-Type" && trim($bits[1]) == "text/xml; charset=UTF-8") {
+                header("Content-Type: text/xml");
+                $setUserInCapabilities = true;
             } elseif (sizeof($bits) > 1 && $bits[0] != "Content-Encoding" && trim($bits[1]) != "chunked") {
                 header($header_line);
             }
             return strlen($header_line);
         });
         $content = curl_exec($ch);
+        if ($setUserInCapabilities) {
+            $content = str_replace("__USER__", $this->user , $content);
+        }
         curl_close($ch);
         echo $content;
         exit();
@@ -264,15 +281,11 @@ class Wms extends Controller
     {
         // Set MapFile. For now this can only be WFS
         switch ($this->service) {
-            case "wms":
-                $mapFile = $db . "_" . $postgisschema . "_wms.map";
-                break;
-
             case "wfs":
                 $mapFile = $db . "_" . $postgisschema . "_wfs.map";
                 break;
-
             default:
+                $mapFile = $db . "_" . $postgisschema . "_wms.map";
                 break;
         }
 
