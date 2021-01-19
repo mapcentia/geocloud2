@@ -48,8 +48,8 @@ services:
     networks:
       - default
       - internal
-  #    ports:
-  #      - "6379:6379"
+    ports:
+      - "6379:6379"
   postgis:
     build: ./postgis
     image: mapcentia/postgis
