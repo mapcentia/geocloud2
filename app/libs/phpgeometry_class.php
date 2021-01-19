@@ -767,7 +767,7 @@ class gmlConverter
      */
     public function gmlToWKT(string $gml, ?array $splitTag = array("FEATUREMEMBER")): array
     {
-        $gml = preg_replace("/^(?!urn:).+:/", "", $gml, 1); // This strips name spaces except urn:x-ogc:def:crs:epsg
+        $gml = preg_replace("/[\w-]*:(?![\w-]*:)/", "", $gml); // This strips name spaces except urn:x-ogc:def:crs:epsg
         global $count;
         $this->splitTag = $splitTag;
         $count = 0;
