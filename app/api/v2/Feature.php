@@ -161,8 +161,6 @@ class Feature extends \app\inc\Controller
         // Convert GML to WKT
         $gmlConverter = new \app\libs\gmlConverter();
         $wkt = $gmlConverter->gmlToWKT($xml)[0][0];
-        //die($xml);
-        //die(print_r($wkt, true));
 
         // Convert WKT to GeoJSON
         if ($wkt) {
