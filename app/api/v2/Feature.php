@@ -126,7 +126,7 @@ class Feature extends \app\inc\Controller
 
         // GET the transaction
         try {
-            $res = $this->client->get($url . "?request=GetFeature&typeName={$this->table}&FEATUREID={$this->table}.{$this->key}");
+            $res = $this->client->get($url . "?service=WFS&version=1.0.0&request=GetFeature&typeName={$this->table}&FEATUREID={$this->table}.{$this->key}");
         } catch (\Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -159,8 +159,10 @@ class Feature extends \app\inc\Controller
         }
 
         // Convert GML to WKT
-        $gmlConverter = new \mapcentia\gmlConverter();
+        $gmlConverter = new \app\libs\gmlConverter();
         $wkt = $gmlConverter->gmlToWKT($xml)[0][0];
+        //die($xml);
+        //die(print_r($wkt, true));
 
         // Convert WKT to GeoJSON
         if ($wkt) {
