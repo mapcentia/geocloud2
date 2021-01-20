@@ -136,8 +136,8 @@ class Wms extends Controller
         $qgs = isset($_GET["qgs"]) ? base64_decode($_GET["qgs"]) : false;
         // Check if WMS filters are set
         if ((isset($_GET["filters"]) || (isset($_GET["labels"]) && $_GET["labels"] == "false")) && $this->service == "wms") {
-            // Parse filter
-            $filters = isset($_GET["filters"]) ? json_decode(base64_decode($_GET["filters"]), true) : null;
+            // Parse filter. Both base64 and base64url is tried
+            $filters = isset($_GET["filters"]) ? json_decode(Util::base64urlDecode($_GET["filters"]), true) : null;
             $layer = $this->layers[0];
             $split = explode(".", $layer);
             $name = md5(rand(1, 999999999) . microtime());
@@ -270,7 +270,7 @@ class Wms extends Controller
         });
         $content = curl_exec($ch);
         if ($setUserInCapabilities) {
-            $content = str_replace("__USER__", $this->user , $content);
+            $content = str_replace("__USER__", $this->user, $content);
         }
         curl_close($ch);
         echo $content;

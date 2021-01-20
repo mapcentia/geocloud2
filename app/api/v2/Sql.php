@@ -22,6 +22,7 @@ use PHPSQLParser;
 use RecursiveArrayIterator;
 use RecursiveIteratorIterator;
 
+use app\inc\Util;
 
 /**
  * Class Sql
@@ -147,7 +148,7 @@ class Sql extends Controller
         }
 
         if (Input::get('base64') === true || Input::get('base64') === "true") {
-            $this->q = base64_decode(Input::get('q'));
+            $this->q = Util::base64urlDecode(Input::get("q"));
         } else {
             $this->q = urldecode(Input::get('q'));
         }
