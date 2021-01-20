@@ -109,12 +109,12 @@ class Util
     }
 
     /**
-     * @param $start
-     * @param $end
-     * @param $steps
-     * @return array
+     * @param string $start
+     * @param string $end
+     * @param int $steps
+     * @return array<mixed>
      */
-    static function makeGradient($start, $end, $steps)
+    static function makeGradient(string $start, string $end, int $steps): array
     {
 
         $theColorBegin = hexdec($start);
@@ -154,7 +154,7 @@ class Util
     /**
      * @return float
      */
-    static function microtime_float()
+    static function microtime_float(): float
     {
         list($usec, $sec) = explode(" ", microtime());
         return ((float)$usec + (float)$sec);
@@ -163,7 +163,7 @@ class Util
     /**
      * @return string
      */
-    static function protocol()
+    static function protocol(): string
     {
         if (isset($_SERVER['HTTPS']) &&
             ($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTPS'] == 1) ||
@@ -178,11 +178,11 @@ class Util
     }
 
     /**
-     * @param $ip
-     * @param $range
+     * @param string $ip
+     * @param string $range
      * @return bool
      */
-    static function ipInRange($ip, $range)
+    static function ipInRange(string $ip, string $range): bool
     {
         if (strpos($range, '/') !== false) {
             // $range is in IP/NETMASK format
@@ -235,7 +235,7 @@ class Util
     /**
      * @return string
      */
-    static function clientIp()
+    static function clientIp(): string
     {
         if (!empty($_SERVER['HTTP_CLIENT_IP']))
             $ipAddress = $_SERVER['HTTP_CLIENT_IP'];
@@ -255,7 +255,7 @@ class Util
     }
 
     /**
-     * @param $url
+     * @param string $url
      * @param int $connectTimeout
      * @param int $timeout
      * @return mixed
@@ -279,11 +279,11 @@ class Util
     }
 
     /**
-     * @param $url
+     * @param string $url
      * @param string $payload
      * @return bool
      */
-    static function asyncRequest($url, $payload = "")
+    static function asyncRequest(string $url, string $payload = ""): bool
     {
         $cmd = "curl -XGET -H 'Content-Type: application/json'";
         $cmd .= " -d '" . $payload . "' " . "'" . $url . "'";
@@ -292,17 +292,22 @@ class Util
         return $exit == 0;
     }
 
-    static public function guid()
+    /**
+     * @return string
+     */
+    static public function guid(): string
     {
-        if (function_exists('com_create_guid') === true)
-        {
+        if (function_exists('com_create_guid') === true) {
             return trim(com_create_guid(), '{}');
         }
 
         return sprintf('%04X%04X-%04X-%04X-%04X-%04X%04X%04X', mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
     }
 
-    static public function disableOb()
+    /**
+     *
+     */
+    static public function disableOb(): void
     {
         // Turn off output buffering
         ini_set('output_buffering', 'off');
@@ -325,6 +330,15 @@ class Util
             apache_setenv('no-gzip', '1');
             apache_setenv('dont-vary', '1');
         }
+    }
+
+    /**
+     * @param string $str
+     * @return string
+     */
+    static public function base64urlDecode(string $str): string
+    {
+        return base64_decode(str_replace(array('-', '_'), array('+', '/'), $str));
     }
 
 }
