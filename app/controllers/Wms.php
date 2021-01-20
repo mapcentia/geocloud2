@@ -124,6 +124,15 @@ class Wms extends Controller
     }
 
     /**
+     * @param string $string
+     * @return string
+     */
+    private static function xmlEscape(string $string): string
+    {
+        return str_replace(array('&', '<', '>', '\'', '"'), array('\&amp;', '\&lt;', '\&gt;', '\&apos;', '\&quot;'), $string);
+    }
+
+    /**
      * @param $db string
      * @param $postgisschema string
      * @throws PhpfastcacheInvalidArgumentException
@@ -166,7 +175,7 @@ class Wms extends Controller
                         if ($versionWhere) {
                             $where = "({$where} AND {$versionWhere})";
                         }
-                        $sedCmd = 'sed -i "/table=\"' . $split[0] . '\".\"' . $split[1] . '\"/s/sql=.*</sql=' . $where . '</g" ' . $mapFile;
+                        $sedCmd = 'sed -i "/table=\"' . $split[0] . '\".\"' . $split[1] . '\"/s/sql=.*</sql=' . self::xmlEscape($where) . '</g" ' . $mapFile;
                         shell_exec($sedCmd);
                     }
                     if ($disableLabels) {
@@ -177,9 +186,7 @@ class Wms extends Controller
 
                     $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map={$mapFile}&" . $_SERVER["QUERY_STRING"];
                 }
-            }
-
-            // MapServer is used
+            } // MapServer is used
             else {
                 switch ($this->service) {
                     case "wfs":
