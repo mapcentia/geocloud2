@@ -58,8 +58,8 @@ services:
     networks:
       - default
       - internal
-    #    ports:
-    #      - "5432:5432"
+    ports:
+      - "5432:5432"
     environment:
       - GC2_USER=gc2
       - GC2_PASSWORD=1234
