@@ -6,13 +6,15 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNRELEASED]
 ### Added
-- PHPStan added to project for static code analysis. A lot of type issues fixed.
+- PHPStan added to project for static code analysis. A lot of issues fixed.
+- WFS-T now supports version 1.1.0. 
   
 ### Changed
 - Migration code moved to `app\migration`.
 
 ### Fixed
 - The correct online resources are now set in OWS GetCapabilities when using sub-users. This will fix authication issues in QGIS, which always uses online resource URLs from GetCapabilities in WFS. 
+- XML reversed chars in QGS files filters are now converted to HTML entities. So a filters with < > / & ' " will not render the QGS file invalid.
 
 ## [2020.12.0] - 2020-21-12
 ### Added
