@@ -195,7 +195,7 @@ class GetPart
      */
     function part(int $e): ?string
     {
-        return isset($this->parts[$e]) ? $this->parts[$e] : null;
+        return isset($this->parts[$e]) ? urldecode($this->parts[$e]) : null;
     }
 
     /**
