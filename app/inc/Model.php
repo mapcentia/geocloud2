@@ -17,6 +17,7 @@ use PDOException;
 use PDOStatement;
 use phpDocumentor\Reflection\Types\Resource;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use TypeError;
 
 
 /**
@@ -162,6 +163,7 @@ class Model
      */
     public function getPrimeryKey(string $table): ?array
     {
+        $response = null;
         $cacheType = "prikey";
         $cacheRel = $table;
         $cacheId = $this->postgisdb . "_" . $cacheType . "_" . $cacheRel;
@@ -180,10 +182,14 @@ class Model
                 $response = NULL;
             }
 
-            if (!is_array($row = $this->fetchRow($result))) { // If $table is view we bet on there is a gid field
-                $response = array("attname" => "gid");
-            } else {
-                $response = $row;
+            try {
+                if (!is_array($row = $this->fetchRow($result))) { // If $table is view we bet on there is a gid field
+                    $response = array("attname" => "gid");
+                } else {
+                    $response = $row;
+                }
+            } catch (TypeError $e) {
+                return null;
             }
 
             try {
@@ -542,11 +548,10 @@ class Model
     function getGeometryColumns(string $table, string $field) // : string|array|null
     {
         $response = [];
-        preg_match("/^[\w'-]*\./", $table, $matches);
-        $_schema = $matches[0];
 
-        preg_match("/[\w'-]*$/", $table, $matches);
-        $_table = $matches[0];
+        $_schema = sizeof(explode(".", $table)) > 1 ? explode(".", $table)[0] : null;
+
+        $_table = sizeof(explode(".", $table)) > 1 ? explode(".", $table)[1] : $table;
 
         if (!$_schema) {
             $_schema = $this->postgisschema;
