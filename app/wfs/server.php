@@ -253,19 +253,18 @@ if (!(empty($properties[0]))) {
                 $fields[$table] .= $property . ",";
             }
         }
-
     }
 }
 if (!(empty($featureids[0]))) {
+    $tables = [];
     foreach ($featureids as $featureid) {
-        $__u = explode(".", $featureid);
-        foreach ($tables as $table) {
-            $primeryKey = $postgisObject->getPrimeryKey($postgisschema . "." . $table);
-            if ($table == $__u[0]) {
-                $wheresArr[$table][] = "{$primeryKey['attname']}='{$__u[1]}'";
-            }
-            $wheres[$table] = implode(" OR ", $wheresArr[$table]);
-        }
+        $u = explode(".", $featureid, 2);
+        $table = $u[0];
+        if (!in_array($table, $tables)) $tables[] = $table;
+        $primeryKey = $postgisObject->getPrimeryKey($postgisschema . "." . $table);
+
+        $wheresArr[$table][] = "{$primeryKey['attname']}='{$u[1]}'";
+        $wheres[$table] = implode(" OR ", $wheresArr[$table]);
     }
 }
 if (!(empty($bbox[0]))) {
@@ -442,7 +441,7 @@ function getCapabilities(\app\inc\Model $postgisObject)
         <ows:Parameter name=\"idgen\">
             <ows:Value>GenerateNew</ows:Value>
             <ows:Value>UseExisting</ows:Value>
-            <ows:Value>ReplaceDuplicate</ows:Value>
+            <!--<ows:Value>ReplaceDuplicate</ows:Value>-->
         </ows:Parameter>
         <ows:Parameter name=\"releaseAction\">
             <ows:Value>ALL</ows:Value>
@@ -1053,7 +1052,6 @@ function doQuery(string $queryType)
                 $wheresFlag = false;
                 $sql2 = null;
                 if (!(empty($fields[$table]))) {
-
                     $fields[$table] = substr($fields[$table], 0, strlen($fields[$table]) - 1);
                     $fieldsArr[$table] = explode(",", $fields[$table]);
                 } else {
@@ -1150,7 +1148,7 @@ function doQuery(string $queryType)
                 if (!(empty($limits[$table]))) {
                     //$from .= " LIMIT " . $limits[$table];
                 }
-                //die($sql.$from);
+                //die($sql . $from);
                 doSelect($table, $sql, $from, $sql2);
             }
             break;
@@ -1539,15 +1537,10 @@ function doParse(array $arr)
 
     ob_start();
 
-    $serializer_options = array(
-        'indent' => '  ',
-    );
-
     // We start sql BEGIN block
     $postgisObject->connect();
     $postgisObject->begin();
 
-    $Serializer = new XML_Serializer($serializer_options);
     $workflowData = array();
     foreach ($arr as $key => $featureMember) {
 
@@ -1559,9 +1552,17 @@ function doParse(array $arr)
                 $featureMember = array(0 => $featureMember);
             }
             foreach ($featureMember as $hey) {
+                $primeryKey = null;
+                $globalSrsName = $hey["srsName"] ?? null;
                 foreach ($hey as $typeName => $feature) {
+                    $gmlId = null;
                     $typeName = dropAllNameSpaces($typeName);
                     if (is_array($feature)) { // Skip handles
+                        $primeryKey = $postgisObject->getPrimeryKey($postgisschema . "." . $typeName);
+                        $gmlId = $feature["gml:id"] ?? null;
+                        if (!$primeryKey) {
+                            makeExceptionReport("UnknownFeature", ["exceptionCode" => "NoApplicableCode/"]);
+                        }
                         // Remove ns from properties
                         foreach ($feature as $field => $value) {
                             $split = explode(":", $field);
@@ -1599,15 +1600,30 @@ function doParse(array $arr)
                         $values = array();
 
                         foreach ($feature as $field => $value) {
+                            // If primary field is provided we skip it
+                            // Or else we get an duplicate key error
+                            // when using GenerateNew key generation
+                            if ($field == $primeryKey["attname"]) {
+                                continue;
+                            }
+                            // In case of UseExisting key generation
+                            if (!empty($gmlId)) {
+                                $fields[] = $primeryKey["attname"];
+                                $values[] = $gmlId;
+                                unset($gmlId);
+                            }
                             $fields[] = $field;
                             $role = $roleObj["data"][$user];
                             if ($tableObj->workflow && ($role == "none" && $parentUser == false)) {
                                 makeExceptionReport("You don't have a role in the workflow of '{$typeName}'");
                             }
                             if (is_array($value)) { // Must be geom if array
-                                //makeExceptionReport(print_r($value, true));
-                                $wktArr = toWkt($value);
+                                $wktArr = toWkt($value, false, getAxisOrder($globalSrsName), parseEpsgCode($globalSrsName));
                                 $values[] = array("{$field}" => $wktArr[0], "srid" => $wktArr[1]);
+                                if (!empty($wktArr[2])) {
+                                     $fields[] = $primeryKey["attname"];
+                                     $values[] = $wktArr[2];
+                                 }
                                 unset($gmlCon);
                                 unset($wktArr);
                             } elseif ($field == "gc2_version_user") {
@@ -1675,6 +1691,7 @@ function doParse(array $arr)
             }
             $fid = 0;
             foreach ($featureMember as $hey) {
+                $globalSrsName = $hey["srsName"] ?? null;
                 $hey["typeName"] = dropAllNameSpaces($hey["typeName"]);
                 if (!is_array($hey['Property'][0]) && isset($hey['Property'])) {
                     $hey['Property'] = array(0 => $hey['Property']);
@@ -1715,15 +1732,16 @@ function doParse(array $arr)
                     if ($split[1]) {
                         $pair['Name'] = dropAllNameSpaces($pair['Name']);
                     }
+                    //else {
+                    //   continue;
+                    // }
                     $fields[$fid][] = $pair['Name'];
                     $role = $roleObj["data"][$user];
                     if ($tableObj->workflow && ($role == "none" && $parentUser == false)) {
                         makeExceptionReport("You don't have a role in the workflow of '{$hey['typeName']}'");
                     }
                     if (is_array($pair['Value'])) { // Must be geom if array
-
-//                        makeExceptionReport(print_r($pair["Value"], true));
-                        $wktArr = toWkt($pair["Value"]);
+                        $wktArr = toWkt($pair["Value"], false, getAxisOrder($globalSrsName), parseEpsgCode($globalSrsName));
                         $values[$fid][] = (array("{$pair['Name']}" => $wktArr[0], "srid" => $wktArr[1]));
                         unset($gmlCon);
                         unset($wktArr);
@@ -1814,6 +1832,7 @@ function doParse(array $arr)
 
     // First we loop through inserts
     if (isset($forSql) && sizeof($forSql['tables']) > 0) {
+        //makeExceptionReport(print_r($forSql, true));
         $values = [];
         for ($i = 0; $i < sizeof($forSql['tables']); $i++) {
             if ($postgisObject->getGeometryColumns($postgisschema . "." . $forSql['tables'][$i], "editable")) {
@@ -2057,10 +2076,11 @@ function doParse(array $arr)
         }
     }
     // We fire the sqls
+    //makeExceptionReport(print_r($sqls, true));
     if (isset($sqls)) {
         foreach ($sqls as $operation => $sql) {
             foreach ($sql as $singleSql) {
-                $results[$operation][] = $postgisObject->execQuery($singleSql, "PDO", "select"); // Returning PDOStatement object
+                $results[$operation][] = $postgisObject->execQuery($singleSql); // Returning PDOStatement object
                 fwrite($logFile, "{$singleSql}\n\n\n");
             }
         }
@@ -2070,8 +2090,35 @@ function doParse(array $arr)
     if (sizeof($notEditable) > 0) {
         $postgisObject->PDOerror[0] = "Layer not editable";
     }
+    // TransactionSummary
+    echo '<wfs:TransactionSummary>';
+    if (isset($results)) {
+        $i = 0;
+        $u = 0;
+        $d = 0;
+        //makeExceptionReport(print_r($results, true));
+        foreach ($results as $operation => $result) {
+            foreach ($result as $tran) {
+                $c = isset($tran) ? $tran->rowCount() : 0;
+                if ($operation == "insert") {
+                    $i += $c;
+                }
+                if ($operation == "update") {
+                    $u += $c;
+                }
+                if ($operation == "delete") {
+                    $d += $c;
+                }
+            }
+        }
+        echo "<wfs:totalInserted>" . $i . "</wfs:totalInserted>";
+        echo "<wfs:totalUpdated>" . $u . "</wfs:totalUpdated>";
+        echo "<wfs:totalDeleted>" . $d . "</wfs:totalDeleted>";
+    }
 
-    // TransactionResult
+    echo '</wfs:TransactionSummary>';
+
+// TransactionResult
     $rowIdsChanged = []; // Global Array that holds ids from all affected rows. Can be used in post-processes
     if (sizeof($postgisObject->PDOerror) == 0) {
         echo $version == "1.1.0" ? '<wfs:TransactionResults/>' : '<wfs:TransactionResult handle="mygeocloud-WFS-default-handle"><wfs:Status><wfs:SUCCESS/></wfs:Status></wfs:TransactionResult>';
@@ -2087,11 +2134,11 @@ function doParse(array $arr)
         $results['update'] = NULL; // Was object
         $results['delete'] = 0;
         makeExceptionReport($postgisObject->PDOerror); // This output a exception and kills the script
+        //makeExceptionReport("Database error", ["exceptionCode" => "InvalidParameterValue"]);
     }
 
-    // InsertResult
-    $numOfInserts = 0;
-    if (sizeof($results['insert']) > 0) {
+// InsertResult
+    if (isset($results['insert'][0]) && $results['insert'][0]->rowCount() > 0) {
         if (isset($forSql['tables'])) reset($forSql['tables']);
         echo $version == "1.1.0" ? '<wfs:InsertResults>' : '<wfs:InsertResult>';
         foreach ($results['insert'] as $res) {
@@ -2102,7 +2149,6 @@ function doParse(array $arr)
             $rowIdsChanged[] = $row['gid'];
             if (isset($row['gid'])) {
                 echo $row['gid'];
-                $numOfInserts++;
             } else {
                 echo "nan";
             }
@@ -2127,9 +2173,8 @@ function doParse(array $arr)
         echo $version == "1.1.0" ? '</wfs:InsertResults>' : '</wfs:InsertResult>';
     }
 
-    // UpdateResult
-    $numOfUpdates = 0;
-    if (sizeof($results['update']) > 0) {
+// UpdateResult
+    if (isset($results['update'][0]) && $results['update'][0]->rowCount() > 0) {
         if (isset($forSql2['tables'])) reset($forSql2['tables']);
         echo $version == "1.1.0" ? '<wfs:UpdateResults>' : '<wfs:UpdateResult>';
         foreach ($results['update'] as $res) {
@@ -2140,7 +2185,6 @@ function doParse(array $arr)
             $rowIdsChanged[] = $row['gid'];
             if (isset($row['gid'])) {
                 echo $row['gid'];
-                $numOfUpdates++;
             } else {
                 echo "nan";
             }
@@ -2165,20 +2209,22 @@ function doParse(array $arr)
         echo $version == "1.1.0" ? '</wfs:UpdateResults>' : '</wfs:UpdateResult>';
     }
 
-    // deleteResult
-    $numOfDeletes = 0;
-    if (sizeof($results['delete']) > 0) {
+// deleteResult
+    if (isset($results['delete'][0]) && $results['delete'][0]->rowCount() > 0) {
         if (isset($forSql3['tables'])) reset($forSql3['tables']);
+        echo $version == "1.1.0" ? '<wfs:DeleteResults>' : '<wfs:DeleteResult>';
         foreach ($results['delete'] as $res) {
+            echo $version === "1.1.0" ? '<wfs:Feature>' : '';
+            echo '<ogc:FeatureId fid="';
+            if (isset($forSql3['tables'])) echo current($forSql3['tables']) . ".";
             $row = $postgisObject->fetchRow($res);
             $rowIdsChanged[] = $row['gid'];
-            if ($row['gid']) {
+            if (isset($row['gid'])) {
                 echo $row['gid'];
-                $numOfDeletes++;
             } else {
                 echo "nan";
             }
-
+            echo '" />';
             if (isset($row["gc2_workflow"])) {
                 $workflowData[] = array(
                     "schema" => $postgisschema,
@@ -2193,24 +2239,11 @@ function doParse(array $arr)
                 );
             }
             if (isset($forSql2['tables'])) next($forSql2['tables']);
+            echo $version === "1.1.0" ? '</wfs:Feature>' : '';
         }
+        echo $version == "1.1.0" ? '</wfs:DeleteResults>' : '</wfs:DeleteResult>';
     }
 
-    // TransactionSummary
-    echo '<wfs:TransactionSummary>';
-    if (isset($results)) foreach ($results as $operation => $result) {
-
-        if ($operation == "insert") {
-            echo "<wfs:totalInserted>" . $numOfInserts . "</wfs:totalInserted>";
-        }
-        if ($operation == "update") {
-            echo "<wfs:totalUpdated>" . $numOfUpdates . "</wfs:totalUpdated>";
-        }
-        if ($operation == "delete") {
-            echo "<wfs:totalDeleted>" . $numOfDeletes . "</wfs:totalDeleted>";
-        }
-    }
-    echo '</wfs:TransactionSummary>';
 
     if ($version == "1.1.0") {
         echo '</wfs:TransactionResponse>';
@@ -2319,18 +2352,22 @@ ob_flush();
  * @param array<array<mixed>> $arr
  * @param bool|null $coordsOnly
  * @param string|null $axisOrder
+ * @param string|null $globalSrid
  * @return array<string|null>
  */
-function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null): array
+function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null, ?string $globalSrid = null): array
 {
+    //makeExceptionReport(print_r($arr, true));
     $str = "";
     $strEnd = "";
     $srid = null;
+    $fid = null;
     foreach ($arr as $key => $value) {
         $str = "";
         $type = strtoupper($key);
         $strEnd = ")";
-        $srid = isset($value["srsName"]) ? parseEpsgCode($value["srsName"]) : null;
+        $srid = isset($value["srsName"]) ? parseEpsgCode($value["srsName"]) : $globalSrid;
+        $fid = $value["gml:id"] ?? null;
         if (isset($value["srsName"])) {
             $axisOrder = getAxisOrder($value["srsName"]);
         }
@@ -2380,7 +2417,7 @@ function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null)
                         } elseif (isset($v["posList"]) && is_array($v["posList"])) {
                             $str .= ",(" . postListToWKT($v["posList"]["_content"], $axisOrder) . ")";
                         } elseif (isset($v["posList"])) {
-                            $str .= ",(" . ostListToWKT($v["posList"], $axisOrder) . ")";
+                            $str .= ",(" . postListToWKT($v["posList"], $axisOrder) . ")";
                         }
                     }
                 }
@@ -2425,7 +2462,7 @@ function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null)
 
         }
     }
-    return [$str . $strEnd . "\n", $srid];
+    return [$str . $strEnd . "\n", $srid, $fid];
 }
 
 /**
@@ -2486,11 +2523,12 @@ function postListToWKT(string $str, string $axisOrder): string
 }
 
 /**
- * @param string $epsg
- * @return string
+ * @param string|null $epsg
+ * @return string|null
  */
-function getAxisOrder(string $epsg): string
+function getAxisOrder(?string $epsg): ?string
 {
+    if (!$epsg) return null;
     if ($epsg == "urn:ogc:def:crs:EPSG::4326" || substr($epsg, 0, 23) === "urn:x-ogc:def:crs:EPSG:") {
         $first = "latitude";
     } else {
@@ -2500,11 +2538,12 @@ function getAxisOrder(string $epsg): string
 }
 
 /**
- * @param string $epsg
- * @return string
+ * @param string|null $epsg
+ * @return string|null
  */
-function parseEpsgCode(string $epsg): string
+function parseEpsgCode(?string $epsg): ?string
 {
+    if (!$epsg) return null;
     $split = explode(":", $epsg);
     $clean = end($split);
     $clean = preg_replace("/[\w]\./", "", $clean);
@@ -2580,16 +2619,10 @@ function parseFilter($filter, string $table): string
         $st['schema'] = $postgisschema;
     }
     $primeryKey = $postgisObject->getPrimeryKey($st['schema'] . "." . $st['table']);
-    $serializer_options = array(
-        'indent' => '  ',
-    );
-    $Serializer = new XML_Serializer($serializer_options);
     if (!is_array($filter[0]) && isset($filter) && !(isset($filter['And']) or isset($filter['Or']) or isset($filter['Not']))) {
         $filter = array(0 => $filter);
     }
-
     $sridOfTable = $postgisObject->getGeometryColumns($table, "srid");
-
     $i = 0;
     $boolOperator = null;
     $where = [];
@@ -2597,6 +2630,7 @@ function parseFilter($filter, string $table): string
         if ($key == "And" || $key == "Or") {
             $boolOperator = $key;
         }
+
 
         //if (isset($arr['Not'])) {
         //$where[] = parseFilter($arr['Not'],$table,"<>");
@@ -2608,37 +2642,38 @@ function parseFilter($filter, string $table): string
         // PropertyIsEqualTo
         $arr['PropertyIsEqualTo'] = addDiminsionOnArray($arr['PropertyIsEqualTo']);
         if (is_array($arr['PropertyIsEqualTo'])) foreach ($arr['PropertyIsEqualTo'] as $value) {
-            $where[] = $value['PropertyName'] . "=" . $postgisObject->quote($value['Literal']);
+            $value["PropertyName"] = $value["PropertyName"] == "gml:name" ? $primeryKey["attname"] : $value["attname"];
+            $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . "\"=" . $postgisObject->quote($value['Literal']);
         }
         // PropertyIsNotEqualTo
         $arr['PropertyIsNotEqualTo'] = addDiminsionOnArray($arr['PropertyIsNotEqualTo']);
         if (is_array($arr['PropertyIsNotEqualTo'])) foreach ($arr['PropertyIsNotEqualTo'] as $value) {
-            $where[] = $value['PropertyName'] . "<>'" . $value['Literal'] . "'";
+            $where[] = "\"" . $value['PropertyName'] . "\"<>'" . $value['Literal'] . "'";
         }
         // PropertyIsLessThan
         $arr['PropertyIsLessThan'] = addDiminsionOnArray($arr['PropertyIsLessThan']);
         if (is_array($arr['PropertyIsLessThan'])) foreach ($arr['PropertyIsLessThan'] as $value) {
-            $where[] = $value['PropertyName'] . "<'" . $value['Literal'] . "'";
+            $where[] = "\"" . $value['PropertyName'] . "\"<'" . $value['Literal/'] . "'";
         }
         // PropertyIsGreaterThan
         $arr['PropertyIsGreaterThan'] = addDiminsionOnArray($arr['PropertyIsGreaterThan']);
         if (is_array($arr['PropertyIsGreaterThan'])) foreach ($arr['PropertyIsGreaterThan'] as $value) {
-            $where[] = $value['PropertyName'] . ">'" . $value['Literal'] . "'";
+            $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . "\">'" . $value['Literal'] . "'";
         }
         // PropertyIsLessThanOrEqualTo
         $arr['PropertyIsLessThanOrEqualTo'] = addDiminsionOnArray($arr['PropertyIsLessThanOrEqualTo']);
         if (is_array($arr['PropertyIsLessThanOrEqualTo'])) foreach ($arr['PropertyIsLessThanOrEqualTo'] as $value) {
-            $where[] = $value['PropertyName'] . "<='" . $value['Literal'] . "'";
+            $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . "\"<='" . $value['Literal'] . "'";
         }
         //PropertyIsGreaterThanOrEqualTo
         $arr['PropertyIsGreaterThanOrEqualTo'] = addDiminsionOnArray($arr['PropertyIsGreaterThanOrEqualTo']);
         if (is_array($arr['PropertyIsGreaterThanOrEqualTo'])) foreach ($arr['PropertyIsGreaterThanOrEqualTo'] as $value) {
-            $where[] = $value['PropertyName'] . ">='" . $value['Literal'] . "'";
+            $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . "\">='" . $value['Literal'] . "'";
         }
         //PropertyIsLike
         $arr['PropertyIsLike'] = addDiminsionOnArray($arr['PropertyIsLike']);
         if (is_array($arr['PropertyIsLike'])) foreach ($arr['PropertyIsLike'] as $value) {
-            $where[] = $value['PropertyName'] . " LIKE '%" . $value['Literal'] . "%'";
+            $where[] = "\"" . $value['PropertyName'] . "\" LIKE '%" . $value['Literal'] . "%'";
         }
         //PropertyIsBetween
         $w = [];
@@ -2646,9 +2681,9 @@ function parseFilter($filter, string $table): string
         if (is_array($arr['PropertyIsBetween'])) {
             foreach ($arr['PropertyIsBetween'] as $value) {
                 if ($value['LowerBoundary'])
-                    $w[] = $value['PropertyName'] . " > '" . $value['LowerBoundary']['Literal'] . "'";
+                    $w[] = "\"" . $value['PropertyName'] . "\" > '" . $value['LowerBoundary']['Literal'] . "'";
                 if ($value['UpperBoundary'])
-                    $w[] = $value['PropertyName'] . " < '" . $value['UpperBoundary']['Literal'] . "'";
+                    $w[] = "\"" . $value['PropertyName'] . "\" < '" . $value['UpperBoundary']['Literal'] . "'";
             }
             $where[] = implode(" AND ", $w);
         }
@@ -2663,8 +2698,8 @@ function parseFilter($filter, string $table): string
         // GmlObjectId
         $arr['GmlObjectId'] = addDiminsionOnArray($arr['GmlObjectId']);
         if (is_array($arr['GmlObjectId'])) foreach ($arr['GmlObjectId'] as $value) {
-            $value['id'] = preg_replace("/{$table}\./", "", $value['id']); // remove table name
-            $where[] = "{$primeryKey['attname']}=" . $value['id'];
+            $value['gml:id'] = preg_replace("/{$table}\./", "", $value['gml:id']); // remove table name
+            $where[] = "{$primeryKey['attname']}='" . $value['gml:id'] . "'";
         }
         //Intersects
         $arr['Intersects'] = addDiminsionOnArray($arr['Intersects']);
