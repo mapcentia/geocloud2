@@ -2381,7 +2381,6 @@ function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null,
     $fid = null;
     foreach ($arr as $key => $value) {
         $str = "";
-        $type = strtoupper($key);
         $strEnd = ")";
         $srid = isset($value["srsName"]) ? parseEpsgCode($value["srsName"]) : $globalSrid;
         $fid = $value["gml:id"] ?? null;
@@ -2408,7 +2407,6 @@ function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null,
                 break;
             case "gml:Polygon":
                 $str .= $coordsOnly ? "((" : "POLYGON((";
-
                 $v = $value["gml:outerBoundaryIs"]["gml:LinearRing"] ?: $value["gml:exterior"]["gml:LinearRing"];
                 if (isset($v["gml:coordinates"]) && is_array($v["gml:coordinates"])) {
                     $str .= coordinatesToWKT($v["gml:coordinates"]["_content"], $axisOrder);
