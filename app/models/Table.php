@@ -902,7 +902,7 @@ class Table extends Model
                     $response['code'] = 400;
                     return $response;
                 }
-                $sql .= "ALTER TABLE {$this->table} RENAME \"{$value->id}\" TO \"{$safeColumn}\";";
+                $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " RENAME \"{$value->id}\" TO \"{$safeColumn}\";";
                 $value->column = $safeColumn;
                 unset($fieldconfArr[$value->id]);
                 $response['message'] = "Renamed";
@@ -957,7 +957,7 @@ class Table extends Model
                 $response['code'] = 400;
                 return $response;
             }
-            $sql .= "ALTER TABLE {$this->table} DROP COLUMN {$value};";
+            $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " DROP COLUMN \"{$value}\"";
             unset($fieldconfArr[$value]);
         }
         $this->execQuery($sql, "PDO", "transaction");
@@ -1048,7 +1048,7 @@ class Table extends Model
                 $type = "varchar(255)";
                 break;
         }
-        $sql .= "ALTER TABLE {$this->table} ADD COLUMN {$safeColumn} {$type};";
+        $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ADD COLUMN \"{$safeColumn}\" {$type};";
         $this->execQuery($sql, "PDO", "transaction");
         if ((!$this->PDOerror) || (!$sql)) {
             $response['success'] = true;
