@@ -909,6 +909,7 @@ function doParse($arr)
                 foreach ($hey as $typeName => $feature) {
                     $typeName = dropAllNameSpaces($typeName);
                     if (is_array($feature)) { // Skip handles
+                        $primeryKey = $postgisObject->getPrimeryKey($postgisschema . "." . $typeName);
                         // Remove ns from properties
                         foreach ($feature as $field => $value) {
                             $split = explode(":", $field);
@@ -943,6 +944,9 @@ function doParse($arr)
                         $roleObj = $layerObj->getRole($postgisschema, $typeName, $user);
 
                         foreach ($feature as $field => $value) {
+                            if ($field == $primeryKey["attname"]) {
+                                continue;
+                            }
                             $fields[] = $field;
                             $role = $roleObj["data"][$user];
                             if ($tableObj->workflow && ($role == "none" && $parentUser == false)) {
