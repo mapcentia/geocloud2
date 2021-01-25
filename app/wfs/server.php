@@ -17,9 +17,6 @@ use app\models\Layer;
 use app\conf\Connection;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
-Util::disableOb();
-
-const FEATURE_LIMIT = 1000000;
 
 ini_set("max_execution_time", "0");
 
@@ -30,13 +27,11 @@ include __DIR__ . "/../libs/PEAR/XML/Unserializer.php";
 include __DIR__ . "/../libs/PEAR/XML/Serializer.php";
 include __DIR__ . "/../libs/PEAR/Cache_Lite/Lite.php";
 
-if (empty($gmlNameSpace)) {
-    $gmlNameSpace = Connection::$param["postgisdb"];
-}
+Util::disableOb();
+const FEATURE_LIMIT = 1000000;
 
-if (empty($gmlNameSpaceUri)) {
-    $gmlNameSpaceUri = "http://mapcentia.com/" . Connection::$param["postgisdb"];
-}
+$gmlNameSpace = Connection::$param["postgisdb"];
+$gmlNameSpaceUri = "http://mapcentia.com/" . Connection::$param["postgisdb"];
 
 $postgisschema = Connection::$param["postgisschema"];
 $layerObj = new Layer();
@@ -54,7 +49,6 @@ if ($timeSlice != "all") {
 }
 
 $postgisObject = new \app\inc\Model();
-
 $geometryColumnsObj = new \app\controllers\Layer();
 
 $trusted = false;
@@ -80,9 +74,9 @@ $uri = str_replace("index.php", "", $_SERVER['REDIRECT_URL']);
 $uri = str_replace("//", "/", $uri);
 
 $thePath = "http://" . $_SERVER['SERVER_NAME'] . ":8080" . $uri;
-//$thePath = "http://docker_gc2core_1" . $uri;
+$thePath = "http://docker_gc2core_1" . $uri;
 $server = "http://" . $_SERVER['SERVER_NAME'] . "8080";
-//$server = "http://docker_gc2core_1";
+$server = "http://docker_gc2core_1";
 $BBox = null;
 
 $currentTable = null;
@@ -1574,7 +1568,7 @@ function doParse(array $arr)
                             if (isset($split[1]) && $split[0] != "gml") {
                                 $feature[dropAllNameSpaces($field)] = $value;
                                 unset($feature[$field]);
-                            } elseif(!isset($split[1])) {
+                            } elseif (!isset($split[1])) {
                                 $feature[$field] = $value;
                             } else {
                                 unset($feature[$field]); // unsetting gml ns elementes
@@ -2202,9 +2196,9 @@ function doParse(array $arr)
             $row = $postgisObject->fetchRow($res);
             $rowIdsChanged[] = $row['gid'];
             if (isset($row['gid'])) {
-              //  echo $row['gid'];
+                //  echo $row['gid'];
             } else {
-              //  echo "nan";
+                //  echo "nan";
             }
 
             //echo '" />';
@@ -2238,9 +2232,9 @@ function doParse(array $arr)
             $row = $postgisObject->fetchRow($res);
             $rowIdsChanged[] = $row['gid'];
             if (isset($row['gid'])) {
-            //    echo $row['gid'];
+                //    echo $row['gid'];
             } else {
-            //    echo "nan";
+                //    echo "nan";
             }
             //echo '" />';
             if (isset($row["gc2_workflow"])) {
@@ -2257,7 +2251,7 @@ function doParse(array $arr)
                 );
             }
             if (isset($forSql2['tables'])) next($forSql2['tables']);
-           // echo $version === "1.1.0" ? '</wfs:Feature>' : '';
+            // echo $version === "1.1.0" ? '</wfs:Feature>' : '';
         }
         //echo $version == "1.1.0" ? '</wfs:DeleteResults>' : '</wfs:DeleteResult>';
     }
@@ -2817,10 +2811,16 @@ function parseFilter($filter, string $table): string
     return "(" . implode(" " . $boolOperator . " ", $where) . ")";
 }
 
-function numberOfDimensions($array) {
+/**
+ * @param array<mixed> $array
+ * @return int
+ *
+ */
+function numberOfDimensions(array $array): int
+{
     $it = new RecursiveIteratorIterator(new RecursiveArrayIterator($array));
     $d = 0;
-    foreach ( $it as $v )
+    foreach ($it as $v)
         $it->getDepth() >= $d and $d = $it->getDepth();
-    return ++ $d;
+    return ++$d;
 }
