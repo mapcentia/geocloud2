@@ -61,7 +61,7 @@ class Mapfile extends Controller
     }
 
     /**
-     * @return array<bool|string>
+     * @return array<bool|string>|bool
      * @throws PhpfastcacheInvalidArgumentException
      */
     private function writeWms()
