@@ -74,9 +74,9 @@ $uri = str_replace("index.php", "", $_SERVER['REDIRECT_URL']);
 $uri = str_replace("//", "/", $uri);
 
 $thePath = "http://" . $_SERVER['SERVER_NAME'] . ":8080" . $uri;
-$thePath = "http://docker_gc2core_1" . $uri;
+//$thePath = "http://docker_gc2core_1" . $uri;
 $server = "http://" . $_SERVER['SERVER_NAME'] . "8080";
-$server = "http://docker_gc2core_1";
+//$server = "http://docker_gc2core_1";
 $BBox = null;
 
 $currentTable = null;
@@ -1986,8 +1986,8 @@ function doParse(array $arr)
                     $query = "SELECT * FROM {$postgisschema}.{$forSql2['tables'][$i]} WHERE {$forSql2['wheres'][$i]}";
                     $res = $postgisObject->execQuery($query);
                     $originalFeature = $postgisObject->fetchRow($res);
-                    $oldValue = (string)$forSql2['values'][$i][$key];
-                    $newValue = (string)$originalFeature[$primeryKey['attname']];
+                    $newValue = (string)$forSql2['values'][$i][$key];
+                    $oldValue = (string)$originalFeature[$primeryKey['attname']];
                     if ($oldValue != $newValue) {
                         makeExceptionReport("It's not possible to update the primary key ({$primeryKey['attname']}). The value of the key is {$oldValue} and new value is {$newValue}");
                     }
