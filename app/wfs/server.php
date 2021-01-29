@@ -731,6 +731,7 @@ function getCapabilities(\app\inc\Model $postgisObject)
  */
 function getXSD(\app\inc\Model $postgisObject)
 {
+    ob_start();
     print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
     global $server;
     global $depth;
@@ -741,18 +742,18 @@ function getXSD(\app\inc\Model $postgisObject)
     global $postgisschema;
     global $version;
 
-    $atts["targetNamespace"] = $gmlNameSpaceUri;
     $atts["xmlns:xsd"] = "http://www.w3.org/2001/XMLSchema";
     $atts["xmlns:gml"] = "http://www.opengis.net/gml";
     $atts["xmlns:gc2"] = "http://www.mapcentia.com/gc2";
     $atts["xmlns:{$gmlNameSpace}"] = $gmlNameSpaceUri;
     $atts["elementFormDefault"] = "qualified";
+    $atts["targetNamespace"] = $gmlNameSpaceUri;
     $atts["version"] = $version;
     writeTag("open", "xsd", "schema", $atts, True, True);
     $atts = null;
     $depth++;
     $atts["namespace"] = "http://www.opengis.net/gml";
-    $atts["schemaLocation"] = "http://schemas.opengis.net/gml/" . ($version == "1.1.0" ? "3.1.1" : "2.1.2") . "/base/feature.xsd";
+    $atts["schemaLocation"] = "http://schemas.opengis.net/gml/" . ($version == "1.1.0" ? "3.1.1/base" : "2.1.2") . "/feature.xsd";
     writeTag("selfclose", "xsd", "import", $atts, True, True);
     $atts["namespace"] = "http://www.mapcentia.com/gc2";
     $atts["schemaLocation"] = $server . "/xmlschemas/gc2.xsd";
@@ -764,7 +765,8 @@ function getXSD(\app\inc\Model $postgisObject)
         $sql = "SELECT f_table_name,f_geometry_column,srid FROM public.geometry_columns WHERE f_table_schema='{$postgisschema}'";
         $result = $postgisObject->execQuery($sql);
         if ($postgisObject->PDOerror) {
-            makeExceptionReport($postgisObject->PDOerror);
+            makeExceptionReport("Relation doesn't exist", ["exceptionCode" => "InvalidParameterValue"]);
+            //makeExceptionReport($postgisObject->PDOerror);
         }
         while ($row = $postgisObject->fetchRow($result)) {
             $tables[] = $row['f_table_name'];
@@ -788,7 +790,7 @@ function getXSD(\app\inc\Model $postgisObject)
         $sql = "SELECT '{$fields}' FROM \"" . $postgisschema . "\".\"" . $table . "\" LIMIT 1";
         $result = $postgisObject->execQuery($sql);
         if ($postgisObject->PDOerror) {
-            makeExceptionReport($postgisObject->PDOerror);
+            makeExceptionReport("Relation doesn't exist", ["exceptionCode" => "InvalidParameterValue"]);
         }
         $atts["name"] = $table . "Type";
         writeTag("open", "xsd", "complexType", $atts, True, True);
