@@ -121,6 +121,7 @@ if ($HTTP_RAW_POST_DATA) {
     $HTTP_FORM_VARS["SERVICE"] = $arr["service"];
     $HTTP_FORM_VARS["MAXFEATURES"] = $arr["maxFeatures"];
     $HTTP_FORM_VARS["RESULTTYPE"] = $arr["resultType"];
+    $HTTP_FORM_VARS["OUTPUTFORMAT"] = $arr["outputFormat"];
     switch ($unserializer->getRootName()) {
         case "GetFeature":
             if (!is_array($arr['Query'][0])) {
@@ -205,8 +206,9 @@ $srsName = !empty($HTTP_FORM_VARS["SRSNAME"]) ? $HTTP_FORM_VARS["SRSNAME"] : nul
 $version = !empty($HTTP_FORM_VARS["VERSION"]) ? $HTTP_FORM_VARS["VERSION"] : "1.1.0";
 $service = !empty($HTTP_FORM_VARS["SERVICE"]) ? $HTTP_FORM_VARS["SERVICE"] : $HTTP_FORM_VARS["REQUEST"] == "GetFeature" ? "WFS" : null;
 $maxFeatures = !empty($HTTP_FORM_VARS["MAXFEATURES"]) ? $HTTP_FORM_VARS["MAXFEATURES"] : null;
-$outputFormat = !empty($HTTP_FORM_VARS["OUTPUTFORMAT"]) ? $HTTP_FORM_VARS["OUTPUTFORMAT"] : "XMLSCHEMA";
+$outputFormat = !empty($HTTP_FORM_VARS["OUTPUTFORMAT"]) ? $HTTP_FORM_VARS["OUTPUTFORMAT"] : ($version == "1.1.0" ? "GML3" : "GML2");
 $srs = $srsName ? parseEpsgCode($srsName) : $srs ?: App::$param["epsg"] ?: null;
+//die($outputFormat);
 
 if (!empty($HTTP_FORM_VARS["FILTER"])) {
     $wheres[$HTTP_FORM_VARS["TYPENAME"]] = parseFilter($HTTP_FORM_VARS["FILTER"], $HTTP_FORM_VARS["TYPENAME"]);
@@ -218,7 +220,7 @@ if ($version != "1.0.0" && $version != "1.1.0") {
 if (!$service || strcasecmp($service, "wfs") != 0) {
     makeExceptionReport("No service", ["exceptionCode" => "MissingParameterValue", "locator" => "service"]);
 }
-if (strcasecmp($outputFormat, "XMLSCHEMA") != 0) {
+if (strcasecmp($outputFormat, "XMLSCHEMA") != 0 && strcasecmp($outputFormat, "GML2") != 0 && strcasecmp($outputFormat, "GML3") != 0) {
     makeExceptionReport("Output format not supported");
 }
 
@@ -1028,6 +1030,7 @@ function doQuery(string $queryType)
     global $geometryColumnsObj;
     global $specialChars;
     global $version;
+    global $outputFormat;
 
     if (!$srs) {
         makeExceptionReport("You need to specify a srid in the URL.");
@@ -1084,7 +1087,7 @@ function doQuery(string $queryType)
 
                 foreach ($tableObj->metaData as $key => $arr) {
                     if ($arr['type'] == "geometry") {
-                        $gmlVersion = $version == "1.1.0" ? "3" : "2";
+                        $gmlVersion = $outputFormat == "GML3" ? "3" : "2";
                         $longCrs = $version == "1.1.0" ? 1 : 0;
                         $flipAxis = $version == "1.1.0" && $srs == "4326" ? 16 : 0; // flip axis if lat/lon
                         $options = (string)($longCrs + $flipAxis + 4 + 2);
@@ -1250,7 +1253,7 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     print "xmlns:{$gmlNameSpace}=\"{$gmlNameSpaceUri}\" ";
     print "xmlns:gml=\"http://www.opengis.net/gml\" ";
     print "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ";
-    print "numberOfFeatures=\"{$featureCount}\" timeStamp=\"" . date("Y-m-d\TH:i:s.v\Z") . "\" ";
+    if ($version == "1.1.0") print "numberOfFeatures=\"{$featureCount}\" timeStamp=\"" . date("Y-m-d\TH:i:s.v\Z") . "\" ";
     print "xsi:schemaLocation=\"{$gmlNameSpaceUri} {$thePath}?service=wfs&amp;version=1.1.0&amp;request=DescribeFeatureType&amp;typeName=" . $HTTP_FORM_VARS["TYPENAME"];
     print " http://www.opengis.net/wfs http://schemas.opengis.net/wfs/{$version}/WFS-basic.xsd\"";
     print ">";
@@ -1268,7 +1271,7 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
             while ($myrow = $postgisObject->fetchRow($result)) {
                 if (!(empty($myrow["txmin"]))) {
                     //added NR
-                    //genBBox($myrow["txmin"], $myrow["tymin"], $myrow["txmax"], $myrow["tymax"]);
+                    genBBox($myrow["txmin"], $myrow["tymin"], $myrow["txmax"], $myrow["tymax"]);
                 } else {
                     //return;
                 }
