@@ -169,7 +169,7 @@ if (Input::getPath()->part(1) == "api") {
     // V2
     //======================
     Route::add("api/v2/sql/{user}/[method]", function () {
-        if (empty(Input::get("key"))) { // Only start session if no API key is provided
+        if (empty(Input::get("key")) || Input::get("key") == "null") { // Only start session if no API key is provided
             Session::start();
         }
         $r = func_get_arg(0);
