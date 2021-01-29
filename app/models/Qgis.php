@@ -104,6 +104,8 @@ class Qgis extends Model
         $xml = preg_replace("/port='?[0-9]*'?/", "port=" . Connection::$param["postgisport"] . "", $xml);
         $xml = preg_replace("/user=\'?[^\s\\\\]*\'?/", "user=" . Connection::$param["postgisuser"] . "", $xml);
         $xml = preg_replace("/password=\'?[^\s\\\\]*\'?/", "password=" . Connection::$param["postgispw"] . "", $xml);
+        $xml = preg_replace("/host=\'?[^\s\\\\]*\'?/", "host=" . Connection::$param["postgishost"] . "", $xml);
+        $xml = preg_replace("/dbname=\'?[^\s\\\\]*\'?/", "dbname=" . Database::getDb() . "", $xml);
         return $xml;
     }
 }
