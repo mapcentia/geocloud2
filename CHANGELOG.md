@@ -7,7 +7,8 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [UNRELEASED]
 ### Added
 - PHPStan added to project for static code analysis. A lot of issues fixed.
-- WFS-T now supports version 1.1.0. 
+- WFS-T now supports version 1.1.0.
+- KML/KMZ output added to WFS MapFiles. The OGR/KML og OGR/LIBKML drivers are used. Example URL: `/ows/mydb/test/?service=wfs&version=1.0.0&request=getfeature&typename=test.train_station&OUTPUTFORMAT=KML`
   
 ### Changed
 - Migration code moved to `app\migration`.
