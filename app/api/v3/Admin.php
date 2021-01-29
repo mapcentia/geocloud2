@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -23,6 +23,8 @@ use app\conf\Connection;
 use app\migration\Sql;
 use app\models\Qgis;
 use PDOException;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+
 
 /**
  * Class Admin
@@ -60,6 +62,7 @@ class Admin extends Controller
      *     )
      *   )
      * )
+     * @throws PhpfastcacheInvalidArgumentException
      */
     public function get_mapfiles(): array
     {
@@ -204,12 +207,6 @@ class Admin extends Controller
         $response["success"] = true;
         $response["data"] = $data;
         return $response;
-    }
-
-    public function get_reprocessqgis(): array
-    {
-        // TODO
-        // SELECT FROM settings.qgis_files WHERE db=....
     }
 
     /**
