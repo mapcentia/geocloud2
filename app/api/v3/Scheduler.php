@@ -6,7 +6,6 @@
  *
  */
 
-
 namespace app\api\v3;
 
 use app\inc\Controller;
@@ -15,8 +14,17 @@ use app\inc\Input;
 use app\inc\Jwt;
 use app\models\Job;
 
+/**
+ * Class Scheduler
+ * @package app\api\v3
+ */
 class Scheduler extends Controller
 {
+    /**
+     * @var \app\models\Tileseeder
+     */
+    public $tileSeeder;
+
     /**
      * Tileseeder constructor.
      */

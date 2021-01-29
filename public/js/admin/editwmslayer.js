@@ -16,6 +16,7 @@ wmsLayer.init = function (record) {
     wmsLayer.numFieldsForStore = [];
     wmsLayer.fieldsForStoreBrackets = [];
     wmsLayer.defaultSql = record.data || "SELECT * FROM " + record.f_table_schema + "." + record.f_table_name;
+    wmsLayer.legendUrl = record.legend_url;
 
     $.ajax({
         url: '/controllers/table/columns/' + record.f_table_schema + '.' + record.f_table_name,
@@ -181,8 +182,8 @@ wmsLayer.init = function (record) {
         items: [
             {
                 html: '<table>' +
-                '<tr class="x-grid3-row"><td><b>SQL</b></td></tr>' +
-                '</table>',
+                    '<tr class="x-grid3-row"><td><b>SQL</b></td></tr>' +
+                    '</table>',
                 border: false,
                 bodyStyle: 'padding-left: 3px'
             },
@@ -250,6 +251,82 @@ wmsLayer.init = function (record) {
             }
         ]
     });
+    wmsLayer.legendForm = new Ext.FormPanel({
+        labelWidth: 70,
+        frame: false,
+        border: false,
+        id: "legendForm",
+        viewConfig: {
+            forceFit: true
+        },
+        bodyStyle: 'padding: 10px 5px 0px 5px;',
+        items: [{
+            xtype: 'fieldset',
+            title: __('Settings'),
+            defaults: {
+                anchor: '100%'
+            },
+            items: [
+                {
+                    name: '_key_',
+                    xtype: 'hidden',
+                    value: record._key_
+
+                },
+                {
+                    xtype: 'textfield',
+                    labelAlign: 'top',
+                    fieldLabel: __('Image URL'),
+                    name: 'legend_url',
+                    value: wmsLayer.legendUrl
+                }
+            ]
+        }],
+        buttons: [
+            {
+                text: '<i class="fa fa-check"></i> ' + __('Update'),
+                handler: function () {
+                    var f = Ext.getCmp('legendForm');
+                    if (f.form.isValid()) {
+                        var values = f.form.getValues();
+                        values.legend_url = encodeURIComponent(values.legend_url);
+                        var param = {
+                            data: values
+                        };
+                        param = Ext.util.JSON.encode(param);
+                        Ext.Ajax.request({
+                            url: '/controllers/layer/records/_key_',
+                            method: 'put',
+                            headers: {
+                                'Content-Type': 'application/json; charset=utf-8'
+                            },
+                            params: param,
+                            success: function () {
+                                store.reload();
+                                writeFiles(record._key_);
+                                App.setAlert(App.STATUS_NOTICE, __("Legend URL updated"));
+                            },
+                            failure: function (response) {
+                                Ext.MessageBox.show({
+                                    title: 'Failure',
+                                    msg: __(Ext.decode(response.responseText).message),
+                                    buttons: Ext.MessageBox.OK,
+                                    width: 400,
+                                    height: 300,
+                                    icon: Ext.MessageBox.ERROR
+                                });
+                            }
+                        });
+                    } else {
+                        var s = '';
+                        Ext.iterate(f.form.getValues(), function (key, value) {
+                            s += String.format("{0} = {1}<br />", key, value);
+                        }, this);
+                    }
+                }
+            }
+        ]
+    })
 };
 
 

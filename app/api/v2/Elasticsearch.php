@@ -1,26 +1,31 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\api\v2;
 
-use \app\inc\Input;
-use \app\inc\Util;
-use \app\inc\Route;
-use \app\conf\App;
-use \GuzzleHttp\Client;
+use app\inc\Controller;
+use app\inc\Input;
+use app\inc\Model;
+use app\inc\Util;
+use app\inc\Route;
+use app\conf\App;
+use app\models\Sql_to_es;
+use Exception;
+use GuzzleHttp\Client;
 
-ini_set('max_execution_time', 0);
+ini_set('max_execution_time', '0');
+
 
 /**
  * Class Elasticsearch
  * @package app\api\v2
  */
-class Elasticsearch extends \app\inc\Controller
+class Elasticsearch extends Controller
 {
     /**
      * @var string
@@ -43,7 +48,7 @@ class Elasticsearch extends \app\inc\Controller
     protected $settings;
 
     /**
-     * @var \GuzzleHttp\Client
+     * @var Client
      */
     protected $client;
 
@@ -109,7 +114,7 @@ class Elasticsearch extends \app\inc\Controller
             )
         );
         // Check if there are custom settings
-        if (!$this->settings = @file_get_contents(\app\conf\App::$param["path"] . "/app/conf/elasticsearch_settings.json")) {
+        if (!$this->settings = @file_get_contents(App::$param["path"] . "/app/conf/elasticsearch_settings.json")) {
             $this->settings = json_encode($defaultSettings);
         }
 
@@ -141,7 +146,7 @@ class Elasticsearch extends \app\inc\Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      */
     public function get_search(): array
     {
@@ -221,7 +226,7 @@ class Elasticsearch extends \app\inc\Controller
                 }
             }
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = $e->getCode();
@@ -240,7 +245,7 @@ class Elasticsearch extends \app\inc\Controller
     public function get_map()
     {
         if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key') ?: "")) {
-           // return $response;
+            // return $response;
         }
         $schema = Input::getPath()->part(6);
         $table = Input::getPath()->part(7);
@@ -250,7 +255,7 @@ class Elasticsearch extends \app\inc\Controller
     }
 
     /**
-     * @return mixed
+     * @return array<mixed>
      */
     public function delete_delete(): array
     {
@@ -329,14 +334,14 @@ class Elasticsearch extends \app\inc\Controller
         }
 
         $es = new \app\models\Elasticsearch();
-        $model = new \app\inc\Model();
+        $model = new Model();
 
         // Check which relation type we are dealing with
         // =============================================
 
         $relationCheck = $model->isTableOrView($triggerSchema . "." . $triggerTable);
         if (!$relationCheck["success"]) {
-            return Array
+            return array
             (
                 "success" => false,
                 "message" => "Trigger table doesn't exists",
@@ -356,7 +361,7 @@ class Elasticsearch extends \app\inc\Controller
         // Create or replace notify function in PG
         // =======================================
 
-        $pl = file_get_contents(\app\conf\App::$param["path"] . "/app/scripts/sql/notify_transaction.sql");
+        $pl = file_get_contents(App::$param["path"] . "/app/scripts/sql/notify_transaction.sql");
         // TODO check if sprintf is needed
         $pl = sprintf($pl, $priKey, $priKey, $priKey);
         $result = $model->execQuery($pl, "PG");
@@ -431,7 +436,7 @@ class Elasticsearch extends \app\inc\Controller
 
         if ($insert == "t") {
             $sql = "SELECT * FROM {$fullTable}";
-            $api = new \app\models\Sql_to_es("4326");
+            $api = new Sql_to_es("4326");
             $api->execQuery("set client_encoding='UTF8'", "PDO");
             $res = $api->runSql($sql, $index, $type, $priKey, $db);
             if (!$res["success"]) {
@@ -480,8 +485,6 @@ class Elasticsearch extends \app\inc\Controller
         ];
 
         $map = [
-            "geometry_columns_view" =>
-                [
                     "properties" =>
                         [
                             "properties" =>
@@ -493,30 +496,22 @@ class Elasticsearch extends \app\inc\Controller
                                                 [
                                                     "type" => "keyword"
                                                 ],
-
                                             "f_table_name" => $typeahead,
-
                                             "f_table_abstract" => $typeahead,
-
                                             "f_table_title" => $typeahead,
-
                                             "created" =>
                                                 [
                                                     "type" => "text"
                                                 ],
-
                                             "lastmodified" =>
                                                 [
                                                     "type" => "text"
                                                 ],
-
                                             "layergroup" => $typeahead,
-
                                             "uuid" =>
                                                 [
                                                     "type" => "text"
                                                 ],
-
                                             "tags" =>
                                                 [
                                                     "type" => "text"
@@ -526,15 +521,7 @@ class Elasticsearch extends \app\inc\Controller
                                                 [
                                                     "type" => "object",
                                                     "properties" => [
-                                                        "meta_desc" => [
-
-                                                            "type" => "text",
-                                                            "analyzer" => "auto_complete_analyzer",
-                                                            "search_analyzer" => "auto_complete_search_analyzer",
-                                                            "fielddata" => true
-
-
-                                                        ],
+                                                        "meta_desc" => $typeahead,
                                                         "layer_search_include" => [
                                                             "type" => "boolean"
                                                         ]
@@ -543,13 +530,9 @@ class Elasticsearch extends \app\inc\Controller
                                         ]
                                 ]
                         ]
-                ]
         ];
 
-        // Check if Es is online
-        // =====================
-        $url = $this->host;
-        $ch = curl_init($url);
+        $ch = curl_init($this->host);
         curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
         curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -587,13 +570,13 @@ class Elasticsearch extends \app\inc\Controller
         $installTrigger = false;
 
         $es = new \app\models\Elasticsearch();
-        $model = new \app\inc\Model();
+        $model = new Model();
 
         $priKey = "_key_";
 
         // Create or replace notify function in PG
         // =======================================
-        $pl = file_get_contents(\app\conf\App::$param["path"] . "/app/scripts/sql/notify_transaction.sql");
+        $pl = file_get_contents(App::$param["path"] . "/app/scripts/sql/notify_transaction.sql");
         // TODO check if sprintf is needed
         $pl = sprintf($pl, $priKey, $priKey, $priKey);
         $result = $model->execQuery($pl, "PG");
@@ -648,7 +631,7 @@ class Elasticsearch extends \app\inc\Controller
 
         // Create mapping
         // ==============
-        $res = $es->map($fullIndex, $type, json_encode($map));
+        $res = $es->map($fullIndex, json_encode($map));
         $obj = json_decode($res["json"], true);
         if (isset($obj["error"]) && $obj["error"] != false) {
             $response['success'] = false;
@@ -661,7 +644,7 @@ class Elasticsearch extends \app\inc\Controller
         // ===========
         if (1 == 1) {
             $sql = "SELECT * FROM {$fullTable}";
-            $api = new \app\models\Sql_to_es("4326");
+            $api = new Sql_to_es("4326");
             $api->execQuery("set client_encoding='UTF8'", "PDO");
             $res = $api->runSql($sql, $index, $type, $priKey, $db);
             if (!$res["success"]) {
@@ -708,9 +691,8 @@ class Elasticsearch extends \app\inc\Controller
         $index = $db . "_" . $schema . "_" . $rel;
 
 
-
         $sql = "SELECT * FROM {$fullTable} WHERE gid='{$id}'";
-        $api = new \app\models\Sql_to_es("4326");
+        $api = new Sql_to_es("4326");
         $api->execQuery("set client_encoding='UTF8'", "PDO");
         $res = $api->runSql($sql, $schema, $rel, "gid", $db);
         if (!$res["success"]) {

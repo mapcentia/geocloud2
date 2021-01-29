@@ -1,19 +1,34 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\models;
 
+use app\controllers\Tilecache;
 use app\inc\Model;
-use \app\conf\Connection;
+use app\conf\Connection;
+use app\inc\PgHStore;
+use PDO;
+use PDOException;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
+
+/**
+ * Class Workflow
+ * @package app\models
+ */
 class Workflow extends Model
 {
-    public function getRecords($subuser, $showAll)
+    /**
+     * @param string $subuser
+     * @param bool $showAll
+     * @return array<bool|string|int|array<mixed>>
+     */
+    public function getRecords(string $subuser, bool $showAll): array
     {
         $select = "SELECT DISTINCT ON (version_gid) version_gid AS x,*,workflow->'author' AS author,workflow->'reviewer' AS reviewer,workflow->'publisher' AS publisher, (CASE WHEN status = 1 THEN 'Drafted (1)'  WHEN status = 2 THEN 'Reviewed (2)' WHEN status =3 THEN 'Published (3)' END) AS status_text FROM settings.workflow";
 
@@ -40,17 +55,19 @@ class Workflow extends Model
         }
 
         $this->connect();
-        $this->db->setAttribute(\PDO::ATTR_EMULATE_PREPARES, true);
+        $this->db->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
         $res = $this->prepare($sql);
+
         try {
             $res->execute($args);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 400;
             return $response;
         }
-        while ($row = $this->fetchRow($res, "assoc")) {
+        $arr = [];
+        while ($row = $this->fetchRow($res)) {
             $arr[] = $row;
         }
         $response['success'] = true;
@@ -59,11 +76,19 @@ class Workflow extends Model
         return $response;
     }
 
-    public function touch($schema, $table, $gid, $user)
+    /**
+     * @param string $schema
+     * @param string $table
+     * @param string $gid
+     * @param string $user
+     * @return array<bool|string|int|array<mixed>>
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public function touch(string $schema, string $table, string $gid, string $user): array
     {
         $primeryKey = $this->getPrimeryKey("{$schema}.{$table}");
         $layerObj = new Layer();
-        $roleObj = $layerObj->getRole($schema, $table, $user);
+        $roleObj = $layerObj->getRole($schema, $table);
         $roles = $roleObj["data"];
         $role = $roles[$user];
 
@@ -78,7 +103,7 @@ class Workflow extends Model
         $res = $this->prepare($query);
         try {
             $res->execute(array("gid" => $gid));
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -153,7 +178,7 @@ class Workflow extends Model
         $res = $this->prepare($sql);
         try {
             $res->execute(array("gid" => $gid));
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -166,7 +191,7 @@ class Workflow extends Model
         $res = $this->prepare($query);
         try {
             $res->execute(array("gid" => $gid));
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -174,14 +199,13 @@ class Workflow extends Model
             return $response;
         }
 
-        $query = "INSERT INTO settings.workflow (f_schema_name,f_table_name,gid,status,gc2_user,roles,workflow,version_gid,operation)";
-        $query .= " VALUES('{$schema}','{$table}',{$gid},{$status},'{$user}'," . \app\inc\PgHStore::toPg($roles) . ",{$workflow},{$gc2_version_gid},'update')";
-        //die($query);
+        $query = "INSERT INTO settings.workflow (f_schema_name,f_table_name,gid,status,gc2_user,roles,workflow,version_gid,operation)
+                  VALUES('{$schema}','{$table}',{$gid},{$status},'{$user}'," . PgHStore::toPg($roles) . ",{$workflow},{$gc2_version_gid},'update')";
 
         $res = $this->prepare($query);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -192,7 +216,7 @@ class Workflow extends Model
         $this->commit();
 
         // Bust the cache
-        \app\controllers\Tilecache::bust($schema . "." . $table);
+        Tilecache::bust($schema . "." . $table);
 
         $response['success'] = true;
         $response['message'] = "Workflow updated";

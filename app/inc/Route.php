@@ -1,26 +1,28 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\inc;
 
+use Closure;
+
 class Route
 {
     /**
-     * @var array
+     * @var array<mixed>
      */
     static $params;
 
     /**
      * @param string $uri
-     * @param \Closure|null $func
+     * @param Closure|null $func
      * @param bool $silent
      */
-    static public function add(string $uri, \Closure $func = null, bool $silent = false)
+    static public function add(string $uri, Closure $func = null, bool $silent = false): void
     {
         $signatureMatch = false;
         $e = [];
@@ -31,26 +33,27 @@ class Route
 
         $routeSignature = explode("/", $uri);
         $requestSignature = explode("/", $requestUri);
+        $sizeOfRouteSignature = sizeof($routeSignature);
 
         /*     if (sizeof($requestSignature) > sizeof($routeSignature)) {
                  $signatureMatch = false;
              } else {*/
 
-        for ($i = 0; $i < sizeof($routeSignature); $i++) {
-                if ($routeSignature[$i][0] == '{' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == '}') {
-                    if (!empty($requestSignature[$i])) {
-                        $r[trim($routeSignature[$i], "{}")] = trim($requestSignature[$i], "{}");
-                    } else {
-                        $signatureMatch = false;
-                    }
-                } else if ($routeSignature[$i][0] == '[' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == ']') {
-                    if (!empty($requestSignature[$i])) {
-                        $r[trim($routeSignature[$i], "[]")] = trim($requestSignature[$i], "[]");
-                    }
+        for ($i = 0; $i < $sizeOfRouteSignature; $i++) {
+            if ($routeSignature[$i][0] == '{' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == '}') {
+                if (!empty($requestSignature[$i])) {
+                    $r[trim($routeSignature[$i], "{}")] = trim($requestSignature[$i], "{}");
                 } else {
-                    $e[] = $requestSignature[$i];
-                    $signatureMatch = $requestSignature[$i] == $routeSignature[$i] ? true : false;
+                    $signatureMatch = false;
                 }
+            } else if ($routeSignature[$i][0] == '[' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == ']') {
+                if (!empty($requestSignature[$i])) {
+                    $r[trim($routeSignature[$i], "[]")] = trim($requestSignature[$i], "[]");
+                }
+            } else {
+                $e[] = $requestSignature[$i];
+                $signatureMatch = $requestSignature[$i] == $routeSignature[$i];
+            }
             if (!$signatureMatch) {
                 break;
             }
@@ -108,7 +111,7 @@ class Route
     /**
      *
      */
-    static public function miss()
+    static public function miss(): void
     {
         header('HTTP/1.0 404 Not Found');
         echo "<h1>404 Not Found</h1>";
@@ -119,7 +122,7 @@ class Route
      * @param string $parameter
      * @return string|null
      */
-    static public function getParam(string $parameter)
+    static public function getParam(string $parameter): ?string
     {
         return isset(self::$params[$parameter]) ? self::$params[$parameter] : null;
     }

@@ -1,18 +1,24 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\models;
 
-use \app\inc\Model;
-use \app\conf\App;
-use app\inc\Util;
-use \Firebase\JWT\JWT;
+use app\conf\App;
+use app\inc\Jwt;
+use app\inc\Model;
+use Exception;
+use PDOException;
 
+
+/**
+ * Class Session
+ * @package app\models
+ */
 class Session extends Model
 {
     function __construct()
@@ -20,20 +26,26 @@ class Session extends Model
         parent::__construct();
     }
 
-    private function VDFormat($sValue, $bQuotes = false)
+    /**
+     * @param string $sValue
+     * @param bool $bQuotes
+     * @return string
+     */
+    private function VDFormat(string $sValue, bool $bQuotes = false): string
     {
         $sValue = trim($sValue);
         if ($bQuotes xor get_magic_quotes_gpc()) {
             $sValue = $bQuotes ? addslashes($sValue) : stripslashes($sValue);
         }
-
         return $sValue;
     }
 
-    public function check()
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    public function check() : array
     {
         $response = [];
-
         if (isset($_SESSION['auth']) && $_SESSION['auth'] == true) {
             $response['data']['message'] = "Session is active";
             $response['data']['session'] = true;
@@ -49,7 +61,6 @@ class Session extends Model
             $response['data']['message'] = "Session not started";
             $response['data']['session'] = false;
         }
-
         return $response;
     }
 
@@ -58,16 +69,17 @@ class Session extends Model
      * @param string $pw
      * @param string $schema
      * @param bool $parentdb
-     * @return array
-     * @throws \Exception
+     * @param bool $tokenOnly
+     * @return array<string, array<string, mixed>|bool|string|int>
+     * @throws Exception
      */
-    public function start(string $sUserID, string $pw, $schema = "public", $parentdb = false, $tokenOnly = false): array
+    public function start(string $sUserID, string $pw, $schema = "public", $parentdb = false, bool $tokenOnly = false): array
     {
         $response = [];
         $pw = $this->VDFormat($pw, true);
 
         $isAuthenticated = false;
-        $setting = new \app\models\Setting();
+        $setting = new Setting();
         $sPassword = $setting->encryptPw($pw);
 
         $sUserIDNotConverted = $sUserID;
@@ -91,15 +103,15 @@ class Session extends Model
                 ":sEmail" => $sUserIDNotConverted,
                 ":parentDb" => $parentdb
             ]);
-
             $rows = $this->fetchAll($res);
         }
 
+        $row = [];
         if (sizeof($rows) === 1) {
             $row = $rows[0];
             if ($row['pw'] === $sPassword || password_verify($pw, $row['pw'])) {
                 $isAuthenticated = true;
-            } elseif (!empty(\app\conf\App::$param['masterPw']) && $sPassword == \app\conf\App::$param['masterPw']) {
+            } elseif (!empty(App::$param['masterPw']) && $sPassword == App::$param['masterPw']) {
                 $isAuthenticated = true;
             }
         }
@@ -126,7 +138,7 @@ class Session extends Model
             $response['data']['screen_name'] = $_SESSION['screen_name'];
             $response['data']['session_id'] = session_id();
             $response['data']['parentdb'] = $_SESSION['parentdb'];
-            $response['data']['subuser'] = $row['parentdb'] ? true : false;;
+            $response['data']['subuser'] = $row['parentdb'] ? true : false;
             $response['data']['email'] = $row['email'];
             $response['data']['properties'] = $properties;
 
@@ -140,7 +152,7 @@ class Session extends Model
                 while ($rowSubUSers = $this->fetchRow($res)) {
                     $_SESSION['subusers'][] = $rowSubUSers["screenname"];
                     $_SESSION['subuserEmails'][$rowSubUSers["screenname"]] = $rowSubUSers["email"];
-                };
+                }
 
                 // Check if user has secure password (bcrypt hash)
                 if (preg_match('/^\$2y\$.{56}$/', $row['pw'])) {
@@ -151,14 +163,14 @@ class Session extends Model
                     $_SESSION['passwordExpired'] = true;
                 }
                 Database::setDb($response['data']['parentdb']);
-                $settings_viewer = new \app\models\Setting();
+                $settings_viewer = new Setting();
                 $response['data']['api_key'] = $settings_viewer->get()['data']->api_key;
             } else {
                 // Get super user key, which are used for JWT secret
                 Database::setDb($response['data']['parentdb']);
-                $settings_viewer = new \app\models\Setting();
+                $settings_viewer = new Setting();
                 $superUserApiKey = $settings_viewer->getApiKeyForSuperUser();
-                $token = \app\inc\Jwt::createJWT($superUserApiKey, $response['data']['parentdb'], $response['data']['screen_name'], !$response['data']['subuser']);
+                $token = Jwt::createJWT($superUserApiKey, $response['data']['parentdb'], $response['data']['screen_name'], !$response['data']['subuser']);
                 return [
                     "access_token" => $token['token'],
                     "token_type" => "bearer",
@@ -168,7 +180,6 @@ class Session extends Model
                 ];
             }
             // Insert into logins
-            //die(Util::clientIp());
             $sql = "INSERT INTO logins (db, \"user\") VALUES(:parentDb, :sUserID)";
             $res = $this->prepare($sql);
             try {
@@ -176,7 +187,7 @@ class Session extends Model
                     ":sUserID" => $sUserID,
                     ":parentDb" => $parentdb
                 ]);
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 // We do not stop login in case of error
             }
         } else {
@@ -197,7 +208,7 @@ class Session extends Model
     }
 
     /**
-     * @return array
+     * @return array<string,bool|string>
      */
     public function stop(): array
     {

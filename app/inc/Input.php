@@ -1,17 +1,22 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\inc;
 
+
+/**
+ * Class Input
+ * @package app\inc
+ */
 class Input
 {
     /**
-     * @var
+     * @var array<string>
      */
     static $params;
     const TEXT_PLAIN = "text/plain";
@@ -21,9 +26,9 @@ class Input
 
     /**
      *
-     * @param array $arr
+     * @param array<string> $arr
      */
-    public static function setParams(array $arr)
+    public static function setParams(array $arr): void
     {
         self::$params = $arr;
     }
@@ -34,8 +39,7 @@ class Input
     public static function getPath(): GetPart
     {
         $request = explode("/", strtok($_SERVER["REQUEST_URI"], '?'));
-        $obj = new GetPart($request);
-        return $obj;
+        return new GetPart($request);
     }
 
     /**
@@ -63,11 +67,11 @@ class Input
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public static function getApiKey()
+    public static function getApiKey(): ?string
     {
-        return $_SERVER['HTTP_GC2_API_KEY'];
+        return $_SERVER['HTTP_GC2_API_KEY'] ?? null;
     }
 
     /**
@@ -95,6 +99,9 @@ class Input
         return urldecode(file_get_contents('php://input'));
     }
 
+    /**
+     * @return array<string>
+     */
     public static function getCookies(): array
     {
         return $_COOKIE;
@@ -123,13 +130,9 @@ class Input
             case "get":
                 $query = $_GET;
                 break;
-            case "post":
-                $query = static::parseQueryString(file_get_contents('php://input'), $raw);
-                break;
             case "put":
-                $query = static::parseQueryString(file_get_contents('php://input'), $raw);
-                break;
             case "delete":
+            case "post":
                 $query = static::parseQueryString(file_get_contents('php://input'), $raw);
                 break;
         }
@@ -148,7 +151,7 @@ class Input
     /**
      * @param string $str
      * @param bool $raw
-     * @return array
+     * @return array<mixed>
      */
     static function parseQueryString(string $str, bool $raw = false): array
     {
@@ -173,13 +176,13 @@ class Input
 class GetPart
 {
     /**
-     * @var array
+     * @var array<string>
      */
     private $parts;
 
     /**
      * GetPart constructor.
-     * @param array $request
+     * @param array<string> $request
      */
     function __construct(array $request)
     {
@@ -187,16 +190,16 @@ class GetPart
     }
 
     /**
-     * @param string $e
+     * @param int $e
      * @return string|null
      */
-    function part(string $e)
+    function part(int $e): ?string
     {
-        return isset($this->parts[$e]) ? $this->parts[$e] : null;
+        return isset($this->parts[$e]) ? urldecode($this->parts[$e]) : null;
     }
 
     /**
-     * @return array
+     * @return array<string>
      */
     function parts(): array
     {

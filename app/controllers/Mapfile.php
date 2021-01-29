@@ -1,31 +1,46 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\controllers;
 
-use \app\conf\App;
-use \app\conf\Connection;
-use \app\inc\Util;
+use app\conf\App;
+use app\conf\Connection;
+use app\inc\Controller;
+use app\inc\Model;
+use app\inc\Util;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+
 
 /**
  * Class Mapfile
  * @package app\controllers
  */
-class Mapfile extends \app\inc\Controller
+class Mapfile extends Controller
 {
-    private $fonts;
+
+    /**
+     * @var Model
+     */
     private $postgisObject;
+
+    /**
+     * @var float[]
+     */
     private $bbox;
 
+    /**
+     * Mapfile constructor.
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     function __construct()
     {
         parent::__construct();
-        $this->postgisObject = new \app\inc\Model();
+        $this->postgisObject = new Model();
         $settings = new \app\models\Setting();
         $extents = $settings->get()["data"]->extents;
 
@@ -33,7 +48,11 @@ class Mapfile extends \app\inc\Controller
         $this->bbox = property_exists($extents, $schema) ? $extents->$schema : [-20037508.34, -20037508.34, 20037508.34, 20037508.34]; // Is in EPSG:3857
     }
 
-    public function get_index()
+    /**
+     * @return array<array<bool|string>>
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public function get_index(): array
     {
         $res = [];
         $res[] = $this->writeWms();
@@ -41,9 +60,13 @@ class Mapfile extends \app\inc\Controller
         return $res;
     }
 
+    /**
+     * @return array<bool|string>|bool
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     private function writeWms()
     {
-        $postgisObject = new \app\inc\Model();
+        $postgisObject = new Model();
         $user = Connection::$param['postgisdb'];
 
         $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),4326)) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
@@ -97,7 +120,7 @@ class Mapfile extends \app\inc\Controller
         "wms_srs"    <?php echo "\"" . (!empty(App::$param['advertisedSrs']) ? implode(" ", App::$param['advertisedSrs']) : "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832") . "\"\n" ?>
         "wms_name"    "<?php echo $user; ?>"
         "wms_format"    "image/png"
-        "wms_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
+        "wms_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/__USER__/<?php echo Connection::$param['postgisschema']; ?>/"
         "wms_enable_request" "*"
         "ows_encoding" "UTF-8"
         "wms_extent" "<?php echo implode(" ", $extent) ?>"
@@ -365,7 +388,7 @@ class Mapfile extends \app\inc\Controller
                 }
                 $arr = $sortedArr;
                 for ($i = 0; $i < sizeof($arr); $i++) {
-                    $arrNew[$i] = (array)\app\inc\Util::casttoclass('stdClass', $arr[$i]);
+                    $arrNew[$i] = (array)Util::casttoclass('stdClass', $arr[$i]);
                     $arrNew[$i]['id'] = $i;
                 }
                 $classArr = array("data" => !empty($arrNew) ? $arrNew : null);
@@ -376,9 +399,9 @@ class Mapfile extends \app\inc\Controller
                 <?php $layerName = $row['f_table_schema'] . "." . $row['f_table_name']; ?>
                 NAME "<?php echo $layerName; ?>"
                 STATUS off
-                GROUP "<?php echo $postgisObject::toAscii($row['layergroup']) ?>"
+                GROUP "<?php echo !empty($row['layergroup']) ? $postgisObject::toAscii($row['layergroup']) : "" ?>"
                 <?php if ($row['filter']) { ?>
-                    FILTER "<?php echo $row['filter']; ?>"
+                    PROCESSING "NATIVE_FILTER=<?php echo $row['filter']; ?>"
                 <?php } ?>
                 <?php
                 if (!empty($layerArr['data'][0]['geotype']) && $layerArr['data'][0]['geotype'] != "Default") {
@@ -527,9 +550,12 @@ class Mapfile extends \app\inc\Controller
                 "gml_types" "auto"
                 "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
                 "gml_<?php echo $row['f_geometry_column'] ?>_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
-                <?php if ($row['wmssource']) {
+                <?php if ($row['wmssource'] && empty($row['legend_url'])) {
                     $wmsCon = str_replace(array("layers", "LAYERS"), "LAYER", $row['wmssource']);
                     echo "\"wms_get_legend_url\" \"{$wmsCon}&REQUEST=getlegendgraphic\"\n";
+                } ?>
+                <?php if (!empty($row['legend_url'])) {
+                    echo "\"wms_get_legend_url\" \"{$row['legend_url']}\"\n";
                 } ?>
                 <?php if (!empty($layerArr['data'][0]['query_buffer'])) echo "\"appformap_query_buffer\" \"" . $layerArr['data'][0]['query_buffer'] . "\"\n"; ?>
                 END
@@ -922,9 +948,13 @@ class Mapfile extends \app\inc\Controller
         return array("success" => true, "message" => "Mapfile written", "ch" => $path . $name);
     }
 
+    /**
+     * @return array<bool|string>
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     private function writeWfs()
     {
-        $postgisObject = new \app\inc\Model();
+        $postgisObject = new Model();
         $user = Connection::$param['postgisdb'];
 
         $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),4326)) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
@@ -984,7 +1014,7 @@ class Mapfile extends \app\inc\Controller
         "wfs_title"    "<?php echo $user; ?>'s OWS"
         "wfs_srs"    <?php echo "\"" . (!empty(App::$param['advertisedSrs']) ? implode(" ", App::$param['advertisedSrs']) : "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832") . "\"\n" ?>
         "wfs_name"    "<?php echo $user; ?>"
-        "wfs_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo Connection::$param['postgisdb']; ?>/<?php echo Connection::$param['postgisschema']; ?>/"
+        "wfs_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/__USER__/<?php echo Connection::$param['postgisschema']; ?>/"
         "wfs_enable_request" "*"
         "wfs_encoding" "UTF-8"
         "wfs_namespace_prefix" "<?php echo $user; ?>"

@@ -1,31 +1,41 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2020 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\inc;
 
-use \app\conf\App;
-use \Phpfastcache\CacheManager;
-use \Phpfastcache\Core\Pool\TaggableCacheItemPoolInterface;
-use \Phpfastcache\Drivers\Files\Config as FilesConfig;
-use \Phpfastcache\Drivers\Redis\Config as RedisConfig;
-use \Phpfastcache\Drivers\Memcached\Config as MemcachedConfig;
+use app\conf\App;
+use Error;
+use Exception;
+use Phpfastcache\CacheManager;
+use Phpfastcache\Core\Item\ExtendedCacheItemInterface;
+use Phpfastcache\Core\Pool\ExtendedCacheItemPoolInterface;
+use Phpfastcache\Core\Pool\TaggableCacheItemPoolInterface;
+use Phpfastcache\Drivers\Files\Config as FilesConfig;
+use Phpfastcache\Drivers\Redis\Config as RedisConfig;
+use Phpfastcache\Drivers\Memcached\Config as MemcachedConfig;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 
 abstract class Cache
 {
 
+    /**
+     * @var ExtendedCacheItemPoolInterface
+     */
     static public $instanceCache;
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
-    static public function setInstance()
+    static public function setInstance(): void
     {
+        $redisConfig = null;
+        $memcachedConfig = null;
         if (!empty(App::$param['appCache']["host"])) {
             $split = explode(":", App::$param['appCache']["host"] ?: "127.0.0.1:6379");
 
@@ -60,8 +70,8 @@ abstract class Cache
                         new RedisConfig($redisConfig)
                     );
                 } catch
-                (\Exception $exception) {
-                    throw new \Exception($exception->getMessage());
+                (Exception $exception) {
+                    throw new Exception($exception->getMessage());
                 }
                 break;
 
@@ -71,8 +81,8 @@ abstract class Cache
                         new MemcachedConfig($memcachedConfig)
                     );
                 } catch
-                (\Exception $exception) {
-                    throw new \Exception($exception->getMessage());
+                (Exception $exception) {
+                    throw new Exception($exception->getMessage());
                 }
                 break;
 
@@ -81,27 +91,27 @@ abstract class Cache
                     self::$instanceCache = CacheManager::getInstance('files',
                         new FilesConfig($fileConfig)
                     );
-                } catch (\Exception $exception) {
-                    throw new \Exception($exception->getMessage());
+                } catch (Exception $exception) {
+                    throw new Exception($exception->getMessage());
                 }
                 break;
         }
     }
 
     /**
-     *
+     * @return array<mixed>
      */
-    static public function clear()
+    static public function clear(): array
     {
         try {
             $res = self::$instanceCache->clear();
-        } catch (\Error $exception) {
+        } catch (Error $exception) {
             return [
                 "code" => 400,
                 "success" => false,
                 "message" => $exception->getMessage()
             ];
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             return [
                 "code" => 400,
                 "success" => false,
@@ -114,50 +124,60 @@ abstract class Cache
         ];
     }
 
-    static public function deleteItemsByTagsAll(array $tags)
+    /**
+     * @param array<string> $tags
+     */
+    static public function deleteItemsByTagsAll(array $tags): void
     {
         self::$instanceCache->deleteItemsByTags($tags, TaggableCacheItemPoolInterface::TAG_STRATEGY_ALL); // V8
     }
 
-    static public function deleteItemsByTags(array $tags)
+    /**
+     * @param array<string> $tags
+     */
+    static public function deleteItemsByTags(array $tags): void
     {
         self::$instanceCache->deleteItemsByTags($tags, TaggableCacheItemPoolInterface::TAG_STRATEGY_ONE);
     }
 
     /**
      * @param string $key
-     * @return |null
+     * @return ExtendedCacheItemInterface|null
      */
-    static public function getItem(string $key)
+    static public function getItem(string $key): ?ExtendedCacheItemInterface
     {
         try {
             $CachedString = self::$instanceCache->getItem($key);
-        } catch (\Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException $exception) {
-            $CachedString = null;
-        } catch (\Error $exception) {
+        } catch (PhpfastcacheInvalidArgumentException | Error $exception) {
             $CachedString = null;
         }
         return $CachedString;
     }
 
     /**
-     * @param $CachedString
+     * @param ExtendedCacheItemInterface $CachedString
      */
-    static public function save($CachedString)
+    static public function save(ExtendedCacheItemInterface $CachedString): void
     {
         try {
             self::$instanceCache->save($CachedString);
-        } catch (\Error $exception) {
+        } catch (Error $exception) {
             error_log($exception->getMessage());
         }
     }
 
-    static public function getStats()
+    /**
+     * @return array<mixed>
+     */
+    static public function getStats(): array
     {
         return (array)self::$instanceCache->getStats();
     }
 
-    static public function getItemsByTagsAsJsonString()
+    /**
+     * @return array<mixed>
+     */
+    static public function getItemsByTagsAsJsonString(): array
     {
         return self::$instanceCache->getItems();
     }

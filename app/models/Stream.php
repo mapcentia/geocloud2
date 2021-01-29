@@ -1,19 +1,21 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
-
-
 namespace app\models;
 
-ini_set('max_execution_time', 0);
+ini_set("max_execution_time", "0");
 
 use app\inc\Model;
 use app\inc\Util;
+use Exception;
+use PDOException;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+
 
 /**
  * Class Stream
@@ -37,10 +39,11 @@ class Stream extends Model
     }
 
     /**
-     * @param $q
+     * @param string $q
      * @return string
+     * @throws PhpfastcacheInvalidArgumentException
      */
-    public function runSql($q): string
+    public function runSql(string $q): string
     {
         $i = 0;
         $geometries = null;
@@ -53,7 +56,7 @@ class Stream extends Model
         try {
             $res = $this->prepare($sqlView);
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             //$this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -79,7 +82,7 @@ class Stream extends Model
         try {
             $this->prepare("DECLARE curs CURSOR FOR {$sql}")->execute();
             $innerStatement = $this->prepare("FETCH 1 FROM curs");
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 400;
@@ -89,7 +92,7 @@ class Stream extends Model
         Util::disableOb();
         header('Content-type: text/plain; charset=utf-8');
         try {
-            while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement, "assoc")) {
+            while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
                 $arr = [];
                 foreach ($row as $key => $value) {
                     if ($arrayWithFields[$key]['type'] == "geometry") {
@@ -122,26 +125,26 @@ class Stream extends Model
             }
             if ($json) {
                 echo str_pad($json, 4096);
-            };
+            }
             $this->execQuery("CLOSE curs");
             $this->commit();
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 410;
-            return $response;
+            return serialize($response);
         }
         die();
     }
 
     /**
-     * @param array $array
+     * @param array<mixed> $array
      * @param string $key
      * @param mixed $value
-     * @return mixed
+     * @return array<mixed>
      */
-    private function array_push_assoc($array, $key, $value)
+    private function array_push_assoc(array $array, string $key, $value) : array
     {
         $array[$key] = $value;
         return $array;

@@ -13,11 +13,12 @@ include_once(__DIR__ . "/../vendor/autoload.php");
 
 new \app\conf\App();
 
-use \app\conf\App;
-use \app\conf\Connection;
-use \app\inc\Util;
+use app\conf\App;
+use app\conf\Connection;
+use app\inc\Cache;
+use app\inc\Util;
 
-\app\inc\Cache::setInstance();
+Cache::setInstance();
 
 
 $report = [];
@@ -119,16 +120,19 @@ if (is_numeric($safeName[0])) {
     $safeName = "_" . $safeName;
 }
 
-if ($grid == null) {
 
-}
-
-function which()
+/**
+ * @return string
+ */
+function which(): string
 {
     return "/usr/local/bin/ogr2ogr";
 }
 
-function getCmd()
+/**
+ *
+ */
+function getCmd(): void
 {
     global $encoding, $srid, $dir, $tempFile, $type, $db, $workingSchema, $randTableName, $downloadSchema, $url, $report, $out, $err;
 
@@ -162,7 +166,10 @@ function getCmd()
     exec($cmd . ' 2>&1', $out, $err);
 }
 
-function getCmdPaging()
+/**
+ *
+ */
+function getCmdPaging(): void
 {
     global $randTableName, $type, $db, $workingSchema, $url, $grid, $id, $encoding, $downloadSchema, $table, $pass, $cellTemps, $report, $numberOfFeatures;
 
@@ -175,7 +182,7 @@ function getCmdPaging()
     $res = $table->execQuery($sql);
     $cellTemps = [];
 
-    function fetch($row, $url, $randTableName, $encoding, $downloadSchema, $workingSchema, $type, $db, $id)
+    function fetch($row, $url, $randTableName, $encoding, $downloadSchema, $workingSchema, $type, $db, $id): void
     {
         global $pass, $count, $cellNumber, $table, $cellTemps, $id, $numberOfFeatures, $srid, $out, $err, $tmpDir;
         $out = [];
@@ -190,7 +197,7 @@ function getCmdPaging()
             $pass = false;
         };
 
-        $cmd = "PGCLIENTENCODING={$encoding} " . which("ogr2ogr") . " " .
+        $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
             "-overwrite " .
             "-preserve_fid " .
             "-dim 2 " .
@@ -220,7 +227,7 @@ function getCmdPaging()
 
         if (!$pass) {
             if ($count > 2) {
-                print "\nError; Too many recursive tries to fetch cell #{$cellNumber}";
+                print "\nError: Too many recursive tries to fetch cell #{$cellNumber}";
                 cleanUp();
                 exit(1);
             }

@@ -113,12 +113,6 @@ if (!function_exists('is_a'))
    }
 }
 
-if (!class_exists('stdClass')) {
-    /* PHP5 doesn't define this? */
-    class stdClass {
-        function __constructor() {}
-    };
-}
 
 class SOAP_Base_Object extends PEAR
 {

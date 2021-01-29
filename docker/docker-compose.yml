@@ -36,7 +36,13 @@ services:
       - internal
     ports:
       - "8080:80"
-
+    environment:
+      - POSTGIS_HOST=postgis
+      - POSTGIS_DB=postgres
+      - POSTGIS_USER=gc2
+      - POSTGIS_PORT=5432
+      - POSTGIS_PW=1234
+      - POSTGIS_PGBOUNCER=false
   redis:
     image: redis
     networks:
@@ -44,27 +50,22 @@ services:
       - internal
     ports:
       - "6379:6379"
-
   postgis:
+    build: ./postgis
     image: mapcentia/postgis
     volumes:
       - postgis_var_lib_postgresql:/var/lib/postgresql
-      - postgis_var_log:/var/log
-      - postgis_etc_postgresql:/etc/postgresql
-      - postgis_etc_pgbouncer:/etc/pgbouncer
-    env_file:
-      - env
     networks:
       - default
       - internal
     ports:
       - "5432:5432"
+    environment:
+      - GC2_USER=gc2
+      - GC2_PASSWORD=1234
 
 volumes:
-  postgis_var_log:
-  postgis_etc_postgresql:
   postgis_var_lib_postgresql:
-  postgis_etc_pgbouncer:
 
 
 

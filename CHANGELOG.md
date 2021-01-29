@@ -6,6 +6,38 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNRELEASED]
 ### Added
+- PHPStan added to project for static code analysis. A lot of issues fixed.
+- WFS-T now supports version 1.1.0. 
+  
+### Changed
+- Migration code moved to `app\migration`.
+
+### Fixed
+- The correct online resources are now set in OWS GetCapabilities when using sub-users. This will fix authication issues in QGIS, which always uses online resource URLs from GetCapabilities in WFS. 
+- XML reversed chars in QGS files filters are now converted to HTML entities. So a filters with < > / & ' " will not render the QGS file invalid.
+
+## [2020.12.0] - 2020-21-12
+### Added
+- A custom PNG can now be used as legend for a layer. The URL pointing to the PNG is set in the Legend tab. Must run database migrations.
+- PostgreSQL connection parameters can now be set using environment variables. If the parameters are set in `app/conf/Connection.php` they will have precedence:
+  - POSTGIS_HOST=127.0.0.1
+  - POSTGIS_DB=postgres
+  - POSTGIS_USER=gc2
+  - POSTGIS_PORT=5432
+  - POSTGIS_PW=1234
+  - POSTGIS_PGBOUNCER=false
+    
+### Changed
+- Intercom.io widget is removed.
+- Some unused files are removed.
+- The primary key will now be exposed as an ordinary element in the WFS-t service. Before it was only exposed as the GML FID. It can not be updated and an exception will be thrown if tried.
+
+### Fixed
+- Using `PROCESSING 'NATIVE_FILTER=id=234'` instead of `FILTER` in MapFile.
+- Workflow is fixed.
+
+## [2020.11.0] - 2020-18-11
+### Added
 - OAuth API added with password grant: api/v3/oauth/token. Token is not longer returned using `/api/v2/session/start`.
 - Settings in `\app\conf\App.php` for PostgreSQL settings:
 ```php
@@ -61,8 +93,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - In MapFiles the `wfs_extent` and `wms_extent` will always be set from the GC2 schema extent instead of leaving these properties out and let MapServer calculate the extent. The latter can be very inefficient.
 - A WMS request can now have a parameter called `labels`, which can be either `true` or `false`. If `false` the labels will be switched off Mapserver and QGIS backed layers.
 - A WMS request can now have a `qgs` parameter for QGIS backed layers. The value is the path to the qgs file for the layer (base64 encoded). The path will be used to send the request directly to qgis_serv instead of cascading it through MapServer. Used by Vidi.
-- The Keyvalue API will output newest keys. The field `id` is ordered DESC.
-- QOL: Added 'Z'-types of geometries when creating a layer from scratch.
+- The Keyvalue API will output the newest keys. The field `id` is ordered DESC.
 
 ### Fixed
 - Bug in the scheduler get.php script regarding gridded download.

@@ -2823,6 +2823,7 @@ $(document).ready(function () {
         Ext.getCmp("a10").removeAll();
         Ext.getCmp("a11").removeAll();
         Ext.getCmp("a12").removeAll();
+        Ext.getCmp("a13").removeAll();
         Ext.getCmp("layerStylePanel").disable();
         Ext.getCmp("classTabs").disable();
 
@@ -3063,6 +3064,10 @@ $(document).ready(function () {
         a11.doLayout();
 
         Ext.getCmp("layerStyleTabs").activate(activeTab);
+        var a13 = Ext.getCmp("a13");
+        a13.remove(wmsLayer.legendForm);
+        a13.add(wmsLayer.legendForm);
+        a13.doLayout();
         updateLegend();
     };
 
@@ -3571,7 +3576,7 @@ $(document).ready(function () {
                                                                 },
                                                                 {
                                                                     xtype: "panel",
-                                                                    title: 'Legend',
+                                                                    title: __('Legend'),
                                                                     autoHeight: true,
                                                                     defaults: {
                                                                         border: false,
@@ -3582,7 +3587,11 @@ $(document).ready(function () {
                                                                             xtype: "panel",
                                                                             id: "a6",
                                                                             html: ""
-                                                                        }
+                                                                        },
+                                                                        {
+                                                                            xtype: "panel",
+                                                                            id: "a13"
+                                                                        },
                                                                     ]
                                                                 }
                                                             ]
@@ -4032,9 +4041,9 @@ $(document).ready(function () {
                                                     });
                                                 Ext.getCmp("mainTabs").activate(0);
                                                 setTimeout(function () {
-                                                    mapFrame.attributeForm.init(records[0].get("f_table_name"), r.data[0].pkey);
-                                                    mapFrame.startWfsEdition(records[0].get("f_table_name"), r.data[0].f_geometry_column, filter, true);
-                                                    mapFrame.attributeForm.form.disable();
+                                                    attributeForm.init(records[0].get("f_table_name"), r.data[0].pkey);
+                                                    startWfsEdition(records[0].get("f_table_name"), r.data[0].f_geometry_column, filter, true);
+                                                    attributeForm.form.disable();
                                                 }, 100);
                                             },
                                             failure: function (response) {
@@ -4848,7 +4857,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
 
     }
     $.ajax({
-        url: '/controllers/table/columns/' + layerName,
+        url: '/controllers/table/columns/' + layerName + '?i=1',
         async: false,
         dataType: 'json',
         type: 'GET',

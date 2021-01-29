@@ -1,6 +1,0 @@
-<?php
-header("Content-type: text/plain");
-include_once("../App.php");
-new \app\conf\App();
-$db = new \app\models\Database();
-print_r($db->changeOwner("test", "test"));

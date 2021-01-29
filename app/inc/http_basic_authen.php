@@ -1,18 +1,22 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
-use \app\inc\Input;
+use app\inc\Input;
+use app\models\Setting;
 
 $db = Input::getPath()->part(2);
 $dbSplit = explode("@", $db);
 
 if (!function_exists("makeExceptionReport")) {
-    function makeExceptionReport($value)
+    /**
+     * @param string|array<string> $value
+     */
+    function makeExceptionReport($value): void
     {
         ob_get_clean();
         ob_start();
@@ -51,7 +55,7 @@ if (sizeof($dbSplit) == 2 || !empty($_SESSION["subuser"])) { // is Sub-user
         $subUser = $_SESSION["screen_name"];
     }
 
-    $settingsModel = new \app\models\Setting();
+    $settingsModel = new Setting();
     $settings = $settingsModel->get();
     $userGroup = !empty($settings["data"]->userGroups->$subUser) ? $settings["data"]->userGroups->$subUser : null;
 
@@ -60,7 +64,7 @@ if (sizeof($dbSplit) == 2 || !empty($_SESSION["subuser"])) { // is Sub-user
         $res = $postgisObject->prepare($sql);
         try {
             $res->execute(array("schema" => $postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"] . ".%"));
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 401;
@@ -78,7 +82,7 @@ if (sizeof($dbSplit) == 2 || !empty($_SESSION["subuser"])) { // is Sub-user
 
 if (empty($_SESSION['auth']) || $_SESSION['parentdb'] != $db) {
     if (!$settings) {
-        $settingsModel = new \app\models\Setting();
+        $settingsModel = new Setting();
         $settings = $settingsModel->get();
     }
     // mod_php
@@ -91,7 +95,7 @@ if (empty($_SESSION['auth']) || $_SESSION['parentdb'] != $db) {
         if (strpos(strtolower($_SERVER['HTTP_AUTHENTICATION']), 'basic') === 0)
             list($username, $password) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
     }
-    if (empty($username) || $username != Input::getPath()->part(2) || \app\models\Setting::encryptPw($password) != $settings["data"]->pw) {
+    if (empty($username) || $username != Input::getPath()->part(2) || Setting::encryptPw($password) != $settings["data"]->pw) {
         header('WWW-Authenticate: Basic realm="' . Input::getPath()->part(2) . '"');
         header('HTTP/1.0 401 Unauthorized');
         header("Cache-Control: no-cache, must-revalidate");

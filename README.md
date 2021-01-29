@@ -37,8 +37,8 @@ GC2 uses [Docker](https://docs.docker.com/) to orchestra all the software needed
 First get the docker-compose file:
 
 ```bash
-git clone https://github.com/mapcentia/dockerfiles.git
-cd dockerfiles/docker-compose/local/gc2
+git clone https://github.com/mapcentia/gc2-vidi-docker-compose.git
+cd gc2-vidi-docker-compose
 ```  
 
 Deploy both GC2 and Vidi:
@@ -50,6 +50,8 @@ docker-compose up
 When open GC2 Admin at http://localhost:8080 and create a database by clicking Create New Account.
 
 After you've created a database you can request Vidi at http://localhost:3000/app/[database]/public. Just make sure, there are some layers in `public` schema and they're in a Group.
+
+It's recommended to go through [this workshop](https://mapcentia.github.io/GC2-Vidi-workshop/), which will teach you the basics of GC2/Vidi. 
 
 > The Docker-compose file is for deploying GC2 and Vidi in a test environment.
 > It will expose GC2 on port 8080 and Vidi on 3000

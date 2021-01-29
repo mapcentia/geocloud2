@@ -58,7 +58,7 @@ class UserManagementCest
         ]);
 
         $response = json_decode($I->grabResponse(), true);
-        $I->assertContains('_symbols_are_non_ascii', $response['data']['screenname']);
+        $I->assertStringContainsString('_symbols_are_non_ascii', $response['data']['screenname']);
 
         $I->sendPOST('/api/v2/session/start', json_encode([
             'user' => $this->userName . ' symbols ø § are non ascii',
@@ -315,8 +315,8 @@ class UserManagementCest
         ]);
 
         $response = $I->grabResponse();
-        $I->assertContains('User identifier', $response);
-        $I->assertContains('already exists', $response);
+        $I->assertStringContainsString('User identifier', $response);
+        $I->assertStringContainsString('already exists', $response);
     }
 
     public function shouldNotCreateUserWithSameEmail(\ApiTester $I)
@@ -334,8 +334,8 @@ class UserManagementCest
         ]);
 
         $response = $I->grabResponse();
-        $I->assertContains('Email', $response);
-        $I->assertContains('already exists', $response);
+        $I->assertStringContainsString('Email', $response);
+        $I->assertStringContainsString('already exists', $response);
     }
 
     public function shouldNotCreateUserWithWeakPassword(\ApiTester $I)
@@ -353,7 +353,8 @@ class UserManagementCest
         ]);
 
         $response = $I->grabResponse();
-        $I->assertContains('Password does not meet following requirements', $response);
+        $I->assertStringContainsString
+        ('Password does not meet following requirements', $response);
     }
 
     public function superUserShouldGetInformationAboutHimself(\ApiTester $I)
