@@ -1548,6 +1548,7 @@ function doParse(array $arr)
          * INSERT
          */
         if ($key == "Insert") {
+            $handles = [];
             if (!is_array($featureMember[0]) && isset($featureMember)) {
                 $featureMember = array(0 => $featureMember);
             }
@@ -1694,15 +1695,15 @@ function doParse(array $arr)
                             }
                         }
                         // End HTTP basic authentication
+                    } else {
+                        $handles[] = $feature;
                     }
                 }
             }
-        }
-
-        /**
+        } /**
          * UPDATE
          */
-        if ($key == "Update") {
+        elseif ($key == "Update") {
             if (!is_array($featureMember[0]) && isset($featureMember)) {
                 $featureMember = array(0 => $featureMember);
             }
@@ -1785,17 +1786,18 @@ function doParse(array $arr)
             $pair = array();
             $values = array();
             $fields = array();
-        }
-
-        /**
+        } /**
          * DELETE
          */
-        if ($key == "Delete") {
+        elseif ($key == "Delete") {
             if (!is_array($featureMember[0]) && isset($featureMember)) {
                 $featureMember = array(0 => $featureMember);
             }
             foreach ($featureMember as $hey) {
                 $hey['typeName'] = dropAllNameSpaces($hey['typeName']);
+                if (!isset($hey['Filter'])) {
+                    makeExceptionReport("Must specify filter for delete", ["exceptionCode" => "MissingParameterValue"]);
+                }
 
                 /**
                  * Load pre-processors
@@ -1830,6 +1832,11 @@ function doParse(array $arr)
                 }
                 // End HTTP basic authentication
             }
+        } /**
+         * NATIVE
+         */
+        elseif ($key == "Native") {
+            makeExceptionReport("", ["exceptionCode" => "NoApplicableCode"]);
         }
     }
 
@@ -2157,9 +2164,10 @@ function doParse(array $arr)
 // InsertResult
     if (isset($results['insert'][0]) && $results['insert'][0]->rowCount() > 0) {
         if (isset($forSql['tables'])) reset($forSql['tables']);
+        if (isset($handles)) reset($handles);
         echo $version == "1.1.0" ? '<wfs:InsertResults>' : '<wfs:InsertResult>';
         foreach ($results['insert'] as $res) {
-            echo $version === "1.1.0" ? '<wfs:Feature>' : '';
+            echo $version === "1.1.0" ? "<wfs:Feature handle=\"" . (isset($handles) ? current($handles) : "") . "\">" : "";
             echo '<ogc:FeatureId fid="';
             if (isset($forSql['tables'])) echo current($forSql['tables']) . ".";
             $row = $postgisObject->fetchRow($res);
@@ -2185,6 +2193,7 @@ function doParse(array $arr)
                 );
             }
             if (isset($forSql['tables'])) next($forSql['tables']);
+            if (isset($handles)) next($handles);
             echo $version === "1.1.0" ? '</wfs:Feature>' : '';
         }
         echo $version == "1.1.0" ? '</wfs:InsertResults>' : '</wfs:InsertResult>';
