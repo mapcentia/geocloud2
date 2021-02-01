@@ -22,7 +22,9 @@
         "ext-curl": "*",
         "ext-apache": "*",
         "ext-simplexml": "*",
-        "ext-xml": "*"
+        "ext-xml": "*",
+        "ext-zip": "*",
+        "ext-zlib": "*"
     },
     "require-dev": {
         "codeception/module-asserts": "^1.3",

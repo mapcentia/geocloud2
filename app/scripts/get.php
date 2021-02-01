@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -11,12 +11,17 @@ set_time_limit(0);
 include_once(__DIR__ . "/../conf/App.php");
 include_once(__DIR__ . "/../vendor/autoload.php");
 
-new \app\conf\App();
 
 use app\conf\App;
 use app\conf\Connection;
+use app\controllers\Tilecache;
 use app\inc\Cache;
 use app\inc\Util;
+use app\models\Database;
+use app\models\Layer;
+use app\models\Table;
+
+new App();
 
 Cache::setInstance();
 
@@ -75,7 +80,6 @@ if (!file_exists($lockFile)) {
     @touch($lockFile);
 }
 
-
 // Check if Paging should be used
 if (sizeof(explode("|http", $url)) > 1) {
     $grid = explode("|", $url)[0];
@@ -106,6 +110,7 @@ if (sizeof(explode("|http", $url)) > 1) {
 $dir = App::$param['path'] . "app/tmp/" . $db . "/__vectors";
 $tempFile = md5(microtime() . rand());
 $randTableName = "_" . md5(microtime() . rand());
+$err = null;
 $out = null;
 
 if (!file_exists(App::$param['path'] . "app/tmp/" . $db)) {
@@ -195,7 +200,7 @@ function getCmdPaging(): void
         if (!file_put_contents($tmpDir . $gmlName, Util::wget($wfsUrl . $bbox))) {
             print "\nError: could not get GML for cell #{$row["gid"]}";
             $pass = false;
-        };
+        }
 
         $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
             "-overwrite " .
@@ -272,7 +277,7 @@ function getCmdPaging(): void
                 $res->execute();
                 $numberOfFeatures[] = $table->fetchRow($res)["number"];
                 $cellTemps[] = $cellTemp;
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 $numberOfFeatures[] = 0;
             }
         } else {
@@ -293,6 +298,7 @@ function getCmdPaging(): void
 
     $selects = [];
     $drops = [];
+    $fields = [];
     $gotFields = false;
     foreach ($cellTemps as $t) {
         if (!$gotFields) {
@@ -332,7 +338,7 @@ function getCmdPaging(): void
     $res = $table->prepare($sql);
     try {
         $res->execute();
-    } catch (\PDOException $e) {
+    } catch (PDOException $e) {
         print "Error: ";
         print_r($e->getMessage());
         cleanUp();
@@ -343,7 +349,7 @@ function getCmdPaging(): void
             $res = $table->prepare($d);
             try {
                 $res->execute();
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 print "Warning: ";
                 print_r($e->getMessage());
             }
@@ -357,7 +363,7 @@ function getCmdPaging(): void
     $res = $table->prepare($sql);
     try {
         $res->execute();
-    } catch (\PDOException $e) {
+    } catch (PDOException $e) {
         print "\nNotice: Could not rename id2 to id. Source may not has an 'id' field.";
         $table->execQuery("ROLLBACK TO SAVEPOINT rename_id2");
     }
@@ -367,7 +373,7 @@ function getCmdPaging(): void
     $res = $table->prepare($sql);
     try {
         $res->execute();
-    } catch (\PDOException $e) {
+    } catch (PDOException $e) {
         print "\nNotice: Could not drop id1. Source may not has an 'id' field.";
         $table->execQuery("ROLLBACK TO SAVEPOINT drop_id1");
     }
@@ -402,21 +408,21 @@ function getCmdPaging(): void
                                 cleanUp();
                                 exit(1);
                             }
-                        } catch (\PDOException $e) {
+                        } catch (PDOException $e) {
                             print "Error: ";
                             print_r($e->getMessage());
                             cleanUp();
                             exit(1);
                         }
                     }
-                } catch (\PDOException $e) {
+                } catch (PDOException $e) {
                     print "Error: ";
                     print_r($e->getMessage());
                     cleanUp();
                     exit(1);
                 }
             }
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             print "Error: ";
             print_r($e->getMessage());
             cleanUp();
@@ -444,7 +450,7 @@ function getCmdPaging(): void
             print "\nNotice: Removed no duplicates.";
             $report[DUPSCOUNT] = 0;
         }
-    } catch (\PDOException $e) {
+    } catch (PDOException $e) {
         print "Error: ";
         print_r($e->getMessage());
         $table->rollback();
@@ -463,7 +469,7 @@ function getCmdPaging(): void
     $res = $table->prepare($sql);
     try {
         $res->execute();
-    } catch (\PDOException $e) {
+    } catch (PDOException $e) {
         print "Error: ";
         print_r($e->getMessage());
         $table->rollback();
@@ -486,11 +492,11 @@ function getCmdPaging(): void
             try {
                 $res->execute();
                 print "\nNotice: Dummy gml_id field created.";
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 print "\nWarning: Could not create a dummy gml_id field.";
             }
         }
-    } catch (\PDOException $e) {
+    } catch (PDOException $e) {
         print "\nWarning: Could not detect gml_id field.";
     }
 
@@ -499,7 +505,7 @@ function getCmdPaging(): void
     $res = $table->prepare($sql);
     try {
         $res->execute();
-    } catch (\PDOException $e) {
+    } catch (PDOException $e) {
         print "Error: ";
         print_r($e->getMessage());
         $table->rollback();
@@ -510,7 +516,7 @@ function getCmdPaging(): void
     $res = $table->prepare($sql);
     try {
         $res->execute();
-    } catch (\PDOException $e) {
+    } catch (PDOException $e) {
         print "Error: ";
         print_r($e->getMessage());
         $table->rollback();
@@ -521,7 +527,7 @@ function getCmdPaging(): void
     $res = $table->prepare($sql);
     try {
         $res->execute();
-    } catch (\PDOException $e) {
+    } catch (PDOException $e) {
         print "Error: ";
         print_r($e->getMessage());
         $table->rollback();
@@ -534,7 +540,7 @@ function getCmdPaging(): void
     $res = $table->prepare($sql);
     try {
         $res->execute();
-    } catch (\PDOException $e) {
+    } catch (PDOException $e) {
         print "Error: ";
         print_r($e->getMessage());
         $table->rollback();
@@ -548,7 +554,7 @@ function getCmdPaging(): void
 
 }
 
-function getCmdFile()
+function getCmdFile(): void
 {
     global $randTableName, $type, $db, $workingSchema, $url, $encoding, $srid, $report, $out, $err, $tmpDir;
 
@@ -634,7 +640,7 @@ function getCmdFile()
     array_map('unlink', glob($tmpDir . $randFileName . ".*"));
 }
 
-function getCmdZip()
+function getCmdZip(): void
 {
     global $extCheck2, $dir, $url, $tempFile, $encoding, $srid, $type, $db, $workingSchema, $randTableName, $downloadSchema, $outFileName, $report, $out, $err;
 
@@ -736,8 +742,8 @@ function getCmdZip()
     exec($cmd . ' 2>&1', $out, $err);
 }
 
-\app\models\Database::setDb($db);
-$table = new \app\models\Table($schema . "." . $safeName);
+Database::setDb($db);
+$table = new Table($schema . "." . $safeName);
 
 // Begin transaction
 // =================
@@ -747,7 +753,7 @@ $sql = "CREATE SCHEMA IF NOT EXISTS {$workingSchema}";
 $res = $table->prepare($sql);
 try {
     $res->execute();
-} catch (\PDOException $e) {
+} catch (PDOException $e) {
     print "Error: ";
     print_r($e->getMessage());
     cleanUp();
@@ -756,7 +762,7 @@ try {
 
 // We poll for running jobs
 // ========================
-function poll()
+function poll(): void
 {
     global $getFunction, $lockDir, $report;
     $sleep = 10;
@@ -839,7 +845,7 @@ try {
     print "\nInfo: Total number of fetched features: " . $n;
     $report[FEATURECOUNT] = $n;
 
-} catch (\PDOException $e) {
+} catch (PDOException $e) {
     print "\nNotice: No data for the area (a guess).";
     $report[FEATURECOUNT] = 0;
     $table->rollback();
@@ -854,7 +860,7 @@ if ($preSql) {
         $res = $table->prepare($q);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             print "\nError: ";
             print_r($e->getMessage());
             $table->rollback();
@@ -877,6 +883,7 @@ if ($fieldObj) {
     }
 }
 
+$fields = [];
 foreach ($table->getMetaData("{$workingSchema}.{$randTableName}") as $k => $v) {
     if (!in_array($k, $extras)) {
         $fields[] = $k;
@@ -893,7 +900,7 @@ if ($o != "-overwrite") {
     $res = $table->prepare($sql);
     try {
         $res->execute();
-    } catch (\PDOException $e) {
+    } catch (PDOException $e) {
         print "\nError: ";
         print_r($e->getMessage());
         $table->rollback();
@@ -910,7 +917,7 @@ if ($o != "-overwrite") {
     $res = $table->prepare($sql);
     try {
         $res->execute();
-    } catch (\PDOException $e) {
+    } catch (PDOException $e) {
         print "\nError: ";
         print_r($e->getMessage());
         $table->rollback();
@@ -929,7 +936,7 @@ if ($o != "-overwrite") {
         if ($row) {
             $idxSql = "CREATE INDEX {$safeName}_gix ON {$schema}.{$safeName} USING GIST (the_geom)";
         }
-    } catch (\PDOException $e) {
+    } catch (PDOException $e) {
         print "\nError: ";
         print_r($e->getMessage());
         cleanUp();
@@ -942,7 +949,7 @@ print "\nInfo: Create/update final table...";
 $res = $table->prepare($sql);
 try {
     $res->execute();
-} catch (\PDOException $e) {
+} catch (PDOException $e) {
     print "\nError: ";
     print_r($e->getMessage());
     $table->rollback();
@@ -954,7 +961,7 @@ if ($pkSql) {
     $res = $table->prepare($pkSql);
     try {
         $res->execute();
-    } catch (\PDOException $e) {
+    } catch (PDOException $e) {
         print "\nError: ";
         print_r($e->getMessage());
     }
@@ -964,7 +971,7 @@ if ($idxSql) {
     $res = $table->prepare($idxSql);
     try {
         $res->execute();
-    } catch (\PDOException $e) {
+    } catch (PDOException $e) {
         print "\nError: ";
         print_r($e->getMessage());
     }
@@ -994,7 +1001,7 @@ if ($extra) {
                 $res = $table->prepare($sql);
                 try {
                     $res->execute();
-                } catch (\PDOException $e) {
+                } catch (PDOException $e) {
                     print "\nError: ";
                     print_r($e->getMessage());
                     $table->rollback();
@@ -1009,7 +1016,7 @@ if ($extra) {
             $res = $table->prepare($sql);
             try {
                 $res->execute(array(":value" => $fieldValue));
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 print "\nError: ";
                 print_r($e->getMessage());
                 $table->rollback();
@@ -1030,7 +1037,7 @@ if ($postSql) {
         $res = $table->prepare($q);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             print "\nError: ";
             print_r($e->getMessage());
             $table->rollback();
@@ -1045,11 +1052,11 @@ if ($postSql) {
 $table->commit();
 
 print "\nInfo: Data imported into " . $schema . "." . $safeName;
-print "\nInfo: " . \app\controllers\Tilecache::bust($schema . "." . $safeName)["message"];
+print "\nInfo: " . Tilecache::bust($schema . "." . $safeName)["message"];
 
 // Clean up
 // ========
-function cleanUp($success = 0)
+function cleanUp(bool $success = false): void
 {
     global $schema, $workingSchema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db, $report, $lockFile;
 
@@ -1076,7 +1083,7 @@ function cleanUp($success = 0)
 
     // Update jobs table
     // =================
-    \app\models\Database::setDb("gc2scheduler");
+    Database::setDb("gc2scheduler");
     $job = new \app\inc\Model();
 
     // lastcheck
@@ -1084,7 +1091,7 @@ function cleanUp($success = 0)
     $res = $job->prepare("UPDATE jobs SET lastcheck=:lastcheck WHERE id=:id");
     try {
         $res->execute([":lastcheck" => $success, ":id" => $jobId]);
-    } catch (\PDOException $e) {
+    } catch (PDOException $e) {
         print "\nWarning: ";
         print_r($e->getMessage());
     }
@@ -1094,7 +1101,7 @@ function cleanUp($success = 0)
     $res = $job->prepare("UPDATE jobs SET lastrun=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id");
     try {
         $res->execute(["id" => $jobId]);
-    } catch (\PDOException $e) {
+    } catch (PDOException $e) {
         print "\nWarning: ";
         print_r($e->getMessage());
     }
@@ -1104,7 +1111,7 @@ function cleanUp($success = 0)
     $res = $job->prepare("UPDATE jobs SET report=:report WHERE id=:id");
     try {
         $res->execute(["id" => $jobId, "report" => json_encode($report)]);
-    } catch (\PDOException $e) {
+    } catch (PDOException $e) {
         print "\nWarning: ";
         print_r($e->getMessage());
     }
@@ -1114,7 +1121,7 @@ function cleanUp($success = 0)
         $res = $job->prepare("UPDATE jobs SET lasttimestamp=('now'::TEXT)::TIMESTAMP(0) WHERE id=:id");
         try {
             $res->execute(["id" => $jobId]);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             print "\nWarning: ";
             print_r($e->getMessage());
         }
@@ -1124,15 +1131,15 @@ function cleanUp($success = 0)
     $res = $table->prepare("DROP TABLE IF EXISTS {$workingSchema}.{$randTableName}");
     try {
         $res->execute();
-    } catch (\PDOException $e) {
+    } catch (PDOException $e) {
         print "\nWarning: ";
         print_r($e->getMessage());
     }
     print "\nInfo: Temp table dropped.";
 
     if ($success) {
-        \app\models\Database::setDb($db);
-        $layer = new \app\models\Layer();
+        Database::setDb($db);
+        $layer = new Layer();
         $res = $layer->updateLastmodified($schema . "." . $safeName . ".the_geom");
         print "\nInfo: " . $res["message"];
     }
