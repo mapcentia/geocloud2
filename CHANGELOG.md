@@ -12,6 +12,7 @@ and this project adheres to [CalVer](https://calver.org/).
   
 ### Changed
 - Migration code moved to `app\migration`.
+- Namespace URI in WFS-T is now set like this xmlns:[schema]="http://[host]/[database]/[schema]". If the port differs from 80 or 443 it will be added. This is mostly for testing purposes. 
 
 ### Fixed
 - The correct online resources are now set in OWS GetCapabilities when using sub-users. This will fix authication issues in QGIS, which always uses online resource URLs from GetCapabilities in WFS. 
