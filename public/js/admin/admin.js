@@ -4998,7 +4998,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
             url: "/wfs/" + (subUser ? screenName + "@" + parentdb : screenName) + "/" + schema + "/900913" + (timeSlice ? "/" + timeSlice : "") + "?",
             version: "1.0.0",
             featureType: layerName,
-            featureNS: "http://mapcentia.com/" + parentdb + "/" + schema,
+            featureNS: "http:" + "//" + location.hostname + (location.port ? ":" + location.port : "") + "/" + parentdb + "/" + schema,
             featurePrefix: schema,
             srsName: "EPSG:900913",
             geometryName: geomField, // must be dynamamic

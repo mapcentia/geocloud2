@@ -30,8 +30,10 @@ include __DIR__ . "/../libs/PEAR/Cache_Lite/Lite.php";
 Util::disableOb();
 const FEATURE_LIMIT = 1000000;
 
+$host = "http://" . $_SERVER['SERVER_NAME'] . ":" . $_SERVER['SERVER_PORT'];
+
 $gmlNameSpace = Connection::$param["postgisschema"];
-$gmlNameSpaceUri = "http://mapcentia.com/" . Connection::$param["postgisdb"] . "/" . Connection::$param["postgisschema"];
+$gmlNameSpaceUri = $host . "/" . Connection::$param["postgisdb"] . "/" . Connection::$param["postgisschema"];
 
 $postgisschema = Connection::$param["postgisschema"];
 $layerObj = new Layer();
@@ -73,9 +75,9 @@ $startTime = microtime_float();
 $uri = str_replace("index.php", "", $_SERVER['REDIRECT_URL']);
 $uri = str_replace("//", "/", $uri);
 
-$thePath = "http://" . $_SERVER['SERVER_NAME'] . ":" . $_SERVER['SERVER_PORT'] .$uri;
+$thePath = $host .$uri;
 //$thePath = "http://docker_gc2core_1" . $uri;
-$server = "http://" . $_SERVER['SERVER_NAME'] . ":" . $_SERVER['SERVER_PORT'];
+$server = $host;
 //$server = "http://docker_gc2core_1";
 $BBox = null;
 
