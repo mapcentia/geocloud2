@@ -913,7 +913,7 @@ function getXSD(\app\inc\Model $postgisObject)
                 } elseif ($tableObj->metaData[$atts["name"]]['type'] == "uuid") {
                     $atts["type"] = "xsd:string";
                 } elseif ($tableObj->metaData[$atts["name"]]['type'] == "int") {
-                    $atts["type"] = "xsd:integer";
+                    $atts["type"] = "xsd:int";
                 } else {
                     if ($tableObj->metaData[$atts["name"]]['isArray']) {
                         $atts["type"] = "xsd:string";
@@ -1856,7 +1856,6 @@ function doParse(array $arr)
 
     // First we loop through inserts
     if (isset($forSql) && sizeof($forSql['tables']) > 0) {
-        //makeExceptionReport(print_r($forSql, true));
         $values = [];
         for ($i = 0; $i < sizeof($forSql['tables']); $i++) {
             if ($postgisObject->getGeometryColumns($postgisschema . "." . $forSql['tables'][$i], "editable")) {
@@ -2775,27 +2774,28 @@ function parseFilter($filter, string $table): string
         }
         //BBox
         if ($arr['BBOX']) {
+            //makeExceptionReport($arr);
             $axisOrder = null;
             $sridOfFilter = null;
             $where = [];
-            if (is_array($arr['BBOX']['Box']['coordinates'])) {
-                $arr['BBOX']['Box']['coordinates']['_content'] = str_replace(" ", ",", $arr['BBOX']['Box']['coordinates']['_content']);
-                $coordsArr = explode(",", $arr['BBOX']['Box']['coordinates']['_content']);
+            if (is_array($arr['BBOX']['gml:Box']['gml:coordinates'])) {
+                $arr['BBOX']['gml:Box']['gml:coordinates']['_content'] = str_replace(" ", ",", $arr['BBOX']['gml:Box']['gml:coordinates']['_content']);
+                $coordsArr = explode(",", $arr['BBOX']['gml:Box']['gml:coordinates']['_content']);
             } else {
-                $arr['BBOX']['Box']['coordinates'] = str_replace(" ", ",", $arr['BBOX']['Box']['coordinates']);
-                $coordsArr = explode(",", $arr['BBOX']['Box']['coordinates']);
+                $arr['BBOX']['gml:Box']['gml:coordinates'] = str_replace(" ", ",", $arr['BBOX']['gml:Box']['gml:coordinates']);
+                $coordsArr = explode(",", $arr['BBOX']['gml:Box']['gml:coordinates']);
 
             }
-            if (is_array($arr['BBOX']['Box'])) {
-                $sridOfFilter = parseEpsgCode($arr['BBOX']['Box']['srsName']);
-                $axisOrder = getAxisOrder($arr['BBOX']['Box']['srsName']);
+            if (is_array($arr['BBOX']['gml:Box'])) {
+                $sridOfFilter = parseEpsgCode($arr['BBOX']['gml:Box']['srsName']);
+                $axisOrder = getAxisOrder($arr['BBOX']['gml:Box']['srsName']);
                 if (!$sridOfFilter) $sridOfFilter = $srs; // If no filter on BBOX we think it must be same as the requested srs
                 if (!$sridOfFilter) $sridOfFilter = $sridOfTable; // If still no filter on BBOX we set it to native srs
             }
-            if (is_array($arr['BBOX']['Envelope'])) {
-                $coordsArr = array_merge(explode(" ", $arr['BBOX']['Envelope']['lowerCorner']), explode(" ", $arr['BBOX']['Envelope']['upperCorner']));
-                $sridOfFilter = parseEpsgCode($arr['BBOX']['Envelope']['srsName']);
-                $axisOrder = getAxisOrder($arr['BBOX']['Envelope']['srsName']);
+            if (is_array($arr['BBOX']['gml:Envelope'])) {
+                $coordsArr = array_merge(explode(" ", $arr['BBOX']['gml:Envelope']['lowerCorner']), explode(" ", $arr['BBOX']['Envelope']['upperCorner']));
+                $sridOfFilter = parseEpsgCode($arr['BBOX']['gml:Envelope']['srsName']);
+                $axisOrder = getAxisOrder($arr['BBOX']['gml:Envelope']['srsName']);
                 if (!$sridOfFilter) $sridOfFilter = $srs; // If no filter on BBOX we think it must be same as the requested srs
                 if (!$sridOfFilter) $sridOfFilter = $sridOfTable; // If still no filter on BBOX we set it to native srs
             }
