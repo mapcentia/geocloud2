@@ -73,9 +73,9 @@ $startTime = microtime_float();
 $uri = str_replace("index.php", "", $_SERVER['REDIRECT_URL']);
 $uri = str_replace("//", "/", $uri);
 
-$thePath = "http://" . $_SERVER['SERVER_NAME'] . ":8080" . $uri;
+$thePath = "http://" . $_SERVER['SERVER_NAME'] . $uri;
 //$thePath = "http://docker_gc2core_1" . $uri;
-$server = "http://" . $_SERVER['SERVER_NAME'] . "8080";
+$server = "http://" . $_SERVER['SERVER_NAME'];
 //$server = "http://docker_gc2core_1";
 $BBox = null;
 
@@ -1255,7 +1255,7 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     print "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ";
     if ($version == "1.1.0") print "numberOfFeatures=\"{$featureCount}\" timeStamp=\"" . date("Y-m-d\TH:i:s.v\Z") . "\" ";
     print "xsi:schemaLocation=\"{$gmlNameSpaceUri} {$thePath}?service=wfs&amp;version=1.1.0&amp;request=DescribeFeatureType&amp;typeName=" . $HTTP_FORM_VARS["TYPENAME"];
-    print " http://www.opengis.net/wfs http://schemas.opengis.net/wfs/{$version}/WFS-basic.xsd\"";
+    print " http://www.opengis.net/wfs http://schemas.opengis.net/wfs/{$version}/" . ($version == "1.1.0" ? "wfs" : "WFS-basic") . ".xsd\"";
     print ">";
     if ($resultType == "hits") {
         return;
