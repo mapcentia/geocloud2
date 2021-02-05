@@ -376,6 +376,7 @@ class Sql extends Controller
                     $this->response['code'] = 406;
                     return serialize($this->response);
                 }
+                array_push($this->usedRelations, $table["no_quotes"]);
                 $response = $this->ApiKeyAuthLayer($table["no_quotes"], $this->subUser, true, Input::get('key'), $this->usedRelations);
                 if (!$response["success"]) {
                     return serialize($response);
