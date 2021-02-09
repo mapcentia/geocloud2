@@ -40,24 +40,13 @@ class Util
     }
 
     /**
-     * @param $match
-     * @return null|string|string[]
-     */
-    static function replace_unicode_escape_sequence($match)
-    {
-        return mb_convert_encoding(pack('H*', $match[1]), 'UTF-8', 'UCS-2BE');
-    }
-
-    /**
      * @param string $hexStr
      * @param bool $returnAsString
      * @param string $seperator
      * @return array<string>|bool|string
      */
-    static function hex2RGB($hexStr, bool $returnAsString = false, string $seperator = ',')
+    static function hex2RGB(string $hexStr, bool $returnAsString = false, string $seperator = ',')
     {
-        error_log(print_r($hexStr, true));
-
         $hexStr = preg_replace("/[^0-9A-Fa-f]/", '', $hexStr);
         // Gets a proper hex string
         $rgbArray = array();
@@ -120,7 +109,6 @@ class Util
      */
     static function makeGradient(string $start, string $end, int $steps): array
     {
-
         $theColorBegin = hexdec($start);
         $theColorEnd = hexdec($end);
 
@@ -132,20 +120,11 @@ class Util
         $theG1 = ($theColorEnd & 0x00ff00) >> 8;
         $theB1 = ($theColorEnd & 0x0000ff) >> 0;
 
-        function interpolate($pBegin, $pEnd, $pStep, $pMax)
-        {
-            if ($pBegin < $pEnd) {
-                return (($pEnd - $pBegin) * ($pStep / $pMax)) + $pBegin;
-            } else {
-                return (($pBegin - $pEnd) * (1 - ($pStep / $pMax))) + $pEnd;
-            }
-        }
-
         $grad = array();
         for ($i = 0; $i <= $steps; $i++) {
-            $theR = interpolate($theR0, $theR1, $i, $steps);
-            $theG = interpolate($theG0, $theG1, $i, $steps);
-            $theB = interpolate($theB0, $theB1, $i, $steps);
+            $theR = self::interpolate($theR0, $theR1, $i, $steps);
+            $theG = self::interpolate($theG0, $theG1, $i, $steps);
+            $theB = self::interpolate($theB0, $theB1, $i, $steps);
 
             $theVal = ((($theR << 8) | $theG) << 8) | $theB;
 
@@ -153,6 +132,21 @@ class Util
         }
         return $grad;
 
+    }
+    /**
+     * @param int $pBegin
+     * @param int $pEnd
+     * @param int $pStep
+     * @param int $pMax
+     * @return int
+     */
+    private static function interpolate(int $pBegin, int $pEnd, int $pStep, int $pMax): int
+    {
+        if ($pBegin < $pEnd) {
+            return (($pEnd - $pBegin) * ($pStep / $pMax)) + $pBegin;
+        } else {
+            return (($pBegin - $pEnd) * (1 - ($pStep / $pMax))) + $pEnd;
+        }
     }
 
     /**
@@ -183,14 +177,14 @@ class Util
 
     /**
      * @param string $ip
-     * @param string $range
+     * @param string $ipWithCidr
      * @return bool
      */
-    static function ipInRange(string $ip, string $range): bool
+    static function ipInRange(string $ip, string $ipWithCidr): bool
     {
-        if (strpos($range, '/') !== false) {
+        if (strpos($ipWithCidr, '/') !== false) {
             // $range is in IP/NETMASK format
-            list($range, $netmask) = explode('/', $range, 2);
+            list($range, $netmask) = explode('/', $ipWithCidr, 2);
             if (strpos($netmask, '.') !== false) {
                 // $netmask is a 255.255.0.0 format
                 $netmask = str_replace('*', '0', $netmask);
@@ -210,22 +204,22 @@ class Util
                 #$netmask_dec = bindec(str_pad('', $netmask, '1') . str_pad('', 32-$netmask, '0'));
 
                 # Strategy 2 - Use math to create it
-                $wildcard_dec = pow(2, (32 - $netmask)) - 1;
+                $wildcard_dec = pow(2, (32 - (int)$netmask)) - 1;
                 $netmask_dec = ~$wildcard_dec;
 
                 return (($ip_dec & $netmask_dec) == ($range_dec & $netmask_dec));
             }
         } else {
             // range might be 255.255.*.* or 1.2.3.0-1.2.3.255
-            if (strpos($range, '*') !== false) { // a.b.*.* format
+            if (strpos($ipWithCidr, '*') !== false) { // a.b.*.* format
                 // Just convert to A-B format by setting * to 0 for A and 255 for B
-                $lower = str_replace('*', '0', $range);
-                $upper = str_replace('*', '255', $range);
-                $range = "$lower-$upper";
+                $lower = str_replace('*', '0', $ipWithCidr);
+                $upper = str_replace('*', '255', $ipWithCidr);
+                $ipWithCidr = "$lower-$upper";
             }
 
-            if (strpos($range, '-') !== false) { // A-B format
-                list($lower, $upper) = explode('-', $range, 2);
+            if (strpos($ipWithCidr, '-') !== false) { // A-B format
+                list($lower, $upper) = explode('-', $ipWithCidr, 2);
                 $lower_dec = (float)sprintf("%u", ip2long($lower));
                 $upper_dec = (float)sprintf("%u", ip2long($upper));
                 $ip_dec = (float)sprintf("%u", ip2long($ip));
@@ -265,7 +259,7 @@ class Util
      * @return mixed
      * @throws Exception
      */
-    static function wget($url, $connectTimeout = 10, $timeout = 0)
+    static function wget(string $url, int $connectTimeout = 10, int $timeout = 0)
     {
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
@@ -276,8 +270,12 @@ class Util
         $buffer = curl_exec($ch);
         curl_close($ch);
 
-        if (isset($buffer['curl_error'])) throw new Exception($buffer['curl_error']);
-        if (isset($buffer['http_code']) && $buffer['http_code'] != '200') throw new Exception("HTTP Code = " . $buffer['http_code']);
+        if (isset($buffer['curl_error'])) {
+            throw new Exception($buffer['curl_error']);
+        }
+        if (isset($buffer['http_code']) && $buffer['http_code'] != "200") {
+            throw new Exception("HTTP Code = " . $buffer['http_code']);
+        }
 
         return $buffer;
     }

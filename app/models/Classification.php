@@ -123,8 +123,6 @@ class Classification extends \app\inc\Model
 
     private function store($data)
     {
-        // First we replace unicode escape sequence
-        //$data = preg_replace_callback('/\\\\u([0-9a-f]{4})/i', 'replace_unicode_escape_sequence', $data);
         $tableObj = new Table("settings.geometry_columns_join");
         $obj = new \stdClass;
         $obj->class = $data;
@@ -140,8 +138,6 @@ class Classification extends \app\inc\Model
 
     private function storeWizard($data)
     {
-        // First we replace unicode escape sequence
-        //$data = preg_replace_callback('/\\\\u([0-9a-f]{4})/i', 'replace_unicode_escape_sequence', $data);
         $tableObj = new Table("settings.geometry_columns_join");
         $obj = new \stdClass;
         $obj->classwizard = $data;
