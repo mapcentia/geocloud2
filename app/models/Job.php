@@ -10,6 +10,7 @@ namespace app\models;
 
 ini_set('max_execution_time', "0");
 
+use app\conf\App;
 use app\inc\Model;
 use app\inc\Util;
 use PDOException;
@@ -71,9 +72,9 @@ class Job extends Model
             return $response;
         }
         $cronInstall = $this->createCronJobs();
-        if ($cronInstall !== true) {
+        if ($cronInstall["success"] != true) {
             $response['success'] = false;
-            $response['message'] = $cronInstall;
+            $response['message'] = $cronInstall["message"];
             $response['code'] = 400;
             return $response;
         }
@@ -100,9 +101,9 @@ class Job extends Model
             return $response;
         }
         $cronInstall = $this->createCronJobs();
-        if ($cronInstall !== true) {
+        if ($cronInstall["success"] != true) {
             $response['success'] = false;
-            $response['message'] = $cronInstall;
+            $response['message'] = $cronInstall["message"];
             $response['code'] = 400;
             return $response;
         }
@@ -128,9 +129,9 @@ class Job extends Model
             return $response;
         }
         $cronInstall = $this->createCronJobs();
-        if ($cronInstall !== true) {
+        if ($cronInstall["success"] != true) {
             $response['success'] = false;
-            $response['message'] = $cronInstall;
+            $response['message'] = $cronInstall["message"];
             $response['code'] = 400;
             return $response;
         }
@@ -147,8 +148,6 @@ class Job extends Model
      */
     public function runJob(int $id, string $db, bool $flush = false): ?array
     {
-        ini_set('max_execution_time', "0");
-
         $cmd = null;
         $jobs = $this->getAll($db);
         foreach ($jobs["data"] as $job) {
@@ -188,12 +187,17 @@ class Job extends Model
     }
 
     /**
-     * @return bool|string
+     * @return null|array<bool|string>
      */
-    public function createCronJobs()
+    public function createCronJobs(): ?array
     {
         $jobs = $this->getAll(null);
         exec("crontab -r");
+        if (!empty(App::$param["schedulerDisableCrontab"]) && App::$param["schedulerDisableCrontab"] == true) {
+            return [
+                "success" => true
+            ];
+        }
         foreach ($jobs["data"] as $job) {
             if ($job["active"]) {
                 if (!$job["delete_append"]) $job["delete_append"] = "0";
@@ -201,13 +205,18 @@ class Job extends Model
                 $cmd = "crontab -l | { cat; echo \"{$job["min"]} {$job["hour"]} {$job["dayofmonth"]} {$job["month"]} {$job["dayofweek"]} /usr/bin/timeout -s SIGINT 4h php " . __DIR__ . "/../scripts/get.php {$job["db"]} {$job["schema"]} {$job["name"]} \"\\\"\"" . urldecode($job["url"]) . "\"\\\"\" {$job["epsg"]} {$job["type"]} {$job["encoding"]} {$job["id"]} {$job["delete_append"]} " . (base64_encode($job["extra"]) ?: "null") . " " . (base64_encode($job["presql"]) ?: "null") . " " . (base64_encode($job["postsql"]) ?: "null") . " {$job["download_schema"]} > " . __DIR__ . "/../../public/logs/{$job["id"]}_scheduler.log\n\"; } | crontab - 2>&1";
                 $out = exec($cmd);
                 if ($out) {
-                    return $out . " ({$job["id"]})";
+                    return [
+                        "success" => false,
+                        "message" => $out . " ({$job["id"]})"
+                    ];
                 }
             }
         }
         $this->createRapportJob();
         $this->createPurgeJob();
-        return true;
+        return [
+            "success" => true
+        ];
     }
 
     /**

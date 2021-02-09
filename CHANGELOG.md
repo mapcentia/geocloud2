@@ -9,7 +9,10 @@ and this project adheres to [CalVer](https://calver.org/).
 - PHPStan added to project for static code analysis. A lot of issues fixed.
 - WFS-T now supports version 1.1.0.
 - KML/KMZ output added to WFS MapFiles. The OGR/KML og OGR/LIBKML drivers are used. Example URL: `/ows/mydb/test/?service=wfs&version=1.0.0&request=getfeature&typename=test.train_station&OUTPUTFORMAT=KML`
-  
+- It's now possible to disable scheduler installation of crontab. Useful in a cluster enviroment. 
+  ```php
+  ["schedulerDisableCrontab" => false];
+  ```
 ### Changed
 - Migration code moved to `app\migration`.
 - Namespace URI in WFS-T is now set like this xmlns:[schema]="http://[host]/[database]/[schema]". If the port differs from 80 or 443 it will be added. This is mostly for testing purposes. 
