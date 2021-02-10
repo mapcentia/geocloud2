@@ -6,7 +6,6 @@
  *
  */
 
-
 include_once(__DIR__ . "/../conf/App.php");
 include_once(__DIR__ . "/../vendor/autoload.php");
 
@@ -31,12 +30,12 @@ $sql = "SELECT * FROM jobs ORDER BY id";
 $res = $model->prepare($sql);
 try {
     $res->execute();
-} catch (\PDOException $e) {
+} catch (PDOException $e) {
     print_r($e);
     exit(1);
 }
 
-while ($row = $model->fetchRow($res, "assoc")) {
+while ($row = $model->fetchRow($res)) {
     $args = [
         "--db" => $row["db"],
         "--schema" => $row["schema"],
