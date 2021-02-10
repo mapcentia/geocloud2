@@ -13,6 +13,8 @@ and this project adheres to [CalVer](https://calver.org/).
   ```php
   ["schedulerDisableCrontab" => false];
   ```
+- WFS-T will log all requests with POST bodies to an Apache combined style log.  
+
 ### Changed
 - Migration code moved to `app\migration`.
 - Namespace URI in WFS-T is now set like this xmlns:[schema]="http://[host]/[database]/[schema]". If the port differs from 80 or 443 it will be added. This is mostly for testing purposes.

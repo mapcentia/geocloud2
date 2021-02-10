@@ -102,8 +102,7 @@ $sessionComment = "";
 
 $specialChars = "/['^£$%&*()}{@#~?><>,|=+¬]/";
 
-$logFile = fopen("/var/www/geocloud2/public/logs/wfs_transactions.log", "a");
-fwrite($logFile, Util::clientIp() . " - - [" . date('Y-m-d H:i:s') . "] ");
+$logPath = "/var/www/geocloud2/public/logs/wfs_transactions.log";
 
 // Post method is used
 // ===================
@@ -111,8 +110,6 @@ fwrite($logFile, Util::clientIp() . " - - [" . date('Y-m-d H:i:s') . "] ");
 $HTTP_RAW_POST_DATA = file_get_contents("php://input");
 
 if ($HTTP_RAW_POST_DATA) {
-    fwrite($logFile, "\"POST " . $_SERVER["REQUEST_URI"] . "\" \"" . ($_SERVER['HTTP_USER_AGENT'] ?? null) . "\"\n");
-    fwrite($logFile, $HTTP_RAW_POST_DATA . "\n");
     $HTTP_RAW_POST_DATA = dropNameSpace($HTTP_RAW_POST_DATA);
 
     // HACK. MapInfo 15 sends invalid XML with newline \n and double xmlns:wfs namespace. So we strip those
@@ -174,9 +171,7 @@ if ($HTTP_RAW_POST_DATA) {
 // ==================
 
 } else {
-    fwrite($logFile, "\"GET " . $_SERVER["REQUEST_URI"] . "\" \"" . $_SERVER['HTTP_USER_AGENT'] ?? null . "\"");
     if (sizeof($_GET) > 0) {
-        Log::write($_SERVER['QUERY_STRING'] . "\n\n");
         $HTTP_FORM_VARS = $_GET;
         $HTTP_FORM_VARS = array_change_key_case($HTTP_FORM_VARS, CASE_UPPER); // Make keys case insensative
         $HTTP_FORM_VARS["TYPENAME"] = dropAllNameSpaces($HTTP_FORM_VARS["TYPENAME"]); // We remove name space, so $where will get key without it.
@@ -193,6 +188,8 @@ if ($HTTP_RAW_POST_DATA) {
         $HTTP_FORM_VARS = array("");
     }
 }
+// Log the request
+Log::write($logPath, $HTTP_RAW_POST_DATA);
 
 //HTTP_FORM_VARS is set in script if POST is used
 $HTTP_FORM_VARS = array_change_key_case($HTTP_FORM_VARS, CASE_UPPER); // Make keys case
@@ -312,7 +309,6 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
         makeExceptionReport("No such operation WFS {$HTTP_FORM_VARS["REQUEST"]}", ["exceptionCode" => "OperationNotSupported", "locator" => $HTTP_FORM_VARS["REQUEST"]]);
         break;
 }
-fwrite($logFile, "\n");
 
 /**
  * @param \app\inc\Model $postgisObject
@@ -1267,7 +1263,6 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     if ($sql2) {
         $postgisObject->execQuery("BEGIN");
         $result = $postgisObject->execQuery($sql2 . $from);
-        //Log::write($sql2.$from."\n");
         if ($postgisObject->numRows($result) == 1) {
             while ($myrow = $postgisObject->fetchRow($result)) {
                 if (!(empty($myrow["txmin"]))) {
@@ -2105,7 +2100,6 @@ function doParse(array $arr)
         foreach ($sqls as $operation => $sql) {
             foreach ($sql as $singleSql) {
                 $results[$operation][] = $postgisObject->execQuery($singleSql); // Returning PDOStatement object
-                fwrite($logFile, "{$singleSql}\n\n\n");
             }
         }
     }
@@ -2148,17 +2142,14 @@ function doParse(array $arr)
         echo $version == "1.1.0" ? '<wfs:TransactionResults/>' : '<wfs:TransactionResult handle="mygeocloud-WFS-default-handle"><wfs:Status><wfs:SUCCESS/></wfs:Status></wfs:TransactionResult>';
     } else {
         echo '<wfs:TransactionResult handle="mygeocloud-WFS-default-handle"><wfs:Status><wfs:FAILURE/></wfs:Status></wfs:TransactionResult>';
-        Log::write("Error in\n");
         foreach ($postgisObject->PDOerror as $str) {
-            Log::write("{$str}\n");
         }
-        Log::write("ROLLBACK\n");
         $postgisObject->rollback();
         $results['insert'] = NULL; // Was object
         $results['update'] = NULL; // Was object
         $results['delete'] = 0;
-        //makeExceptionReport($postgisObject->PDOerror); // This output a exception and kills the script
-        makeExceptionReport("Database error", ["exceptionCode" => "InvalidParameterValue"]);
+        makeExceptionReport($postgisObject->PDOerror, ["exceptionCode" => "InvalidParameterValue"]); // This output a exception and kills the script
+//        makeExceptionReport("Database error", ["exceptionCode" => "InvalidParameterValue"]);
     }
 
 // InsertResult
@@ -2318,7 +2309,6 @@ function doParse(array $arr)
  */
 function makeExceptionReport($value, array $attributes = []): void
 {
-    global $sessionComment;
     global $version;
 
     ob_get_clean();
@@ -2341,7 +2331,7 @@ function makeExceptionReport($value, array $attributes = []): void
 	           xsi:schemaLocation="http://www.opengis.net/ogc http://schemas.opengis.net/wfs/1.1.0/OGC-exception.xsd">';
         writeTag("open", null, "ServiceException", null, true, true);
     }
-
+    print "<![CDATA[";
     if (is_array($value)) {
         if (sizeof($value) == 1) {
             print $value[0];
@@ -2351,6 +2341,7 @@ function makeExceptionReport($value, array $attributes = []): void
     } else {
         print $value;
     }
+    print "]]>";
 
     if ($version == "1.1.0") {
         writeTag("close", "ows", "ExceptionText", null, true, true);
