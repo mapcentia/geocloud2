@@ -57,7 +57,7 @@ class Session
      */
     static function getUser(): ?string
     {
-        return $_SESSION['screen_name'];
+        return $_SESSION['screen_name'] ?? null;
     }
 
     /**
