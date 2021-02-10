@@ -20,11 +20,11 @@
         "ext-pgsql": "*",
         "ext-iconv": "*",
         "ext-curl": "*",
-        "ext-apache": "*",
         "ext-simplexml": "*",
         "ext-xml": "*",
         "ext-zip": "*",
-        "ext-zlib": "*"
+        "ext-zlib": "*",
+        "peppeocchi/php-cron-scheduler": "^3.1"
     },
     "require-dev": {
         "codeception/module-asserts": "^1.3",

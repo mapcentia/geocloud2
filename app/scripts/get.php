@@ -50,19 +50,36 @@ print "Info: Started at " . date(DATE_RFC822);
 // Set path so libjvm.so can be loaded in ogr2ogr for MS Access support
 putenv("LD_LIBRARY_PATH=/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server");
 
-$db = $argv[1];
-$schema = $argv[2];
-$safeName = $argv[3];
-$url = $argv[4];
-$srid = $argv[5];
-$type = $argv[6];
-$encoding = $argv[7];
-$jobId = $argv[8];
-$deleteAppend = $argv[9];
-$extra = $argv[10] == "null" ? null : base64_decode($argv[10]);
-$preSql = $argv[11] == "null" ? null : base64_decode($argv[11]);
-$postSql = $argv[12] == "null" ? null : base64_decode($argv[12]);
-$downloadSchema = $argv[13];
+$longopts = array(
+    "db:",
+    "schema:",
+    "safeName:",
+    "url:",
+    "srid:",
+    "type:",
+    "encoding:",
+    "jobId:",
+    "deleteAppend:",
+    "extra:",
+    "preSql:",
+    "postSql:",
+    "downloadSchema:",
+);
+$options = getopt("", $longopts);
+
+$db = $options["db"];
+$schema = $options["schema"];
+$safeName = $options["safeName"];
+$url = $options["url"];
+$srid = $options["srid"];
+$type = $options["type"];
+$encoding = $options["encoding"];
+$jobId = $options["jobId"];
+$deleteAppend = $options["deleteAppend"];
+$extra = $options["extra"] == "null" ? null : base64_decode($options["extra"]);
+$preSql = $options["preSql"] == "null" ? null : base64_decode($options["preSql"]);
+$postSql = $options["postSql"] == "null" ? null : base64_decode($options["postSql"]);
+$downloadSchema = $options["downloadSchema"];
 
 $workingSchema = "_gc2scheduler";
 

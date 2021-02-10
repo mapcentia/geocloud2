@@ -15,7 +15,8 @@ and this project adheres to [CalVer](https://calver.org/).
   ```
 ### Changed
 - Migration code moved to `app\migration`.
-- Namespace URI in WFS-T is now set like this xmlns:[schema]="http://[host]/[database]/[schema]". If the port differs from 80 or 443 it will be added. This is mostly for testing purposes. 
+- Namespace URI in WFS-T is now set like this xmlns:[schema]="http://[host]/[database]/[schema]". If the port differs from 80 or 443 it will be added. This is mostly for testing purposes.
+- Scheduler now uses `peppeocchi/php-cron-scheduler` for scheduling jobs. This replaces the error-prone method by writing the single jobs to the crontab. Docker image must be rebuild.
 
 ### Fixed
 - The correct online resources are now set in OWS GetCapabilities when using sub-users. This will fix authication issues in QGIS, which always uses online resource URLs from GetCapabilities in WFS. 

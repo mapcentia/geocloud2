@@ -75,7 +75,7 @@ $startTime = microtime_float();
 $uri = str_replace("index.php", "", $_SERVER['REDIRECT_URL']);
 $uri = str_replace("//", "/", $uri);
 
-$thePath = $host .$uri;
+$thePath = $host . $uri;
 //$thePath = "http://docker_gc2core_1" . $uri;
 $server = $host;
 //$server = "http://docker_gc2core_1";
@@ -103,6 +103,7 @@ $sessionComment = "";
 $specialChars = "/['^£$%&*()}{@#~?><>,|=+¬]/";
 
 $logFile = fopen("/var/www/geocloud2/public/logs/wfs_transactions.log", "a");
+fwrite($logFile, Util::clientIp() . " - - [" . date('Y-m-d H:i:s') . "] ");
 
 // Post method is used
 // ===================
@@ -110,7 +111,8 @@ $logFile = fopen("/var/www/geocloud2/public/logs/wfs_transactions.log", "a");
 $HTTP_RAW_POST_DATA = file_get_contents("php://input");
 
 if ($HTTP_RAW_POST_DATA) {
-    Log::write($HTTP_RAW_POST_DATA);
+    fwrite($logFile, "\"POST " . $_SERVER["REQUEST_URI"] . "\" \"" . ($_SERVER['HTTP_USER_AGENT'] ?? null) . "\"\n");
+    fwrite($logFile, $HTTP_RAW_POST_DATA . "\n");
     $HTTP_RAW_POST_DATA = dropNameSpace($HTTP_RAW_POST_DATA);
 
     // HACK. MapInfo 15 sends invalid XML with newline \n and double xmlns:wfs namespace. So we strip those
@@ -164,11 +166,6 @@ if ($HTTP_RAW_POST_DATA) {
             $HTTP_FORM_VARS["REQUEST"] = "GetCapabilities";
             break;
         case "Transaction":
-            fwrite($logFile, Input::getPath()->part(2) . "\n");
-            fwrite($logFile, $HTTP_RAW_POST_DATA);
-            fwrite($logFile, "\n");
-            fwrite($logFile, "--------------");
-            fwrite($logFile, "\n\n");
             $HTTP_FORM_VARS["REQUEST"] = "Transaction";
             break;
     }
@@ -177,6 +174,7 @@ if ($HTTP_RAW_POST_DATA) {
 // ==================
 
 } else {
+    fwrite($logFile, "\"GET " . $_SERVER["REQUEST_URI"] . "\" \"" . $_SERVER['HTTP_USER_AGENT'] ?? null . "\"");
     if (sizeof($_GET) > 0) {
         Log::write($_SERVER['QUERY_STRING'] . "\n\n");
         $HTTP_FORM_VARS = $_GET;
@@ -314,6 +312,7 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
         makeExceptionReport("No such operation WFS {$HTTP_FORM_VARS["REQUEST"]}", ["exceptionCode" => "OperationNotSupported", "locator" => $HTTP_FORM_VARS["REQUEST"]]);
         break;
 }
+fwrite($logFile, "\n");
 
 /**
  * @param \app\inc\Model $postgisObject
