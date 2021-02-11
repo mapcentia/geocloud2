@@ -23,6 +23,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ### Fixed
 - The correct online resources are now set in OWS GetCapabilities when using sub-users. This will fix authication issues in QGIS, which always uses online resource URLs from GetCapabilities in WFS. 
 - XML reversed chars in QGS files filters are now converted to HTML entities. So a filters with < > / & ' " will not render the QGS file invalid.
+- Newly created sub-users will be added to the session, so they can be granted privileges rigth away without siging out and in again.
 
 ## [2020.12.0] - 2020-21-12
 ### Added

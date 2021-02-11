@@ -1,21 +1,26 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\inc;
 
-use \app\conf\App;
+use app\conf\App;
 
+
+/**
+ * Class Session
+ * @package app\inc
+ */
 class Session
 {
     /**
      *
      */
-    static function start(): void
+    public static function start(): void
     {
         ini_set("session.cookie_lifetime", "86400");
         ini_set("session.gc_maxlifetime", "86400");
@@ -29,10 +34,36 @@ class Session
     }
 
     /**
+     * @param string $key
+     * @param mixed $value
+     */
+    public static function set(string $key, $value): void
+    {
+        $_SESSION[$key] = $value;
+    }
+
+    /**
+     * @param string $key
+     * @return mixed|null
+     */
+    public static function getByKey(string $key)
+    {
+        return $_SESSION[$key] ?? null;
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    public static function get(): array
+    {
+        return $_SESSION;
+    }
+
+    /**
      * @param string|null $redirect
      * @return bool|void
      */
-    static function authenticate(?string $redirect = " / ")
+    public static function authenticate(?string $redirect = " / ")
     {
         if (isset($_SESSION['auth']) && $_SESSION['auth'] == true) {
             return true;
@@ -47,7 +78,7 @@ class Session
     /**
      * @return bool
      */
-    static function isAuth(): bool
+    public static function isAuth(): bool
     {
         return isset($_SESSION['auth']) ? $_SESSION['auth'] : false;
     }
@@ -55,7 +86,7 @@ class Session
     /**
      * @return string|null
      */
-    static function getUser(): ?string
+    public static function getUser(): ?string
     {
         return $_SESSION['screen_name'] ?? null;
     }
@@ -63,7 +94,7 @@ class Session
     /**
      * @return string|null
      */
-    static function getDatabase(): ?string
+    public static function getDatabase(): ?string
     {
         return $_SESSION['parentdb'];
     }
@@ -71,7 +102,7 @@ class Session
     /**
      * @return bool
      */
-    static function isSubUser(): bool
+    public static function isSubUser(): bool
     {
         return !empty($_SESSION["subuser"]);
     }
@@ -79,7 +110,7 @@ class Session
     /**
      * @return string
      */
-    static function getFullUseName(): string
+    public static function getFullUseName(): string
     {
         return $_SESSION["subuser"] ? $_SESSION["screen_name"] . "@" . $_SESSION['parentdb'] : $_SESSION['screen_name'];
     }
@@ -87,7 +118,7 @@ class Session
     /**
      * @return string
      */
-    static function getLog(): string
+    public static function getLog(): string
     {
         if (!$_SESSION["log"]) {
             $_SESSION["log"] = "<i > Session log started @ " . date('l jS \of F Y h:i:s A') . " </i ><br />";
@@ -101,7 +132,7 @@ class Session
      * @param string $file
      * @return string
      */
-    static function createLog(array $lines, string $file): string
+    public static function createLog(array $lines, string $file): string
     {
         $num = 15;
         $plainTxt = "";
@@ -124,7 +155,7 @@ class Session
     /**
      * @param array<mixed> $obj
      */
-    static function createLogEs(array $obj): void
+    public static function createLogEs(array $obj): void
     {
         $num = 35;
         $_SESSION["log"] .= "<br /<br />";

@@ -10,6 +10,11 @@ namespace app\inc;
 
 use Exception;
 
+
+/**
+ * Class Util
+ * @package app\inc
+ */
 class Util
 {
     /**
@@ -17,7 +22,7 @@ class Util
      * @param object $object
      * @return mixed
      */
-    static function casttoclass(string $class, object $object)
+    public static function casttoclass(string $class, object $object)
     {
         return unserialize(preg_replace('/^O:\d+:"[^"]++"/', 'O:' . strlen($class) . ':"' . $class . '"', serialize($object)));
     }
@@ -25,7 +30,7 @@ class Util
     /**
      * @param string $dir
      */
-    static function rrmdir(string $dir): void
+    public static function rrmdir(string $dir): void
     {
         if (is_dir($dir)) {
             $objects = scandir($dir);
@@ -45,7 +50,7 @@ class Util
      * @param string $seperator
      * @return array<string>|bool|string
      */
-    static function hex2RGB(string $hexStr, bool $returnAsString = false, string $seperator = ',')
+    public static function hex2RGB(string $hexStr, bool $returnAsString = false, string $seperator = ',')
     {
         $hexStr = preg_replace("/[^0-9A-Fa-f]/", '', $hexStr);
         // Gets a proper hex string
@@ -70,7 +75,7 @@ class Util
     /**
      * @return string
      */
-    static function randHexColor(): string
+    public static function randHexColor(): string
     {
         return sprintf('#%06X', mt_rand(0, 0xFFFFFF));
     }
@@ -79,7 +84,7 @@ class Util
      * @param int|string $code
      * @return string|null
      */
-    static function httpCodeText($code): ?string
+    public static function httpCodeText($code): ?string
     {
         $codes = array(
             200 => "OK",
@@ -107,7 +112,7 @@ class Util
      * @param int $steps
      * @return array<mixed>
      */
-    static function makeGradient(string $start, string $end, int $steps): array
+    public static function makeGradient(string $start, string $end, int $steps): array
     {
         $theColorBegin = hexdec($start);
         $theColorEnd = hexdec($end);
@@ -152,7 +157,7 @@ class Util
     /**
      * @return float
      */
-    static function microtime_float(): float
+    public static function microtime_float(): float
     {
         list($usec, $sec) = explode(" ", microtime());
         return ((float)$usec + (float)$sec);
@@ -161,7 +166,7 @@ class Util
     /**
      * @return string
      */
-    static function protocol(): string
+    public static function protocol(): string
     {
         if (isset($_SERVER['HTTPS']) &&
             ($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTPS'] == 1) ||
@@ -180,7 +185,7 @@ class Util
      * @param string $ipWithCidr
      * @return bool
      */
-    static function ipInRange(string $ip, string $ipWithCidr): bool
+    public static function ipInRange(string $ip, string $ipWithCidr): bool
     {
         if (strpos($ipWithCidr, '/') !== false) {
             // $range is in IP/NETMASK format
@@ -233,7 +238,7 @@ class Util
     /**
      * @return string
      */
-    static function clientIp(): string
+    public static function clientIp(): string
     {
         if (!empty($_SERVER['HTTP_CLIENT_IP']))
             $ipAddress = $_SERVER['HTTP_CLIENT_IP'];
@@ -259,7 +264,7 @@ class Util
      * @return mixed
      * @throws Exception
      */
-    static function wget(string $url, int $connectTimeout = 10, int $timeout = 0)
+    public static function wget(string $url, int $connectTimeout = 10, int $timeout = 0)
     {
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
@@ -285,7 +290,7 @@ class Util
      * @param string $payload
      * @return bool
      */
-    static function asyncRequest(string $url, string $payload = ""): bool
+    public static function asyncRequest(string $url, string $payload = ""): bool
     {
         $cmd = "curl -XGET -H 'Content-Type: application/json'";
         $cmd .= " -d '" . $payload . "' " . "'" . $url . "'";
@@ -297,7 +302,7 @@ class Util
     /**
      * @return string
      */
-    static public function guid(): string
+    public static function guid(): string
     {
         if (function_exists('com_create_guid') === true) {
             return trim(com_create_guid(), '{}');
@@ -309,7 +314,7 @@ class Util
     /**
      *
      */
-    static public function disableOb(): void
+    public static function disableOb(): void
     {
         // Turn off output buffering
         ini_set('output_buffering', 'off');
@@ -327,20 +332,29 @@ class Util
             // If the current level has not changed, abort
             if (ob_get_level() == $level) break;
         }
-        // Disable apache output buffering/compression
-        if (function_exists('apache_setenv')) {
-            apache_setenv('no-gzip', '1');
-            apache_setenv('dont-vary', '1');
-        }
     }
 
     /**
      * @param string $str
      * @return string
      */
-    static public function base64urlDecode(string $str): string
+    public static function base64urlDecode(string $str): string
     {
         return base64_decode(str_replace(array('-', '_'), array('+', '/'), $str));
+    }
+
+    /**
+     * @param string $sValue
+     * @param bool $bQuotes
+     * @return string
+     */
+    public static function format(string $sValue, bool $bQuotes = false): string
+    {
+        $sValue = trim($sValue);
+        if ($bQuotes xor get_magic_quotes_gpc()) {
+            $sValue = $bQuotes ? addslashes($sValue) : stripslashes($sValue);
+        }
+        return $sValue;
     }
 
 }

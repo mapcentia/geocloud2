@@ -1,19 +1,21 @@
 <?php
 /**
  * @author     Aleksandr Shumilov <shumsan1011@gmail.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\api\v2;
 
+use app\conf\App;
 use \app\inc\Route;
 use \app\inc\Input;
 use \app\inc\Controller;
 use \app\models\User as UserModel;
 use \app\models\Database;
 use \app\inc\Session;
+
 
 /**
  * Class User
@@ -116,7 +118,7 @@ class User extends Controller
             }
             return $response;
         } elseif (!empty($data['parentdb']) && filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN) === true && !Session::isAuth()) {
-            if (empty(\app\conf\App::$param["allowUnauthenticatedClientsToCreateSubUsers"])) {
+            if (empty(App::$param["allowUnauthenticatedClientsToCreateSubUsers"])) {
                 return [
                     'success' => false,
                     'message' => "Unauthenticated clients are not allowed to create sub users.",
