@@ -16,7 +16,8 @@ use GO\Scheduler;
 
 new App();
 
-if (!empty(App::$param["schedulerDisableCrontab"]) && App::$param["schedulerDisableCrontab"] == true) {
+if (empty(App::$param["enableSchedulerCrontab"]) || App::$param["enableSchedulerCrontab"] == false) {
+    echo "Scheduler is disabled\n";
     exit(0);
 }
 
