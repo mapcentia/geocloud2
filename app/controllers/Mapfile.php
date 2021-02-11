@@ -13,6 +13,7 @@ use app\conf\Connection;
 use app\inc\Controller;
 use app\inc\Model;
 use app\inc\Util;
+use phpDocumentor\Reflection\Types\This;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 
@@ -351,9 +352,14 @@ class Mapfile extends Controller
             if ($row['srid'] > 1) {
 
                 $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),{$row['srid']})) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
-                $resultExtent = $postgisObject->execQuery($sql);
-                $rowExtent = $postgisObject->fetchRow($resultExtent);
-                $extent = [$rowExtent["xmin"], $rowExtent["ymin"], $rowExtent["xmax"], $rowExtent["ymax"]];
+                $resultExtent = $postgisObject->prepare($sql);
+                try {
+                    $resultExtent->execute();
+                    $rowExtent = $postgisObject->fetchRow($resultExtent);
+                    $extent = [$rowExtent["xmin"], $rowExtent["ymin"], $rowExtent["xmax"], $rowExtent["ymax"]];
+                } catch (\PDOException $e) {
+                    $extent = $this->bbox;
+                }
 
                 $versioning = $postgisObject->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}", "gc2_version_gid");
                 $versioning = $versioning["exists"];
@@ -748,7 +754,7 @@ class Mapfile extends Controller
                         #TEMPLATE "ttt"
                         <?php if (!empty($class['label'])) { ?>
 
-#START_LABEL1_<?php echo $layerName . "\n" ?>
+                            #START_LABEL1_<?php echo $layerName . "\n" ?>
 
                             LABEL
                             <?php if (!empty($class['label_text'])) echo "TEXT '" . $class['label_text'] . "'\n"; ?>
@@ -828,11 +834,11 @@ class Mapfile extends Controller
                             ?>
                             END # STYLE
                             END
-#END_LABEL1_<?php echo $layerName . "\n" ?>
+                            #END_LABEL1_<?php echo $layerName . "\n" ?>
                         <?php } ?>
                         #LABEL2
                         <?php if (!empty($class['label2'])) { ?>
-#START_LABEL2_<?php echo $layerName . "\n" ?>
+                            #START_LABEL2_<?php echo $layerName . "\n" ?>
                             LABEL
                             <?php if (!empty($class['label2_text'])) echo "TEXT '" . $class['label2_text'] . "'\n"; ?>
                             TYPE truetype
@@ -910,7 +916,7 @@ class Mapfile extends Controller
                             ?>
                             END # STYLE
                             END
-#END_LABEL2_<?php echo $layerName . "\n" ?>
+                            #END_LABEL2_<?php echo $layerName . "\n" ?>
 
                         <?php } ?>
 
@@ -976,34 +982,34 @@ class Mapfile extends Controller
         UNITS METERS
 
         OUTPUTFORMAT
-            NAME "utfgrid"
-            DRIVER UTFGRID
-            MIMETYPE "application/json"
-            EXTENSION "json"
-            FORMATOPTION "UTFRESOLUTION=4"
-            FORMATOPTION "DUPLICATES=false"
+        NAME "utfgrid"
+        DRIVER UTFGRID
+        MIMETYPE "application/json"
+        EXTENSION "json"
+        FORMATOPTION "UTFRESOLUTION=4"
+        FORMATOPTION "DUPLICATES=false"
         END
 
         OUTPUTFORMAT
-            NAME kml
-            DRIVER "OGR/KML"
-            MIMETYPE "application/vnd.google-earth.kml+xml"
-            IMAGEMODE FEATURE
-            EXTENSION "kml"
-            FORMATOPTION "FORM=simple"
-            FORMATOPTION 'FILENAME=igmap75.kml'
-            FORMATOPTION "maxfeaturestodraw=1000"
+        NAME kml
+        DRIVER "OGR/KML"
+        MIMETYPE "application/vnd.google-earth.kml+xml"
+        IMAGEMODE FEATURE
+        EXTENSION "kml"
+        FORMATOPTION "FORM=simple"
+        FORMATOPTION 'FILENAME=igmap75.kml'
+        FORMATOPTION "maxfeaturestodraw=1000"
         END
 
         OUTPUTFORMAT
-            NAME kmz
-            DRIVER "OGR/LIBKML"
-            MIMETYPE "application/vnd.google-earth.kmz"
-            IMAGEMODE FEATURE
-            EXTENSION "kmz"
-            FORMATOPTION "FORM=simple"
-            FORMATOPTION 'FILENAME=gmap75.kmz'
-            FORMATOPTION "maxfeaturestodraw=1000"
+        NAME kmz
+        DRIVER "OGR/LIBKML"
+        MIMETYPE "application/vnd.google-earth.kmz"
+        IMAGEMODE FEATURE
+        EXTENSION "kmz"
+        FORMATOPTION "FORM=simple"
+        FORMATOPTION 'FILENAME=gmap75.kmz'
+        FORMATOPTION "maxfeaturestodraw=1000"
         END
 
         #CONFIG "MS_ERRORFILE" "/var/www/geocloud2/app/wms/mapfiles/ms_error.txt"
@@ -1043,13 +1049,17 @@ class Mapfile extends Controller
             return false;
         }
         while ($row = $postgisObject->fetchRow($result)) {
-
             if ($row['srid'] > 1) {
 
                 $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),{$row['srid']})) AS a) select ST_xmin(a) as xmin,ST_ymin(a) as ymin,ST_xmax(a) as xmax,ST_ymax(a) as ymax  from box";
-                $resultExtent = $postgisObject->execQuery($sql);
-                $rowExtent = $postgisObject->fetchRow($resultExtent);
-                $extent = [$rowExtent["xmin"], $rowExtent["ymin"], $rowExtent["xmax"], $rowExtent["ymax"]];
+                $resultExtent = $postgisObject->prepare($sql);
+                try {
+                    $resultExtent->execute();
+                    $rowExtent = $postgisObject->fetchRow($resultExtent);
+                    $extent = [$rowExtent["xmin"], $rowExtent["ymin"], $rowExtent["xmax"], $rowExtent["ymax"]];
+                } catch (\PDOException $e) {
+                    $extent = $this->bbox;
+                }
 
                 $versioning = $postgisObject->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}", "gc2_version_gid");
                 $versioning = $versioning["exists"];

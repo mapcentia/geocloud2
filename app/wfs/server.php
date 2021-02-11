@@ -2679,6 +2679,7 @@ function parseFilter($filter, string $table): string
             // Recursive call
             $where[] = parseFilter($arr, $table);
         }
+        // TODO strip double qoutes from PropertyName - OpenLayers adds them!
         // PropertyIsEqualTo
         $arr['PropertyIsEqualTo'] = addDiminsionOnArray($arr['PropertyIsEqualTo']);
         if (is_array($arr['PropertyIsEqualTo'])) foreach ($arr['PropertyIsEqualTo'] as $value) {
