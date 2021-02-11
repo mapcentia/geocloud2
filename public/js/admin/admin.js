@@ -1928,7 +1928,6 @@ $(document).ready(function () {
                                                                     grid.getSelectionModel().clearSelections();
                                                                     store.reload();
                                                                     App.setAlert(App.STATUS_NOTICE, __("Meta data updated"));
-                                                                    win.close();
                                                                 },
                                                                 failure: function (response) {
                                                                     Ext.MessageBox.show({
