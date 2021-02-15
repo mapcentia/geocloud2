@@ -1,17 +1,22 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\models;
 
-use \app\conf\App;
-use \app\conf\Connection;
-use \app\inc\Model;
+use app\conf\App;
+use app\conf\Connection;
+use app\inc\Model;
+use PDOException;
 
+/**
+ * Class Qgis
+ * @package app\models
+ */
 class Qgis extends Model
 {
     function __construct()
@@ -26,7 +31,7 @@ class Qgis extends Model
         $res = $this->prepare($sql);
         try {
             $res->execute($data);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 401;
@@ -44,7 +49,7 @@ class Qgis extends Model
         $res = $this->prepare($sql);
         try {
             $res->execute(["id" => $id]);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 401;
@@ -63,7 +68,7 @@ class Qgis extends Model
         $res = $this->prepare($sql);
         try {
             $res->execute(["db" => $db]);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 401;
