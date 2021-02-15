@@ -265,7 +265,7 @@ class Admin extends Controller
                     if ($time) {
                         touch($tmpFile, $time);
                     }
-                    $res = $processqgis->get_index($orgFileName);
+                    $res = $processqgis->get_index([$orgFileName]);
                     if ($res["success"]) {
                         unlink($file);
                     }
