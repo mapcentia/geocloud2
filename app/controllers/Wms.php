@@ -13,7 +13,6 @@ use app\inc\Controller;
 use app\inc\Model;
 use app\inc\Util;
 use app\inc\Input;
-use app\wfs\ServiceException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use XML_Unserializer;
 
@@ -108,8 +107,7 @@ class Wms extends Controller
                 $typeName = !empty($arr["wfs:Query"]["typeNames"]) ? $arr["wfs:Query"]["typeNames"] : $arr["Query"]["typeNames"];
             }
             if (empty($typeName)) {
-                ServiceException::report("Could not get the typeName from the requests");
-                exit();
+                self::report("Could not get the typeName from the requests");
             }
 
             // Strip name space if any
@@ -308,6 +306,27 @@ class Wms extends Controller
         $content = curl_exec($ch);
         header("Content-Type: text/xml");
         echo $content;
+        exit();
+    }
+
+
+    /**
+     * @param string $value
+     */
+    private static function report(string $value) : void
+    {
+        ob_get_clean();
+        ob_start();
+        echo '<ServiceExceptionReport
+                       version="1.2.0"
+                       xmlns="http://www.opengis.net/ogc"
+                       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:schemaLocation="http://www.opengis.net/ogc http://schemas.opengis.net/ows/1.0.0/owsExceptionReport.xsd">
+                       <ServiceException>';
+        print $value;
+        echo '</ServiceException>
+	        </ServiceExceptionReport>';
+        header("HTTP/1.0 200 " . Util::httpCodeText("200"));
         exit();
     }
 }
