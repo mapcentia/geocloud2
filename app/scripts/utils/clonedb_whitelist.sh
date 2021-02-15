@@ -142,17 +142,17 @@ rm dump.bak -R
 echo "Writing MapFiles"
 for SCHEMA in "${ARRAY[@]}"
     do
-       RES=$(curl -XGET -s "$targethost/api/v2/mapfile/write/$sourcedb/$SCHEMA" | python -c "import sys, json; print json.load(sys.stdin)")
+       RES=$(curl -XGET -s "$targethost/api/v2/mapfile/write/$targetdb/$SCHEMA" | python3 -c "import sys, json; print(json.load(sys.stdin))")
        echo $RES
     done
 
 #Write out the MapCache file
 echo "Writing MapCache file"
-RES=$(curl -XGET -s "$targethost/api/v2/mapcachefile/write/$sourcedb" | python -c "import sys, json; print json.load(sys.stdin)")
+RES=$(curl -XGET -s "$targethost/api/v2/mapcachefile/write/$targetdb" | python3 -c "import sys, json; print(json.load(sys.stdin))")
 echo $RES
 
 #Write out the QGIS files
 echo "Writing QGIS files"
-RES=$(curl -XGET -s "$targethost/api/v2/qgis/write/$sourcedb" | python -c "import sys, json; print json.load(sys.stdin)")
+RES=$(curl -XGET -s "$targethost/api/v2/qgis/write/$targetdb" | python3 -c "import sys, json; print(json.load(sys.stdin))")
 echo $RES
 
