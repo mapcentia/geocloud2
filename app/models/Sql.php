@@ -70,12 +70,11 @@ class Sql extends Model
         $arrayWithFields = $this->getMetaData($view, true); // Temp VIEW
         $postgisVersion = $this->postgisVersion();
         $bits = explode(".", $postgisVersion["version"]);
-        if ((int)$bits[1] > 0) {
-            $ST_Force2D = "ST_Force2D";
+        if ((int)$bits[0] < 3 && (int)$bits[1] === 0) {
+            $ST_Force2D = "ST_Force_2D"; // In case of PostGIS 2.0.x
         } else {
-            $ST_Force2D = "ST_Force_2D";
+            $ST_Force2D = "ST_Force2D";
         }
-
         $fieldsArr = [];
         foreach ($arrayWithFields as $key => $arr) {
             if ($arr['type'] == "geometry") {
