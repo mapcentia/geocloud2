@@ -1580,8 +1580,8 @@ function doParse(array $arr)
                         /**
                          * Load pre-processors
                          */
-                        foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/*/classes/pre/*.php") as $filename) {
-                            $class = "app\\conf\\wfsprocessors\\" . array_reverse(explode("/", $filename))[3] .
+                        foreach (glob(dirname(__FILE__) . "/processors/*/classes/pre/*.php") as $filename) {
+                            $class = "app\\wfs\\processors\\" . array_reverse(explode("/", $filename))[3] .
                                 "\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
                             $preProcessor = new $class($postgisObject);
                             $preRes = $preProcessor->processInsert($feature, $typeName);
@@ -1714,8 +1714,8 @@ function doParse(array $arr)
                 /**
                  * Load pre-processors
                  */
-                foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/*/classes/pre/*.php") as $filename) {
-                    $class = "app\\conf\\wfsprocessors\\" . array_reverse(explode("/", $filename))[3] .
+                foreach (glob(dirname(__FILE__) . "/processors/*/classes/pre/*.php") as $filename) {
+                    $class = "app\\wfs\\processors\\" . array_reverse(explode("/", $filename))[3] .
                         "\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
                     $preProcessor = new $class($postgisObject);
                     $preRes = $preProcessor->processUpdate($hey, $hey["typeName"]);
@@ -1798,8 +1798,8 @@ function doParse(array $arr)
                 /**
                  * Load pre-processors
                  */
-                foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/*/classes/pre/*.php") as $filename) {
-                    $class = "app\\conf\\wfsprocessors\\" . array_reverse(explode("/", $filename))[3] .
+                foreach (glob(dirname(__FILE__) . "/processors/*/classes/pre/*.php") as $filename) {
+                    $class = "app\\wfs\\processors\\" . array_reverse(explode("/", $filename))[3] .
                         "\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
                     $preProcessor = new $class($postgisObject);
                     $preRes = $preProcessor->processDelete($hey, $hey['typeName']);
@@ -2288,8 +2288,8 @@ function doParse(array $arr)
     /**
      * Load post-processors
      */
-    foreach (glob(dirname(__FILE__) . "/../conf/wfsprocessors/*/classes/post/*.php") as $filename) {
-        $class = "app\\conf\\wfsprocessors\\" . array_reverse(explode("/", $filename))[3] .
+    foreach (glob(dirname(__FILE__) . "/processors/*/classes/post/*.php") as $filename) {
+        $class = "app\\wfs\\processors\\" . array_reverse(explode("/", $filename))[3] .
             "\\classes\\post\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
         $postProcessor = new $class($postgisObject);
         $postRes = $postProcessor->process();

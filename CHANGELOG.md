@@ -20,6 +20,7 @@ and this project adheres to [CalVer](https://calver.org/).
   ```
 - WFS-T will log all requests with POST bodies to an Apache combined style log.
 - Meta dialog no longer closes after save, so it's possible to tweak settings without opening the dailog every time.
+- WFS processors moved from `app/conf/wfsprocessors` to `app/wfs/processors`.
 
 ### Fixed
 - The correct online resources are now set in OWS GetCapabilities when using sub-users. This will fix authication issues in QGIS, which always uses online resource URLs from GetCapabilities in WFS. 
