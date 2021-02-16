@@ -137,7 +137,6 @@ class Wms extends Controller
      */
     private function get(string $db, string $postgisschema): void
     {
-        global $setUserInCapabilities;
         $model = new Model();
         $useFilters = false;
         $qgs = isset($_GET["qgs"]) ? base64_decode($_GET["qgs"]) : false;
@@ -249,14 +248,12 @@ class Wms extends Controller
             exit();
         }
 
-        $setUserInCapabilities = false;
         header("X-Powered-By: GC2 WMS");
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header_line) {
-            global $setUserInCapabilities;
             $bits = explode(":", $header_line);
             if ($bits[0] == "Content-Type") {
                 $this->type = trim($bits[1]);
@@ -264,19 +261,15 @@ class Wms extends Controller
             // Send text/xml instead of application/vnd.ogc.se_xml
             if (sizeof($bits) > 1 && $bits[0] == "Content-Type" && trim($bits[1]) == "application/vnd.ogc.se_xml") {
                 header("Content-Type: text/xml");
-                $setUserInCapabilities = true;
             } elseif (sizeof($bits) > 1 && $bits[0] == "Content-Type" && trim($bits[1]) == "text/xml; charset=UTF-8") {
                 header("Content-Type: text/xml");
-                $setUserInCapabilities = true;
             } elseif (sizeof($bits) > 1 && $bits[0] != "Content-Encoding" && trim($bits[1]) != "chunked") {
                 header($header_line);
             }
             return strlen($header_line);
         });
         $content = curl_exec($ch);
-        if ($setUserInCapabilities) {
-            $content = str_replace("__USER__", $this->user, $content);
-        }
+        $content = str_replace("__USER__", $this->user, $content);
         curl_close($ch);
         echo $content;
         exit();
@@ -313,7 +306,7 @@ class Wms extends Controller
     /**
      * @param string $value
      */
-    private static function report(string $value) : void
+    private static function report(string $value): void
     {
         ob_get_clean();
         ob_start();
