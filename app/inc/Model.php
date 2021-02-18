@@ -166,7 +166,7 @@ class Model
         $response = null;
         $cacheType = "prikey";
         $cacheRel = $table;
-        $cacheId = $this->postgisdb . "_" . $cacheType . "_" . $cacheRel;
+        $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
         if (!empty(App::$param["defaultPrimaryKey"])) {
             return ["attname" => App::$param["defaultPrimaryKey"]];
         }
@@ -364,7 +364,7 @@ class Model
     {
         $cacheType = "metadata";
         $cacheRel = $table;
-        $cacheId = $this->postgisdb . "_" . $cacheType . "_" . md5($cacheRel . (int)$temp . (int)$restriction . serialize($restrictions));
+        $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . md5($cacheRel . (int)$temp . (int)$restriction . serialize($restrictions)));
         $CachedString = Cache::getItem($cacheId);
         $primaryKey = null;
         if ($CachedString != null && $CachedString->isHit()) {
@@ -791,7 +791,7 @@ class Model
     {
         $cacheType = "columnExist";
         $cacheRel = $table;
-        $cacheId = $this->postgisdb . "_" . $cacheType . "_" . $cacheRel . "_" . $column;
+        $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel . "_" . $column);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
@@ -822,7 +822,7 @@ class Model
                 $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
                 $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             } catch (Error $exception) {
-                // Pass
+                error_log($exception->getMessage());
             }
             Cache::save($CachedString);
             return $response;
@@ -839,7 +839,7 @@ class Model
     {
         $cacheType = "foreignConstrain";
         $cacheRel = $schema . "." . $table;
-        $cacheId = $this->postgisdb . "_" . $cacheType . "_" . $cacheRel;
+        $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
@@ -920,7 +920,7 @@ class Model
     {
         $cacheType = "childTables";
         $cacheRel = $schema . "." . $table;
-        $cacheId = $this->postgisdb . "_" . $cacheType . "_" . $cacheRel;
+        $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
@@ -985,7 +985,7 @@ class Model
     {
         $cacheType = "columns";
         $cacheRel = $schema . "." . $table;
-        $cacheId = $this->postgisdb . "_" . $cacheType . "_" . $cacheRel;
+        $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();

@@ -126,7 +126,7 @@ class Table extends Model
         if ($this->schema != "settings") {
             $cacheType = "relExist";
             $cacheRel = $this->table;
-            $cacheId = $this->postgisdb . "_" . $cacheType . "_" . $cacheRel;
+            $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
             $CachedString = Cache::getItem($cacheId);
             if ($CachedString != null && $CachedString->isHit()) {
                 $this->exits = $CachedString->get();
