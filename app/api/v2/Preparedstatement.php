@@ -1,26 +1,33 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\api\v2;
 
-use \app\inc\Input;
-use \app\inc\Route;
-use \GuzzleHttp\Client;
+use app\inc\Controller;
+use app\inc\Input;
+use app\inc\Route;
+use app\models\Preparedstatement as PreparedstatementModel;
+use GuzzleHttp\Client;
+use InvalidArgumentException;
+use TypeError;
+use GuzzleHttp\Exception\RequestException;
+
+
 
 /**
  * Class Preparedstatement
  * @package app\api\v2
  */
-class Preparedstatement extends \app\inc\Controller
+class Preparedstatement extends Controller
 {
 
     /**
-     * @var \GuzzleHttp\Client
+     * @var Client
      */
     protected $client;
 
@@ -41,14 +48,14 @@ class Preparedstatement extends \app\inc\Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      */
     public function get_index(): array
     {
         // Get the URI params from request
         // /{user}
         $user = Route::getParam("user");
-        $preparedstatement = new \app\models\Preparedstatement();
+        $preparedstatement = new PreparedstatementModel();
 
         // Check if body and if so, when set input params
         // ==============================================
@@ -63,19 +70,19 @@ class Preparedstatement extends \app\inc\Controller
                 // Set input params from JSON
                 // ==========================
                 try {
-                    $arr = \GuzzleHttp\json_decode($q, true);
+                    $arr = json_decode($q, true);
                     if (!isset($arr["params"])) {
                         $arr["params"] = [];
                     }
                     Input::setParams(
                         [
                             "uuid" => $arr["uuid"],
-                            "params" => \GuzzleHttp\json_encode($arr["params"]), // Keep as JSON
+                            "params" => json_encode($arr["params"]), // Keep as JSON
                             "key" => $arr["key"],
                             "srs" => $arr["srs"],
                         ]
                     );
-                } catch (\InvalidArgumentException $e) {
+                } catch (InvalidArgumentException $e) {
                     $response['success'] = false;
                     $response['message'] = $e->getMessage();
                     $response['code'] = 500;
@@ -86,7 +93,7 @@ class Preparedstatement extends \app\inc\Controller
 
         try {
             $statement = $preparedstatement->getByUuid(Input::get("uuid"));
-        } catch (\TypeError $e) {
+        } catch (TypeError $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 500;
@@ -100,8 +107,8 @@ class Preparedstatement extends \app\inc\Controller
 
         // Decode params
         try {
-            $params = \GuzzleHttp\json_decode(Input::get("params") ?: "{}", true);
-        } catch (\InvalidArgumentException $e) {
+            $params = json_decode(Input::get("params") ?: "{}", true);
+        } catch (InvalidArgumentException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 500;
@@ -115,13 +122,13 @@ class Preparedstatement extends \app\inc\Controller
             $body = json_encode(
                 [
                     "q" => $sql,
-                    "key" => Input::get("key"),
+                    "key" => Input::getApiKey() ?? Input::get("key"),
                     "srs" => Input::get("srs") ?: "4326",
                 ]
             );
             $esResponse = $this->client->post($url, ['body' => $body]);
 
-        } catch (\Exception $e) {
+        } catch (RequestException $e) {
             $response['success'] = false;
             $response['message'] = $e->getResponse()->getBody()->getContents();
             $response['code'] = $e->getCode();
@@ -133,7 +140,10 @@ class Preparedstatement extends \app\inc\Controller
         return $response;
     }
 
-    public function post_index()
+    /**
+     * @return array<mixed>
+     */
+    public function post_index(): array
     {
         return $this->get_index();
     }
