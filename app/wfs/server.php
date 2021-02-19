@@ -945,7 +945,7 @@ function doParse($arr)
 
                         foreach ($feature as $field => $value) {
                             if ($field == $primeryKey["attname"]) {
-                                continue;
+                            //    continue;
                             }
                             $fields[] = $field;
                             $role = $roleObj["data"][$user];
