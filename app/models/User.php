@@ -374,10 +374,9 @@ class User extends Model
         if ($password) $sQuery .= ", pw=:sPassword";
         if ($email) $sQuery .= ", email=:sEmail";
         if ($properties) $sQuery .= ", properties=:sProperties";
-        if ($userGroup) {
+        if (isset($userGroup)) {
             $sQuery .= ", usergroup=:sUsergroup";
             $obj[$user] = $userGroup;
-
             Database::setDb($this->parentdb);
             $settings = new Setting();
             if (!$settings->updateUserGroups((object)$obj)['success']) {
@@ -387,7 +386,6 @@ class User extends Model
                 return $response;
             }
             Database::setDb("mapcentia");
-
         }
 
         if (!empty($data["parentdb"])) {
@@ -400,7 +398,10 @@ class User extends Model
             $res = $this->prepare($sQuery);
             if ($password) $res->bindParam(":sPassword", $password);
             if ($email) $res->bindParam(":sEmail", $email);
-            if ($userGroup) $res->bindParam(":sUsergroup", $userGroup);
+            if (isset($userGroup)) {
+                $str = $userGroup !== "" ? $userGroup : null;
+                $res->bindParam(":sUsergroup", $str);
+            }
             if ($properties) $res->bindParam(":sProperties", $properties);
             $res->bindParam(":sUserID", $user);
             if (!empty($data["parentdb"])) $res->bindParam(":sParentDb", $data["parentdb"]);
