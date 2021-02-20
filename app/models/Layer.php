@@ -210,6 +210,7 @@ class Layer extends Table
                 $primeryKey = $this->getPrimeryKey($rel); // Is cached
                 $resVersioning = $this->doesColumnExist($rel, "gc2_version_gid");  // Is cached
                 $versioning = $resVersioning["exists"];
+                $extent = null;
                 if ($row['type'] != "RASTER" && $includeExtent == true) {
                     $srsTmp = "900913";
                     $sqls = "SELECT ST_Xmin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS xmin,ST_Xmax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS xmax, ST_Ymin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS ymin,ST_Ymax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS ymax  FROM {$row['f_table_schema']}.{$row['f_table_name']}";
@@ -465,6 +466,7 @@ class Layer extends Table
      * @param $data
      * @param $_key_
      * @return mixed
+     * @throws PhpfastcacheInvalidArgumentException
      */
     public function updateElasticsearchMapping($data, $_key_)
     {
@@ -686,7 +688,7 @@ class Layer extends Table
     public function getPrivileges(string $_key_): array
     {
         $privileges = json_decode($this->getValueFromKey($_key_, "privileges") ?: "{}");
-        foreach ($_SESSION['subusers'] as $subuser) {
+        foreach (\app\inc\Session::getByKey('subusers') as $subuser) {
             $privileges->$subuser = ($privileges->$subuser) ?: "none";
             if ($subuser != Connection::$param['postgisschema']) {
                 $response['data'][] = array("subuser" => $subuser, "privileges" => $privileges->$subuser);
@@ -702,7 +704,7 @@ class Layer extends Table
 
     /**
      * @param object $data
-     * @return array<bool|string>
+     * @return array<mixed>
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function updatePrivileges(object $data): array
@@ -961,10 +963,10 @@ class Layer extends Table
         curl_setopt($ch, CURLOPT_HEADER, true);
         curl_exec($ch);
         $info = curl_getinfo($ch);
-        $datasetExists = $info["http_code"] == 200 ? true : false;
+        $datasetExists = $info["http_code"] == 200;
         curl_close($ch);
 
-        // Create the CKAN package object
+        // Create the CKAN package objectuu
         $arr = array();
 
         if ($row["tags"]) {
