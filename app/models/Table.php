@@ -1506,6 +1506,43 @@ class Table extends Model
     }
 
     /**
+     * Works on all tables
+     * @return array<mixed>
+     */
+    public function getFirstRecord(): array
+    {
+        $response = [];
+        $fieldsArr = [];
+        foreach ($this->metaData as $key => $value) {
+            $fieldsArr[] = $key;
+        }
+        // We add "" around field names in sql, so sql keywords don't mess things up
+        foreach ($fieldsArr as $key => $value) {
+            $fieldsArr[$key] = "\"{$value}\"";
+        }
+        $sql = "SELECT " . implode(",", $fieldsArr);
+        foreach ($this->metaData as $key => $arr) {
+            if ($arr['type'] == "bytea") {
+                $sql = str_replace("\"{$key}\"", "encode(\"" . $key . "\",'escape') as " . $key, $sql);
+            }
+        }
+        $sql .= " FROM " . $this->table . " LIMIT 1";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+        } catch (PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        $row = $this->fetchRow($res);
+        $response['success'] = true;
+        $response['data'] = $row;
+        return $response;
+    }
+
+    /**
      * @return array<mixed>
      */
     public function getDependTree(): array
