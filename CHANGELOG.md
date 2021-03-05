@@ -25,6 +25,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Newly created sub-users will be added to the session, so they can be granted privileges rigth away without siging out and in again.
 - Bug regarding not being able to remove inheritance from sub-user is fixed.   
 - cacheId strings are now md5 hashed, because not all characters are allowed.
+- `settings.geometry_columns_join.meta` is set to an empty JSON object, because it can cause problems in Vidi. 
 
 ## [2020.12.0] - 2020-21-12
 ### Added
