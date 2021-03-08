@@ -1,0 +1,450 @@
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T141305.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"nums": 1}
+
+<> 2021-03-08T141259.500.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": "dsd"}
+
+<> 2021-03-08T141250.500.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": "1d4"}
+
+<> 2021-03-08T141239.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 14}
+
+<> 2021-03-08T141231.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T141224.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T135903.500.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T135803.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T135631.500.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T135544.500.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T133629.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T133539.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/myd
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T133531.500.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T133516.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T133431.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T133321.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": "sd"}
+
+<> 2021-03-08T133314.500.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T133309.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T133301.500.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T133204.500.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T133147.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T132838.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": "sd"}
+
+<> 2021-03-08T132829.500.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T132429.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T132422.500.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T132312.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T132219.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": "1"}
+
+<> 2021-03-08T132213.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": "#"}
+
+<> 2021-03-08T132204.500.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": "#"}
+
+<> 2021-03-08T132045.500.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T132023.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{"num": 1}
+
+<> 2021-03-08T131946.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{}
+
+<> 2021-03-08T131856.500.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{}
+
+<> 2021-03-08T130554.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{}
+
+<> 2021-03-08T130540.200.html
+
+###
+
+GET http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
+Content-Type: application/json
+
+{}
+
+<> 2021-03-08T130437.200.html
+
+###
+
+GET http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
+Content-Type: application/json
+
+{}
+
+<> 2021-03-08T130429.404.html
+
+###
+
+GET http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
+Content-Type: application/json
+
+{}
+
+<> 2021-03-08T130403.404.html
+
+###
+
+GET http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
+Content-Type: application/json
+
+{}
+
+<> 2021-03-08T130346.200.json
+
+###
+
+GET http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
+Content-Type: application/json
+
+{}
+
+<> 2021-03-08T130229.200.json
+
+###
+
+GET http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
+Content-Type: application/json
+
+{}
+
+<> 2021-03-08T130159.200.json
+
+###
+
+GET http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
+Content-Type: application/json
+
+{}
+
+<> 2021-03-08T130143.200.json
+
+###
+
+GET http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
+Content-Type: application/json
+
+{}
+
+<> 2021-03-08T130123.200.json
+
+###
+
+GET http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
+Content-Type: application/json
+
+{}
+
+<> 2021-03-08T125937.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
+Content-Type: application/json
+
+{}
+
+<> 2021-03-08T125922.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
+Content-Type: application/json
+
+{}
+
+<> 2021-03-08T125857.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2-demo-extension/controller/dem/mydb
+Content-Type: application/json
+
+{}
+
+<> 2021-03-08T125850.404.html
+
+###
+
+POST http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
+Content-Type: application/json
+
+{}
+
+<> 2021-03-08T125821.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
+Content-Type: application/json
+
+{}
+
+<> 2021-03-08T125706.200.json
+
+###
+
+POST http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
+Content-Type: application/json
+
+{}
+
+<> 2021-03-08T125621.200.json
+
+###
+
