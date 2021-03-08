@@ -18,6 +18,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Meta dialog no longer closes after save, so it's possible to tweak settings without opening the dailog every time.
 - WFS processors moved from `app/conf/wfsprocessors` to `app/wfs/processors`.
 - The `metaConfig` option in `app/conf/App` will now be merges with standard options set in `app\inc\Globals::metaConfig`. This means it's much easier to keep this option updated. Duplicates will be filered out - custom will have precedence.
+- rar compression format is not supported anymore.
 
 ### Fixed
 - The correct online resources are now set in OWS GetCapabilities when using sub-users. This will fix authication issues in QGIS, which always uses online resource URLs from GetCapabilities in WFS. 
@@ -25,7 +26,8 @@ and this project adheres to [CalVer](https://calver.org/).
 - Newly created sub-users will be added to the session, so they can be granted privileges rigth away without siging out and in again.
 - Bug regarding not being able to remove inheritance from sub-user is fixed.   
 - cacheId strings are now md5 hashed, because not all characters are allowed.
-- `settings.geometry_columns_join.meta` is set to an empty JSON object, because it can cause problems in Vidi. 
+- `settings.geometry_columns_join.meta` is set to an empty JSON object, because it can cause problems in Vidi.
+- Added QGIS_AUTH_DB_DIR_PATH to Apache2 conf, so HTTPS requests in QGIS Server doesn't fail.
 
 ## [2020.12.0] - 2020-21-12
 ### Added
