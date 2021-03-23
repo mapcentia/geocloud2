@@ -28,6 +28,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - cacheId strings are now md5 hashed, because not all characters are allowed.
 - `settings.geometry_columns_join.meta` is set to an empty JSON object, because it can cause problems in Vidi.
 - Added QGIS_AUTH_DB_DIR_PATH to Apache2 conf, so HTTPS requests in QGIS Server doesn't fail.
+- Exception format for MapServer WMS client is now set to application/vnd.ogc.se_xml instead of application/vnd.ogc.se_inimage. The latter can result in a blank image for WMS servers, which don't support application/vnd.ogc.se_inimage.
 
 ## [2020.12.0] - 2020-21-12
 ### Added
