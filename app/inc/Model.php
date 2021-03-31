@@ -1004,4 +1004,30 @@ class Model
             return $rows;
         }
     }
+
+    /**
+     * Count the rows in a relation
+     *
+     * @param string $schema
+     * @param string $table
+     * @return array<mixed>
+     */
+    public function countRows(string $schema, string $table): array
+    {
+            $sql = "SELECT count(*) AS count FROM " . $this->doubleQuoteQualifiedName($schema. "." . $table);
+            $res = $this->prepare($sql);
+            try {
+                $res->execute();
+                $row = $this->fetchRow($res);
+            } catch (Exception $e) {
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['code'] = 401;
+                return $response;
+            }
+            return [
+                "success" => true,
+                "data" => $row["count"],
+            ];
+    }
 }
