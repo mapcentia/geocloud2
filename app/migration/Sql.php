@@ -107,7 +107,22 @@ class Sql
                     )";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN legend_url VARCHAR(255)";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER roles TYPE JSONB USING roles::jsonb";
-
+        $sqls[] = "CREATE TABLE settings.geofence
+                    (
+                    id                   serial not null,
+                    priority             integer,
+                    username             varchar default '*'::character varying,
+                    service              varchar default '*'::character varying,
+                    request              varchar default '*'::character varying,
+                    layer                varchar default '*'::character varying,
+                    iprange              varchar default '*'::character varying,
+                    schema               varchar default '*'::character varying,
+                    access               varchar default 'deny'::character varying,
+                    read_filter          text,
+                    read_spatial_filter  text,
+                    write_filter         text,
+                    write_spatial_filter text
+                )";
 
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
