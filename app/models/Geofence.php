@@ -15,6 +15,7 @@ use Generator;
 
 use sad_spirit\pg_builder\Delete;
 use sad_spirit\pg_builder\Insert;
+use sad_spirit\pg_builder\nodes;
 use sad_spirit\pg_builder\nodes\range\UpdateOrDeleteTarget;
 use sad_spirit\pg_builder\Select;
 use sad_spirit\pg_builder\Update;
@@ -32,26 +33,22 @@ class TableWalker extends BlankWalker
 
     public function walkRelationReference(RelationReference $rangeItem): void
     {
-//        $this->relations[] = (string)$rangeItem->name;
+        $this->relations[] = (string)$rangeItem->name;
     }
 
-    public function walkInsertStatement(Insert $statement): void
-    {
-//        $this->relations[] = (string)$statement->relation->relation;
-    }
-
-    public function walkUpdateStatement(Update $statement): void
-    {
-//        $this->relations[] = (string)$statement->relation->relation;
-    }
-
-    public function walkDeleteStatement(Delete $statement): void
-    {
-//        $this->relations[] = (string)$statement->relation->relation;
-    }
     public function walkUpdateOrDeleteTarget(UpdateOrDeleteTarget $target): void
     {
         $this->relations[] = (string)$target->relation->relation;
+    }
+
+    public function walkInsertTarget(nodes\range\InsertTarget $target)
+    {
+        $this->relations[] = (string)$target->relation->schema . "." . (string)$target->relation->relation;
+    }
+    public function walkDeleteStatement(Delete $statement): void
+    {
+        // this will dispatch to child nodes
+        parent::walkDeleteStatement($statement);
     }
 
     /**
@@ -86,7 +83,7 @@ class Geofence extends Model
         $select = $factory->createFromString("WITH t AS (DELETE FROM foo) DELETE FROM bar");
         $walker = new TableWalker();
         $select->dispatch($walker);
-//        print_r($walker->getRelations());
+        //print_r($walker->getRelations());
     }
 
     /**
