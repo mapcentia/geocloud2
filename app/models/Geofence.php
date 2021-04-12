@@ -71,6 +71,10 @@ class Geofence extends Model
      */
     private $userFilter;
 
+    public const ALLOW_ACCESS = "allow";
+    public const DENY_ACCESS = "deny";
+    public const LIMIT_ACCESS = "limit";
+
     /**
      * Geofencing constructor.
      * @param UserFilter $userFilter
