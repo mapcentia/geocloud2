@@ -30,7 +30,7 @@ include __DIR__ . "/../libs/PEAR/Cache_Lite/Lite.php";
 Util::disableOb();
 const FEATURE_LIMIT = 1000000;
 
-$host = "http://" . $_SERVER['SERVER_NAME'] . ($_SERVER['SERVER_PORT'] != "80" && $_SERVER['SERVER_PORT'] != "443" ? ":" . $_SERVER["SERVER_PORT"] : "");
+$host = Util::protocol() . "://" . $_SERVER['SERVER_NAME'] . ($_SERVER['SERVER_PORT'] != "80" && $_SERVER['SERVER_PORT'] != "443" ? ":" . $_SERVER["SERVER_PORT"] : "");
 
 $gmlNameSpace = Connection::$param["postgisschema"];
 $gmlNameSpaceUri = $host . "/" . Connection::$param["postgisdb"] . "/" . Connection::$param["postgisschema"];
