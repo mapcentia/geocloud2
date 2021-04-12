@@ -2812,7 +2812,7 @@ function parseFilter($filter, string $table): string
         // End of filter parsing
         $i++;
     }
-    if (!isset($boolOperator)) {
+    if (empty($boolOperator)) {
         $boolOperator = "OR";
     }
     return "(" . implode(" " . $boolOperator . " ", $where) . ")";
