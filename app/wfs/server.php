@@ -911,6 +911,8 @@ function getXSD(\app\inc\Model $postgisObject)
                     $atts["type"] = "xsd:string";
                 } elseif ($tableObj->metaData[$atts["name"]]['type'] == "int") {
                     $atts["type"] = "xsd:int";
+                } elseif ($tableObj->metaData[$atts["name"]]['type'] == "string") {
+                    unset($atts["type"]);
                 } else {
                     if ($tableObj->metaData[$atts["name"]]['isArray']) {
                         $atts["type"] = "xsd:string";
@@ -921,10 +923,16 @@ function getXSD(\app\inc\Model $postgisObject)
                 $simpleType = true;
             }
             $atts["minOccurs"] = "0";
+            if (!empty($fieldConf->{$atts["name"]}->properties)) {
+                unset($atts["type"]);
+            }
             writeTag("open", "xsd", "element", $atts, True, True);
             if ($simpleType) {
                 $minLength = "0";
                 $maxLength = "256";
+                if ($tableObj->metaData[$atts["name"]]['type'] == "string") {
+                    $maxLength = filter_var($tableObj->metaData[$atts["name"]]['full_type'], FILTER_SANITIZE_NUMBER_INT);
+                }
                 if ($tableObj->metaData[$atts["name"]]['type'] == "decimal") {
                     $tableObj->metaData[$atts["name"]]['type'] = "decimal";
                 }
@@ -955,6 +963,7 @@ function getXSD(\app\inc\Model $postgisObject)
                     $tableObj->metaData[$atts["name"]]['type'] = "string";
                 }
                 if (!empty($fieldConf->{$atts["name"]}->properties)) {
+                    unset($atts["type"]);
                     echo '<xsd:simpleType><xsd:restriction base="xsd:' . $tableObj->metaData[$atts["name"]]['type'] . '">';
 
                     if ($fieldConf->{$atts["name"]}->properties == "*") {
@@ -970,11 +979,12 @@ function getXSD(\app\inc\Model $postgisObject)
                     }
                     echo '</xsd:restriction></xsd:simpleType>';
 
+                } elseif ($tableObj->metaData[$atts["name"]]['type'] == "string") {
+                    echo '<xsd:simpleType><xsd:restriction base="xsd:' . $tableObj->metaData[$atts["name"]]['type'] . '">';
+                    echo "<xsd:minLength value=\"{$minLength}\"/>";
+                    if ($maxLength) echo "<xsd:maxLength value=\"{$maxLength}\"/>";
+                    echo '</xsd:restriction></xsd:simpleType>';
                 }
-//            if ($tableObj->metaData[$atts["name"]]['type'] == "string") {
-//                echo "<xsd:minLength value=\"{$minLength}\"/>";
-//                if ($maxLength) echo "<xsd:maxLength value=\"{$maxLength}\"/>";
-//            }
             }
             writeTag("close", "xsd", "element", NULL, False, True);
             $atts = Null;
