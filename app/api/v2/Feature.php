@@ -103,14 +103,21 @@ class Feature extends \app\inc\Controller
                  xsi:schemaLocation=\"http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/WFS-transaction.xsd\">\n";
     }
 
-    private function decodeCode($code){
-        return preg_replace_callback(
+    /**
+     * @param string $code
+     * @return string
+     */
+    private function decodeCode(string $code): string
+    {
+        $str = preg_replace_callback(
             "@\\\(x)?([0-9a-f]{2,3})@",
-            function($m){
-                return chr($m[1]?hexdec($m[2]):octdec($m[2]));
+            function ($m) {
+                return chr($m[1] ? hexdec($m[2]) : octdec($m[2]));
             },
             $code
         );
+        $str = preg_replace('/\r|\n/', '\n', trim($str));
+        return $str;
     }
 
     public function get_index()
@@ -177,16 +184,16 @@ class Feature extends \app\inc\Controller
                 $response['code'] = "500";
                 return $response;
             }
-       }
+        }
 
         foreach ($arr["gml:featureMember"][$this->db . ":" . $this->table] as $key => $prop) {
-            if (!is_array($prop)){
-                $props[ explode(":", $key)[1]] = $prop;
+            if (!is_array($prop)) {
+                $props[explode(":", $key)[1]] = $prop;
             }
         }
 
         $jArr = [
-            "type"=>"FeatureCollection",
+            "type" => "FeatureCollection",
             "features" => [[
                 "type" => "Feature",
                 "properties" => $props,
@@ -274,7 +281,7 @@ class Feature extends \app\inc\Controller
             $props = $feature["properties"];
 
             // Check if property with primary key is missing
-            if (!isset($props[$this->field])){
+            if (!isset($props[$this->field])) {
                 $response['success'] = false;
                 $response['message'] = "Property with primary key is missing from at least one GeoJSON feature";
                 $response['code'] = 500;
@@ -331,11 +338,11 @@ class Feature extends \app\inc\Controller
         // Start build the WFS transaction
         $xml = $this->transactionHeader;
 
-        $xml.="<wfs:Delete typeName=\"{$this->db}:{$this->table}\" xmlns:{$this->db}=\"http://mapcentia.com/{$this->db}\">";
-        $xml.="<ogc:Filter xmlns:ogc=\"http://www.opengis.net/ogc\">";
-        $xml.="<ogc:FeatureId fid=\"{$this->table}.{$this->key}\"/>";
-        $xml.="</ogc:Filter>";
-        $xml.="</wfs:Delete>";
+        $xml .= "<wfs:Delete typeName=\"{$this->db}:{$this->table}\" xmlns:{$this->db}=\"http://mapcentia.com/{$this->db}\">";
+        $xml .= "<ogc:Filter xmlns:ogc=\"http://www.opengis.net/ogc\">";
+        $xml .= "<ogc:FeatureId fid=\"{$this->table}.{$this->key}\"/>";
+        $xml .= "</ogc:Filter>";
+        $xml .= "</wfs:Delete>";
 
         $xml .= "</wfs:Transaction>\n";
 
@@ -346,7 +353,7 @@ class Feature extends \app\inc\Controller
      * @param $xml
      * @return array<mixed>
      */
-    private function commit(string $xml) : array
+    private function commit(string $xml): array
     {
         //echo $xml;
         $response = [];
