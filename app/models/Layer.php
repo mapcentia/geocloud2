@@ -226,7 +226,6 @@ class Layer extends Table
                     $extent = $this->fetchRow($resExtent);
                 }
                 $restrictions = [];
-
                 foreach ($row as $key => $value) {
                     // Set empty strings to NULL
                     $value = $value == "" ? null : $value;
@@ -240,13 +239,15 @@ class Layer extends Table
                         $obj = json_decode($value, true);
                         if (is_array($obj)) {
                             foreach ($obj as $k => $val) {
+                                $props = json_decode(str_replace("'", '"', $obj[$k]["properties"]), true);
                                 if ($obj[$k]["properties"] == "*") {
                                     $table = new Table($row['f_table_schema'] . "." . $row['f_table_name']);
                                     $distinctValues = $table->getGroupByAsArray($k);
                                     $obj[$k]["properties"] = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK);
-                                } elseif (isset(json_decode(str_replace("'", '"', $obj[$k]["properties"]), true)["_rel"])) {
-                                    $restrictions[$k] = json_decode(str_replace("'", '"', $obj[$k]["properties"]), true);
+                                } elseif (isset($props["_rel"]) || is_array($props)) {
+                                    $restrictions[$k] = $props;
                                 }
+
                             }
                             $value = json_encode($obj);
                         } else {

@@ -431,7 +431,7 @@ class Model
                             }
                         }
                     }
-                } elseif ($restriction == true && $restrictions != false && isset($restrictions[$row["column_name"]])) {
+                } elseif ($restriction == true && $restrictions != false && isset($restrictions[$row["column_name"]]) && isset($restrictions[$row["column_name"]]['_rel'])) {
                     $rel = $restrictions[$row["column_name"]];
                     //print_r($rel);
                     $sql = "SELECT {$rel["_value"]} AS value, {$rel["_text"]} AS text FROM {$rel["_rel"]}";
@@ -447,6 +447,10 @@ class Model
                     }
                     while ($rowC = $this->fetchRow($resC)) {
                         $foreignValues[] = ["value" => $rowC["value"], "alias" => (string)$rowC["text"]];
+                    }
+                } elseif ($restriction == true && $restrictions != false && isset($restrictions[$row["column_name"]])) {
+                    foreach ($restrictions[$row["column_name"]] as $restriction) {
+                        $foreignValues[] = ["value" => $restriction, "alias" => (string)$restriction];
                     }
                 }
 
