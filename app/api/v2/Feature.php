@@ -1,32 +1,26 @@
 <?php
 /**
- * Long description for file
- *
- * Long description for file (if any)...
- *
- * @category   API
- * @package    app\api\v1
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- * @since      File available since Release 2013.1
  *
  */
 
 namespace app\api\v2;
 
-use \app\inc\Input;
-use \app\inc\Route;
-use \app\inc\Response;
-use \app\models\Database;
-use \app\models\Layer;
-use \GuzzleHttp\Client;
+use app\inc\Input;
+use app\inc\Route;
+use app\inc\Response;
+use app\models\Database;
+use app\models\Layer;
+use GuzzleHttp\Client;
 
 include_once(__DIR__ . "../../../vendor/phayes/geophp/geoPHP.inc");
 include_once(__DIR__ . "../../../libs/phpgeometry_class.php");
 include_once(__DIR__ . "../../../libs/gmlparser.php");
 include_once(__DIR__ . "../../../libs/PEAR/XML/Unserializer.php");
 include_once(__DIR__ . "../../../libs/PEAR/XML/Serializer.php");
+
 
 /**
  * Class Feature
@@ -198,7 +192,7 @@ class Feature extends \app\inc\Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      */
     public function post_index(): array
     {
@@ -251,7 +245,7 @@ class Feature extends \app\inc\Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      */
     public function put_index(): array
     {
