@@ -471,7 +471,8 @@ class Sql extends Controller
                         "code" => 500,
                         "format" => $format,
                         "geoformat" => $geoformat,
-                        "message" => "Check formats",
+                        "message" => $this->response["message"],
+                        "query" => $this->q,
                     ]);
                 }
                 $this->addAttr($response);
