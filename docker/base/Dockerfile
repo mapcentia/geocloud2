@@ -38,8 +38,8 @@ RUN cd ~ &&\
 # Make php-fpm run in the foreground
 RUN sed 's/;daemonize = yes/daemonize = no/' -i /etc/php/7.3/fpm/php-fpm.conf
 
-# Install Node.js, Grunt and Forever
-RUN curl -sL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh &&\
+# Install Node.js and Grunt
+RUN curl -sL https://deb.nodesource.com/setup_14.x -o nodesource_setup.sh &&\
     bash nodesource_setup.sh &&\
     apt-get install -y nodejs
 
