@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED]
+## [2021.5.0]
 ### Added
 - PHPStan added to project for static code analysis. A lot of issues fixed.
 - WFS-T now supports version 1.1.0.
@@ -19,6 +19,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - WFS processors moved from `app/conf/wfsprocessors` to `app/wfs/processors`.
 - The `metaConfig` option in `app/conf/App` will now be merges with standard options set in `app\inc\Globals::metaConfig`. This means it's much easier to keep this option updated. Duplicates will be filered out - custom will have precedence.
 - rar compression format is not supported anymore.
+- Bump Node.js to v14.
 
 ### Fixed
 - The correct online resources are now set in OWS GetCapabilities when using sub-users. This will fix authication issues in QGIS, which always uses online resource URLs from GetCapabilities in WFS. 
@@ -30,6 +31,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Added QGIS_AUTH_DB_DIR_PATH to Apache2 conf, so HTTPS requests in QGIS Server doesn't fail.
 - Exception format for MapServer WMS client is now set to application/vnd.ogc.se_xml instead of application/vnd.ogc.se_inimage. The latter can result in a blank image for WMS servers, which don't support application/vnd.ogc.se_inimage.
 - Feature API: Remove line breaks in JSON and replace with \n, so breaks doesn't throw an exception when decoding.
+- The Dashboard will not reset the PHPSESSION cookie, so now will GC2 set `sameSite=None` and `secure` on the cookie when using HTTPS.
 
 ## [2020.12.0] - 2020-21-12
 ### Added
