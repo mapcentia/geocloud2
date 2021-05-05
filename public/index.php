@@ -300,6 +300,19 @@ if (Input::getPath()->part(1) == "api") {
             exit();
         }
     });
+    Route::add("api/v3/grid", function () {
+        $jwt = Jwt::validate();
+        if ($jwt["success"]) {
+            if (!$jwt["data"]["superUser"]) {
+                echo Response::toJson(Response::SUPER_USER_ONLY);
+                exit();
+            }
+            Database::setDb($jwt["data"]["database"]);
+        } else {
+            echo Response::toJson($jwt);
+            exit();
+        }
+    });
 
     Route::miss();
 

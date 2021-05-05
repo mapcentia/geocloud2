@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2021.5.1]
+### Added
+- New v3 API for creating fishnet grids. Useful for WFS scheduler jobs.
+
 ## [2021.5.0]
 ### Added
 - PHPStan added to project for static code analysis. A lot of issues fixed.
