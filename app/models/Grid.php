@@ -33,11 +33,12 @@ class Grid extends Model
     public function create(string $table, string $extent, int $size): array
     {
 
-        $this->connect();
+        $this->connect("PG");
         $tempTable = "_" . md5(rand(1, 999999999) . microtime());
-        $pl = file_get_contents(App::$param["path"] . "app/scripts/sql/st_fishnet.sql");
+        $pl = file_get_contents(__DIR__ . "/../scripts/sql/st_fishnet.sql");
         $this->execQuery($pl, "PG");
 
+        $this->connect();
         $sql = "DROP TABLE IF EXISTS {$table}";
         $this->execQuery($sql);
 
@@ -61,7 +62,7 @@ class Grid extends Model
         if (isset($this->PDOerror)) {
             return [
                 "success" => false,
-                "message" => $this->PDOerror,
+                "message" => $pl,
             ];
         }
 
