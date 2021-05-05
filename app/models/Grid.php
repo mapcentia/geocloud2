@@ -62,7 +62,7 @@ class Grid extends Model
         if (isset($this->PDOerror)) {
             return [
                 "success" => false,
-                "message" => $pl,
+                "message" => $this->PDOerror,
             ];
         }
 
