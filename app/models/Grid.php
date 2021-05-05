@@ -34,17 +34,14 @@ class Grid extends Model
     {
 
         $this->connect();
-        $tempTable = "grids._grid";
+        $tempTable = "_" . md5(rand(1, 999999999) . microtime());
         $pl = file_get_contents(App::$param["path"] . "app/scripts/sql/st_fishnet.sql");
         $this->execQuery($pl, "PG");
 
         $sql = "DROP TABLE IF EXISTS {$table}";
         $this->execQuery($sql);
 
-        $sql = "DROP TABLE IF EXISTS {$tempTable}";
-        $this->execQuery($sql);
-
-        $sql = "CREATE TABLE {$tempTable} AS SELECT st_fishnet('{$extent}','the_geom',{$size}, 25832)";
+        $sql = "CREATE TEMP TABLE {$tempTable} AS SELECT st_fishnet('{$extent}','the_geom',{$size}, 25832)";
         $this->execQuery($sql);
 
         $sql = "ALTER TABLE {$tempTable} ADD gid serial";
@@ -59,9 +56,6 @@ class Grid extends Model
               {$extent} AS ext ON
               st_intersects(st_fishnet,ext.the_geom)
             WHERE ext.gid IS NOT NULL";
-        $this->execQuery($sql);
-
-        $sql = "DROP TABLE IF EXISTS {$tempTable}";
         $this->execQuery($sql);
 
         if (isset($this->PDOerror)) {
