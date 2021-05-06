@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED]
+### Fixed
+- Then no sort_ids is set on layers or sort_ids are the same, then sort by layer title or name if the former is not set. The sorting is done in the application and not in the database.
+
 ## [2021.5.1]
 ### Added
 - New v3 API for creating fishnet grids. Useful for WFS scheduler jobs.
@@ -21,7 +25,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - WFS-T will log all requests with POST bodies to an Apache combined style log.
 - Meta dialog no longer closes after save, so it's possible to tweak settings without opening the dailog every time.
 - WFS processors moved from `app/conf/wfsprocessors` to `app/wfs/processors`.
-- The `metaConfig` option in `app/conf/App` will now be merges with standard options set in `app\inc\Globals::metaConfig`. This means it's much easier to keep this option updated. Duplicates will be filered out - custom will have precedence.
+- The `metaConfig` option in `app/conf/App` will now be merged with standard options set in `app\inc\Globals::metaConfig`. This means it's much easier to keep this option updated. Duplicates will be filered out - custom will have precedence.
 - rar compression format is not supported anymore.
 - Bump Node.js to v14.
 
