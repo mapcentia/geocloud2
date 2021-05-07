@@ -7,6 +7,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [UNRELEASED]
 ### Fixed
 - Then no sort_ids is set on layers or sort_ids are the same, then sort by layer title or name if the former is not set. The sorting is done in the application and not in the database.
+- WFS-T filter parser will now drop namespaces in property names. If not this is done, the resulting SQL will be invalid.
 
 ## [2021.5.1]
 ### Added
