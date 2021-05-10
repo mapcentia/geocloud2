@@ -141,31 +141,28 @@ class Layer extends Table
                 "(authentication<>''foo'' OR authentication is NULL)" :
                 "(authentication=''Write'' OR authentication=''None'')";
             $case = "CASE WHEN ((layergroup = '' OR layergroup IS NULL) AND baselayer != true) THEN 9999999 else sort_id END";
-            $sort = "sort";
-            $sort .= (App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
-            $sort .= ",f_table_name DESC";
 
             if (sizeof($schemata) > 0) {
                 $schemaStr = "''" . implode("'',''", $schemata) . "''";
-                $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema in ({$schemaStr}) AND {$where}','raster_columns.r_table_schema in ({$schemaStr}) AND {$where}') ORDER BY {$sort})";
+                $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema in ({$schemaStr}) AND {$where}','raster_columns.r_table_schema in ({$schemaStr}) AND {$where}'))";
             }
 
             if (sizeof($layers) > 0) {
                 foreach ($layers as $layer) {
                     $split = explode(".", $layer);
-                    $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema = ''{$split[0]}'' AND f_table_name = ''{$split[1]}'' AND {$where}','raster_columns.r_table_schema = ''{$split[0]}'' AND raster_columns.r_table_name = ''{$split[1]}'' AND {$where}') ORDER BY {$sort})";
+                    $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema = ''{$split[0]}'' AND f_table_name = ''{$split[1]}'' AND {$where}','raster_columns.r_table_schema = ''{$split[0]}'' AND raster_columns.r_table_name = ''{$split[1]}'' AND {$where}'))";
                 }
             }
 
             if (sizeof($tags) > 0) {
                 foreach ($tags as $tag) {
                     $tag = urldecode($tag);
-                    $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('tags ? ''{$tag}'' AND {$where}','tags ? ''{$tag}'' AND {$where}') ORDER BY {$sort})";
+                    $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('tags ? ''{$tag}'' AND {$where}','tags ? ''{$tag}'' AND {$where}'))";
                 }
             }
 
             if (sizeof($schemata) == 0 && sizeof($layers) == 0 && sizeof($tags) == 0) {
-                $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('{$where}','{$where}') ORDER BY {$sort})";
+                $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('{$where}','{$where}'))";
             }
 
             $sql = implode(" UNION ALL ", $sqls);
@@ -371,6 +368,15 @@ class Layer extends Table
 
             // Resort data, because a mix of schema and tags search will not be sorted right
             usort($response['data'], function ($a, $b) {
+                if ($a['sort_id'] === $b['sort_id']){
+                    $a['f_table_name'] = strtolower($a['f_table_title'] ?? $a['f_table_name']);
+                    $b['f_table_name'] = strtolower($b['f_table_title'] ?? $b['f_table_name']);
+                    if (App::$param["reverseLayerOrder"]) {
+                        return $a['f_table_name'] <=> $b['f_table_name'];
+                    } else {
+                        return $b['f_table_name'] <=> $a['f_table_name'];
+                    }
+                }
                 return $a['sort_id'] <=> $b['sort_id'];
             });
 

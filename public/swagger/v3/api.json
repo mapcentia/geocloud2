@@ -296,6 +296,62 @@
                 ]
             }
         },
+        "/api/v3/grid": {
+            "post": {
+                "tags": [
+                    "Grid"
+                ],
+                "summary": "Create a fishnet grid from an input polygon",
+                "operationId": "app\\api\\v3\\Grid::post_index",
+                "requestBody": {
+                    "description": "Fishnet parameters",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "table": {
+                                        "type": "string",
+                                        "example": "new_grid"
+                                    },
+                                    "extent": {
+                                        "type": "string",
+                                        "example": "my_extent_polygon"
+                                    },
+                                    "size": {
+                                        "type": "integer",
+                                        "example": 10000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Return true if fishnet grid was created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/v3/oauth/token": {
             "post": {
                 "tags": [
@@ -542,17 +598,17 @@
                 ]
             }
         },
-        "/api/v3/tileseeder/log": {
+        "/api/v3/tileseeder/log/{uuid}": {
             "get": {
                 "tags": [
                     "Tileseeder"
                 ],
-                "summary": "Stream log of a running job",
+                "summary": "Get staus of a running job",
                 "operationId": "app\\api\\v3\\Tileseeder::get_log",
                 "parameters": [
                     {
-                        "name": "userId",
-                        "in": "query",
+                        "name": "uuid",
+                        "in": "path",
                         "description": "Job identifier",
                         "required": true,
                         "schema": {

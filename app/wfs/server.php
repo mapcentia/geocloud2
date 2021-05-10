@@ -2698,15 +2698,16 @@ function parseFilter($filter, string $table): string
             $value["PropertyName"] = $value["PropertyName"] == "gml:name" ? $primeryKey["attname"] : $value["PropertyName"];
             $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . ($matchCase ? "\"=" : "\" ILIKE ") . $postgisObject->quote($value['Literal']);
         }
+
         // PropertyIsNotEqualTo
         $arr['PropertyIsNotEqualTo'] = addDiminsionOnArray($arr['PropertyIsNotEqualTo']);
         if (is_array($arr['PropertyIsNotEqualTo'])) foreach ($arr['PropertyIsNotEqualTo'] as $value) {
-            $where[] = "\"" . $value['PropertyName'] . "\"<>'" . $value['Literal'] . "'";
+            $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . "\"<>'" . $value['Literal'] . "'";
         }
         // PropertyIsLessThan
         $arr['PropertyIsLessThan'] = addDiminsionOnArray($arr['PropertyIsLessThan']);
         if (is_array($arr['PropertyIsLessThan'])) foreach ($arr['PropertyIsLessThan'] as $value) {
-            $where[] = "\"" . $value['PropertyName'] . "\"<'" . $value['Literal/'] . "'";
+            $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . "\"<'" . $value['Literal/'] . "'";
         }
         // PropertyIsGreaterThan
         $arr['PropertyIsGreaterThan'] = addDiminsionOnArray($arr['PropertyIsGreaterThan']);
@@ -2726,13 +2727,14 @@ function parseFilter($filter, string $table): string
         //PropertyIsLike
         $arr['PropertyIsLike'] = addDiminsionOnArray($arr['PropertyIsLike']);
         if (is_array($arr['PropertyIsLike'])) foreach ($arr['PropertyIsLike'] as $value) {
-            $where[] = "\"" . $value['PropertyName'] . "\" LIKE '%" . $value['Literal'] . "%'";
+            $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . "\" LIKE '%" . $value['Literal'] . "%'";
         }
         //PropertyIsBetween
         $w = [];
         $arr['PropertyIsBetween'] = addDiminsionOnArray($arr['PropertyIsBetween']);
         if (is_array($arr['PropertyIsBetween'])) {
             foreach ($arr['PropertyIsBetween'] as $value) {
+                $value['PropertyName'] =  dropAllNameSpaces($value['PropertyName']);
                 if ($value['LowerBoundary'])
                     $w[] = "\"" . $value['PropertyName'] . "\" > '" . $value['LowerBoundary']['Literal'] . "'";
                 if ($value['UpperBoundary'])
@@ -2757,6 +2759,7 @@ function parseFilter($filter, string $table): string
         //Intersects
         $arr['Intersects'] = addDiminsionOnArray($arr['Intersects']);
         if (is_array($arr['Intersects'])) foreach ($arr['Intersects'] as $value) {
+            $value['PropertyName'] =  dropAllNameSpaces($value['PropertyName']);
             $wktArr = toWKT($value, false, $srsName ? getAxisOrder($srsName) : "latitude");
             $sridOfFilter = $wktArr[1];
             if (empty($sridOfFilter)) $sridOfFilter = $srs; // If no filter on BBOX we think it must be same as the requested srs
@@ -2780,7 +2783,6 @@ function parseFilter($filter, string $table): string
             //makeExceptionReport($arr);
             $axisOrder = null;
             $sridOfFilter = null;
-            $where = [];
             if (is_array($arr['BBOX']['gml:Box']['gml:coordinates'])) {
                 $arr['BBOX']['gml:Box']['gml:coordinates']['_content'] = str_replace(" ", ",", $arr['BBOX']['gml:Box']['gml:coordinates']['_content']);
                 $coordsArr = explode(",", $arr['BBOX']['gml:Box']['gml:coordinates']['_content']);
@@ -2796,7 +2798,7 @@ function parseFilter($filter, string $table): string
                 if (!$sridOfFilter) $sridOfFilter = $sridOfTable; // If still no filter on BBOX we set it to native srs
             }
             if (is_array($arr['BBOX']['gml:Envelope'])) {
-                $coordsArr = array_merge(explode(" ", $arr['BBOX']['gml:Envelope']['lowerCorner']), explode(" ", $arr['BBOX']['Envelope']['upperCorner']));
+                $coordsArr = array_merge(explode(" ", $arr['BBOX']['gml:Envelope']['gml:lowerCorner']), explode(" ", $arr['BBOX']['gml:Envelope']['gml:upperCorner']));
                 $sridOfFilter = parseEpsgCode($arr['BBOX']['gml:Envelope']['srsName']);
                 $axisOrder = getAxisOrder($arr['BBOX']['gml:Envelope']['srsName']);
                 if (!$sridOfFilter) $sridOfFilter = $srs; // If no filter on BBOX we think it must be same as the requested srs
@@ -2815,9 +2817,6 @@ function parseFilter($filter, string $table): string
                     . "),$sridOfTable),"
                     . "\"" . (($arr['BBOX']['PropertyName']) ?: $postgisObject->getGeometryColumns($table, "f_geometry_column")) . "\")";
             }
-            /*$where[] = "public.ST_Transform(public.ST_GeometryFromText('POLYGON((".$coordsArr[0]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[1]."))',"
-                .$sridOfFilter
-                ."),$sridOfTable) && ".$arr['BBOX']['PropertyName'];*/
         }
         // End of filter parsing
         $i++;

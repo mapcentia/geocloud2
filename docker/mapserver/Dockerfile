@@ -107,6 +107,8 @@ RUN crontab -l 2>/dev/null| { cat; echo "0 6 * * * php -f /var/www/geocloud2/app
 # Run scheduler
 RUN crontab -l 2>/dev/null| { cat; echo "* * * * * php -f /var/www/geocloud2/app/scripts/scheduler.php 1>> /dev/null 2>&1";} | crontab
 
+RUN crontab -l 2>/dev/null| { cat; echo "";} | crontab
+
 # Expose standard ports for HTTP and HTTPS
 EXPOSE 80
 EXPOSE 443

@@ -96,6 +96,7 @@ Ext.define('MyApp.controller.MyController', {
             url: '/controllers/job/run/' + record.data.id,
             success: function(response){
                 Ext.MessageBox.hide();
+                Ext.ComponentQuery.query('viewport')[0].down('grid').getSelectionModel().clearSelections()
                 Ext.getStore("MyJsonStore").reload();
             }
         });
@@ -103,6 +104,7 @@ Ext.define('MyApp.controller.MyController', {
     },
 
     onButtonClick6: function(button, e, eOpts) {
+        Ext.ComponentQuery.query('viewport')[0].down('grid').getSelectionModel().clearSelections()
         Ext.getStore("MyJsonStore").reload();
     },
 

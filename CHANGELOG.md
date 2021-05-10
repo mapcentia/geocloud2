@@ -5,6 +5,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNRELEASED]
+### Fixed
+- Then no sort_ids is set on layers or sort_ids are the same, then sort by layer title or name if the former is not set. The sorting is done in the application and not in the database.
+- WFS-T filter parser will now drop namespaces in property names. If not this is done, the resulting SQL will be invalid.
+- Bug regarding no-strip of gml namespace on Envelope BBOX filter is fixed.
+
+## [2021.5.1]
+### Added
+- New v3 API for creating fishnet grids. Useful for WFS scheduler jobs.
+
+## [2021.5.0]
 ### Added
 - PHPStan added to project for static code analysis. A lot of issues fixed.
 - WFS-T now supports version 1.1.0.
@@ -17,8 +27,9 @@ and this project adheres to [CalVer](https://calver.org/).
 - WFS-T will log all requests with POST bodies to an Apache combined style log.
 - Meta dialog no longer closes after save, so it's possible to tweak settings without opening the dailog every time.
 - WFS processors moved from `app/conf/wfsprocessors` to `app/wfs/processors`.
-- The `metaConfig` option in `app/conf/App` will now be merges with standard options set in `app\inc\Globals::metaConfig`. This means it's much easier to keep this option updated. Duplicates will be filered out - custom will have precedence.
+- The `metaConfig` option in `app/conf/App` will now be merged with standard options set in `app\inc\Globals::metaConfig`. This means it's much easier to keep this option updated. Duplicates will be filered out - custom will have precedence.
 - rar compression format is not supported anymore.
+- Bump Node.js to v14.
 
 ### Fixed
 - The correct online resources are now set in OWS GetCapabilities when using sub-users. This will fix authication issues in QGIS, which always uses online resource URLs from GetCapabilities in WFS. 
@@ -30,6 +41,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Added QGIS_AUTH_DB_DIR_PATH to Apache2 conf, so HTTPS requests in QGIS Server doesn't fail.
 - Exception format for MapServer WMS client is now set to application/vnd.ogc.se_xml instead of application/vnd.ogc.se_inimage. The latter can result in a blank image for WMS servers, which don't support application/vnd.ogc.se_inimage.
 - Feature API: Remove line breaks in JSON and replace with \n, so breaks doesn't throw an exception when decoding.
+- The Dashboard will not reset the PHPSESSION cookie, so now will GC2 set `sameSite=None` and `secure` on the cookie when using HTTPS.
 
 ## [2020.12.0] - 2020-21-12
 ### Added
