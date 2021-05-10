@@ -2783,7 +2783,6 @@ function parseFilter($filter, string $table): string
             //makeExceptionReport($arr);
             $axisOrder = null;
             $sridOfFilter = null;
-            $where = [];
             if (is_array($arr['BBOX']['gml:Box']['gml:coordinates'])) {
                 $arr['BBOX']['gml:Box']['gml:coordinates']['_content'] = str_replace(" ", ",", $arr['BBOX']['gml:Box']['gml:coordinates']['_content']);
                 $coordsArr = explode(",", $arr['BBOX']['gml:Box']['gml:coordinates']['_content']);
@@ -2799,7 +2798,7 @@ function parseFilter($filter, string $table): string
                 if (!$sridOfFilter) $sridOfFilter = $sridOfTable; // If still no filter on BBOX we set it to native srs
             }
             if (is_array($arr['BBOX']['gml:Envelope'])) {
-                $coordsArr = array_merge(explode(" ", $arr['BBOX']['gml:Envelope']['lowerCorner']), explode(" ", $arr['BBOX']['Envelope']['upperCorner']));
+                $coordsArr = array_merge(explode(" ", $arr['BBOX']['gml:Envelope']['gml:lowerCorner']), explode(" ", $arr['BBOX']['gml:Envelope']['gml:upperCorner']));
                 $sridOfFilter = parseEpsgCode($arr['BBOX']['gml:Envelope']['srsName']);
                 $axisOrder = getAxisOrder($arr['BBOX']['gml:Envelope']['srsName']);
                 if (!$sridOfFilter) $sridOfFilter = $srs; // If no filter on BBOX we think it must be same as the requested srs
@@ -2818,9 +2817,6 @@ function parseFilter($filter, string $table): string
                     . "),$sridOfTable),"
                     . "\"" . (($arr['BBOX']['PropertyName']) ?: $postgisObject->getGeometryColumns($table, "f_geometry_column")) . "\")";
             }
-            /*$where[] = "public.ST_Transform(public.ST_GeometryFromText('POLYGON((".$coordsArr[0]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[3].",".$coordsArr[2]." ".$coordsArr[1].",".$coordsArr[0]." ".$coordsArr[1]."))',"
-                .$sridOfFilter
-                ."),$sridOfTable) && ".$arr['BBOX']['PropertyName'];*/
         }
         // End of filter parsing
         $i++;
