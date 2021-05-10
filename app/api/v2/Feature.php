@@ -180,7 +180,7 @@ class Feature extends \app\inc\Controller
             }
         }
 
-        foreach ($arr["gml:featureMember"][$this->db . ":" . $this->table] as $key => $prop) {
+        foreach ($arr["gml:featureMember"][$this->schema. ":" . $this->table] as $key => $prop) {
             if (!is_array($prop)) {
                 $props[explode(":", $key)[1]] = $prop;
             }
@@ -223,7 +223,7 @@ class Feature extends \app\inc\Controller
 
             // Create the Insert section
             $xml .= "<wfs:Insert>\n";
-            $xml .= "<feature:{$this->table} xmlns:feature=\"http://mapcentia.com/{$this->db}\">\n";
+            $xml .= "<feature:{$this->table} xmlns:feature=\"http://mapcentia.com/{$this->db}/{$this->schema}\">\n";
 
             try {
                 // Get GML from WKT geom and catch error if geom is missing
@@ -283,7 +283,7 @@ class Feature extends \app\inc\Controller
             }
 
             // Create the Insert section
-            $xml .= "<wfs:Update typeName=\"{$this->db}:{$this->table}\">\n";
+            $xml .= "<wfs:Update typeName=\"{$this->schema}:{$this->table}\">\n";
 
             // Get GML from WKT geom and catch error if geom is missing
             try {
@@ -332,7 +332,7 @@ class Feature extends \app\inc\Controller
         // Start build the WFS transaction
         $xml = $this->transactionHeader;
 
-        $xml .= "<wfs:Delete typeName=\"{$this->db}:{$this->table}\" xmlns:{$this->db}=\"http://mapcentia.com/{$this->db}\">";
+        $xml .= "<wfs:Delete typeName=\"{$this->schema}:{$this->table}\" xmlns:{$this->schema}=\"http://mapcentia.com/{$this->db}/{$this->schema}\">";
         $xml .= "<ogc:Filter xmlns:ogc=\"http://www.opengis.net/ogc\">";
         $xml .= "<ogc:FeatureId fid=\"{$this->table}.{$this->key}\"/>";
         $xml .= "</ogc:Filter>";
