@@ -218,7 +218,7 @@ if (!$service || strcasecmp($service, "wfs") != 0) {
     makeExceptionReport("No service", ["exceptionCode" => "MissingParameterValue", "locator" => "service"]);
 }
 if (strcasecmp($outputFormat, "XMLSCHEMA") != 0 && strcasecmp($outputFormat, "GML2") != 0 && strcasecmp($outputFormat, "GML3") != 0) {
-    makeExceptionReport("Output format not supported");
+    $outputFormat = "GML2";
 }
 
 // Start HTTP basic authentication

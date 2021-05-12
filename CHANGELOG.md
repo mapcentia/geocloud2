@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNRELEASED]
+### Changed
+- outputFormat in WFS-t is set to GML2, if a not recognized format is requested instead if throwing an exception. 
+
 ### Fixed
 - Then no sort_ids is set on layers or sort_ids are the same, then sort by layer title or name if the former is not set. The sorting is done in the application and not in the database.
 - WFS-T filter parser will now drop namespaces in property names. If not this is done, the resulting SQL will be invalid.
