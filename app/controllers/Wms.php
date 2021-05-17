@@ -127,7 +127,7 @@ class Wms extends Controller
      */
     private static function xmlEscape(string $string): string
     {
-        return str_replace(array('&', '<', '>', '\'', '"'), array('\&amp;', '\&lt;', '\&gt;', '\&apos;', '\&quot;'), $string);
+        return str_replace(array('&', '<', '>', '\'', '"', '/'), array('\&amp;', '\&lt;', '\&gt;', '\&apos;', '\&quot;', '\/'), $string);
     }
 
     /**
