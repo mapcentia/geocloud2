@@ -34,6 +34,8 @@ $host = Util::protocol() . "://" . $_SERVER['SERVER_NAME'] . ($_SERVER['SERVER_P
 
 $gmlNameSpace = Connection::$param["postgisschema"];
 $gmlNameSpaceUri = $host . "/" . Connection::$param["postgisdb"] . "/" . Connection::$param["postgisschema"];
+// Always set ns uri to http://
+$gmlNameSpaceUri = str_replace("https://", "http://", $gmlNameSpaceUri);
 
 $postgisschema = Connection::$param["postgisschema"];
 $layerObj = new Layer();
@@ -1446,8 +1448,9 @@ function dropNameSpace(string $tag): string
 
 function dropAllNameSpaces($tag)
 {
-
     $tag = preg_replace("/[\w-]*:/", "", $tag); // remove any namespaces
+    // Trim double qoutes. Openlayers adds them to ogc:PropertyName in WFS requets
+    $tag = trim($tag, '"');
     return ($tag);
 }
 
