@@ -15,7 +15,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Fixed bug in Feature API regarding namespace changes in WFS-t.
 - Trim double qoutes from ogc:PropertyName in WFS-t. Openlayers adds them in WFS requets. 
 - Always set ns uri to http:// in WFS-t or else editing won't work in Admin.
-
+- A POST WFS DescribeFeatureType to OWS request would always end in an exception. Not many clients do this, but MapInfo 15.0 does.
 
 ## [2021.5.1]
 ### Added
