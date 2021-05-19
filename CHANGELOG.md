@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED]
+## [2021.5.2]
 ### Changed
 - outputFormat in WFS-t is set to GML2, if a not recognized format is requested instead if throwing an exception. 
 
@@ -15,7 +15,6 @@ and this project adheres to [CalVer](https://calver.org/).
 - Fixed bug in Feature API regarding namespace changes in WFS-t.
 - Trim double qoutes from ogc:PropertyName in WFS-t. Openlayers adds them in WFS requets. 
 - Always set ns uri to http:// in WFS-t or else editing won't work in Admin.
-
 
 ## [2021.5.1]
 ### Added
