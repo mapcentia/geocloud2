@@ -18,7 +18,7 @@ use GO\Scheduler;
 new App();
 Database::setDb("gc2scheduler");
 $scheduler = new Scheduler([
-    'tempDir' => '/var/www/geocloud2/app/tmp'
+    'tempDir' => '/var/www/geocloud2/app/tmp/scheduler_locks'
 ]);
 
 $model = new Model();
@@ -34,7 +34,7 @@ try {
 }
 
 while ($row = $model->fetchRow($res)) {
-    if (isset(App::$param["gc2scheduler"][$row["db"]]) && App::$param["gc2scheduler"][$row["db"]] === true) {
+    if (!empty($row["active"]) && isset(App::$param["gc2scheduler"][$row["db"]]) && App::$param["gc2scheduler"][$row["db"]] === true) {
         $args = [
             "--db" => $row["db"],
             "--schema" => $row["schema"],

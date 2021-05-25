@@ -7,6 +7,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [2021.5.2]
 ### Changed
 - outputFormat in WFS-t is set to GML2, if a not recognized format is requested instead if throwing an exception. 
+- `peppeocchi/php-cron-scheduler` lock files are now created in `/var/www/geocloud2/app/tmp/scheduler_locks`, so they get purged with other lock files after an hour. 
 
 ### Fixed
 - Then no sort_ids is set on layers or sort_ids are the same, then sort by layer title or name if the former is not set. The sorting is done in the application and not in the database.
