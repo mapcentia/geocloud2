@@ -331,7 +331,7 @@ class Mapcachefile extends \app\inc\Controller
                             <url><?php echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $row["f_table_schema"] . "_wms.map&"; ?></url>
                         </http>
                         </source>
-                        <tileset name="<?php echo $table ?>.json/">
+                        <tileset name="<?php echo $table ?>.json">
                             <source><?php echo $table ?>.json</source>
                             <cache><?php echo $cache ?></cache>
                             <grid>g20</grid>
