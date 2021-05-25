@@ -300,7 +300,7 @@ tableStructure.init = function (record, db) {
                     xtype: 'checkcolumn',
                     header: __("Show in mouse-over"),
                     dataIndex: 'mouseover',
-                    hidden: true
+                    hidden: false
                 },
                 {
                     id: "searchable",
