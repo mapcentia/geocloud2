@@ -70,7 +70,7 @@ $options = getopt("", $longopts);
 $db = $options["db"];
 $schema = $options["schema"];
 $safeName = $options["safeName"];
-$url = $options["url"];
+$url = urldecode($options["url"]);
 $srid = $options["srid"];
 $type = $options["type"];
 $encoding = $options["encoding"];
@@ -1073,7 +1073,7 @@ print "\nInfo: " . Tilecache::bust($schema . "." . $safeName)["message"];
 
 // Clean up
 // ========
-function cleanUp(bool $success = false): void
+function cleanUp(int $success = 0): void
 {
     global $schema, $workingSchema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db, $report, $lockFile;
 

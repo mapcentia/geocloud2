@@ -16,6 +16,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Fixed bug in Feature API regarding namespace changes in WFS-t.
 - Trim double qoutes from ogc:PropertyName in WFS-t. Openlayers adds them in WFS requets. 
 - Always set ns uri to http:// in WFS-t or else editing won't work in Admin.
+- Bugs related to the new `peppeocchi/php-cron-scheduler` system. 
 
 ## [2021.5.1]
 ### Added
