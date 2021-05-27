@@ -105,7 +105,7 @@ RUN crontab -l 2>/dev/null| { cat; echo "* * * * * php -f /var/www/geocloud2/app
 # Create scheduler report once a day
 RUN crontab -l 2>/dev/null| { cat; echo "0 6 * * * php -f /var/www/geocloud2/app/scripts/job_report.php 1>> /dev/null 2>&1";} | crontab
 # Run scheduler
-RUN crontab -l 2>/dev/null| { cat; echo "* * * * * php -f /var/www/geocloud2/app/scripts/scheduler.php 1>> /dev/null 2>&1";} | crontab
+RUN crontab -l 2>/dev/null| { cat; echo "* * * * * sudo -u www-data php -f /var/www/geocloud2/app/scripts/scheduler.php 1>> /dev/null 2>&1";} | crontab
 
 RUN crontab -l 2>/dev/null| { cat; echo "";} | crontab
 
