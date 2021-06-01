@@ -252,6 +252,26 @@ class Globals
 
         ],
         [
+            "fieldsetName" => "Mouse over",
+            "fields" => [
+                [
+                    "name" => "hover_active",
+                    "type" => "checkbox",
+                    "title" => "Activate mouse over",
+                ],
+                [
+                    "name" => "info_template_hover",
+                    "type" => "textarea",
+                    "title" => "Template",
+                ],
+                [
+                    "name" => "cache_utf_grid",
+                    "type" => "checkbox",
+                    "title" => "Cache UTF grid",
+                ],
+            ]
+        ],
+        [
             "fieldsetName" => "References",
             "fields" => [
                 [
