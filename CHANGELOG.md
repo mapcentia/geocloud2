@@ -17,6 +17,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Trim double qoutes from ogc:PropertyName in WFS-t. Openlayers adds them in WFS requets. 
 - Always set ns uri to http:// in WFS-t or else editing won't work in Admin.
 - Bugs related to the new `peppeocchi/php-cron-scheduler` system. 
+- The manual Run function in scheduler GUI will not time out after 30 secs. 
 
 ## [2021.5.1]
 ### Added
