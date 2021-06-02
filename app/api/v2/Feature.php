@@ -110,7 +110,7 @@ class Feature extends \app\inc\Controller
             },
             $code
         );
-        $str = preg_replace('/\r|\n/', '\n', trim($str));
+        //$str = preg_replace('/\r|\n/', '\n', trim($str));
         return $str;
     }
 
@@ -180,7 +180,7 @@ class Feature extends \app\inc\Controller
             }
         }
 
-        foreach ($arr["gml:featureMember"][$this->schema. ":" . $this->table] as $key => $prop) {
+        foreach ($arr["gml:featureMember"][$this->schema . ":" . $this->table] as $key => $prop) {
             if (!is_array($prop)) {
                 $props[explode(":", $key)[1]] = $prop;
             }
@@ -221,9 +221,11 @@ class Feature extends \app\inc\Controller
             // Get properties
             $props = $feature["properties"];
 
+            $gmlId = !empty($props[$this->field]) ? "gml:id=\"{$props[$this->field]}\"" : "";
+
             // Create the Insert section
             $xml .= "<wfs:Insert>\n";
-            $xml .= "<feature:{$this->table} xmlns:feature=\"http://mapcentia.com/{$this->db}/{$this->schema}\">\n";
+            $xml .= "<feature:{$this->table} {$gmlId} xmlns:feature=\"http://mapcentia.com/{$this->db}/{$this->schema}\">\n";
 
             try {
                 // Get GML from WKT geom and catch error if geom is missing
@@ -237,15 +239,16 @@ class Feature extends \app\inc\Controller
 
             // Create the elements
             foreach ($props as $elem => $value) {
-                if (is_string($value)) {
-                    $value = "<![CDATA[{$value}]]>";
+                if (!empty($props[$this->field]) && $props[$this->field] != $value) {
+                    if (is_string($value)) {
+                        $value = "<![CDATA[{$value}]]>";
+                    }
+                    $xml .= "<feature:{$elem}>{$value}</feature:{$elem}>\n";
                 }
-                $xml .= "<feature:{$elem}>{$value}</feature:{$elem}>\n";
             }
 
             $xml .= "</feature:{$this->table}>\n";
             $xml .= "</wfs:Insert>\n";
-
         }
         $xml .= "</wfs:Transaction>\n";
         return $this->commit($xml);
