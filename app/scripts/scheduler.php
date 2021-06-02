@@ -18,7 +18,7 @@ use GO\Scheduler;
 new App();
 Database::setDb("gc2scheduler");
 $scheduler = new Scheduler([
-    'tempDir' => '/var/www/geocloud2/app/tmp/scheduler_locks'
+    'tempDir' => '/var/www/geocloud2/app/tmp'
 ]);
 
 $model = new Model();
@@ -55,7 +55,7 @@ while ($row = $model->fetchRow($res)) {
             $cmd,
             "/usr/bin/php",
             $args,
-            $row["name"]
+            $row["id"] . "_" . $row["name"]
         )->at("{$row["min"]} {$row["hour"]} {$row["dayofmonth"]} {$row["month"]} {$row["dayofweek"]}")->output([
             __DIR__ . "/../../public/logs/{$row["id"]}_scheduler.log"
         ])->onlyOne();
