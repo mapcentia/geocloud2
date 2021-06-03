@@ -4,9 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED]
+## [2021.5.2]
 ### Changed
 - outputFormat in WFS-t is set to GML2, if a not recognized format is requested instead if throwing an exception. 
+- `peppeocchi/php-cron-scheduler` lock files are now created in `/var/www/geocloud2/app/tmp/scheduler_locks`, so they get purged with other lock files after an hour. 
 
 ### Fixed
 - Then no sort_ids is set on layers or sort_ids are the same, then sort by layer title or name if the former is not set. The sorting is done in the application and not in the database.
@@ -15,6 +16,8 @@ and this project adheres to [CalVer](https://calver.org/).
 - Fixed bug in Feature API regarding namespace changes in WFS-t.
 - Trim double qoutes from ogc:PropertyName in WFS-t. Openlayers adds them in WFS requets. 
 - Always set ns uri to http:// in WFS-t or else editing won't work in Admin.
+- Bugs related to the new `peppeocchi/php-cron-scheduler` system. 
+- The manual Run function in scheduler GUI will not time out after 30 secs. 
 - A POST WFS DescribeFeatureType to OWS request would always end in an exception. Not many clients do this, but MapInfo 15.0 does.
 
 ## [2021.5.1]

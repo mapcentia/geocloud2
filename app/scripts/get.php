@@ -70,7 +70,7 @@ $options = getopt("", $longopts);
 $db = $options["db"];
 $schema = $options["schema"];
 $safeName = $options["safeName"];
-$url = $options["url"];
+$url = urldecode($options["url"]);
 $srid = $options["srid"];
 $type = $options["type"];
 $encoding = $options["encoding"];
@@ -573,7 +573,7 @@ function getCmdPaging(): void
 
 function getCmdFile(): void
 {
-    global $randTableName, $type, $db, $workingSchema, $url, $encoding, $srid, $report, $out, $err, $tmpDir;
+    global $randTableName, $type, $db, $workingSchema, $url, $encoding, $srid, $report, $out, $err, $dir;
 
     $report[DOWNLOADTYPE] = FILE;
 
@@ -626,7 +626,7 @@ function getCmdFile(): void
     }
 
     foreach ($files as $key => $file) {
-        $path = $tmpDir . $key;
+        $path = $dir . "/" . $key;
         $fileRes = fopen($path, 'w');
         try {
             file_put_contents($path, Util::wget($file));
@@ -649,12 +649,12 @@ function getCmdFile(): void
         "-lco 'PRECISION=NO' " .
         "-a_srs 'EPSG:{$srid}' " .
         "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
-        $tmpDir . $fileSetName . " " .
+        $dir . "/" . $fileSetName . " " .
         "-nln {$workingSchema}.{$randTableName} " .
         "-nlt {$type}";
     exec($cmd . ' 2>&1', $out, $err);
 
-    array_map('unlink', glob($tmpDir . $randFileName . ".*"));
+    array_map('unlink', glob($dir . "/" . $randFileName . ".*"));
 }
 
 function getCmdZip(): void
@@ -1073,7 +1073,7 @@ print "\nInfo: " . Tilecache::bust($schema . "." . $safeName)["message"];
 
 // Clean up
 // ========
-function cleanUp(bool $success = false): void
+function cleanUp(int $success = 0): void
 {
     global $schema, $workingSchema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db, $report, $lockFile;
 

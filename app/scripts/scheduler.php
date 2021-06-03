@@ -34,12 +34,12 @@ try {
 }
 
 while ($row = $model->fetchRow($res)) {
-    if (isset(App::$param["gc2scheduler"][$row["db"]]) && App::$param["gc2scheduler"][$row["db"]] === true) {
+    if (!empty($row["active"]) && isset(App::$param["gc2scheduler"][$row["db"]]) && App::$param["gc2scheduler"][$row["db"]] === true) {
         $args = [
             "--db" => $row["db"],
             "--schema" => $row["schema"],
             "--safeName" => $row["name"],
-            "--url" => urldecode($row["url"]),
+            "--url" => urlencode($row["url"]),
             "--srid" => $row["epsg"],
             "--type" => $row["type"],
             "--encoding" => $row["encoding"],
@@ -55,7 +55,7 @@ while ($row = $model->fetchRow($res)) {
             $cmd,
             "/usr/bin/php",
             $args,
-            $row["name"]
+            $row["id"] . "_" . $row["name"]
         )->at("{$row["min"]} {$row["hour"]} {$row["dayofmonth"]} {$row["month"]} {$row["dayofweek"]}")->output([
             __DIR__ . "/../../public/logs/{$row["id"]}_scheduler.log"
         ])->onlyOne();
