@@ -981,6 +981,7 @@ class Mapfile extends Controller
         SIZE 2000 1500
         MAXSIZE 16384
         UNITS METERS
+        FONTSET "/var/www/geocloud2/app/wms/fonts/fonts.txt"
 
         OUTPUTFORMAT
         NAME "utfgrid"
@@ -1190,7 +1191,7 @@ class Mapfile extends Controller
 
                 TEMPLATE "test"
                 <?php
-                if (is_array($classArr['data']) and (!$row['wmssource'])) {
+                if (is_array($classArr['data'])) {
 //                    print_r($classArr['data']);
 //                    die();
                     foreach ($classArr['data'] as $class) {

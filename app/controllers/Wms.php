@@ -238,6 +238,7 @@ class Wms extends Controller
                 $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map={$qgs}&" . $_SERVER["QUERY_STRING"];
             } else {
                 switch ($this->service) {
+                    case "utfgrid":
                     case "wfs":
                         $mapFile = $db . "_" . $postgisschema . "_wfs.map";
                         break;
