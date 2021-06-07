@@ -1,3 +1,723 @@
+POST http://127.0.0.1:8080/api/v2/feature/mydb/test.city_center.the_geom/25832
+Content-Type: application/json
+Gc2-API-KEY: aea11527e8629882a405f70acc498554
+
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "gid" : 1000,
+        "gml_id": "8783",
+        "fot_id": 1,
+        "objekt_status": "A",
+        "geometri_status": "Clever",
+        "test": "MH1"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              8.780522,
+              55.325531
+            ],
+            [
+              8.785973,
+              55.326044
+            ],
+            [
+              8.785715,
+              55.323505
+            ],
+            [
+              8.784041,
+              55.32348
+            ],
+            [
+              8.783011,
+              55.323309
+            ],
+            [
+              8.780522,
+              55.325531
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
+
+<> 2021-06-07T121650.200.json
+
+###
+
+POST http://127.0.0.1:8080/api/v2/feature/mydb/test.city_center.the_geom/25832
+Content-Type: application/json
+Gc2-API-KEY: aea11527e8629882a405f70acc498554
+
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "gid" : 1,
+        "gml_id": "8783",
+        "fot_id": 1,
+        "objekt_status": "A",
+        "geometri_status": "Clever",
+        "test": "MH1"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              8.780522,
+              55.325531
+            ],
+            [
+              8.785973,
+              55.326044
+            ],
+            [
+              8.785715,
+              55.323505
+            ],
+            [
+              8.784041,
+              55.32348
+            ],
+            [
+              8.783011,
+              55.323309
+            ],
+            [
+              8.780522,
+              55.325531
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
+
+<> 2021-06-07T121620.500.json
+
+###
+
+POST http://127.0.0.1:8080/api/v2/feature/mydb/test.city_center.the_geom/25832
+Content-Type: application/json
+Gc2-API-KEY: aea11527e8629882a405f70acc498554
+
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "gid" : 1,
+        "gml_id": "8783",
+        "fot_id": 1,
+        "objekt_status": "A",
+        "geometri_status": "Clever",
+        "test": "MH1"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              8.780522,
+              55.325531
+            ],
+            [
+              8.785973,
+              55.326044
+            ],
+            [
+              8.785715,
+              55.323505
+            ],
+            [
+              8.784041,
+              55.32348
+            ],
+            [
+              8.783011,
+              55.323309
+            ],
+            [
+              8.780522,
+              55.325531
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
+
+<> 2021-06-07T121606.200.html
+
+###
+
+POST http://127.0.0.1:8080/api/v2/feature/mydb/test.city_center.the_geom/25832
+Content-Type: application/json
+Gc2-API-KEY: aea11527e8629882a405f70acc498554
+
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "gid" : 1,
+        "gml_id": "8783",
+        "fot_id": 1,
+        "objekt_status": "A",
+        "geometri_status": "Clever",
+        "test": "MH1"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              8.780522,
+              55.325531
+            ],
+            [
+              8.785973,
+              55.326044
+            ],
+            [
+              8.785715,
+              55.323505
+            ],
+            [
+              8.784041,
+              55.32348
+            ],
+            [
+              8.783011,
+              55.323309
+            ],
+            [
+              8.780522,
+              55.325531
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
+
+<> 2021-06-07T121355.200.html
+
+###
+
+POST http://127.0.0.1:8080/api/v2/feature/mydb/test.city_center.the_geom/25832
+Content-Type: application/json
+Gc2-API-KEY: aea11527e8629882a405f70acc498554
+
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "gid" : 1,
+        "gml_id": "8783",
+        "fot_id": 1,
+        "objekt_status": "A",
+        "geometri_status": "Clever",
+        "test": "MH1"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              8.780522,
+              55.325531
+            ],
+            [
+              8.785973,
+              55.326044
+            ],
+            [
+              8.785715,
+              55.323505
+            ],
+            [
+              8.784041,
+              55.32348
+            ],
+            [
+              8.783011,
+              55.323309
+            ],
+            [
+              8.780522,
+              55.325531
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
+
+<> 2021-06-07T121159.200.html
+
+###
+
+POST http://127.0.0.1:8080/api/v2/feature/mydb/test.city_center.the_geom/25832
+Content-Type: application/json
+Gc2-API-KEY: aea11527e8629882a405f70acc498554
+
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "gml_id": "8783",
+        "fot_id": 1,
+        "objekt_status": "A",
+        "geometri_status": "Clever",
+        "test": "MH1"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              8.780522,
+              55.325531
+            ],
+            [
+              8.785973,
+              55.326044
+            ],
+            [
+              8.785715,
+              55.323505
+            ],
+            [
+              8.784041,
+              55.32348
+            ],
+            [
+              8.783011,
+              55.323309
+            ],
+            [
+              8.780522,
+              55.325531
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
+
+<> 2021-06-07T121116.200.html
+
+###
+
+POST http://127.0.0.1:8080/api/v2/feature/mydb/test.city_center.the_geom/25832
+Content-Type: application/json
+Gc2-API-KEY: aea11527e8629882a405f70acc498554
+
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "gml_id": "8783",
+        "fot_id": 1,
+        "objekt_status": "A",
+        "geometri_status": "Clever",
+        "test": "MH1"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              8.780522,
+              55.325531
+            ],
+            [
+              8.785973,
+              55.326044
+            ],
+            [
+              8.785715,
+              55.323505
+            ],
+            [
+              8.784041,
+              55.32348
+            ],
+            [
+              8.783011,
+              55.323309
+            ],
+            [
+              8.780522,
+              55.325531
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
+
+<> 2021-06-07T121002.200.html
+
+###
+
+POST http://127.0.0.1:8080/api/v2/feature/mydb/test.city_center.the_geom/25832
+Content-Type: application/json
+Gc2-API-KEY: aea11527e8629882a405f70acc498554
+
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "gml_id": "8783",
+        "fot_id": 1,
+        "objekt_status": "A",
+        "geometri_status": "Clever",
+        "test": "MH1"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              8.780522,
+              55.325531
+            ],
+            [
+              8.785973,
+              55.326044
+            ],
+            [
+              8.785715,
+              55.323505
+            ],
+            [
+              8.784041,
+              55.32348
+            ],
+            [
+              8.783011,
+              55.323309
+            ],
+            [
+              8.780522,
+              55.325531
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
+
+<> 2021-06-07T120948.200.html
+
+###
+
+POST http://127.0.0.1:8080/api/v2/feature/mydb/test.city_center.the_geom/25832
+Content-Type: application/json
+Gc2-API-KEY: aea11527e8629882a405f70acc498554
+
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "gml_id": "8783",
+        "fot_id": 1,
+        "objekt_status": "A",
+        "geometri_status": "Clever",
+        "test": "MH1"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              8.780522,
+              55.325531
+            ],
+            [
+              8.785973,
+              55.326044
+            ],
+            [
+              8.785715,
+              55.323505
+            ],
+            [
+              8.784041,
+              55.32348
+            ],
+            [
+              8.783011,
+              55.323309
+            ],
+            [
+              8.780522,
+              55.325531
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
+
+<> 2021-06-07T120744.200.html
+
+###
+
+POST http://127.0.0.1:8080/api/v2/feature/mydb/test.city_center.the_geom/25832
+Content-Type: application/json
+Gc2-API-KEY: aea11527e8629882a405f70acc498554
+
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "gml_id": "8783",
+        "fot_id": 1,
+        "objekt_status": "A",
+        "geometri_status": "Clever",
+        "test": "MH1"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              8.780522,
+              55.325531
+            ],
+            [
+              8.785973,
+              55.326044
+            ],
+            [
+              8.785715,
+              55.323505
+            ],
+            [
+              8.784041,
+              55.32348
+            ],
+            [
+              8.783011,
+              55.323309
+            ],
+            [
+              8.780522,
+              55.325531
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
+
+<> 2021-06-07T120700.200.html
+
+###
+
+POST http://127.0.0.1:8080/api/v2/feature/mydb/test.city_center.the_geom/25832
+Content-Type: application/json
+Gc2-API-KEY: aea11527e8629882a405f70acc498554
+
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "gml_id": "8783",
+        "fot_id": 1,
+        "objekt_status": "A",
+        "geometri_status": "Clever",
+        "test": "MH1"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              8.780522,
+              55.325531
+            ],
+            [
+              8.785973,
+              55.326044
+            ],
+            [
+              8.785715,
+              55.323505
+            ],
+            [
+              8.784041,
+              55.32348
+            ],
+            [
+              8.783011,
+              55.323309
+            ],
+            [
+              8.780522,
+              55.325531
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
+
+<> 2021-06-07T120627.200.html
+
+###
+
+POST http://127.0.0.1:8080/api/v2/feature/mydb/test.city_center.the_geom/25832
+Content-Type: application/json
+Gc2-API-KEY: aea11527e8629882a405f70acc498554
+
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "gml_id": "8783",
+        "fot_id": 1,
+        "objekt_status": "A",
+        "geometri_status": "Clever",
+        "test": "MH1"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              8.780522,
+              55.325531
+            ],
+            [
+              8.785973,
+              55.326044
+            ],
+            [
+              8.785715,
+              55.323505
+            ],
+            [
+              8.784041,
+              55.32348
+            ],
+            [
+              8.783011,
+              55.323309
+            ],
+            [
+              8.780522,
+              55.325531
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
+
+<> 2021-06-07T120540.200.json
+
+###
+
+POST http://127.0.0.1:8080/api/v2/feature/mydb/test.city_center.the_geon/25832
+Content-Type: application/json
+Gc2-API-KEY: aea11527e8629882a405f70acc498554
+
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "gml_id": "8783",
+        "fot_id": 1,
+        "objekt_status": "A",
+        "geometri_status": "Clever",
+        "test": "MH1"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              8.780522,
+              55.325531
+            ],
+            [
+              8.785973,
+              55.326044
+            ],
+            [
+              8.785715,
+              55.323505
+            ],
+            [
+              8.784041,
+              55.32348
+            ],
+            [
+              8.783011,
+              55.323309
+            ],
+            [
+              8.780522,
+              55.325531
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
+
+<> 2021-06-07T120509.500.json
+
+###
+
 POST http://localhost:8080/extensions/gc2_demo_extension/controller/demo/mydb
 Content-Type: application/json
 
@@ -328,123 +1048,6 @@ Content-Type: application/json
 {}
 
 <> 2021-03-08T130429.404.html
-
-###
-
-GET http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
-Content-Type: application/json
-
-{}
-
-<> 2021-03-08T130403.404.html
-
-###
-
-GET http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
-Content-Type: application/json
-
-{}
-
-<> 2021-03-08T130346.200.json
-
-###
-
-GET http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
-Content-Type: application/json
-
-{}
-
-<> 2021-03-08T130229.200.json
-
-###
-
-GET http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
-Content-Type: application/json
-
-{}
-
-<> 2021-03-08T130159.200.json
-
-###
-
-GET http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
-Content-Type: application/json
-
-{}
-
-<> 2021-03-08T130143.200.json
-
-###
-
-GET http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
-Content-Type: application/json
-
-{}
-
-<> 2021-03-08T130123.200.json
-
-###
-
-GET http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
-Content-Type: application/json
-
-{}
-
-<> 2021-03-08T125937.200.json
-
-###
-
-POST http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
-Content-Type: application/json
-
-{}
-
-<> 2021-03-08T125922.200.json
-
-###
-
-POST http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
-Content-Type: application/json
-
-{}
-
-<> 2021-03-08T125857.200.json
-
-###
-
-POST http://localhost:8080/extensions/gc2-demo-extension/controller/dem/mydb
-Content-Type: application/json
-
-{}
-
-<> 2021-03-08T125850.404.html
-
-###
-
-POST http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
-Content-Type: application/json
-
-{}
-
-<> 2021-03-08T125821.200.json
-
-###
-
-POST http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
-Content-Type: application/json
-
-{}
-
-<> 2021-03-08T125706.200.json
-
-###
-
-POST http://localhost:8080/extensions/gc2-demo-extension/controller/demo/mydb
-Content-Type: application/json
-
-{}
-
-<> 2021-03-08T125621.200.json
 
 ###
 
