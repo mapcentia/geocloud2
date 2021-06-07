@@ -239,7 +239,7 @@ class Feature extends \app\inc\Controller
 
             // Create the elements
             foreach ($props as $elem => $value) {
-                if (!empty($props[$this->field]) && $props[$this->field] != $value) {
+                if (isset($this->field) && $this->field != $elem) {
                     if (is_string($value)) {
                         $value = "<![CDATA[{$value}]]>";
                     }
