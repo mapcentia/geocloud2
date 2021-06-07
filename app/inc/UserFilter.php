@@ -15,10 +15,6 @@ namespace app\inc;
  */
 class UserFilter
 {
-    public const ALLOW = "allow";
-    public const LIMIT = "limit";
-    public const DENY = "deny";
-
     /**
      * @var string
      */

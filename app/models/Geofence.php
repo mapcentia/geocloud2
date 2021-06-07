@@ -106,18 +106,18 @@ class Geofence extends Model
                 ($this->userFilter->ipAddress == $rule["ipaddress"] || $rule["ipaddress"] == null) &&
                 ($this->userFilter->request == $rule["request"] || $rule["request"] == "*")
             ) {
-                if ($rule["access"] == UserFilter::ALLOW) {
+                if ($rule["access"] == self::ALLOW_ACCESS) {
                     $filters = [];
-                    $response["access"] = UserFilter::ALLOW;
+                    $response["access"] = self::ALLOW_ACCESS;
                     break;
 
-                } elseif ($rule["access"] == UserFilter::DENY) {
+                } elseif ($rule["access"] == self::DENY_ACCESS) {
                     $filters = [];
-                    $response["access"] = UserFilter::DENY;
+                    $response["access"] = self::DENY_ACCESS;
                     break;
 
                 } else {
-                    $response["access"] = UserFilter::LIMIT;
+                    $response["access"] = self::LIMIT_ACCESS;
                     $filters["read"] = $rule["read_filter"];
                     $filters["write"] = $rule["write_filter"];
                     $filters["read_spatial"] = $rule["read_spatial_filter"];
