@@ -292,11 +292,11 @@ class Mapcachefile extends \app\inc\Controller
                             <getmap>
                                 <params>
                                     <FORMAT>mvt</FORMAT>
-                                    <LAYERS><?php echo $QGISLayers ?: $table ?><?php echo $layers ?></LAYERS>
+                                    <LAYERS><?php echo $table ?><?php echo $layers ?></LAYERS>
                                 </params>
                             </getmap>
                             <http>
-                                <url><?php echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $row["f_table_schema"] . "_wms.map&"; ?></url>
+                                <url><?php echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $row["f_table_schema"] . "_wfs.map&"; ?></url>
                             </http>
                         </source>
                         <tileset name="<?php echo $table ?>.mvt">
@@ -324,11 +324,11 @@ class Mapcachefile extends \app\inc\Controller
                         <getmap>
                             <params>
                                 <FORMAT>json</FORMAT>
-                                <LAYERS><?php echo $QGISLayers ?: $table ?><?php echo $layers ?></LAYERS>
+                                <LAYERS><?php echo $table ?><?php echo $layers ?></LAYERS>
                             </params>
                         </getmap>
                         <http>
-                            <url><?php echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $row["f_table_schema"] . "_wms.map&"; ?></url>
+                            <url><?php echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $row["f_table_schema"] . "_wfs.map&"; ?></url>
                         </http>
                         </source>
                         <tileset name="<?php echo $table ?>.json">
@@ -340,7 +340,7 @@ class Mapcachefile extends \app\inc\Controller
                                 echo "<grid>{$k}</grid>\n";
                             }
                             ?>
-                            <format>MVT</format>
+                            <format>JSON</format>
                             <expires><?php echo $expire ?></expires>
                             <?php if ($auto_expire) echo "<auto_expire>" . $auto_expire . "</auto_expire>\n" ?>
                             <metadata>
@@ -419,12 +419,7 @@ class Mapcachefile extends \app\inc\Controller
                     </getmap>
                     <http>
                         <url><?php
-
-                            if (empty(App::$param["useQgisForMergedLayers"][$k])) {
-                                echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $k . "_wms.map&";
-                            } else {
-                                echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/qgis_mapserv.fcgi?map=/var/www/geocloud2/app/wms/qgsfiles/parsed_" . App::$param["useQgisForMergedLayers"][$k] . "&transparent=true";
-                            }
+                                echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $k . "_wfs.map&";
                             ?></url>
 
                     </http>
