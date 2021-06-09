@@ -73,7 +73,7 @@ class Wms extends Controller
                 // Get the service. wms, wfs or UTFGRID
                 if (strtolower($k) == "service") {
                     $this->service = strtolower($v);
-                } elseif (strtolower($k) == "format" && ($v == "json" || "mvt")) {
+                } elseif (strtolower($k) == "format" && ($v == "json" || $v == "mvt")) {
                     $this->service = "utfgrid";
 
                 }
