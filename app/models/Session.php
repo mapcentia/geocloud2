@@ -134,7 +134,7 @@ class Session extends Model
                 $_SESSION['subuserEmails'] = [];
                 $sQuery = "SELECT * FROM users WHERE parentdb = :sUserID";
                 $res = $this->prepare($sQuery);
-                $res->execute(array(":sUserID" => $_SESSION['screen_name']));
+                $res->execute(array(":sUserID" => $_SESSION["subuser"] ? $_SESSION["parentdb"] : $_SESSION['screen_name']));
                 while ($rowSubUSers = $this->fetchRow($res)) {
                     $_SESSION['subusers'][] = $rowSubUSers["screenname"];
                     $_SESSION['subuserEmails'][$rowSubUSers["screenname"]] = $rowSubUSers["email"];
