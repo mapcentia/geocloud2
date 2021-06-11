@@ -103,9 +103,16 @@ class Wms extends Controller
             $this->service = strtolower($arr["service"]);
 
             $typeName = !empty($arr["wfs:Query"]["typeName"]) ? $arr["wfs:Query"]["typeName"] : $arr["Query"]["typeName"];
+
             if (empty($typeName)) {
                 $typeName = !empty($arr["wfs:Query"]["typeNames"]) ? $arr["wfs:Query"]["typeNames"] : $arr["Query"]["typeNames"];
             }
+
+            // In case of a POST DescribeFeatureType
+            if (empty($typeName)) {
+                $typeName = !empty($arr["wfs:TypeName"]) ? $arr["wfs:TypeName"] : $arr["TypeName"];
+            }
+
             if (empty($typeName)) {
                 self::report("Could not get the typeName from the requests");
             }
@@ -231,6 +238,7 @@ class Wms extends Controller
                 $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map={$qgs}&" . $_SERVER["QUERY_STRING"];
             } else {
                 switch ($this->service) {
+                    case "utfgrid":
                     case "wfs":
                         $mapFile = $db . "_" . $postgisschema . "_wfs.map";
                         break;

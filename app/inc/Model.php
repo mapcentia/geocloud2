@@ -361,7 +361,7 @@ class Model
      * @return array<mixed>
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function getMetaData(string $table, bool $temp = false, bool $restriction = false, ?array $restrictions = null): array
+    public function getMetaData(string $table, bool $temp = false, bool $restriction = false, $restrictions = null): array
     {
         $cacheType = "metadata";
         $cacheRel = $table;

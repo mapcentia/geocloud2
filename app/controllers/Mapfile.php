@@ -981,6 +981,170 @@ class Mapfile extends Controller
         SIZE 2000 1500
         MAXSIZE 16384
         UNITS METERS
+        FONTSET "/var/www/geocloud2/app/wms/fonts/fonts.txt"
+
+        #
+        # Vector Line Types
+        #
+
+        Symbol
+        Name 'triangle'
+        Type VECTOR
+        Filled TRUE
+        Points
+        0 1
+        .5 0
+        1 1
+        0 1
+        END
+        END
+
+        SYMBOL
+        NAME "circle"
+        TYPE ellipse
+        FILLED true
+        POINTS
+        1 1
+        END
+        END
+
+        Symbol
+        Name 'square'
+        Type VECTOR
+        Filled TRUE
+        Points
+        0 1
+        0 0
+        1 0
+        1 1
+        0 1
+        END
+        END
+
+        Symbol
+        Name 'star'
+        Type VECTOR
+        Filled TRUE
+        Points
+        0 .375
+        .35 .375
+        .5 0
+        .65 .375
+        1 .375
+        .75 .625
+        .875 1
+        .5 .75
+        .125 1
+        .25 .625
+        END
+        END
+
+        SYMBOL
+        NAME "hatch1"
+        TYPE VECTOR
+        POINTS
+        0 1 1 0
+        END
+        END
+
+        SYMBOL
+        NAME "dashed1"
+        TYPE ELLIPSE
+        FILLED TRUE
+        POINTS
+        1 1
+        END
+        #STYLE 4 2 END
+        END
+
+        SYMBOL
+
+        NAME "arrow"
+        TYPE vector
+        FILLED true
+        POINTS
+        0 0.4
+        3 0.4
+        3 0
+        5 0.8
+        3 1.6
+        3 1.2
+        0 1.2
+        0 0.4
+        END
+        ANCHORPOINT 0 0.5
+        END # SYMBOL
+
+        SYMBOL
+        NAME "arrow2"
+        TYPE vector
+        FILLED true
+        POINTS
+        0 0.8
+        1 0.4
+        0 0
+        0 0.8
+        END
+        ANCHORPOINT 0 0.5
+        END
+
+        #
+        # Vector Line Types
+        #
+
+        SYMBOL
+        NAME "continue"
+        TYPE ELLIPSE
+        FILLED TRUE
+        POINTS
+        1 1
+        END
+        END
+
+        SYMBOL
+        NAME "dashed-line-short"
+        TYPE ELLIPSE
+        FILLED TRUE
+        POINTS
+        10 1
+        END
+        END
+
+        SYMBOL
+        NAME "dashed-line-long"
+        TYPE ELLIPSE
+        FILLED TRUE
+        POINTS
+        10 10
+        END
+        END
+
+        SYMBOL
+        NAME "dash-dot"
+        TYPE ELLIPSE
+        FILLED TRUE
+        POINTS
+        20 6 2 6
+        END
+        END
+
+        SYMBOL
+        NAME "dash-dot-dot"
+        TYPE ELLIPSE
+        FILLED TRUE
+        POINTS
+        1 1
+        END
+        END
+
+        SYMBOL
+        NAME "dot-dot"
+        TYPE ELLIPSE
+        FILLED TRUE
+        POINTS
+        1 1
+        END
+        END
 
         #
         # Vector Line Types
@@ -1353,7 +1517,7 @@ class Mapfile extends Controller
 
                 TEMPLATE "test"
                 <?php
-                if (is_array($classArr['data']) and (!$row['wmssource'])) {
+                if (is_array($classArr['data'])) {
 //                    print_r($classArr['data']);
 //                    die();
                     foreach ($classArr['data'] as $class) {

@@ -314,6 +314,10 @@ if (Input::getPath()->part(1) == "api") {
         }
     });
 
+    Route::add("api/v3/geofence", function () {
+            Database::setDb("mydb");
+    });
+
     Route::miss();
 
 } elseif (Input::getPath()->part(1) == "admin") {

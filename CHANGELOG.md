@@ -18,6 +18,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Always set ns uri to http:// in WFS-t or else editing won't work in Admin.
 - Bugs related to the new `peppeocchi/php-cron-scheduler` system. 
 - The manual Run function in scheduler GUI will not time out after 30 secs. 
+- A POST WFS DescribeFeatureType to OWS request would always end in an exception. Not many clients do this, but MapInfo 15.0 does.
 
 ## [2021.5.1]
 ### Added

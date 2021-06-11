@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4c87c09046c9f27fbb81067c0545547c",
+    "content-hash": "d163a43bcdd92b7f1b94d6a90a8071db",
     "packages": [
         {
             "name": "aws/aws-sdk-php",
@@ -1528,36 +1528,41 @@
         },
         {
             "name": "sad_spirit/pg_builder",
-            "version": "v0.4.1",
+            "version": "v1.0.0-beta",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sad-spirit/pg-builder.git",
-                "reference": "4447dbcf94d9a6f8563681f2247f586aef0e331a"
+                "reference": "13cb43835d6cce8f924cc68e84738e8a7d7471c9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sad-spirit/pg-builder/zipball/4447dbcf94d9a6f8563681f2247f586aef0e331a",
-                "reference": "4447dbcf94d9a6f8563681f2247f586aef0e331a",
+                "url": "https://api.github.com/repos/sad-spirit/pg-builder/zipball/13cb43835d6cce8f924cc68e84738e8a7d7471c9",
+                "reference": "13cb43835d6cce8f924cc68e84738e8a7d7471c9",
                 "shasum": ""
             },
             "require": {
                 "ext-ctype": "*",
-                "ext-pgsql": "*",
-                "php": ">=5.3.0"
+                "php": ">=7.2.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^4.8|^5.7",
+                "ext-pdo_pgsql": "*",
+                "ext-pgsql": "*",
+                "phpstan/phpstan": "^0.12",
+                "phpunit/phpunit": "^8.0",
                 "psr/cache": "^1.0",
-                "sad_spirit/pg_wrapper": "^0.2"
+                "sad_spirit/pg_wrapper": "^1.0.0@beta",
+                "vimeo/psalm": "^4.6.1"
             },
             "suggest": {
+                "ext-pdo_pgsql": "Used for running built queries",
                 "psr/cache-implementation": "Used for caching parsed queries",
-                "sad_spirit/pg_wrapper": "Used for running built queries"
+                "sad_spirit/pg_wrapper": "Used for DB types conversion and running built queries"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "sad_spirit\\pg_builder\\": "src/sad_spirit/pg_builder"
+                    "sad_spirit\\pg_builder\\": "src/sad_spirit/pg_builder",
+                    "sad_spirit\\pg_builder\\rector\\": "rector/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -1570,7 +1575,7 @@
                     "email": "avb@php.net"
                 }
             ],
-            "description": "Query builder for PostgreSQL backed by query parser",
+            "description": "Query builder for Postgres backed by SQL parser",
             "keywords": [
                 "ast",
                 "builder",
@@ -1583,9 +1588,9 @@
             ],
             "support": {
                 "issues": "https://github.com/sad-spirit/pg-builder/issues",
-                "source": "https://github.com/sad-spirit/pg-builder/tree/v0.4.1"
+                "source": "https://github.com/sad-spirit/pg-builder/tree/v1.0.0-beta"
             },
-            "time": "2020-09-30T21:25:44+00:00"
+            "time": "2021-02-20T21:15:14+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
@@ -6740,7 +6745,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "sad_spirit/pg_builder": 10
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
