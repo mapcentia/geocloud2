@@ -236,12 +236,10 @@ class Layer extends Table
                         $obj = json_decode($value, true);
                         if (is_array($obj)) {
                             foreach ($obj as $k => $val) {
-                                $props = json_decode(str_replace("'", '"', $obj[$k]["properties"]), true);
+                                $props = json_decode(str_replace("'", '"', $obj[$k]["properties"]));
                                 if ($obj[$k]["properties"] == "*") {
-                                    $table = new Table($row['f_table_schema'] . "." . $row['f_table_name']);
-                                    $distinctValues = $table->getGroupByAsArray($k);
-                                    $obj[$k]["properties"] = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK);
-                                } elseif (isset($props["_rel"]) || is_array($props)) {
+                                    $restrictions[$k] = "*";
+                                } elseif (is_object($props) || is_array($props)) {
                                     $restrictions[$k] = $props;
                                 }
 
@@ -368,7 +366,7 @@ class Layer extends Table
 
             // Resort data, because a mix of schema and tags search will not be sorted right
             usort($response['data'], function ($a, $b) {
-                if ($a['sort_id'] === $b['sort_id']){
+                if ($a['sort_id'] === $b['sort_id']) {
                     $a['f_table_name'] = strtolower($a['f_table_title'] ?? $a['f_table_name']);
                     $b['f_table_name'] = strtolower($b['f_table_title'] ?? $b['f_table_name']);
                     if (App::$param["reverseLayerOrder"]) {
