@@ -10,6 +10,7 @@ namespace app\inc;
 
 use app\conf\App;
 use app\conf\Connection;
+use app\models\Table;
 use Error;
 use Exception;
 use PDO;
@@ -360,7 +361,7 @@ class Model
      * @return array<mixed>
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function getMetaData(string $table, bool $temp = false, bool $restriction = false, ?array $restrictions = null): array
+    public function getMetaData(string $table, bool $temp = false, bool $restriction = false, $restrictions = null): array
     {
         $cacheType = "metadata";
         $cacheRel = $table;
@@ -431,10 +432,9 @@ class Model
                             }
                         }
                     }
-                } elseif ($restriction == true && $restrictions != false && isset($restrictions[$row["column_name"]]) && isset($restrictions[$row["column_name"]]['_rel'])) {
+                } elseif ($restriction == true && $restrictions != false && isset($restrictions[$row["column_name"]]) && isset($restrictions[$row["column_name"]]->_rel)) {
                     $rel = $restrictions[$row["column_name"]];
-                    //print_r($rel);
-                    $sql = "SELECT {$rel["_value"]} AS value, {$rel["_text"]} AS text FROM {$rel["_rel"]}";
+                    $sql = "SELECT {$rel->_value} AS value, {$rel->_text} AS text FROM {$rel->_rel}";
                     try {
                         $resC = $this->prepare($sql);
                         $resC->execute();
@@ -448,9 +448,20 @@ class Model
                     while ($rowC = $this->fetchRow($resC)) {
                         $foreignValues[] = ["value" => $rowC["value"], "alias" => (string)$rowC["text"]];
                     }
-                } elseif ($restriction == true && $restrictions != false && isset($restrictions[$row["column_name"]])) {
-                    foreach ($restrictions[$row["column_name"]] as $restriction) {
-                        $foreignValues[] = ["value" => $restriction, "alias" => (string)$restriction];
+                } elseif ($restriction == true && $restrictions != false && isset($restrictions[$row["column_name"]]) && $restrictions[$row["column_name"]] != "*") {
+                    if (is_array($restrictions[$row["column_name"]])) {
+                        foreach ($restrictions[$row["column_name"]] as $restriction) {
+                            $foreignValues[] = ["value" => $restriction, "alias" => (string)$restriction];
+                        }
+                    } elseif (is_object($restrictions[$row["column_name"]])) {
+                        foreach ($restrictions[$row["column_name"]] as $alias => $value) {
+                            $foreignValues[] = ["value" => (string)$value, "alias" => (string)$alias];
+                        }
+                    }
+                } elseif ($restrictions[$row["column_name"]] == "*") {
+                    $t = new Table($table);
+                    foreach ($t->getGroupByAsArray($row["column_name"])["data"] as $value) {
+                        $foreignValues[] = ["value" => (string)$value, "alias" => (string)$value];
                     }
                 }
 
@@ -1018,20 +1029,20 @@ class Model
      */
     public function countRows(string $schema, string $table): array
     {
-            $sql = "SELECT count(*) AS count FROM " . $this->doubleQuoteQualifiedName($schema. "." . $table);
-            $res = $this->prepare($sql);
-            try {
-                $res->execute();
-                $row = $this->fetchRow($res);
-            } catch (Exception $e) {
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 401;
-                return $response;
-            }
-            return [
-                "success" => true,
-                "data" => $row["count"],
-            ];
+        $sql = "SELECT count(*) AS count FROM " . $this->doubleQuoteQualifiedName($schema . "." . $table);
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
+            $row = $this->fetchRow($res);
+        } catch (Exception $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        return [
+            "success" => true,
+            "data" => $row["count"],
+        ];
     }
 }
