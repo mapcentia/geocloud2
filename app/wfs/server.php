@@ -1300,11 +1300,9 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     }
     if ($version == "1.1.0") writeTag("open", "gml", "featureMembers", null, True, True);
     while ($innerStatement->execute() && $myrow = $postgisObject->fetchRow($innerStatement, "assoc")) {
-        if ($version != "1.1.0") writeTag("open", "gml", "featureMember", null, True, True);
-        $depth++;
-        writeTag("open", $gmlNameSpace, $gmlFeature[$table], $version == "1.1.0" ? array("gml:id" => "{$table}.{$myrow["fid"]}") : array("fid" => "{$table}.{$myrow["fid"]}"), True, True);
-        $depth++;
-        $checkIfGeomHasPassed = false; // Check that geom field is written out only once.
+        $str = "";
+        if ($version != "1.1.0") $str .= writeTag("open", "gml", "featureMember", null, True, True, true);
+        $str .= writeTag("open", $gmlNameSpace, $gmlFeature[$table], $version == "1.1.0" ? array("gml:id" => "{$table}.{$myrow["fid"]}") : array("fid" => "{$table}.{$myrow["fid"]}"), True, True, true);
         $numFields = sizeof($myrow);
         $keys = array_keys($myrow);
         for ($i = 0; $i < $numFields; $i++) {
@@ -1338,9 +1336,9 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
                             $fieldValue = str_replace("&", "&#38;", $fieldValue);
                         }
                     }
-                    writeTag("open", $gmlNameSpace, $fieldName, $imageAttr, True, False);
-                    echo (string)$fieldValue;
-                    writeTag("close", $gmlNameSpace, $fieldName, null, False, True);
+                    $str .= writeTag("open", $gmlNameSpace, $fieldName, $imageAttr, True, False, true);
+                    $str .= (string)$fieldValue;
+                    $str .= writeTag("close", $gmlNameSpace, $fieldName, null, False, True, true);
                 }
             } elseif (!empty($tableObj->metaData[$fieldName]) && $tableObj->metaData[$fieldName]['type'] == "geometry") {
                 // Check if the geometry field use another name space and element name
@@ -1352,30 +1350,17 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
                 } else {
                     $tmpNameSpace = $gmlNameSpace;
                 }
-
-                if ($version == "1.1.0") {
-                    /*writeTag("open", "gml", "boundedBy", null, True, True);
-                    $depth++;
-                    echo $myrow["_boundedby"];
-                    $depth--;
-                    writeTag("close", "gml", "boundedBy", null, True, True);*/
-                }
                 if (!empty($myrow[$fieldName])) {
-                    writeTag("open", $tmpNameSpace, $gmlGeomFieldName[$table], null, True, True);
-                    $depth++;
-                    echo $myrow[$fieldName];
-                    $depth--;
-                    writeTag("close", $tmpNameSpace, $gmlGeomFieldName[$table], null, True, True);
+                    $str .= writeTag("open", $tmpNameSpace, $gmlGeomFieldName[$table], null, True, True, true);
+                    $str .= $myrow[$fieldName];
+                    $str .= writeTag("close", $tmpNameSpace, $gmlGeomFieldName[$table], null, True, True, true);
                 }
                 unset($gmlGeomFieldName[$table]);
             }
         }
-        $depth--;
-        writeTag("close", $gmlNameSpace, $gmlFeature[$table], null, True, True);
-        $depth--;
-        if ($version != "1.1.0") writeTag("close", "gml", "featureMember", null, True, True);
-        $data = ob_get_clean();
-        echo $data;
+        $str .= writeTag("close", $gmlNameSpace, $gmlFeature[$table], null, True, True, true);
+        if ($version != "1.1.0") $str .= writeTag("close", "gml", "featureMember", null, True, True, true);
+        echo $str;
         flush();
         ob_flush();
     }
@@ -2621,34 +2606,31 @@ function addDiminsionOnArray(?array $array): ?array
  * @param bool|null $ind
  * @param bool|null $n
  */
-function writeTag(string $type, ?string $ns, ?string $tag, ?array $atts, ?bool $ind, ?bool $n): void
+function writeTag(string $type, ?string $ns, ?string $tag, ?array $atts, ?bool $ind, ?bool $n, $rtn = false): ?string
 {
-    global $depth;
-    if ($ind != false) {
-        for ($i = 0; $i < $depth; $i++) {
-            echo "  ";
-        }
-    }
+    $str = "";
     if ($ns != null) {
         $tag = $ns . ":" . $tag;
     }
-    echo "<";
+    $str .= "<";
     if ($type == "close") {
-        echo "/";
+        $str .= "/";
     }
-    echo $tag;
+    $str .= $tag;
     if (!empty($atts)) {
         foreach ($atts as $key => $value) {
-            echo ' ' . $key . '="' . $value . '"';
+            $str .= ' ' . $key . '="' . $value . '"';
         }
     }
     if ($type == "selfclose") {
-        echo "/";
+        $str .= "/";
     }
-    echo ">";
-    if ($n == true) {
-        echo "\n";
+    $str .= ">";
+    if ($rtn) {
+        return $str;
     }
+    echo $str;
+    return null;
 }
 
 /**
@@ -2737,7 +2719,7 @@ function parseFilter($filter, string $table): string
         $arr['PropertyIsBetween'] = addDiminsionOnArray($arr['PropertyIsBetween']);
         if (is_array($arr['PropertyIsBetween'])) {
             foreach ($arr['PropertyIsBetween'] as $value) {
-                $value['PropertyName'] =  dropAllNameSpaces($value['PropertyName']);
+                $value['PropertyName'] = dropAllNameSpaces($value['PropertyName']);
                 if ($value['LowerBoundary'])
                     $w[] = "\"" . $value['PropertyName'] . "\" > '" . $value['LowerBoundary']['Literal'] . "'";
                 if ($value['UpperBoundary'])
@@ -2762,7 +2744,7 @@ function parseFilter($filter, string $table): string
         //Intersects
         $arr['Intersects'] = addDiminsionOnArray($arr['Intersects']);
         if (is_array($arr['Intersects'])) foreach ($arr['Intersects'] as $value) {
-            $value['PropertyName'] =  dropAllNameSpaces($value['PropertyName']);
+            $value['PropertyName'] = dropAllNameSpaces($value['PropertyName']);
             $wktArr = toWKT($value, false, $srsName ? getAxisOrder($srsName) : "latitude");
             $sridOfFilter = $wktArr[1];
             if (empty($sridOfFilter)) $sridOfFilter = $srs; // If no filter on BBOX we think it must be same as the requested srs
