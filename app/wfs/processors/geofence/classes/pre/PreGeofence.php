@@ -55,8 +55,15 @@ class PreGeofence implements PreInterface
     function __construct(Model $db)
     {
         $this->db = $db;
-        $this->gc2User = explode("@", Input::getPath()->part(2))[0];
-        $this->dbName = explode("@", Input::getPath()->part(2))[1];
+        $urlPart =Input::getPath()->part(2);
+        $dbSplit = explode("@", $urlPart);
+        if (sizeof($dbSplit) == 2) {
+            $this->gc2User = $dbSplit[0];
+            $this->dbName = $dbSplit[1];
+        } else {
+            $this->gc2User = $urlPart;
+            $this->dbName = $urlPart;
+        }
         self::$isDelete = false;
     }
 
