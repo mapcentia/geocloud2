@@ -106,14 +106,12 @@ App::$param['userHostName'] = App::$param['userHostName'] ?: App::$param['host']
 $http_origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : null;
 if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App::$param["AccessControlAllowOrigin"])) {
     header("Access-Control-Allow-Origin: " . $http_origin);
-    header("Access-Control-Allow-Headers: Origin, Content-Type, Authorization, X-Requested-With, Accept");
-    header("Access-Control-Allow-Credentials: true");
-    header("Access-Control-Allow-Methods: GET, PUT, POST, DELETE, HEAD");
 } elseif (isset(App::$param["AccessControlAllowOrigin"]) && App::$param["AccessControlAllowOrigin"][0] == "*") {
     header("Access-Control-Allow-Origin: *");
-    header("Access-Control-Allow-Headers: Origin, Content-Type, Authorization, X-Requested-With, Accept");
-    header("Access-Control-Allow-Credentials: true");
 }
+header("Access-Control-Allow-Headers: Origin, Content-Type, Authorization, X-Requested-With, Accept");
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Methods: GET, PUT, POST, DELETE, HEAD");
 
 // Start routing
 if (Input::getPath()->part(1) == "api") {
