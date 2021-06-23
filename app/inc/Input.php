@@ -53,6 +53,14 @@ class Input
     /**
      * @return string
      */
+    public static function getAccept(): string
+    {
+        return strtolower($_SERVER['HTTP_ACCEPT']);
+    }
+
+    /**
+     * @return string
+     */
     public static function getContentType(): string
     {
         return $_SERVER["CONTENT_TYPE"];

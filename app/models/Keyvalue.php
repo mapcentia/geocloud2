@@ -85,16 +85,21 @@ class Keyvalue extends Model
         }
 
         if ($fetchingAll) {
-            $response["data"] = $this->fetchAll($res, "assoc");
+            $response["data"] = $this->fetchAll($res, "assoc") ?: [];
         } else {
-            $response["data"] = $this->fetchRow($res, "assoc");
+            $response["data"] = $this->fetchRow($res, "assoc") ?: [];
         }
 
         $response["success"] = true;
         return $response;
     }
 
-    public function insert($key, $json): array
+    /**
+     * @param string $key
+     * @param string $json
+     * @return array<mixed>
+     */
+    public function insert(string $key, string $json): array
     {
         $response = [];
         if (!$key) {

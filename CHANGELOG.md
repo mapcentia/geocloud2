@@ -11,7 +11,8 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [2021.5.2]
 ### Changed
 - outputFormat in WFS-t is set to GML2, if a not recognized format is requested instead if throwing an exception. 
-- `peppeocchi/php-cron-scheduler` lock files are now created in `/var/www/geocloud2/app/tmp/scheduler_locks`, so they get purged with other lock files after an hour. 
+- `peppeocchi/php-cron-scheduler` lock files are now created in `/var/www/geocloud2/app/tmp/scheduler_locks`, so they get purged with other lock files after an hour.
+- Keyvalue API now can be requested with headers: `Content-Type: text/plain` and `Accept: text/plain`. In this case the body on POST and PUT must be a base64url encoded string. And for GET the response will be a base64url encoded string. This makes it easier to get user generated JSON unaltered through the network. E.g. a JSON value like `ILIKE '%12'` will not mess things up.
 
 ### Fixed
 - Then no sort_ids is set on layers or sort_ids are the same, then sort by layer title or name if the former is not set. The sorting is done in the application and not in the database.

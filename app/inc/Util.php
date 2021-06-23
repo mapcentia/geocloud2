@@ -138,6 +138,7 @@ class Util
         return $grad;
 
     }
+
     /**
      * @param int $pBegin
      * @param int $pEnd
@@ -322,7 +323,7 @@ class Util
         ini_set('zlib.output_compression', 'false');
         // Implicitly flush the buffer(s)
         ini_set('implicit_flush', 'true');
-        ob_implicit_flush(1);
+        ob_implicit_flush(true);
         // Clear, and turn off output buffering
         while (ob_get_level() > 0) {
             // Get the curent level
@@ -342,6 +343,16 @@ class Util
     {
         return base64_decode(str_replace(array('-', '_'), array('+', '/'), $str));
     }
+
+    /**
+     * @param string $str
+     * @return string
+     */
+    public static function base64urlEncode(string $str): string
+    {
+        return rtrim(strtr(base64_encode($str), '+/', '-_'), '=');
+    }
+
 
     /**
      * @param string $sValue
