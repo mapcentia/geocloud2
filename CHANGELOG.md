@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNREALEASED]
+### Changed
+- The timestamp fields `created` and `updated` are added to `settings.key_value`. The latter is updated when the value is updated. The Keyvalue GET API will now sort by the `update` field in descending order.
+
 ### Fixed
 - Big `GetFeature` optimizition of WFS-t.
 

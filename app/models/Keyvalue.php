@@ -57,7 +57,7 @@ class Keyvalue extends Model
             $sql .= " AND {$parsedFilter}";
         }
 
-        $sql .= " ORDER BY id DESC"; // Newest first in output
+        $sql .= " ORDER BY updated DESC, id DESC"; // Newest first in output
 
         if (strpos($sql, ';') !== false) {
             $response['success'] = false;
@@ -132,7 +132,7 @@ class Keyvalue extends Model
             $response['code'] = 401;
             return $response;
         }
-        $sql = "UPDATE settings.key_value SET value=:value WHERE key=:key RETURNING *";
+        $sql = "UPDATE settings.key_value SET value=:value, updated=default WHERE key=:key RETURNING *";
         try {
             $res = $this->prepare($sql);
             $res->execute(["key" => $key, "value" => $json]);
