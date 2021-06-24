@@ -121,7 +121,7 @@ class Mapfile extends Controller
         "wms_srs"    <?php echo "\"" . (!empty(App::$param['advertisedSrs']) ? implode(" ", App::$param['advertisedSrs']) : "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832") . "\"\n" ?>
         "wms_name"    "<?php echo $user; ?>"
         "wms_format"    "image/png"
-        "wms_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/__USER__/<?php echo Connection::$param['postgisschema']; ?>/"
+        "wms_onlineresource"    "<?php echo App::$param['host']; ?>/ows/__USER__/<?php echo Connection::$param['postgisschema']; ?>/"
         "wms_enable_request" "*"
         "ows_encoding" "UTF-8"
         "wms_extent" "<?php echo implode(" ", $extent) ?>"
@@ -1348,7 +1348,7 @@ class Mapfile extends Controller
         "ows_title"    "<?php echo $user; ?>'s OWS"
         "ows_srs"    <?php echo "\"" . (!empty(App::$param['advertisedSrs']) ? implode(" ", App::$param['advertisedSrs']) : "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:3044 EPSG:25832") . "\"\n" ?>
         "ows_name"    "<?php echo $user; ?>"
-        "ows_onlineresource"    "http://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/__USER__/<?php echo Connection::$param['postgisschema']; ?>/"
+        "ows_onlineresource"    "<?php echo App::$param['host']; ?>/ows/__USER__/<?php echo Connection::$param['postgisschema']; ?>/"
         "ows_enable_request" "*"
         "ows_encoding" "UTF-8"
         "ows_namespace_prefix" "<?php echo $user; ?>"
