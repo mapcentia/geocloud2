@@ -566,13 +566,13 @@ class Mapfile extends Controller
                 } ?>
                 <?php if (!empty($layerArr['data'][0]['query_buffer'])) echo "\"appformap_query_buffer\" \"" . $layerArr['data'][0]['query_buffer'] . "\"\n"; ?>
                 END
-                UTFITEM   "<?php echo $primeryKey['attname'] ?>"
+                #UTFITEM   "<?php echo $primeryKey['attname'] ?>"
                 <?php $fields = json_decode($row['fieldconf'], true);
                 if (!empty($fields)) foreach ($fields as $field => $name) {
                     $fieldsArr[] = "\\\"{$field}\\\":\\\"[{$field}]\\\"";
                 }
                 ?>
-                UTFDATA "<?php echo "{" . implode(",", !empty($fieldsArr) ? $fieldsArr : []) . "}";
+                #UTFDATA "<?php echo "{" . implode(",", !empty($fieldsArr) ? $fieldsArr : []) . "}";
                 $fieldsArr = [];
                 ?>"
 
@@ -1501,13 +1501,13 @@ class Mapfile extends Controller
                 "gml_<?php echo $row['f_geometry_column'] ?>_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
                 "wfs_getfeature_formatlist" "kml,kmz"
                 END
-                UTFITEM   "<?php echo $primeryKey['attname'] ?>"
+                #UTFITEM   "<?php echo $primeryKey['attname'] ?>"
                 <?php $fields = json_decode($row['fieldconf'], true);
                 if (!empty($fields)) foreach ($fields as $field => $name) {
                     $fieldsArr[] = "\\\"{$field}\\\":\\\"[{$field}]\\\"";
                 }
                 ?>
-                UTFDATA "<?php echo "{" . implode(",", (!empty($fieldsArr) ? $fieldsArr : [])) . "}";
+                #UTFDATA "<?php echo "{" . implode(",", (!empty($fieldsArr) ? $fieldsArr : [])) . "}";
                 $fieldsArr = [];
                 ?>"
 
