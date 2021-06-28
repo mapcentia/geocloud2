@@ -82,14 +82,14 @@ class Model
      */
     public $theGeometry;
 
-
+    // If Connection::$params are not set, then set them from environment variables
     function __construct()
     {
-        $this->postgishost = Connection::$param['postgishost'];
-        $this->postgisport = Connection::$param['postgisport'];
-        $this->postgisuser = Connection::$param['postgisuser'];
-        $this->postgisdb = Connection::$param['postgisdb'];
-        $this->postgispw = Connection::$param['postgispw'];
+        $this->postgishost = Connection::$param['postgishost'] ?? getenv('POSTGIS_HOST');
+        $this->postgisport = Connection::$param['postgisport'] ?? getenv('POSTGIS_PORT');
+        $this->postgisuser = Connection::$param['postgisuser'] ?? getenv('POSTGIS_USER');
+        $this->postgisdb = Connection::$param['postgisdb'] ?? getenv('POSTGIS_DB');
+        $this->postgispw = Connection::$param['postgispw'] ?? getenv('POSTGIS_PW');
         $this->postgisschema = isset(Connection::$param['postgisschema']) ? Connection::$param['postgisschema'] : null;
     }
 
@@ -861,21 +861,21 @@ class Model
         } else {
 
             $response = [];
-            $sql = "SELECT 
-                    att2.attname AS \"child_column\", 
-                    cl.relname AS \"parent_table\", 
-                    nspname AS \"parent_schema\", 
+            $sql = "SELECT
+                    att2.attname AS \"child_column\",
+                    cl.relname AS \"parent_table\",
+                    nspname AS \"parent_schema\",
                     att.attname AS \"parent_column\",
                     conname
                 FROM
-                   (SELECT 
-                        unnest(con1.conkey) AS \"parent\", 
-                        unnest(con1.confkey) AS \"child\", 
-                        con1.confrelid, 
+                   (SELECT
+                        unnest(con1.conkey) AS \"parent\",
+                        unnest(con1.confkey) AS \"child\",
+                        con1.confrelid,
                         con1.conrelid,
                         con1.conname,
                         ns.nspname
-                    FROM 
+                    FROM
                         pg_class cl
                         JOIN pg_namespace ns ON cl.relnamespace = ns.oid
                         JOIN pg_constraint con1 ON con1.conrelid = cl.oid
@@ -942,11 +942,11 @@ class Model
         } else {
             $response = [];
             $sql = "SELECT tc.*, ccu.column_name
-                    FROM information_schema.table_constraints tc 
-                    RIGHT JOIN information_schema.constraint_column_usage ccu 
-                          ON tc.constraint_catalog=ccu.constraint_catalog 
-                         AND tc.constraint_schema = ccu.constraint_schema 
-                         AND tc.constraint_name = ccu.constraint_name 
+                    FROM information_schema.table_constraints tc
+                    RIGHT JOIN information_schema.constraint_column_usage ccu
+                          ON tc.constraint_catalog=ccu.constraint_catalog
+                         AND tc.constraint_schema = ccu.constraint_schema
+                         AND tc.constraint_name = ccu.constraint_name
                     AND (ccu.table_schema, ccu.table_name) IN ((:schema, :table))
                     WHERE lower(tc.constraint_type) IN ('foreign key') AND constraint_type='FOREIGN KEY'";
 

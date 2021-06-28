@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNREALEASED]
+
+### Fixed
+- If the variables in Connection.php is set as environment variables in the image and therefore Connection.php is empty. It is now possible to run the migrations in app/migration/run.php.
 ### Changed
 - The timestamp fields `created` and `updated` are added to `settings.key_value`. The latter is updated when the value is updated. The Keyvalue GET API will now sort by the `update` field in descending order.
 
@@ -348,4 +351,3 @@ So both containers must connect to the same user-defined network. Notice that Do
 
 ### Security
 - Better checking of privileges on layers when POSTing WFS GetFeature requests.
-
