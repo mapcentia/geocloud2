@@ -7,6 +7,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [UNREALEASED]
 ### Changed
 - The timestamp fields `created` and `updated` are added to `settings.key_value`. The latter is updated when the value is updated. The Keyvalue GET API will now sort by the `update` field in descending order.
+- Upgraded QGIS Server to 3.16.8 in Dockerfile.
 
 ### Fixed
 - Big `GetFeature` optimizition of WFS-t.
