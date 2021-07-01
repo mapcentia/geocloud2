@@ -760,5 +760,6 @@ tableStructure.onWrite = function (store, action, result, transaction, rs) {
     if (transaction.message === "Renamed") {
         tableStructure.store.load();
     }
+    writeFiles();
 };
 
