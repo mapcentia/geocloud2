@@ -85,11 +85,19 @@ class Model
     // If Connection::$params are not set, then set them from environment variables
     function __construct()
     {
-        $this->postgishost = Connection::$param['postgishost'] ?? getenv('POSTGIS_HOST');
-        $this->postgisport = Connection::$param['postgisport'] ?? getenv('POSTGIS_PORT');
-        $this->postgisuser = Connection::$param['postgisuser'] ?? getenv('POSTGIS_USER');
-        $this->postgisdb = Connection::$param['postgisdb'] ?? getenv('POSTGIS_DB');
-        $this->postgispw = Connection::$param['postgispw'] ?? getenv('POSTGIS_PW');
+        // If Connection::$params are not set, when set them from environment variables
+        Connection::$param['postgishost'] = Connection::$param['postgishost'] ?? getenv('POSTGIS_HOST');
+        Connection::$param['postgisport'] = Connection::$param['postgisport'] ?? getenv('POSTGIS_PORT');
+        Connection::$param['postgisuser'] = Connection::$param['postgisuser'] ?? getenv('POSTGIS_USER');
+        Connection::$param['postgisdb'] = Connection::$param['postgisdb'] ?? getenv('POSTGIS_DB');
+        Connection::$param['postgispw'] = Connection::$param['postgispw'] ?? getenv('POSTGIS_PW');
+        Connection::$param['pgbouncer'] = Connection::$param['pgbouncer'] ?? getenv('POSTGIS_PGBOUNCER') === "true";
+
+        $this->postgishost = Connection::$param['postgishost'];
+        $this->postgisport = Connection::$param['postgisport'];
+        $this->postgisuser = Connection::$param['postgisuser'];
+        $this->postgisdb = Connection::$param['postgisdb'];
+        $this->postgispw = Connection::$param['postgispw'];
         $this->postgisschema = isset(Connection::$param['postgisschema']) ? Connection::$param['postgisschema'] : null;
     }
 

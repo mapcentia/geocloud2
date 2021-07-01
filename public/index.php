@@ -30,14 +30,6 @@ include_once("../app/inc/Globals.php");
 
 new App();
 
-// If Connection::$params are not set, when set them from environment variables
-Connection::$param['postgishost'] = Connection::$param['postgishost'] ?? getenv('POSTGIS_HOST');
-Connection::$param['postgisport'] = Connection::$param['postgisport'] ?? getenv('POSTGIS_PORT');
-Connection::$param['postgisuser'] = Connection::$param['postgisuser'] ?? getenv('POSTGIS_USER');
-Connection::$param['postgisdb'] = Connection::$param['postgisdb'] ?? getenv('POSTGIS_DB');
-Connection::$param['postgispw'] = Connection::$param['postgispw'] ?? getenv('POSTGIS_PW');
-
-
 $memoryLimit = isset(App::$param["memoryLimit"]) ? App::$param["memoryLimit"] : "128M";
 ini_set("memory_limit", $memoryLimit);
 ini_set("max_execution_time", "30");
