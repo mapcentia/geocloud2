@@ -1389,9 +1389,11 @@ class Mapfile extends Controller
                     $extent = $this->bbox;
                 }
 
-                $versioning = $postgisObject->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}", "gc2_version_gid");
+                $rel = "{$row['f_table_schema']}.{$row['f_table_name']}";
+                $versioning = $postgisObject->doesColumnExist($rel, "gc2_version_gid");
                 $versioning = $versioning["exists"];
-                $workflow = $postgisObject->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}", "gc2_status");
+                $workflow = $postgisObject->doesColumnExist($rel, "gc2_status");
+                $meta = $postgisObject->getMetaData($rel);
                 $workflow = $workflow["exists"];
                 $arr = (array)json_decode($row['def']); // Cast stdclass to array
                 $props = array("label_column", "theme_column");
@@ -1501,13 +1503,17 @@ class Mapfile extends Controller
                 "gml_<?php echo $row['f_geometry_column'] ?>_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
                 "wfs_getfeature_formatlist" "kml,kmz"
                 END
-                #UTFITEM   "<?php echo $primeryKey['attname'] ?>"
+                UTFITEM   "<?php echo $primeryKey['attname'] ?>"
                 <?php $fields = json_decode($row['fieldconf'], true);
-                if (!empty($fields)) foreach ($fields as $field => $name) {
-                    $fieldsArr[] = "\\\"{$field}\\\":\\\"[{$field}]\\\"";
+                if (!empty($fields)) {
+                    foreach ($fields as $field => $name) {
+                        if (isset($meta[$field]) && !empty($name["mouseover"])) {
+                            $fieldsArr[] = "\\\"{$field}\\\":\\\"[{$field}]\\\"";
+                        }
+                    }
                 }
                 ?>
-                #UTFDATA "<?php echo "{" . implode(",", (!empty($fieldsArr) ? $fieldsArr : [])) . "}";
+                UTFDATA "<?php echo "{" . implode(",", (!empty($fieldsArr) ? $fieldsArr : [])) . "}";
                 $fieldsArr = [];
                 ?>"
 
