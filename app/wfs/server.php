@@ -2362,6 +2362,49 @@ echo str_pad("", 4096);
 flush();
 ob_flush();
 
+/**
+ * @param array<mixed> $arr
+ * @return array<mixed>
+ */
+function addNs(array $arr): array
+{
+    return array_combine(
+        array_map(function ($k) {
+            if ($k == "srsName") {
+                return $k;
+            } else {
+                return 'gml:' . $k;
+            }
+        }, array_keys($arr)),
+        array_map(function ($k) {
+            if (is_array($k)) {
+                return addNs($k);
+            } else {
+                return $k;
+            }
+        }, $arr)
+    );
+}
+
+/**
+ * @param array<mixed> $arr
+ * @return array<mixed>
+ */
+function removeNs(array $arr): array
+{
+    return array_combine(
+        array_map(function ($k) {
+            return preg_replace("/[\w-]*:/", "", $k);
+        }, array_keys($arr)),
+        array_map(function ($k) {
+            if (is_array($k)) {
+                return removeNs($k);
+            } else {
+                return $k;
+            }
+        }, $arr)
+    );
+}
 
 /**
  * @param array<array<mixed>> $arr
@@ -2372,7 +2415,8 @@ ob_flush();
  */
 function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null, ?string $globalSrid = null): array
 {
-    $str = "";
+    $arr = removeNs($arr);
+    $arr = addNs($arr);
     $strEnd = "";
     $srid = null;
     $fid = null;
@@ -2384,9 +2428,13 @@ function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null,
         if (isset($value["srsName"])) {
             $axisOrder = getAxisOrder($value["srsName"]);
         }
+        if (sizeof(explode(":", $key)) == 1) {
+            $key = "gml:" . $key;
+        }
         switch ($key) {
             case "gml:Point":
             case "gml:LineString":
+
                 $str .= $coordsOnly ? "(" : ($key == "gml:Point" ? "POINT" : "LINESTRING") . "(";
                 if (isset($value["gml:coordinates"]) && is_array($value["gml:coordinates"])) {
                     $str .= coordinatesToWKT($value["gml:coordinates"]["_content"], $axisOrder);
@@ -2403,6 +2451,7 @@ function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null,
                 }
                 break;
             case "gml:Polygon":
+
                 $str .= $coordsOnly ? "((" : "POLYGON((";
                 $v = $value["gml:outerBoundaryIs"]["gml:LinearRing"] ?: $value["gml:exterior"]["gml:LinearRing"];
                 if (isset($v["gml:coordinates"]) && is_array($v["gml:coordinates"])) {
