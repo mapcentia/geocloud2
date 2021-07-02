@@ -4,16 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNREALEASED]
+## [2021.6.0] - 2021-2-6
+### Added
+- UTFGrid support is added. The Mouse-over checkbox in the Structur tab will expose the field in UTFGrid.
 
-### Fixed
-- If the variables in Connection.php is set as environment variables in the image and therefore Connection.php is empty. It is now possible to run the migrations in app/migration/run.php.
 ### Changed
 - The timestamp fields `created` and `updated` are added to `settings.key_value`. The latter is updated when the value is updated. The Keyvalue GET API will now sort by the `update` field in descending order.
 - Upgraded QGIS Server to 3.16.8 in Dockerfile.
 
 ### Fixed
 - Big `GetFeature` optimizition of WFS-t.
+- If the variables in Connection.php is set as environment variables in the image and therefore Connection.php is empty. It is now possible to run the migrations in `app/migration/run.php`.
+- Filter for WFS-t doesn't need to use name space prefixes.
 
 ## [2021.5.2]
 ### Changed
