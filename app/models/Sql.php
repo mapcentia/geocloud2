@@ -9,12 +9,14 @@
 namespace app\models;
 
 use app\conf\App;
+use app\conf\Connection;
 use app\inc\Model;
 use Exception;
 use PDOException;
 use PHPExcel_Reader_CSV;
 use PHPExcel_Writer_Excel2007;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use ZipArchive;
 
 
 /**
@@ -58,6 +60,46 @@ class Sql extends Model
         $name = "_" . rand(1, 999999999) . microtime();
         $view = self::toAscii($name, null, "_");
         $sqlView = "CREATE TEMPORARY VIEW {$view} as {$q}";
+
+        $formatSplit = explode("/", $format);
+        if (sizeof($formatSplit) == 2 && $formatSplit[0] == "ogr") {
+            $fileOrFolder = $view . "." . self::toAscii($formatSplit[1], null, "_");
+            $path = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__vectors/" . $fileOrFolder;
+            $cmd = "ogr2ogr " .
+                "-q -f \"" . explode("/", $format)[1] . "\" " . $path . " " .
+                "-t_srs \"EPSG:" . $this->srs . "\" " .
+                "PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
+                "-sql \"" . $q . "\"";
+            exec($cmd . ' 2>&1', $out, $err);
+            if ($out) {
+                foreach ($out as $str) {
+                    if (strpos($str, 'ERROR') !== false) {
+                        return [
+                            'success' => false,
+                            "message" => $out,
+                        ];
+                    }
+                }
+            }
+            $zip = new ZipArchive();
+            $zipPath = $path . ".zip";
+            if ($zip->open($zipPath, ZIPARCHIVE::CREATE) != TRUE) {
+                error_log("Could not open ZIP archive");
+            }
+            if (is_dir($path)) {
+                $zip->addGlob($path . "/*", 0, ["remove_all_path" => true]);
+            } else {
+                $zip->addFile($path, $fileOrFolder);
+            }
+            if ($zip->status != ZIPARCHIVE::ER_OK) {
+                error_log("Failed to write files to zip archive");
+            }
+            $zip->close();
+            header("Content-type: application/zip, application/octet-stream");
+            header("Content-Disposition: attachment; filename=\"{$fileOrFolder}.zip\"");
+            readfile($zipPath);
+            exit(0);
+        }
         $res = $this->prepare($sqlView);
         try {
             $res->execute();
