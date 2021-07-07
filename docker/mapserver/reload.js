@@ -57,11 +57,11 @@ function callback() {
                         unlink();
                     }
                     if (count === length)
-                        exec("service apache2 reload", function (error, stdout, stderr) {
+                        exec("/usr/sbin/apachectl graceful", function (error, stdout, stderr) {
                             if (error !== null) {
                                 console.log(error);
                             }
-                            console.log(stdout);
+                            console.log("Reloading apache after MapCache file change");
                             unlink();
 
                         });
