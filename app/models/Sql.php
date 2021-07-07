@@ -48,10 +48,11 @@ class Sql extends Model
      * @param bool|null $csvAllToStr
      * @param string|null $aliasesFrom
      * @param null $nlt
+     * @param null $nln
      * @return array<mixed>
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, $nlt = null): array
+    public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, $nlt = null, $nln = null): array
     {
         if ($format == "excel") {
             $limit = !empty(App::$param["limits"]["sqlExcel"]) ? App::$param["limits"]["sqlExcel"] : 10000;
@@ -60,17 +61,21 @@ class Sql extends Model
         }
         $name = "_" . rand(1, 999999999) . microtime();
         $view = self::toAscii($name, null, "_");
-        $sqlView = "CREATE TEMPORARY VIEW {$view} as {$q}";
         $formatSplit = explode("/", $format);
         if (sizeof($formatSplit) == 2 && $formatSplit[0] == "ogr") {
-            $fileOrFolder = $view . "." . self::toAscii($formatSplit[1], null, "_");
+            $fileOrFolder = $nln ?: $view;
+            $fileOrFolder .= "." . self::toAscii($formatSplit[1], null, "_");
             $path = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__vectors/" . $fileOrFolder;
             $cmd = "ogr2ogr " .
                 "-f \"" . explode("/", $format)[1] . "\" " . $path . " " .
                 "-t_srs \"EPSG:" . $this->srs . "\" " .
-                ($nlt ? "-nlt" . $nlt . " ": "") .
+                "-a_srs \"EPSG:" . $this->srs . "\" " .
+                ($nlt ? "-nlt " . $nlt . " " : "") .
+                ($nln ? "-nln " . $nln . " " : "") .
+                "-preserve_fid " .
                 "PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
                 "-sql \"" . $q . "\"";
+//            die($cmd);
             exec($cmd . ' 2>&1', $out, $err);
             if ($out) {
                 foreach ($out as $str) {
@@ -102,6 +107,7 @@ class Sql extends Model
             readfile($zipPath);
             exit(0);
         }
+        $sqlView = "CREATE TEMPORARY VIEW {$view} as {$q}";
         $res = $this->prepare($sqlView);
         try {
             $res->execute();
