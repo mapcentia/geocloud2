@@ -47,12 +47,12 @@ class Sql extends Model
      * @param string|null $geoformat
      * @param bool|null $csvAllToStr
      * @param string|null $aliasesFrom
-     * @param null $nlt
-     * @param null $nln
+     * @param string|null $nlt
+     * @param string|null $nln
      * @return array<mixed>
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, $nlt = null, $nln = null): array
+    public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, ?string $nlt = null, ?string $nln = null): array
     {
         if ($format == "excel") {
             $limit = !empty(App::$param["limits"]["sqlExcel"]) ? App::$param["limits"]["sqlExcel"] : 10000;
