@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED]
+## [2021.7.0]
 ### Added
 - The SQL API now support ogr format with `&format=ogr/[format]`. E.g. `&format=ogr/ESRI Shapefile` or `&format=ogr/GPKG`. The response is a zip file with the file(s) or folder. Any vector format, which ogr2ogr is able to write can be used. 
 
