@@ -12,10 +12,10 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [2021.6.0] - 2021-2-6
 ### Added
-- UTFGrid support is added. The Mouse-over checkbox in the Structur tab will expose the field in UTFGrid.
+- Added UTFGrid support. The Mouse-over checkbox in the Structur tab will expose the field in UTFGrid.
 
 ### Changed
-- The timestamp fields `created` and `updated` are added to `settings.key_value`. The latter is updated when the value is updated. The Keyvalue GET API will now sort by the `update` field in descending order.
+- The timestamp fields `created` and `updated` are added to `settings.key_value`. The latter will be updated when the value is updated. The Keyvalue GET API will now sort by the `update` field in descending order.
 - Upgraded QGIS Server to 3.16.8 in Dockerfile.
 
 ### Fixed
