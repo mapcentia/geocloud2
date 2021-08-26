@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -9,8 +9,14 @@
 namespace app\models;
 
 use app\inc\Model;
+use Exception;
 use PDOException;
 
+
+/**
+ * Class Keyvalue
+ * @package app\models
+ */
 class Keyvalue extends Model
 {
     function __construct()
@@ -18,9 +24,17 @@ class Keyvalue extends Model
         parent::__construct();
     }
 
-    public function get($key, $urlVars): array
+    /**
+     * @param string|null $key
+     * @param array<string> $urlVars
+     * @return array<mixed>
+     * @throws Exception
+     */
+
+    public function get(?string $key, array $urlVars): array
     {
         $params = [];
+        $tmp = [];
 
         $fetchingAll = true;
 
@@ -87,34 +101,38 @@ class Keyvalue extends Model
         if ($fetchingAll) {
             $response["data"] = $this->fetchAll($res, "assoc") ?: [];
         } else {
-            $response["data"] = $this->fetchRow($res, "assoc") ?: [];
+            $response["data"] = $this->fetchRow($res) ?: [];
         }
-
-        if (!is_array($response["data"][0])) {
-            $parsed = json_decode($response["data"]["value"], true);
-            foreach ($parsed["snapshot"]["modules"]["conflict"]["hits"] as $i => $v) {
-                // TODO Not all conflict meta should be unset
-                // unset($parsed["snapshot"]["modules"]["conflict"]["hits"][$i]["meta"]);
-            }
-            unset($parsed["snapshot"]["modules"]["print"]["metaData"]);
-            if ($parsed)
-                $response["data"]["value"] = json_encode($parsed);
-            else
-                $response["data"] = [];
-        } else {
-            foreach ($response["data"] as $key => $value) {
-                $parsed = json_decode($value["value"], true);
-                unset($parsed["snapshot"]["modules"]["print"]["metaData"]);
+        // HACK get rid of unnecessary meta in Vidi snapshots
+        if (isset($urlVars["like"]) && $urlVars["like"] == "state_snapshot_%") {
+            if (!is_array($response["data"][0])) {
+                $parsed = json_decode($response["data"]["value"], true);
                 foreach ($parsed["snapshot"]["modules"]["conflict"]["hits"] as $i => $v) {
                     // TODO Not all conflict meta should be unset
                     // unset($parsed["snapshot"]["modules"]["conflict"]["hits"][$i]["meta"]);
                 }
+                unset($parsed["snapshot"]["modules"]["print"]["metaData"]);
                 if ($parsed)
-                    $response["data"][$key]["value"] = json_encode($parsed);
+                    $response["data"]["value"] = json_encode($parsed);
                 else
-                    $response["data"][$key] = [];
+                    $response["data"] = [];
+            } else {
+                foreach ($response["data"] as $key => $value) {
+                    $parsed = json_decode($value["value"], true);
+                    unset($parsed["snapshot"]["modules"]["print"]["metaData"]);
+                    foreach ($parsed["snapshot"]["modules"]["conflict"]["hits"] as $i => $v) {
+                        // TODO Not all conflict meta should be unset
+                        // unset($parsed["snapshot"]["modules"]["conflict"]["hits"][$i]["meta"]);
+                    }
+                    if ($parsed)
+                        $response["data"][$key]["value"] = json_encode($parsed);
+                    else
+                        $response["data"][$key] = [];
+                }
             }
         }
+        // HACK end
+
         $response["success"] = true;
         return $response;
     }
@@ -143,12 +161,17 @@ class Keyvalue extends Model
             $response['code'] = 401;
             return $response;
         }
-        $response["data"] = $this->fetchRow($res, "assoc");
+        $response["data"] = $this->fetchRow($res);
         $response["success"] = true;
         return $response;
     }
 
-    public function update($key, $json): array
+    /**
+     * @param string|null $key
+     * @param string $json
+     * @return array<mixed>
+     */
+    public function update(?string $key, string $json): array
     {
         $response = [];
         if (!$key) {
@@ -167,12 +190,16 @@ class Keyvalue extends Model
             $response['code'] = 401;
             return $response;
         }
-        $response["data"] = $this->fetchRow($res, "assoc");
+        $response["data"] = $this->fetchRow($res);
         $response["success"] = true;
         return $response;
     }
 
-    public function delete($key): array
+    /**
+     * @param string|null $key
+     * @return array<mixed>
+     */
+    public function delete(?string $key): array
     {
         $response = [];
         if (!$key) {

@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNRELEASED]
+### Fixed
+- Unset unnecessary meta in Vidi snapshots. Vidi has been storing this meta data, but doesn't do it anymore. So this fix will reduce the size of older snap shots.
 
 ## [2021.7.0] - 2021-9-7
 ### Added
