@@ -20,7 +20,7 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ### Fixed
 - Big `GetFeature` optimizition of WFS-t.
-- If the variables in Connection.php is set as environment variables in the image and therefore Connection.php is empty. It is now possible to run the migrations in `app/migration/run.php`.
+- If the variables in Connection.php are set as environment variables in the container and therefore Connection.php is empty. It is now possible to run the migrations in `app/migration/run.php`.
 - Filter for WFS-t doesn't need to use name space prefixes.
 
 ## [2021.5.2]
