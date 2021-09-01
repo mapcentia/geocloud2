@@ -12,6 +12,7 @@ use app\inc\Controller;
 use app\inc\Route;
 use app\inc\Input;
 use app\inc\Util;
+use Exception;
 
 /**
  * Class Keyvalue
@@ -74,11 +75,12 @@ class Keyvalue extends Controller
      *     )
      *   )
      * )
+     * @throws Exception
      */
     public function get_index(): array
     {
         $key = Route::getParam("key");
-        $data = $this->keyValue->get($key, Input::get());
+        $data = $this->keyValue->get($key, gettype(Input::get()) == "array" ? Input::get() : [] );
         if (Input::getAccept() == Input::TEXT_PLAIN) {
             $data = Util::base64urlEncode(json_encode($data));
             return [

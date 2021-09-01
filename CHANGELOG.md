@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2021.8.1] - 2021-1-9
+### Fixed
+- Type error fixed in Keyvalue API.
+
 ## [2021.8.0] - 2021-30-8
 ### Fixed
 - Unset unnecessary meta in Vidi snapshots. Vidi has been storing this meta data, but doesn't do it anymore. So this fix will reduce the size of older snap shots.
