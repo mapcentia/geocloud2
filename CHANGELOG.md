@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2021.9.0] - 2021-6-9
+### Changed
+- Increase the `upload_max_filesize` and `post_max_size` in PHP.
+
+### Fixed
+- Bug in WFS-t, which could result in an internal error when doing transactions on polygons.
+- Unset Upgrade header in Apache2, which can cause an error in Safari browsers.
+
 ## [2021.8.1] - 2021-1-9
 ### Fixed
 - Type error fixed in Keyvalue API.

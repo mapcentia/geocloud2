@@ -2370,7 +2370,7 @@ function addNs(array $arr): array
 {
     return array_combine(
         array_map(function ($k) {
-            if ($k == "srsName") {
+            if ($k == "srsName" || $k == "_content") {
                 return $k;
             } else {
                 return 'gml:' . $k;
