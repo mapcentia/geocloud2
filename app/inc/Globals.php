@@ -27,6 +27,16 @@ class Globals
      */
     static public $metaConfig =[
         [
+            "fieldsetName" => "CKAN",
+            "fields" => [
+                [
+                    "name" => "meta_desc",
+                    "type" => "textarea",
+                    "title" => "Description",
+                ],
+            ]
+        ],
+        [
             "fieldsetName" => "Konflikt",
             "fields" => [
                 [
