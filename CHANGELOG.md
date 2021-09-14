@@ -9,7 +9,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Increase the `upload_max_filesize` and `post_max_size` in PHP.
 
 ### Fixed
-- Bug in WFS-t, which could result in an internal error when doing transactions on polygons.
+- Regression bug in WFS-t 1.1.0, which could result in an internal error when doing transactions on polygons and linestrings.
 - Unset Upgrade header in Apache2, which can cause an error in Safari browsers.
 
 ## [2021.8.1] - 2021-1-9
