@@ -16,6 +16,9 @@ RUN wget https://packages.microsoft.com/debian/10/prod/pool/main/m/msodbcsql17/m
     export ACCEPT_EULA=Y && \
     dpkg -i msodbcsql17_17.4.2.1-1_amd64.deb
 
+# Set MinProtocol to TLSv1.0 because some SQL Server doesn't support 1.2
+RUN sed -i "s#MinProtocol = TLSv1.2#MinProtocol = TLSv1.0#g" /etc/ssl/openssl.cnf
+
 # Install tds_fdw
 #RUN export TDS_FDW_VERSION="2.0.2" &&\
 #    wget https://github.com/tds-fdw/tds_fdw/archive/v${TDS_FDW_VERSION}.tar.gz &&\
