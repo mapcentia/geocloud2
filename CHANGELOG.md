@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED]
+### Added
+- Legend data is now being cached in AppCache.
+
 ## [2021.9.0] - 2021-6-9
 ### Changed
 - Increase the `upload_max_filesize` and `post_max_size` in PHP.

@@ -1,7 +1,7 @@
 <?php
 /*
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -9,11 +9,23 @@
 namespace app\api\v1;
 
 use app\conf\App;
+use app\inc\Cache;
 use app\inc\Controller;
+use app\inc\Globals;
 use app\inc\Input;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Phpfastcache\Exceptions\PhpfastcacheLogicException;
 
+
+/**
+ * Class Legend
+ * @package app\api\v1
+ */
 class Legend extends Controller
 {
+    /**
+     * @var mixed
+     */
     private $legendArr;
 
     function __construct()
@@ -21,62 +33,72 @@ class Legend extends Controller
         parent::__construct();
         $path = App::$param['path'] . "/app/wms/mapfiles/";
         if (Input::get("l")) {
-            $layerNames = explode(";", Input::get("l"));
-            $layerNames = array_reverse($layerNames);
-            $temp = $layerNames;
-            $newLayerNames = $arr = array();
-            // Check if schema is given as param and get the layer names
-            foreach ($temp as $layerName) {
-                $splitName = explode(".", $layerName);
-                if ($splitName[0] !== "gc2_group") {
-                    if (sizeof($splitName) < 2) {
-                        $mapFile = Input::getPath()->part(5) . "_" . $splitName[0] . "_wms.map";
-                        if (file_exists($path . $mapFile)) {
-                            $map = ms_newMapobj($path . $mapFile);
-                            $arr = $map->getAllLayerNames();
+            $cacheType = "legend";
+            $cacheId = md5(Input::getPath()->part(5) . "_" . $cacheType . "_" . Input::get("l"));
+            $CachedString = Cache::getItem($cacheId);
+            if ($CachedString != null && $CachedString->isHit()) {
+                $this->legendArr = $CachedString->get();
+            } else {
+                $layerNames = explode(";", Input::get("l"));
+                $layerNames = array_reverse($layerNames);
+                $temp = $layerNames;
+                $newLayerNames = $arr = array();
+                // Check if schema is given as param and get the layer names
+                foreach ($temp as $layerName) {
+                    $splitName = explode(".", $layerName);
+                    if ($splitName[0] !== "gc2_group") {
+                        if (sizeof($splitName) < 2) {
+                            $mapFile = Input::getPath()->part(5) . "_" . $splitName[0] . "_wms.map";
+                            if (file_exists($path . $mapFile)) {
+                                $map = ms_newMapobj($path . $mapFile);
+                                $arr = $map->getAllLayerNames();
+                            }
+                        } else {
+                            $newLayerNames[] = $layerName;
                         }
-                    } else {
-                        $newLayerNames[] = $layerName;
+                        $newLayerNames = array_merge($newLayerNames, $arr);
                     }
-                    $newLayerNames = array_merge($newLayerNames, $arr);
                 }
-            }
-            foreach ($newLayerNames as $layerName) {
-                $layerNameWithOutPrefix = str_replace("v:", "", $layerName);
-                $splitName = explode(".", $layerNameWithOutPrefix);
-                $mapFile = Input::getPath()->part(5) . "_" . $splitName[0] . "_wms.map";
-                $map = ms_newMapobj($path . $mapFile);
-                $layer = $map->getLayerByName($layerNameWithOutPrefix);
-                if ($layer) {
+                foreach ($newLayerNames as $layerName) {
+                    $layerNameWithOutPrefix = str_replace("v:", "", $layerName);
+                    $splitName = explode(".", $layerNameWithOutPrefix);
+                    $mapFile = Input::getPath()->part(5) . "_" . $splitName[0] . "_wms.map";
+                    $map = ms_newMapobj($path . $mapFile);
+                    $layer = $map->getLayerByName($layerNameWithOutPrefix);
+                    if ($layer) {
 
-                    $this->legendArr[$layerName]['title'] = $layer->getMetaData("ows_title");
+                        $this->legendArr[$layerName]['title'] = $layer->getMetaData("ows_title");
 
-                    if ($layer->getMetaData("wms_get_legend_url")) {
-                        $icon = imagecreatefrompng($layer->getMetaData("wms_get_legend_url"));
-                        imagecolortransparent($icon, imagecolorallocatealpha($icon, 0, 0, 0, 127));
-                        imagealphablending($icon, false);
-                        imagesavealpha($icon, true);
-                        ob_start();
-                        imagepng($icon);
-                        imagedestroy($icon);
-                        $data = base64_encode(ob_get_clean());
-                        $this->legendArr[$layerName]['classes'][0]['img'] = $data;
-                        $this->legendArr[$layerName]['classes'][0]['name'] = "_gc2_wms_legend";
-                        $this->legendArr[$layerName]['classes'][0]['expression'] = null;
-                    } else {
-                        for ($i = 0; $i < $layer->numclasses; $i++) {
-                            $class = $layer->getClass($i);
-                            $icon = $class->createLegendIcon(17, 17);
+                        if ($layer->getMetaData("wms_get_legend_url")) {
+                            $icon = imagecreatefrompng($layer->getMetaData("wms_get_legend_url"));
+                            imagecolortransparent($icon, imagecolorallocatealpha($icon, 0, 0, 0, 127));
+                            imagealphablending($icon, false);
+                            imagesavealpha($icon, true);
                             ob_start();
-                            $icon->saveImage("", $map);
+                            imagepng($icon);
+                            imagedestroy($icon);
                             $data = base64_encode(ob_get_clean());
-                            $this->legendArr[$layerName]['classes'][$i]['img'] = $data;
-                            $this->legendArr[$layerName]['classes'][$i]['name'] = $class->name;
-                            $this->legendArr[$layerName]['classes'][$i]['expression'] = $class->getExpressionString();
+                            $this->legendArr[$layerName]['classes'][0]['img'] = $data;
+                            $this->legendArr[$layerName]['classes'][0]['name'] = "_gc2_wms_legend";
+                            $this->legendArr[$layerName]['classes'][0]['expression'] = null;
+                        } else {
+                            for ($i = 0; $i < $layer->numclasses; $i++) {
+                                $class = $layer->getClass($i);
+                                $icon = $class->createLegendIcon(17, 17);
+                                ob_start();
+                                $icon->saveImage("", $map);
+                                $data = base64_encode(ob_get_clean());
+                                $this->legendArr[$layerName]['classes'][$i]['img'] = $data;
+                                $this->legendArr[$layerName]['classes'][$i]['name'] = $class->name;
+                                $this->legendArr[$layerName]['classes'][$i]['expression'] = $class->getExpressionString();
 
+                            }
                         }
                     }
                 }
+                $CachedString->set($this->legendArr)->expiresAfter(Globals::$cacheTtl);
+                $CachedString->addTags([$cacheType, Input::getPath()->part(5)]);
+                Cache::save($CachedString);
             }
         }
     }
@@ -109,7 +131,10 @@ class Legend extends Controller
         exit($data);
     }
 
-    public function get_html()
+    /**
+     * @return array<string>
+     */
+    public function get_html(): array
     {
         $html = "";
         if (is_array($this->legendArr)) {
@@ -131,7 +156,10 @@ class Legend extends Controller
         return $response;
     }
 
-    public function get_json()
+    /**
+     * @return array<mixed>
+     */
+    public function get_json(): array
     {
         $json = array();
         $classes = array();
