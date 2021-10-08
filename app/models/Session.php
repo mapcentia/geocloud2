@@ -110,7 +110,7 @@ class Session extends Model
             $_SESSION['auth'] = true;
             $_SESSION['screen_name'] = $row['screenname'];
             $_SESSION['parentdb'] = $row['parentdb'] ?: $row['screenname'];
-            $_SESSION["subuser"] = $row['parentdb'] ? true : false;
+            $_SESSION["subuser"] = (bool)$row['parentdb'];
             $_SESSION["properties"] = $properties;
 
             $_SESSION['email'] = $row['email'];
@@ -124,7 +124,7 @@ class Session extends Model
             $response['data']['screen_name'] = $_SESSION['screen_name'];
             $response['data']['session_id'] = session_id();
             $response['data']['parentdb'] = $_SESSION['parentdb'];
-            $response['data']['subuser'] = $row['parentdb'] ? true : false;
+            $response['data']['subuser'] = (bool)$row['parentdb'];
             $response['data']['email'] = $row['email'];
             $response['data']['properties'] = $properties;
 
