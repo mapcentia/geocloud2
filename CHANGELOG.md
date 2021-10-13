@@ -4,9 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED]
+## [2021.10.0] - 2021-13-10
 ### Added
 - Legend data is now being cached in AppCache.
+
+### Fixed
+- Prevent default placeholder being inserted into config editor when it's empty.
 
 ## [2021.9.0] - 2021-6-9
 ### Changed
