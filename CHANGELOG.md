@@ -7,6 +7,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [UNRELEASED]
 ### Changed
 - MapCache SQLite files are now completly deleted on cache busting instead of running a DELETE FROM sql in the file. This solves the issue with huge SQLite files and busting.
+- The `Clear tile cache` button in the `Database` tab in Admin will now only bust the merged schema cache and not every single layer cache.
 
 ## [2021.10.0] - 2021-13-10
 ### Added
