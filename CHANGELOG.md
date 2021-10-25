@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED]
+### Changed
+- MapCache SQLite files are now completly deleted on cache busting instead of running a DELETE FROM sql in the file. This solves the issue with huge SQLite files and busting.
+
 ## [2021.10.0] - 2021-13-10
 ### Added
 - Legend data is now being cached in AppCache.

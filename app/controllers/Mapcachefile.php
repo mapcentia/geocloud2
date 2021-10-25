@@ -145,7 +145,7 @@ class Mapcachefile extends \app\inc\Controller
             }
             $arr = array();
             $table = null;
-            $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ NOTNULL";
+            $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ NOTNULL ORDER BY sort_id";
             $result = $postgisObject->execQuery($sql);
             if ($postgisObject->PDOerror) {
                 ob_get_clean();
@@ -363,8 +363,8 @@ class Mapcachefile extends \app\inc\Controller
             foreach ($layerArr as $k => $v) {
                 if (sizeof($v) > 0) {
 
-                    //$cache = App::$param["mapCache"]["type"] ?: "sqlite";
-                    $cache = "disk";
+                    $cache = App::$param["mapCache"]["type"] ?: "sqlite";
+                    //$cache = "disk";
 
                     ?>
                     <!-- <?php echo $k ?> -->

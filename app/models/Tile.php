@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -9,21 +9,37 @@
 namespace app\models;
 
 use app\inc\Model;
+use app\inc\Cache;
 
+
+/**
+ * Class Tile
+ * @package app\models
+ */
 class Tile extends Model
 {
+    /**
+     * @var string
+     */
     var $table;
 
-    function __construct($table)
+    /**
+     * Tile constructor.
+     * @param string $table
+     */
+    function __construct(string $table)
     {
         parent::__construct();
         $this->table = $table;
     }
 
-    public function get()
+    /**
+     * @return array<mixed>
+     */
+    public function get(): array
     {
         $sql = "SELECT def FROM settings.geometry_columns_join WHERE _key_='{$this->table}'";
-        $row = $this->fetchRow($this->execQuery($sql), "assoc");
+        $row = $this->fetchRow($this->execQuery($sql));
         if (!$this->PDOerror) {
             $response['success'] = true;
             $arr = (array)json_decode($row['def']); // Cast stdclass to array
@@ -41,8 +57,13 @@ class Tile extends Model
         return $response;
     }
 
-    public function update($data)
+    /**
+     * @param object $data
+     * @return array<mixed>
+     */
+    public function update(object $data): array
     {
+        Cache::clear();
         $schema = array(
             "theme_column",
             "label_column",
