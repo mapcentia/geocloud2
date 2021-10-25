@@ -1972,6 +1972,7 @@ $(document).ready(function () {
                                 success: function () {
                                     store.reload();
                                     App.setAlert(App.STATUS_OK, __("Tile cache deleted"));
+                                    writeMapCacheFile();
                                 },
                                 failure: function (response) {
                                     Ext.MessageBox.show({
