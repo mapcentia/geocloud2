@@ -59,11 +59,11 @@ class Sql extends Model
         } else {
             $limit = !empty(App::$param["limits"]["sqlJson"]) ? App::$param["limits"]["sqlJson"] : 100000;
         }
-        $name = "_" . rand(1, 999999999) . microtime();
+        $name = md5(rand(1, 999999999) . microtime());
         $view = self::toAscii($name, null, "_");
         $formatSplit = explode("/", $format);
         if (sizeof($formatSplit) == 2 && $formatSplit[0] == "ogr") {
-            $fileOrFolder = $nln ?: $view;
+            $fileOrFolder = $nln ? $nln. "_" . $name: $view;
             $fileOrFolder .= "." . self::toAscii($formatSplit[1], null, "_");
             $path = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__vectors/" . $fileOrFolder;
             $cmd = "ogr2ogr " .
