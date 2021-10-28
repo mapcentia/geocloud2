@@ -93,8 +93,7 @@ class Tile extends Model
         $oldData = $this->get();
         $newData = array();
         foreach ($schema as $k) {
-            $newData[$k] = (isset($data->$k) || (isset($data->$k) && $data->$k === false) || (isset($data->$k) && $data->$k === "")) ? $data->$k : $oldData["data"][0][$k];
-            //$newData[$k] = !empty($data->$k) ? $data->$k : !empty($oldData["data"][0][$k]) ? $oldData["data"][0][$k] : "";
+            $newData[$k] = (isset($data->$k) || (isset($data->$k) && $data->$k === false) || (isset($data->$k) && $data->$k === "") || (property_exists($data, $k) && $data->$k === null)) ? $data->$k : $oldData["data"][0][$k];
         }
         $newData = json_encode($newData);
         $sql = "UPDATE settings.geometry_columns_join SET def='{$newData}' WHERE _key_='{$this->table}'";
