@@ -1,20 +1,22 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\models;
 
+use app\inc\Model;
 use app\inc\Util;
+
 
 /**
  * Class Classification
  * @package app\models
  */
-class Classification extends \app\inc\Model
+class Classification extends Model
 {
     private $layer;
     private $table;
@@ -222,7 +224,7 @@ class Classification extends \app\inc\Model
             return $response;
         }
         $def["data"][0]["cluster"] = null;
-        $defJson = json_encode($def["data"][0], JSON_UNESCAPED_UNICODE);
+        $defJson = (object)$def["data"][0];
         $res = $this->tile->update($defJson);
         if (!$res['success']) {
             $response['success'] = false;
@@ -490,7 +492,7 @@ class Classification extends \app\inc\Model
         $def["data"][0]["cluster"] = $distance;
         $def["data"][0]["meta_tiles"] = true;
         $def["data"][0]["meta_size"] = 4;
-        $defJson = json_encode($def["data"][0], JSON_UNESCAPED_UNICODE);
+        $defJson = (object)$def["data"][0];
         $res = $this->tile->update($defJson);
         if (!$res['success']) {
             $response['success'] = false;
@@ -590,7 +592,6 @@ class Classification extends \app\inc\Model
             "label_color" => !empty($data->labelColor) ? $data->labelColor : "",
             "color" => $color,
             "outlinecolor" => !empty($outlineColor) ? $outlineColor : "",
-            "style_opacity" => !empty($data->opacity) ? $data->opacity : "",
             "symbol" => $symbol,
             "angle" => !empty($data->angle) ? $data->angle : "",
             "size" => $size,

@@ -4,7 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED]
+## [2021.10.2] - 2021-28-10
+### Fixed
+- Model `app\models\Tile::update` has been called with a string as argument from `app\controllers\upload\Classification::setLayerDef` and `app\controllers\uploadProcessvector::get_index`. Added type annotation caught this and this is now fixed.
+
+## [2021.10.1] - 2021-25-10
 ### Changed
 - MapCache SQLite files are now completly deleted on cache busting instead of running a DELETE FROM sql in the file. This solves the issue with huge SQLite files and busting.
 - The `Clear tile cache` button in the `Database` tab in Admin will now only bust the merged schema cache and not every single layer cache.

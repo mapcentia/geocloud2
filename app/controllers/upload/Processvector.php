@@ -211,6 +211,7 @@ class Processvector extends Controller
         $def = new Tile($key);
         $arr = $def->get();
         if (empty($arr['data'][0])) {
+            // TODO create a standard object instead of decoding JSON string
             $json = '{
             "theme_column":"",
             "label_column":"",
@@ -222,7 +223,7 @@ class Processvector extends Controller
             "meta_size":"3",
             "meta_buffer":"10",
             "ttl":""}';
-            $def->update($json);
+            $def->update(json_decode($json));
         }
 
         // Check ogr2ogr output
