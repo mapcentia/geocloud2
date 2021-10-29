@@ -2804,11 +2804,10 @@ function parseFilter($filter, string $table): string
                 . "),$sridOfTable)";
 
             $where[] =
-                "({$g} && {$value['PropertyName']}) AND "
-
+                "({$g} && " . dropAllNameSpaces($value['PropertyName']) . ") AND "
                 . "ST_Intersects"
                 . "({$g},"
-                . $value['PropertyName'] . ")";
+                . dropAllNameSpaces($value['PropertyName']) . ")";
 
             unset($wktArr);
         }
@@ -2843,13 +2842,13 @@ function parseFilter($filter, string $table): string
                     . "(public.ST_Transform(public.ST_GeometryFromText('POLYGON((" . $coordsArr[0] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[1] . "))',"
                     . $sridOfFilter
                     . "),$sridOfTable),"
-                    . "\"" . (($arr['BBOX']['PropertyName']) ?: $postgisObject->getGeometryColumns($table, "f_geometry_column")) . "\")";
+                    . "\"" . (dropAllNameSpaces($arr['BBOX']['PropertyName']) ?: $postgisObject->getGeometryColumns($table, "f_geometry_column")) . "\")";
             } else {
                 $where[] = "ST_Intersects"
                     . "(public.ST_Transform(public.ST_GeometryFromText('POLYGON((" . $coordsArr[1] . " " . $coordsArr[0] . "," . $coordsArr[3] . " " . $coordsArr[0] . "," . $coordsArr[3] . " " . $coordsArr[2] . "," . $coordsArr[1] . " " . $coordsArr[2] . "," . $coordsArr[1] . " " . $coordsArr[0] . "))',"
                     . $sridOfFilter
                     . "),$sridOfTable),"
-                    . "\"" . (($arr['BBOX']['PropertyName']) ?: $postgisObject->getGeometryColumns($table, "f_geometry_column")) . "\")";
+                    . "\"" . (dropAllNameSpaces($arr['BBOX']['PropertyName']) ?: $postgisObject->getGeometryColumns($table, "f_geometry_column")) . "\")";
             }
         }
         // End of filter parsing
