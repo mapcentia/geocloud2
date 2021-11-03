@@ -272,13 +272,13 @@ if (!(empty($bbox[0]))) {
         $axisOrder = getAxisOrder($bbox[4]);
         if ($axisOrder == "longitude") {
             $wheres[$table] .= "ST_intersects"
-                . "(public.ST_Transform(public.ST_GeometryFromText('POLYGON((" . $bbox[0] . " " . $bbox[1] . "," . $bbox[0] . " " . $bbox[3] . "," . $bbox[2] . " " . $bbox[3] . "," . $bbox[2] . " " . $bbox[1] . "," . $bbox[0] . " " . $bbox[1] . "))',"
+                . "(ST_Transform(ST_GeometryFromText('POLYGON((" . $bbox[0] . " " . $bbox[1] . "," . $bbox[0] . " " . $bbox[3] . "," . $bbox[2] . " " . $bbox[3] . "," . $bbox[2] . " " . $bbox[1] . "," . $bbox[0] . " " . $bbox[1] . "))',"
                 . parseEpsgCode($bbox[4])
                 . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $table, "srid") . "),"
                 . $postgisObject->getGeometryColumns($postgisschema . "." . $table, "f_geometry_column") . ")";
         } else {
             $wheres[$table] .= "ST_intersects"
-                . "(public.ST_Transform(public.ST_GeometryFromText('POLYGON((" . $bbox[1] . " " . $bbox[0] . "," . $bbox[3] . " " . $bbox[0] . "," . $bbox[3] . " " . $bbox[2] . "," . $bbox[1] . " " . $bbox[2] . "," . $bbox[1] . " " . $bbox[0] . "))',"
+                . "(ST_Transform(ST_GeometryFromText('POLYGON((" . $bbox[1] . " " . $bbox[0] . "," . $bbox[3] . " " . $bbox[0] . "," . $bbox[3] . " " . $bbox[2] . "," . $bbox[1] . " " . $bbox[2] . "," . $bbox[1] . " " . $bbox[0] . "))',"
                 . parseEpsgCode($bbox[4])
                 . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $table, "srid") . "),"
                 . $postgisObject->getGeometryColumns($postgisschema . "." . $table, "f_geometry_column") . ")";
@@ -299,7 +299,9 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
         print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         doQuery("Select");
         print "</wfs:FeatureCollection>";
-
+        print "\n<!--";
+        print_r($wheres);
+        print "-->";
         break;
     case "DESCRIBEFEATURETYPE":
         getXSD($postgisObject);
@@ -1026,7 +1028,6 @@ function doQuery(string $queryType)
     global $fields;
     global $wheres;
     global $filters;
-    global $limits;
     global $postgisObject;
     global $srs;
     global $postgisschema;
@@ -1040,6 +1041,7 @@ function doQuery(string $queryType)
     global $specialChars;
     global $version;
     global $outputFormat;
+    global $from;
 
     if (!$srs) {
         makeExceptionReport("You need to specify a srid in the URL.");
@@ -1100,8 +1102,8 @@ function doQuery(string $queryType)
                         $longCrs = $version == "1.1.0" ? 1 : 0;
                         $flipAxis = $version == "1.1.0" && $srs == "4326" ? 16 : 0; // flip axis if lat/lon
                         $options = (string)($longCrs + $flipAxis + 4 + 2);
-                        $sql = str_replace("\"{$key}\"", "ST_AsGml({$gmlVersion},public.ST_Transform(\"{$key}\",{$srs}),5,{$options}) as \"{$key}\"", $sql);
-                        $sql2 = "SELECT public.ST_Xmin(public.ST_Extent(public.ST_Transform(\"" . $key . "\",{$srs}))) AS TXMin,public.ST_Xmax(public.ST_Extent(public.ST_Transform(\"" . $key . "\",{$srs}))) AS TXMax, public.ST_Ymin(public.ST_Extent(public.ST_Transform(\"" . $key . "\",{$srs}))) AS TYMin,public.ST_Ymax(public.ST_Extent(public.ST_Transform(\"" . $key . "\",{$srs}))) AS TYMax ";
+                        $sql = str_replace("\"{$key}\"", "ST_AsGml({$gmlVersion},ST_Transform(\"{$key}\",{$srs}),5,{$options}) as \"{$key}\"", $sql);
+                        $sql2 = "SELECT ST_Xmin(ST_Extent(ST_Transform(\"" . $key . "\",{$srs}))) AS TXMin,ST_Xmax(ST_Extent(ST_Transform(\"" . $key . "\",{$srs}))) AS TXMax, ST_Ymin(ST_Extent(ST_Transform(\"" . $key . "\",{$srs}))) AS TYMin,ST_Ymax(ST_Extent(ST_Transform(\"" . $key . "\",{$srs}))) AS TYMax ";
                     }
                     if ($arr['type'] == "bytea") {
                         $sql = str_replace("\"{$key}\"", "encode(\"" . $key . "\",'escape') as " . $key, $sql);
@@ -1199,12 +1201,10 @@ function genBBox($XMin, $YMin, $XMax, $YMax)
 
 
 /**
- *
- *
- * @param unknown $table
- * @param unknown $sql
- * @param unknown $sql2
- * @param unknown $from
+ * @param string $table
+ * @param string $sql
+ * @param string $from
+ * @param string|null $sql2
  */
 function doSelect(string $table, string $sql, string $from, ?string $sql2): void
 {
@@ -1860,7 +1860,7 @@ function doParse(array $arr)
                 foreach ($forSql['values'][$i] as $key => $value) {
                     if ($forSql['fields'][$i][$key] != "gc2_version_uuid" && $forSql['fields'][$i][$key] != "gc2_version_start_date" && $forSql['fields'][$i][$key] != "gc2_version_gid") {
                         if (is_array($value)) {
-                            $values[] = "public.ST_Transform(public.ST_GeometryFromText('" . current($value) . "'," . next($value) . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $forSql['tables'][$i], "srid") . ")";
+                            $values[] = "ST_Transform(ST_GeometryFromText('" . current($value) . "'," . next($value) . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $forSql['tables'][$i], "srid") . ")";
                         } elseif (empty($value) && !is_numeric($value)) {
                             $values[] = "NULL";
                         } elseif ($forSql['fields'][$i][$key] == "gc2_workflow") { // Don't quote a hstore
@@ -1931,7 +1931,7 @@ function doParse(array $arr)
 
             foreach ($forSql2['fields'][$i] as $key => $field) {
                 if (is_array($forSql2['values'][$i][$key])) { // is geometry
-                    $value = "public.ST_Transform(public.ST_GeometryFromText('" . current($forSql2['values'][$i][$key]) . "'," . next($forSql2['values'][$i][$key]) . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $forSql2['tables'][$i], "srid") . ")";
+                    $value = "ST_Transform(ST_GeometryFromText('" . current($forSql2['values'][$i][$key]) . "'," . next($forSql2['values'][$i][$key]) . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $forSql2['tables'][$i], "srid") . ")";
                 } elseif ($field == "gc2_version_user") {
                     $value = $postgisObject->quote($user);
                 } elseif ($field == "gc2_status") {
@@ -2857,13 +2857,13 @@ function parseFilter($filter, string $table): string
             }
             if ($axisOrder == "longitude") {
                 $where[] = "ST_Intersects"
-                    . "(public.ST_Transform(public.ST_GeometryFromText('POLYGON((" . $coordsArr[0] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[1] . "))',"
+                    . "(ST_Transform(ST_GeometryFromText('POLYGON((" . $coordsArr[0] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[1] . "))',"
                     . $sridOfFilter
                     . "),$sridOfTable),"
                     . "\"" . (dropAllNameSpaces($arr['BBOX']['PropertyName']) ?: $postgisObject->getGeometryColumns($table, "f_geometry_column")) . "\")";
             } else {
                 $where[] = "ST_Intersects"
-                    . "(public.ST_Transform(public.ST_GeometryFromText('POLYGON((" . $coordsArr[1] . " " . $coordsArr[0] . "," . $coordsArr[3] . " " . $coordsArr[0] . "," . $coordsArr[3] . " " . $coordsArr[2] . "," . $coordsArr[1] . " " . $coordsArr[2] . "," . $coordsArr[1] . " " . $coordsArr[0] . "))',"
+                    . "(ST_Transform(ST_GeometryFromText('POLYGON((" . $coordsArr[1] . " " . $coordsArr[0] . "," . $coordsArr[3] . " " . $coordsArr[0] . "," . $coordsArr[3] . " " . $coordsArr[2] . "," . $coordsArr[1] . " " . $coordsArr[2] . "," . $coordsArr[1] . " " . $coordsArr[0] . "))',"
                     . $sridOfFilter
                     . "),$sridOfTable),"
                     . "\"" . (dropAllNameSpaces($arr['BBOX']['PropertyName']) ?: $postgisObject->getGeometryColumns($table, "f_geometry_column")) . "\")";

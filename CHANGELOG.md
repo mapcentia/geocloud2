@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED]
+### Fixed
+- Improvments in filtering for WFT-t. `Not` operator now works. 
+
 ## [2021.10.2] - 2021-28-10
 ### Fixed
 - Model `app\models\Tile::update` has been called with a string as argument from `app\controllers\upload\Classification::setLayerDef` and `app\controllers\uploadProcessvector::get_index`. Added type annotation caught this and this is now fixed.
