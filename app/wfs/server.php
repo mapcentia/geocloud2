@@ -668,11 +668,11 @@ function getCapabilities(\app\inc\Model $postgisObject)
     writeTag("open", "ogc", $version == "1.1.0" ? "SpatialOperators" : "Spatial_Operators", null, true, true);
     if ($version == "1.1.0") {
         writeTag("selfclose", "ogc", "SpatialOperator", array("name" => "Intersects"), true, true);
-        writeTag("selfclose", "ogc", "SpatialOperator", array("name" => "BBOX"), true, true);
+//        writeTag("selfclose", "ogc", "SpatialOperator", array("name" => "BBOX"), true, true);
 
     } else {
         writeTag("selfclose", "ogc", "Intersect", null, true, true);
-        writeTag("selfclose", "ogc", "BBOX", null, true, true);
+//        writeTag("selfclose", "ogc", "BBOX", null, true, true);
     }
     writeTag("close", "ogc", $version == "1.1.0" ? "SpatialOperators" : "Spatial_Operators", null, true, true);
     writeTag("close", "ogc", "Spatial_Capabilities", null, false, true);
@@ -1148,16 +1148,7 @@ function doQuery(string $queryType)
                     }
 
                 }
-                //die($from);
-                if ((!(empty($BBox))) || (!(empty($wheres[$table])))) {
-                    //$from =dropLastChrs($from, 5);
-                    //$from.=")";
-                }
-
-                if (!(empty($limits[$table]))) {
-                    //$from .= " LIMIT " . $limits[$table];
-                }
-                //die($sql . $from);
+//                die($sql . $from);
                 doSelect($table, $sql, $from, $sql2);
             }
             break;
@@ -2547,7 +2538,7 @@ function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null,
 
         }
     }
-    return [$str . $strEnd . "\n", $srid, $fid];
+    return [$str . $strEnd, $srid, $fid];
 }
 
 /**
@@ -2682,6 +2673,12 @@ function writeTag(string $type, ?string $ns, ?string $tag, ?array $atts, ?bool $
     return null;
 }
 
+function isAssoc(array $arr)
+{
+    if (array() === $arr) return false;
+    return array_keys($arr) !== range(0, count($arr) - 1);
+}
+
 /**
  * @param array|string $filter
  * @param string $table
@@ -2695,87 +2692,114 @@ function parseFilter($filter, string $table): string
     global $srsName;
     global $srs;
 
-    //makeExceptionReport(print_r($filter, true));
-
     $table = dropAllNameSpaces($table);
     $st = \app\inc\Model::explodeTableName($table);
     if (!$st['schema']) {
         $st['schema'] = $postgisschema;
     }
     $primeryKey = $postgisObject->getPrimeryKey($st['schema'] . "." . $st['table']);
-    if (!is_array($filter[0]) && isset($filter) && !(isset($filter['And']) or isset($filter['Or']) or isset($filter['Not']))) {
+    if (!is_array($filter[0]) && isset($filter) && !(isset($filter['And']) || isset($filter['Or']))) {
         $filter = array(0 => $filter);
     }
     $sridOfTable = $postgisObject->getGeometryColumns($table, "srid");
     $i = 0;
     $boolOperator = null;
     $where = [];
+//    print_r($filter);
+//    print "***********\n";
     foreach ($filter as $key => $arr) {
         if ($key == "And" || $key == "Or") {
             $boolOperator = $key;
         }
-
-
-        //if (isset($arr['Not'])) {
-        //$where[] = parseFilter($arr['Not'],$table,"<>");
-        //}
-        if (isset($arr['And']) || isset($arr['Or'])) {
-            // Recursive call
-            $where[] = parseFilter($arr, $table);
+        $first = array_key_first($arr);
+        if ($first !== "Not" && is_array($arr[$first]) && !isAssoc($arr[$first])) {
+            foreach ($arr[$first] as $f) {
+                $where[] = parseFilter([$first => $f], $table);
+            }
+        } elseif (isset($arr["And"]) || isset($arr["Or"]) && $key !== "Not") {
+            if (isset($arr["And"]) && !isAssoc($arr["And"])) {
+                foreach ($arr["And"] as $f) {
+                    $where[] = parseFilter(["And" => $f], $table);
+                }
+            } elseif (isset($arr["Or"]) && !isAssoc($arr["Or"])) {
+                foreach ($arr["Or"] as $f) {
+                    $where[] = parseFilter(["Or" => $f], $table);
+                }
+            } else {
+                $where[] = parseFilter($arr, $table);
+            }
         }
-        // TODO strip double qoutes from PropertyName - OpenLayers adds them!
-        // PropertyIsEqualTo
-        $arr['PropertyIsEqualTo'] = addDiminsionOnArray($arr['PropertyIsEqualTo']);
-        if (is_array($arr['PropertyIsEqualTo'])) foreach ($arr['PropertyIsEqualTo'] as $value) {
-            $matchCase = isset($value["matchCase"]) && $value["matchCase"] == "false" ? false : true;
 
+        // TODO strip double qoutes from PropertyName - OpenLayers adds them!
+        $prop = "Not";
+        if (isset($arr[$prop])) {
+            $value = $arr[$prop];
+            if (is_array($value) && !isAssoc($value)) {
+                foreach ($value as $f) {
+                    $where[] = "NOT" . parseFilter($f, $table);
+                }
+            } else {
+                $where[] = "NOT" . parseFilter($arr["Not"], $table);
+            }
+        }
+        $prop = "PropertyIsEqualTo";
+        if (isset($arr[$prop]) && isAssoc($arr[$prop]) && $key !== "Not") {
+            $value = $arr[$prop];
+            $matchCase = !(isset($value["matchCase"]) && $value["matchCase"] == "false");
             $value["PropertyName"] = $value["PropertyName"] == "gml:name" ? $primeryKey["attname"] : $value["PropertyName"];
             $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . ($matchCase ? "\"=" : "\" ILIKE ") . $postgisObject->quote($value['Literal']);
         }
 
-        // PropertyIsNotEqualTo
-        $arr['PropertyIsNotEqualTo'] = addDiminsionOnArray($arr['PropertyIsNotEqualTo']);
-        if (is_array($arr['PropertyIsNotEqualTo'])) foreach ($arr['PropertyIsNotEqualTo'] as $value) {
+        $prop = "PropertyIsNotEqualTo";
+        if (isset($arr[$prop]) && isAssoc($arr[$prop]) && $key !== "Not") {
+            $value = $arr[$prop];
             $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . "\"<>'" . $value['Literal'] . "'";
         }
-        // PropertyIsLessThan
-        $arr['PropertyIsLessThan'] = addDiminsionOnArray($arr['PropertyIsLessThan']);
-        if (is_array($arr['PropertyIsLessThan'])) foreach ($arr['PropertyIsLessThan'] as $value) {
-            $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . "\"<'" . $value['Literal/'] . "'";
+
+        $prop = "PropertyIsLessThan";
+        if (isset($arr[$prop]) && isAssoc($arr[$prop]) && $key !== "Not") {
+            $value = $arr[$prop];
+            $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . "\"<'" . $value['Literal'] . "'";
         }
-        // PropertyIsGreaterThan
-        $arr['PropertyIsGreaterThan'] = addDiminsionOnArray($arr['PropertyIsGreaterThan']);
-        if (is_array($arr['PropertyIsGreaterThan'])) foreach ($arr['PropertyIsGreaterThan'] as $value) {
+
+        $prop = "PropertyIsGreaterThan";
+        if (isset($arr[$prop]) && isAssoc($arr[$prop]) && $key !== "Not") {
+            $value = $arr[$prop];
             $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . "\">'" . $value['Literal'] . "'";
         }
-        // PropertyIsLessThanOrEqualTo
-        $arr['PropertyIsLessThanOrEqualTo'] = addDiminsionOnArray($arr['PropertyIsLessThanOrEqualTo']);
-        if (is_array($arr['PropertyIsLessThanOrEqualTo'])) foreach ($arr['PropertyIsLessThanOrEqualTo'] as $value) {
+
+        $prop = "PropertyIsLessThanOrEqualTo";
+        if (isset($arr[$prop]) && isAssoc($arr[$prop]) && $key !== "Not") {
+            $value = $arr[$prop];
             $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . "\"<='" . $value['Literal'] . "'";
         }
-        //PropertyIsGreaterThanOrEqualTo
-        $arr['PropertyIsGreaterThanOrEqualTo'] = addDiminsionOnArray($arr['PropertyIsGreaterThanOrEqualTo']);
-        if (is_array($arr['PropertyIsGreaterThanOrEqualTo'])) foreach ($arr['PropertyIsGreaterThanOrEqualTo'] as $value) {
+
+        $prop = "PropertyIsGreaterThanOrEqualTo";
+        if (isset($arr[$prop]) && isAssoc($arr[$prop]) && $key !== "Not") {
+            $value = $arr[$prop];
             $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . "\">='" . $value['Literal'] . "'";
         }
-        //PropertyIsLike
-        $arr['PropertyIsLike'] = addDiminsionOnArray($arr['PropertyIsLike']);
-        if (is_array($arr['PropertyIsLike'])) foreach ($arr['PropertyIsLike'] as $value) {
+
+        $prop = "PropertyIsLike";
+        if (isset($arr[$prop]) && isAssoc($arr[$prop]) && $key !== "not") {
+            $value = $arr[$prop];
             $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . "\" LIKE '%" . $value['Literal'] . "%'";
         }
-        //PropertyIsBetween
-        $w = [];
-        $arr['PropertyIsBetween'] = addDiminsionOnArray($arr['PropertyIsBetween']);
-        if (is_array($arr['PropertyIsBetween'])) {
-            foreach ($arr['PropertyIsBetween'] as $value) {
-                $value['PropertyName'] = dropAllNameSpaces($value['PropertyName']);
-                if ($value['LowerBoundary'])
-                    $w[] = "\"" . $value['PropertyName'] . "\" > '" . $value['LowerBoundary']['Literal'] . "'";
-                if ($value['UpperBoundary'])
-                    $w[] = "\"" . $value['PropertyName'] . "\" < '" . $value['UpperBoundary']['Literal'] . "'";
+
+        $prop = "PropertyIsBetween";
+        if (isset($arr[$prop]) && isAssoc($arr[$prop]) && $key !== "not") {
+            $value = $arr[$prop];
+            $w = [];
+            $value['PropertyName'] = dropAllNameSpaces($value['PropertyName']);
+            if ($value['LowerBoundary']) {
+                $w[] = "\"" . $value['PropertyName'] . "\" > '" . $value['LowerBoundary']['Literal'] . "'";
             }
-            $where[] = implode(" AND ", $w);
+            if ($value['UpperBoundary']) {
+                $w[] = "\"" . $value['PropertyName'] . "\" < '" . $value['UpperBoundary']['Literal'] . "'";
+            }
+            $where[] = "(" . implode(" AND ", $w) . ")";
         }
+
         // FeatureID
         if (!is_array($arr['FeatureId'][0]) && isset($arr['FeatureId'])) {
             $arr['FeatureId'] = array(0 => $arr['FeatureId']);
@@ -2790,30 +2814,24 @@ function parseFilter($filter, string $table): string
             $value['gml:id'] = preg_replace("/{$table}\./", "", $value['gml:id']); // remove table name
             $where[] = "{$primeryKey['attname']}='" . $value['gml:id'] . "'";
         }
-        //Intersects
-        $arr['Intersects'] = addDiminsionOnArray($arr['Intersects']);
-        if (is_array($arr['Intersects'])) foreach ($arr['Intersects'] as $value) {
+
+        $prop = "Intersects";
+        if (isset($arr[$prop]) && isAssoc($arr[$prop]) && $key !== "not") {
+            $value = $arr[$prop];
             $value['PropertyName'] = dropAllNameSpaces($value['PropertyName']);
             $wktArr = toWKT($value, false, $srsName ? getAxisOrder($srsName) : "latitude");
             $sridOfFilter = $wktArr[1];
             if (empty($sridOfFilter)) $sridOfFilter = $srs; // If no filter on BBOX we think it must be same as the requested srs
             if (empty($sridOfFilter)) $sridOfFilter = $sridOfTable; // If still no filter on BBOX we set it to native srs
-
-            $g = "public.ST_Transform(public.ST_GeometryFromText('" . $wktArr[0] . "',"
-                . $sridOfFilter
-                . "),$sridOfTable)";
-
+            $g = "ST_Transform(ST_GeometryFromText('" . $wktArr[0] . "'," . $sridOfFilter . "),$sridOfTable)";
             $where[] =
-                "({$g} && " . dropAllNameSpaces($value['PropertyName']) . ") AND "
-                . "ST_Intersects"
+                "ST_Intersects"
                 . "({$g},"
                 . dropAllNameSpaces($value['PropertyName']) . ")";
-
             unset($wktArr);
         }
         //BBox
         if ($arr['BBOX']) {
-            //makeExceptionReport($arr);
             $axisOrder = null;
             $sridOfFilter = null;
             if (is_array($arr['BBOX']['gml:Box']['gml:coordinates'])) {
@@ -2857,6 +2875,7 @@ function parseFilter($filter, string $table): string
     if (empty($boolOperator)) {
         $boolOperator = "OR";
     }
+//    print_r($where);
     return "(" . implode(" " . $boolOperator . " ", $where) . ")";
 }
 
