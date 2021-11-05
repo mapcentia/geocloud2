@@ -49,10 +49,10 @@ RUN cd ~ && \
 
 # Install QGIS-server
 RUN add-apt-repository "deb https://qgis.org/debian-ltr `lsb_release -c -s` main" &&\
-    wget -qO - https://qgis.org/downloads/qgis-2020.gpg.key | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import &&\
+    wget -qO - https://qgis.org/downloads/qgis-2021.gpg.key | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import &&\
     chmod a+r /etc/apt/trusted.gpg.d/qgis-archive.gpg &&\
-    apt-get update &&\
-    apt-get -y install qgis-server=1:3.16.8+15buster
+    apt-get update --allow-releaseinfo-change &&\
+    apt-get -y install qgis-server=1:3.16.12+15buster
 
 # Symlink font for QGIS Server
 RUN ln -s /usr/share/fonts directory /usr/lib/x86_64-linux-gnu
