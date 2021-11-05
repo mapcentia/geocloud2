@@ -1263,8 +1263,8 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     if (!$gmlFeature[$table]) {
         $gmlFeature[$table] = $table;
     }
+    $postgisObject->begin();
     if ($sql2) {
-        $postgisObject->execQuery("BEGIN");
         $result = $postgisObject->execQuery($sql2 . $from);
         if ($postgisObject->numRows($result) == 1) {
             while ($myrow = $postgisObject->fetchRow($result)) {
@@ -1282,7 +1282,6 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     }
 
     $fullSql = $sql . $from . " LIMIT " . ($maxFeatures ?? FEATURE_LIMIT);
-    $postgisObject->begin();
     try {
         $postgisObject->prepare("DECLARE curs CURSOR FOR {$fullSql}")->execute();
         $innerStatement = $postgisObject->prepare("FETCH 1 FROM curs");
@@ -2645,6 +2644,8 @@ function addDiminsionOnArray(?array $array): ?array
  * @param array|null $atts
  * @param bool|null $ind
  * @param bool|null $n
+ * @param bool $rtn
+ * @return string|null
  */
 function writeTag(string $type, ?string $ns, ?string $tag, ?array $atts, ?bool $ind, ?bool $n, $rtn = false): ?string
 {
