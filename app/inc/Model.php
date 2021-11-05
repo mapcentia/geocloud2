@@ -154,7 +154,11 @@ class Model
      */
     public function numRows($result): int
     {
-        return sizeof($result);
+        if ($result instanceof PDOStatement) {
+            return $result->rowCount();
+        } else {
+            return sizeof($result);
+        }
     }
 
     /**
