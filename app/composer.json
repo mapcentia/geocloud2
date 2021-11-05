@@ -24,10 +24,9 @@
         "ext-xml": "*",
         "ext-zip": "*",
         "ext-zlib": "*",
-        "peppeocchi/php-cron-scheduler": "^3.1",
+        "peppeocchi/php-cron-scheduler": "^4.0",
         "sad_spirit/pg_builder": "v1.0.0-beta",
-        "ext-gd": "*",
-        "ext-dba": "*"
+        "ext-gd": "*"
     },
     "require-dev": {
         "codeception/module-asserts": "^1.3",
