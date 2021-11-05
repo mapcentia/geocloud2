@@ -7,25 +7,25 @@ networks:
 services:
   base:
     build: ./base
-    image: mapcentia/gc2core:base
+    image: mapcentia/gc2core:base8
   ecw:
     build: ./ecw
-    image: mapcentia/gc2core:ecw
+    image: mapcentia/gc2core:ecw8
     depends_on:
       - base
   gdal:
     build: ./gdal
-    image: mapcentia/gc2core:gdal
+    image: mapcentia/gc2core:gdal8
     depends_on:
       - ecw
   mapserver:
     build: ./mapserver
-    image: mapcentia/gc2core:mapserver
+    image: mapcentia/gc2core:mapserver8
     depends_on:
       - gdal
   gc2core:
     build: ./stable
-    image: mapcentia/gc2core
+    image: mapcentia/gc2core8
     depends_on:
       - mapserver
     privileged: true

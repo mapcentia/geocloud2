@@ -203,10 +203,10 @@ $bbox = !empty($HTTP_FORM_VARS["BBOX"]) ? explode(",", $HTTP_FORM_VARS["BBOX"]) 
 $resultType = !empty($HTTP_FORM_VARS["RESULTTYPE"]) ? $HTTP_FORM_VARS["RESULTTYPE"] : null;
 $srsName = !empty($HTTP_FORM_VARS["SRSNAME"]) ? $HTTP_FORM_VARS["SRSNAME"] : null;
 $version = !empty($HTTP_FORM_VARS["VERSION"]) ? $HTTP_FORM_VARS["VERSION"] : "1.1.0";
-$service = !empty($HTTP_FORM_VARS["SERVICE"]) ? $HTTP_FORM_VARS["SERVICE"] : $HTTP_FORM_VARS["REQUEST"] == "GetFeature" ? "WFS" : null;
+$service = !empty($HTTP_FORM_VARS["SERVICE"]) ? $HTTP_FORM_VARS["SERVICE"] : ($HTTP_FORM_VARS["REQUEST"] == "GetFeature" ? "WFS" : null);
 $maxFeatures = !empty($HTTP_FORM_VARS["MAXFEATURES"]) ? $HTTP_FORM_VARS["MAXFEATURES"] : null;
 $outputFormat = !empty($HTTP_FORM_VARS["OUTPUTFORMAT"]) ? $HTTP_FORM_VARS["OUTPUTFORMAT"] : ($version == "1.1.0" ? "GML3" : "GML2");
-$srs = $srsName ? parseEpsgCode($srsName) : $srs ?: App::$param["epsg"] ?: null;
+$srs = $srsName ? parseEpsgCode($srsName) : ($srs ?: App::$param["epsg"] ?: null);
 //die($outputFormat);
 
 if (!empty($HTTP_FORM_VARS["FILTER"])) {
@@ -1263,6 +1263,7 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     if (!$gmlFeature[$table]) {
         $gmlFeature[$table] = $table;
     }
+    $postgisObject->begin();
     if ($sql2) {
         $postgisObject->execQuery("BEGIN");
         $result = $postgisObject->execQuery($sql2 . $from);
@@ -1282,7 +1283,6 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     }
 
     $fullSql = $sql . $from . " LIMIT " . ($maxFeatures ?? FEATURE_LIMIT);
-    $postgisObject->begin();
     try {
         $postgisObject->prepare("DECLARE curs CURSOR FOR {$fullSql}")->execute();
         $innerStatement = $postgisObject->prepare("FETCH 1 FROM curs");
@@ -1300,6 +1300,7 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
             $fieldName = $keys[$i];
             $fieldValue = $myrow[$fieldName];
             if (
+                !empty($fieldName) &&
                 !empty($tableObj->metaData[$fieldName] && $tableObj->metaData[$fieldName]['type'] != "geometry") &&
                 $fieldName != "txmin" && $fieldName != "tymin" &&
                 $fieldName != "txmax" && $fieldName != "tymax" &&

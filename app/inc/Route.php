@@ -69,7 +69,7 @@ class Route
             }
 
             $e[count($e) - 1] = ucfirst($e[count($e) - 1]);
-            $uri = implode($e, "/");
+            $uri = implode("/", $e);
             $n = sizeof($e);
             $className = strtr($uri, '/', '\\');
             $class = "app\\{$className}";

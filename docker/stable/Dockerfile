@@ -1,12 +1,12 @@
-FROM mapcentia/gc2core:mapserver
-MAINTAINER Martin Høgh<mh@mapcentia.com>
+FROM mapcentia/gc2core:mapserver8
+MAINTAINER Martin Høgh 1<mh@mapcentia.com>
 
 RUN export DEBIAN_FRONTEND=noninteractive
 ENV DEBIAN_FRONTEND noninteractive
 
 # Clone GC2 from GitHub
 RUN cd /var/www/ &&\
-	git clone https://github.com/mapcentia/geocloud2.git
+	git clone https://github.com/mapcentia/geocloud2.git --branch=bullseye
 
 # Install npm packages run Grunt
 RUN	cd /var/www/geocloud2 &&\

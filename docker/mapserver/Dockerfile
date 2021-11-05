@@ -1,14 +1,14 @@
-FROM mapcentia/gc2core:gdal
+FROM mapcentia/gc2core:gdal8
 MAINTAINER Martin Høgh<mh@mapcentia.com>
 
 RUN export DEBIAN_FRONTEND=noninteractive
 ENV DEBIAN_FRONTEND noninteractive
 
 # Set php session timeout to one day
-RUN sed -i "s/session.gc_maxlifetime = 1440/session.gc_maxlifetime = 86400/g" /etc/php/7.3/fpm/php.ini
+RUN sed -i "s/session.gc_maxlifetime = 1440/session.gc_maxlifetime = 86400/g" /etc/php/8.0/fpm/php.ini
 # Set max upload file size
-RUN sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 1000M/g" /etc/php/7.3/fpm/php.ini
-RUN sed -i "s/post_max_size = 8M/post_max_size = 1000M/g" /etc/php/7.3/fpm/php.ini
+RUN sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 1000M/g" /etc/php/8.0/fpm/php.ini
+RUN sed -i "s/post_max_size = 8M/post_max_size = 1000M/g" /etc/php/8.0/fpm/php.ini
 
 
 # Install MapServer 7.6 from source
@@ -22,8 +22,8 @@ RUN git clone https://github.com/mapserver/mapserver.git --branch branch-7-6 &&\
     -DWITH_CLIENT_WMS=ON \
     -DWITH_CURL=ON \
     -DWITH_SOS=ON \
-    -DWITH_PHP=ON \
-    -DWITH_PYTHON=ON \
+    -DWITH_PHPNG=OFF \
+    -DWITH_PHP=OFF \
     -DWITH_ORACLESPATIAL=0 \
     -DWITH_RSVG=ON \
     -DWITH_POINT_Z_M=ON \
@@ -34,7 +34,7 @@ RUN git clone https://github.com/mapserver/mapserver.git --branch branch-7-6 &&\
     make && make install &&\
     cp /mapserver/build/mapserv /usr/lib/cgi-bin/mapserv.fcgi
 
-RUN echo "extension=php_mapscript.so" >> /etc/php/7.3/fpm/php.ini
+RUN echo "extension=php_mapscript.so" >> /etc/php/8.0/fpm/php.ini
 
 # Instal MapCache from source
 RUN cd ~ && \
@@ -48,11 +48,11 @@ RUN cd ~ && \
     ldconfig
 
 # Install QGIS-server
-RUN add-apt-repository "deb https://qgis.org/debian-ltr `lsb_release -c -s` main" &&\
-    wget -qO - https://qgis.org/downloads/qgis-2020.gpg.key | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import &&\
-    chmod a+r /etc/apt/trusted.gpg.d/qgis-archive.gpg &&\
-    apt-get update &&\
-    apt-get -y install qgis-server=1:3.16.8+15buster
+#RUN add-apt-repository "deb https://qgis.org/debian-ltr `lsb_release -c -s` main" &&\
+#    wget -qO - https://qgis.org/downloads/qgis-2020.gpg.key | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import &&\
+#    chmod a+r /etc/apt/trusted.gpg.d/qgis-archive.gpg &&\
+#    apt-get update &&\
+#    apt-get -y install qgis-server=1:3.16.8+15buster
 
 # Symlink font for QGIS Server
 RUN ln -s /usr/share/fonts directory /usr/lib/x86_64-linux-gnu
@@ -69,10 +69,6 @@ RUN chmod +x /watch_mapcache_changes.sh
 # Add the reload.js
 COPY reload.js /reload.js
 
-RUN curl -sL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh &&\
-    bash nodesource_setup.sh &&\
-    apt-get install -y nodejs
-
 RUN mkdir /mapcache
 RUN cp /root/mapcache/mapcache.xml /mapcache/
 
@@ -84,7 +80,7 @@ ADD conf/apache/mapcache.conf /etc/apache2/sites-enabled/
 ADD conf/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Add php-fpm config file from Docker repo
-ADD conf/fpm/www.conf /etc/php/7.3/fpm/pool.d/www.conf
+ADD conf/fpm/www.conf /etc/php/8.0/fpm/pool.d/www.conf
 
 # Add the check-if-fpm-is-alive script
 COPY check-fpm.sh /check-fpm.sh

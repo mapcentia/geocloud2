@@ -362,9 +362,9 @@ class Util
     public static function format(string $sValue, bool $bQuotes = false): string
     {
         $sValue = trim($sValue);
-        if ($bQuotes xor get_magic_quotes_gpc()) {
-            $sValue = $bQuotes ? addslashes($sValue) : stripslashes($sValue);
-        }
+//        if ($bQuotes xor get_magic_quotes_gpc()) {
+//            $sValue = $bQuotes ? addslashes($sValue) : stripslashes($sValue);
+//        }
         return $sValue;
     }
 

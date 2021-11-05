@@ -8,7 +8,6 @@
 
 namespace app\inc;
 
-use phpDocumentor\Reflection\Types\Mixed;
 
 class Response
 {

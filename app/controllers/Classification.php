@@ -25,7 +25,7 @@ class Classification extends \app\inc\Controller
     {
         $id = Input::getPath()->part(5);
         $response = $this->auth(Input::getPath()->part(4), array("read" => true, "write" => true, "all" => true));
-        return (!$response['success']) ? $response : ($id !== false && $id !== null && $id !== "") ? $this->class->get($id) : $this->class->getAll();
+        return (!$response['success']) ? $response : (($id !== false && $id !== null && $id !== "") ? $this->class->get($id) : $this->class->getAll());
     }
 
     public function post_index()
