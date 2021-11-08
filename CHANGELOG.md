@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED]
+### Changed
+- `clonedb_whitelist.sh` will now use gc2-cli to sync mapfiles, mapcachefile and QGIS files. Two extra flags must be set: -G TargetGc2Host -A TargetGc2Password
+
 ## [2021.11.0] - 2021-3-11
 ### Fixed
 - Improvments in filtering for WFT-t. `Not` operator now works. 

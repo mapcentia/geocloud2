@@ -13,9 +13,9 @@ sourceuser=""
 targetuser=""
 sourcepw=""
 targetpw=""
-usage="Usage: sh clonedb_whitelist.sh -h SourceHost -d SourceDb -u SourceUser -p SourcePw -H TargetHost -D TargetDb -U TargetUser -P TargetPw"
+usage="Usage: sh clonedb_whitelist.sh -h SourceHost -d SourceDb -u SourceUser -p SourcePw -H TargetHost -D TargetDb -U TargetUser -P TargetPw -G TargetGc2Host -A TargetGc2Password"
 
-while getopts "k?:h:d:H:D:u:U:p:P:" opt; do
+while getopts "k?:h:d:H:D:u:U:p:P:G:A:" opt; do
     case "$opt" in
     k|\?)
         echo $usage
@@ -37,6 +37,10 @@ while getopts "k?:h:d:H:D:u:U:p:P:" opt; do
         ;;
     P)  targetpw=$OPTARG
         ;;
+    G)  targetgc2host=$OPTARG
+        ;;
+    A)  targetgc2pwd=$OPTARG
+        ;;
     :)  echo "Option -$OPTARG requires an argument." >&2
         exit 1
         ;;
@@ -57,6 +61,9 @@ function if_error
 {
     if [[ $? -ne 0 ]]; then # check return code passed to function
         print "$1 DATE: `date +%Y-%m-%d:%H:%M:%S`"
+        #Clean up
+        rm dump.bak -R
+        psql postgres -c "DROP DATABASE IF EXISTS $tmpdb"
         exit $?
     fi
 }
@@ -99,7 +106,7 @@ psql -c "CREATE EXTENSION pgagent;"
 
 # Run any custom SQL before restoring
 psql -f ./custom_restore.sql
-if_error "No custom_restore.sql file."
+#if_error "No custom_restore.sql file."
 
 # pg_restore will ignore errors (some errors are harmless). In such case it will exit with status 1. Therefore we can't check.
 pg_restore dump.bak --jobs=4 --dbname=$tmpdb
@@ -133,26 +140,19 @@ COMMIT;
 "
 if_error "Could not rename database."
 
-psql postgres -c "drop database $tmpdb"
-
 #Clean up
 rm dump.bak -R
 
+# Connect to target with GC2-cli
+gc2 connect -u $targetdb -H $targetgc2host
+gc2 login -p $targetgc2pwd
+
 # Write out the MapFiles
-echo "Writing MapFiles"
-for SCHEMA in "${ARRAY[@]}"
-    do
-       RES=$(curl -XGET -s "$targethost/api/v2/mapfile/write/$targetdb/$SCHEMA" | python3 -c "import sys, json; print(json.load(sys.stdin))")
-       echo $RES
-    done
+gc2 admin -t mapfiles
 
 #Write out the MapCache file
-echo "Writing MapCache file"
-RES=$(curl -XGET -s "$targethost/api/v2/mapcachefile/write/$targetdb" | python3 -c "import sys, json; print(json.load(sys.stdin))")
-echo $RES
+gc2 admin -t mapcachefile
 
 #Write out the QGIS files
-echo "Writing QGIS files"
-RES=$(curl -XGET -s "$targethost/api/v2/qgis/write/$targetdb" | python3 -c "import sys, json; print(json.load(sys.stdin))")
-echo $RES
+gc2 admin -t qgisfiles
 
