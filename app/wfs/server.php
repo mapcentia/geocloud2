@@ -2533,8 +2533,6 @@ function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null,
                 }
                 $str .= implode(",", $arr);
                 break;
-
-
         }
     }
     return [$str . $strEnd, $srid, $fid];
@@ -2618,11 +2616,12 @@ function getAxisOrder(?string $epsg): ?string
  */
 function parseEpsgCode(?string $epsg): ?string
 {
-    if (!$epsg) return null;
+    if (!$epsg) {
+        return null;
+    }
     $split = explode(":", $epsg);
     $clean = end($split);
-    $clean = preg_replace("/[\w]\./", "", $clean);
-    return $clean;
+    return preg_replace("/[\w]\./", "", $clean);
 }
 
 /**
