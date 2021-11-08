@@ -109,6 +109,11 @@ RUN crontab -l 2>/dev/null| { cat; echo "* * * * * sudo -u www-data php -f /var/
 
 RUN crontab -l 2>/dev/null| { cat; echo "";} | crontab
 
+# Install gc2-cli
+ARG version=2021.11.0
+RUN wget https://gc2-cli.s3.eu-west-1.amazonaws.com/apt/gc2_${version}-1_amd64.deb &&\
+    dpkg -i gc2_${version}-1_amd64.deb
+
 # Expose standard ports for HTTP and HTTPS
 EXPOSE 80
 EXPOSE 443

@@ -6,7 +6,7 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNRELEASED]
 ### Changed
-- `clonedb_whitelist.sh` will now use gc2-cli to sync mapfiles, mapcachefile and QGIS files. Two extra flags must be set: -G TargetGc2Host -A TargetGc2Password
+- `clonedb_whitelist.sh` will not try to write out mapfiles, mapcachefile and QGIS files.
 
 ## [2021.11.0] - 2021-3-11
 ### Fixed

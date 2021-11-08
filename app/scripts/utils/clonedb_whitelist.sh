@@ -13,9 +13,9 @@ sourceuser=""
 targetuser=""
 sourcepw=""
 targetpw=""
-usage="Usage: sh clonedb_whitelist.sh -h SourceHost -d SourceDb -u SourceUser -p SourcePw -H TargetHost -D TargetDb -U TargetUser -P TargetPw -G TargetGc2Host -A TargetGc2Password"
+usage="Usage: sh clonedb_whitelist.sh -h SourceHost -d SourceDb -u SourceUser -p SourcePw -H TargetHost -D TargetDb -U TargetUser -P TargetPw"
 
-while getopts "k?:h:d:H:D:u:U:p:P:G:A:" opt; do
+while getopts "k?:h:d:H:D:u:U:p:P:" opt; do
     case "$opt" in
     k|\?)
         echo $usage
@@ -36,10 +36,6 @@ while getopts "k?:h:d:H:D:u:U:p:P:G:A:" opt; do
     p)  sourcepw=$OPTARG
         ;;
     P)  targetpw=$OPTARG
-        ;;
-    G)  targetgc2host=$OPTARG
-        ;;
-    A)  targetgc2pwd=$OPTARG
         ;;
     :)  echo "Option -$OPTARG requires an argument." >&2
         exit 1
@@ -142,17 +138,4 @@ if_error "Could not rename database."
 
 #Clean up
 rm dump.bak -R
-
-# Connect to target with GC2-cli
-gc2 connect -u $targetdb -H $targetgc2host
-gc2 login -p $targetgc2pwd
-
-# Write out the MapFiles
-gc2 admin -t mapfiles
-
-#Write out the MapCache file
-gc2 admin -t mapcachefile
-
-#Write out the QGIS files
-gc2 admin -t qgisfiles
 
