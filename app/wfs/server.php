@@ -58,7 +58,7 @@ $geometryColumnsObj = new \app\controllers\Layer();
 $trusted = false;
 foreach (App::$param["trustedAddresses"] as $address) {
     if (Util::ipInRange(Util::clientIp(), $address)) {
-        if (getenv("ENV") != "test") {
+        if (getenv("MODE_ENV") != "test") {
             $trusted = true;
         }
         break;
