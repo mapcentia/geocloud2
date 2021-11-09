@@ -43,6 +43,7 @@ services:
       - POSTGIS_PORT=5432
       - POSTGIS_PW=1234
       - POSTGIS_PGBOUNCER=false
+      - ENV=${ENV}
   redis:
     image: redis
     networks:
