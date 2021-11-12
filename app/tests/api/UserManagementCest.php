@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 class UserManagementCest
 {
@@ -26,19 +26,20 @@ class UserManagementCest
 
     public function __construct()
     {
+        $buildId = getenv("BUILD_NAME");
         $this->date = new DateTime();
-        
-        $this->userName = 'Test super user name ' . $this->date->getTimestamp();
-        $this->userEmail = 'supertest' . $this->date->getTimestamp() . '@example.com';
 
-        $this->secondUserName = 'Test super user 2 name ' . $this->date->getTimestamp();
-        $this->secondUserEmail = 'supertest2' . $this->date->getTimestamp() . '@example.com';
+        $this->userName = 'Test super user name ' . ($buildId ?: $this->date->getTimestamp());
+        $this->userEmail = 'supertest' . ($buildId ?: $this->date->getTimestamp()) . '@example.com';
 
-        $this->subUserName = 'Test sub user name ' . $this->date->getTimestamp();
-        $this->subUserEmail = 'subtest' . $this->date->getTimestamp() . '@example.com';
+        $this->secondUserName = 'Test super user 2 name ' . $buildId ?: $this->date->getTimestamp();
+        $this->secondUserEmail = 'supertest2' . ($buildId ?: $this->date->getTimestamp()) . '@example.com';
 
-        $this->secondSubUserName = 'Test sub user name ' . $this->date->getTimestamp();
-        $this->secondSubUserEmail = 'anothersubtest' . $this->date->getTimestamp() . '@example.com';
+        $this->subUserName = 'Test sub user name ' . $buildId ?: $this->date->getTimestamp();
+        $this->subUserEmail = 'subtest' . ($buildId ?: $this->date->getTimestamp()) . '@example.com';
+
+        $this->secondSubUserName = 'Test sub user name ' . ($buildId ?: $this->date->getTimestamp());
+        $this->secondSubUserEmail = 'anothersubtest' . ($buildId ?: $this->date->getTimestamp()) . '@example.com';
     }
 
     public function shouldCreateSuperUserWitnNonASCIICharactersInNameAndAllowAuthorizeWithName(\ApiTester $I)
@@ -307,7 +308,7 @@ class UserManagementCest
             'email' => $this->userEmail,
             'password' => 'A1abcabcabc',
         ]));
-       
+
         $I->seeResponseCodeIs(\Codeception\Util\HttpCode::BAD_REQUEST);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([

@@ -36,23 +36,24 @@ class DatabaseManagementCest
 
     public function __construct()
     {
+        $buildId = getenv("BUILD_ID") ?? $this->date = new DateTime();
         $this->date = new DateTime();
 
-        $this->userName = 'Database test super user name ' . $this->date->getTimestamp();
+        $this->userName = 'Database test super user name ' . ($buildId ?: $this->date->getTimestamp());
         $this->password = 'A1abcabcabc';
-        $this->userEmail = 'databasetest' . $this->date->getTimestamp() . '@example.com';
-        $this->subUserName = 'Database test sub user name ' . $this->date->getTimestamp();
-        $this->subUserEmail = 'databasesubtest' . $this->date->getTimestamp() . '@example.com';
+        $this->userEmail = 'databasetest' . ($buildId ?: $this->date->getTimestamp()) . '@example.com';
+        $this->subUserName = 'Database test sub user name ' . ($buildId ?: $this->date->getTimestamp());
+        $this->subUserEmail = 'databasesubtest' . ($buildId ?: $this->date->getTimestamp()) . '@example.com';
 
-        $this->userName1 = 'Another database test super user name ' . $this->date->getTimestamp();
-        $this->userEmail1 = 'anotherdatabasetest' . $this->date->getTimestamp() . '@example.com';
-        $this->subUserName1 = 'Database test sub user name ' . $this->date->getTimestamp();
-        $this->subUserEmail1 = 'anotherdatabasesubtest' . $this->date->getTimestamp() . '@example.com';
+        $this->userName1 = 'Another database test super user name ' . ($buildId ?: $this->date->getTimestamp());
+        $this->userEmail1 = 'anotherdatabasetest' . ($buildId ?: $this->date->getTimestamp()) . '@example.com';
+        $this->subUserName1 = 'Database test sub user name ' . ($buildId ?: $this->date->getTimestamp());
+        $this->subUserEmail1 = 'anotherdatabasesubtest' . ($buildId ?: $this->date->getTimestamp()) . '@example.com';
 
-        $this->userName2 = 'Second another database test super user name ' . $this->date->getTimestamp();
-        $this->userEmail2 = 'secondanotherdatabasetest' . $this->date->getTimestamp() . '@example.com';
-        $this->subUserName2 = 'Second database test sub user name ' . $this->date->getTimestamp();
-        $this->subUserEmail2 = 'anotherdatabasesubtest' . $this->date->getTimestamp() . '@example.com';
+        $this->userName2 = 'Second another database test super user name ' . ($buildId ?: $this->date->getTimestamp());
+        $this->userEmail2 = 'secondanotherdatabasetest' . ($buildId ?: $this->date->getTimestamp()) . '@example.com';
+        $this->subUserName2 = 'Second database test sub user name ' . ($buildId ?: $this->date->getTimestamp());
+        $this->subUserEmail2 = 'anotherdatabasesubtest' . ($buildId ?: $this->date->getTimestamp()) . '@example.com';
     }
 
     public function shouldPrepareForTestFirstUser(\ApiTester $I)
@@ -249,7 +250,8 @@ class DatabaseManagementCest
         $I->assertEquals($response->databases[1]->parentdb, $this->userId2);
     }
 
-    public function shouldSetBasicAuthPasswordForSubUser(\ApiTester $I) {
+    public function shouldSetBasicAuthPasswordForSubUser(\ApiTester $I)
+    {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendPUT('/controllers/setting/pw', "pw=" . $this->password);
@@ -260,7 +262,8 @@ class DatabaseManagementCest
         ]);
     }
 
-    public function shouldSetBasicAuthPasswordForSuperUser(\ApiTester $I) {
+    public function shouldSetBasicAuthPasswordForSuperUser(\ApiTester $I)
+    {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendPUT('/controllers/setting/pw', "pw=" . $this->password);
@@ -373,6 +376,7 @@ class DatabaseManagementCest
         $I->sendGET('/wfs/' . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
         $I->seeResponseCodeIs(\Codeception\Util\HttpCode::UNAUTHORIZED);
     }
+
     // Sub user WFS-t request to protected data source from outside session
     public function shouldNotGetDataFromWfstAsSubUserOutsideSession(\ApiTester $I)
     {
@@ -381,6 +385,7 @@ class DatabaseManagementCest
         $I->seeResponseIsXml();
         $I->canSeeResponseContains('ServiceExceptionReport');
     }
+
     // Super user WFS-t request to protected data source from inside session
     public function shouldGetDataFromWfstAsSuperUserInsideSession(\ApiTester $I)
     {

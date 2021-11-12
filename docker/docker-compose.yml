@@ -43,7 +43,8 @@ services:
       - POSTGIS_PORT=5432
       - POSTGIS_PW=1234
       - POSTGIS_PGBOUNCER=false
-      - ENV=${MODE_ENV}
+      - MODE_ENV=${MODE_ENV}
+      - BUILD_ID=${BUILD_ID}
   redis:
     image: redis
     networks:
