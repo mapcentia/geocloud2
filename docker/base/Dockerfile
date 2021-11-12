@@ -19,10 +19,18 @@ RUN apt-get -y update
 RUN apt-get -y install cron vim wget g++ build-essential git unzip rng-tools apache2-utils postgresql-client supervisor netcat \
     apache2  apache2-dev php8.0-fpm php8.0-pgsql php8.0-redis php8.0-memcached php8.0-curl php8.0-sqlite3 php8.0-mbstring php8.0-gd php8.0-cli php8.0-mbstring php8.0-dev php8.0-zip \
     cmake libgdal-dev librsvg2-dev libpng++-dev libjpeg-dev libfreetype6-dev libproj-dev libfribidi-dev libharfbuzz-dev libcairo2-dev \
-    libgeos++-dev libpython-all-dev curl libapache2-mod-fcgid libfcgi-dev xvfb osm2pgsql postgis swig sudo \
+    libgeos++-dev libpython-all-dev curl libapache2-mod-fcgid libfcgi-dev xvfb osm2pgsql postgis  sudo \
     apt-transport-https ca-certificates software-properties-common \
     libprotobuf-c-dev libprotobuf-dev libprotobuf-c1 libprotobuf23 protobuf-compiler protobuf-c-compiler libtool \
-    python3-dev
+    python3-dev \
+
+# Compile SWIG > 4.0.0 to get PHP8 support
+RUN git clone https://github.com/swig/swig.git &&\
+    cd swig &&\
+    mkdir build &&\
+    cd build &&\
+    cmake .. &&\
+    make && make install
 
 # Install Java 8 for MSACCESSS support in GDAL
 RUN wget -O - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | apt-key add - &&\

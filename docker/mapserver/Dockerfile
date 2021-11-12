@@ -22,8 +22,7 @@ RUN git clone https://github.com/mapserver/mapserver.git --branch branch-7-6 &&\
     -DWITH_CLIENT_WMS=ON \
     -DWITH_CURL=ON \
     -DWITH_SOS=ON \
-    -DWITH_PHPNG=OFF \
-    -DWITH_PHP=OFF \
+    -DWITH_PHPNG=ON \
     -DWITH_ORACLESPATIAL=0 \
     -DWITH_RSVG=ON \
     -DWITH_POINT_Z_M=ON \
