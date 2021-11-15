@@ -125,6 +125,19 @@ class Sql
                 )";
         $sqls[] = "ALTER TABLE settings.key_value ADD COLUMN created TIMESTAMP WITH TIME ZONE DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE";
         $sqls[] = "ALTER TABLE settings.key_value ADD COLUMN updated TIMESTAMP WITH TIME ZONE DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE";
+        $sqls[] = "CREATE TABLE settings.symbols
+                    (
+                    id                   varchar not null PRIMARY KEY,
+                    rotation             float,
+                    scale                float,
+                    zoom                 int,
+                    svg                  text,
+                    browserid            varchar,
+                    userid               varchar,  
+                    anonymous            bool,
+                    file                 varchar,  
+                    the_geom             geometry(POINT, 4326)
+                )";
 
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
