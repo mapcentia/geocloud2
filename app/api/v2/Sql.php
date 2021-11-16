@@ -293,7 +293,7 @@ class Sql extends Controller
                 }
                 $table["no_quotes"] = str_replace('"', '', $table["no_quotes"]);
                 if (
-                    explode(".", $table["no_quotes"])[0] == "settings" ||
+//                    explode(".", $table["no_quotes"])[0] == "settings" ||
                     explode(".", $table["no_quotes"])[0] == "information_schema" ||
                     explode(".", $table["no_quotes"])[0] == "sqlapi" ||
                     explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
@@ -387,7 +387,7 @@ class Sql extends Controller
         } elseif (isset($parsedSQL['INSERT'])) {
             foreach ($parsedSQL['INSERT'] as $table) {
                 if (
-                    explode(".", $table["no_quotes"])[0] == "settings" ||
+//                    explode(".", $table["no_quotes"])[0] == "settings" ||
                     explode(".", $table["no_quotes"])[0] == "information_schema" ||
                     explode(".", $table["no_quotes"])[0] == "sqlapi" ||
                     explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
