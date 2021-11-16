@@ -26,16 +26,16 @@ class UserManagementCest
 
     public function __construct()
     {
-        $buildId = getenv("BUILD_NAME");
+        $buildId = getenv("BUILD_ID");
         $this->date = new DateTime();
 
         $this->userName = 'Test super user name ' . ($buildId ?: $this->date->getTimestamp());
         $this->userEmail = 'supertest' . ($buildId ?: $this->date->getTimestamp()) . '@example.com';
 
-        $this->secondUserName = 'Test super user 2 name ' . $buildId ?: $this->date->getTimestamp();
+        $this->secondUserName = 'Test super user 2 name ' . ($buildId ?: $this->date->getTimestamp());
         $this->secondUserEmail = 'supertest2' . ($buildId ?: $this->date->getTimestamp()) . '@example.com';
 
-        $this->subUserName = 'Test sub user name ' . $buildId ?: $this->date->getTimestamp();
+        $this->subUserName = 'Test sub user name ' . ($buildId ?: $this->date->getTimestamp());
         $this->subUserEmail = 'subtest' . ($buildId ?: $this->date->getTimestamp()) . '@example.com';
 
         $this->secondSubUserName = 'Test sub user name ' . ($buildId ?: $this->date->getTimestamp());
