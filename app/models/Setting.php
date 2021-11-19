@@ -40,9 +40,9 @@ class Setting extends Model
     }
 
     /**
-     * @return object
+     * @return object|null
      */
-    public function getArray(): object
+    public function getArray(): ?object
     {
         if (App::$param["encryptSettings"]) {
             $secretKey = file_get_contents(App::$param["path"] . "app/conf/secret.key");
