@@ -1235,6 +1235,10 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     global $maxFeatures;
     ob_start();
 
+    if (!$postgisObject->db) {
+        $postgisObject->connect();
+    }
+
     $featureCount = "";
     if ($maxFeatures) {
         $featureCount = $maxFeatures;
@@ -1248,7 +1252,6 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
             makeExceptionReport($e->getMessage());
         }
     }
-
     print "<wfs:FeatureCollection ";
     print "xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" ";
     print "xmlns:wfs=\"http://www.opengis.net/wfs\" ";
