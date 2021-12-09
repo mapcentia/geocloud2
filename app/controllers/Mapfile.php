@@ -566,16 +566,6 @@ class Mapfile extends Controller
                 } ?>
                 <?php if (!empty($layerArr['data'][0]['query_buffer'])) echo "\"appformap_query_buffer\" \"" . $layerArr['data'][0]['query_buffer'] . "\"\n"; ?>
                 END
-                #UTFITEM   "<?php echo $primeryKey['attname'] ?>"
-                <?php $fields = json_decode($row['fieldconf'], true);
-                if (!empty($fields)) foreach ($fields as $field => $name) {
-                    $fieldsArr[] = "\\\"{$field}\\\":\\\"[{$field}]\\\"";
-                }
-                ?>
-                #UTFDATA "<?php echo "{" . implode(",", !empty($fieldsArr) ? $fieldsArr : []) . "}";
-                $fieldsArr = [];
-                ?>"
-
 
                 PROJECTION
                 "init=epsg:<?php echo $row['srid']; ?>"
