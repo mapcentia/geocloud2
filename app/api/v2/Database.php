@@ -23,17 +23,11 @@ class Database extends Controller
 {
 
     /**
-     * @var UserModel
-     */
-    private $user;
-
-    /**
      * User constructor.
      */
     function __construct()
     {
         parent::__construct();
-        $this->user = new UserModel(Session::isAuth() ? Session::getUser() : null);
     }
 
     /**
