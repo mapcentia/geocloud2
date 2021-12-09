@@ -5,9 +5,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNRELEASED]
+### Changed
+- Scheduler can now be activated for all database with this setting in `app/conf/App.php`:
+```php
+    "gc2scheduler" => [
+        "*" => true,
+    ],
+```
+
 ### Fixed
-- Sigin form now reacts on database exceptions letting the user know something is wrong.
-- Handling of database exceptions in signup proccess, e.g. so the role is dropped again and if the database creation went wrong.
+- Sign-in form now reacts on database exceptions letting the user know something is wrong.
+- Handling of database exceptions in signup proccess, e.g. so the role is dropped again if the database creation went wrong. This means no manual clean up is needed.
 
 ## [2021.11.3] 2021.11.19
 ### Fixed

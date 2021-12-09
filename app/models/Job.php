@@ -23,7 +23,7 @@ class Job extends Model
 {
     /**
      * @param string|null $db
-     * @return array<bool|int|string|array<mixed>>
+     * @return array<mixed>
      */
     public function getAll(?string $db): array
     {

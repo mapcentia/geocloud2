@@ -4360,7 +4360,7 @@ $(document).ready(function () {
      * Hide tab if scheduler is not available for the db
      */
     if (window.gc2Options.gc2scheduler !== null) {
-        if (window.gc2Options.gc2scheduler.hasOwnProperty(parentdb) === false || window.gc2Options.gc2scheduler[parentdb] === false) {
+        if ((window.gc2Options.gc2scheduler.hasOwnProperty(parentdb) === false || window.gc2Options.gc2scheduler[parentdb] === false) && window.gc2Options.gc2scheduler.hasOwnProperty("*") === false) {
             tabs.hideTabStripItem(Ext.getCmp('schedulerPanel'));
         }
     } else {

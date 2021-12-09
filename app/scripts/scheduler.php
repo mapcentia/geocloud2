@@ -34,7 +34,7 @@ try {
 }
 
 while ($row = $model->fetchRow($res)) {
-    if (!empty($row["active"]) && isset(App::$param["gc2scheduler"][$row["db"]]) && App::$param["gc2scheduler"][$row["db"]] === true) {
+    if (!empty($row["active"]) && ((isset(App::$param["gc2scheduler"][$row["db"]]) && App::$param["gc2scheduler"][$row["db"]] === true) || (isset(App::$param["gc2scheduler"]["*"]) && App::$param["gc2scheduler"]["*"] === true))) {
         $args = [
             "--db" => $row["db"],
             "--schema" => $row["schema"],
