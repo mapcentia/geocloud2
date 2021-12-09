@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED]
+## [2021.12.0] - 2021-12-9
 ### Changed
 - Scheduler can now be activated for all database with this setting in `app/conf/App.php`:
 ```php
@@ -17,15 +17,15 @@ and this project adheres to [CalVer](https://calver.org/).
 - Sign-in form now reacts on database exceptions letting the user know something is wrong.
 - Handling of database exceptions in signup proccess, e.g. so the role is dropped again if the database creation went wrong. This means no manual clean up is needed.
 
-## [2021.11.3] 2021.11.19
+## [2021.11.3] - 2021-11-19
 ### Fixed
 - `maxFeature` in wfs-t rendered an error, because the db was never connected.
 
-## [2021.11.2] 2021.11.2
+## [2021.11.2] - 2021-11-2
 ### Fixed
 - Tests are fixed
 
-## [2021.11.1] 2021.11.1
+## [2021.11.1] - 2021-11-1
 ### Changed
 - `clonedb_whitelist.sh` will not try to write out mapfiles, mapcachefile and QGIS files. Use gc2-cli for this.
 - API tests now uses $BUILD_ID env var if set for usernames, so they can be predicted in Vidi tests.
