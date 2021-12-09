@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED]
+### Fixed
+- Sigin form now reacts on database exceptions letting the user know something is wrong.
+- Handling of database exceptions in signup proccess, e.g. so the role is dropped again and if the database creation went wrong.
+
 ## [2021.11.3] 2021.11.19
 ### Fixed
 - `maxFeature` in wfs-t rendered an error, because the db was never connected.

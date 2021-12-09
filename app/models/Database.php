@@ -23,18 +23,33 @@ class Database extends Model
 {
     /**
      * @param string $name
-     * @return bool
+     * @return void
+     * @throws PDOException
      */
-    private function createUser(string $name): bool
+    private function createUser(string $name): void
     {
         $sql = "CREATE USER {$name}";
-        $this->execQuery($sql);
-        try {
-            $this->execQuery($sql);
-            return true;
-        } catch (Exception $e) {
-            return false;
-        }
+        $this->db->query($sql);
+    }
+
+    /**
+     * @param string $name
+     * @throws PDOException
+     */
+    public function dropUser(string $name): void
+    {
+        $sql = "DROP USER {$name}";
+        $this->db->query($sql);
+    }
+
+    /**
+     * @param string $name
+     * @throws PDOException
+     */
+    public function dropDatabase(string $name): void
+    {
+        $sql = "DROP DATABASE {$name}";
+        $this->db->query($sql);
     }
 
     /**
@@ -71,14 +86,14 @@ class Database extends Model
        			TEMPLATE={$template}
        			CONNECTION LIMIT=-1;
 			";
-        $this->execQuery($sql);
+        $this->db->query($sql);
 
         $sql = "GRANT ALL PRIVILEGES ON DATABASE {$screenName} to {$screenName}";
-        $this->execQuery($sql);
+        $this->db->query($sql);
 
         $postgisUser = explode('@', $this->postgisuser)[0];
         $sql = "GRANT {$screenName} to {$postgisUser}";
-        $this->execQuery($sql);
+        $this->db->query($sql);
 
         $this->changeOwner($screenName, $screenName);
 
@@ -89,7 +104,6 @@ class Database extends Model
             $this->execQuery($sql);
             $sql = "DROP USER {$screenName}";
             $this->execQuery($sql);
-            print_r($this->PDOerror);
             return false;
         }
     }
@@ -172,10 +186,10 @@ class Database extends Model
     /**
      * @param string $db
      * @param string $newOwner
-     * @return array<bool|string>
-     * @throws Exception
+     * @return void
+     * @throws PDOException
      */
-    public function changeOwner(string $db, string $newOwner): array
+    public function changeOwner(string $db, string $newOwner): void
     {
         $this->db = null;
         $this->postgisdb = $db;
@@ -185,61 +199,52 @@ class Database extends Model
 
         //Database
         $sql = "ALTER DATABASE {$db} OWNER TO {$newOwner}";
-        $this->execQuery($sql);
+        $this->db->query($sql);
 
         // Schema
         $sql = "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name<>'information_schema'";
-        $res = $this->execQuery($sql);
+        $res = $this->db->query($sql);
         $rows1 = $this->fetchAll($res);
 
         // tables
         $sql = "SELECT '\"'||schemaname||'\".\"'||tablename||'\"' AS table FROM pg_tables WHERE schemaname NOT LIKE 'pg_%' AND schemaname<>'information_schema'";
+        $res = $this->db->query($sql);
         $res = $this->execQuery($sql);
         $rows2 = $this->fetchAll($res);
 
 
         $sql = "SELECT '\"'||table_schema||'\".\"'||table_name||'\"' AS table FROM information_schema.views WHERE table_schema NOT LIKE 'pg_%' AND table_schema<>'information_schema'";
-        $res = $this->execQuery($sql);
+        $res = $this->db->query($sql);
         $rows3 = $this->fetchAll($res);
 
 
         $sql = "SELECT '\"'||sequence_schema||'\".\"'||sequence_name||'\"' AS table FROM information_schema.sequences WHERE sequence_schema NOT LIKE 'pg_%' AND sequence_schema<>'information_schema'";
-        $res = $this->execQuery($sql);
+        $res = $this->db->query($sql);
         $rows4 = $this->fetchAll($res);
 
-
-        $this->execQuery($sql);
         foreach ($rows1 as $row) {
             $sql = "ALTER SCHEMA {$row["schema_name"]} OWNER TO {$newOwner}";
-            $this->execQuery($sql);
+            $this->db->query($sql);
         }
         foreach ($rows1 as $row) {
             $sql = "GRANT USAGE ON SCHEMA {$row["schema_name"]} TO {$newOwner}";
-            $this->execQuery($sql);
+            $this->db->query($sql);
         }
         foreach ($rows2 as $row) {
             $sql = "ALTER TABLE {$row["table"]} OWNER TO {$newOwner}";
-            $this->execQuery($sql);
+            $this->db->query($sql);
         }
         foreach ($rows3 as $row) {
             $sql = "ALTER TABLE {$row["table"]} OWNER TO {$newOwner}";
-            $this->execQuery($sql);
+            $this->db->query($sql);
         }
         foreach ($rows4 as $row) {
+            $this->db->query($sql);
             $sql = "ALTER TABLE {$row["table"]} OWNER TO {$newOwner}";
-            $this->execQuery($sql);
         }
 
         $this->commit();
 
-        if (!$this->PDOerror) {
-            $response['success'] = true;
-            $response['message'] = "Owner changed";
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror[0];
-        }
-        return $response;
     }
 
     /**

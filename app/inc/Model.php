@@ -128,13 +128,13 @@ class Model
      * @param PDOStatement $result
      * @param string $result_type
      * @return array<mixed>
-     * @throws Exception
+     * @throws PDOException
      */
     public function fetchAll(PDOStatement $result, string $result_type = "both"): array
     {
         $rows = [];
         if (isset($this->PDOerror)) {
-            throw new Exception($this->PDOerror[0]);
+            throw new PDOException($this->PDOerror[0]);
         }
         switch ($result_type) {
             case "assoc" :

@@ -251,7 +251,18 @@ class User extends Model
             try {
                 $db->createdb($userId, App::$param['databaseTemplate']);
             } catch (Exception $e) {
-                // PASS
+                // Clean up
+                try {
+                    $db->dropUser($userId);
+                    $db->dropDatabase($userId);
+                } catch (\PDOException $e) {
+                    // Pass
+                }
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['test'] = Session::getUser();
+                $response['code'] = 400;
+                return $response;
             }
         }
 
