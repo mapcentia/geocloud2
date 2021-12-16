@@ -28,6 +28,7 @@ class Database extends Model
      */
     private function createUser(string $name): void
     {
+        $this->connect();
         $sql = "CREATE USER {$name}";
         $this->db->query($sql);
     }
@@ -38,6 +39,7 @@ class Database extends Model
      */
     public function dropUser(string $name): void
     {
+        $this->connect();
         $sql = "DROP USER {$name}";
         $this->db->query($sql);
     }
@@ -48,6 +50,7 @@ class Database extends Model
      */
     public function dropDatabase(string $name): void
     {
+        $this->connect();
         $sql = "DROP DATABASE {$name}";
         $this->db->query($sql);
     }

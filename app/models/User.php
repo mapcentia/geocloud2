@@ -366,7 +366,7 @@ class User extends Model
         // Check if the password is strong enough
         $password = null;
         if (isset($data["password"])) {
-            $passwordCheckResults = Setting::checkPasswordStrength($data["password"]);
+            $passwordCheckResults = Setting::checkPasswordStrength(Util::format($data["password"], true));
             if (sizeof($passwordCheckResults) > 0) {
                 return array(
                     'code' => 400,
@@ -375,7 +375,7 @@ class User extends Model
                 );
             }
 
-            $password = Setting::encryptPwSecure($data["password"]);
+            $password = Setting::encryptPwSecure(Util::format($data["password"], true));
         }
 
         $userGroup = isset($data["usergroup"]) ? $data["usergroup"] : null;
