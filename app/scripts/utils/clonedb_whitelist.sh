@@ -55,8 +55,8 @@ fi
 function if_error
 ##################
 {
-    if [[ $? -ne 0 ]]; then # check return code passed to function
-        print "$1 DATE: `date +%Y-%m-%d:%H:%M:%S`"
+    if [ $? -ne 0 ]; then # check return code passed to function
+        echo "$1 DATE: `date +%Y-%m-%d:%H:%M:%S`"
         #Clean up
         rm dump.bak -R
         psql postgres -c "DROP DATABASE IF EXISTS $tmpdb"
