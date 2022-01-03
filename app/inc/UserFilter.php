@@ -52,10 +52,10 @@ class UserFilter
 
     public function __construct(string $db, string $userName, string $service, string $request, string $ipAddress, string $schema, string $layer)
     {
-        $this->userName = $db;
+        $this->db = $db;
         $this->userName = $userName;
         $this->service = $service;
-        $this->service = $request;
+        $this->request = $request;
         $this->ipAddress = $ipAddress;
         $this->schema = $schema;
         $this->layer = $layer;
