@@ -460,7 +460,7 @@ function getCmdPaging(): void
     try {
         $res->execute();
         $row = $table->fetchRow($res);
-        if (sizeof($row["num"]) > 0) {
+        if ($row["num"] > 0) {
             print "\nInfo: Removed " . $row["num"] . " duplicates.";
             $report[DUPSCOUNT] = $row["num"];
         } else {
@@ -926,7 +926,8 @@ if ($o != "-overwrite") {
     }
 
     print "\nInfo: Data in existing table deleted.";
-    $sql = "INSERT INTO {$schema}.{$safeName} (SELECT \"" . implode("\",\"", $fields) . "\" FROM {$workingSchema}.{$randTableName})";
+    $fieldsStr = implode("\",\"", $fields);
+    $sql = "INSERT INTO {$schema}.{$safeName} (\"{$fieldsStr}\") (SELECT \"{$fieldsStr}\" FROM {$workingSchema}.{$randTableName})";
 
 // Overwrite
 } else {
