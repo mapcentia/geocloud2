@@ -181,11 +181,12 @@ if ($HTTP_RAW_POST_DATA) {
         $HTTP_FORM_VARS["TYPENAME"] = dropAllNameSpaces($HTTP_FORM_VARS["TYPENAME"]); // We remove name space, so $where will get key without it.
 
         if (!empty($HTTP_FORM_VARS['FILTER'])) {
-            @$checkXml = simplexml_load_string($HTTP_FORM_VARS['FILTER']);
+            $filter = dropNameSpace($HTTP_FORM_VARS['FILTER']);
+            @$checkXml = simplexml_load_string($filter);
             if ($checkXml === FALSE) {
                 makeExceptionReport("Filter is not valid");
             }
-            $unserializer->unserialize(dropNameSpace($HTTP_FORM_VARS['FILTER']));
+            $unserializer->unserialize($filter);
             $HTTP_FORM_VARS['FILTER'] = $unserializer->getUnserializedData();
         }
     } else {
@@ -1399,8 +1400,8 @@ function dropNameSpace(string $tag): string
 {
 
     //$tag = html_entity_decode($tag);
-    $tag = preg_replace('/ xmlns(?:.*?)?=\".*?\"/', "", $tag); // Remove xmlns with "
-    $tag = preg_replace('/ xmlns(?:.*?)?=\'.*?\'/', "", $tag); // Remove xmlns with '
+//    $tag = preg_replace('/ xmlns(?:.*?)?=\".*?\"/', "", $tag); // Remove xmlns with "
+//    $tag = preg_replace('/ xmlns(?:.*?)?=\'.*?\'/', "", $tag); // Remove xmlns with '
     $tag = preg_replace('/ xsi(?:.*?)?=\".*?\"/', "", $tag); // remove xsi:schemaLocation with "
     $tag = preg_replace('/ xsi(?:.*?)?=\'.*?\'/', "", $tag); // remove xsi:schemaLocation with '
     $tag = preg_replace('/ cs(?:.*?)?=\".*?\"/', "", $tag); //
@@ -2710,8 +2711,6 @@ function parseFilter($filter, string $table): string
     $i = 0;
     $boolOperator = null;
     $where = [];
-//    print_r($filter);
-//    print "***********\n";
     foreach ($filter as $key => $arr) {
         if ($key == "And" || $key == "Or") {
             $boolOperator = $key;
@@ -2881,6 +2880,7 @@ function parseFilter($filter, string $table): string
         $boolOperator = "OR";
     }
 //    print_r($where);
+//    die();
     return "(" . implode(" " . $boolOperator . " ", $where) . ")";
 }
 
