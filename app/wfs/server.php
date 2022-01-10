@@ -192,6 +192,7 @@ if ($HTTP_RAW_POST_DATA) {
     } else {
         $HTTP_FORM_VARS = array("");
     }
+
 }
 // Log the request
 Log::write($logPath, $HTTP_RAW_POST_DATA);
@@ -1398,32 +1399,9 @@ function dropFirstChrs($str, $no)
  */
 function dropNameSpace(string $tag): string
 {
-
-    //$tag = html_entity_decode($tag);
-//    $tag = preg_replace('/ xmlns(?:.*?)?=\".*?\"/', "", $tag); // Remove xmlns with "
-//    $tag = preg_replace('/ xmlns(?:.*?)?=\'.*?\'/', "", $tag); // Remove xmlns with '
-    $tag = preg_replace('/ xsi(?:.*?)?=\".*?\"/', "", $tag); // remove xsi:schemaLocation with "
-    $tag = preg_replace('/ xsi(?:.*?)?=\'.*?\'/', "", $tag); // remove xsi:schemaLocation with '
-    $tag = preg_replace('/ cs(?:.*?)?=\".*?\"/', "", $tag); //
-    $tag = preg_replace('/ cs(?:.*?)?=\'.*?\'/', "", $tag);
-    $tag = preg_replace('/ ts(?:.*?)?=\".*?\"/', "", $tag);
-    $tag = preg_replace('/ decimal(?:.*?)?=\".*?\"/', "", $tag);
-    $tag = preg_replace('/\<wfs:(?:.*?)/', "<", $tag);
-    //$tag = preg_replace('/\<gml:(?:.*?)/', "<", $tag);
-    $tag = preg_replace('/\<ogc:(?:.*?)/', "<", $tag);
-    $tag = preg_replace('/\<ns:(?:.*?)/', "<", $tag);
-    $tag = preg_replace('/\<foo:(?:.*?)/', "<", $tag);
-
-    $tag = preg_replace('/\<\/wfs:(?:.*?)/', "</", $tag);
-    //$tag = preg_replace('/\<\/gml:(?:.*?)/', "</", $tag);
-    $tag = preg_replace('/\<\/ogc:(?:.*?)/', "</", $tag);
-    $tag = preg_replace('/\<\/ns:(?:.*?)/', "</", $tag);
-
-    $tag = preg_replace('/\<\/foo:(?:.*?)/', "</", $tag);
-    //$tag = preg_replace('/EPSG:(?:.*?)/', "", $tag);
-
-
-    //$tag = preg_replace("/[\w-]*:(?![\w-]*:)/", "", $tag); // remove any namespaces
+    $tag = preg_replace('/ \w*(?:\:\w*?)?(?<!gml)(?<!service)(?<!version)(?<!outputFormat)(?<!maxFeatures)(?<!resultType)(?<!typeName)(?<!srsName)=(\".*?\"|\'.*?\')/s', "", $tag);
+    $tag = preg_replace('/\<[a-z|0-9]*(?<!gml):(?:.*?)/', "<", $tag);
+    $tag = preg_replace('/\<\/[a-z|0-9]*(?<!gml):(?:.*?)/', "</", $tag);
     return $tag;
 }
 
@@ -1434,7 +1412,6 @@ function dropAllNameSpaces($tag)
     $tag = trim($tag, '"');
     return ($tag);
 }
-
 
 /**
  *
@@ -2712,6 +2689,10 @@ function parseFilter($filter, string $table): string
     $boolOperator = null;
     $where = [];
     foreach ($filter as $key => $arr) {
+        // Skip xmlns:gml key
+        if (!is_array($arr)) {
+            continue;
+        }
         if ($key == "And" || $key == "Or") {
             $boolOperator = $key;
         }
