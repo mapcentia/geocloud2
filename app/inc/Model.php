@@ -370,13 +370,14 @@ class Model
      * @param bool $temp
      * @param bool $restriction
      * @param array<array>|null $restrictions
+     * @param string|null $cacheKey
      * @return array<mixed>
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function getMetaData(string $table, bool $temp = false, bool $restriction = false, $restrictions = null): array
+    public function getMetaData(string $table, bool $temp = false, bool $restriction = false, array $restrictions = null, string $cacheKey = null): array
     {
         $cacheType = "metadata";
-        $cacheRel = $table;
+        $cacheRel = md5($cacheKey ?: $table);
         $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . md5($cacheRel . (int)$temp . (int)$restriction . serialize($restrictions)));
         $CachedString = Cache::getItem($cacheId);
         $primaryKey = null;

@@ -117,7 +117,7 @@ class Sql extends Model
             $response['code'] = 400;
             return $response;
         }
-        $arrayWithFields = $this->getMetaData($view, true); // Temp VIEW
+        $arrayWithFields = $this->getMetaData($view, true, false, null, $q); // Temp VIEW
         $postgisVersion = $this->postgisVersion();
         $bits = explode(".", $postgisVersion["version"]);
         if ((int)$bits[0] < 3 && (int)$bits[1] === 0) {
