@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2022.1.0] - 2022-1-10
+### Added
+- New 'Ignore' checkbox in the Structure tab. If checked the field will be ignored when using the feature info tool in Vidi. Useful if a field contains large data structures.
+
+### Fixed
+- Bug regarding changing password with `"` is fixed.
+- Bug in parseing WFS filters with `gml` name space is fixed.
+- The SQL API now uses the query string as cache key instead of the random temp view name, so the cache does not get flooded with keys on heavy use.
+
 ## [2021.12.0] - 2021-12-9
 ### Changed
 - Scheduler can now be activated for all database with this setting in `app/conf/App.php`:

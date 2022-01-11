@@ -502,14 +502,13 @@ class User extends Model
         $res = $this->prepare($sQuery);
         $res->execute([":sUserID" => $userId]);
         $row = $this->fetchRow($res);
-
+        $pwd = Util::format($checkedPassword, true);
         $hasPassword = false;
-        if (md5($checkedPassword) === $row['pw']) {
+        if (md5($pwd) === $row['pw']) {
             $hasPassword = true;
-        } else if (password_verify($checkedPassword, $row['pw'])) {
+        } else if (password_verify($pwd, $row['pw'])) {
             $hasPassword = true;
         }
-
         return $hasPassword;
     }
 }
