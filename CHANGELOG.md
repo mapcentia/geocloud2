@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2022.1.1] - 2022-1-13
+### Fixed
+- The stripping of attributes from incoming WFS requets works from an include list instead of an exclude list. This was changes in 2022.1.0. But the `fid` attribute on update requests was not included and updates failed.
+
 ## [2022.1.0] - 2022-1-10
 ### Added
 - New 'Ignore' checkbox in the Structure tab. If checked the field will be ignored when using the feature info tool in Vidi. Useful if a field contains large data structures.
