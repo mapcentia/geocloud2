@@ -86,7 +86,7 @@ class Layer extends Table
      * @param bool|null $parse
      * @param bool|null $es
      * @param string $db
-     * @return array
+     * @return array<mixed>
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function getAll(?string $query = null, ?bool $auth, ?bool $includeExtent = false, ?bool $parse = false, ?bool $es = false, string $db): array
@@ -98,7 +98,7 @@ class Layer extends Table
         }
 
         $cacheType = "meta";
-        $cacheId = $this->postgisdb . "_" . \app\inc\Session::getUser() . "_" . $cacheType . "_" . md5($query . "_" . "(int)$auth" . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es);
+        $cacheId = md5($this->postgisdb . "_" . \app\inc\Session::getUser() . "_" . $cacheType . "_" . md5($query . "_" . "(int)$auth" . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es));
 
         $CachedString = Cache::getItem($cacheId);
 
@@ -141,31 +141,28 @@ class Layer extends Table
                 "(authentication<>''foo'' OR authentication is NULL)" :
                 "(authentication=''Write'' OR authentication=''None'')";
             $case = "CASE WHEN ((layergroup = '' OR layergroup IS NULL) AND baselayer != true) THEN 9999999 else sort_id END";
-            $sort = "sort";
-            $sort .= (App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
-            $sort .= ",f_table_name DESC";
 
             if (sizeof($schemata) > 0) {
                 $schemaStr = "''" . implode("'',''", $schemata) . "''";
-                $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema in ({$schemaStr}) AND {$where}','raster_columns.r_table_schema in ({$schemaStr}) AND {$where}') ORDER BY {$sort})";
+                $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema in ({$schemaStr}) AND {$where}','raster_columns.r_table_schema in ({$schemaStr}) AND {$where}'))";
             }
 
             if (sizeof($layers) > 0) {
                 foreach ($layers as $layer) {
                     $split = explode(".", $layer);
-                    $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema = ''{$split[0]}'' AND f_table_name = ''{$split[1]}'' AND {$where}','raster_columns.r_table_schema = ''{$split[0]}'' AND raster_columns.r_table_name = ''{$split[1]}'' AND {$where}') ORDER BY {$sort})";
+                    $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema = ''{$split[0]}'' AND f_table_name = ''{$split[1]}'' AND {$where}','raster_columns.r_table_schema = ''{$split[0]}'' AND raster_columns.r_table_name = ''{$split[1]}'' AND {$where}'))";
                 }
             }
 
             if (sizeof($tags) > 0) {
                 foreach ($tags as $tag) {
                     $tag = urldecode($tag);
-                    $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('tags ? ''{$tag}'' AND {$where}','tags ? ''{$tag}'' AND {$where}') ORDER BY {$sort})";
+                    $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('tags ? ''{$tag}'' AND {$where}','tags ? ''{$tag}'' AND {$where}'))";
                 }
             }
 
             if (sizeof($schemata) == 0 && sizeof($layers) == 0 && sizeof($tags) == 0) {
-                $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('{$where}','{$where}') ORDER BY {$sort})";
+                $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('{$where}','{$where}'))";
             }
 
             $sql = implode(" UNION ALL ", $sqls);
@@ -203,13 +200,14 @@ class Layer extends Table
                 $esOnline = true;
             }
 
-            while ($row = $this->fetchRow($res, "assoc")) {
+            while ($row = $this->fetchRow($res)) {
                 $arr = array();
                 $schema = $row['f_table_schema'];
                 $rel = $row['f_table_schema'] . "." . $row['f_table_name'];
                 $primeryKey = $this->getPrimeryKey($rel); // Is cached
                 $resVersioning = $this->doesColumnExist($rel, "gc2_version_gid");  // Is cached
                 $versioning = $resVersioning["exists"];
+                $extent = null;
                 if ($row['type'] != "RASTER" && $includeExtent == true) {
                     $srsTmp = "900913";
                     $sqls = "SELECT ST_Xmin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS xmin,ST_Xmax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS xmax, ST_Ymin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS ymin,ST_Ymax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS ymax  FROM {$row['f_table_schema']}.{$row['f_table_name']}";
@@ -222,10 +220,9 @@ class Layer extends Table
                         $response['code'] = 401;
                         return $response;
                     }
-                    $extent = $this->fetchRow($resExtent, "assoc");
+                    $extent = $this->fetchRow($resExtent);
                 }
                 $restrictions = [];
-
                 foreach ($row as $key => $value) {
                     // Set empty strings to NULL
                     $value = $value == "" ? null : $value;
@@ -239,13 +236,13 @@ class Layer extends Table
                         $obj = json_decode($value, true);
                         if (is_array($obj)) {
                             foreach ($obj as $k => $val) {
+                                $props = json_decode(str_replace("'", '"', $obj[$k]["properties"]));
                                 if ($obj[$k]["properties"] == "*") {
-                                    $table = new Table($row['f_table_schema'] . "." . $row['f_table_name']);
-                                    $distinctValues = $table->getGroupByAsArray($k);
-                                    $obj[$k]["properties"] = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK);
-                                } elseif (isset(json_decode(str_replace("'", '"', $obj[$k]["properties"]), true)["_rel"])) {
-                                    $restrictions[$k] = json_decode(str_replace("'", '"', $obj[$k]["properties"]), true);
+                                    $restrictions[$k] = "*";
+                                } elseif (is_object($props) || is_array($props)) {
+                                    $restrictions[$k] = $props;
                                 }
+
                             }
                             $value = json_encode($obj);
                         } else {
@@ -369,6 +366,15 @@ class Layer extends Table
 
             // Resort data, because a mix of schema and tags search will not be sorted right
             usort($response['data'], function ($a, $b) {
+                if ($a['sort_id'] === $b['sort_id']) {
+                    $a['f_table_name'] = strtolower($a['f_table_title'] ?? $a['f_table_name']);
+                    $b['f_table_name'] = strtolower($b['f_table_title'] ?? $b['f_table_name']);
+                    if (App::$param["reverseLayerOrder"]) {
+                        return $a['f_table_name'] <=> $b['f_table_name'];
+                    } else {
+                        return $b['f_table_name'] <=> $a['f_table_name'];
+                    }
+                }
                 return $a['sort_id'] <=> $b['sort_id'];
             });
 
@@ -411,7 +417,7 @@ class Layer extends Table
         $sql = "SELECT f_table_schema AS schemas FROM settings.geometry_columns_view WHERE f_table_schema IS NOT NULL AND f_table_schema!='sqlapi' GROUP BY f_table_schema";
         $result = $this->execQuery($sql);
         if (!$this->PDOerror) {
-            while ($row = $this->fetchRow($result, "assoc")) {
+            while ($row = $this->fetchRow($result)) {
                 $arr[] = array("schema" => $row["schemas"], "desc" => null);
             }
             $response['success'] = true;
@@ -423,25 +429,20 @@ class Layer extends Table
         return $response;
     }
 
-    public function getElasticsearchMapping($_key_) // Only geometry tables
+    /**
+     * @param string $_key_
+     * @return array<mixed>
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public function getElasticsearchMapping(string $_key_): array
     {
-        $hasGeom = false;
         $elasticsearch = new Elasticsearch();
         $response['success'] = true;
         $response['message'] = "Map loaded";
 
-        $checkForGeom = $this->getMetaData($_key_);
-        foreach ($checkForGeom as $key => $value) {
-            if ($value["type"] == "geometry") {
-                $hasGeom = true;
-                break;
-            } else {
-                $hasGeom = false;
-            }
-        }
-        $arr = array();
+        $arr = [];
         $keySplit = explode(".", $_key_);
-        $table = new Table($keySplit[0] . "." . $keySplit[1], false, $hasGeom ?: false); // Add geometry types (or not)
+        $table = new Table($keySplit[0] . "." . $keySplit[1], false);
         $elasticsearchArr = (array)json_decode($this->getGeometryColumns($keySplit[0] . "." . $keySplit[1], "elasticsearch"));
         foreach ($table->metaData as $key => $value) {
             $esType = $elasticsearch->mapPg2EsType($value['type'], !empty($value['geom_type']) && $value['geom_type'] == "POINT" ? true : false);
@@ -470,6 +471,7 @@ class Layer extends Table
      * @param $data
      * @param $_key_
      * @return mixed
+     * @throws PhpfastcacheInvalidArgumentException
      */
     public function updateElasticsearchMapping($data, $_key_)
     {
@@ -684,13 +686,14 @@ class Layer extends Table
     }
 
     /**
-     * @param $_key_
-     * @return array
+     * @param string $_key_
+     * @return array<mixed>
+     * @throws PhpfastcacheInvalidArgumentException
      */
-    public function getPrivileges($_key_)
+    public function getPrivileges(string $_key_): array
     {
         $privileges = json_decode($this->getValueFromKey($_key_, "privileges") ?: "{}");
-        foreach ($_SESSION['subusers'] as $subuser) {
+        foreach (\app\inc\Session::getByKey('subusers') as $subuser) {
             $privileges->$subuser = ($privileges->$subuser) ?: "none";
             if ($subuser != Connection::$param['postgisschema']) {
                 $response['data'][] = array("subuser" => $subuser, "privileges" => $privileges->$subuser);
@@ -705,13 +708,13 @@ class Layer extends Table
     }
 
     /**
-     * @param $data
-     * @return mixed
+     * @param object $data
+     * @return array<mixed>
+     * @throws PhpfastcacheInvalidArgumentException
      */
-    public function updatePrivileges($data)
+    public function updatePrivileges(object $data): array
     {
-        $rel = explode(".", $data->_key_)[0] . "." . explode(".", $data->_key_)[1];
-        $this->clearCacheOfColumns($rel);
+        $this->clearCacheOfColumns();
         $this->clearCacheOnSchemaChanges();
 
         $table = new Table("settings.geometry_columns_join");
@@ -814,7 +817,7 @@ class Layer extends Table
             $response['code'] = 403;
             return $response;
         }
-        $extent = $this->fetchRow($resExtent, "assoc");
+        $extent = $this->fetchRow($resExtent);
         $response['success'] = true;
         $response['extent'] = $extent;
         return $response;
@@ -833,7 +836,7 @@ class Layer extends Table
             $extent = array("xmin" => $row['txmin'], "ymin" => $row['tymin'], "xmax" => $row['txmax'], "ymax" => $row['tymax']);
         } catch (PDOException $e) {
             $response['success'] = false;
-            $response['message'] = $e->getMessage();;
+            $response['message'] = $e->getMessage();
             $response['code'] = 403;
             return $response;
         }
@@ -954,7 +957,7 @@ class Layer extends Table
             $response['code'] = 401;
             return $response;
         }
-        $row = $this->fetchRow($res, "assoc");
+        $row = $this->fetchRow($res);
 
         $id = $row["uuid"];
 
@@ -965,10 +968,10 @@ class Layer extends Table
         curl_setopt($ch, CURLOPT_HEADER, true);
         curl_exec($ch);
         $info = curl_getinfo($ch);
-        $datasetExists = $info["http_code"] == 200 ? true : false;
+        $datasetExists = $info["http_code"] == 200;
         curl_close($ch);
 
-        // Create the CKAN package object
+        // Create the CKAN package objectuu
         $arr = array();
 
         if ($row["tags"]) {
@@ -1206,7 +1209,7 @@ class Layer extends Table
             return $response;
         }
         $arr = array();
-        while ($row = $this->fetchRow($res, "assoc")) {
+        while ($row = $this->fetchRow($res)) {
             if (isset($row["tags"]) && json_decode($row["tags"])) {
                 $arr[] = implode(",", json_decode($row["tags"]));
             }
@@ -1235,7 +1238,7 @@ class Layer extends Table
             return $response;
         }
 
-        while ($row = $this->fetchRow($res, "assoc")) {
+        while ($row = $this->fetchRow($res)) {
             $arr[] = array("group" => $row[$field]);
         }
         $response['success'] = true;

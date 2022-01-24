@@ -142,7 +142,6 @@ class Controller
     {
         $key = "http_auth_" . $layer . "_" . ($subUser ?: $db);
         if (!$_SESSION[$key]) {
-            Log::write("Checking auth");
             Database::setDb($db);
             $postgisObject = new Model();
             $auth = $postgisObject->getGeometryColumns($layer, "authentication");

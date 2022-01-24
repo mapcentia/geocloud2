@@ -84,7 +84,7 @@ class Sql
                     )";
         $sqls[] = "CREATE UNIQUE INDEX key_value_key_uindex ON settings.key_value (key)";
         $sqls[] = "UPDATE settings.geometry_columns_join SET wmssource = replace(wmssource, '127.0.0.1', 'gc2core')";
-       // $sqls[] = "UPDATE settings.geometry_columns_join SET wmssource = replace(wmssource, 'gc2core', '127.0.0.1')";
+        // $sqls[] = "UPDATE settings.geometry_columns_join SET wmssource = replace(wmssource, 'gc2core', '127.0.0.1')";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER COLUMN authentication TYPE VARCHAR(255) USING authentication::VARCHAR(255)";
         $sqls[] = "CREATE INDEX geometry_columns_join_authentication_idx ON settings.geometry_columns_join (authentication)";
         $sqls[] = "CREATE INDEX geometry_columns_join_baselayer_idx ON settings.geometry_columns_join (baselayer)";
@@ -107,7 +107,37 @@ class Sql
                     )";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN legend_url VARCHAR(255)";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER roles TYPE JSONB USING roles::jsonb";
-
+        $sqls[] = "CREATE TABLE settings.geofence
+                    (
+                    id                   serial not null,
+                    priority             integer,
+                    username             varchar default '*'::character varying,
+                    service              varchar default '*'::character varying,
+                    request              varchar default '*'::character varying,
+                    layer                varchar default '*'::character varying,
+                    iprange              varchar default '*'::character varying,
+                    schema               varchar default '*'::character varying,
+                    access               varchar default 'deny'::character varying,
+                    read_filter          text,
+                    read_spatial_filter  text,
+                    write_filter         text,
+                    write_spatial_filter text
+                )";
+        $sqls[] = "ALTER TABLE settings.key_value ADD COLUMN created TIMESTAMP WITH TIME ZONE DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE";
+        $sqls[] = "ALTER TABLE settings.key_value ADD COLUMN updated TIMESTAMP WITH TIME ZONE DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE";
+        $sqls[] = "CREATE TABLE settings.symbols
+                    (
+                    id                   varchar not null PRIMARY KEY,
+                    rotation             float,
+                    scale                float,
+                    zoom                 int,
+                    svg                  text,
+                    browserid            varchar,
+                    userid               varchar,  
+                    anonymous            bool,
+                    file                 varchar,  
+                    the_geom             geometry(POINT, 4326)
+                )";
 
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
@@ -634,6 +664,8 @@ class Sql
                       \"user\" VARCHAR(255) NOT NULL,
                       timestamp TIMESTAMP DEFAULT now() NOT NULL
                     )";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER meta SET DEFAULT '{}'";
+        $sqls[] = "UPDATE settings.geometry_columns_join SET meta='{}' WHERE meta isnull";
         return $sqls;
     }
 

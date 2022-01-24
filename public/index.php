@@ -30,14 +30,6 @@ include_once("../app/inc/Globals.php");
 
 new App();
 
-// If Connection::$params are not set, when set them from environment variables
-Connection::$param['postgishost'] = !empty(Connection::$param['postgishost']) ? Connection::$param['postgishost'] : getenv('POSTGIS_HOST');
-Connection::$param['postgisport'] = !empty(Connection::$param['postgisport']) ? Connection::$param['postgisport'] : getenv('POSTGIS_PORT');
-Connection::$param['postgisuser'] = !empty(Connection::$param['postgisuser']) ? Connection::$param['postgisuser'] : getenv('POSTGIS_USER');
-Connection::$param['postgisdb'] = !empty(Connection::$param['postgisdb']) ? Connection::$param['postgisdb'] : getenv('POSTGIS_DB');
-Connection::$param['postgispw'] = !empty(Connection::$param['postgispw']) ? Connection::$param['postgispw'] : getenv('POSTGIS_PW');
-
-
 $memoryLimit = isset(App::$param["memoryLimit"]) ? App::$param["memoryLimit"] : "128M";
 ini_set("memory_limit", $memoryLimit);
 ini_set("max_execution_time", "30");
@@ -99,21 +91,19 @@ try {
 
 // Setup host
 App::$param['protocol'] = isset(App::$param['protocol']) ? App::$param['protocol'] : Util::protocol();
-App::$param['host'] = App::$param['host'] ?: App::$param['protocol'] . "://" . $_SERVER['SERVER_NAME'] . ":" . $_SERVER['SERVER_PORT'];
+App::$param['host'] = App::$param['host'] ?: App::$param['protocol'] . "://" . $_SERVER['SERVER_NAME'] . ($_SERVER['SERVER_PORT'] != "80" && $_SERVER['SERVER_PORT'] != "443" ? ":" . $_SERVER["SERVER_PORT"] : "");
 App::$param['userHostName'] = App::$param['userHostName'] ?: App::$param['host'];
 
 // Write Access-Control-Allow-Origin if origin is white listed
 $http_origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : null;
 if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App::$param["AccessControlAllowOrigin"])) {
     header("Access-Control-Allow-Origin: " . $http_origin);
-    header("Access-Control-Allow-Headers: Origin, Content-Type, Authorization, X-Requested-With, Accept");
-    header("Access-Control-Allow-Credentials: true");
-    header("Access-Control-Allow-Methods: GET, PUT, POST, DELETE, HEAD");
 } elseif (isset(App::$param["AccessControlAllowOrigin"]) && App::$param["AccessControlAllowOrigin"][0] == "*") {
     header("Access-Control-Allow-Origin: *");
-    header("Access-Control-Allow-Headers: Origin, Content-Type, Authorization, X-Requested-With, Accept");
-    header("Access-Control-Allow-Credentials: true");
 }
+header("Access-Control-Allow-Headers: Origin, Content-Type, Authorization, X-Requested-With, Accept");
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Methods: GET, PUT, POST, DELETE, HEAD");
 
 // Start routing
 if (Input::getPath()->part(1) == "api") {
@@ -169,7 +159,7 @@ if (Input::getPath()->part(1) == "api") {
     // V2
     //======================
     Route::add("api/v2/sql/{user}/[method]", function () {
-        if (empty(Input::get("key"))) { // Only start session if no API key is provided
+        if (empty(Input::get("key")) || Input::get("key") == "null") { // Only start session if no API key is provided
             Session::start();
         }
         $r = func_get_arg(0);
@@ -299,6 +289,23 @@ if (Input::getPath()->part(1) == "api") {
             echo Response::toJson($jwt);
             exit();
         }
+    });
+    Route::add("api/v3/grid", function () {
+        $jwt = Jwt::validate();
+        if ($jwt["success"]) {
+            if (!$jwt["data"]["superUser"]) {
+                echo Response::toJson(Response::SUPER_USER_ONLY);
+                exit();
+            }
+            Database::setDb($jwt["data"]["database"]);
+        } else {
+            echo Response::toJson($jwt);
+            exit();
+        }
+    });
+
+    Route::add("api/v3/geofence", function () {
+            Database::setDb("mydb");
     });
 
     Route::miss();

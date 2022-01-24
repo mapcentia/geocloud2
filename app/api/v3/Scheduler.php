@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -13,6 +13,7 @@ use app\inc\Route;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\models\Job;
+
 
 /**
  * Class Scheduler
@@ -59,7 +60,7 @@ class Scheduler extends Controller
      */
     public function get_index()
     {
-        $id = Route::getParam("id");
+        $id = (int)Route::getParam("id");
         $job = new Job();
         $db = Jwt::extractPayload(Input::getJwtToken())["data"]["database"];
         $job->runJob($id, $db, true);

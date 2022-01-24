@@ -4,12 +4,150 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED]
+## [2022.1.1] - 2022-1-13
+### Fixed
+- The stripping of attributes from incoming WFS requets works from an include list instead of an exclude list. This was changes in 2022.1.0. But the `fid` attribute on update requests was not included and updates failed.
+
+## [2022.1.0] - 2022-1-10
 ### Added
-- PHPStan added to project for static code analysis. A lot of type issues fixed.
-  
+- New 'Ignore' checkbox in the Structure tab. If checked the field will be ignored when using the feature info tool in Vidi. Useful if a field contains large data structures.
+
+### Fixed
+- Bug regarding changing password with `"` is fixed.
+- Bug in parseing WFS filters with `gml` name space is fixed.
+- The SQL API now uses the query string as cache key instead of the random temp view name, so the cache does not get flooded with keys on heavy use.
+
+## [2021.12.0] - 2021-12-9
+### Changed
+- Scheduler can now be activated for all database with this setting in `app/conf/App.php`:
+```php
+    "gc2scheduler" => [
+        "*" => true,
+    ],
+```
+
+### Fixed
+- Sign-in form now reacts on database exceptions letting the user know something is wrong.
+- Handling of database exceptions in signup proccess, e.g. so the role is dropped again if the database creation went wrong. This means no manual clean up is needed.
+
+## [2021.11.3] - 2021-11-19
+### Fixed
+- `maxFeature` in wfs-t rendered an error, because the db was never connected.
+
+## [2021.11.2] - 2021-11-2
+### Fixed
+- Tests are fixed
+
+## [2021.11.1] - 2021-11-1
+### Changed
+- `clonedb_whitelist.sh` will not try to write out mapfiles, mapcachefile and QGIS files. Use gc2-cli for this.
+- API tests now uses $BUILD_ID env var if set for usernames, so they can be predicted in Vidi tests.
+
+## [2021.11.0] - 2021-3-11
+### Fixed
+- Improvments in filtering for WFT-t. `Not` operator now works. 
+
+## [2021.10.2] - 2021-28-10
+### Fixed
+- Model `app\models\Tile::update` has been called with a string as argument from `app\controllers\upload\Classification::setLayerDef` and `app\controllers\uploadProcessvector::get_index`. Added type annotation caught this and this is now fixed.
+
+## [2021.10.1] - 2021-25-10
+### Changed
+- MapCache SQLite files are now completly deleted on cache busting instead of running a DELETE FROM sql in the file. This solves the issue with huge SQLite files and busting.
+- The `Clear tile cache` button in the `Database` tab in Admin will now only bust the merged schema cache and not every single layer cache.
+
+### Fixed
+- The merged schema cache in MapCache files are now agian sorted by `sort_id`.
+
+## [2021.10.0] - 2021-13-10
+### Added
+- Legend data is now being cached in AppCache.
+
+### Fixed
+- Prevent default placeholder being inserted into config editor when it's empty.
+
+## [2021.9.0] - 2021-6-9
+### Changed
+- Increase the `upload_max_filesize` and `post_max_size` in PHP.
+
+### Fixed
+- Regression bug in WFS-t 1.1.0, which could result in an internal error when doing transactions on polygons and linestrings.
+- Unset Upgrade header in Apache2, which can cause an error in Safari browsers.
+
+## [2021.8.1] - 2021-1-9
+### Fixed
+- Type error fixed in Keyvalue API.
+
+## [2021.8.0] - 2021-30-8
+### Fixed
+- Unset unnecessary meta in Vidi snapshots. Vidi has been storing this meta data, but doesn't do it anymore. So this fix will reduce the size of older snap shots.
+
+## [2021.7.0] - 2021-9-7
+### Added
+- The SQL API now support ogr format with `&format=ogr/[format]`. E.g. `&format=ogr/ESRI Shapefile` or `&format=ogr/GPKG`. The response is a zip file with the file(s) or folder. Any vector format, which ogr2ogr is able to write can be used. 
+
+## [2021.6.0] - 2021-2-7
+### Added
+- Added UTFGrid support. The Mouse-over checkbox in the Structur tab will expose the field in UTFGrid.
+
+### Changed
+- The timestamp fields `created` and `updated` are added to `settings.key_value`. The latter will be updated when the value is updated. The Keyvalue GET API will now sort by the `update` field in descending order.
+- Upgraded QGIS Server to 3.16.8 in Dockerfile.
+
+### Fixed
+- Big `GetFeature` optimizition of WFS-t.
+- If the variables in Connection.php are set as environment variables in the container and therefore Connection.php is empty. It is now possible to run the migrations in `app/migration/run.php`.
+- Filter for WFS-t doesn't need to use name space prefixes.
+
+## [2021.5.2]
+### Changed
+- outputFormat in WFS-t is set to GML2, if a not recognized format is requested instead if throwing an exception. 
+- `peppeocchi/php-cron-scheduler` lock files are now created in `/var/www/geocloud2/app/tmp/scheduler_locks`, so they get purged with other lock files after an hour.
+- Keyvalue API now can be requested with headers: `Content-Type: text/plain` and `Accept: text/plain`. In this case the body on POST and PUT must be a base64url encoded string. And for GET the response will be a base64url encoded string. This makes it easier to get user generated JSON unaltered through the network. E.g. a JSON value like `ILIKE '%12'` will not mess things up.
+
+### Fixed
+- Then no sort_ids is set on layers or sort_ids are the same, then sort by layer title or name if the former is not set. The sorting is done in the application and not in the database.
+- WFS-T filter parser will now drop namespaces in property names. If not this is done, the resulting SQL will be invalid.
+- Bug regarding no-strip of gml namespace on Envelope BBOX filter is fixed.
+- Fixed bug in Feature API regarding namespace changes in WFS-t.
+- Trim double qoutes from ogc:PropertyName in WFS-t. Openlayers adds them in WFS requets. 
+- Always set ns uri to http:// in WFS-t or else editing won't work in Admin.
+- Bugs related to the new `peppeocchi/php-cron-scheduler` system. 
+- The manual Run function in scheduler GUI will not time out after 30 secs. 
+- A POST WFS DescribeFeatureType to OWS request would always end in an exception. Not many clients do this, but MapInfo 15.0 does.
+
+## [2021.5.1]
+### Added
+- New v3 API for creating fishnet grids. Useful for WFS scheduler jobs.
+
+## [2021.5.0]
+### Added
+- PHPStan added to project for static code analysis. A lot of issues fixed.
+- WFS-T now supports version 1.1.0.
+- KML/KMZ output added to WFS MapFiles. The OGR/KML og OGR/LIBKML drivers are used. Example URL: `/ows/mydb/test/?service=wfs&version=1.0.0&request=getfeature&typename=test.train_station&OUTPUTFORMAT=KML`
+
 ### Changed
 - Migration code moved to `app\migration`.
+- Namespace URI in WFS-T is now set like this xmlns:[schema]="http://[host]/[database]/[schema]". If the port differs from 80 or 443 it will be added. This is mostly for testing purposes.
+- Scheduler now uses `peppeocchi/php-cron-scheduler` for scheduling jobs. This replaces the error-prone method by writing the single jobs to the crontab. Docker image must be rebuild.
+- WFS-T will log all requests with POST bodies to an Apache combined style log.
+- Meta dialog no longer closes after save, so it's possible to tweak settings without opening the dailog every time.
+- WFS processors moved from `app/conf/wfsprocessors` to `app/wfs/processors`.
+- The `metaConfig` option in `app/conf/App` will now be merged with standard options set in `app\inc\Globals::metaConfig`. This means it's much easier to keep this option updated. Duplicates will be filered out - custom will have precedence.
+- rar compression format is not supported anymore.
+- Bump Node.js to v14.
+
+### Fixed
+- The correct online resources are now set in OWS GetCapabilities when using sub-users. This will fix authication issues in QGIS, which always uses online resource URLs from GetCapabilities in WFS. 
+- XML reversed chars in QGS files filters are now converted to HTML entities. So a filters with < > / & ' " will not render the QGS file invalid.
+- Newly created sub-users will be added to the session, so they can be granted privileges rigth away without siging out and in again.
+- Bug regarding not being able to remove inheritance from sub-user is fixed.   
+- cacheId strings are now md5 hashed, because not all characters are allowed.
+- `settings.geometry_columns_join.meta` is set to an empty JSON object, because it can cause problems in Vidi.
+- Added QGIS_AUTH_DB_DIR_PATH to Apache2 conf, so HTTPS requests in QGIS Server doesn't fail.
+- Exception format for MapServer WMS client is now set to application/vnd.ogc.se_xml instead of application/vnd.ogc.se_inimage. The latter can result in a blank image for WMS servers, which don't support application/vnd.ogc.se_inimage.
+- Feature API: Remove line breaks in JSON and replace with \n, so breaks doesn't throw an exception when decoding.
+- The Dashboard will not reset the PHPSESSION cookie, so now will GC2 set `sameSite=None` and `secure` on the cookie when using HTTPS.
 
 ## [2020.12.0] - 2020-21-12
 ### Added
@@ -298,4 +436,3 @@ So both containers must connect to the same user-defined network. Notice that Do
 
 ### Security
 - Better checking of privileges on layers when POSTing WFS GetFeature requests.
-

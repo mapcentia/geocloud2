@@ -1,32 +1,26 @@
 <?php
 /**
- * Long description for file
- *
- * Long description for file (if any)...
- *
- * @category   API
- * @package    app\api\v1
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- * @since      File available since Release 2013.1
  *
  */
 
 namespace app\api\v2;
 
-use \app\inc\Input;
-use \app\inc\Route;
-use \app\inc\Response;
-use \app\models\Database;
-use \app\models\Layer;
-use \GuzzleHttp\Client;
+use app\inc\Input;
+use app\inc\Route;
+use app\inc\Response;
+use app\models\Database;
+use app\models\Layer;
+use GuzzleHttp\Client;
 
 include_once(__DIR__ . "../../../vendor/phayes/geophp/geoPHP.inc");
-include_once(__DIR__ . "../../../libs/phpgeometry_class_namespace.php");
+include_once(__DIR__ . "../../../libs/phpgeometry_class.php");
 include_once(__DIR__ . "../../../libs/gmlparser.php");
 include_once(__DIR__ . "../../../libs/PEAR/XML/Unserializer.php");
 include_once(__DIR__ . "../../../libs/PEAR/XML/Serializer.php");
+
 
 /**
  * Class Feature
@@ -95,7 +89,7 @@ class Feature extends \app\inc\Controller
         $this->field = $layer->getAll(Route::getParam("layer"), true, false, false, false, $this->db)["data"][0]["pkey"];
 
         // Init geometryfactory
-        $this->geometryfactory = new \mapcentia\geometryfactory();
+        $this->geometryfactory = new \app\libs\GeometryFactory();
 
         // Set transaction xml header
         $this->transactionHeader = "<wfs:Transaction xmlns:wfs=\"http://www.opengis.net/wfs\" service=\"WFS\" version=\"1.0.0\"
@@ -103,14 +97,21 @@ class Feature extends \app\inc\Controller
                  xsi:schemaLocation=\"http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/WFS-transaction.xsd\">\n";
     }
 
-    private function decodeCode($code){
-        return preg_replace_callback(
+    /**
+     * @param string $code
+     * @return string
+     */
+    private function decodeCode(string $code): string
+    {
+        $str = preg_replace_callback(
             "@\\\(x)?([0-9a-f]{2,3})@",
-            function($m){
-                return chr($m[1]?hexdec($m[2]):octdec($m[2]));
+            function ($m) {
+                return chr($m[1] ? hexdec($m[2]) : octdec($m[2]));
             },
             $code
         );
+        //$str = preg_replace('/\r|\n/', '\n', trim($str));
+        return $str;
     }
 
     public function get_index()
@@ -126,7 +127,7 @@ class Feature extends \app\inc\Controller
 
         // GET the transaction
         try {
-            $res = $this->client->get($url . "?request=GetFeature&typeName={$this->table}&FEATUREID={$this->table}.{$this->key}");
+            $res = $this->client->get($url . "?service=WFS&version=1.0.0&request=GetFeature&typeName={$this->table}&FEATUREID={$this->table}.{$this->key}");
         } catch (\Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -159,7 +160,7 @@ class Feature extends \app\inc\Controller
         }
 
         // Convert GML to WKT
-        $gmlConverter = new \mapcentia\gmlConverter();
+        $gmlConverter = new \app\libs\gmlConverter();
         $wkt = $gmlConverter->gmlToWKT($xml)[0][0];
 
         // Convert WKT to GeoJSON
@@ -177,16 +178,16 @@ class Feature extends \app\inc\Controller
                 $response['code'] = "500";
                 return $response;
             }
-       }
+        }
 
-        foreach ($arr["gml:featureMember"][$this->db . ":" . $this->table] as $key => $prop) {
-            if (!is_array($prop)){
-                $props[ explode(":", $key)[1]] = $prop;
+        foreach ($arr["gml:featureMember"][$this->schema . ":" . $this->table] as $key => $prop) {
+            if (!is_array($prop)) {
+                $props[explode(":", $key)[1]] = $prop;
             }
         }
 
         $jArr = [
-            "type"=>"FeatureCollection",
+            "type" => "FeatureCollection",
             "features" => [[
                 "type" => "Feature",
                 "properties" => $props,
@@ -198,7 +199,7 @@ class Feature extends \app\inc\Controller
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      */
     public function post_index(): array
     {
@@ -220,15 +221,17 @@ class Feature extends \app\inc\Controller
             // Get properties
             $props = $feature["properties"];
 
+            $gmlId = !empty($props[$this->field]) ? "gml:id=\"{$props[$this->field]}\"" : "";
+
             // Create the Insert section
             $xml .= "<wfs:Insert>\n";
-            $xml .= "<feature:{$this->table} xmlns:feature=\"http://mapcentia.com/{$this->db}\">\n";
+            $xml .= "<feature:{$this->table} {$gmlId} xmlns:feature=\"http://mapcentia.com/{$this->db}/{$this->schema}\">\n";
 
             try {
                 // Get GML from WKT geom and catch error if geom is missing
                 $wkt = \geoPHP::load(json_encode($feature), 'json')->out('wkt');
                 $xml .= "<feature:{$this->geom}>\n";
-                $xml .= $this->geometryfactory->createGeometry($wkt, "EPSG:" . $this->sourceSrid)->getGML();
+                $xml .= $this->geometryfactory->createGeometry($wkt, "EPSG:" . $this->sourceSrid)->toGML();
                 $xml .= "</feature:{$this->geom}>\n";
             } catch (\Exception $e) {
                 // Pass. Geom is not required
@@ -236,22 +239,23 @@ class Feature extends \app\inc\Controller
 
             // Create the elements
             foreach ($props as $elem => $value) {
-                if (is_string($value)) {
-                    $value = "<![CDATA[{$value}]]>";
+                if (isset($this->field) && $this->field != $elem) {
+                    if (is_string($value)) {
+                        $value = "<![CDATA[{$value}]]>";
+                    }
+                    $xml .= "<feature:{$elem}>{$value}</feature:{$elem}>\n";
                 }
-                $xml .= "<feature:{$elem}>{$value}</feature:{$elem}>\n";
             }
 
             $xml .= "</feature:{$this->table}>\n";
             $xml .= "</wfs:Insert>\n";
-
         }
         $xml .= "</wfs:Transaction>\n";
         return $this->commit($xml);
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      */
     public function put_index(): array
     {
@@ -274,7 +278,7 @@ class Feature extends \app\inc\Controller
             $props = $feature["properties"];
 
             // Check if property with primary key is missing
-            if (!isset($props[$this->field])){
+            if (!isset($props[$this->field])) {
                 $response['success'] = false;
                 $response['message'] = "Property with primary key is missing from at least one GeoJSON feature";
                 $response['code'] = 500;
@@ -282,7 +286,7 @@ class Feature extends \app\inc\Controller
             }
 
             // Create the Insert section
-            $xml .= "<wfs:Update typeName=\"{$this->db}:{$this->table}\">\n";
+            $xml .= "<wfs:Update typeName=\"{$this->schema}:{$this->table}\">\n";
 
             // Get GML from WKT geom and catch error if geom is missing
             try {
@@ -290,7 +294,7 @@ class Feature extends \app\inc\Controller
                 $xml .= "<wfs:Property>\n";
                 $xml .= "<wfs:Name>{$this->geom}</wfs:Name>\n";
                 $xml .= "<wfs:Value>\n";
-                $xml .= $this->geometryfactory->createGeometry($wkt, "EPSG:" . $this->sourceSrid)->getGML();
+                $xml .= $this->geometryfactory->createGeometry($wkt, "EPSG:" . $this->sourceSrid)->toGML();
                 $xml .= "</wfs:Value>\n";
                 $xml .= "</wfs:Property>\n";
             } catch (\Exception $e) {
@@ -331,11 +335,11 @@ class Feature extends \app\inc\Controller
         // Start build the WFS transaction
         $xml = $this->transactionHeader;
 
-        $xml.="<wfs:Delete typeName=\"{$this->db}:{$this->table}\" xmlns:{$this->db}=\"http://mapcentia.com/{$this->db}\">";
-        $xml.="<ogc:Filter xmlns:ogc=\"http://www.opengis.net/ogc\">";
-        $xml.="<ogc:FeatureId fid=\"{$this->table}.{$this->key}\"/>";
-        $xml.="</ogc:Filter>";
-        $xml.="</wfs:Delete>";
+        $xml .= "<wfs:Delete typeName=\"{$this->schema}:{$this->table}\" xmlns:{$this->schema}=\"http://mapcentia.com/{$this->db}/{$this->schema}\">";
+        $xml .= "<ogc:Filter xmlns:ogc=\"http://www.opengis.net/ogc\">";
+        $xml .= "<ogc:FeatureId fid=\"{$this->table}.{$this->key}\"/>";
+        $xml .= "</ogc:Filter>";
+        $xml .= "</wfs:Delete>";
 
         $xml .= "</wfs:Transaction>\n";
 
@@ -344,9 +348,9 @@ class Feature extends \app\inc\Controller
 
     /**
      * @param $xml
-     * @return array
+     * @return array<mixed>
      */
-    private function commit(string $xml) : array
+    private function commit(string $xml): array
     {
         //echo $xml;
         $response = [];

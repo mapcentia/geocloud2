@@ -111,7 +111,7 @@ WARNING: No locale has been set for the GC2
       service postgresql stop
 
     #Add gc2 user to pgbouncer user list
-    echo "\"gc2\" \"$GC2_PASSWORD\"" >>/etc/pgbouncer/userlist.txt
+    echo "\"$GC2_USER\" \"$GC2_PASSWORD\"" >>/etc/pgbouncer/userlist.txt
   fi
 fi
 exec "$@"

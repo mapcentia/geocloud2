@@ -11,7 +11,7 @@ attributeForm.init = function (layer, geomtype) {
     Ext.QuickTips.init();
     // create attributes store
     attributeForm.attributeStore = new GeoExt.data.AttributeStore({
-        url: '/wfs/' + (subUser ? screenName + "@" + parentdb : screenName) + '/' + schema + '?REQUEST=DescribeFeatureType&TYPENAME=' + layer,
+        url: '/wfs/' + (subUser ? screenName + "@" + parentdb : screenName) + '/' + schema + '?SERVICE=wfs&VERSION=1.0.0&REQUEST=DescribeFeatureType&TYPENAME=' + layer,
         listeners: {
             load: {
                 scope: this,

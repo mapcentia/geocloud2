@@ -22,6 +22,7 @@ use PHPSQLParser;
 use RecursiveArrayIterator;
 use RecursiveIteratorIterator;
 
+use app\inc\Util;
 
 /**
  * Class Sql
@@ -147,7 +148,7 @@ class Sql extends Controller
         }
 
         if (Input::get('base64') === true || Input::get('base64') === "true") {
-            $this->q = base64_decode(Input::get('q'));
+            $this->q = Util::base64urlDecode(Input::get("q"));
         } else {
             $this->q = urldecode(Input::get('q'));
         }
@@ -292,7 +293,7 @@ class Sql extends Controller
                 }
                 $table["no_quotes"] = str_replace('"', '', $table["no_quotes"]);
                 if (
-                    explode(".", $table["no_quotes"])[0] == "settings" ||
+//                    explode(".", $table["no_quotes"])[0] == "settings" ||
                     explode(".", $table["no_quotes"])[0] == "information_schema" ||
                     explode(".", $table["no_quotes"])[0] == "sqlapi" ||
                     explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
@@ -375,6 +376,7 @@ class Sql extends Controller
                     $this->response['code'] = 406;
                     return serialize($this->response);
                 }
+                array_push($this->usedRelations, $table["no_quotes"]);
                 $response = $this->ApiKeyAuthLayer($table["no_quotes"], $this->subUser, true, Input::get('key'), $this->usedRelations);
                 if (!$response["success"]) {
                     return serialize($response);
@@ -385,7 +387,7 @@ class Sql extends Controller
         } elseif (isset($parsedSQL['INSERT'])) {
             foreach ($parsedSQL['INSERT'] as $table) {
                 if (
-                    explode(".", $table["no_quotes"])[0] == "settings" ||
+//                    explode(".", $table["no_quotes"])[0] == "settings" ||
                     explode(".", $table["no_quotes"])[0] == "information_schema" ||
                     explode(".", $table["no_quotes"])[0] == "sqlapi" ||
                     explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
@@ -469,7 +471,8 @@ class Sql extends Controller
                         "code" => 500,
                         "format" => $format,
                         "geoformat" => $geoformat,
-                        "message" => "Check formats",
+                        "message" => $this->response["message"],
+                        "query" => $this->q,
                     ]);
                 }
                 $this->addAttr($response);

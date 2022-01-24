@@ -16,10 +16,14 @@ namespace app\inc;
 class Log
 {
     /**
-     * @param string $string
+     * @param string $path
+     * @param string|null $body
      */
-    static function write(string $string): void
+    static function write(string $path, ?string $body = null): void
     {
-        error_log($string);
+        $logFile = fopen($path, "a");
+        fwrite($logFile, Util::clientIp() . " - - [" . date('Y-m-d H:i:s') . "] ");
+        fwrite($logFile, "\"" . $_SERVER['REQUEST_METHOD'] . " " . $_SERVER["REQUEST_URI"] . " " . $_SERVER['SERVER_PROTOCOL'] . "\" \"" . ($_SERVER['HTTP_USER_AGENT'] ?? null) . "\"\n");
+        if (!empty($body)) fwrite($logFile,$body . "\n");
     }
 }

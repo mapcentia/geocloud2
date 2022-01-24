@@ -43,13 +43,15 @@ services:
       - POSTGIS_PORT=5432
       - POSTGIS_PW=1234
       - POSTGIS_PGBOUNCER=false
+      - MODE_ENV=${MODE_ENV}
+      - BUILD_ID=${BUILD_ID}
   redis:
     image: redis
     networks:
       - default
       - internal
-#    ports:
-#      - "6379:6379"
+    ports:
+      - "6379:6379"
   postgis:
     build: ./postgis
     image: mapcentia/postgis
@@ -58,14 +60,14 @@ services:
     networks:
       - default
       - internal
-#    ports:
-#      - "5432:5432"
+    ports:
+      - "5432:5432"
     environment:
       - GC2_USER=gc2
       - GC2_PASSWORD=1234
 
 volumes:
-  postgis_etc_postgresql:
+  postgis_var_lib_postgresql:
 
 
 

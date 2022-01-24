@@ -11,6 +11,7 @@ namespace app\models;
 use app\conf\App;
 use app\controllers\Mapcache;
 use app\inc\Controller;
+use app\inc\Globals;
 
 class Baselayerjs extends Controller
 {
@@ -19,6 +20,21 @@ class Baselayerjs extends Controller
      */
     public function getSettings(): array
     {
+        // Merge metaConfig with custom metaConfig and remove dups.
+        $metaConfig = !empty(App::$param['metaConfig']) ? array_merge(App::$param['metaConfig'] ?? [], Globals::$metaConfig) : Globals::$metaConfig;
+        $arr = [];
+        $final = [];
+        foreach ($metaConfig as $v) {
+            if (isset($arr[$v["fieldsetName"]])) {
+                continue;
+            }
+            $arr[$v["fieldsetName"]] = $v;
+        }
+        foreach ($arr as $value) {
+            $final[] = $value;
+        }
+        $metaConfig = $final;
+
         $settingsRawJSON = '';
         $settingsRawJSON .= "{";
         $settingsRawJSON .= "\"leafletDraw\": " . (!empty(App::$param['leafletDraw']) ? "true" : "false") . ",\n";
@@ -40,7 +56,7 @@ class Baselayerjs extends Controller
         $settingsRawJSON .= "\"showExtraLayerProperty\": " . (!empty(App::$param['showExtraLayerProperty']) ? json_encode(App::$param['showExtraLayerProperty']) : "null") . ",\n";
         $settingsRawJSON .= "\"extraLayerPropertyName\": " . (!empty(App::$param['extraLayerPropertyName']) ? json_encode(App::$param['extraLayerPropertyName']) : "null") . ",\n";
         $settingsRawJSON .= "\"clientConfig\": " . (!empty(App::$param['clientConfig']) ? json_encode(App::$param['clientConfig']) : "null") . ",\n";
-        $settingsRawJSON .= "\"metaConfig\": " . (!empty(App::$param['metaConfig']) ? json_encode(App::$param['metaConfig']) : "null") . ",\n";
+        $settingsRawJSON .= "\"metaConfig\": " . json_encode($metaConfig) . ",\n";
         $settingsRawJSON .= "\"enablePrint\": " . (!empty(App::$param['enablePrint']) ? json_encode(App::$param['enablePrint']) : "null") . ",\n";
         $settingsRawJSON .= "\"enableWorkflow\": " . (!empty(App::$param['enableWorkflow']) ? json_encode(App::$param['enableWorkflow']) : "null") . ",\n";
         $settingsRawJSON .= "\"hereApp\": " . (!empty(App::$param['hereApp']) ? json_encode(App::$param['hereApp']) : "null") . ",\n";

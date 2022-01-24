@@ -53,6 +53,14 @@ class Input
     /**
      * @return string
      */
+    public static function getAccept(): string
+    {
+        return strtolower($_SERVER['HTTP_ACCEPT']);
+    }
+
+    /**
+     * @return string
+     */
     public static function getContentType(): string
     {
         return $_SERVER["CONTENT_TYPE"];
@@ -169,40 +177,3 @@ class Input
     }
 }
 
-/**
- * Class GetPart
- * @package app\inc
- */
-class GetPart
-{
-    /**
-     * @var array<string>
-     */
-    private $parts;
-
-    /**
-     * GetPart constructor.
-     * @param array<string> $request
-     */
-    function __construct(array $request)
-    {
-        $this->parts = $request;
-    }
-
-    /**
-     * @param int $e
-     * @return string|null
-     */
-    function part(int $e): ?string
-    {
-        return isset($this->parts[$e]) ? $this->parts[$e] : null;
-    }
-
-    /**
-     * @return array<string>
-     */
-    function parts(): array
-    {
-        return $this->parts;
-    }
-}

@@ -40,9 +40,9 @@ class Setting extends Model
     }
 
     /**
-     * @return object
+     * @return object|null
      */
-    public function getArray(): object
+    public function getArray(): ?object
     {
         if (App::$param["encryptSettings"]) {
             $secretKey = file_get_contents(App::$param["path"] . "app/conf/secret.key");
@@ -231,7 +231,11 @@ class Setting extends Model
 
         $obj = $arr->userGroups;
         foreach ((array)$userGroup as $key => $value) {
-            $obj->$key = $value;
+            if ($value === "") {
+                unset($obj->$key);
+            } else {
+                $obj->$key = $value;
+            }
         }
         $arr->userGroups = $obj;
         if (App::$param["encryptSettings"]) {
@@ -260,7 +264,7 @@ class Setting extends Model
     public function get(bool $unsetPw = false): array
     {
         $cacheType = "settings";
-        $cacheId = $this->postgisdb . "_" . $cacheType . "_" . $_SESSION["screen_name"];
+        $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $_SESSION["screen_name"]);
 
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {

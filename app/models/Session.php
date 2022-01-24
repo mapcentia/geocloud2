@@ -11,6 +11,7 @@ namespace app\models;
 use app\conf\App;
 use app\inc\Jwt;
 use app\inc\Model;
+use app\inc\Util;
 use Exception;
 use PDOException;
 
@@ -24,20 +25,6 @@ class Session extends Model
     function __construct()
     {
         parent::__construct();
-    }
-
-    /**
-     * @param string $sValue
-     * @param bool $bQuotes
-     * @return string
-     */
-    private function VDFormat(string $sValue, bool $bQuotes = false): string
-    {
-        $sValue = trim($sValue);
-        if ($bQuotes xor get_magic_quotes_gpc()) {
-            $sValue = $bQuotes ? addslashes($sValue) : stripslashes($sValue);
-        }
-        return $sValue;
     }
 
     /**
@@ -76,7 +63,7 @@ class Session extends Model
     public function start(string $sUserID, string $pw, $schema = "public", $parentdb = false, bool $tokenOnly = false): array
     {
         $response = [];
-        $pw = $this->VDFormat($pw, true);
+        $pw = Util::format($pw, true);
 
         $isAuthenticated = false;
         $setting = new Setting();
@@ -120,11 +107,10 @@ class Session extends Model
             // Login successful.
             $properties = json_decode($row['properties']);
             $_SESSION['zone'] = $row['zone'];
-            $_SESSION['VDaemonData'] = null;
             $_SESSION['auth'] = true;
             $_SESSION['screen_name'] = $row['screenname'];
             $_SESSION['parentdb'] = $row['parentdb'] ?: $row['screenname'];
-            $_SESSION["subuser"] = $row['parentdb'] ? true : false;
+            $_SESSION["subuser"] = (bool)$row['parentdb'];
             $_SESSION["properties"] = $properties;
 
             $_SESSION['email'] = $row['email'];
@@ -138,7 +124,7 @@ class Session extends Model
             $response['data']['screen_name'] = $_SESSION['screen_name'];
             $response['data']['session_id'] = session_id();
             $response['data']['parentdb'] = $_SESSION['parentdb'];
-            $response['data']['subuser'] = $row['parentdb'] ? true : false;
+            $response['data']['subuser'] = (bool)$row['parentdb'];
             $response['data']['email'] = $row['email'];
             $response['data']['properties'] = $properties;
 
@@ -148,7 +134,7 @@ class Session extends Model
                 $_SESSION['subuserEmails'] = [];
                 $sQuery = "SELECT * FROM users WHERE parentdb = :sUserID";
                 $res = $this->prepare($sQuery);
-                $res->execute(array(":sUserID" => $_SESSION['screen_name']));
+                $res->execute(array(":sUserID" => $_SESSION["subuser"] ? $_SESSION["parentdb"] : $_SESSION['screen_name']));
                 while ($rowSubUSers = $this->fetchRow($res)) {
                     $_SESSION['subusers'][] = $rowSubUSers["screenname"];
                     $_SESSION['subuserEmails'][$rowSubUSers["screenname"]] = $rowSubUSers["email"];

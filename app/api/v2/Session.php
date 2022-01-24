@@ -1,20 +1,23 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\api\v2;
 
-use \app\inc\Input;
+use app\inc\Controller;
+use app\inc\Input;
+use Exception;
+use TypeError;
 
 /**
  * Class Session
  * @package app\api\v1
  */
-class Session extends \app\inc\Controller
+class Session extends Controller
 {
     /**
      * @var \app\models\Session
@@ -31,8 +34,8 @@ class Session extends \app\inc\Controller
     }
 
     /**
-     * @return array
-     * @throws \Exception
+     * @return array<mixed>
+     * @throws Exception
      *
      * @OA\Get(
      *   path="/api/v2/session/start",
@@ -73,7 +76,7 @@ class Session extends \app\inc\Controller
         if (!empty(Input::get("user")) && !empty(Input::get("password"))) {
             try {
                 return $this->session->start(Input::get("user"), Input::get("password"), Input::get("schema"), Input::get("database"));
-            } catch (\TypeError $exception) {
+            } catch (TypeError $exception) {
                 return [
                     "success" => false,
                     "error" => $exception->getMessage(),
@@ -91,8 +94,8 @@ class Session extends \app\inc\Controller
     }
 
     /**
-     * @return array
-     * 
+     * @return array<mixed>
+     *
      * @OA\Post(
      *   path="/api/v2/session/start",
      *   tags={"Session"},
@@ -115,24 +118,25 @@ class Session extends \app\inc\Controller
      *     description="Operation status"
      *   )
      * )
+     * @throws Exception
      */
     public function post_start(): array
     {
-        $data = json_decode(Input::getBody(), true) ? : [];
+        $data = json_decode(Input::getBody(), true) ?: [];
         Input::setParams(
             [
                 "user" => $data["user"],
                 "password" => $data["password"],
-                "schema" => isset($data["schema"]) ? $data["schema"] : null,
-                "database" => isset($data["database"]) ? $data["database"] : null,
+                "schema" => $data["schema"] ?? null,
+                "database" => $data["database"] ?? null,
             ]
         );
         return $this->get_start();
     }
 
     /**
-     * @return array
-     * 
+     * @return array<string, array<string, mixed>>
+     *
      * @OA\Get(
      *   path="/api/v2/session",
      *   tags={"Session"},
@@ -143,14 +147,14 @@ class Session extends \app\inc\Controller
      *   )
      * )
      */
-    public function get_index()
+    public function get_index(): array
     {
         return $this->session->check();
     }
 
     /**
-     * @return array
-     * 
+     * @return array<string,bool|string>
+     *
      * @OA\Get(
      *   path="/api/v2/session/stop",
      *   tags={"Session"},
@@ -161,7 +165,7 @@ class Session extends \app\inc\Controller
      *   )
      * )
      */
-    public function get_stop()
+    public function get_stop(): array
     {
         return $this->session->stop();
     }

@@ -1,20 +1,31 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\models;
 
-ini_set('max_execution_time', 0);
+ini_set('max_execution_time', "0");
 
+use app\inc\Model;
 use app\inc\Util;
+use PDOException;
 
-class Job extends \app\inc\Model
+
+/**
+ * Class Job
+ * @package app\models
+ */
+class Job extends Model
 {
-    public function getAll($db)
+    /**
+     * @param string|null $db
+     * @return array<mixed>
+     */
+    public function getAll(?string $db): array
     {
         $arr = array();
         if ($db) {
@@ -27,13 +38,13 @@ class Job extends \app\inc\Model
         $res = $this->prepare($sql);
         try {
             $res->execute($args);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 400;
             return $response;
         }
-        while ($row = $this->fetchRow($res, "assoc")) {
+        while ($row = $this->fetchRow($res)) {
             $arr[] = $row;
         }
         $response['success'] = true;
@@ -42,22 +53,20 @@ class Job extends \app\inc\Model
         return $response;
     }
 
-    public function newJob($data, $db)
+    /**
+     * @param object $data
+     * @param string $db
+     * @return array<bool|string|int>
+     */
+    public function newJob(object $data, string $db): array
     {
         $sql = "INSERT INTO jobs (db, name, schema, url, cron, epsg, type, min, hour, dayofmonth, month, dayofweek, encoding, extra, delete_append, download_schema, presql, postsql, active) VALUES(:db, :name, :schema, :url, :cron, :epsg, :type, :min, :hour, :dayofmonth, :month, :dayofweek, :encoding, :extra, :delete_append, :download_schema, :presql, :postsql, :active)";
         $res = $this->prepare($sql);
         try {
-            $res->execute(array(":db" => $db, ":name" => \app\inc\Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":extra" => $data->extra, ":delete_append" => $data->delete_append, ":download_schema" => $data->download_schema, ":presql" => $data->presql, ":postsql" => $data->postsql, ":active" => $data->active));
-        } catch (\PDOException $e) {
+            $res->execute(array(":db" => $db, ":name" => Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":extra" => $data->extra, ":delete_append" => $data->delete_append, ":download_schema" => $data->download_schema, ":presql" => $data->presql, ":postsql" => $data->postsql, ":active" => $data->active));
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
-        $cronInstall = $this->createCronJobs();
-        if ($cronInstall !== true) {
-            $response['success'] = false;
-            $response['message'] = $cronInstall;
             $response['code'] = 400;
             return $response;
         }
@@ -66,23 +75,20 @@ class Job extends \app\inc\Model
         return $response;
     }
 
-    public function updateJob($data)
+    /**
+     * @param object $data
+     * @return array<bool|string|int>
+     */
+    public function updateJob(object $data): array
     {
 
         $sql = "UPDATE jobs SET name=:name, schema=:schema, url=:url, cron=:cron, epsg=:epsg, type=:type, min=:min, hour=:hour, dayofmonth=:dayofmonth, month=:month, dayofweek=:dayofweek, encoding=:encoding, extra=:extra, delete_append=:delete_append, download_schema=:download_schema, presql=:presql, postsql=:postsql, active=:active WHERE id=:id";
         $res = $this->prepare($sql);
         try {
-            $res->execute(array(":name" => \app\inc\Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":id" => $data->id, ":extra" => $data->extra, "delete_append" => $data->delete_append, "download_schema" => $data->download_schema, "presql" => $data->presql, "postsql" => $data->postsql, "active" => $data->active));
-        } catch (\PDOException $e) {
+            $res->execute(array(":name" => Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":id" => $data->id, ":extra" => $data->extra, "delete_append" => $data->delete_append, "download_schema" => $data->download_schema, "presql" => $data->presql, "postsql" => $data->postsql, "active" => $data->active));
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
-        $cronInstall = $this->createCronJobs();
-        if ($cronInstall !== true) {
-            $response['success'] = false;
-            $response['message'] = $cronInstall;
             $response['code'] = 400;
             return $response;
         }
@@ -91,22 +97,19 @@ class Job extends \app\inc\Model
         return $response;
     }
 
-    public function deleteJob($data)
+    /**
+     * @param object $data
+     * @return array<bool|string|int>
+     */
+    public function deleteJob(object $data): array
     {
         $sql = "DELETE FROM jobs WHERE id=:id";
         $res = $this->prepare($sql);
         try {
             $res->execute(array(":id" => $data->id));
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
-        $cronInstall = $this->createCronJobs();
-        if ($cronInstall !== true) {
-            $response['success'] = false;
-            $response['message'] = $cronInstall;
             $response['code'] = 400;
             return $response;
         }
@@ -115,22 +118,26 @@ class Job extends \app\inc\Model
         return $response;
     }
 
-    public function runJob($id, $db, $flush = false)
+    /**
+     * @param int $id
+     * @param string $db
+     * @param bool $flush
+     * @return array<mixed>|null
+     */
+    public function runJob(int $id, string $db, bool $flush = false): ?array
     {
-        ini_set('max_execution_time', 0);
-
         $cmd = null;
         $jobs = $this->getAll($db);
         foreach ($jobs["data"] as $job) {
             if ($id == $job["id"]) {
                 if (!$job["delete_append"]) $job["delete_append"] = "0";
                 if (!$job["download_schema"]) $job["download_schema"] = "0";
-                $cmd = "/usr/bin/timeout -s SIGINT 4h php " . __DIR__ . "/../scripts/get.php {$job["db"]} {$job["schema"]} {$job["name"]} \"{$job["url"]}\" {$job["epsg"]} {$job["type"]} {$job["encoding"]} {$job["id"]} {$job["delete_append"]} " . (base64_encode($job["extra"]) ?: "null") . " " . (base64_encode($job["presql"]) ?: "null") . " " . (base64_encode($job["postsql"]) ?: "null") . " {$job["download_schema"]}";
+                $cmd = "/usr/bin/timeout -s SIGINT 4h php " . __DIR__ . "/../scripts/get.php --db {$job["db"]} --schema {$job["schema"]} --safeName {$job["name"]} --url \"{$job["url"]}\" --srid {$job["epsg"]} --type {$job["type"]} --encoding {$job["encoding"]} --jobId {$job["id"]} --deleteAppend {$job["delete_append"]} --extra " . (base64_encode($job["extra"]) ?: "null") . " --preSql " . (base64_encode($job["presql"]) ?: "null") . " --postSql " . (base64_encode($job["postsql"]) ?: "null") . " --downloadSchema {$job["download_schema"]}";
                 break;
             }
         }
 
-        if (!$flush) {
+        if (!$flush && isset($job)) {
             exec($cmd . " > " . __DIR__ . "/../../public/logs/{$job["id"]}_scheduler.log  2>&1", $out, $err);
             $response['cmd'] = $cmd;
             $response['success'] = true;
@@ -154,50 +161,6 @@ class Job extends \app\inc\Model
                 flush();
             }
         }
-    }
-
-    public function createCronJobs()
-    {
-
-        $jobs = $this->getAll(null);
-        exec("crontab -r");
-        foreach ($jobs["data"] as $job) {
-            if ($job["active"]) {
-                if (!$job["delete_append"]) $job["delete_append"] = "0";
-                if (!$job["download_schema"]) $job["download_schema"] = "0";
-                $cmd = "crontab -l | { cat; echo \"{$job["min"]} {$job["hour"]} {$job["dayofmonth"]} {$job["month"]} {$job["dayofweek"]} /usr/bin/timeout -s SIGINT 4h php " . __DIR__ . "/../scripts/get.php {$job["db"]} {$job["schema"]} {$job["name"]} \"\\\"\"" . urldecode($job["url"]) . "\"\\\"\" {$job["epsg"]} {$job["type"]} {$job["encoding"]} {$job["id"]} {$job["delete_append"]} " . (base64_encode($job["extra"]) ?: "null") . " " . (base64_encode($job["presql"]) ?: "null") . " " . (base64_encode($job["postsql"]) ?: "null") . " {$job["download_schema"]} > " . __DIR__ . "/../../public/logs/{$job["id"]}_scheduler.log\n\"; } | crontab - 2>&1";
-                $out = exec($cmd);
-                if ($out) {
-                    return $out . " ({$job["id"]})";
-                }
-            }
-        }
-        $this->createRapportJob();
-        $this->createPurgeJob();
-        return true;
-    }
-
-    private function createRapportJob()
-    {
-
-        $cmd = "crontab -l | { cat; echo \"0 6 * * * php " . __DIR__ . "/../scripts/job_report.php \n\"; } | crontab - 2>&1";
-        $out = exec($cmd);
-        if ($out) {
-            return $out;
-        }
-
-        return true;
-    }
-
-    private function createPurgeJob()
-    {
-
-        $cmd = "crontab -l | { cat; echo \"* * * * * php " . __DIR__ . "/../scripts/purge_locks.php > " . __DIR__ . "/../../public/logs/purge_locks.log \n\"; } | crontab - 2>&1";
-        $out = exec($cmd);
-        if ($out) {
-            return $out;
-        }
-
-        return true;
+        return null;
     }
 }

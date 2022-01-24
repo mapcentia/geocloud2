@@ -1,10 +1,13 @@
 #!/usr/bin/php
 <?php
+
+use app\conf\App;
 use \app\models\Database;
+use app\models\Layer;
 
 header("Content-type: text/plain");
-include_once("../App.php");
-new \app\conf\App();
+include_once(__DIR__ . "/../conf/App.php");
+new App();
 
 $shortopts  = "";
 $shortopts .= "h:";
@@ -28,7 +31,7 @@ $arr = $database->listAllDbs();
 foreach ($arr['data'] as $db) {
     if ($db != "template1" AND $db != "template0" AND $db != "postgres" AND $db != "postgis_template" AND $db != "mapcentia") {
         Database::setDb($db);
-        $layer = new \app\models\Layer();
+        $layer = new Layer();
         $meta = $layer->getAll(null, null, true, false, true, true);
 
         /*$url = "http://{$host}/api/v1/elasticsearch/delete/{$db}*";
@@ -49,7 +52,7 @@ foreach ($arr['data'] as $db) {
                     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
                     curl_setopt($ch, CURLOPT_POSTFIELDS, "key={$key}");
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-                    echo curl_exec($ch)."\n\n";;
+                    echo curl_exec($ch)."\n\n";
                     curl_close($ch);
                 }
             }

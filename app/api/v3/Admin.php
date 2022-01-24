@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -12,10 +12,8 @@ ini_set('max_execution_time', '0');
 
 use app\controllers\Mapcachefile;
 use app\controllers\Mapfile;
-use app\controllers\upload\Processqgis;
 use app\inc\Controller;
 use app\inc\Cache;
-use app\inc\Input;
 use app\inc\Model;
 use app\models\Database;
 use app\conf\App;
@@ -23,6 +21,8 @@ use app\conf\Connection;
 use app\migration\Sql;
 use app\models\Qgis;
 use PDOException;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+
 
 /**
  * Class Admin
@@ -60,6 +60,7 @@ class Admin extends Controller
      *     )
      *   )
      * )
+     * @throws PhpfastcacheInvalidArgumentException
      */
     public function get_mapfiles(): array
     {
@@ -203,80 +204,6 @@ class Admin extends Controller
         }
         $response["success"] = true;
         $response["data"] = $data;
-        return $response;
-    }
-
-    public function get_reprocessqgis(): array
-    {
-        // TODO
-        // SELECT FROM settings.qgis_files WHERE db=....
-    }
-
-    /**
-     * @return array<mixed>
-     *
-     * DEPRECATED
-     */
-    public function get_qgisfromfiles(): array
-    {
-        $response = [];
-        $index = 7;
-        $file = !empty(Input::get("file")) ? Input::get("file") : null;
-
-        if ($file) {
-            $files = glob(App::$param['path'] . "app/wms/qgsfiles/" . $file, GLOB_BRACE);
-        } else {
-            $files = glob(App::$param['path'] . "app/wms/qgsfiles/*.{qgs}", GLOB_BRACE);
-        }
-        if ($files && sizeof($files) == 0) {
-            $response["code"] = 400;
-            $response["success"] = false;
-            $response["message"] = "No files";
-            return $response;
-        }
-        $qgis = new Qgis();
-        $processqgis = new Processqgis();
-
-        if ($files) {
-            usort($files, function ($a, $b) {
-                return filemtime($b) < filemtime($a);
-            });
-            foreach ($files as $file) {
-                $bits1 = explode("/", $file);
-                $bits2 = explode("_", $bits1[$index]);
-                if ($bits2[0] == "parsed") {
-                    if (strlen($bits2[sizeof($bits2) - 1]) == 36) {
-                        $arr = [];
-                        $size = sizeof($bits2);
-                        for ($i = 1; $i < $size - 1; $i++) {
-                            $arr[] = $bits2[$i];
-                        }
-                        $orgFileName = implode("_", $arr) . ".qgs";
-                        $qgis->flagAsOld($bits1[$index]);
-
-                    } else {
-                        continue;
-                    }
-                } else {
-                    $orgFileName = $bits1[$index];
-                }
-
-                $tmpFile = App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"] . "/__qgis/" . $orgFileName;
-
-                if (copy($file, $tmpFile)) {
-                    $time = filemtime($file);
-                    if ($time) {
-                        touch($tmpFile, $time);
-                    }
-                    $res = $processqgis->get_index($orgFileName);
-                    if ($res["success"]) {
-                        unlink($file);
-                    }
-                    $response["data"][] = $res["ch"];
-                }
-            }
-        }
-        $response["success"] = true;
         return $response;
     }
 

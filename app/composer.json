@@ -20,8 +20,14 @@
         "ext-pgsql": "*",
         "ext-iconv": "*",
         "ext-curl": "*",
-        "ext-apache": "*",
-        "ext-simplexml": "*"
+        "ext-simplexml": "*",
+        "ext-xml": "*",
+        "ext-zip": "*",
+        "ext-zlib": "*",
+        "peppeocchi/php-cron-scheduler": "^3.1",
+        "sad_spirit/pg_builder": "v1.0.0-beta",
+        "ext-gd": "*",
+        "ext-dba": "*"
     },
     "require-dev": {
         "codeception/module-asserts": "^1.3",

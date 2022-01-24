@@ -94,6 +94,10 @@ tableStructure.init = function (record, db) {
             allowBlank: true
         },
         {
+            name: 'ignore',
+            allowBlank: true
+        },
+        {
             name: 'image',
             allowBlank: true
         },
@@ -300,7 +304,7 @@ tableStructure.init = function (record, db) {
                     xtype: 'checkcolumn',
                     header: __("Show in mouse-over"),
                     dataIndex: 'mouseover',
-                    hidden: true
+                    hidden: false
                 },
                 {
                     id: "searchable",
@@ -336,6 +340,13 @@ tableStructure.init = function (record, db) {
                     xtype: 'checkcolumn',
                     header: __("Make link"),
                     dataIndex: 'link',
+                    //width: 35
+                },
+                {
+                    id: "ignore",
+                    xtype: 'checkcolumn',
+                    header: __("Ignore"),
+                    dataIndex: 'ignore',
                     //width: 35
                 },
                 {
@@ -420,7 +431,11 @@ tableStructure.init = function (record, db) {
                                 },
                                 {
                                     name: 'Decimal',
-                                    value: 'float'
+                                    value: 'decimal'
+                                },
+                                {
+                                    name: 'Double',
+                                    value: 'double'
                                 },
                                 {
                                     name: 'Text',
@@ -756,5 +771,6 @@ tableStructure.onWrite = function (store, action, result, transaction, rs) {
     if (transaction.message === "Renamed") {
         tableStructure.store.load();
     }
+    writeFiles();
 };
 

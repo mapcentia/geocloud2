@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -126,12 +126,12 @@ class Table extends Model
         if ($this->schema != "settings") {
             $cacheType = "relExist";
             $cacheRel = $this->table;
-            $cacheId = $this->postgisdb . "_" . $cacheType . "_" . $cacheRel;
+            $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
             $CachedString = Cache::getItem($cacheId);
             if ($CachedString != null && $CachedString->isHit()) {
                 $this->exits = $CachedString->get();
             } else {
-                $sql = "SELECT 1 FROM {$table} LIMIT 1";
+                $sql = "SELECT 1 FROM " . $this->doubleQuoteQualifiedName($table) . " LIMIT 1";
                 try {
                     $this->execQuery($sql);
                 } catch (PDOException $e) {
@@ -211,13 +211,17 @@ class Table extends Model
         ) {
             $field['typeObj'] = array("type" => "int");
             $field['type'] = "int";
-        } elseif (preg_match("/numeric/", $field['type']) ||
+        } elseif (
+            preg_match("/numeric/", $field['type']) ||
             preg_match("/real/", $field['type']) ||
-            preg_match("/double/", $field['type']) ||
-            preg_match("/float/", $field['type'])
+            preg_match("/float/", $field['type']) ||
+            preg_match("/decimal/", $field['type'])
         ) {
             $field['typeObj'] = array("type" => "decimal", "precision" => 3, "scale" => 10);
-            $field['type'] = "number"; // SKAL ændres
+            $field['type'] = "decimal"; // SKAL ændres
+        } elseif (preg_match("/double/", $field['type'])) {
+            $field['typeObj'] = array("type" => "double");
+            $field['type'] = "double"; // SKAL ændres
         } elseif (preg_match("/bool/", $field['type'])) {
             $field['typeObj'] = array("type" => "boolean");
             $field['type'] = "boolean";
@@ -802,20 +806,21 @@ class Table extends Model
                 $arr = $this->array_push_assoc($arr, "id", $key);
                 $arr = $this->array_push_assoc($arr, "column", $key);
                 $arr = $this->array_push_assoc($arr, "sort_id", !empty($fieldconfArr[$key]->sort_id) ? (int)$fieldconfArr[$key]->sort_id : 0);
-                $arr = $this->array_push_assoc($arr, "querable", !empty($fieldconfArr[$key]->querable) ? (bool)$fieldconfArr[$key]->querable : false);
-                $arr = $this->array_push_assoc($arr, "mouseover", !empty($fieldconfArr[$key]->mouseover) ? (bool)$fieldconfArr[$key]->mouseover : false);
-                $arr = $this->array_push_assoc($arr, "filter", !empty($fieldconfArr[$key]->filter) ? (bool)$fieldconfArr[$key]->filter : false);
-                $arr = $this->array_push_assoc($arr, "autocomplete", !empty($fieldconfArr[$key]->autocomplete) ? (bool)$fieldconfArr[$key]->autocomplete : false);
-                $arr = $this->array_push_assoc($arr, "searchable", !empty($fieldconfArr[$key]->searchable) ? (bool)$fieldconfArr[$key]->searchable : false);
-                $arr = $this->array_push_assoc($arr, "conflict", !empty($fieldconfArr[$key]->conflict) ? (bool)$fieldconfArr[$key]->conflict : false);
+                $arr = $this->array_push_assoc($arr, "querable", !empty($fieldconfArr[$key]->querable) && $fieldconfArr[$key]->querable);
+                $arr = $this->array_push_assoc($arr, "mouseover", !empty($fieldconfArr[$key]->mouseover) && $fieldconfArr[$key]->mouseover);
+                $arr = $this->array_push_assoc($arr, "filter", !empty($fieldconfArr[$key]->filter) && $fieldconfArr[$key]->filter);
+                $arr = $this->array_push_assoc($arr, "autocomplete", !empty($fieldconfArr[$key]->autocomplete) && $fieldconfArr[$key]->autocomplete);
+                $arr = $this->array_push_assoc($arr, "searchable", !empty($fieldconfArr[$key]->searchable) && $fieldconfArr[$key]->searchable);
+                $arr = $this->array_push_assoc($arr, "conflict", !empty($fieldconfArr[$key]->conflict) && $fieldconfArr[$key]->conflict);
                 $arr = $this->array_push_assoc($arr, "alias", !empty($fieldconfArr[$key]->alias) ? $fieldconfArr[$key]->alias : "");
-                $arr = $this->array_push_assoc($arr, "link", !empty($fieldconfArr[$key]->link) ? (bool)$fieldconfArr[$key]->link : false);
-                $arr = $this->array_push_assoc($arr, "image", !empty($fieldconfArr[$key]->image) ? (bool)$fieldconfArr[$key]->image : false);
+                $arr = $this->array_push_assoc($arr, "link", !empty($fieldconfArr[$key]->link) && $fieldconfArr[$key]->link);
+                $arr = $this->array_push_assoc($arr, "image", !empty($fieldconfArr[$key]->image) && $fieldconfArr[$key]->image);
                 $arr = $this->array_push_assoc($arr, "content", !empty($fieldconfArr[$key]->content) ? $fieldconfArr[$key]->content : null);
                 $arr = $this->array_push_assoc($arr, "linkprefix", !empty($fieldconfArr[$key]->linkprefix) ? $fieldconfArr[$key]->linkprefix : null);
                 $arr = $this->array_push_assoc($arr, "linksuffix", !empty($fieldconfArr[$key]->linksuffix) ? $fieldconfArr[$key]->linksuffix : null);
                 $arr = $this->array_push_assoc($arr, "properties", !empty($fieldconfArr[$key]->properties) ? $fieldconfArr[$key]->properties : null);
-                $arr = $this->array_push_assoc($arr, "is_nullable", !empty($value['is_nullable']) ? (bool)$value['is_nullable'] : false);
+                $arr = $this->array_push_assoc($arr, "ignore", !empty($fieldconfArr[$key]->ignore) && $fieldconfArr[$key]->ignore);
+                $arr = $this->array_push_assoc($arr, "is_nullable", !empty($value['is_nullable']) && $value['is_nullable']);
                 if ($value['typeObj']['type'] == "decimal") {
                     $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
                 } else {
@@ -898,7 +903,7 @@ class Table extends Model
                     $response['code'] = 400;
                     return $response;
                 }
-                $sql .= "ALTER TABLE {$this->table} RENAME \"{$value->id}\" TO \"{$safeColumn}\";";
+                $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " RENAME \"{$value->id}\" TO \"{$safeColumn}\";";
                 $value->column = $safeColumn;
                 unset($fieldconfArr[$value->id]);
                 $response['message'] = "Renamed";
@@ -953,7 +958,7 @@ class Table extends Model
                 $response['code'] = 400;
                 return $response;
             }
-            $sql .= "ALTER TABLE {$this->table} DROP COLUMN {$value};";
+            $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " DROP COLUMN \"{$value}\"";
             unset($fieldconfArr[$value]);
         }
         $this->execQuery($sql, "PDO", "transaction");
@@ -1001,8 +1006,11 @@ class Table extends Model
             case "Integer":
                 $type = "integer";
                 break;
-            case "Decimal":
+            case "Double":
                 $type = "double precision";
+                break;
+            case "Decimal":
+                $type = "decimal";
                 break;
             case "Text":
                 $type = "text";
@@ -1041,7 +1049,7 @@ class Table extends Model
                 $type = "varchar(255)";
                 break;
         }
-        $sql .= "ALTER TABLE {$this->table} ADD COLUMN {$safeColumn} {$type};";
+        $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ADD COLUMN \"{$safeColumn}\" {$type};";
         $this->execQuery($sql, "PDO", "transaction");
         if ((!$this->PDOerror) || (!$sql)) {
             $response['success'] = true;
@@ -1355,7 +1363,7 @@ class Table extends Model
         $response = [];
         $arrayWithFields = $this->getMetaData($table);
         foreach ($arrayWithFields as $key => $arr) {
-             if ($arr['type'] == "bytea") {
+            if ($arr['type'] == "bytea") {
                 $fieldsArr[] = "'binary' AS \"{$key}\"";
             } else {
                 $fieldsArr[] = "\"{$key}\"";
@@ -1366,7 +1374,7 @@ class Table extends Model
         } else {
             $sql = "*";
         }
-        $sql = "SELECT {$sql} FROM {$table} LIMIT {$limit} OFFSET {$offset}";
+        $sql = "SELECT {$sql} FROM " . $this->doubleQuoteQualifiedName($table) . " LIMIT {$limit} OFFSET {$offset}";
         $res = $this->prepare($sql);
         try {
             $res->execute();
@@ -1390,7 +1398,7 @@ class Table extends Model
             $response['data'] = array();
         }
         // Get the total count
-        $sql = "SELECT count(*) AS count FROM {$table}";
+        $sql = "SELECT count(*) AS count FROM " . $this->doubleQuoteQualifiedName($table);
         $res = $this->prepare($sql);
         try {
             $res->execute();
@@ -1414,7 +1422,7 @@ class Table extends Model
     public function insertRecord(): array
     {
         $response = [];
-        $sql = "INSERT INTO " . $this->table . " DEFAULT VALUES";
+        $sql = "INSERT INTO " . $this->doubleQuoteQualifiedName($this->table) . " DEFAULT VALUES";
         $res = $this->prepare($sql);
         try {
             $res->execute();
@@ -1445,7 +1453,7 @@ class Table extends Model
         }
         $data = $this->makeArray($data);
 
-        $sql = "DELETE FROM " . $this->table . " WHERE \"{$keyName}\" =:key";
+        $sql = "DELETE FROM " . $this->doubleQuoteQualifiedName($this->table) . " WHERE \"{$keyName}\" =:key";
         $res = $this->prepare($sql);
         try {
             $res->execute(array("key" => $data["data"]));
@@ -1486,6 +1494,43 @@ class Table extends Model
         $res = $this->prepare($sql);
         try {
             $res->execute(array("pkey" => $pkey));
+        } catch (PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
+        $row = $this->fetchRow($res);
+        $response['success'] = true;
+        $response['data'] = $row;
+        return $response;
+    }
+
+    /**
+     * Works on all tables
+     * @return array<mixed>
+     */
+    public function getFirstRecord(): array
+    {
+        $response = [];
+        $fieldsArr = [];
+        foreach ($this->metaData as $key => $value) {
+            $fieldsArr[] = $key;
+        }
+        // We add "" around field names in sql, so sql keywords don't mess things up
+        foreach ($fieldsArr as $key => $value) {
+            $fieldsArr[$key] = "\"{$value}\"";
+        }
+        $sql = "SELECT " . implode(",", $fieldsArr);
+        foreach ($this->metaData as $key => $arr) {
+            if ($arr['type'] == "bytea") {
+                $sql = str_replace("\"{$key}\"", "encode(\"" . $key . "\",'escape') as " . $key, $sql);
+            }
+        }
+        $sql .= " FROM " . $this->table . " LIMIT 1";
+        $res = $this->prepare($sql);
+        try {
+            $res->execute();
         } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();

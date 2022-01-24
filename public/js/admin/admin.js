@@ -1928,7 +1928,6 @@ $(document).ready(function () {
                                                                     grid.getSelectionModel().clearSelections();
                                                                     store.reload();
                                                                     App.setAlert(App.STATUS_NOTICE, __("Meta data updated"));
-                                                                    win.close();
                                                                 },
                                                                 failure: function (response) {
                                                                     Ext.MessageBox.show({
@@ -1973,6 +1972,7 @@ $(document).ready(function () {
                                 success: function () {
                                     store.reload();
                                     App.setAlert(App.STATUS_OK, __("Tile cache deleted"));
+                                    writeMapCacheFile();
                                 },
                                 failure: function (response) {
                                     Ext.MessageBox.show({
@@ -4360,7 +4360,7 @@ $(document).ready(function () {
      * Hide tab if scheduler is not available for the db
      */
     if (window.gc2Options.gc2scheduler !== null) {
-        if (window.gc2Options.gc2scheduler.hasOwnProperty(parentdb) === false || window.gc2Options.gc2scheduler[parentdb] === false) {
+        if ((window.gc2Options.gc2scheduler.hasOwnProperty(parentdb) === false || window.gc2Options.gc2scheduler[parentdb] === false) && window.gc2Options.gc2scheduler.hasOwnProperty("*") === false) {
             tabs.hideTabStripItem(Ext.getCmp('schedulerPanel'));
         }
     } else {
@@ -4998,8 +4998,8 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
             url: "/wfs/" + (subUser ? screenName + "@" + parentdb : screenName) + "/" + schema + "/900913" + (timeSlice ? "/" + timeSlice : "") + "?",
             version: "1.0.0",
             featureType: layerName,
-            featureNS: "http://mapcentia.com/" + parentdb,
-            featurePrefix: parentdb,
+            featureNS: "http:" + "//" + location.hostname + (location.port ? ":" + location.port : "") + "/" + parentdb + "/" + schema,
+            featurePrefix: schema,
             srsName: "EPSG:900913",
             geometryName: geomField, // must be dynamamic
             defaultFilter: wfsFilter

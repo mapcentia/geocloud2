@@ -1,21 +1,21 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\models;
 
-use \app\conf\App;
-use \app\inc\Model;
+use app\conf\App;
+use app\inc\Model;
+use app\inc\Session;
+use app\inc\Util;
+use Exception;
 use \Postmark\PostmarkClient;
 use \Postmark\Models\PostmarkException;
 
-define('VDAEMON_PARSE', false);
-define('VD_E_POST_SECURITY', false);
-require(__DIR__ . '/../../public/user/vdaemon/vdaemon.php');
 
 /**
  * Class User
@@ -23,10 +23,17 @@ require(__DIR__ . '/../../public/user/vdaemon/vdaemon.php');
  */
 class User extends Model
 {
+    /**
+     * @var string|null
+     */
     public $userId;
+
+    /**
+     * @var string|null
+     */
     public $parentdb;
 
-    function __construct($userId = null, $parentdb = null)
+    function __construct(?string $userId = null, ?string $parentdb = null)
     {
         parent::__construct();
         $this->userId = $userId;
@@ -35,8 +42,8 @@ class User extends Model
     }
 
     /**
-     * @return array
-     * @throws \Exception
+     * @return array<bool|array<mixed>>
+     * @throws Exception
      */
     public function getAll(): array
     {
@@ -54,12 +61,14 @@ class User extends Model
     }
 
     /**
-     * @return array
+     * @param string $userIdentifier
+     * @return array<string, array<int, array>>
+     * @throws Exception
      */
-    public function getDatabasesForUser($userIdentifier): array
+    public function getDatabasesForUser(string $userIdentifier): array
     {
         if (empty($userIdentifier)) {
-            throw new \Exception('User name or email should not be empty');
+            throw new Exception('User name or email should not be empty');
         }
 
         $data = [];
@@ -70,7 +79,7 @@ class User extends Model
             $res = $this->prepare($query);
             $res->execute(array(":sUserID" => $userName));
 
-            while ($row = $this->fetchRow($res, "assoc")) {
+            while ($row = $this->fetchRow($res)) {
                 array_push($data, $row);
             }
         } else {
@@ -78,7 +87,7 @@ class User extends Model
             $res = $this->prepare($query);
             $res->execute(array(":sUserEmail" => $userIdentifier));
 
-            while ($row = $this->fetchRow($res, "assoc")) {
+            while ($row = $this->fetchRow($res)) {
                 array_push($data, $row);
             }
         }
@@ -89,7 +98,7 @@ class User extends Model
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      */
     public function getData(): array
     {
@@ -117,8 +126,8 @@ class User extends Model
     }
 
     /**
-     * @param array $data
-     * @return array
+     * @param array<string|bool> $data
+     * @return array<mixed>
      */
     public function createUser(array $data): array
     {
@@ -133,20 +142,20 @@ class User extends Model
             }
         }
 
-        $name = VDFormat($data['name'], true);
-        $email = VDFormat($data['email'], true);
-        $password = VDFormat($data['password'], true);
-        $group = (empty($data['usergroup']) ? null : VDFormat($data['usergroup'], true));
-        $zone = (empty($data['zone']) ? null : VDFormat($data['zone'], true));
-        $parentDb = (empty($data['parentdb']) ? null : VDFormat($data['parentdb'], true));
+        $name = Util::format($data['name'], true);
+        $email = Util::format($data['email'], true);
+        $password = Util::format($data['password'], true);
+        $group = (empty($data['usergroup']) ? null : Util::format($data['usergroup'], true));
+        $zone = (empty($data['zone']) ? null : Util::format($data['zone'], true));
+        $parentDb = (empty($data['parentdb']) ? null : Util::format($data['parentdb'], true));
         $properties = (empty($data['properties']) ? null : $data['properties']);
         if ($parentDb) {
             $sql = "SELECT 1 from pg_database WHERE datname=:sDatabase";
             try {
                 $res = $this->prepare($sql);
                 $res->execute([":sDatabase" => $parentDb]);
-                $row = $this->fetchRow($res, "assoc");
-            } catch (\Exception $e) {
+                $row = $this->fetchRow($res);
+            } catch (Exception $e) {
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
                 $response['code'] = 400;
@@ -240,9 +249,20 @@ class User extends Model
             $db = new Database();
             $db->postgisdb = $this->postgisdb;
             try {
-                $db->createdb($userId, App::$param['databaseTemplate'], "UTF8");
-            } catch (\Exception $e) {
-                // PASS
+                $db->createdb($userId, App::$param['databaseTemplate']);
+            } catch (Exception $e) {
+                // Clean up
+                try {
+                    $db->dropUser($userId);
+                    $db->dropDatabase($userId);
+                } catch (\PDOException $e) {
+                    // Pass
+                }
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['test'] = Session::getUser();
+                $response['code'] = 400;
+                return $response;
             }
         }
 
@@ -260,11 +280,11 @@ class User extends Model
                 ":sProperties" => $properties,
             ));
 
-            $row = $this->fetchRow($res, "assoc");
-        } catch (\Exception $e) {
+            $row = $this->fetchRow($res);
+        } catch (Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
-            $response['test'] = \app\inc\Session::getUser();
+            $response['test'] = Session::getUser();
             $response['code'] = 400;
             return $response;
         }
@@ -296,7 +316,7 @@ class User extends Model
             }
 
             try {
-                $sendResult = $client->sendEmailBatch($messages);
+                $client->sendEmailBatch($messages);
             } catch (PostmarkException $ex) {
 //                echo $ex->httpStatusCode . "\n";
 //                echo $ex->postmarkApiErrorCode . "\n";
@@ -309,12 +329,19 @@ class User extends Model
         $response['success'] = true;
         $response['message'] = 'User was created';
         $response['data'] = $row;
+        $response['session'] = Session::get();
+        $subusers = Session::getByKey("subusers") ?? [];
+        $subuserEmails = Session::getByKey("subuserEmails") ?? [];
+        $subusers[] = $row["screenname"];
+        $subuserEmails[$userId] = $row["email"];
+        Session::set("subusers", $subusers);
+        Session::set("subuserEmails", $subuserEmails);
         return $response;
     }
 
     /**
-     * @param array $data
-     * @return array
+     * @param array<string> $data
+     * @return array<bool|string|int|string[]>
      */
     public function updateUser(array $data): array
     {
@@ -339,7 +366,7 @@ class User extends Model
         // Check if the password is strong enough
         $password = null;
         if (isset($data["password"])) {
-            $passwordCheckResults = Setting::checkPasswordStrength($data["password"]);
+            $passwordCheckResults = Setting::checkPasswordStrength(Util::format($data["password"], true));
             if (sizeof($passwordCheckResults) > 0) {
                 return array(
                     'code' => 400,
@@ -348,7 +375,7 @@ class User extends Model
                 );
             }
 
-            $password = Setting::encryptPwSecure($data["password"]);
+            $password = Setting::encryptPwSecure(Util::format($data["password"], true));
         }
 
         $userGroup = isset($data["usergroup"]) ? $data["usergroup"] : null;
@@ -358,10 +385,9 @@ class User extends Model
         if ($password) $sQuery .= ", pw=:sPassword";
         if ($email) $sQuery .= ", email=:sEmail";
         if ($properties) $sQuery .= ", properties=:sProperties";
-        if ($userGroup) {
+        if (isset($userGroup)) {
             $sQuery .= ", usergroup=:sUsergroup";
             $obj[$user] = $userGroup;
-
             Database::setDb($this->parentdb);
             $settings = new Setting();
             if (!$settings->updateUserGroups((object)$obj)['success']) {
@@ -369,9 +395,8 @@ class User extends Model
                 $response['message'] = "Could not update settings.";
                 $response['code'] = 400;
                 return $response;
-            };
+            }
             Database::setDb("mapcentia");
-
         }
 
         if (!empty($data["parentdb"])) {
@@ -384,18 +409,21 @@ class User extends Model
             $res = $this->prepare($sQuery);
             if ($password) $res->bindParam(":sPassword", $password);
             if ($email) $res->bindParam(":sEmail", $email);
-            if ($userGroup) $res->bindParam(":sUsergroup", $userGroup);
+            if (isset($userGroup)) {
+                $str = $userGroup !== "" ? $userGroup : null;
+                $res->bindParam(":sUsergroup", $str);
+            }
             if ($properties) $res->bindParam(":sProperties", $properties);
             $res->bindParam(":sUserID", $user);
             if (!empty($data["parentdb"])) $res->bindParam(":sParentDb", $data["parentdb"]);
 
 
             $res->execute();
-            $row = $this->fetchRow($res, "assoc");
-        } catch (\Exception $e) {
+            $row = $this->fetchRow($res);
+        } catch (Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
-            $response['test'] = \app\inc\Session::getUser();
+            $response['test'] = Session::getUser();
             $response['code'] = 400;
             return $response;
         }
@@ -408,7 +436,7 @@ class User extends Model
 
     /**
      * @param string $data
-     * @return array
+     * @return array<bool|string|int>
      */
     public function deleteUser(string $data): array
     {
@@ -417,14 +445,21 @@ class User extends Model
         try {
             $res = $this->prepare($sQuery);
             $res->execute([":sUserID" => $user, ":parentDb" => $this->userId]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
-            $response['test'] = \app\inc\Session::getUser();
+            $response['test'] = Session::getUser();
             $response['code'] = 400;
             return $response;
         }
-
+        $subusers = Session::getByKey("subusers");
+        $subuserEmails = Session::getByKey("subuserEmails");
+        if (!empty($subusers) && !empty($subuserEmails)) {
+            $subusers = array_diff($subusers, [$user]);
+            $subuserEmails = array_diff($subuserEmails, [$user]);
+            Session::set("subusers", $subusers);
+            Session::set("subuserEmails", $subuserEmails);
+        }
         $response['success'] = true;
         $response['message'] = "User was deleted";
         $response['data'] = $res->rowCount();
@@ -433,7 +468,7 @@ class User extends Model
 
     /**
      * @param string $userId
-     * @return bool
+     * @return array<mixed>
      */
     public function getSubusers(string $userId): array
     {
@@ -442,7 +477,7 @@ class User extends Model
         $res->execute([":sUserID" => $userId]);
 
         $subusers = [];
-        while ($row = $this->fetchRow($res, "assoc")) {
+        while ($row = $this->fetchRow($res)) {
             $row["screenName"] = $row["screenname"];
             unset($row["screenname"]);
             unset($row["pw"]);
@@ -458,7 +493,7 @@ class User extends Model
 
     /**
      * @param string $userId
-     * @param string $password
+     * @param string $checkedPassword
      * @return bool
      */
     public function hasPassword(string $userId, string $checkedPassword): bool
@@ -466,15 +501,14 @@ class User extends Model
         $sQuery = "SELECT pw FROM users WHERE screenname = :sUserID";
         $res = $this->prepare($sQuery);
         $res->execute([":sUserID" => $userId]);
-        $row = $this->fetchRow($res, "assoc");
-
+        $row = $this->fetchRow($res);
+        $pwd = Util::format($checkedPassword, true);
         $hasPassword = false;
-        if (md5($checkedPassword) === $row['pw']) {
+        if (md5($pwd) === $row['pw']) {
             $hasPassword = true;
-        } else if (password_verify($checkedPassword, $row['pw'])) {
+        } else if (password_verify($pwd, $row['pw'])) {
             $hasPassword = true;
         }
-
         return $hasPassword;
     }
 }

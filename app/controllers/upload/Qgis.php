@@ -1,26 +1,31 @@
 <?php
 /**
- * Long description for file
- *
- * Long description for file (if any)...
- *
- * @category   API
- * @package    app\controllers
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- * @since      File available since Release 2013.1
  *
  */
 
 namespace app\controllers\upload;
 
-use \app\conf\Connection;
-use \app\conf\App;
+use app\conf\Connection;
+use app\conf\App;
+use app\inc\Controller;
 
-class Qgis extends \app\inc\Controller
+/**
+ * Class Qgis
+ * @package app\controllers\upload
+ */
+class Qgis extends Controller
 {
+    /**
+     * @var
+     */
     protected $file;
+
+    /**
+     * @var
+     */
     public $response;
 
     /**
@@ -34,7 +39,7 @@ class Qgis extends \app\inc\Controller
     /**
      *
      */
-    public function post_index()
+    public function post_index(): void
     {
         @set_time_limit(5 * 60);
         $mainDir = App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"];
@@ -113,10 +118,6 @@ class Qgis extends \app\inc\Controller
         if (!$chunks || $chunk == $chunks - 1) {
             // Strip the temp .part suffix off
             rename("{$filePath}.part", $filePath);
-
-
-
-
         }
         die('{"jsonrpc" : "2.0", "result" : null, "id" : "id"}');
     }
