@@ -234,6 +234,8 @@ gc2i18n = {
         "Change between WMS and Tile Cache": "Change between single WMS and Tile Cache",
 
         "Structure": "Structure",
-        "Update SQL": "Update SQL"
+        "Update SQL": "Update SQL",
+        "Ignore": "Ignore",
+        "Content": "Content"
     }
 };

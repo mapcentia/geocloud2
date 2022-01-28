@@ -6,7 +6,7 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [2022.1.1] - 2022-1-13
 ### Fixed
-- The stripping of attributes from incoming WFS requets works from an include list instead of an exclude list. This was changes in 2022.1.0. But the `fid` attribute on update requests was not included and updates failed.
+- The stripping of attributes from incoming WFS requets works from an include-list instead of an exclude-list. This was changes in 2022.1.0. But the `fid` attribute on update requests was not included and updates failed.
 
 ## [2022.1.0] - 2022-1-10
 ### Added
