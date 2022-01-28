@@ -49,7 +49,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'GeoCloud2'
-copyright = u'2021, MapCentia'
+copyright = u'2022, MapCentia'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
