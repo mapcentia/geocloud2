@@ -2469,6 +2469,15 @@ function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null,
                 } else {
                     $arr[] = toWkt($value["gml:pointMember"], true, $axisOrder)[0];
                 }
+
+                if (isset($value["gml:pointMembers"][0]["gml:Point"])) {
+                    foreach ($value["gml:pointMembers"] as $member) {
+                        $arr[] = toWkt($member, true, $axisOrder)[0];
+                    }
+                } else {
+                    $arr[] = toWkt($value["gml:pointMembers"], true, $axisOrder)[0];
+                }
+
                 $str .= implode(",", $arr);
                 break;
             case "gml:MultiLineString":
