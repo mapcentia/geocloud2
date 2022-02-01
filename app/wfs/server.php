@@ -2860,7 +2860,7 @@ function parseFilter($filter, string $table): string
                     . "\"" . (dropAllNameSpaces($arr['BBOX']['PropertyName']) ?: $postgisObject->getGeometryColumns($table, "f_geometry_column")) . "\")";
             } else {
                 $where[] = "ST_Intersects"
-                    . "(ST_Transform(ST_GeometryFromText('POLYGON((" . $coordsArr[0] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[1] . "))',"
+                    . "(ST_Transform(ST_GeometryFromText('POLYGON((" . $coordsArr[1] . " " . $coordsArr[0] . "," . $coordsArr[3] . " " . $coordsArr[0] . "," . $coordsArr[3] . " " . $coordsArr[2] . "," . $coordsArr[1] . " " . $coordsArr[2] . "," . $coordsArr[1] . " " . $coordsArr[0] . "))',"
                     . $sridOfFilter
                     . "),$sridOfTable),"
                     . "\"" . (dropAllNameSpaces($arr['BBOX']['PropertyName']) ?: $postgisObject->getGeometryColumns($table, "f_geometry_column")) . "\")";
