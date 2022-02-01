@@ -2466,7 +2466,7 @@ function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null,
                     foreach ($value["gml:pointMember"] as $member) {
                         $arr[] = toWkt($member, true, $axisOrder)[0];
                     }
-                } else {
+                } elseif (isset($value["gml:pointMember"])) {
                     $arr[] = toWkt($value["gml:pointMember"], true, $axisOrder)[0];
                 }
 
@@ -2474,7 +2474,7 @@ function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null,
                     foreach ($value["gml:pointMembers"] as $member) {
                         $arr[] = toWkt($member, true, $axisOrder)[0];
                     }
-                } else {
+                } elseif (isset($value["gml:pointMembers"])) {
                     $arr[] = toWkt($value["gml:pointMembers"], true, $axisOrder)[0];
                 }
 
