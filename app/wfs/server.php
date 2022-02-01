@@ -223,6 +223,9 @@ if ($version != "1.0.0" && $version != "1.1.0") {
 if (!$service || strcasecmp($service, "wfs") != 0) {
     makeExceptionReport("No service", ["exceptionCode" => "MissingParameterValue", "locator" => "service"]);
 }
+if (strpos($outputFormat, "gml/3") != false) {
+    $outputFormat = "GML3";
+}
 if (strcasecmp($outputFormat, "XMLSCHEMA") != 0 && strcasecmp($outputFormat, "GML2") != 0 && strcasecmp($outputFormat, "GML3") != 0) {
     $outputFormat = "GML2";
 }
@@ -674,11 +677,11 @@ function getCapabilities(\app\inc\Model $postgisObject)
     writeTag("open", "ogc", $version == "1.1.0" ? "SpatialOperators" : "Spatial_Operators", null, true, true);
     if ($version == "1.1.0") {
         writeTag("selfclose", "ogc", "SpatialOperator", array("name" => "Intersects"), true, true);
-//        writeTag("selfclose", "ogc", "SpatialOperator", array("name" => "BBOX"), true, true);
+        writeTag("selfclose", "ogc", "SpatialOperator", array("name" => "BBOX"), true, true);
 
     } else {
         writeTag("selfclose", "ogc", "Intersect", null, true, true);
-//        writeTag("selfclose", "ogc", "BBOX", null, true, true);
+        writeTag("selfclose", "ogc", "BBOX", null, true, true);
     }
     writeTag("close", "ogc", $version == "1.1.0" ? "SpatialOperators" : "Spatial_Operators", null, true, true);
     writeTag("close", "ogc", "Spatial_Capabilities", null, false, true);
@@ -2848,7 +2851,7 @@ function parseFilter($filter, string $table): string
                     . "\"" . (dropAllNameSpaces($arr['BBOX']['PropertyName']) ?: $postgisObject->getGeometryColumns($table, "f_geometry_column")) . "\")";
             } else {
                 $where[] = "ST_Intersects"
-                    . "(ST_Transform(ST_GeometryFromText('POLYGON((" . $coordsArr[1] . " " . $coordsArr[0] . "," . $coordsArr[3] . " " . $coordsArr[0] . "," . $coordsArr[3] . " " . $coordsArr[2] . "," . $coordsArr[1] . " " . $coordsArr[2] . "," . $coordsArr[1] . " " . $coordsArr[0] . "))',"
+                    . "(ST_Transform(ST_GeometryFromText('POLYGON((" . $coordsArr[0] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[1] . "))',"
                     . $sridOfFilter
                     . "),$sridOfTable),"
                     . "\"" . (dropAllNameSpaces($arr['BBOX']['PropertyName']) ?: $postgisObject->getGeometryColumns($table, "f_geometry_column")) . "\")";
