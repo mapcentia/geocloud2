@@ -2469,7 +2469,7 @@ function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null,
                 } elseif (isset($value["gml:pointMember"])) {
                     $arr[] = toWkt($value["gml:pointMember"], true, $axisOrder)[0];
                 }
-
+                // MapInfo v15 uses pointMembers instead of pointMember
                 if (isset($value["gml:pointMembers"][0]["gml:Point"])) {
                     foreach ($value["gml:pointMembers"] as $member) {
                         $arr[] = toWkt($member, true, $axisOrder)[0];
