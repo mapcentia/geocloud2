@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2022.2.0] - 2022-2-1
+### Fixed
+- When POSTing a BBOX filter the filter coords was reversed in WFS-t.
+- WFS-t now exposes BBOX as a spatial operator.
+- MapInfo v15 uses `pointMembers` instead of `pointMember` in GML, so this is added to toWkt function in WFS-t.
+
 ## [2022.1.1] - 2022-1-13
 ### Fixed
 - The stripping of attributes from incoming WFS requets works from an include-list instead of an exclude-list. This was changes in 2022.1.0. But the `fid` attribute on update requests was not included and updates failed.
