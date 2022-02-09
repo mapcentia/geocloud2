@@ -100,7 +100,6 @@ class Sql extends Controller
         // /{user}
         $r = func_get_arg(0);
 
-
         $db = $r["user"];
         $dbSplit = explode("@", $db);
 
@@ -130,10 +129,10 @@ class Sql extends Controller
                 [
                     "q" => !empty($json["q"]) ? $json["q"] : null,
                     "client_encoding" => !empty($json["client_encoding"]) ? $json["client_encoding"] : null,
-                    "srs" => !empty($json["srs"]) ? $json["srs"] : null,
+                    "srs" => !empty($json["srs"]) ? $json["srs"] : Input::$params["srs"],
                     "format" => !empty($json["format"]) ? $json["format"] : null,
                     "geoformat" => !empty($json["geoformat"]) ? $json["geoformat"] : null,
-                    "key" => !empty($json["key"]) ? $json["key"] : null,
+                    "key" => !empty($json["key"]) ? $json["key"] : Input::$params["key"],
                     "geojson" => !empty($json["geojson"]) ? $json["geojson"] : null,
                     "allstr" => !empty($json["allstr"]) ? $json["allstr"] : null,
                     "alias" => !empty($json["alias"]) ? $json["alias"] : null,
@@ -255,7 +254,6 @@ class Sql extends Controller
             }
             $this->api->commit();
             return $res;
-
         } else {
             return $this->get_index($r);
         }
