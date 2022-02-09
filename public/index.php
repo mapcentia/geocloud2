@@ -308,6 +308,16 @@ if (Input::getPath()->part(1) == "api") {
             Database::setDb("mydb");
     });
 
+    Route::add("api/v3/sql", function () {
+        $jwt = Jwt::validate();
+        if ($jwt["success"]) {
+            Database::setDb($jwt["data"]["database"]);
+        } else {
+            echo Response::toJson($jwt);
+            exit();
+        }
+    });
+
     Route::miss();
 
 } elseif (Input::getPath()->part(1) == "admin") {
