@@ -165,6 +165,7 @@ function getCmd(): void
     curl_setopt($ch, CURLOPT_URL, $url);
     $fp = fopen($dir . "/" . $tempFile, 'w+');
     curl_setopt($ch, CURLOPT_FILE, $fp);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     curl_exec($ch);
     curl_close($ch);
     fclose($fp);
@@ -668,6 +669,7 @@ function getCmdZip(): void
     curl_setopt($ch, CURLOPT_URL, $url);
     $fp = fopen($dir . "/" . $tempFile . "." . $extCheck2[0], 'w+');
     curl_setopt($ch, CURLOPT_FILE, $fp);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     curl_exec($ch);
     curl_close($ch);
     fclose($fp);
