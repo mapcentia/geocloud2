@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2022.3.0] - 2022-3-1
+### Added
+- V3 SQL API added. This is the OAuth version of the SQL API. Checkout the Swagger API docs (See below)
+
+### Changed
+- Update of the Swagger UI page. A definition select-box is added, so just go to `/swagger-ui/` and choose v2 or v3. The latter is default.
+
+### Fixed
+- Scheduler will now follow redirects.
+
 ## [2022.2.0] - 2022-2-1
 ### Fixed
 - When POSTing a BBOX filter the filter coords was reversed in WFS-t.
