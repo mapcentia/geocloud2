@@ -17,9 +17,9 @@ Kom godt i gang med GC2
 Hvad er GC2?
 ================================================================= 
 
-GC2 er en enterprise platform for håndtering af geospatial data, kort-visualisering og spatiale værktøjer. Bygget på de bedste opensource og standard baserede programmer.
+GeoCloud2 eller fremover GC2 er en enterprise platform for håndtering af geospatial data, kort-visualisering og spatiale værktøjer. Bygget på de bedste opensource og standard baserede programmer.
 
-GC2 gør det nemt at starte med PostGIS, MapServer, QGIS Server, MapCache, Elasticsearch, GDAL/OGR2OGR samt en simpel web-interface til administration af hele software-pakken.
+GC2 gør det nemt at starte med PostGIS, MapServer, QGIS Server, MapCache, Elasticsearch, GDAL/OGR2OGR. Brugerfladen i GC2, er et simpelt web-interface til administration af hele software-pakken.
 
 Målet med GC2 er at gøre det nemt for organisationer at bruge opensource værktøjer til at bygge en geospatial infrastruktur.
 
@@ -35,7 +35,7 @@ TBD
 Log ind
 -----------------------------------------------------------------
 
-Når man forbinder til GC2 bliver man mødt med log-in skærmen som det første. Her er det muligt at logge ind som database-bruger eller sub-bruger.
+Url'en til GC2 vælges når GC2 installeres. Når man forbinder til GC2 bliver man mødt med log-in skærmen som det første. Her er det muligt at logge ind som database-bruger eller sub-bruger.
 
 Først taster man brugernavn, derefter på ``Log ind``. Der bliver lavet et hurtigt tjek på om brugeren eksiterer. Hvis den gør, bliver det muligt at udfylde password. afslut med ``Log ind``.
 
@@ -53,7 +53,7 @@ Hvis det lykkedes at logge ind bliver man automatisk bragt videre til :ref:`dash
 
 .. _gettingstarted_register:
 
-Opret user
+Tilmeld/opret databasebruger
 -----------------------------------------------------------------
 
 .. note::
@@ -75,10 +75,14 @@ Når man er færdig, kan man bruge oplysningerne til at logge ind.
 
 .. _gettingstarted_dashboard:
 
-Dashboard
+Kontrolpanel/Dashboard
 =================================================================
 
-TBD
+Når der er logget ind i GC2, så vises kontrolpanelet/dashboardet. 
+
+Kontrolpanelet er stedet hvor man i venstre side kan se en oversigt over skemaer eller konfigurationer i databasen. I højre side vises en oversigt over Sub-brugere. Der kan også tilføjes Sub-brugere.
+
+I den blå topbar er der et spørgsmålstegn, som giver adgang til dokumentationen, og der kan skiftes password for den bruger der er logget ind med ved at klikke på brugernavnet.
 
 .. figure:: ../../../_media/gettingstarted-dashboard.png
     :width: 400px
@@ -91,18 +95,25 @@ TBD
 Skemaer
 -----------------------------------------------------------------
 
-Hvert skema under databasebrugeren bliver vist. Det er også muligt at bruge filter-feltet til at Skemaet ``public`` bliver oprettet sammen med databasebrugeren.
+Hvert skema under databasebrugeren bliver vist. Der er et filter-felt, som kan bruges til at filtrere i listen.
 
-For hvert skema er det muligt at gøre følgende:
+Skemaet ``public`` bliver som standard oprettet sammen med databasebrugeren, og bør nomalt ikke bruges til noget.
 
-* Gå direkte til vidi
+Hvis der klikkes på et skema foldes det ud, og det er muligt at gøre følgende:
+
+* Åbne Vidi med lagene der er opsat i skemaet.
 * Gå til administrationsmodulet
 
 
 Konfigurationer
 -----------------------------------------------------------------
 
-TBD
+Konfigurationer er json filer, som gemmes i databasen. Konfigurationerne bruges til at styre opsætningen af Vidi. Dvs, det kan styres hvilke lag der vises, hvilke extensions og hvilke baggrundskort der er tilgængelige. 
+
+Konfigurationerne oprettes her, og skal have et navn, der kan suppleres med en beskrivelse.
+
+For en grundig gennemgang af mulighederne i konfigurationerne, så læs afsnittet i Vidi dokumentationen `Vidi kørselskonfiguration <https://vidi.readthedocs.io/da/latest/pages/standard/91_run_configuration.html>`_
+
 
 Profil
 -----------------------------------------------------------------
