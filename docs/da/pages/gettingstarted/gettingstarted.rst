@@ -71,18 +71,18 @@ Når man er færdig, kan man bruge oplysningerne til at logge ind.
     :name: gettingstarted-register
     :figclass: align-center
 
-    Opret bruger
+    Opret databasebruger
 
 .. _gettingstarted_dashboard:
 
-Kontrolpanel/Dashboard
+Kontrolcenter/Dashboard
 =================================================================
 
-Når der er logget ind i GC2, så vises kontrolpanelet/dashboardet. 
+Når der er logget ind i GC2, så vises kontrolcenter/dashboardet. 
 
-Kontrolpanelet er stedet hvor man i venstre side kan se en oversigt over skemaer eller konfigurationer i databasen. I højre side vises en oversigt over Sub-brugere. Der kan også tilføjes Sub-brugere.
+Kontrolcenter er stedet hvor man i venstre side kan se en oversigt over skemaer eller konfigurationer i databasen. I højre side vises en oversigt over Sub-brugere. Der kan også tilføjes Sub-brugere.
 
-I den blå topbar er der et spørgsmålstegn, som giver adgang til dokumentationen, og der kan skiftes password for den bruger der er logget ind med ved at klikke på brugernavnet.
+I den blå topbar er der et spørgsmålstegn, som giver adgang til dokumentationen, og der kan åbnes en brugerprofil for den bruger der logget ind ved at klikke på brugernavnet. Se mere om brugerprofil her: :ref:`gettingstarted_userprofile`
 
 .. figure:: ../../../_media/gettingstarted-dashboard.png
     :width: 400px
@@ -90,7 +90,7 @@ I den blå topbar er der et spørgsmålstegn, som giver adgang til dokumentation
     :name: gettingstarted-dashboard
     :figclass: align-center
 
-    Dashboard
+    Kontrolcenter
 
 Skemaer
 -----------------------------------------------------------------
@@ -114,11 +114,20 @@ Konfigurationerne oprettes her, og skal have et navn, der kan suppleres med en b
 
 For en grundig gennemgang af mulighederne i konfigurationerne, så læs afsnittet i Vidi dokumentationen `Vidi kørselskonfiguration <https://vidi.readthedocs.io/da/latest/pages/standard/91_run_configuration.html>`_
 
+.. _gettingstarted_userprofile:
 
-Profil
+Brugerprofil
 -----------------------------------------------------------------
 
-TBD
+Når der er logget ind i GC2, kan man tilgå sin brugerprofil i den blå topbar. Der klikkes på brugernavnet, og der åbnes en dialogboks, hvor der kan ses brugeroplysninger og skiftes password.
+
+.. figure:: ../../../_media/gettingstarted-userprofile.png
+    :width: 400px
+    :align: center
+    :name: gettingstarted-dashboard
+    :figclass: align-center
+
+    Brugerprofil
 
 Subusers
 -----------------------------------------------------------------
@@ -130,14 +139,18 @@ Her vises alle subusers. For at få mere information om subusers, kan du læse :
 Administrationsmodul
 =================================================================
 
-Administrationsmodulet er bygget op i faner. Disse er nærmere beskrevet på herunder.
+Administrationsmodulet er delt op i faner. Fanerne er nærmere beskrevet herunder.
 
 .. _gettingstarted_admin_map:
 
-Map
+Kort
 -----------------------------------------------------------------
 
-TBD
+I fanen "Kort" kan man i venstre side se en oversigt over de lag der er i skemaet. Hvis lagene ikke er sat op endnu, findes de under ungrouped. Ellers findes de i den gruppering der er lavet i database fanen, som beskrives senere. Over laglisten er der mulighed for at tilføje nye lag, og reloade siden, hvis der er lavet noget der ikke vises rigtigt.
+
+Til højre for lagoversigten findes styling vinduet. Her kan der for hvert lag laves en opsætning af kartografien på laget. Der er en class wizard, som kan bruges til at lave en hurtig opsætning, som så efterfølgende kan justeres.
+
+I resten af fanen vises et kort, hvor de opsatte data kan se, når laget tændes i lag træet.
 
 .. _gettingstarted_admin_database:
 
@@ -149,10 +162,13 @@ TBD
 
     Map
 
+
+
+
 Database
 -----------------------------------------------------------------
 
-TBD
+I Databasefanen kan databasen administreres. Det er her de overordnede egenskaber på lag sættes og tabelstrukturen kan ændres.
 
 .. figure:: ../../../_media/gettingstarted-admin-database.png
     :width: 400px
@@ -161,6 +177,35 @@ TBD
     :figclass: align-center
 
     Database
+
+Laglisten
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Øverste del af fanen er rummer en linje med forskllige funktioner. Under linjen findes laglisten.
+
+.. figure:: ../../../_media/gettingstarted-admin-database-layerlist.png
+    :width: 400px
+    :align: center
+    :name: gettingstarted-database-layerlist
+    :figclass: align-center
+
+    Lagliste
+
+Lags egenskaber kan ændres ved at dobbeltklikke på det felt i listen, som ønskes ændret.  
+
+(1)Type: Lagets geometritype som kan være (MULTI)POINT, (MULTI)LINESTRING, (MULTI)POLYGON eller GEOMETRY. Sidste betyder, at laget kan have en blandning af flere forskellige typer. Lagets type kan ikke ændres.
+(2)Navn: Det tekniske navn på laget. Hvis laget er importeret fra en fil svarer navnet på laget til filnavnet. Lagets tekniske navn kan ikke ændres.
+(3)Titel: Lagets titel. Hvis titel er sat, er det den, som vises i lagtræ, signaturer, WMS/WFS titler mv.
+(4)Beskrivelse: En beskrivende tekst til laget. Bruges i WMS/WFS abstract.
+(5)Gruppe: Grupper anvendes til at inddele lagtræet i Map fanen og i Vieweren. Dette er combo felt: Enten skrives navnet på en ny gruppe eller der vælges en allerede eksisterende.
+(6)Sort id: Placering af laget i laghierarki. Dvs. om et lag ligger ovenpå eller underneden et andet lag, når de vises sammen i Map fanen eller Vieweren.
+(7)Authentication: Hvilket niveau af authentication ønskes for det enkelte lag i WMS og WFS tjenester? Write = authentication kun ved editering, Read/Write = authentication ved både læsning og editering, None = ingen authentication på laget.
+(8)Skrivebar: Hvis slået fra, kan laget ikke editeres i Map fanen eller gennem WFS-T.
+(9)Tile cache: Manuelt sletning af lagets tile cache. Dette er normalt ikke nødvendigt at gøre, da GC2 søger for sletning, når der er brug for det.
+
+Tabelstruktur
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 .. _gettingstarted_admin_workflow:
 
