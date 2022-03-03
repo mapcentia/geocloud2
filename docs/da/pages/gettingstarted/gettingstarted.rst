@@ -193,26 +193,103 @@ Laglisten
 
 Lags egenskaber kan ændres ved at dobbeltklikke på det felt i listen, som ønskes ændret.  
 
-(1)Type: Lagets geometritype som kan være (MULTI)POINT, (MULTI)LINESTRING, (MULTI)POLYGON eller GEOMETRY. Sidste betyder, at laget kan have en blandning af flere forskellige typer. Lagets type kan ikke ændres.
-
-(2)Navn: Det tekniske navn på laget. Hvis laget er importeret fra en fil svarer navnet på laget til filnavnet. Lagets tekniske navn kan ikke ændres.
-
-(3)Titel: Lagets titel. Hvis titel er sat, er det den, som vises i lagtræ, signaturer, WMS/WFS titler mv.
-
-(4)Beskrivelse: En beskrivende tekst til laget. Bruges i WMS/WFS abstract.
-
-(5)Gruppe: Grupper anvendes til at inddele lagtræet i Map fanen og i Vieweren. Dette er combo felt: Enten skrives navnet på en ny gruppe eller der vælges en allerede eksisterende.
-
-(6)Sort id: Placering af laget i laghierarki. Dvs. om et lag ligger ovenpå eller underneden et andet lag, når de vises sammen i Map fanen eller Vieweren.
-
-(7)Authentication: Hvilket niveau af authentication ønskes for det enkelte lag i WMS og WFS tjenester? Write = authentication kun ved editering, Read/Write = authentication ved både læsning og editering, None = ingen authentication på laget.
-
-(8)Skrivebar: Hvis slået fra, kan laget ikke editeres i Map fanen eller gennem WFS-T.
-
-(9)Tile cache: Manuelt sletning af lagets tile cache. Dette er normalt ikke nødvendigt at gøre, da GC2 søger for sletning, når der er brug for det.
+1. Type: Lagets geometritype som kan være (MULTI)POINT, (MULTI)LINESTRING, (MULTI)POLYGON eller GEOMETRY. Sidste betyder, at laget kan have en blandning af flere forskellige typer. Lagets type kan ikke ændres.
+#. Navn: Det tekniske navn på laget. Hvis laget er importeret fra en fil svarer navnet på laget til filnavnet. Lagets tekniske navn kan ikke ændres.
+#. Titel: Lagets titel. Hvis titel er sat, er det den, som vises i lagtræ, signaturer, WMS/WFS titler mv.
+#. Beskrivelse: En beskrivende tekst til laget. Bruges i WMS/WFS abstract.
+#. Gruppe: Grupper anvendes til at inddele lagtræet i Map fanen og i Vieweren. Dette er combo felt: Enten skrives navnet på en ny gruppe eller der vælges en allerede eksisterende.
+#. Sort id: Placering af laget i laghierarki. Dvs. om et lag ligger ovenpå eller underneden et andet lag, når de vises sammen i Map fanen eller Vieweren.
+#. Authentication: Hvilket niveau af authentication ønskes for det enkelte lag i WMS og WFS tjenester? Write = authentication kun ved editering, Read/Write = authentication ved både læsning og editering, None = ingen authentication på laget.
+#. Skrivebar: Hvis slået fra, kan laget ikke editeres i Map fanen eller gennem WFS-T.
+#. Tile cache: Manuelt sletning af lagets tile cache. Dette er normalt ikke nødvendigt at gøre, da GC2 søger for sletning, når der er brug for det.
 
 Tabelstruktur
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Når et lag i laglisten vælges, vises lagets tabelstruktur i sektion nedenunder. Her kan sættes egenskaber på kolonnerne. Egenskaber kan ændres ved at dobbeltklikke på det felt i listen, som ønskes ændret. Kolonner kan tilføjes og slettes.
+
+.. figure:: ../../../_media/gettingstarted-admin-database-table-structure.png
+    :width: 400px
+    :align: center
+    :name: gettingstarted-database-layerlist
+    :figclass: align-center
+
+    Tabelstruktur
+
+1. Sort id: I hvilken rækkefølge kan kolonnerne vises i ved forespørgelser i Vieweren. Kolonner med lavere Sort id vises øverest.
+#. Kolonne: Navn på kolonnen. Navnet kan ændres, men overvej at benytte Alias (4) i stedet for.
+#. Type: Kolonnens type. Kan ikke ændres.
+#. ALLOW NULL:
+#. Alias: Et alias til kolonnen. Vises ved forespørgelser i Vieweren.
+#. Vis i klik-info: Skal kolonnen vises ved forespørgelser i Vieweren? Udgangspunktet er, at alle kolonner vises. Ændres der ved disse egenskaber, vises kun dem, som er tjekket af.
+#. VIS I MOUSE-OVER:
+#. SØGBAR:
+#. AKTIVER FILTRERING:
+#. Gør til link: Hvis indholdet i kolonnen er et link, kan det gøres aktivt i Vieweren ved forespørgelser.
+#. IMAGE:
+#. Link prefix: Hvis links fx mangler "http://" kan dette tilføjes her.
+#. EGENSKABER:
+#. Properties: Kan indeholde vilkårligt information til bruges i brugertilpassede applikationer.
+#. Tilføj ny kolonne: Tilføj en ny kolonne til lagets tabel.
+#. Slet kolonne: Slet den valgte kolonne.
+
+Flyt lag mellem schemaer
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: ../../../_media/gettingstarted-admin-database-movelayer-schema.png
+    :width: 400px
+    :align: center
+    :name: gettingstarted-database-layerlist
+    :figclass: align-center
+
+    Flyt lag mellem schemaer
+
+1. Vælg et eller flere lag på laglisten (hold Shift eller Ctrl nede for at vælge flere) og klik "Flyt lag".
+#. Vælg hvilket schema de skal flyttes til.
+
+Omdøb lag
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: ../../../_media/gettingstarted-admin-database-rename-layer.png
+    :width: 400px
+    :align: center
+    :name: gettingstarted-database-layerlist
+    :figclass: align-center
+
+    Omdøb lag
+	
+1. Vælg et enkelt lag og klik "Omdøb layer".
+#. Vælg et nyt navn til laget.
+
+Skab tabel fra bunden
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Du kan skabe en ny tom tabel fra bunden ved først at klikke på nyt lag
+
+.. figure:: ../../../_media/gettingstarted-admin-database-create-table.png
+    :width: 400px
+    :align: center
+    :name: gettingstarted-database-layerlist
+    :figclass: align-center
+
+    Klik nyt lag
+	
+	
+.. figure:: ../../../_media/gettingstarted-admin-database-create-table-dialog.png
+    :width: 400px
+    :align: center
+    :name: gettingstarted-database-layerlist
+    :figclass: align-center
+
+    Nyt lag dialogboks
+	
+1. Klik på Blank layer.
+#. giv den nye tabel et navn.
+#. Sæt EPSG kode for geometri-feltet.
+#. Sæt type kode for geometri-feltet.
+
+Hvis du vil have en tabel uden geometri, så slettes geometri-feltet bare efter tabellen er oprettet.
+
 
 
 .. _gettingstarted_admin_workflow:
