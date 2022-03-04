@@ -6,13 +6,12 @@ Dokumentation for GC2
 
 Her finder du dokumentation for GeoCloud2
 
-I dette dokument er dokumneteret hvordan GC2 bruges, og de forskellige komponenter virker. Der findes på samme måde en dokumentation til Vidi, som er en viewer løsning til brug for visning af data fra GC2, `Vidi dokumentation finder du her. <https://vidi.readthedocs.io/`_
+I dette dokument er dokumenteret hvordan GC2 bruges, og de forskellige komponenter virker. Der findes på samme måde en dokumentation til Vidi, som er en viewer løsning til brug for visning af data fra GC2, `Vidi dokumentation finder du her. <https://vidi.readthedocs.io/>`_
 
-API dokumentation for GC2 laves i swagger. Det betyder at dokumnetationen er tilgænglig i det site der skal arbejdes på. for at finde dokumentationen, skal der navigeres til en url på sitet, som har dette format <GC2 site url>/swagger-ui/
+API dokumentation for GC2 laves i swagger. Det betyder at dokumentationen er tilgænglig i det site der skal arbejdes på. For at finde dokumentationen, skal der navigeres til en url på sitet, som har dette format <GC2 site url>/swagger-ui/
 
-Det er vigtigt at der bruges den apidokumnetation, som ligger på det aktuelle site, for den vil passe til den version af GC2, som der programmeres mod.
+Det er vigtigt at der bruges den apidokumnetation, som ligger på det aktuelle site, for den vil passe til den version af GC2, som der programmeres mod. `Her kan du se et ekesempel på hvordan dokumentationen ser ud. <https://dk.gc2.io/swagger-ui/>`_
 
-`Her kan du se et ekesempel på hvordan dokumentationen ser ud. https://dk.gc2.io/swagger-ui/`_
 
 *****************************************************************
 Kom godt i gang med GC2
