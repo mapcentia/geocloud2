@@ -85,7 +85,7 @@ Kontrolcenter er stedet hvor man i venstre side kan se en oversigt over skemaer 
 I den blå topbar er der et spørgsmålstegn, som giver adgang til dokumentationen, og der kan åbnes en brugerprofil for den bruger der logget ind ved at klikke på brugernavnet. Se mere om brugerprofil her: :ref:`gettingstarted_userprofile`
 
 .. figure:: ../../../_media/gettingstarted-dashboard.png
-    :width: 400px
+    :width: 550px
     :align: center
     :name: gettingstarted-dashboard
     :figclass: align-center
@@ -122,7 +122,7 @@ Brugerprofil
 Når der er logget ind i GC2, kan man tilgå sin brugerprofil i den blå topbar. Der klikkes på brugernavnet, og der åbnes en dialogboks, hvor der kan ses brugeroplysninger og skiftes password.
 
 .. figure:: ../../../_media/gettingstarted-userprofile.png
-    :width: 400px
+    :width: 550px
     :align: center
     :name: gettingstarted-dashboard
     :figclass: align-center
@@ -155,7 +155,7 @@ I resten af fanen vises et kort, hvor de opsatte data kan se, når laget tændes
 .. _gettingstarted_admin_database:
 
 .. figure:: ../../../_media/gettingstarted-admin-map.png
-    :width: 400px
+    :width: 690px
     :align: center
     :name: gettingstarted-admin-map
     :figclass: align-center
@@ -171,7 +171,7 @@ Database
 I Databasefanen kan databasen administreres. Det er her de overordnede egenskaber på lag sættes og tabelstrukturen kan ændres.
 
 .. figure:: ../../../_media/gettingstarted-admin-database.png
-    :width: 400px
+    :width: 690px
     :align: center
     :name: gettingstarted-admin-database
     :figclass: align-center
@@ -184,7 +184,7 @@ Laglisten
 Øverste del af fanen er rummer en linje med forskllige funktioner. Under linjen findes laglisten.
 
 .. figure:: ../../../_media/gettingstarted-admin-database-layerlist.png
-    :width: 400px
+    :width: 690px
     :align: center
     :name: gettingstarted-database-layerlist
     :figclass: align-center
@@ -209,7 +209,7 @@ Tabelstruktur
 Når et lag i laglisten vælges, vises lagets tabelstruktur i sektion nedenunder. Her kan sættes egenskaber på kolonnerne. Egenskaber kan ændres ved at dobbeltklikke på det felt i listen, som ønskes ændret. Kolonner kan tilføjes og slettes.
 
 .. figure:: ../../../_media/gettingstarted-admin-database-table-structure.png
-    :width: 400px
+    :width: 690px
     :align: center
     :name: gettingstarted-database-layerlist
     :figclass: align-center
@@ -237,7 +237,7 @@ Flyt lag mellem schemaer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: ../../../_media/gettingstarted-admin-database-movelayer-schema.png
-    :width: 400px
+    :width: 690px
     :align: center
     :name: gettingstarted-database-layerlist
     :figclass: align-center
@@ -251,7 +251,7 @@ Omdøb lag
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: ../../../_media/gettingstarted-admin-database-rename-layer.png
-    :width: 400px
+    :width: 690px
     :align: center
     :name: gettingstarted-database-layerlist
     :figclass: align-center
@@ -267,7 +267,7 @@ Skab tabel fra bunden
 Du kan skabe en ny tom tabel fra bunden ved først at klikke på nyt lag
 
 .. figure:: ../../../_media/gettingstarted-admin-database-create-table.png
-    :width: 400px
+    :width: 690px
     :align: center
     :name: gettingstarted-database-layerlist
     :figclass: align-center
@@ -276,7 +276,7 @@ Du kan skabe en ny tom tabel fra bunden ved først at klikke på nyt lag
 	
 	
 .. figure:: ../../../_media/gettingstarted-admin-database-create-table-dialog.png
-    :width: 400px
+    :width: 690px
     :align: center
     :name: gettingstarted-database-layerlist
     :figclass: align-center
