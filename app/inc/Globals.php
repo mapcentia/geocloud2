@@ -166,6 +166,12 @@ class Globals
                     "type" => "textarea",
                     "title" => "Selected style",
                 ],
+                [
+                    "name" => "tiled",
+                    "type" => "checkbox",
+                    "title" => "Tiled",
+                    "default" => false,
+                ],
             ]
 
         ],

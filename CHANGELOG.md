@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNREALESED] - 2022-9-3
+### Added
+- Added GC2 Meta option for tiled raster layer: `tiled`. If set to `true` the layer will be fetched by Vidi in tiles instead of one big single tile, which is default. 
+
 ## [2022.3.0] - 2022-3-1
 ### Added
 - V3 SQL API added. This is the OAuth version of the SQL API. Checkout the Swagger API docs (See below)
