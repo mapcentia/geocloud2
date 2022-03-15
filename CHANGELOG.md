@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNREALESED] - 2022-9-3
+## [2022.3.1] - 2022-15-3
 ### Added
 - Added GC2 Meta option for tiled raster layer: `tiled`. If set to `true` the layer will be fetched by Vidi in tiles instead of one big single tile, which is default.
 - In GC2 MapServer symbols you can now use [attribut] in `Classes > Symbol > Style:symbol` Allows individual rendering of features by using an attribute in the dataset that specifies the symbol name or an SVG url. The hard brackets [] are required.
