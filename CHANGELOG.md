@@ -19,6 +19,10 @@ and this project adheres to [CalVer](https://calver.org/).
 ### Fixed
 - Scheduler will now follow redirects.
 
+## [UNREALSED] - 2022-2-1
+### Fixed
+- When creating a sub-user the group was not set in the Setting model. This was only done when updating the sub-user.
+
 ## [2022.2.0] - 2022-2-1
 ### Fixed
 - When POSTing a BBOX filter the filter coords was reversed in WFS-t.
