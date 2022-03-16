@@ -36,6 +36,8 @@ services:
       - internal
     ports:
       - "8080:80"
+    expose:
+      - 9000
     environment:
       - POSTGIS_HOST=postgis
       - POSTGIS_DB=postgres
