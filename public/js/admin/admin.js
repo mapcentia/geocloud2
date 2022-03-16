@@ -1005,9 +1005,7 @@ $(document).ready(function () {
                                                     sortable: false,
                                                     renderer: function (val, cell, record, rowIndex, colIndex, store) {
                                                         var _key_ = records[0].get("_key_"), disabled;
-                                                        console.log(record.data);
-                                                        console.log(subUserGroups);
-                                                        if (typeof subUserGroups[record.data.subuser] === "undefined" || subUserGroups[record.data.subuser] === "") {
+                                                        if (!record.data.group) {
                                                             disabled = "";
                                                         } else {
                                                             disabled = "disabled";
@@ -1027,8 +1025,8 @@ $(document).ready(function () {
                                                     editable: false,
                                                     width: 50,
                                                     renderer: function (val, cell, record, rowIndex, colIndex, store) {
-                                                        if (typeof subUserGroups[record.data.subuser] !== "undefined" && subUserGroups[record.data.subuser] !== "") {
-                                                            return subUserGroups[record.data.subuser];
+                                                        if (record.data.group) {
+                                                            return record.data.group;
                                                         }
                                                     }
                                                 }

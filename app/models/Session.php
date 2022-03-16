@@ -138,6 +138,7 @@ class Session extends Model
                 while ($rowSubUSers = $this->fetchRow($res)) {
                     $_SESSION['subusers'][] = $rowSubUSers["screenname"];
                     $_SESSION['subuserEmails'][$rowSubUSers["screenname"]] = $rowSubUSers["email"];
+                    $_SESSION['usergroups'][$rowSubUSers["screenname"]] = $rowSubUSers["usergroup"];
                 }
 
                 // Check if user has secure password (bcrypt hash)

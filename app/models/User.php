@@ -340,10 +340,13 @@ class User extends Model
         $response['session'] = Session::get();
         $subusers = Session::getByKey("subusers") ?? [];
         $subuserEmails = Session::getByKey("subuserEmails") ?? [];
+        $userGroups = Session::getByKey("usergroups") ?? [];
+        $userGroups[$userId] = $group ?? null;
         $subusers[] = $row["screenname"];
         $subuserEmails[$userId] = $row["email"];
         Session::set("subusers", $subusers);
         Session::set("subuserEmails", $subuserEmails);
+        Session::set("usergroups", $userGroups);
         return $response;
     }
 
@@ -405,6 +408,10 @@ class User extends Model
                 return $response;
             }
             Database::setDb("mapcentia");
+
+            $userGroups = Session::getByKey("usergroups") ?? [];
+            $userGroups[$user] = !empty($userGroup) ? $userGroup : null;
+            Session::set("usergroups", $userGroups);
         }
 
         if (!empty($data["parentdb"])) {
