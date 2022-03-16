@@ -308,6 +308,21 @@ class Setting extends Model
                 $response['message'] = $this->PDOerror;
                 $response['code'] = 400;
             }
+            // Get userGroups from mapcentia database
+            Database::setDb("mapcentia");
+            $users = new Model();
+            $sQuery = "SELECT * FROM users WHERE parentdb = :parentDb";
+            $res = $users->prepare($sQuery);
+            $res->execute([
+                ":parentDb" => $this->postgisdb
+            ]);
+            $rows = $this->fetchAll($res);
+            $userGroups = [];
+            foreach ($rows as $row) {
+                $userGroups[$row["screenname"]] = $row["usergroup"];
+            }
+            $response["data"]->userGroups = $userGroups;
+            Database::setDb($this->postgisdb);
             try {
                 $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
                 $CachedString->addTags([$cacheType, $this->postgisdb]);
