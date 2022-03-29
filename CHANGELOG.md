@@ -11,6 +11,7 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ### Fixed
 - When creating a sub-user the group was not set in the Setting model. This was only done when updating the sub-user.
+- Tags can now be appended again
 
 ## [2022.3.1] - 2022-15-3
 ### Added

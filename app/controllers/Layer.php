@@ -64,7 +64,7 @@ class Layer extends Controller
     {
         $data = (array)json_decode(urldecode(Input::get(null, true)));
         $response = $this->auth($data["data"]->_key_);
-        return (!$response['success']) ? $response : $this->geometryJoinTable->updateRecord($data, "_key_", false, false);
+        return (!$response['success']) ? $response : $this->geometryJoinTable->updateRecord($data, "_key_", false, !empty(Input::getPath()->part(5)));
     }
 
     /**
