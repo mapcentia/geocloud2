@@ -2796,7 +2796,21 @@ $(document).ready(function () {
             '<tr class="x-grid3-row"><td class="bottom-info-bar-param"><b>' + __('Geom field') + '</b></td><td>{f_geometry_column}</td><td class="bottom-info-bar-pipe">|</td><td class="bottom-info-bar-param"><b>' + __('Dimensions') + '</b></td><td>{coord_dimension}</td><td class="bottom-info-bar-pipe">|</td></td><td class="bottom-info-bar-param"><b>' + __('Guid') + '</b></td><td>{uuid}</td></tr>' +
             '</table>']);
         if (records.length === 1) {
-            detailPanelTemplate.overwrite(detailPanel.body, records[0].data);
+            var dataClone = JSON.parse(JSON.stringify(records[0].data));
+            var tagsStr = dataClone.tags;
+            var tagsArr = [];
+            var tagsPresent
+            if (typeof tagsStr === "string") {
+                tagsArr = JSON.parse(tagsStr);
+            }
+            if (tagsArr.length === 0) {
+                tagsPresent = __("No tags");
+            } else {
+                tagsPresent = tagsArr.join(", ");
+            }
+            dataClone.tags = tagsPresent;
+            debugger
+            detailPanelTemplate.overwrite(detailPanel.body, dataClone);
             tableStructure.grid = null;
             Ext.getCmp("tablepanel").activate(0);
             tableStructure.init(records[0], parentdb);

@@ -11,7 +11,8 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ### Fixed
 - When creating a sub-user the group was not set in the Setting model. This was only done when updating the sub-user.
-- Tags can now be appended again
+- Tags can now be appended again.
+- Tags presentation in footer is now nicer and no tags is writen out instead of showing `null` or `[]`.
 
 ## [2022.3.1] - 2022-15-3
 ### Added

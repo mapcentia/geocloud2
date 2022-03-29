@@ -236,6 +236,7 @@ gc2i18n = {
         "Structure": "Structure",
         "Update SQL": "Update SQL",
         "Ignore": "Ignore",
-        "Content": "Content"
+        "Content": "Content",
+        "No tags": "No tags"
     }
 };
