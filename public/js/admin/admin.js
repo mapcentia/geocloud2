@@ -2809,7 +2809,6 @@ $(document).ready(function () {
                 tagsPresent = tagsArr.join(", ");
             }
             dataClone.tags = tagsPresent;
-            debugger
             detailPanelTemplate.overwrite(detailPanel.body, dataClone);
             tableStructure.grid = null;
             Ext.getCmp("tablepanel").activate(0);
