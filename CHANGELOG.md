@@ -8,6 +8,8 @@ and this project adheres to [CalVer](https://calver.org/).
 ### Changed
 - Usergroups are now set in Session and returned with `/controllers/layer/privileges/`, so GC2 Admin doesn't need to be refreshed when changing group on a sub-user.
 - `Setting::get` will now get the `userGroup` property from the mapcentia database instead of the `settings.viewer` table. This way the data doesn't need to be replicated from mapcentia db to the user db.
+- If GC2 Admin is started for more than one schema, an alert will dispatched telling the user to either close the tab/browser with the stall Admin or refresh it. If the latter the current Admin will then go stall and alert.
+- If the session ends/timeouts GC2 Admin will dispatch an alert telling the user that no active session is running.
 
 ### Fixed
 - When creating a sub-user the group was not set in the Setting model. This was only done when updating the sub-user.

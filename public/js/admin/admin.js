@@ -4846,8 +4846,30 @@ $(document).ready(function () {
 // Always write the MapFile on start up
     writeFiles();
 
-})
-;
+});
+
+/**
+ * Setup checks for session and schema in session
+ */
+setInterval(function () {
+    $.ajax({
+        url: '/api/v2/session',
+        dataType: 'json',
+        success: function (data) {
+            if (!data.data.session) {
+                alert(__("You are no longer logged in to GC2. Close or refresh your browser"));
+                return;
+            }
+            if (schema !== data.data.schema) {
+                alert(__("You have started Admin for another schema. Either close this here or refresh your browser"));
+            }
+        },
+        error: function () {
+            alert("Noget gik galt. Prøv at refreshe din browser");
+        }
+    });
+}, 2000);
+
 
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';

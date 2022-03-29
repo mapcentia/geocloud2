@@ -44,6 +44,7 @@ class Session extends Model
             $response['data']['subuser'] = $_SESSION["subuser"];
             $response['data']['subusers'] = $_SESSION['subusers'];
             $response['data']['properties'] = $_SESSION['properties'];
+            $response['data']['schema'] = $_SESSION['postgisschema'];
         } else {
             $response['data']['message'] = "Session not started";
             $response['data']['session'] = false;
