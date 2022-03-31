@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNREALSED] - 2022-2-1
+## [2022.3.2] - 2022-31-3
 ### Changed
 - Usergroups are now set in Session and returned with `/controllers/layer/privileges/`, so GC2 Admin doesn't need to be refreshed when changing group on a sub-user.
 - `Setting::get` will now get the `userGroup` property from the mapcentia database instead of the `settings.viewer` table. This way the data doesn't need to be replicated from mapcentia db to the user db.
