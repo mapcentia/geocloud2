@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2022.4.0] - 2022-1-4
+### Fixed
+- The stripping of attributes from incoming WFS requets works from an include-list instead of an exclude-list. This was changes in 2022.1.0. But the `gml:id` attribute on insert requests was not included and insert with explicit fid failed.
+
 ## [2022.3.2] - 2022-31-3
 ### Changed
 - Usergroups are now set in Session and returned with `/controllers/layer/privileges/`, so GC2 Admin doesn't need to be refreshed when changing group on a sub-user.
