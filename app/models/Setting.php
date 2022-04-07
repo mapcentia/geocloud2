@@ -276,7 +276,6 @@ class Setting extends Model
                 $response["cache"] = $exception->getMessage();
             }
             $response["cache"]["signature"] = md5(serialize($response));
-            return $response;
         } else {
             try {
                 $arr = $this->getArray();
@@ -321,7 +320,7 @@ class Setting extends Model
             foreach ($rows as $row) {
                 $userGroups[$row["screenname"]] = $row["usergroup"];
             }
-            $response["data"]->userGroups = $userGroups;
+            $response["data"]->userGroups = (object)$userGroups;
             Database::setDb($this->postgisdb);
             try {
                 $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
@@ -332,9 +331,8 @@ class Setting extends Model
             }
             Cache::save($CachedString);
             $response["cache"]["hit"] = false;
-
-            return $response;
         }
+        return $response;
     }
 
     /**

@@ -181,11 +181,7 @@ class Controller
         if ($auth == "Read/write" || $auth == "Write") {
             $settings_viewer = new Setting();
             $response = $settings_viewer->get();
-            if (isset($response["data"]->userGroups->$subUser)) {
-                $userGroup = $response["data"]->userGroups->$subUser;
-            } else {
-                $userGroup = null;
-            }
+            $userGroup = $response["data"]->userGroups->$subUser ?? null;
             if ($subUser) {
                 $apiKey = $response['data']->api_key_subuser->$subUser;
             } else {
@@ -201,10 +197,10 @@ class Controller
                 }
                 if ($subUser) {
                     $privileges = (array)json_decode($row["privileges"]);
+                    $response = array();
+                    $response['auth_level'] = $auth;
                     if (($apiKey == $inputApiKey && $apiKey != false) || !empty($_SESSION["auth"])) {
-                        $response = array();
-                        $response['auth_level'] = $auth;
-                        $response['privileges'] = !empty($privileges[$subUser]) ? $privileges[$subUser] : null;
+                        $response['privileges'] = $privileges[$userGroup] ?? $privileges[$subUser];
                         $response['session'] = $_SESSION['subuser'] ? $_SESSION["screen_name"] . '@' . $_SESSION["parentdb"] : null;
                         $response[Sql::USEDRELSKEY] = $rels;
                         switch ($transaction) {
@@ -240,22 +236,19 @@ class Controller
                         }
                         return $response;
                     } else {
-                        $response = array();
-                        $response['auth_level'] = $auth;
                         $response[Sql::USEDRELSKEY] = $rels;
-                        $response['privileges'] = !empty($privileges[$subUser]) ? $privileges[$subUser] : null;
+                        $response['privileges'] = $privileges[$userGroup] ?? $privileges[$subUser];
                         $response['session'] = !empty($_SESSION["screen_name"]) ? $_SESSION["screen_name"] : null;
 
                         if ($auth == "Read/write" || ($transaction)) {
                             $response['success'] = false;
                             $response['message'] = "Not the right key!";
                             $response['code'] = 403;
-                            return $response;
                         } else {
                             $response['success'] = true;
                             $response['code'] = 200;
-                            return $response;
                         }
+                        return $response;
                     }
                 } else {
                     $response = array();
