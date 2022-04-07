@@ -207,7 +207,7 @@ class Model
 
             try {
                 $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);
-//                $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
+                $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
 
             } catch (Error $exception) {
                 die($exception->getMessage());
