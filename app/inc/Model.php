@@ -792,21 +792,35 @@ class Model
      */
     public function postgisVersion(): array
     {
-        $response = [];
-        $sql = "SELECT PostGIS_Lib_Version()";
-        $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
+        $cacheType = "postgisVersion";
+        $cacheId = $cacheType;
+        $CachedString = Cache::getItem($cacheId);
+        if ($CachedString != null && $CachedString->isHit()) {
+            return $CachedString->get();
+        } else {
+
+            $response = [];
+            $sql = "SELECT PostGIS_Lib_Version()";
+            $res = $this->prepare($sql);
+            try {
+                $res->execute();
+            } catch (PDOException $e) {
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['code'] = 401;
+                return $response;
+            }
+            $row = $this->fetchRow($res);
+            $response['success'] = true;
+            $response['version'] = $row["postgis_lib_version"];
+            try {
+                $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
+            } catch (Error $exception) {
+                error_log($exception->getMessage());
+            }
+            Cache::save($CachedString);
             return $response;
         }
-        $row = $this->fetchRow($res);
-        $response['success'] = true;
-        $response['version'] = $row["postgis_lib_version"];
-        return $response;
     }
 
     /**
