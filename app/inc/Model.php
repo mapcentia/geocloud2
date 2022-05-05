@@ -178,7 +178,7 @@ class Model
     {
         $response = null;
         $cacheType = "prikey";
-        $cacheRel = $table;
+        $cacheRel = md5($table);
         $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
         if (!empty(App::$param["defaultPrimaryKey"])) {
             return ["attname" => App::$param["defaultPrimaryKey"]];
@@ -832,7 +832,7 @@ class Model
     public function doesColumnExist(string $table, string $column): array
     {
         $cacheType = "columnExist";
-        $cacheRel = $table;
+        $cacheRel = md5($table);
         $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel . "_" . $column);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
@@ -880,7 +880,7 @@ class Model
     public function getForeignConstrains(string $schema, string $table): array
     {
         $cacheType = "foreignConstrain";
-        $cacheRel = $schema . "." . $table;
+        $cacheRel = md5($schema . "." . $table);
         $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
@@ -961,7 +961,7 @@ class Model
     public function getChildTables(string $schema, string $table): array
     {
         $cacheType = "childTables";
-        $cacheRel = $schema . "." . $table;
+        $cacheRel = md5($schema . "." . $table);
         $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
@@ -1026,7 +1026,7 @@ class Model
     public function getColumns(string $schema, string $table): array
     {
         $cacheType = "columns";
-        $cacheRel = $schema . "." . $table;
+        $cacheRel = md5($schema . "." . $table);
         $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
