@@ -23,7 +23,7 @@ RUN apt-get -y install cron vim wget g++ build-essential git unzip rng-tools apa
     libgeos++-dev libpython-all-dev curl libapache2-mod-fcgid libfcgi-dev xvfb osm2pgsql postgis  sudo \
     apt-transport-https ca-certificates software-properties-common \
     libprotobuf-c-dev libprotobuf-dev libprotobuf-c1 libprotobuf23 protobuf-compiler protobuf-c-compiler libtool \
-    python3-dev \
+    python3-dev bison
 
 # Compile SWIG > 4.0.0 to get PHP8 support
 RUN git clone https://github.com/swig/swig.git &&\
