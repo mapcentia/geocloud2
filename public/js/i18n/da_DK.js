@@ -234,6 +234,13 @@ gc2i18n = {
         "Change between WMS and Tile Cache": "Skift mellem WMS og Tile Cache",
 
         "Structure": "Struktur",
-        "Update SQL": "Opdater SQL"
+        "Update SQL": "Opdater SQL",
+        "Ignore": "Ignorere",
+        "Content": "Indhold",
+        "No tags": "Ingen tags",
+
+        "You are no longer logged in to GC2. Close or refresh your browser": "Du er ikke længere logget ind i GC2. Luk eller refresh din browser",
+        "You have started Admin for another schema. Either close this here or refresh your browser": "Du har startet Admin for et andet schema. Enten luk denne her eller refresh din browser",
+        "Something went wrong. Try refreshing your browser": "Noget gik galt. Prøv at refreshe din browser"
     }
 };

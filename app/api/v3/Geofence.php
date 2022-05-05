@@ -45,7 +45,7 @@ class Geofence extends Controller
      * @return void
      *
      * @OA\Get(
-     *   path="/api/v3/scheduler/{jobId}",
+     *   path="/api/v3/geofence/{jobId}",
      *   tags={"Scheduler"},
      *   summary="Start scheduled job by id.",
      *   security={{"bearerAuth":{}}},

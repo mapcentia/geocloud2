@@ -696,7 +696,7 @@ class Layer extends Table
         foreach (\app\inc\Session::getByKey('subusers') as $subuser) {
             $privileges->$subuser = ($privileges->$subuser) ?: "none";
             if ($subuser != Connection::$param['postgisschema']) {
-                $response['data'][] = array("subuser" => $subuser, "privileges" => $privileges->$subuser);
+                $response['data'][] = array("subuser" => $subuser, "privileges" => $privileges->$subuser, "group" => \app\inc\Session::getByKey("usergroups")[$subuser]);
             }
         }
         if (!isset($response['data'])) {

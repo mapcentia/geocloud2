@@ -296,6 +296,36 @@
                 ]
             }
         },
+        "/api/v3/geofence/{jobId}": {
+            "get": {
+                "tags": [
+                    "Scheduler"
+                ],
+                "summary": "Start scheduled job by id.",
+                "operationId": "app\\api\\v3\\Geofence::get_index",
+                "parameters": [
+                    {
+                        "name": "jobId",
+                        "in": "path",
+                        "description": "Job identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operation status"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/v3/grid": {
             "post": {
                 "tags": [
@@ -452,6 +482,73 @@
                 "responses": {
                     "200": {
                         "description": "Operation status"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v3/sql": {
+            "post": {
+                "tags": [
+                    "Sql"
+                ],
+                "summary": "Do SQL quyeries",
+                "operationId": "app\\api\\v3\\Sql::post_index",
+                "requestBody": {
+                    "description": "Parameters",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "q": {
+                                        "type": "string",
+                                        "example": "SELECT 1 as id,ST_setsrid(ST_MakePoint(10,56),4326) as geom"
+                                    },
+                                    "srs": {
+                                        "description": "",
+                                        "type": "integer",
+                                        "example": "25832"
+                                    },
+                                    "format": {
+                                        "type": "string",
+                                        "example": "csv"
+                                    },
+                                    "geoformat": {
+                                        "type": "string",
+                                        "example": "wkt"
+                                    },
+                                    "allstr": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "lifetime": {
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "base64": {
+                                        "type": "boolean",
+                                        "example": false
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "If select then the result will be data on choosen format. If transaction the number of effected rows is returned.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [

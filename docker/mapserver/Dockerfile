@@ -37,7 +37,7 @@ RUN echo "extension=php_mapscript.so" >> /etc/php/8.0/fpm/php.ini
 
 # Instal MapCache from source
 RUN cd ~ && \
-    git clone http://github.com/mapserver/mapcache.git --branch branch-1-10 && \
+    git clone http://github.com/mapserver/mapcache.git --branch branch-1-12 && \
     cd mapcache &&\
     mkdir build &&\
     cd build &&\
@@ -47,11 +47,11 @@ RUN cd ~ && \
     ldconfig
 
 # Install QGIS-server
-#RUN add-apt-repository "deb https://qgis.org/debian-ltr `lsb_release -c -s` main" &&\
-#    wget -qO - https://qgis.org/downloads/qgis-2020.gpg.key | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import &&\
-#    chmod a+r /etc/apt/trusted.gpg.d/qgis-archive.gpg &&\
-#    apt-get update &&\
-#    apt-get -y install qgis-server=1:3.16.8+15buster
+RUN add-apt-repository "deb https://qgis.org/debian-ltr `lsb_release -c -s` main" &&\
+    wget -qO - https://qgis.org/downloads/qgis-2021.gpg.key | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import &&\
+    chmod a+r /etc/apt/trusted.gpg.d/qgis-archive.gpg &&\
+    apt-get update --allow-releaseinfo-change &&\
+    apt-get -y install qgis-server=1:3.16.16+15buster
 
 # Symlink font for QGIS Server
 RUN ln -s /usr/share/fonts directory /usr/lib/x86_64-linux-gnu
@@ -67,6 +67,10 @@ RUN chmod +x /watch_mapcache_changes.sh
 
 # Add the reload.js
 COPY reload.js /reload.js
+
+RUN curl -sL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh &&\
+    bash nodesource_setup.sh &&\
+    apt-get install -y nodejs
 
 RUN mkdir /mapcache
 RUN cp /root/mapcache/mapcache.xml /mapcache/
@@ -103,6 +107,11 @@ RUN crontab -l 2>/dev/null| { cat; echo "0 6 * * * php -f /var/www/geocloud2/app
 RUN crontab -l 2>/dev/null| { cat; echo "* * * * * sudo -u www-data php -f /var/www/geocloud2/app/scripts/scheduler.php 1>> /dev/null 2>&1";} | crontab
 
 RUN crontab -l 2>/dev/null| { cat; echo "";} | crontab
+
+# Install gc2-cli
+ARG version=2021.11.0
+RUN wget https://gc2-cli.s3.eu-west-1.amazonaws.com/apt/gc2_${version}-1_amd64.deb &&\
+    dpkg -i gc2_${version}-1_amd64.deb
 
 # Expose standard ports for HTTP and HTTPS
 EXPOSE 80

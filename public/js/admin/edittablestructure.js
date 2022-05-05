@@ -94,6 +94,10 @@ tableStructure.init = function (record, db) {
             allowBlank: true
         },
         {
+            name: 'ignore',
+            allowBlank: true
+        },
+        {
             name: 'image',
             allowBlank: true
         },
@@ -336,6 +340,13 @@ tableStructure.init = function (record, db) {
                     xtype: 'checkcolumn',
                     header: __("Make link"),
                     dataIndex: 'link',
+                    //width: 35
+                },
+                {
+                    id: "ignore",
+                    xtype: 'checkcolumn',
+                    header: __("Ignore"),
+                    dataIndex: 'ignore',
                     //width: 35
                 },
                 {

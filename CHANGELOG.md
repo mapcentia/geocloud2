@@ -4,6 +4,90 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED] - 2022-5-5
+### Fixed
+- All cache tags are now md5 encoded because they can contain illegal characters (tags are formed from relation names).
+
+## [2022.4.1] - 2022-7-4
+### Fixed
+- Inhertance of privileges in key Auth API's didn't work. This is a regression bug from 2022.3.2.
+
+## [2022.4.0] - 2022-1-4
+### Fixed
+- The stripping of attributes from incoming WFS requets works from an include-list instead of an exclude-list. This was changes in 2022.1.0. But the `gml:id` attribute on insert requests was not included and insert with explicit fid failed.
+
+## [2022.3.2] - 2022-31-3
+### Changed
+- Usergroups are now set in Session and returned with `/controllers/layer/privileges/`, so GC2 Admin doesn't need to be refreshed when changing group on a sub-user.
+- `Setting::get` will now get the `userGroup` property from the mapcentia database instead of the `settings.viewer` table. This way the data doesn't need to be replicated from mapcentia db to the user db.
+- If GC2 Admin is started for more than one schema, an alert will dispatched telling the user to either close the tab/browser with the stall Admin or refresh it. If the latter the current Admin will then go stall and alert.
+- If the session ends/timeouts GC2 Admin will dispatch an alert telling the user that no active session is running.
+
+### Fixed
+- When creating a sub-user the group was not set in the Setting model. This was only done when updating the sub-user.
+- Tags can now be appended again.
+- Tags presentation in footer is now nicer and no tags is writen out instead of showing `null` or `[]`.
+
+## [2022.3.1] - 2022-15-3
+### Added
+- Added GC2 Meta option for tiled raster layer: `tiled`. If set to `true` the layer will be fetched by Vidi in tiles instead of one big single tile, which is default.
+- In GC2 MapServer symbols you can now use [attribut] in `Classes > Symbol > Style:symbol` Allows individual rendering of features by using an attribute in the dataset that specifies the symbol name or an SVG url. The hard brackets [] are required.
+
+## [2022.3.0] - 2022-3-1
+### Added
+- V3 SQL API added. This is the OAuth version of the SQL API. Checkout the Swagger API docs (See below)
+
+### Changed
+- Update of the Swagger UI page. A definition select-box is added, so just go to `/swagger-ui/` and choose v2 or v3. The latter is default.
+
+### Fixed
+- Scheduler will now follow redirects.
+
+## [2022.2.0] - 2022-2-1
+### Fixed
+- When POSTing a BBOX filter the filter coords was reversed in WFS-t.
+- WFS-t now exposes BBOX as a spatial operator.
+- MapInfo v15 uses `pointMembers` instead of `pointMember` in GML, so this is added to toWkt function in WFS-t.
+
+## [2022.1.1] - 2022-1-13
+### Fixed
+- The stripping of attributes from incoming WFS requets works from an include-list instead of an exclude-list. This was changes in 2022.1.0. But the `fid` attribute on update requests was not included and updates failed.
+
+## [2022.1.0] - 2022-1-10
+### Added
+- New 'Ignore' checkbox in the Structure tab. If checked the field will be ignored when using the feature info tool in Vidi. Useful if a field contains large data structures.
+
+### Fixed
+- Bug regarding changing password with `"` is fixed.
+- Bug in parseing WFS filters with `gml` name space is fixed.
+- The SQL API now uses the query string as cache key instead of the random temp view name, so the cache does not get flooded with keys on heavy use.
+
+## [2021.12.0] - 2021-12-9
+### Changed
+- Scheduler can now be activated for all database with this setting in `app/conf/App.php`:
+```php
+    "gc2scheduler" => [
+        "*" => true,
+    ],
+```
+
+### Fixed
+- Sign-in form now reacts on database exceptions letting the user know something is wrong.
+- Handling of database exceptions in signup proccess, e.g. so the role is dropped again if the database creation went wrong. This means no manual clean up is needed.
+
+## [2021.11.3] - 2021-11-19
+### Fixed
+- `maxFeature` in wfs-t rendered an error, because the db was never connected.
+
+## [2021.11.2] - 2021-11-2
+### Fixed
+- Tests are fixed
+
+## [2021.11.1] - 2021-11-1
+### Changed
+- `clonedb_whitelist.sh` will not try to write out mapfiles, mapcachefile and QGIS files. Use gc2-cli for this.
+- API tests now uses $BUILD_ID env var if set for usernames, so they can be predicted in Vidi tests.
+
 ## [2021.11.0] - 2021-3-11
 ### Fixed
 - Improvments in filtering for WFT-t. `Not` operator now works. 

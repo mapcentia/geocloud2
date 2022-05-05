@@ -13,8 +13,9 @@ use app\inc\Model;
 use app\inc\Session;
 use app\inc\Util;
 use Exception;
-use \Postmark\PostmarkClient;
-use \Postmark\Models\PostmarkException;
+use PDOException;
+use Postmark\PostmarkClient;
+use Postmark\Models\PostmarkException;
 
 
 /**
@@ -70,26 +71,21 @@ class User extends Model
         if (empty($userIdentifier)) {
             throw new Exception('User name or email should not be empty');
         }
-
         $data = [];
         if (strrpos($userIdentifier, '@') === false) {
             $userName = Model::toAscii($userIdentifier, NULL, "_");
-
             $query = "SELECT screenname, email, parentdb FROM users WHERE screenname = :sUserID";
             $res = $this->prepare($query);
             $res->execute(array(":sUserID" => $userName));
 
-            while ($row = $this->fetchRow($res)) {
-                array_push($data, $row);
-            }
         } else {
             $query = "SELECT screenname, email, parentdb FROM users WHERE email = :sUserEmail";
             $res = $this->prepare($query);
             $res->execute(array(":sUserEmail" => $userIdentifier));
 
-            while ($row = $this->fetchRow($res)) {
-                array_push($data, $row);
-            }
+        }
+        while ($row = $this->fetchRow($res)) {
+            $data[] = $row;
         }
 
         return [
@@ -108,7 +104,7 @@ class User extends Model
         $row = $this->fetchRow($res);
         if (!$row['userid']) {
             $response['success'] = false;
-            $response['message'] = "User identifier $this->userId was not found (parent database: " . ($this->parentdb ? $this->parentdb : 'null') . ")";
+            $response['message'] = "User identifier $this->userId was not found (parent database: " . ($this->parentdb ?: 'null') . ")";
             $response['code'] = 404;
             return $response;
         }
@@ -251,7 +247,18 @@ class User extends Model
             try {
                 $db->createdb($userId, App::$param['databaseTemplate']);
             } catch (Exception $e) {
-                // PASS
+                // Clean up
+                try {
+                    $db->dropUser($userId);
+                    $db->dropDatabase($userId);
+                } catch (PDOException $e) {
+                    // Pass
+                }
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['test'] = Session::getUser();
+                $response['code'] = 400;
+                return $response;
             }
         }
 
@@ -276,6 +283,18 @@ class User extends Model
             $response['test'] = Session::getUser();
             $response['code'] = 400;
             return $response;
+        }
+        if (isset($group)) {
+            $obj[$userId] = $group;
+            Database::setDb($this->parentdb);
+            $settings = new Setting();
+            if (!$settings->updateUserGroups((object)$obj)['success']) {
+                $response['success'] = false;
+                $response['message'] = "Could not update settings.";
+                $response['code'] = 400;
+                return $response;
+            }
+            Database::setDb("mapcentia");
         }
 
         // Start email notification
@@ -321,10 +340,13 @@ class User extends Model
         $response['session'] = Session::get();
         $subusers = Session::getByKey("subusers") ?? [];
         $subuserEmails = Session::getByKey("subuserEmails") ?? [];
+        $userGroups = Session::getByKey("usergroups") ?? [];
+        $userGroups[$userId] = $group ?? null;
         $subusers[] = $row["screenname"];
         $subuserEmails[$userId] = $row["email"];
         Session::set("subusers", $subusers);
         Session::set("subuserEmails", $subuserEmails);
+        Session::set("usergroups", $userGroups);
         return $response;
     }
 
@@ -355,7 +377,7 @@ class User extends Model
         // Check if the password is strong enough
         $password = null;
         if (isset($data["password"])) {
-            $passwordCheckResults = Setting::checkPasswordStrength($data["password"]);
+            $passwordCheckResults = Setting::checkPasswordStrength(Util::format($data["password"], true));
             if (sizeof($passwordCheckResults) > 0) {
                 return array(
                     'code' => 400,
@@ -364,10 +386,10 @@ class User extends Model
                 );
             }
 
-            $password = Setting::encryptPwSecure($data["password"]);
+            $password = Setting::encryptPwSecure(Util::format($data["password"], true));
         }
 
-        $userGroup = isset($data["usergroup"]) ? $data["usergroup"] : null;
+        $userGroup = $data["usergroup"] ?? null;
         $properties = isset($data["properties"]) ? json_encode($data["properties"]) : null;
 
         $sQuery = "UPDATE users SET screenname=screenname";
@@ -386,6 +408,10 @@ class User extends Model
                 return $response;
             }
             Database::setDb("mapcentia");
+
+            $userGroups = Session::getByKey("usergroups") ?? [];
+            $userGroups[$user] = !empty($userGroup) ? $userGroup : null;
+            Session::set("usergroups", $userGroups);
         }
 
         if (!empty($data["parentdb"])) {
@@ -470,7 +496,7 @@ class User extends Model
             $row["screenName"] = $row["screenname"];
             unset($row["screenname"]);
             unset($row["pw"]);
-            array_push($subusers, $row);
+            $subusers[] = $row;
         }
 
         $response = [];
@@ -491,14 +517,13 @@ class User extends Model
         $res = $this->prepare($sQuery);
         $res->execute([":sUserID" => $userId]);
         $row = $this->fetchRow($res);
-
+        $pwd = Util::format($checkedPassword, true);
         $hasPassword = false;
-        if (md5($checkedPassword) === $row['pw']) {
+        if (md5($pwd) === $row['pw']) {
             $hasPassword = true;
-        } else if (password_verify($checkedPassword, $row['pw'])) {
+        } else if (password_verify($pwd, $row['pw'])) {
             $hasPassword = true;
         }
-
         return $hasPassword;
     }
 }

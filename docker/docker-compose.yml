@@ -36,6 +36,8 @@ services:
       - internal
     ports:
       - "8080:80"
+    expose:
+      - 9000
     environment:
       - POSTGIS_HOST=postgis
       - POSTGIS_DB=postgres
@@ -43,6 +45,8 @@ services:
       - POSTGIS_PORT=5432
       - POSTGIS_PW=1234
       - POSTGIS_PGBOUNCER=false
+      - MODE_ENV=${MODE_ENV}
+      - BUILD_ID=${BUILD_ID}
   redis:
     image: redis
     networks:
@@ -63,6 +67,34 @@ services:
     environment:
       - GC2_USER=gc2
       - GC2_PASSWORD=1234
+#  zookeeper:
+#    image: debezium/zookeeper:${DEBEZIUM_VERSION}
+#    ports:
+#      - 2181:2181
+#      - 2888:2888
+#      - 3888:3888
+#    networks:
+#      - internal
+#  kafka:
+#    image: debezium/kafka:${DEBEZIUM_VERSION}
+#    ports:
+#      - 9092:9092
+#    environment:
+#      - ZOOKEEPER_CONNECT=zookeeper:2181
+#    networks:
+#      - internal
+#  connect:
+#    image: debezium/connect:${DEBEZIUM_VERSION}
+#    ports:
+#      - 8083:8083
+#    networks:
+#      - internal
+#    environment:
+#      - BOOTSTRAP_SERVERS=kafka:9092
+#      - GROUP_ID=1
+#      - CONFIG_STORAGE_TOPIC=my_connect_configs
+#      - OFFSET_STORAGE_TOPIC=my_connect_offsets
+#      - STATUS_STORAGE_TOPIC=my_connect_statuses
 
 volumes:
   postgis_var_lib_postgresql:

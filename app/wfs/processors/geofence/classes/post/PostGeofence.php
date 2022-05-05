@@ -44,7 +44,7 @@ class PostGeofence implements PostInterface
     function __construct(Model $db)
     {
         $this->db = $db;
-        $urlPart =Input::getPath()->part(2);
+        $urlPart = Input::getPath()->part(2);
         $dbSplit = explode("@", $urlPart);
         if (sizeof($dbSplit) == 2) {
             $this->gc2User = $dbSplit[0];
@@ -74,9 +74,18 @@ class PostGeofence implements PostInterface
                 $response = [];
                 $typeName = PreGeofence::$typeName;
                 foreach ($rowIdsChanged as $objekt_id) {
-                    $sql = "SELECT objekt_id FROM fkg.{$typeName} " .
-                        "WHERE fkg.{$typeName}.objekt_id='{$objekt_id}'" .
-                        " AND st_intersects(fkg.{$typeName}.geometri, ST_transform(({$rule["filters"]["write_spatial"]}), 25832))";
+                    $filter = "";
+                    $spatialFilter = "";
+                    $sql = "SELECT objekt_id FROM fkg.{$typeName} WHERE fkg.{$typeName}.objekt_id='{$objekt_id}'";
+                    if (!empty($rule["filters"]["write"])) {
+                        $filter = " AND {$rule["filters"]["write"]}";
+                    }
+                    if (!empty($rule["filters"]["write_spatial"])) {
+                        $spatialFilter = " AND st_intersects(fkg.{$typeName}.geometri, ST_transform(({$rule["filters"]["write_spatial"]}), 25832))";
+                    }
+
+                    $sql = $sql . $filter;
+                    $sql = $sql . $spatialFilter;
 
                     try {
                         $res = $this->db->prepare($sql);

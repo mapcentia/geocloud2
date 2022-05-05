@@ -278,6 +278,12 @@ module.exports = function (grunt) {
             },
             composer: {
                 command: 'cd app && php composer.phar install'
+            },
+            swagger_v2: {
+                command: 'cd app && ./vendor/zircote/swagger-php/bin/openapi -o ../public/swagger/v2/api.json api/v2/'
+            },
+            swagger_v3: {
+                command: 'cd app && ./vendor/zircote/swagger-php/bin/openapi -o ../public/swagger/v3/api.json api/v3/'
             }
         }
     });

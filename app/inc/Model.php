@@ -128,13 +128,13 @@ class Model
      * @param PDOStatement $result
      * @param string $result_type
      * @return array<mixed>
-     * @throws Exception
+     * @throws PDOException
      */
     public function fetchAll(PDOStatement $result, string $result_type = "both"): array
     {
         $rows = [];
         if (isset($this->PDOerror)) {
-            throw new Exception($this->PDOerror[0]);
+            throw new PDOException($this->PDOerror[0]);
         }
         switch ($result_type) {
             case "assoc" :
@@ -178,7 +178,7 @@ class Model
     {
         $response = null;
         $cacheType = "prikey";
-        $cacheRel = $table;
+        $cacheRel = md5($table);
         $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
         if (!empty(App::$param["defaultPrimaryKey"])) {
             return ["attname" => App::$param["defaultPrimaryKey"]];
@@ -370,13 +370,14 @@ class Model
      * @param bool $temp
      * @param bool $restriction
      * @param array<array>|null $restrictions
+     * @param string|null $cacheKey
      * @return array<mixed>
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function getMetaData(string $table, bool $temp = false, bool $restriction = false, $restrictions = null): array
+    public function getMetaData(string $table, bool $temp = false, bool $restriction = false, array $restrictions = null, string $cacheKey = null): array
     {
         $cacheType = "metadata";
-        $cacheRel = $table;
+        $cacheRel = md5($cacheKey ?: $table);
         $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . md5($cacheRel . (int)$temp . (int)$restriction . serialize($restrictions)));
         $CachedString = Cache::getItem($cacheId);
         $primaryKey = null;
@@ -791,21 +792,35 @@ class Model
      */
     public function postgisVersion(): array
     {
-        $response = [];
-        $sql = "SELECT PostGIS_Lib_Version()";
-        $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
+        $cacheType = "postgisVersion";
+        $cacheId = $cacheType;
+        $CachedString = Cache::getItem($cacheId);
+        if ($CachedString != null && $CachedString->isHit()) {
+            return $CachedString->get();
+        } else {
+
+            $response = [];
+            $sql = "SELECT PostGIS_Lib_Version()";
+            $res = $this->prepare($sql);
+            try {
+                $res->execute();
+            } catch (PDOException $e) {
+                $response['success'] = false;
+                $response['message'] = $e->getMessage();
+                $response['code'] = 401;
+                return $response;
+            }
+            $row = $this->fetchRow($res);
+            $response['success'] = true;
+            $response['version'] = $row["postgis_lib_version"];
+            try {
+                $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
+            } catch (Error $exception) {
+                error_log($exception->getMessage());
+            }
+            Cache::save($CachedString);
             return $response;
         }
-        $row = $this->fetchRow($res);
-        $response['success'] = true;
-        $response['version'] = $row["postgis_lib_version"];
-        return $response;
     }
 
     /**
@@ -817,7 +832,7 @@ class Model
     public function doesColumnExist(string $table, string $column): array
     {
         $cacheType = "columnExist";
-        $cacheRel = $table;
+        $cacheRel = md5($table);
         $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel . "_" . $column);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
@@ -865,7 +880,7 @@ class Model
     public function getForeignConstrains(string $schema, string $table): array
     {
         $cacheType = "foreignConstrain";
-        $cacheRel = $schema . "." . $table;
+        $cacheRel = md5($schema . "." . $table);
         $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
@@ -946,7 +961,7 @@ class Model
     public function getChildTables(string $schema, string $table): array
     {
         $cacheType = "childTables";
-        $cacheRel = $schema . "." . $table;
+        $cacheRel = md5($schema . "." . $table);
         $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
@@ -1011,7 +1026,7 @@ class Model
     public function getColumns(string $schema, string $table): array
     {
         $cacheType = "columns";
-        $cacheRel = $schema . "." . $table;
+        $cacheRel = md5($schema . "." . $table);
         $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {

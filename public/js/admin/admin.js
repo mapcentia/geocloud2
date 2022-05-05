@@ -1005,9 +1005,7 @@ $(document).ready(function () {
                                                     sortable: false,
                                                     renderer: function (val, cell, record, rowIndex, colIndex, store) {
                                                         var _key_ = records[0].get("_key_"), disabled;
-                                                        console.log(record.data);
-                                                        console.log(subUserGroups);
-                                                        if (typeof subUserGroups[record.data.subuser] === "undefined" || subUserGroups[record.data.subuser] === "") {
+                                                        if (!record.data.group) {
                                                             disabled = "";
                                                         } else {
                                                             disabled = "disabled";
@@ -1027,8 +1025,8 @@ $(document).ready(function () {
                                                     editable: false,
                                                     width: 50,
                                                     renderer: function (val, cell, record, rowIndex, colIndex, store) {
-                                                        if (typeof subUserGroups[record.data.subuser] !== "undefined" && subUserGroups[record.data.subuser] !== "") {
-                                                            return subUserGroups[record.data.subuser];
+                                                        if (record.data.group) {
+                                                            return record.data.group;
                                                         }
                                                     }
                                                 }
@@ -2798,7 +2796,20 @@ $(document).ready(function () {
             '<tr class="x-grid3-row"><td class="bottom-info-bar-param"><b>' + __('Geom field') + '</b></td><td>{f_geometry_column}</td><td class="bottom-info-bar-pipe">|</td><td class="bottom-info-bar-param"><b>' + __('Dimensions') + '</b></td><td>{coord_dimension}</td><td class="bottom-info-bar-pipe">|</td></td><td class="bottom-info-bar-param"><b>' + __('Guid') + '</b></td><td>{uuid}</td></tr>' +
             '</table>']);
         if (records.length === 1) {
-            detailPanelTemplate.overwrite(detailPanel.body, records[0].data);
+            var dataClone = JSON.parse(JSON.stringify(records[0].data));
+            var tagsStr = dataClone.tags;
+            var tagsArr = [];
+            var tagsPresent
+            if (typeof tagsStr === "string") {
+                tagsArr = JSON.parse(tagsStr);
+            }
+            if (tagsArr.length === 0) {
+                tagsPresent = __("No tags");
+            } else {
+                tagsPresent = tagsArr.join(", ");
+            }
+            dataClone.tags = tagsPresent;
+            detailPanelTemplate.overwrite(detailPanel.body, dataClone);
             tableStructure.grid = null;
             Ext.getCmp("tablepanel").activate(0);
             tableStructure.init(records[0], parentdb);
@@ -4360,7 +4371,7 @@ $(document).ready(function () {
      * Hide tab if scheduler is not available for the db
      */
     if (window.gc2Options.gc2scheduler !== null) {
-        if (window.gc2Options.gc2scheduler.hasOwnProperty(parentdb) === false || window.gc2Options.gc2scheduler[parentdb] === false) {
+        if ((window.gc2Options.gc2scheduler.hasOwnProperty(parentdb) === false || window.gc2Options.gc2scheduler[parentdb] === false) && window.gc2Options.gc2scheduler.hasOwnProperty("*") === false) {
             tabs.hideTabStripItem(Ext.getCmp('schedulerPanel'));
         }
     } else {
@@ -4835,8 +4846,30 @@ $(document).ready(function () {
 // Always write the MapFile on start up
     writeFiles();
 
-})
-;
+});
+
+/**
+ * Setup checks for session and schema in session
+ */
+setInterval(function () {
+    $.ajax({
+        url: '/api/v2/session',
+        dataType: 'json',
+        success: function (data) {
+            if (!data.data.session) {
+                alert(__("You are no longer logged in to GC2. Close or refresh your browser"));
+                return;
+            }
+            if (schema !== data.data.schema) {
+                alert(__("You have started Admin for another schema. Either close this here or refresh your browser"));
+            }
+        },
+        error: function () {
+            alert("Noget gik galt. Prøv at refreshe din browser");
+        }
+    });
+}, 2000);
+
 
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';

@@ -732,7 +732,7 @@ table .x-btn-click {
 .x-grid3-row {
     border-color:rgba(255, 255, 255, 0.1);
     border-top-color: #fff;
-    color: #fff;
+    /*color: rgba(255, 255, 255, 0.8);*/
     border-top-width: 0;
     border-bottom-width: 1px;
     border-bottom-color: rgba(255, 255, 255, 0.1);

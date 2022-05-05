@@ -58,7 +58,9 @@ $geometryColumnsObj = new \app\controllers\Layer();
 $trusted = false;
 foreach (App::$param["trustedAddresses"] as $address) {
     if (Util::ipInRange(Util::clientIp(), $address)) {
-        $trusted = true;
+        if (getenv("MODE_ENV") != "test") {
+            $trusted = true;
+        }
         break;
     }
 }
@@ -179,16 +181,18 @@ if ($HTTP_RAW_POST_DATA) {
         $HTTP_FORM_VARS["TYPENAME"] = dropAllNameSpaces($HTTP_FORM_VARS["TYPENAME"]); // We remove name space, so $where will get key without it.
 
         if (!empty($HTTP_FORM_VARS['FILTER'])) {
-            @$checkXml = simplexml_load_string($HTTP_FORM_VARS['FILTER']);
+            $filter = dropNameSpace($HTTP_FORM_VARS['FILTER']);
+            @$checkXml = simplexml_load_string($filter);
             if ($checkXml === FALSE) {
                 makeExceptionReport("Filter is not valid");
             }
-            $unserializer->unserialize(dropNameSpace($HTTP_FORM_VARS['FILTER']));
+            $unserializer->unserialize($filter);
             $HTTP_FORM_VARS['FILTER'] = $unserializer->getUnserializedData();
         }
     } else {
         $HTTP_FORM_VARS = array("");
     }
+
 }
 // Log the request
 Log::write($logPath, $HTTP_RAW_POST_DATA);
@@ -218,6 +222,9 @@ if ($version != "1.0.0" && $version != "1.1.0") {
 }
 if (!$service || strcasecmp($service, "wfs") != 0) {
     makeExceptionReport("No service", ["exceptionCode" => "MissingParameterValue", "locator" => "service"]);
+}
+if (strpos($outputFormat, "gml/3") != false) {
+    $outputFormat = "GML3";
 }
 if (strcasecmp($outputFormat, "XMLSCHEMA") != 0 && strcasecmp($outputFormat, "GML2") != 0 && strcasecmp($outputFormat, "GML3") != 0) {
     $outputFormat = "GML2";
@@ -670,11 +677,11 @@ function getCapabilities(\app\inc\Model $postgisObject)
     writeTag("open", "ogc", $version == "1.1.0" ? "SpatialOperators" : "Spatial_Operators", null, true, true);
     if ($version == "1.1.0") {
         writeTag("selfclose", "ogc", "SpatialOperator", array("name" => "Intersects"), true, true);
-//        writeTag("selfclose", "ogc", "SpatialOperator", array("name" => "BBOX"), true, true);
+        writeTag("selfclose", "ogc", "SpatialOperator", array("name" => "BBOX"), true, true);
 
     } else {
         writeTag("selfclose", "ogc", "Intersect", null, true, true);
-//        writeTag("selfclose", "ogc", "BBOX", null, true, true);
+        writeTag("selfclose", "ogc", "BBOX", null, true, true);
     }
     writeTag("close", "ogc", $version == "1.1.0" ? "SpatialOperators" : "Spatial_Operators", null, true, true);
     writeTag("close", "ogc", "Spatial_Capabilities", null, false, true);
@@ -1233,6 +1240,10 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     global $maxFeatures;
     ob_start();
 
+    if (!$postgisObject->db) {
+        $postgisObject->connect();
+    }
+
     $featureCount = "";
     if ($maxFeatures) {
         $featureCount = $maxFeatures;
@@ -1246,7 +1257,6 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
             makeExceptionReport($e->getMessage());
         }
     }
-
     print "<wfs:FeatureCollection ";
     print "xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" ";
     print "xmlns:wfs=\"http://www.opengis.net/wfs\" ";
@@ -1265,7 +1275,6 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     }
     $postgisObject->begin();
     if ($sql2) {
-        $postgisObject->execQuery("BEGIN");
         $result = $postgisObject->execQuery($sql2 . $from);
         if ($postgisObject->numRows($result) == 1) {
             while ($myrow = $postgisObject->fetchRow($result)) {
@@ -1394,32 +1403,9 @@ function dropFirstChrs($str, $no)
  */
 function dropNameSpace(string $tag): string
 {
-
-    //$tag = html_entity_decode($tag);
-    $tag = preg_replace('/ xmlns(?:.*?)?=\".*?\"/', "", $tag); // Remove xmlns with "
-    $tag = preg_replace('/ xmlns(?:.*?)?=\'.*?\'/', "", $tag); // Remove xmlns with '
-    $tag = preg_replace('/ xsi(?:.*?)?=\".*?\"/', "", $tag); // remove xsi:schemaLocation with "
-    $tag = preg_replace('/ xsi(?:.*?)?=\'.*?\'/', "", $tag); // remove xsi:schemaLocation with '
-    $tag = preg_replace('/ cs(?:.*?)?=\".*?\"/', "", $tag); //
-    $tag = preg_replace('/ cs(?:.*?)?=\'.*?\'/', "", $tag);
-    $tag = preg_replace('/ ts(?:.*?)?=\".*?\"/', "", $tag);
-    $tag = preg_replace('/ decimal(?:.*?)?=\".*?\"/', "", $tag);
-    $tag = preg_replace('/\<wfs:(?:.*?)/', "<", $tag);
-    //$tag = preg_replace('/\<gml:(?:.*?)/', "<", $tag);
-    $tag = preg_replace('/\<ogc:(?:.*?)/', "<", $tag);
-    $tag = preg_replace('/\<ns:(?:.*?)/', "<", $tag);
-    $tag = preg_replace('/\<foo:(?:.*?)/', "<", $tag);
-
-    $tag = preg_replace('/\<\/wfs:(?:.*?)/', "</", $tag);
-    //$tag = preg_replace('/\<\/gml:(?:.*?)/', "</", $tag);
-    $tag = preg_replace('/\<\/ogc:(?:.*?)/', "</", $tag);
-    $tag = preg_replace('/\<\/ns:(?:.*?)/', "</", $tag);
-
-    $tag = preg_replace('/\<\/foo:(?:.*?)/', "</", $tag);
-    //$tag = preg_replace('/EPSG:(?:.*?)/', "", $tag);
-
-
-    //$tag = preg_replace("/[\w-]*:(?![\w-]*:)/", "", $tag); // remove any namespaces
+    $tag = preg_replace('/ \w*(?:\:\w*?)?(?<!gml)(?<!service)(?<!version)(?<!outputFormat)(?<!maxFeatures)(?<!resultType)(?<!typeName)(?<!srsName)(?<!fid)(?<!id)=(\".*?\"|\'.*?\')/s', "", $tag);
+    $tag = preg_replace('/\<[a-z|0-9]*(?<!gml):(?:.*?)/', "<", $tag);
+    $tag = preg_replace('/\<\/[a-z|0-9]*(?<!gml):(?:.*?)/', "</", $tag);
     return $tag;
 }
 
@@ -1430,7 +1416,6 @@ function dropAllNameSpaces($tag)
     $tag = trim($tag, '"');
     return ($tag);
 }
-
 
 /**
  *
@@ -2482,9 +2467,18 @@ function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null,
                     foreach ($value["gml:pointMember"] as $member) {
                         $arr[] = toWkt($member, true, $axisOrder)[0];
                     }
-                } else {
+                } elseif (isset($value["gml:pointMember"])) {
                     $arr[] = toWkt($value["gml:pointMember"], true, $axisOrder)[0];
                 }
+                // MapInfo v15 uses pointMembers instead of pointMember
+                if (isset($value["gml:pointMembers"][0]["gml:Point"])) {
+                    foreach ($value["gml:pointMembers"] as $member) {
+                        $arr[] = toWkt($member, true, $axisOrder)[0];
+                    }
+                } elseif (isset($value["gml:pointMembers"])) {
+                    $arr[] = toWkt($value["gml:pointMembers"], true, $axisOrder)[0];
+                }
+
                 $str .= implode(",", $arr);
                 break;
             case "gml:MultiLineString":
@@ -2535,8 +2529,6 @@ function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null,
                 }
                 $str .= implode(",", $arr);
                 break;
-
-
         }
     }
     return [$str . $strEnd, $srid, $fid];
@@ -2620,11 +2612,12 @@ function getAxisOrder(?string $epsg): ?string
  */
 function parseEpsgCode(?string $epsg): ?string
 {
-    if (!$epsg) return null;
+    if (!$epsg) {
+        return null;
+    }
     $split = explode(":", $epsg);
     $clean = end($split);
-    $clean = preg_replace("/[\w]\./", "", $clean);
-    return $clean;
+    return preg_replace("/[\w]\./", "", $clean);
 }
 
 /**
@@ -2646,6 +2639,8 @@ function addDiminsionOnArray(?array $array): ?array
  * @param array|null $atts
  * @param bool|null $ind
  * @param bool|null $n
+ * @param bool $rtn
+ * @return string|null
  */
 function writeTag(string $type, ?string $ns, ?string $tag, ?array $atts, ?bool $ind, ?bool $n, $rtn = false): ?string
 {
@@ -2706,9 +2701,11 @@ function parseFilter($filter, string $table): string
     $i = 0;
     $boolOperator = null;
     $where = [];
-//    print_r($filter);
-//    print "***********\n";
     foreach ($filter as $key => $arr) {
+        // Skip xmlns:gml key
+        if (!is_array($arr)) {
+            continue;
+        }
         if ($key == "And" || $key == "Or") {
             $boolOperator = $key;
         }
@@ -2877,6 +2874,7 @@ function parseFilter($filter, string $table): string
         $boolOperator = "OR";
     }
 //    print_r($where);
+//    die();
     return "(" . implode(" " . $boolOperator . " ", $where) . ")";
 }
 

@@ -79,7 +79,7 @@ Vektor
 
     Vektor-lag dialog
 
-For at uploade vektor-filer og dermed danne lag på baggrund af disse, følges denne beskrivelse. Numre passer med :numfig:`layer-create-vector`:
+For at uploade vektor-filer og dermed danne lag på baggrund af disse, følges denne beskrivelse. Numre passer med :numref:`layer-create-vector`:
 
 1. Klik på ``Tilføj filer``, eller træk flere filer ad gangen ind i dialogboksen. Følg hjælpeteksten i boksen.
 
@@ -116,7 +116,7 @@ Raster & billede
 
     Raster- & Billed-lag dialog
 
-For at uploade raster-filer og dermed danne lag på baggrund af disse, følges denne beskrivelse. Numre passer med :numfig:`layer-create-raster`:
+For at uploade raster-filer og dermed danne lag på baggrund af disse, følges denne beskrivelse. Numre passer med :numref:`layer-create-raster`:
 
 1. Vælg fanen ``Tilføj Raster``
 2. Klik på ``Tilføj filer``, eller træk flere filer ad gangen ind i dialogboksen. Følg hjælpeteksten i boksen.

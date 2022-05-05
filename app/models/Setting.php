@@ -40,9 +40,9 @@ class Setting extends Model
     }
 
     /**
-     * @return object
+     * @return object|null
      */
-    public function getArray(): object
+    public function getArray(): ?object
     {
         if (App::$param["encryptSettings"]) {
             $secretKey = file_get_contents(App::$param["path"] . "app/conf/secret.key");
@@ -276,7 +276,6 @@ class Setting extends Model
                 $response["cache"] = $exception->getMessage();
             }
             $response["cache"]["signature"] = md5(serialize($response));
-            return $response;
         } else {
             try {
                 $arr = $this->getArray();
@@ -308,6 +307,21 @@ class Setting extends Model
                 $response['message'] = $this->PDOerror;
                 $response['code'] = 400;
             }
+            // Get userGroups from mapcentia database
+            Database::setDb("mapcentia");
+            $users = new Model();
+            $sQuery = "SELECT * FROM users WHERE parentdb = :parentDb";
+            $res = $users->prepare($sQuery);
+            $res->execute([
+                ":parentDb" => $this->postgisdb
+            ]);
+            $rows = $this->fetchAll($res);
+            $userGroups = [];
+            foreach ($rows as $row) {
+                $userGroups[$row["screenname"]] = $row["usergroup"];
+            }
+            $response["data"]->userGroups = (object)$userGroups;
+            Database::setDb($this->postgisdb);
             try {
                 $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
                 $CachedString->addTags([$cacheType, $this->postgisdb]);
@@ -317,9 +331,8 @@ class Setting extends Model
             }
             Cache::save($CachedString);
             $response["cache"]["hit"] = false;
-
-            return $response;
         }
+        return $response;
     }
 
     /**

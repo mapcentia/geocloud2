@@ -234,6 +234,13 @@ gc2i18n = {
         "Change between WMS and Tile Cache": "Change between single WMS and Tile Cache",
 
         "Structure": "Structure",
-        "Update SQL": "Update SQL"
+        "Update SQL": "Update SQL",
+        "Ignore": "Ignore",
+        "Content": "Content",
+        "No tags": "No tags",
+
+        "You are no longer logged in to GC2. Close or refresh your browser": "You are no longer logged in to GC2. Close or refresh your browser",
+        "You have started Admin for another schema. Either close this here or refresh your browser": "You have started Admin for another schema. Either close this here or refresh your browser",
+        "Something went wrong. Try refreshing your browser": "Something went wrong. Try refreshing your browser"
     }
 };

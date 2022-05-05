@@ -55,8 +55,11 @@ fi
 function if_error
 ##################
 {
-    if [[ $? -ne 0 ]]; then # check return code passed to function
-        print "$1 DATE: `date +%Y-%m-%d:%H:%M:%S`"
+    if [ $? -ne 0 ]; then # check return code passed to function
+        echo "$1 DATE: `date +%Y-%m-%d:%H:%M:%S`"
+        #Clean up
+        rm dump.bak -R
+        psql postgres -c "DROP DATABASE IF EXISTS $tmpdb"
         exit $?
     fi
 }
@@ -99,7 +102,7 @@ psql -c "CREATE EXTENSION pgagent;"
 
 # Run any custom SQL before restoring
 psql -f ./custom_restore.sql
-if_error "No custom_restore.sql file."
+#if_error "No custom_restore.sql file."
 
 # pg_restore will ignore errors (some errors are harmless). In such case it will exit with status 1. Therefore we can't check.
 pg_restore dump.bak --jobs=4 --dbname=$tmpdb
@@ -133,26 +136,6 @@ COMMIT;
 "
 if_error "Could not rename database."
 
-psql postgres -c "drop database $tmpdb"
-
 #Clean up
 rm dump.bak -R
-
-# Write out the MapFiles
-echo "Writing MapFiles"
-for SCHEMA in "${ARRAY[@]}"
-    do
-       RES=$(curl -XGET -s "$targethost/api/v2/mapfile/write/$targetdb/$SCHEMA" | python3 -c "import sys, json; print(json.load(sys.stdin))")
-       echo $RES
-    done
-
-#Write out the MapCache file
-echo "Writing MapCache file"
-RES=$(curl -XGET -s "$targethost/api/v2/mapcachefile/write/$targetdb" | python3 -c "import sys, json; print(json.load(sys.stdin))")
-echo $RES
-
-#Write out the QGIS files
-echo "Writing QGIS files"
-RES=$(curl -XGET -s "$targethost/api/v2/qgis/write/$targetdb" | python3 -c "import sys, json; print(json.load(sys.stdin))")
-echo $RES
 

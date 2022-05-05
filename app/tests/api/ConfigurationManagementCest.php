@@ -1,26 +1,31 @@
-<?php 
+<?php
 
 class ConfigurationManagementCest
 {
     private $date;
     private $userName;
     private $userEmail;
+    private $subUserName;
+    private $subUserEmail;
     private $userAuthCookie;
     private $userId;
-
     private $publishedConfigurationId;
     private $nonPublishedConfigurationId;
 
     public function __construct()
     {
+
+        $buildId = getenv("BUILD_ID") ?? $this->date = new DateTime();
         $this->date = new DateTime();
-        $this->userName = 'Configuration test super user name ' . $this->date->getTimestamp();
-        $this->userEmail = 'configurationtest' . $this->date->getTimestamp() . '@example.com';
-        $this->subUserName = 'Configuration test sub user name ' . $this->date->getTimestamp();
-        $this->subUserEmail = 'configurationsubtest' . $this->date->getTimestamp() . '@example.com';
+
+        $this->userName = 'Configuration test super user name ' . ($buildId ?: $this->date->getTimestamp());
+        $this->userEmail = 'configurationtest' . ($buildId ?: $this->date->getTimestamp()) . '@example.com';
+        $this->subUserName = 'Configuration test sub user name ' . ($buildId ?: $this->date->getTimestamp());
+        $this->subUserEmail = 'configurationsubtest' . ($buildId ?: $this->date->getTimestamp()) . '@example.com';
     }
 
-    public function shouldPrepareForTest(\ApiTester $I) {
+    public function shouldPrepareForTest(\ApiTester $I)
+    {
         // Create a super and sub user
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendPOST('/api/v2/user', json_encode([
@@ -43,7 +48,8 @@ class ConfigurationManagementCest
         $this->userAuthCookie = $sessionCookie;
     }
 
-    public function shouldNotCreateConfigurationForGuest(\ApiTester $I) {
+    public function shouldNotCreateConfigurationForGuest(\ApiTester $I)
+    {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendPOST('/api/v2/configuration/' . $this->userId, json_encode([
             "name" => 'Test configuration',
@@ -59,7 +65,8 @@ class ConfigurationManagementCest
         ]);
     }
 
-    public function shouldCreateConfigurationForUser(\ApiTester $I) {
+    public function shouldCreateConfigurationForUser(\ApiTester $I)
+    {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendPOST('/api/v2/configuration/' . $this->userId, json_encode([
@@ -90,7 +97,8 @@ class ConfigurationManagementCest
         $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
     }
 
-    public function shouldUpdateConfigurationForUser(\ApiTester $I) {
+    public function shouldUpdateConfigurationForUser(\ApiTester $I)
+    {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendPUT('/api/v2/configuration/' . $this->userId . '/' . $this->publishedConfigurationId, json_encode([
@@ -107,7 +115,8 @@ class ConfigurationManagementCest
         $I->assertEquals($this->publishedConfigurationId, $response['data']['key']);
     }
 
-    public function shouldGetNoKeyValueItemsExceptConfigurations(\ApiTester $I) {
+    public function shouldGetNoKeyValueItemsExceptConfigurations(\ApiTester $I)
+    {
         // Create non-configuration key-value item
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendPOST('/api/v2/keyvalue/' . $this->userId . '/somekey', json_encode([
@@ -125,7 +134,8 @@ class ConfigurationManagementCest
     }
 
 
-    public function shouldGetPublishedConfigurationsForGuest(\ApiTester $I) {
+    public function shouldGetPublishedConfigurationsForGuest(\ApiTester $I)
+    {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendGET('/api/v2/configuration/' . $this->userId);
 
@@ -136,7 +146,8 @@ class ConfigurationManagementCest
         $I->assertEquals(1, sizeof($response['data']));
     }
 
-    public function shouldGetAllConfigurationsForUser(\ApiTester $I) {
+    public function shouldGetAllConfigurationsForUser(\ApiTester $I)
+    {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendGET('/api/v2/configuration/' . $this->userId);
@@ -148,7 +159,8 @@ class ConfigurationManagementCest
         $I->assertEquals(2, sizeof($response['data']));
     }
 
-    public function shouldGetSpecificPublishedConfigurationForGuest(\ApiTester $I) {
+    public function shouldGetSpecificPublishedConfigurationForGuest(\ApiTester $I)
+    {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendGET('/api/v2/configuration/' . $this->userId . '/' . $this->publishedConfigurationId);
 
@@ -159,7 +171,8 @@ class ConfigurationManagementCest
         $I->assertEquals(1, $response['data']['id']);
     }
 
-    public function shouldNotGetSpecificPublishedConfigurationForGuest(\ApiTester $I) {
+    public function shouldNotGetSpecificPublishedConfigurationForGuest(\ApiTester $I)
+    {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendGET('/api/v2/configuration/' . $this->userId . '/' . $this->nonPublishedConfigurationId);
         $I->seeResponseCodeIs(\Codeception\Util\HttpCode::FORBIDDEN);
@@ -167,7 +180,8 @@ class ConfigurationManagementCest
         $I->seeResponseContainsJson(['success' => false]);
     }
 
-    public function shouldGetSpecificNonPublishedConfigurationForUser(\ApiTester $I) {
+    public function shouldGetSpecificNonPublishedConfigurationForUser(\ApiTester $I)
+    {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendGET('/api/v2/configuration/' . $this->userId . '/' . $this->nonPublishedConfigurationId);
@@ -179,7 +193,8 @@ class ConfigurationManagementCest
         $I->assertEquals(3, sizeof($response['data']));
     }
 
-    public function shouldGetSpecificConfigurationAsJSONFile(\ApiTester $I) {
+    public function shouldGetSpecificConfigurationAsJSONFile(\ApiTester $I)
+    {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendGET('/api/v2/configuration/' . $this->userId . '/' . $this->publishedConfigurationId . '.json');
         $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
@@ -187,7 +202,8 @@ class ConfigurationManagementCest
         $I->seeResponseContainsJson(['a' => 1, 'b' => 2]);
     }
 
-    public function shouldNotGetNotPublishedConfigurationOnlyForGuest(\ApiTester $I) {
+    public function shouldNotGetNotPublishedConfigurationOnlyForGuest(\ApiTester $I)
+    {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendGET('/api/v2/configuration/' . $this->userId . '/' . $this->nonPublishedConfigurationId);
         $I->seeResponseCodeIs(\Codeception\Util\HttpCode::FORBIDDEN);
@@ -195,7 +211,8 @@ class ConfigurationManagementCest
         $I->seeResponseContainsJson(['success' => false]);
     }
 
-    public function shouldGetNotPublishedConfigurationOnlyForOwner(\ApiTester $I) {
+    public function shouldGetNotPublishedConfigurationOnlyForOwner(\ApiTester $I)
+    {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendGET('/api/v2/configuration/' . $this->userId . '/' . $this->nonPublishedConfigurationId);
@@ -204,7 +221,8 @@ class ConfigurationManagementCest
         $I->seeResponseContainsJson(['success' => true]);
     }
 
-    public function shouldDeleteSpecificConfiguration(\ApiTester $I) {
+    public function shouldDeleteSpecificConfiguration(\ApiTester $I)
+    {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendDELETE('/api/v2/configuration/' . $this->userId . '/' . $this->publishedConfigurationId);
@@ -213,7 +231,8 @@ class ConfigurationManagementCest
         $I->seeResponseContainsJson(['success' => true]);
     }
 
-    public function shouldNotGetNonExistingConfiguration(\ApiTester $I) {
+    public function shouldNotGetNonExistingConfiguration(\ApiTester $I)
+    {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendGET('/api/v2/configuration/' . $this->userId . '/' . $this->publishedConfigurationId . 'abc123');
         $I->seeResponseCodeIs(\Codeception\Util\HttpCode::NOT_FOUND);
