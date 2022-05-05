@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED] - 2022-5-5
+### Fixed
+- All cache tags are now md5 encoded because they can contain illegal characters (tags are formed from relation names).
+
 ## [2022.4.1] - 2022-7-4
 ### Fixed
 - Inhertance of privileges in key Auth API's didn't work. This is a regression bug from 2022.3.2.
