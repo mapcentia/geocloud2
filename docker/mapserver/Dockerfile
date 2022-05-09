@@ -12,7 +12,7 @@ RUN sed -i "s/post_max_size = 8M/post_max_size = 1000M/g" /etc/php/8.0/fpm/php.i
 
 
 # Install MapServer 7.6 from source
-RUN git clone https://github.com/mapserver/mapserver.git --branch branch-7-6 &&\
+RUN git clone https://github.com/mapserver/mapserver.git --branch main &&\
     cd mapserver &&\
     mkdir build &&\
     cd build &&\
