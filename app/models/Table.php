@@ -1265,7 +1265,7 @@ class Table extends Model
             $table = "_" . $table;
         }
         $sql = "BEGIN;";
-        $sql .= "CREATE TABLE {$this->postgisschema}.{$table} (gid SERIAL PRIMARY KEY,id INT) WITH OIDS;";
+        $sql .= "CREATE TABLE {$this->postgisschema}.{$table} (gid SERIAL PRIMARY KEY,id INT);";
         $sql .= "SELECT AddGeometryColumn('" . $this->postgisschema . "','{$table}','the_geom',{$srid},'{$type}',2);"; // Must use schema prefix cos search path include public
         $sql .= "COMMIT;";
         $this->execQuery($sql, "PDO", "transaction");
