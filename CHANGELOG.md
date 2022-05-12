@@ -4,10 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED] - 2022-5-5
+## [2022.5.0] - 2022-12-5
 ### Fixed
 - All cache tags are now md5 encoded because they can contain illegal characters (tags are formed from relation names).
-- Create blank table function used WITH OIDS, which doesn't work in PostgreSQL > 14. It's removed from the CREATE statemant.
+- Create blank table function used 'WITH OIDS', which doesn't work in PostgreSQL > 14. It's removed from the CREATE statemant.
 
 ## [2022.4.1] - 2022-7-4
 ### Fixed
