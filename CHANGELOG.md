@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED] - 2022-12-5
+### Fixed
+- In WFS-t 1.0.0 it's now possible to provide primary key as ordinary element, because 1.0.0 doesn't support `idgen`.  
+
 ## [2022.5.0] - 2022-12-5
 ### Fixed
 - All cache tags are now md5 encoded because they can contain illegal characters (tags are formed from relation names).
