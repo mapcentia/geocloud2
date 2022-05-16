@@ -249,7 +249,7 @@ function getCmdPaging(): void
         }
 
         if (!$pass) {
-            if ($count > 2) {
+            if ($count > 10) {
                 print "\nError: Too many recursive tries to fetch cell #{$cellNumber}";
                 cleanUp();
                 exit(1);
@@ -566,10 +566,9 @@ function getCmdPaging(): void
         exit(1);
     }
 
-    rsort($numberOfFeatures);
-    print "\nInfo: Highest number of features in cell: " . $numberOfFeatures[0];
-    $report[MAXCELLCOUNT] = $numberOfFeatures[0];
-
+    arsort($numberOfFeatures);
+    print "\nInfo: Highest number of features in cell: " . array_values($numberOfFeatures)[0] . (" (#" . ((int)array_keys($numberOfFeatures)[0] + 1)) . ")";
+    $report[MAXCELLCOUNT] = array_values($numberOfFeatures)[0];
 }
 
 function getCmdFile(): void
