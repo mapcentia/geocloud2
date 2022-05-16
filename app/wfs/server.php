@@ -1581,8 +1581,9 @@ function doParse(array $arr)
                         foreach ($feature as $field => $value) {
                             // If primary field is provided we skip it
                             // Or else we get an duplicate key error
-                            // when using GenerateNew key generation
-                            if ($field == $primeryKey["attname"]) {
+                            // when using GenerateNew key generation.
+                            // But not for 1.0.0 which doesn't support idgen
+                            if ($field == $primeryKey["attname"] && $version != "1.0.0") {
                                 continue;
                             }
                             // In case of UseExisting key generation
