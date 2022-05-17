@@ -27,7 +27,7 @@ INFO:   GC2 system already initiated.
       echo $TIMEZONE >/etc/timezone
 
       # PGSQL
-      echo "timezone = '$TIMEZONE'" >>/etc/postgresql/11/main/postgresql.conf
+      echo "timezone = '$TIMEZONE'" >>/etc/postgresql/13/main/postgresql.conf
     fi
 
     if [ -n "$GC2_USER" ]; then
