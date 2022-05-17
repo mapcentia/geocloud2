@@ -12,13 +12,13 @@ use app\conf\Connection;
 use app\inc\Cache;
 use app\inc\Controller;
 use app\inc\Input;
-use app\inc\Session;
-use app\inc\TableWalker;
-use sad_spirit\pg_builder\StatementFactory;
+use app\inc\TableWalkerRelation;
+use app\inc\TableWalkerRule;
 use app\models\Setting;
 use app\models\Stream;
-use Exception;
+use sad_spirit\pg_builder\StatementFactory;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Exception;
 
 use app\inc\Util;
 
@@ -73,10 +73,6 @@ class Sql extends Controller
      */
     private $streamFlag;
 
-    /**
-     * @var string
-     */
-    private $db;
 
     function __construct()
     {
@@ -92,19 +88,13 @@ class Sql extends Controller
         // Get the URI params from request
         // /{user}
         $r = func_get_arg(0);
-
-        $db = $r["user"];
-        $dbSplit = explode("@", $db);
-
+        $dbSplit = explode("@", $r["user"]);
         if (sizeof($dbSplit) == 2) {
             $this->subUser = $dbSplit[0];
-            $this->db = $dbSplit[1];
         } elseif (!empty($_SESSION["subuser"])) {
             $this->subUser = $_SESSION["screen_name"];
-            $this->db = Session::getDatabase();
         } else {
             $this->subUser = null;
-            $this->db = $db;
         }
 
         // Check if body is JSON
@@ -190,17 +180,13 @@ class Sql extends Controller
 
         // Use bulk if content type is text/plain
         if (Input::getContentType() == Input::TEXT_PLAIN) {
-            $db = $r["user"];
-            $dbSplit = explode("@", $db);
+            $dbSplit = explode("@", $r["user"]);
             if (sizeof($dbSplit) == 2) {
                 $this->subUser = $dbSplit[0];
-                $this->db = $dbSplit[1];
             } elseif (!empty($_SESSION["subuser"])) {
                 $this->subUser = $_SESSION["screen_name"];
-                $this->db = Session::getDatabase();
             } else {
                 $this->subUser = null;
-                $this->db = $db;
             }
 
             // Set API key from headers
@@ -222,7 +208,6 @@ class Sql extends Controller
             $this->api = new \app\models\Sql();
             $this->api->connect();
             $this->apiKey = $res['data']->api_key;
-
 
             if (empty(Input::getBody())) {
                 return [
@@ -261,10 +246,11 @@ class Sql extends Controller
     private function transaction(string $sql, ?string $clientEncoding = null): string
     {
         $response = [];
-        $walker = new TableWalker();
+        $walkerRelation = new TableWalkerRelation();
+        $walkerRule = new TableWalkerRule();
         $factory = new StatementFactory();
         try {
-            $select = $factory->createFromString($sql);
+            $select = $factory->createFromString($this->q);
         } catch (Exception $e) {
             return serialize(
                 [
@@ -275,8 +261,8 @@ class Sql extends Controller
             );
         }
         $operation = self::getClassName(get_class($select));
-        $select->dispatch($walker);
-        $usedRelations = $walker->getRelations();
+        $select->dispatch($walkerRelation);
+        $usedRelations = $walkerRelation->getRelations();
 
         // Check auth on relations
         foreach ($usedRelations as $rel) {
@@ -285,11 +271,13 @@ class Sql extends Controller
                 return serialize($response);
             }
         }
+        $select->dispatch($walkerRule);
 
         if ($operation == "Delete" || $operation == "Update" || $operation == "Insert") {
+            $this->q = $factory->createFromAST($select)->getSql();
             $this->response = $this->api->transaction($this->q);
             $this->addAttr($response);
-        } elseif ($operation == "Select") {
+        } elseif ($operation == "Select" || $operation == "SetOpSelect") {
             if ($this->streamFlag) {
                 $stream = new Stream();
                 $res = $stream->runSql($this->q);
@@ -341,7 +329,7 @@ class Sql extends Controller
             }
         } else {
             $this->response['success'] = false;
-            $this->response['message'] = "Check your SQL. Could not recognise it as either SELECT, INSERT, UPDATE or DELETE";
+            $this->response['message'] = "Check your SQL. Could not recognise it as either SELECT, INSERT, UPDATE or DELETE ({$operation})";
             $this->response['code'] = 400;
         }
         return serialize($this->response);
