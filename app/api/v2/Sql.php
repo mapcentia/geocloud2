@@ -12,15 +12,13 @@ use app\conf\Connection;
 use app\inc\Cache;
 use app\inc\Controller;
 use app\inc\Input;
-use app\inc\Response;
 use app\inc\Session;
+use app\inc\TableWalker;
+use sad_spirit\pg_builder\StatementFactory;
 use app\models\Setting;
 use app\models\Stream;
 use Exception;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
-use PHPSQLParser;
-use RecursiveArrayIterator;
-use RecursiveIteratorIterator;
 
 use app\inc\Util;
 
@@ -59,11 +57,6 @@ class Sql extends Controller
      * @var \app\models\Sql
      */
     private $api;
-
-    /**
-     * @var array<string>
-     */
-    private $usedRelations;
 
     /**
      *
@@ -260,57 +253,6 @@ class Sql extends Controller
     }
 
     /**
-     * @param array<mixed> $array
-     * @param string $needle
-     * @return array<mixed>
-     */
-    private function recursiveFind(array $array, string $needle): array
-    {
-        $iterator = new RecursiveArrayIterator($array);
-        $recursive = new RecursiveIteratorIterator($iterator, RecursiveIteratorIterator::SELF_FIRST);
-        $aHitList = [];
-        foreach ($recursive as $key => $value) {
-            if ($key === $needle) {
-                array_push($aHitList, $value);
-            }
-        }
-        return $aHitList;
-    }
-
-    /**
-     * @param array<mixed>|null $fromArr
-     */
-    private function parseSelect(?array $fromArr = null): void
-    {
-        if (is_array($fromArr)) {
-            foreach ($fromArr as $table) {
-                if ($table["expr_type"] == "subquery") {
-
-                    // Recursive call
-                    $this->parseSelect($table["sub_tree"]["FROM"]);
-                }
-                $table["no_quotes"] = str_replace('"', '', $table["no_quotes"]);
-                if (
-//                    explode(".", $table["no_quotes"])[0] == "settings" ||
-                    explode(".", $table["no_quotes"])[0] == "information_schema" ||
-                    explode(".", $table["no_quotes"])[0] == "sqlapi" ||
-                    explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
-                    $table["no_quotes"] == "geometry_columns"
-                ) {
-                    $this->response['success'] = false;
-                    $this->response['message'] = "Can't complete the query";
-                    $this->response['code'] = 403;
-                    die(Response::toJson($this->response));
-                }
-                if ($table["no_quotes"]) {
-                    $this->usedRelations[] = $table["no_quotes"];
-                }
-                $this->usedRelations = array_unique($this->usedRelations);
-            }
-        }
-    }
-
-    /**
      * @param string $sql
      * @param string|null $clientEncoding
      * @return string
@@ -319,132 +261,45 @@ class Sql extends Controller
     private function transaction(string $sql, ?string $clientEncoding = null): string
     {
         $response = [];
-        require_once dirname(__FILE__) . '/../../libs/PHP-SQL-Parser/src/PHPSQLParser.php';
-        $parser = new PHPSQLParser($sql, false);
-        $parsedSQL = $parser->parsed ?: []; // Make its an array
-        $this->usedRelations = array();
-
-        // First recursive go through the SQL to find FROM in select, update and delete
-        foreach ($this->recursiveFind($parsedSQL, "FROM") as $x) {
-            $this->parseSelect($x);
+        $walker = new TableWalker();
+        $factory = new StatementFactory();
+        try {
+            $select = $factory->createFromString($sql);
+        } catch (Exception $e) {
+            return serialize(
+                [
+                    "success" => false,
+                    "message" => $e->getMessage(),
+                    "code" => 400,
+                ]
+            );
         }
+        $operation = self::getClassName(get_class($select));
+        $select->dispatch($walker);
+        $usedRelations = $walker->getRelations();
 
         // Check auth on relations
-        foreach ($this->usedRelations as $rel) {
-            $response = $this->ApiKeyAuthLayer($rel, $this->subUser, false, Input::get('key'), $this->usedRelations);
+        foreach ($usedRelations as $rel) {
+            $response = $this->ApiKeyAuthLayer($rel, $this->subUser, false, Input::get('key'), $usedRelations);
             if (!$response["success"]) {
                 return serialize($response);
             }
         }
 
-        // Check SQL UPDATE
-        if (isset($parsedSQL['UPDATE'])) {
-            foreach ($parsedSQL['UPDATE'] as $table) {
-                if (
-                    explode(".", $table["no_quotes"])[0] == "settings" ||
-                    explode(".", $table["no_quotes"])[0] == "information_schema" ||
-                    explode(".", $table["no_quotes"])[0] == "sqlapi" ||
-                    explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
-                    $table["no_quotes"] == "geometry_columns"
-                ) {
-                    $this->response['success'] = false;
-                    $this->response['message'] = "Can't complete the query";
-                    $this->response['code'] = 406;
-                    return serialize($this->response);
-                }
-                array_push($this->usedRelations, $table["no_quotes"]);
-                $response = $this->ApiKeyAuthLayer($table["no_quotes"], $this->subUser, true, Input::get('key'), $this->usedRelations);
-                if (!$response["success"]) {
-                    return serialize($response);
-                }
-            }
-
-            // Check SQL DELETE
-        } elseif (isset($parsedSQL['DELETE'])) {
-            foreach ($parsedSQL['FROM'] as $table) {
-                if (
-                    explode(".", $table["no_quotes"])[0] == "settings" ||
-                    explode(".", $table["no_quotes"])[0] == "information_schema" ||
-                    explode(".", $table["no_quotes"])[0] == "sqlapi" ||
-                    explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
-                    $table["no_quotes"] == "geometry_columns"
-                ) {
-                    $this->response['success'] = false;
-                    $this->response['message'] = "Can't complete the query";
-                    $this->response['code'] = 406;
-                    return serialize($this->response);
-                }
-                array_push($this->usedRelations, $table["no_quotes"]);
-                $response = $this->ApiKeyAuthLayer($table["no_quotes"], $this->subUser, true, Input::get('key'), $this->usedRelations);
-                if (!$response["success"]) {
-                    return serialize($response);
-                }
-            }
-
-            // Check SQL INSERT
-        } elseif (isset($parsedSQL['INSERT'])) {
-            foreach ($parsedSQL['INSERT'] as $table) {
-                if (
-//                    explode(".", $table["no_quotes"])[0] == "settings" ||
-                    explode(".", $table["no_quotes"])[0] == "information_schema" ||
-                    explode(".", $table["no_quotes"])[0] == "sqlapi" ||
-                    explode(".", $table["no_quotes"])[1] == "geometry_columns" ||
-                    $table["no_quotes"] == "geometry_columns"
-                ) {
-                    $this->response['success'] = false;
-                    $this->response['message'] = "Can't complete the query";
-                    $this->response['code'] = 406;
-                    return serialize($this->response);
-                }
-                array_push($this->usedRelations, $table["no_quotes"]);
-                $response = $this->ApiKeyAuthLayer($table["no_quotes"], $this->subUser, true, Input::get('key'), $this->usedRelations);
-                if (!$response["success"]) {
-                    return serialize($response);
-                }
-            }
-        }
-
-        if (!empty($parsedSQL['DROP'])) {
-            $this->response['success'] = false;
-            $this->response['code'] = 403;
-            $this->response['message'] = "DROP is not allowed through the API";
-        } elseif (!empty($parsedSQL['ALTER'])) {
-            $this->response['success'] = false;
-            $this->response['code'] = 403;
-            $this->response['message'] = "ALTER is not allowed through the API";
-        } elseif (!empty($parsedSQL['CREATE'])) {
-            if (!empty($parsedSQL['CREATE']) && (!empty($parsedSQL['VIEW']) || !empty($parsedSQL['TABLE']))) {
-                if ($this->apiKey == Input::get('key') && $this->apiKey != false) {
-                    $this->response = $this->api->transaction($this->q);
-                    $this->addAttr($response);
-                } else {
-                    $this->response['success'] = false;
-                    $this->response['message'] = "Not the right key!";
-                    $this->response['code'] = 403;
-                }
-            } else {
-                $this->response['success'] = false;
-                $this->response['message'] = "Only CREATE VIEW is allowed through the API";
-                $this->response['code'] = 403;
-            }
-        } elseif (!empty($parsedSQL['UPDATE']) || !empty($parsedSQL['INSERT']) || !empty($parsedSQL['DELETE'])) {
+        if ($operation == "Delete" || $operation == "Update" || $operation == "Insert") {
             $this->response = $this->api->transaction($this->q);
             $this->addAttr($response);
-        } elseif (!empty($parsedSQL['SELECT']) || !empty($parsedSQL['UNION'])) {
+        } elseif ($operation == "Select") {
             if ($this->streamFlag) {
                 $stream = new Stream();
                 $res = $stream->runSql($this->q);
                 return ($res);
             }
-
             $lifetime = (Input::get('lifetime')) ?: 0;
-
             $key = md5(Connection::$param["postgisdb"] . "_" . $this->q . "_" . $lifetime);
-
             if ($lifetime > 0) {
                 $CachedString = Cache::getItem($key);
             }
-
             if ($lifetime > 0 && !empty($CachedString) && $CachedString->isHit()) {
                 $this->data = $CachedString->get();
                 try {
@@ -479,7 +334,7 @@ class Sql extends Controller
                 if ($lifetime > 0 && !empty($CachedString)) {
                     $CachedString->set($this->data)->expiresAfter($lifetime ?: 1);// Because 0 secs means cache will life for ever, we set cache to one sec
                     $CachedString->addTags(["sql", Connection::$param["postgisdb"]]);
-                    Cache::save($CachedString); // Save the cache item just like you do with doctrine and entities
+                    Cache::save($CachedString);
                     $this->cacheInfo["hit"] = false;
                 }
                 ob_get_clean();
@@ -503,5 +358,15 @@ class Sql extends Controller
             }
         }
 
+    }
+
+    /**
+     * @param string $classname
+     * @return string
+     */
+    private static function getClassName(string $classname): string
+    {
+        if ($pos = strrpos($classname, '\\')) return substr($classname, $pos + 1);
+        return $pos;
     }
 }
