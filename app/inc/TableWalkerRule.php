@@ -9,6 +9,7 @@
 namespace app\inc;
 
 use app\models\Geofence;
+use Exception;
 use sad_spirit\pg_builder\Delete;
 use sad_spirit\pg_builder\Insert;
 use sad_spirit\pg_builder\Select;
@@ -20,11 +21,15 @@ class TableWalkerRule extends BlankWalker
 {
     private $rules;
 
+    /**
+     * @throws Exception
+     */
     public function walkSelectStatement(Select $statement)
     {
         foreach ($statement->from->getIterator() as $from) {
-            $relation = !empty($from->name->schema->value) ? $from->name->schema->value . "." . $from->name->relation->value :  $from->name->relation->value;
-            $userFilter = new UserFilter("silke", "*", "*", "*", "*", $relation);
+            $schema = $from->name->schema->value ?? "public";
+            $relation = !empty($from->name->schema->value) ? $from->name->schema->value . "." . $from->name->relation->value : $from->name->relation->value;
+            $userFilter = new UserFilter("silke", "sql", "get", "*", $schema, $relation);
             $geofence = new Geofence($userFilter);
             $response = $geofence->authorize($this->rules);
             if (!empty($response["filters"]["read"])) $statement->where->and($response["filters"]["read"]);

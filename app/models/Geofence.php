@@ -51,7 +51,7 @@ class Geofence extends Model
                 ($this->userFilter->userName == $rule["username"] || $rule["username"] == "*") &&
                 ($this->userFilter->layer == $rule["layer"] || $rule["layer"] == "*") &&
                 ($this->userFilter->service == $rule["service"] || $rule["service"] == "*") &&
-                ($this->userFilter->ipAddress == $rule["ipaddress"] || $rule["ipaddress"] == "*") &&
+                ($this->userFilter->ipAddress == $rule["iprange"] || $rule["iprange"] == "*") &&
                 ($this->userFilter->request == $rule["request"] || $rule["request"] == "*")
             ) {
                 if ($rule["access"] == self::LIMIT_ACCESS) {
@@ -69,19 +69,4 @@ class Geofence extends Model
         return $response;
     }
 
-    /**
-     * @return array
-     */
-    public function getRules(): array
-    {
-
-            $sql = "SELECT * FROM settings.geofence order by priority";
-            $res = $this->prepare($sql);
-            $res->execute();
-            $arr = [];
-            while ($row = $this->fetchRow($res)) {
-                $arr[] = $row;
-            }
-        return $arr;
-    }
 }

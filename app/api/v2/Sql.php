@@ -14,6 +14,7 @@ use app\inc\Controller;
 use app\inc\Input;
 use app\inc\TableWalkerRelation;
 use app\inc\TableWalkerRule;
+use app\models\Rules;
 use app\models\Setting;
 use app\models\Stream;
 use sad_spirit\pg_builder\StatementFactory;
@@ -271,10 +272,13 @@ class Sql extends Controller
                 return serialize($response);
             }
         }
+        // Get rules and set them
+        $rules = new Rules();
+        $walkerRule->setRules($rules->getRules());
         $select->dispatch($walkerRule);
+        $this->q = $factory->createFromAST($select)->getSql();
 
         if ($operation == "Delete" || $operation == "Update" || $operation == "Insert") {
-            $this->q = $factory->createFromAST($select)->getSql();
             $this->response = $this->api->transaction($this->q);
             $this->addAttr($response);
         } elseif ($operation == "Select" || $operation == "SetOpSelect") {
