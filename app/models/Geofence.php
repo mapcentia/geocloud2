@@ -10,8 +10,6 @@ namespace app\models;
 
 use app\inc\Model;
 use app\inc\UserFilter;
-use PDOException;
-use Generator;
 
 
 /**
