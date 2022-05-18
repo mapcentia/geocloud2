@@ -63,7 +63,8 @@ class PostGeofence implements PostInterface
         global $rowIdsChanged;
         $userFilter = new UserFilter($this->dbName, $this->gc2User, "*", "*", "*", "*", PreGeofence::$typeName);
         $geofence = new GeofenceModel($userFilter);
-        $rule = $geofence->authorize();
+        $rules = $geofence->getRules();
+        $rule = $geofence->authorize($rules);
 
         if ($rule["access"] == GeofenceModel::DENY_ACCESS) {
             $response["success"] = false;
