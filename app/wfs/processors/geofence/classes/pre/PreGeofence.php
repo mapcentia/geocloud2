@@ -10,6 +10,7 @@ namespace app\wfs\processors\geofence\classes\pre;
 
 use app\inc\Input;
 use app\inc\Model;
+use app\models\Rules;
 use app\wfs\processors\PreInterface;
 use app\models\Geofence as GeofenceModel;
 use app\inc\UserFilter;
@@ -105,12 +106,17 @@ class PreGeofence implements PreInterface
      */
     public function processDelete(array $arr, string $typeName): array
     {
+        global $postgisschema;
         self::$typeName = $typeName;
         self::$isDelete = true;
 
-        $userFilter = new UserFilter($this->dbName, $this->gc2User, "*", "*", "*", "*", $typeName);
+        $userFilter = new UserFilter($this->gc2User, "wfs-t", "delete", "*", $postgisschema, $typeName);
+//        print_r($userFilter);
         $geofence = new GeofenceModel($userFilter);
-        $rule = $geofence->authorize();
+        // Get rules and set them
+        $rules = new Rules();
+        $rule = $geofence->authorize($rules->getRules());
+//        die(print_r($rule, true));
 
         if ($rule["access"] == GeofenceModel::DENY_ACCESS) {
             $response["success"] = false;
@@ -120,15 +126,16 @@ class PreGeofence implements PreInterface
             $filters = $this->addDiminsionOnArray($arr["Filter"]["FeatureId"]);
             foreach ($filters as $filter) {
                 $fid = explode(".", $filter["fid"])[1];
-                $sql = "SELECT objekt_id FROM fkg.{$typeName} " .
-                    "WHERE fkg.{$typeName}.objekt_id='{$fid}'" .
-                    " AND st_intersects(fkg.{$typeName}.geometri, ST_transform(({$rule["filters"]["write_spatial"]}), 25832))";
+                $sql = "SELECT gid FROM \"{$postgisschema}\".\"{$typeName}\" " .
+                    "WHERE {$postgisschema}.{$typeName}.gid='{$fid}'" .
+                    " AND {$rule["filters"]["write"]}";
                 try {
                     $res = $this->db->prepare($sql);
                     $res->execute();
                     $row = $this->db->fetchRow($res);
                     if (!$row) {
-                        $response["message"] = "Et eller flere objekter ligger uden for kommunegrænsen (Operation: DELETE)";
+                        $response["messaged"] = "Et eller flere objekter ligger uden for kommunegrænsen (Operation: DELETE)";
+                        $response["message"] = print_r($arr, true);
                         $response["success"] = false;
                         return $response;
                     }

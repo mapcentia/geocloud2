@@ -18,11 +18,6 @@ class UserFilter
     /**
      * @var string
      */
-    public $db;
-
-    /**
-     * @var string
-     */
     public $userName;
 
     /**

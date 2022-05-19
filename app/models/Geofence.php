@@ -50,6 +50,7 @@ class Geofence extends Model
                 ($this->userFilter->layer == $rule["layer"] || $rule["layer"] == "*") &&
                 ($this->userFilter->service == $rule["service"] || $rule["service"] == "*") &&
                 ($this->userFilter->ipAddress == $rule["iprange"] || $rule["iprange"] == "*") &&
+                ($this->userFilter->schema == $rule["schema"] || $rule["schema"] == "*") &&
                 ($this->userFilter->request == $rule["request"] || $rule["request"] == "*")
             ) {
                 if ($rule["access"] == self::LIMIT_ACCESS) {

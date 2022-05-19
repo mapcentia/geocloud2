@@ -12,6 +12,7 @@ use app\inc\Input;
 use app\inc\Model;
 use app\inc\UserFilter;
 use app\models\Geofence as GeofenceModel;
+use app\models\Rules;
 use app\wfs\processors\PostInterface;
 use app\wfs\processors\geofence\classes\pre\PreGeofence;
 use PDOException;
@@ -63,8 +64,9 @@ class PostGeofence implements PostInterface
         global $rowIdsChanged;
         $userFilter = new UserFilter($this->dbName, $this->gc2User, "*", "*", "*", "*", PreGeofence::$typeName);
         $geofence = new GeofenceModel($userFilter);
-        $rules = $geofence->getRules();
-        $rule = $geofence->authorize($rules);
+        // Get rules and set them
+        $rules = new Rules();
+        $rule = $geofence->authorize($rules->getRules());
 
         if ($rule["access"] == GeofenceModel::DENY_ACCESS) {
             $response["success"] = false;
