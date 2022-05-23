@@ -414,6 +414,7 @@ class Mapfile extends Controller
                     $type = $layerArr['data'][0]['geotype'];
                 } else {
                     switch ($row['type']) {
+                        case "GEOMETRY":
                         case "POINT":
                         case "MULTIPOINT":
                             $type = "POINT";
