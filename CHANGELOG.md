@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNRELEASED] - 2022-12-5
+### Added
+- Memcached can now be used for MapCache backend.
+
 ### Fixed
 - In WFS-t 1.0.0 it's now possible to provide primary key as ordinary element, because 1.0.0 doesn't support `idgen`.  
 

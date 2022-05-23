@@ -10,7 +10,6 @@ RUN sed -i "s/session.gc_maxlifetime = 1440/session.gc_maxlifetime = 86400/g" /e
 RUN sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 1000M/g" /etc/php/7.3/fpm/php.ini
 RUN sed -i "s/post_max_size = 8M/post_max_size = 1000M/g" /etc/php/7.3/fpm/php.ini
 
-
 # Install MapServer 7.6 from source
 RUN git clone https://github.com/mapserver/mapserver.git --branch branch-7-6 &&\
     cd mapserver &&\
@@ -37,12 +36,14 @@ RUN git clone https://github.com/mapserver/mapserver.git --branch branch-7-6 &&\
 RUN echo "extension=php_mapscript.so" >> /etc/php/7.3/fpm/php.ini
 
 # Instal MapCache from source
+RUN apt-get -y install libapr-memcache-dev
+
 RUN cd ~ && \
     git clone http://github.com/mapserver/mapcache.git --branch branch-1-12 && \
     cd mapcache &&\
     mkdir build &&\
     cd build &&\
-    cmake .. &&\
+    cmake .. -DWITH_MEMCACHE=1 &&\
     make &&\
     make install &&\
     ldconfig
