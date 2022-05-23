@@ -4,12 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED] - 2022-12-5
+## [2022.5.1] - 2022-23-5
 ### Added
-- Memcached can now be used for MapCache backend.
+- Memcached can now be used for MapCache backend. For now the host and port is hardcoded to `redis` and `11211`, so only a local dockerized Memcached server can be used. `docker/docker-compose.yml` is updated with Memcached.
 
 ### Fixed
-- In WFS-t 1.0.0 it's now possible to provide primary key as ordinary element, because 1.0.0 doesn't support `idgen`.  
+- In WFS-t 1.0.0 it's now possible to provide primary key as an ordinary element, because 1.0.0 doesn't support `idgen`.  
+- In MapCache files default geometry type is set to point, because both line and polygon can be drawn as points. The default will be used when a layer has GEOMETRY as type.
 
 ## [2022.5.0] - 2022-12-5
 ### Fixed
