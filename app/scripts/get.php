@@ -166,9 +166,18 @@ function getCmd(): void
     $fp = fopen($dir . "/" . $tempFile, 'w+');
     curl_setopt($ch, CURLOPT_FILE, $fp);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_exec($ch);
+    if (curl_errno($ch)) {
+        $error_msg = curl_error($ch);
+    }
     curl_exec($ch);
     curl_close($ch);
     fclose($fp);
+    if (isset($error_msg)) {
+        print "\n" . $error_msg;
+        cleanUp();
+    }
 
     print "\nInfo: Staring inserting in temp table using ogr2ogr...";
 
@@ -669,9 +678,17 @@ function getCmdZip(): void
     $fp = fopen($dir . "/" . $tempFile . "." . $extCheck2[0], 'w+');
     curl_setopt($ch, CURLOPT_FILE, $fp);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_exec($ch);
+    if (curl_errno($ch)) {
+        $error_msg = curl_error($ch);
+    }
     curl_close($ch);
     fclose($fp);
+    if (isset($error_msg)) {
+        print "\n" . $error_msg;
+        cleanUp();
+    }
     $ext = array("shp", "tab", "geojson", "gml", "kml", "mif", "gdb", "csv");
 
     // ZIP start
