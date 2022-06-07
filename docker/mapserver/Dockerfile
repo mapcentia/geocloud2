@@ -49,11 +49,11 @@ RUN cd ~ && \
     ldconfig
 
 # Install QGIS-server
-RUN add-apt-repository "deb https://qgis.org/debian-ltr `lsb_release -c -s` main" &&\
-    wget -qO - https://qgis.org/downloads/qgis-2021.gpg.key | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import &&\
+RUN wget -qO - https://qgis.org/downloads/qgis-2021.gpg.key | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import &&\
     chmod a+r /etc/apt/trusted.gpg.d/qgis-archive.gpg &&\
-    apt-get update --allow-releaseinfo-change &&\
-    apt-get -y install qgis-server=1:3.16.16+15buster
+    add-apt-repository "deb https://qgis.org/debian $(lsb_release -c -s) main" &&\
+    apt-get update --allow-releaseinfo-change && \
+    apt-get -y install qgis-server
 
 # Symlink font for QGIS Server
 RUN ln -s /usr/share/fonts directory /usr/lib/x86_64-linux-gnu
@@ -70,7 +70,7 @@ RUN chmod +x /watch_mapcache_changes.sh
 # Add the reload.js
 COPY reload.js /reload.js
 
-RUN curl -sL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh &&\
+RUN curl -sL https://deb.nodesource.com/setup_14.x -o nodesource_setup.sh &&\
     bash nodesource_setup.sh &&\
     apt-get install -y nodejs
 
