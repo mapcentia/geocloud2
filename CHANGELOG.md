@@ -10,7 +10,7 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ### Fixed
 - In WFS-t 1.0.0 it's now possible to provide primary key as an ordinary element, because 1.0.0 doesn't support `idgen`.  
-- In MapCache files default geometry type is set to point, because both line and polygon can be drawn as points. The default will be used when a layer has GEOMETRY as type.
+- In MapFiles files default geometry type is set to point, because both line and polygon can be drawn as points. The default will be used when a layer has GEOMETRY as type.
 
 ## [2022.5.0] - 2022-12-5
 ### Fixed
@@ -35,7 +35,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ### Fixed
 - When creating a sub-user the group was not set in the Setting model. This was only done when updating the sub-user.
 - Tags can now be appended again.
-- Tags presentation in footer is now nicer and no tags is writen out instead of showing `null` or `[]`.
+- Tags presentation in footer is now nicer and `no tags` is writen out instead of showing `null` or `[]`.
 
 ## [2022.3.1] - 2022-15-3
 ### Added
