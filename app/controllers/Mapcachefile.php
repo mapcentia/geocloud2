@@ -97,6 +97,13 @@ class Mapcachefile extends \app\inc\Controller
                 <creation_retry>3</creation_retry>
             </cache>
 
+            <cache name="memcache" type="memcache">
+                <server>
+                    <host>memcached</host>
+                    <port>11211</port>
+                </server>
+            </cache>
+
             <format name="jpeg_low" type="JPEG">
                 <quality>60</quality>
                 <photometric>ycbcr</photometric>

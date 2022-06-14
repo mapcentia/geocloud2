@@ -54,6 +54,13 @@ services:
       - internal
     ports:
       - "6379:6379"
+  memcached:
+    image: memcached
+    networks:
+      - default
+      - internal
+    ports:
+      - "11211:11211"
   postgis:
     build: ./postgis
     image: mapcentia/postgis
