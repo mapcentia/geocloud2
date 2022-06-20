@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2022.6.0] - 2022-20-6
+### Added
+- `Model::doesColumnExist` now uses `pg_attribute` instead of `information_schema` which speeds up the query many times.
+
 ## [2022.5.1] - 2022-23-5
 ### Added
 - Memcached can now be used for MapCache backend. For now the host and port is hardcoded to `redis` and `11211`, so only a local dockerized Memcached server can be used. `docker/docker-compose.yml` is updated with Memcached.
@@ -335,7 +339,7 @@ Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
 ### Changed
 - CalVer is now used with month identifier like this: YYYY.MM.Minor.Modifier.
 - The default primary key can now be set with `defaultPrimaryKey` in `\app\conf\App.php`. Before this was hardcoded to `gid` which still is the default if `defaultPrimaryKey` is empty.
-- Memcached added as an option for session handling and AppCache. The setup in `\app\conf\App.php` is changed too, so session handling and AppCache be set up independently:
+- Memcached added as an option for session handling and AppCache. The setup in `\app\conf\App.php` is changed too, so session handling and AppCache is set up independently:
 ```php
 [        
     "sessionHandler" => [
