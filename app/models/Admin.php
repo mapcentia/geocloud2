@@ -21,7 +21,7 @@ class Admin extends Model
     }
 
 
-    private function check() : bool
+    private function check(): bool
     {
         $checkPostGIS = $this->dbc->isPostGISInstalled();
 
@@ -46,7 +46,7 @@ class Admin extends Model
 
         $checkMy = $this->dbc->isSchemaInstalled();
         if ($checkMy['success']) {
-            $response['success'] = false;
+            $response['success'] = true;
             $response['message'] = "Schema is installed";
             $response['code'] = 401;
             return $response;
