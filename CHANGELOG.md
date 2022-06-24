@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED] - 2022-
+### Added
+- New `Template` property in Structure tab. Input is a mustache template, which will replace the actual value. All values of the feature can be used in template. Ideal for e.g. custom links/images with alt text. Will overrule `Content` and `Link` properties. 
+
+### Fixed
+- Creating and updating of a layers properties (also in structure tab) now uses prepared statements, so specific characters will not trip updates/inserts in database.
+
 ## [2022.6.0] - 2022-20-6
 ### Added
 - `Model::doesColumnExist` now uses `pg_attribute` instead of `information_schema` which speeds up the query many times.
