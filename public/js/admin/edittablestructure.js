@@ -218,7 +218,7 @@ tableStructure.init = function (record, db) {
         typeAhead: false,
         editable: false,
         triggerAction: 'all',
-        lazyRender:true
+        lazyRender: true
     });
 
     tableStructure.grid = new Ext.grid.EditorGridPanel({
@@ -387,9 +387,17 @@ tableStructure.init = function (record, db) {
                     dataIndex: "template",
                     sortable: true,
                     //width: 80,
-                    editor: new Ext.form.TextField({
+                    editor: new Ext.form.TextArea({
                         allowBlank: true
-                    })
+                    }),
+                    renderer: function (val) {
+                        // Encode htmlentities
+                        if (val) {
+                            return val.replace(/[\u00A0-\u9999<>\&]/gim, function (i) {
+                                return '&#' + i.charCodeAt(0) + ';';
+                            });
+                        }
+                    }
                 },
                 {
                     id: "properties",
