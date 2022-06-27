@@ -24,7 +24,7 @@ header('Content-Type: text/html; charset=utf-8');
   ~ @author     Martin Høgh <mh@mapcentia.com>
   ~ @copyright  2013-2022 MapCentia ApS
   ~ @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
-  ~ @version    UNRELEASED
+  ~ @version    2022.6.1
 
   -->
 <html lang="en">
