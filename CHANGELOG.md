@@ -9,7 +9,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - New `Template` property in Structure tab. Input is a mustache template, which will in Vidi replace the actual value. All values of the feature can be used in template. Ideal for e.g. custom links/images with alt text. Will overrule `Content` and `Link` properties. 
 
 ### Fixed
-- Doubled download i scheduler is fixed.
+- Doubled download in scheduler is fixed.
 
 ### Fixed
 - Creating and updating of a layers properties (also in structure tab) now uses prepared statements, so specific characters will not trip updates/inserts in database.
