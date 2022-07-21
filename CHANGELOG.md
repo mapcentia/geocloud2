@@ -12,6 +12,9 @@ and this project adheres to [CalVer](https://calver.org/).
 This is a label for feature <b>{{gid}}</b>
 ```
 
+### Fixed
+- Optimized `Database::listAllSchemas` method using pg_catalog instead of information_schema.
+
 ## [2022.6.1] - 2022-27-6
 ### Added
 - New `Template` property in Structure tab. Input is a mustache template, which will in Vidi replace the actual value. All values of the feature can be used in template. Ideal for e.g. custom links/images with alt text. Will overrule `Content` and `Link` properties. 
