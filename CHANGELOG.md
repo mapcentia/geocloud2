@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED]
+## [2022.8.0] - 2022-2-8
 ### Added
 - New meta settings for controlling zoom level visibility for vector layers in Vidi: `vector_min_zoom` and `vector_max_zoom`.
 - New meta setting for binding a tooltip to vector layers in Vidi: `tooltip_template`. This is a mustace/handlebars template where feature properties can be uses:
