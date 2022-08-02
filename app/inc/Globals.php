@@ -245,7 +245,7 @@ class Globals
                 [
                     "name" => "tooltip_template",
                     "type" => "textarea",
-                    "title" => "Label template",
+                    "title" => "Tooltip template",
                 ],
             ]
 
