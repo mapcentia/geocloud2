@@ -1,4 +1,10 @@
 <?php
+/**
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2022 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ *
+ */
 
 use app\inc\UserFilter;
 use app\models\Geofence;
@@ -7,7 +13,7 @@ use Codeception\Test\Unit;
 class GeofenceTest extends Unit
 {
     /**
-     * @var \UnitTester
+     * @var UnitTester
      */
     protected $tester;
 

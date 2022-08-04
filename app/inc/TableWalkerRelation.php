@@ -28,12 +28,12 @@ class TableWalkerRelation extends BlankWalker
 
     public function walkUpdateOrDeleteTarget(UpdateOrDeleteTarget $target): void
     {
-        $this->relations[] = (string)$target->relation->schema . "." . (string)$target->relation->relation;
+        $this->relations[] = $target->relation->schema . "." . $target->relation->relation;
     }
 
     public function walkInsertTarget(nodes\range\InsertTarget $target)
     {
-        $this->relations[] = (string)$target->relation->schema . "." . (string)$target->relation->relation;
+        $this->relations[] = $target->relation->schema . "." . $target->relation->relation;
     }
 
     /**
