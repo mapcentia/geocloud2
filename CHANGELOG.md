@@ -4,9 +4,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2022.8.0] - 2022-2-8
+### Added
+- New meta settings for controlling zoom level visibility for vector layers in Vidi: `vector_min_zoom` and `vector_max_zoom`.
+- New meta setting for binding a tooltip to vector layers in Vidi: `tooltip_template`. This is a mustace/handlebars template where feature properties can be uses:
+```handlebars
+This is a label for feature <b>{{gid}}</b>
+```
+
+### Fixed
+- Optimized `Database::listAllSchemas` method using pg_catalog instead of information_schema.
+
+## [2022.6.1] - 2022-27-6
+### Added
+- New `Template` property in Structure tab. Input is a mustache template, which will in Vidi replace the actual value. All values of the feature can be used in template. Ideal for e.g. custom links/images with alt text. Will overrule `Content` and `Link` properties. 
+
+### Fixed
+- Doubled download in scheduler is fixed.
+
+### Fixed
+- Creating and updating of a layers properties (also in structure tab) now uses prepared statements, so specific characters will not trip updates/inserts in database.
+
+## [2022.6.0] - 2022-20-6
+### Added
+- `Model::doesColumnExist` now uses `pg_attribute` instead of `information_schema` which speeds up the query many times.
+
 ## [2022.5.1] - 2022-23-5
 ### Added
-- Memcached can now be used for MapCache backend. For now the host and port is hardcoded to `redis` and `11211`, so only a local dockerized Memcached server can be used. `docker/docker-compose.yml` is updated with Memcached.
+- Memcached can now be used for MapCache backend. For now the host and port is hardcoded to `memcached` and `11211`, so only a local dockerized Memcached server can be used. `docker/docker-compose.yml` is updated with Memcached.
 
 ### Fixed
 - In WFS-t 1.0.0 it's now possible to provide primary key as an ordinary element, because 1.0.0 doesn't support `idgen`.  
@@ -335,7 +360,7 @@ Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
 ### Changed
 - CalVer is now used with month identifier like this: YYYY.MM.Minor.Modifier.
 - The default primary key can now be set with `defaultPrimaryKey` in `\app\conf\App.php`. Before this was hardcoded to `gid` which still is the default if `defaultPrimaryKey` is empty.
-- Memcached added as an option for session handling and AppCache. The setup in `\app\conf\App.php` is changed too, so session handling and AppCache be set up independently:
+- Memcached added as an option for session handling and AppCache. The setup in `\app\conf\App.php` is changed too, so session handling and AppCache is set up independently:
 ```php
 [        
     "sessionHandler" => [

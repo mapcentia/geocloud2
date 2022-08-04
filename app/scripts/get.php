@@ -171,7 +171,6 @@ function getCmd(): void
     if (curl_errno($ch)) {
         $error_msg = curl_error($ch);
     }
-    curl_exec($ch);
     curl_close($ch);
     fclose($fp);
     if (isset($error_msg)) {
