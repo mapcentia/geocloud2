@@ -1578,19 +1578,19 @@ function doParse(array $arr)
                         $fields = array();
                         $values = array();
 
+                        // In case of UseExisting key generation
+                        // UseExisting is set implicit when gml:id attribut is provided in transaction
+                        if (!empty($gmlId)) {
+                            $fields[] = $primeryKey["attname"];
+                            $values[] = $gmlId;
+                        }
                         foreach ($feature as $field => $value) {
                             // If primary field is provided we skip it
-                            // Or else we get an duplicate key error
+                            // Or else we get a duplicate key error
                             // when using GenerateNew key generation.
                             // But not for 1.0.0 which doesn't support idgen
-                            if ($field == $primeryKey["attname"] && $version != "1.0.0") {
+                            if ($field == $primeryKey["attname"] && $version != "1.0.0" && !empty($gmlId)) {
                                 continue;
-                            }
-                            // In case of UseExisting key generation
-                            if (!empty($gmlId)) {
-                                $fields[] = $primeryKey["attname"];
-                                $values[] = $gmlId;
-                                unset($gmlId);
                             }
                             $fields[] = $field;
                             $role = $roleObj["data"][$user];
