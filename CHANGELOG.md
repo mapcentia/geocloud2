@@ -25,8 +25,6 @@ This is a label for feature <b>{{gid}}</b>
 
 ### Fixed
 - Doubled download in scheduler is fixed.
-
-### Fixed
 - Creating and updating of a layers properties (also in structure tab) now uses prepared statements, so specific characters will not trip updates/inserts in database.
 
 ## [2022.6.0] - 2022-20-6
