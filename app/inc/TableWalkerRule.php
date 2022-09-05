@@ -20,6 +20,18 @@ use sad_spirit\pg_builder\BlankWalker;
 class TableWalkerRule extends BlankWalker
 {
     private $rules;
+    private $userName;
+    private $service;
+    private $request;
+    private $ipAddress;
+
+    public function __construct($userName, $service, $request, $ipAddress)
+    {
+        $this->userName = $userName;
+        $this->service = $service;
+        $this->request = $request;
+        $this->ipAddress = $ipAddress;
+    }
 
     /**
      * @throws Exception
@@ -29,7 +41,7 @@ class TableWalkerRule extends BlankWalker
         foreach ($statement->from->getIterator() as $from) {
             $schema = $from->name->schema->value ?? "public";
             $relation = $from->name->relation->value;
-            $userFilter = new UserFilter("silke", "sql", "get", "*", $schema, $relation);
+            $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $schema, $relation);
             $geofence = new Geofence($userFilter);
             $response = $geofence->authorize($this->rules);
             if (!empty($response["filters"]["read"])) $statement->where->and($response["filters"]["read"]);
@@ -42,14 +54,14 @@ class TableWalkerRule extends BlankWalker
         foreach ($statement->from->getIterator() as $from) {
             $schema = $from->name->schema->value ?? "public";
             $relation = $from->name->relation->value;
-            $userFilter = new UserFilter("silke", "sql", "get", "*", $schema, $relation);
+            $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $schema, $relation);
             $geofence = new Geofence($userFilter);
             $response = $geofence->authorize($this->rules);
             if (!empty($response["filters"]["read"])) $statement->where->and($response["filters"]["read"]);
         }
         $schema = $statement->relation->relation->schema->value ?? "public";
         $relation = $statement->relation->relation->relation->value;
-        $userFilter = new UserFilter("silke", "sql", "get", "*", $schema, $relation);
+        $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $schema, $relation);
         $geofence = new Geofence($userFilter);
         $response = $geofence->authorize($this->rules);
         if (!empty($response["filters"]["read"])) $statement->where->and($response["filters"]["read"]);
@@ -61,7 +73,7 @@ class TableWalkerRule extends BlankWalker
         foreach ($statement->using->getIterator() as $using) {
             $schema = $using->name->schema->value ?? "public";
             $relation = $using->name->relation->value;
-            $userFilter = new UserFilter("silke", "sql", "get", "*", $schema, $relation);
+            $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $schema, $relation);
             $geofence = new Geofence($userFilter);
             $response = $geofence->authorize($this->rules);
             if (!empty($response["filters"]["read"])) $statement->where->and($response["filters"]["read"]);
@@ -73,7 +85,7 @@ class TableWalkerRule extends BlankWalker
     {
         $schema = $statement->relation->relation->schema->value ?? "public";
         $relation = $statement->relation->relation->relation->value;
-        $userFilter = new UserFilter("silke", "sql", "get", "*", $schema, $relation);
+        $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $schema, $relation);
         $geofence = new Geofence($userFilter);
         $response = $geofence->authorize($this->rules);
         if (!empty($statement->onConflict) && !empty($response["filters"]["read"])) $statement->onConflict->where->and($response["filters"]["read"]);

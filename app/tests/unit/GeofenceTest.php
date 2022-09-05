@@ -65,7 +65,5 @@ class GeofenceTest extends Unit
         $this->assertContains("userid=1", $response["filters"]);
 //        print_r($response);
 //        die();
-
-
     }
 }

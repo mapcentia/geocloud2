@@ -17,6 +17,7 @@ class SqlParseTest extends Unit
      */
     protected $tester;
     protected $rules;
+    protected $request;
 
     protected function _before()
     {
@@ -74,6 +75,9 @@ class SqlParseTest extends Unit
                 "write_spatial_filter" => null,
             ],
         ];
+        $this->request = [
+            "silke", "sql", "get", "127.0.0.1"
+        ];
     }
 
     protected function _after()
@@ -103,7 +107,7 @@ class SqlParseTest extends Unit
             GROUP BY uid
         ) SELECT * FROM test, foo";
 
-        $walker = new TableWalkerRule();
+        $walker = new TableWalkerRule(...$this->request);
         $walker->setRules($this->rules);
 
         $factory = new sad_spirit\pg_builder\StatementFactory();
@@ -123,7 +127,7 @@ class SqlParseTest extends Unit
             FROM LISTENS 
             GROUP BY uid
         ) DELETE FROM test.test  USING foo, test WHERE id = foo.id OR id = listens.uid";
-        $walker = new TableWalkerRule();
+        $walker = new TableWalkerRule(...$this->request);
         $walker->setRules($this->rules);
         $factory = new sad_spirit\pg_builder\StatementFactory();
         $select = $factory->createFromString($string);
@@ -135,6 +139,7 @@ class SqlParseTest extends Unit
         $this->assertStringContainsString("listens.uid = 'test'", $alteredStatement);
 
     }
+
     public function testTableWalkerRuleShouldAddWhereClauseToUpdate()
     {
         $string = "WITH max_table as (
@@ -142,7 +147,7 @@ class SqlParseTest extends Unit
             FROM LISTENS 
             GROUP BY uid
         ) UPDATE ONLY test.test SET name='Joe' FROM foo WHERE id=1";
-        $walker = new TableWalkerRule();
+        $walker = new TableWalkerRule(...$this->request);
         $walker->setRules($this->rules);
         $factory = new sad_spirit\pg_builder\StatementFactory();
         $select = $factory->createFromString($string);
@@ -153,6 +158,7 @@ class SqlParseTest extends Unit
         $this->assertStringContainsString("test.userid = 'test'", $alteredStatement);
         $this->assertStringContainsString("listens.uid = 'test'", $alteredStatement);
     }
+
     public function testTableWalkerRuleShouldAddWhereClauseToInsert()
     {
         $string = "WITH upd AS (
@@ -161,7 +167,7 @@ class SqlParseTest extends Unit
     RETURNING *
 )
 INSERT INTO test SELECT *, current_timestamp FROM upd ON CONFLICT (did) DO UPDATE SET dname = EXCLUDED.dname";
-        $walker = new TableWalkerRule();
+        $walker = new TableWalkerRule(...$this->request);
         $walker->setRules($this->rules);
         $factory = new sad_spirit\pg_builder\StatementFactory();
         $select = $factory->createFromString($string);
