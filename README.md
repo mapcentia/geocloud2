@@ -55,7 +55,7 @@ It's recommended to go through [this workshop](https://mapcentia.github.io/GC2-V
 
 > The Docker-compose file is for deploying GC2 and Vidi in a test environment.
 > It will expose GC2 on port 8080 and Vidi on 3000
-> PostgreSQL password is set to 12345
+> PostgreSQL password is set to 1234
 
 ## Who is MapCentia?
 MapCentia believes getting easy access to standard based open source software matters. As the company behind the open source project GC2 — a complete platform for managing geospatial data, making map visualisations and creating applications, MapCentia is helping teams to get the most out of their data. From local governments to world leading consulting firms, our product is extending what's possible with open source software and data.

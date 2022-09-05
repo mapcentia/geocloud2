@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2022.8.1] 2022-11-8
+### Changed
+- The snapshot list fetch now only include metadata - not the snapshot data itself. When activating a snapshot in Vidi the data is fetched. This way a long snapshot list will not hog Vidi down.
+
 ## [2022.8.0] - 2022-2-8
 ### Added
 - New meta settings for controlling zoom level visibility for vector layers in Vidi: `vector_min_zoom` and `vector_max_zoom`.
@@ -21,8 +25,6 @@ This is a label for feature <b>{{gid}}</b>
 
 ### Fixed
 - Doubled download in scheduler is fixed.
-
-### Fixed
 - Creating and updating of a layers properties (also in structure tab) now uses prepared statements, so specific characters will not trip updates/inserts in database.
 
 ## [2022.6.0] - 2022-20-6

@@ -107,11 +107,7 @@ class Keyvalue extends Model
         if (isset($urlVars["like"]) && $urlVars["like"] == "state_snapshot_%") {
             if (!is_array($response["data"][0])) {
                 $parsed = json_decode($response["data"]["value"], true);
-                foreach ($parsed["snapshot"]["modules"]["conflict"]["hits"] as $i => $v) {
-                    // TODO Not all conflict meta should be unset
-                    // unset($parsed["snapshot"]["modules"]["conflict"]["hits"][$i]["meta"]);
-                }
-                unset($parsed["snapshot"]["modules"]["print"]["metaData"]);
+                unset($parsed["snapshot"]);
                 if ($parsed)
                     $response["data"]["value"] = json_encode($parsed);
                 else
@@ -119,11 +115,7 @@ class Keyvalue extends Model
             } else {
                 foreach ($response["data"] as $key => $value) {
                     $parsed = json_decode($value["value"], true);
-                    unset($parsed["snapshot"]["modules"]["print"]["metaData"]);
-                    foreach ($parsed["snapshot"]["modules"]["conflict"]["hits"] as $i => $v) {
-                        // TODO Not all conflict meta should be unset
-                        // unset($parsed["snapshot"]["modules"]["conflict"]["hits"][$i]["meta"]);
-                    }
+                    unset($parsed["snapshot"]);
                     if ($parsed)
                         $response["data"][$key]["value"] = json_encode($parsed);
                     else
