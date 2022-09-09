@@ -382,6 +382,43 @@
                 ]
             }
         },
+        "/api/v3/meta/{query}": {
+            "get": {
+                "tags": [
+                    "Meta"
+                ],
+                "summary": "Get layer meta data",
+                "operationId": "app\\api\\v3\\Meta::get_index",
+                "parameters": [
+                    {
+                        "name": "query",
+                        "in": "path",
+                        "description": "",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "If select then the result will be data on choosen format. If transaction the number of effected rows is returned.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/v3/oauth/token": {
             "post": {
                 "tags": [
@@ -482,6 +519,44 @@
                 "responses": {
                     "200": {
                         "description": "Operation status"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v3/schema": {
+            "get": {
+                "tags": [
+                    "Schema"
+                ],
+                "summary": "Get available schemas",
+                "operationId": "app\\api\\v3\\Schema::get_index",
+                "responses": {
+                    "200": {
+                        "description": "List of schemas with count of PostGIS tables",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [

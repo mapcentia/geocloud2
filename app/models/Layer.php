@@ -255,7 +255,9 @@ class Layer extends Table
                                 $key == "def" ||
                                 $key == "class" ||
                                 $key == "classwizard" ||
-                                $key == "meta"
+                                $key == "meta" ||
+                                $key == "tags" ||
+                                $key == "privileges"
                             ) && ($value)
                         ) {
                             $value = json_decode($value);
