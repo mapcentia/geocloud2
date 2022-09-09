@@ -4,7 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [2022.8.1] 2022-11-8
+## [UNRELEASED] - 2022-9-9
+### Added
+- Two new v3 API's: `api/v3/schema` and `api/v3/meta`, which correspond to the v2 ones (`api/v2/database/schemas` and `api/v2/meta`). The new `meta` does format the data different and let out some legacy properties. Check out swagger page.
+
+## [2022.8.1] - 2022-11-8
 ### Changed
 - The snapshot list fetch now only include metadata - not the snapshot data itself. When activating a snapshot in Vidi the data is fetched. This way a long snapshot list will not hog Vidi down.
 
