@@ -161,22 +161,18 @@ class Import extends Controller
     /**
      * @throws Exception
      */
-    public function ogr($fileName): array
+    protected function ogr($fileName): array
     {
         $response = [];
         $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__vectors";
         $safeName = Session::getUser() . "_" . md5(microtime() . rand());
-
         if (is_numeric($safeName[0])) {
             $safeName = "_" . $safeName;
         }
-
         $fileFullPath = $dir . "/" . $fileName;
-
         // Check if file is .zip
         $zipCheck1 = explode(".", $fileName);
         $zipCheck2 = array_reverse($zipCheck1);
-
         if (strtolower($zipCheck2[0]) == "zip") {
             $zip = new ZipArchive;
             $res = $zip->open($dir . "/" . $fileName);
@@ -189,9 +185,7 @@ class Import extends Controller
             $zip->close();
             $fileFullPath = $dir . "/" . $safeName;
         }
-
         $connectionStr = "\"PG:host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "\"";
-
         $cmd = "ogr2postgis" .
             " -c {$connectionStr}" .
             " -t EPSG:25832" .
@@ -201,7 +195,6 @@ class Import extends Controller
             " '" . $fileFullPath . "'";
 
         exec($cmd . ' > /dev/null', $out, $err);
-
         $response['cmd'] = $cmd;
         // Check ogr2ogr output
         if ($out[0] == "") {
@@ -210,6 +203,4 @@ class Import extends Controller
             throw new Exception("CAN_NOT_IMPORT");
         }
     }
-
-
 }
