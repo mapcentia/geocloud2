@@ -8,6 +8,14 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN cd /var/www/ &&\
 	git clone https://github.com/mapcentia/geocloud2.git
 
+# Install ogr2postgis
+RUN cd ~ &&\
+    git clone https://github.com/mapcentia/ogr2postgis.git &&\
+    cd ogr2postgis &&\
+    mkdir build &&\
+    cd build &&\
+    cmake .. && make && make install
+
 # Install npm packages run Grunt
 RUN	cd /var/www/geocloud2 &&\
 	npm install &&\
