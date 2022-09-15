@@ -335,7 +335,7 @@ if (Input::getPath()->part(1) == "api") {
             exit();
         }
     });
-    Route::add("api/v3/import", function () {
+    Route::add("api/v3/import/[file]", function () {
         $jwt = Jwt::validate();
         if ($jwt["success"]) {
             Database::setDb($jwt["data"]["database"]);

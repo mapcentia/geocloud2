@@ -12,6 +12,7 @@ use app\conf\App;
 use app\conf\Connection;
 use app\inc\Controller;
 use app\inc\Jwt;
+use app\inc\Route;
 use app\inc\Session;
 use Exception;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
@@ -45,7 +46,7 @@ class Import extends Controller
      *   ),
      *   @OA\Response(
      *     response="200",
-     *     description="If select then the result will be data on choosen format. If transaction the number of effected rows is returned.",
+     *     description="",
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
@@ -57,11 +58,13 @@ class Import extends Controller
      */
     public function post_index(): array
     {
+        error_log(print_r($_FILES, true));
         $jwt = Jwt::validate()["data"];
         @set_time_limit(5 * 60);
         $mainDir = App::$param['path'] . "/app/tmp/" . $jwt["database"];
         $targetDir = $mainDir . "/__vectors";
         $maxFileAge = 5 * 3600;
+
         if (!file_exists($mainDir)) {
             @mkdir($mainDir);
         }
@@ -143,26 +146,44 @@ class Import extends Controller
             // Strip the temp .part suffix off
             rename("{$filePath}.part", $filePath);
         }
-        try {
-            $this->ogr($fileName);
-            return [
-                "success" => true,
-                "message" => "File uploaded"
-            ];
-        } catch (Exception $e) {
-
-            return [
-                "success" => true,
-                "message" => $e->getMessage()
-            ];
-        }
+        return ["success" => true, "chunk" => $chunk];
     }
 
     /**
+     * @return array<mixed>
      * @throws Exception
+     *
+     * @OA\Get(
+     *   path="/api/v3/import/{file}",
+     *   tags={"Import"},
+     *   summary="Import uploades zip file",
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="file",
+     *     in="path",
+     *     required=false,
+     *     description="Name of uploaded zip file",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         type="object",
+     *         @OA\Property(property="data", type="object", @OA\Schema(type="string")),
+     *         @OA\Property(property="success",type="boolean", example=true)
+     *       )
+     *     )
+     *   )
+     * )
      */
-    protected function ogr($fileName): array
+    public function get_index(): array
     {
+        $fileName= Route::getParam("file");
         $response = [];
         $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__vectors";
         $safeName = Session::getUser() . "_" . md5(microtime() . rand());
@@ -196,9 +217,11 @@ class Import extends Controller
 
         exec($cmd . ' > /dev/null', $out, $err);
         $response['cmd'] = $cmd;
+        $response["success"] = true;
         // Check ogr2ogr output
+        // TODO ogr2postgis must have a JSON output format
+        return $response;
         if ($out[0] == "") {
-            return $response;
         } else {
             throw new Exception("CAN_NOT_IMPORT");
         }
