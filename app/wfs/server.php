@@ -1108,7 +1108,7 @@ function doQuery(string $queryType)
                         $gmlVersion = $outputFormat == "GML3" ? "3" : "2";
                         $longCrs = $version == "1.1.0" ? 1 : 0;
                         $flipAxis = $version == "1.1.0" && $srs == "4326" ? 16 : 0; // flip axis if lat/lon
-                        $options = (string)($longCrs + $flipAxis + 4 + 2);
+                        $options = (string)($longCrs + $flipAxis + 4);
                         $sql = str_replace("\"{$key}\"", "ST_AsGml({$gmlVersion},ST_Transform(\"{$key}\",{$srs}),5,{$options}) as \"{$key}\"", $sql);
                         $sql2 = "SELECT ST_Xmin(ST_Extent(ST_Transform(\"" . $key . "\",{$srs}))) AS TXMin,ST_Xmax(ST_Extent(ST_Transform(\"" . $key . "\",{$srs}))) AS TXMax, ST_Ymin(ST_Extent(ST_Transform(\"" . $key . "\",{$srs}))) AS TYMin,ST_Ymax(ST_Extent(ST_Transform(\"" . $key . "\",{$srs}))) AS TYMax ";
                     }
