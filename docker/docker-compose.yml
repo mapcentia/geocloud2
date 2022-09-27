@@ -74,6 +74,15 @@ services:
     environment:
       - GC2_USER=gc2
       - GC2_PASSWORD=1234
+  elasticsearch:
+    image: elasticsearch:7.17.6
+    networks:
+      - default
+      - internal
+    ports:
+      - "9200:9200"
+    environment:
+      - "discovery.type=single-node"
 #  zookeeper:
 #    image: debezium/zookeeper:${DEBEZIUM_VERSION}
 #    ports:
