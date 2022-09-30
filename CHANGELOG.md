@@ -4,11 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED] - 2022-9-9
+## [UNRELEASED]
 ### Added
 - Two new v3 API's: `api/v3/schema` and `api/v3/meta`, which correspond to the v2 ones (`api/v2/database/schemas` and `api/v2/meta`). The new `meta` does format the data different and let out some legacy properties. Check out swagger page.
 
 ### Changed
+- Hide server version and OS from header and internal error pages. For this change to take effect you have to create a new base image.
+- Updated the QGIS gpg.key to 2022 version.
+- Deny all access to the .git folder in the apache server configuration.
 - Layers are not longer groupped in WMS capabilities because it's not possible to request a group. This would result in an error when GC2 tries to authorize access to the group instead of a single layer. 
 
 ## [2022.8.1] - 2022-11-8
