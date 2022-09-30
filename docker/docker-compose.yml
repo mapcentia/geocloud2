@@ -47,6 +47,8 @@ services:
       - POSTGIS_PGBOUNCER=false
       - MODE_ENV=${MODE_ENV}
       - BUILD_ID=${BUILD_ID}
+    extra_hosts:
+      - host.docker.internal:host-gateway
   redis:
     image: redis
     networks:

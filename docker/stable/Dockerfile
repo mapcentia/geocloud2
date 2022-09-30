@@ -32,5 +32,9 @@ RUN	mkdir -p /var/www/geocloud2/public/dashboard && mkdir /dashboardtmp && cd /d
 COPY conf/gc2/App.php /var/www/geocloud2/app/conf/
 COPY conf/gc2/Connection.php /var/www/geocloud2/app/conf/
 
+RUN apt-get -y install php-xdebug
+COPY conf/fpm/xdebug.ini  /etc/php/7.3/mods-available/
+RUN phpenmod xdebug
+
 # Add Supervisor config and run the deamon
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
