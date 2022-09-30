@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2022 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -248,7 +248,7 @@ class Sql extends Controller
     {
         $response = [];
         $walkerRelation = new TableWalkerRelation();
-        $walkerRule = new TableWalkerRule();
+        $walkerRule = new TableWalkerRule($this->subUser ?: Connection::$param['postgisdb'], "sql", '', '');
         $factory = new StatementFactory();
         try {
             $select = $factory->createFromString($this->q);
@@ -264,6 +264,7 @@ class Sql extends Controller
         $operation = self::getClassName(get_class($select));
         $select->dispatch($walkerRelation);
         $usedRelations = $walkerRelation->getRelations();
+
 
         // Check auth on relations
         foreach ($usedRelations as $rel) {
