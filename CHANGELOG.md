@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [URELEASED]
+### Changed
+- It's now possible to set `Expires` attribute for the session cookie. Defaults to 86400 seconds.
+```php
+{
+  "sessionMaxAge" => 86400
+}
+```
+
+
 ## [2022.9.0] - 2022-30-9
 ### Added
 - Two new v3 API's: `api/v3/schema` and `api/v3/meta`, which correspond to the v2 ones (`api/v2/database/schemas` and `api/v2/meta`). The new `meta` does format the data different and let out some legacy properties. Check out swagger page.
