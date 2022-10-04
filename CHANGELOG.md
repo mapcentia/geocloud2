@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
 ## [URELEASED]
+### Added documentation on layers and authentication
+
 ### Changed
 - It's now possible to set `Expires` attribute for the session cookie. Defaults to 86400 seconds.
 ```php
