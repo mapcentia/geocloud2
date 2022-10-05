@@ -468,13 +468,13 @@ class Model
                         }
                     } elseif (is_object($restrictions[$row["column_name"]])) {
                         foreach ($restrictions[$row["column_name"]] as $alias => $value) {
-                            $foreignValues[] = ["value" => (string)$value, "alias" => (string)$alias];
+                            $foreignValues[] = ["value" => $value, "alias" => (string)$alias];
                         }
                     }
                 } elseif ($restrictions[$row["column_name"]] == "*") {
                     $t = new Table($table);
                     foreach ($t->getGroupByAsArray($row["column_name"])["data"] as $value) {
-                        $foreignValues[] = ["value" => (string)$value, "alias" => (string)$value];
+                        $foreignValues[] = ["value" => $value, "alias" => (string)$value];
                     }
                 }
 
