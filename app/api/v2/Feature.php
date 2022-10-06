@@ -152,7 +152,7 @@ class Feature extends \app\inc\Controller
         $arr = $unserializer->getUnserializedData();
 
         // Check if WFS returned a service exception
-        if (isset($arr["ServiceException"])) {
+        if (isset($arr["ows:Exception"])) {
             $response['success'] = false;
             $response['message'] = $arr;
             $response['code'] = "500";
@@ -388,7 +388,7 @@ class Feature extends \app\inc\Controller
         $arr = $unserializer->getUnserializedData();
 
         // Check if WFS returned a service exception
-        if (isset($arr["ServiceException"])) {
+        if (isset($arr["ows:Exception"])) {
             $response['success'] = false;
             $response['message'] = $arr;
             $response['code'] = "500";
