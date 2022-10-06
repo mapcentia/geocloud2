@@ -1309,7 +1309,7 @@ class Table extends Model
     {
         $response = [];
         $res = $this->doesColumnExist($this->table, $field);
-        if ($this->PDOerror) {
+        if (isset($this->PDOerror)) {
             $response['success'] = true;
             $response['message'] = $res;
             return $response;
