@@ -10,7 +10,6 @@ RUN sed -i "s/session.gc_maxlifetime = 1440/session.gc_maxlifetime = 86400/g" /e
 RUN sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 1000M/g" /etc/php/7.3/fpm/php.ini
 RUN sed -i "s/post_max_size = 8M/post_max_size = 1000M/g" /etc/php/7.3/fpm/php.ini
 
-
 # Install MapServer 7.6 from source
 RUN git clone https://github.com/mapserver/mapserver.git --branch branch-7-6 &&\
     cd mapserver &&\
@@ -37,22 +36,24 @@ RUN git clone https://github.com/mapserver/mapserver.git --branch branch-7-6 &&\
 RUN echo "extension=php_mapscript.so" >> /etc/php/7.3/fpm/php.ini
 
 # Instal MapCache from source
+RUN apt-get -y install libapr-memcache-dev
+
 RUN cd ~ && \
-    git clone http://github.com/mapserver/mapcache.git --branch branch-1-10 && \
+    git clone http://github.com/mapserver/mapcache.git --branch branch-1-12 && \
     cd mapcache &&\
     mkdir build &&\
     cd build &&\
-    cmake .. &&\
+    cmake .. -DWITH_MEMCACHE=1 &&\
     make &&\
     make install &&\
     ldconfig
 
 # Install QGIS-server
-RUN add-apt-repository "deb https://qgis.org/debian-ltr `lsb_release -c -s` main" &&\
-    wget -qO - https://qgis.org/downloads/qgis-2021.gpg.key | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import &&\
+RUN wget -qO - https://qgis.org/downloads/qgis-2022.gpg.key | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import &&\
     chmod a+r /etc/apt/trusted.gpg.d/qgis-archive.gpg &&\
-    apt-get update --allow-releaseinfo-change &&\
-    apt-get -y install qgis-server=1:3.16.12+15buster
+    add-apt-repository "deb https://qgis.org/debian $(lsb_release -c -s) main" &&\
+    apt-get update --allow-releaseinfo-change && \
+    apt-get -y install qgis-server
 
 # Symlink font for QGIS Server
 RUN ln -s /usr/share/fonts directory /usr/lib/x86_64-linux-gnu
@@ -69,7 +70,7 @@ RUN chmod +x /watch_mapcache_changes.sh
 # Add the reload.js
 COPY reload.js /reload.js
 
-RUN curl -sL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh &&\
+RUN curl -sL https://deb.nodesource.com/setup_14.x -o nodesource_setup.sh &&\
     bash nodesource_setup.sh &&\
     apt-get install -y nodejs
 
@@ -121,4 +122,3 @@ EXPOSE 443
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
-

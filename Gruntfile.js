@@ -284,6 +284,9 @@ module.exports = function (grunt) {
             },
             swagger_v3: {
                 command: 'cd app && ./vendor/zircote/swagger-php/bin/openapi -o ../public/swagger/v3/api.json api/v3/'
+            },
+            buildDocs: {
+                command: 'sphinx-build ./docs/da ./docs/html'
             }
         }
     });

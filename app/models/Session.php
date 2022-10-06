@@ -44,6 +44,7 @@ class Session extends Model
             $response['data']['subuser'] = $_SESSION["subuser"];
             $response['data']['subusers'] = $_SESSION['subusers'];
             $response['data']['properties'] = $_SESSION['properties'];
+            $response['data']['schema'] = $_SESSION['postgisschema'];
         } else {
             $response['data']['message'] = "Session not started";
             $response['data']['session'] = false;
@@ -138,6 +139,7 @@ class Session extends Model
                 while ($rowSubUSers = $this->fetchRow($res)) {
                     $_SESSION['subusers'][] = $rowSubUSers["screenname"];
                     $_SESSION['subuserEmails'][$rowSubUSers["screenname"]] = $rowSubUSers["email"];
+                    $_SESSION['usergroups'][$rowSubUSers["screenname"]] = $rowSubUSers["usergroup"];
                 }
 
                 // Check if user has secure password (bcrypt hash)

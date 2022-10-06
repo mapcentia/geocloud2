@@ -73,6 +73,7 @@ class Sql extends Model
                 ($nlt ? "-nlt " . $nlt . " " : "") .
                 ($nln ? "-nln " . $nln . " " : "") .
                 "-preserve_fid " .
+                ($format == "ogr/GPX" ? "-lco 'FORCE_GPX_ROUTE=YES' " : "") .
                 "PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
                 "-sql \"" . $q . "\"";
 //            die($cmd);
@@ -158,15 +159,14 @@ class Sql extends Model
             $this->execQuery("set client_encoding='{$clientEncoding}'");
         }
         try {
-            $result = $this->prepare($sql);
-            $result->execute();
+            $this->prepare("DECLARE curs CURSOR FOR {$sql}")->execute();
+            $innerStatement = $this->prepare("FETCH 1 FROM curs");
         } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
-            $response['code'] = 410;
+            $response['code'] = 400;
             return $response;
         }
-        $this->commit();
 
         $geometries = null;
         $fieldsForStore = [];
@@ -178,7 +178,7 @@ class Sql extends Model
 
         if ($format == "geojson") {
             try {
-                while ($row = $this->fetchRow($result)) {
+                while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
                     $arr = array();
                     foreach ($row as $key => $value) {
                         if ($arrayWithFields[$key]['type'] == "geometry") {
@@ -198,6 +198,8 @@ class Sql extends Model
                     }
                     $geometries = null;
                 }
+                $this->execQuery("CLOSE curs");
+                $this->commit();
             } catch (Exception $e) {
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
@@ -208,7 +210,7 @@ class Sql extends Model
                 $fieldsForStore[] = array("name" => $key, "type" => $value['type']);
                 $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $value['type'], "typeObj" => !empty($value['typeObj']) ? $value['typeObj'] : null);
             }
-            $this->free($result);
+//            $this->free($result);
             $response['success'] = true;
             $response['forStore'] = $fieldsForStore;
             $response['forGrid'] = $columnsForGrid;
@@ -232,7 +234,7 @@ class Sql extends Model
             }
 
             try {
-                while ($row = $this->fetchRow($result)) {
+                while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
                     $arr = array();
                     $fields = array();
 
@@ -270,6 +272,8 @@ class Sql extends Model
                     }
                     $lines[] = implode($separator, $fields);
                 }
+                $this->execQuery("CLOSE curs");
+                $this->commit();
                 $csv = implode("\n", $lines);
 
                 // Convert to Excel
@@ -307,7 +311,6 @@ class Sql extends Model
                 $response['code'] = 410;
                 return $response;
             }
-            $this->free($result);
             $response['success'] = true;
             $response['csv'] = $csv;
             return $response;

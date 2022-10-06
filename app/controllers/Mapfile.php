@@ -13,7 +13,7 @@ use app\conf\Connection;
 use app\inc\Controller;
 use app\inc\Model;
 use app\inc\Util;
-use phpDocumentor\Reflection\Types\This;
+use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 
@@ -357,7 +357,7 @@ class Mapfile extends Controller
                     $resultExtent->execute();
                     $rowExtent = $postgisObject->fetchRow($resultExtent);
                     $extent = [$rowExtent["xmin"], $rowExtent["ymin"], $rowExtent["xmax"], $rowExtent["ymax"]];
-                } catch (\PDOException $e) {
+                } catch (PDOException $e) {
                     $extent = $this->bbox;
                 }
 
@@ -388,7 +388,7 @@ class Mapfile extends Controller
                             $last = $value->sortid;
                         }
                     }
-                    array_push($sortedArr, $temp);
+                    $sortedArr[] = $temp;
                     unset($arr2[$del]);
                     $temp = null;
                 }
@@ -405,7 +405,6 @@ class Mapfile extends Controller
                 <?php $layerName = $row['f_table_schema'] . "." . $row['f_table_name']; ?>
                 NAME "<?php echo $layerName; ?>"
                 STATUS off
-                GROUP "<?php echo !empty($row['layergroup']) ? $postgisObject::toAscii($row['layergroup']) : "" ?>"
                 <?php if ($row['filter']) { ?>
                     PROCESSING "NATIVE_FILTER=<?php echo $row['filter']; ?>"
                 <?php } ?>
@@ -414,32 +413,22 @@ class Mapfile extends Controller
                     $type = $layerArr['data'][0]['geotype'];
                 } else {
                     switch ($row['type']) {
+                        case "GEOMETRY":
                         case "POINT":
-                            $type = "POINT";
-                            break;
-                        case "LINESTRING":
-                            $type = "LINE";
-                            break;
-                        case "POLYGON":
-                            $type = "POLYGON";
-                            break;
                         case "MULTIPOINT":
                             $type = "POINT";
                             break;
+                        case "LINESTRING":
                         case "MULTILINESTRING":
                             $type = "LINE";
                             break;
+                        case "POLYGON":
                         case "MULTIPOLYGON":
+                        case "MULTISURFACE":
                             $type = "POLYGON";
-                            break;
-                        case "GEOMETRY":
-                            $type = "LINE";
                             break;
                         case "RASTER":
                             $type = "RASTER";
-                            break;
-                        case "MULTISURFACE":
-                            $type = "POLYGON";
                             break;
                     }
                 }
@@ -596,8 +585,13 @@ class Mapfile extends Controller
 
                         STYLE
                         #SYMBOL
-                        <?php if (!empty($class['symbol'])) echo "SYMBOL '" . $class['symbol'] . "'\n"; ?>
-
+                        <?php
+                        if (!empty($class['symbol'])) {
+                            $d = "'";
+                            if (substr($class['symbol'], 0, 1) == "[") $d = "";
+                            echo "SYMBOL $d" . $class['symbol'] . "$d\n";
+                        }
+                        ?>
                         #PATTERN
                         <?php if (!empty($class['pattern'])) echo "PATTERN " . $class['pattern'] . " END\n"; ?>
 
@@ -681,7 +675,13 @@ class Mapfile extends Controller
 
                         STYLE
                         #SYMBOL
-                        <?php if (!empty($class['overlaysymbol'])) echo "SYMBOL '" . $class['overlaysymbol'] . "'\n"; ?>
+                        <?php
+                        if (!empty($class['overlaysymbol'])) {
+                            $d = "'";
+                            if (substr($class['overlaysymbol'], 0, 1) == "[") $d = "";
+                            echo "SYMBOL $d" . $class['overlaysymbol'] . "$d\n";
+                        }
+                        ?>
 
                         #PATTERN
                         <?php if (!empty($class['overlaypattern'])) echo "PATTERN " . $class['overlaypattern'] . " END\n"; ?>
@@ -1375,7 +1375,7 @@ class Mapfile extends Controller
                     $resultExtent->execute();
                     $rowExtent = $postgisObject->fetchRow($resultExtent);
                     $extent = [$rowExtent["xmin"], $rowExtent["ymin"], $rowExtent["xmax"], $rowExtent["ymax"]];
-                } catch (\PDOException $e) {
+                } catch (PDOException $e) {
                     $extent = $this->bbox;
                 }
 

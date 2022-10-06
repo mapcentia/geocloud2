@@ -166,6 +166,12 @@ class Globals
                     "type" => "textarea",
                     "title" => "Selected style",
                 ],
+                [
+                    "name" => "tiled",
+                    "type" => "checkbox",
+                    "title" => "Tiled",
+                    "default" => false,
+                ],
             ]
 
         ],
@@ -225,6 +231,21 @@ class Globals
                     "type" => "checkbox",
                     "title" => "Disable feature info",
                     "default" => false,
+                ],
+                [
+                    "name" => "vector_max_zoom",
+                    "type" => "text",
+                    "title" => "Max zoom",
+                ],
+                [
+                    "name" => "vector_min_zoom",
+                    "type" => "text",
+                    "title" => "Min zoom",
+                ],
+                [
+                    "name" => "tooltip_template",
+                    "type" => "textarea",
+                    "title" => "Tooltip template",
                 ],
             ]
 

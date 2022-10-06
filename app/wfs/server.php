@@ -1108,7 +1108,7 @@ function doQuery(string $queryType)
                         $gmlVersion = $outputFormat == "GML3" ? "3" : "2";
                         $longCrs = $version == "1.1.0" ? 1 : 0;
                         $flipAxis = $version == "1.1.0" && $srs == "4326" ? 16 : 0; // flip axis if lat/lon
-                        $options = (string)($longCrs + $flipAxis + 4 + 2);
+                        $options = (string)($longCrs + $flipAxis + 4);
                         $sql = str_replace("\"{$key}\"", "ST_AsGml({$gmlVersion},ST_Transform(\"{$key}\",{$srs}),5,{$options}) as \"{$key}\"", $sql);
                         $sql2 = "SELECT ST_Xmin(ST_Extent(ST_Transform(\"" . $key . "\",{$srs}))) AS TXMin,ST_Xmax(ST_Extent(ST_Transform(\"" . $key . "\",{$srs}))) AS TXMax, ST_Ymin(ST_Extent(ST_Transform(\"" . $key . "\",{$srs}))) AS TYMin,ST_Ymax(ST_Extent(ST_Transform(\"" . $key . "\",{$srs}))) AS TYMax ";
                     }
@@ -1402,7 +1402,7 @@ function dropFirstChrs($str, $no)
  */
 function dropNameSpace(string $tag): string
 {
-    $tag = preg_replace('/ \w*(?:\:\w*?)?(?<!gml)(?<!service)(?<!version)(?<!outputFormat)(?<!maxFeatures)(?<!resultType)(?<!typeName)(?<!srsName)(?<!fid)=(\".*?\"|\'.*?\')/s', "", $tag);
+    $tag = preg_replace('/ \w*(?:\:\w*?)?(?<!gml)(?<!service)(?<!version)(?<!outputFormat)(?<!maxFeatures)(?<!resultType)(?<!typeName)(?<!srsName)(?<!fid)(?<!id)=(\".*?\"|\'.*?\')/s', "", $tag);
     $tag = preg_replace('/\<[a-z|0-9]*(?<!gml):(?:.*?)/', "<", $tag);
     $tag = preg_replace('/\<\/[a-z|0-9]*(?<!gml):(?:.*?)/', "</", $tag);
     return $tag;
@@ -1578,18 +1578,19 @@ function doParse(array $arr)
                         $fields = array();
                         $values = array();
 
+                        // In case of UseExisting key generation
+                        // UseExisting is set implicit when gml:id attribut is provided in transaction
+                        if (!empty($gmlId)) {
+                            $fields[] = $primeryKey["attname"];
+                            $values[] = $gmlId;
+                        }
                         foreach ($feature as $field => $value) {
                             // If primary field is provided we skip it
-                            // Or else we get an duplicate key error
-                            // when using GenerateNew key generation
-                            if ($field == $primeryKey["attname"]) {
+                            // Or else we get a duplicate key error
+                            // when using GenerateNew key generation.
+                            // But not for 1.0.0 which doesn't support idgen
+                            if ($field == $primeryKey["attname"] && $version != "1.0.0" && !empty($gmlId)) {
                                 continue;
-                            }
-                            // In case of UseExisting key generation
-                            if (!empty($gmlId)) {
-                                $fields[] = $primeryKey["attname"];
-                                $values[] = $gmlId;
-                                unset($gmlId);
                             }
                             $fields[] = $field;
                             $role = $roleObj["data"][$user];

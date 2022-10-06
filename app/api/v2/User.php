@@ -34,7 +34,7 @@ class User extends Controller
     function __construct()
     {
         parent::__construct();
-        $this->user = new UserModel(Session::isAuth() ? Session::getUser() : null, Session::getDatabase() ? Session::getDatabase() : null);
+        $this->user = new UserModel(Session::isAuth() ? Session::getUser() : null, Session::getDatabase() ?: null);
     }
 
     /**
@@ -126,8 +126,7 @@ class User extends Controller
                 ];
             }
 
-            $response = $this->user->createUser($data);
-            return $response;
+            return $this->user->createUser($data);
         } else {
             return [
                 'success' => false,

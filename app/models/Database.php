@@ -154,7 +154,7 @@ class Database extends Model
     public function listAllSchemas(): array
     {
         $arr = [];
-        $sql = "SELECT count(*) AS count,f_table_schema FROM geometry_columns GROUP BY f_table_schema";
+        $sql = "SELECT count(*) AS count,f_table_schema FROM geometry_columns where f_table_schema not like 'pg_%' GROUP BY f_table_schema";
         $res = $this->prepare($sql);
         try {
             $res->execute();
@@ -168,7 +168,7 @@ class Database extends Model
             $count[$row['f_table_schema']] = $row['count'];
         }
 
-        $sql = "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name<>'settings' AND schema_name<>'information_schema' AND schema_name<>'sqlapi' ORDER BY schema_name";
+        $sql = "SELECT nspname AS schema_name FROM pg_catalog.pg_namespace WHERE nspname NOT LIKE 'pg_%' AND nspname<>'settings' AND nspname<>'information_schema' AND nspname<>'sqlapi' ORDER BY nspname";
         $res = $this->prepare($sql);
         try {
             $res->execute();

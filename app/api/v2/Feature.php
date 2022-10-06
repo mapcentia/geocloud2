@@ -92,9 +92,9 @@ class Feature extends \app\inc\Controller
         $this->geometryfactory = new \app\libs\GeometryFactory();
 
         // Set transaction xml header
-        $this->transactionHeader = "<wfs:Transaction xmlns:wfs=\"http://www.opengis.net/wfs\" service=\"WFS\" version=\"1.0.0\"
+        $this->transactionHeader = "<wfs:Transaction xmlns:wfs=\"http://www.opengis.net/wfs\" service=\"WFS\" version=\"1.1.0\"
                  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
-                 xsi:schemaLocation=\"http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/WFS-transaction.xsd\">\n";
+                 xsi:schemaLocation=\"http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/WFS-transaction.xsd\">\n";
     }
 
     /**
@@ -127,7 +127,7 @@ class Feature extends \app\inc\Controller
 
         // GET the transaction
         try {
-            $res = $this->client->get($url . "?service=WFS&version=1.0.0&request=GetFeature&typeName={$this->table}&FEATUREID={$this->table}.{$this->key}");
+            $res = $this->client->get($url . "?service=WFS&version=1.1.0&request=GetFeature&typeName={$this->table}&FEATUREID={$this->table}.{$this->key}");
         } catch (\Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -152,7 +152,7 @@ class Feature extends \app\inc\Controller
         $arr = $unserializer->getUnserializedData();
 
         // Check if WFS returned a service exception
-        if (isset($arr["ServiceException"])) {
+        if (isset($arr["ows:Exception"])) {
             $response['success'] = false;
             $response['message'] = $arr;
             $response['code'] = "500";
@@ -388,7 +388,7 @@ class Feature extends \app\inc\Controller
         $arr = $unserializer->getUnserializedData();
 
         // Check if WFS returned a service exception
-        if (isset($arr["ServiceException"])) {
+        if (isset($arr["ows:Exception"])) {
             $response['success'] = false;
             $response['message'] = $arr;
             $response['code'] = "500";
