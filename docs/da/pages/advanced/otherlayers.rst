@@ -29,7 +29,7 @@ Tilføj WMS kilde
 
 Tilføj lag fra en Web Map Service (WMS)
 
-.. include:: ../../_subs/NOTE_GETTINGSTARTED.rst
+.. include:: ../../_subs/WARNING_OLD_DOC.rst
 
 Opret nyt lag
 -----------------------------------------------------------------
@@ -56,10 +56,10 @@ Nyt blankt lag
     Nyt tomt lag
 	
 1. Vælg at oprette et Tomt lag.
-X. Giv det et navn.
-X. Vælg den EPSG kode som WMS'en skal forespørges med. Dvs. at WMS'en skal acceptere den valgte kode.
-X. Geometri typen er underordnet, da laget ikke skal indeholde geometri
-X. Opret laget.
+#. Giv det et navn.
+#. Vælg den EPSG kode som WMS'en skal forespørges med. Dvs. at WMS'en skal acceptere den valgte kode.
+#. Geometri typen er underordnet, da laget ikke skal indeholde geometri
+#. Opret laget.
 
 Åben avancerede indstillinger for laget
 -----------------------------------------------------------------
@@ -73,7 +73,7 @@ X. Opret laget.
     Nyt lag
 	
 1. Klik på det nye lags linje, så den bliver sort.
-X. Klik på 'Avanceret'.
+#. Klik på 'Avanceret'.
 	
 Skriv WMS url'en ind
 -----------------------------------------------------------------
@@ -112,11 +112,11 @@ Opret view
     Nyt lag dialogboks
 	
 1. Klik på "Nyt lag".
-X. Klik på "Database view".
-X. Giv view'et et navn.
-X. Skriv SELECT SQL, som skal definere view'et.
-X. MATERIALIZE
-X. Klik "Skab".
+#. Klik på "Database view".
+#. Giv view'et et navn.
+#. Skriv SELECT SQL, som skal definere view'et.
+#. MATERIALIZE
+#. Klik "Skab".
 
 En tabel og view skal have en primær-nøgle. GC2 detekterer primær-nøgler på tabeller, men views har ikke primær-nøgler, så derfor falder GC2 tilbage på feltet "gid". Dvs. at et view skal have et felt "gid" med unikke værdier. Det skal også have et geometri-felt, så det dukker op i listen over lag (der er ingen krav til navngivningen af geometri-felter). Hvis en tabel er oprettet gennem GC2, vil tabellen have gid som primær-nøgle. Så en SELECT som denne vil virke:
 
@@ -159,5 +159,5 @@ Se et eksisterende views definition
     Se view definintion
 	
 1. Vælg et view-lag i listen, så baggrunden bliver grå.
-X. Klik på Advanced.
-X. SELECT SQL'en, som definerer view'et, kan aflæses i View definition.
+#. Klik på Advanced.
+#. SELECT SQL'en, som definerer view'et, kan aflæses i View definition.

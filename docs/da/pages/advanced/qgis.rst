@@ -27,6 +27,8 @@ Inkluderingen af QGIS Server i GC2 indfrier et længerevarende ønske blandt GIS
     Hvis lagene bliver tematiseret gennem QGIS-projekt skal man være opmærksom på at hele projektet skal læses af MapServer inden der kan returneres et svar til klienten. Det betyder at man kan hente et væsentligt performance-boost ved at tematisere sine lag igennem MapServer.
 
     Hvis man angiver sin tematisering igennem QGIS første gang, vil ændringer i :ref:`styling_manual` overskrive projektet.
+	
+.. include:: ../../_subs/WARNING_OLD_DOC.rst
 
 *****************************************************************
 Styling med QGIS
@@ -45,7 +47,7 @@ QGIS skal hente data ud af GC2 for at kunne style dem, så først skal der forbi
 
 
 1. I Database-fanen klik på Services knappen.
-X. Kopier strengen fra det øverste felt (WFS-T)
+#. Kopier strengen fra det øverste felt (WFS-T)
 
 Så skal du over i QGIS
 
@@ -70,9 +72,9 @@ Bemærk, at din QGIS opsætning kan se anderledes ud end på billederne.
     QGIS wfs dialogboks
 
 1. I WFS dialogen klik på New.
-X. I URL, indsæt strengen fra GC2 og i Name skrives et sigende navn.
-X. Klik OK.
-X. Klik Connect.
+#. I URL, indsæt strengen fra GC2 og i Name skrives et sigende navn.
+#. Klik OK.
+#. Klik Connect.
 
 .. figure:: ../../../_media/qgisstyling-wfs-connect3.png
     :width: 600px
@@ -83,7 +85,7 @@ X. Klik Connect.
     QGIS wfs connection dialogboks
 	
 1. Vælge hvilke lag du vil hente ind og opsætte.
-X. Klik Add.
+#. Klik Add.
 
 .. figure:: ../../../_media/qgisstyling-layer-styling.png
     :width: 600px
@@ -94,7 +96,7 @@ X. Klik Add.
     QGIS opsæt styling
 
 1. Opsæt laget med den ønskede styling.
-X. Gem projektet.
+#. Gem projektet.
 
 .. figure:: ../../../_media/qgisstyling-gc2-upload-project
     :width: 600px
@@ -105,9 +107,9 @@ X. Gem projektet.
     GC2 upload project
 	
 1. Tilbage i GC2 Admin klikkes på New layer.
-X. I upload dialogen vælges QGIS.
-X. Klik Add Files og vælg din QGIS projektfil (her Untitled.qgs)
-X. Klik start upload.
+#. I upload dialogen vælges QGIS.
+#. Klik Add Files og vælg din QGIS projektfil (her Untitled.qgs)
+#. Klik start upload.
 	
 .. figure:: ../../../_media/qgisstyling-gc2-upload-acknowledge.png
     :width: 600px
