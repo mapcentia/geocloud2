@@ -22,7 +22,7 @@ Tilføj andre lagtyper
 Tilføj andre lagtyper
 *****************************************************************
 
-
+.. include:: ../../_subs/WARNING_OLD_DOC.rst
 
 Tilføj WMS kilde
 =================================================================

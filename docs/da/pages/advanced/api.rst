@@ -27,7 +27,7 @@ API
 Session
 =================================================================
 
-Session er et API til at starte en GC2 session, hente API key og skabe en JWT token.:
+Session er et API til at starte en GC2 session, hente API key og skabe en JWT token::
 
 	curl -XPOST "https://swarm.gc2.io/api/v2/session/start" -d '
 	{
