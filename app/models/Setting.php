@@ -287,7 +287,7 @@ class Setting extends Model
             }
 
             if (!empty($_SESSION["subuser"])) {
-                $arr->pw = isset($arr->pw_subuser) ? $arr->pw_subuser->{$_SESSION["screen_name"]} : null;
+                $arr->pw = $arr->pw_subuser->{$_SESSION["screen_name"]} ?? null;
                 $arr->api_key = isset($arr->api_key_subuser) ? $arr->api_key_subuser->{$_SESSION["screen_name"]} : null;
                 if (isset($arr->pw_subuser)) unset($arr->pw_subuser);
             }

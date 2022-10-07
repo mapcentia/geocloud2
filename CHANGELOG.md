@@ -5,8 +5,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
 ## [URELEASED]
-### Added documentation on layers and authentication
+### Added 
+- Documentation on layers and authentication
 
+### Changed
+- Upgraded Grunt
+
+### Fixed
+- Qoute of fields when new version of record is inserted (Track changes). 
+
+## [2022.10.0] - 2022-5-10
 ### Changed
 - It's now possible to set `Expires` attribute for the session cookie. Defaults to 86400 seconds.
 ```php
@@ -14,6 +22,9 @@ and this project adheres to [CalVer](https://calver.org/).
   "sessionMaxAge" => 86400
 }
 ```
+
+### Fixed
+- Restriction values from JSON was always cast to string, which meant the editor tried to submit strings to numeric fields. 
 
 
 ## [2022.9.0] - 2022-30-9

@@ -700,7 +700,7 @@ class Layer extends Table
     {
         $privileges = json_decode($this->getValueFromKey($_key_, "privileges") ?: "{}");
         foreach (\app\inc\Session::getByKey('subusers') as $subuser) {
-            $privileges->$subuser = ($privileges->$subuser) ?: "none";
+            $privileges->$subuser = $privileges->$subuser ?? "none";
             if ($subuser != Connection::$param['postgisschema']) {
                 $response['data'][] = array("subuser" => $subuser, "privileges" => $privileges->$subuser, "group" => \app\inc\Session::getByKey("usergroups")[$subuser]);
             }
@@ -771,7 +771,7 @@ class Layer extends Table
     {
         $roles = json_decode($this->getValueFromKey($_key_, "roles") ?: "{}");
         foreach ($_SESSION['subusers'] as $subuser) {
-            $roles->$subuser = $roles->$subuser ?: "none";
+            $roles->$subuser = $roles->$subuser ?? "none";
             if ($subuser != Connection::$param['postgisschema']) {
                 $response['data'][] = array("subuser" => $subuser, "roles" => $roles->$subuser);
             }
