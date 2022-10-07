@@ -332,7 +332,7 @@ Versionering foregår i WFS laget. Dvs. at det fungerer både ved redigering i G
 
 **Nye system-felter i tabellen**
 
-. figure:: ../../../_media/versioning-system-fields.png
+.. figure:: ../../../_media/versioning-system-fields.png
     :width: 600px
     :align: center
     :name: versioning-system-fields
@@ -355,7 +355,7 @@ Lagets tabel får fem nye system-felter (system-felter starter altid med "gc2_")
 
 **Versionsdata i tabellen**
 
-. figure:: ../../../_media/versioning-versiondata.png
+.. figure:: ../../../_media/versioning-versiondata.png
     :width: 600px
     :align: center
     :name: versioning-versiondata
@@ -367,7 +367,7 @@ Dette er et eksempel på versionsdata i tabellen. Denne versionerede tabel har t
 
 **Se alle versioner**
 
-. figure:: ../../../_media/versioning-see-all-versions.png
+.. figure:: ../../../_media/versioning-see-all-versions.png
     :width: 600px
     :align: center
     :name: versioning-see-all-versions
@@ -381,7 +381,7 @@ Som standard vises kun aktuelle features, dvs. dem uden en gc2_version_end_date.
 #. Vælg "all" under "Time slicing", som skal tjekkes af i boksen.
 #. Load features.
 
-. figure:: ../../../_media/versioning-example.png
+.. figure:: ../../../_media/versioning-example.png
     :width: 600px
     :align: center
     :name: versioning-example
@@ -395,7 +395,7 @@ Afsluttede versioner vise med rød, stiplet kant. Disse kan ikke redgieres.
 
 **Time slicing**
 	
-	. figure:: ../../../_media/versioning-timeslicing.png
+.. figure:: ../../../_media/versioning-timeslicing.png
     :width: 600px
     :align: center
     :name: versioning-timeslicing
@@ -410,7 +410,7 @@ Det er muligt at se hvordan et lag så ud på et bestemt tidspunkt.
 #. Load features.
 	
 	
-	. figure:: ../../../_media/versioning-timeslicing-example.png
+.. figure:: ../../../_media/versioning-timeslicing-example.png
     :width: 600px
     :align: center
     :name: versioning-timeslicing-example
@@ -423,7 +423,7 @@ Ved Time slicing vises de versioner, som var aktuelle på den pågældende dato/
 	**Versionering i ekstern editor fx QGIS**
 	
 	
-	. figure:: ../../../_media/versioning-example-qgis.png
+.. figure:: ../../../_media/versioning-example-qgis.png
     :width: 600px
     :align: center
     :name: versioning-example-qgis
@@ -570,9 +570,9 @@ Hver transaktion har følgende værdier:
 
 Knapper i Workflow
 
-1. Show all. Viser alle transaktioner. Også den, som ikke er aktuelle for brugeren.
-#. See/edit feature. Skifter til Map fanen og loader featuren.
-#. Check feature. Godkender featuren. Svarer til en update af featuren uden at ændre den.
+1. **Show all**. Viser alle transaktioner. Også den, som ikke er aktuelle for brugeren.
+#. **See/edit feature**. Skifter til Map fanen og loader featuren.
+#. **Check feature**. Godkender featuren. Svarer til en update af featuren uden at ændre den.
 	
 	
 **Efter "Review"**
