@@ -5,9 +5,29 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNRELEASED]
-
 ### Added
 - Added the following to documentation: description on how to enable extensions and a description on the traccar_api extension.
+- Documentation on layers and authentication.
+
+### Changed
+- Upgraded Grunt
+
+### Fixed
+- Qoute of fields when new version of record is inserted (Track changes). 
+
+## [2022.10.0] - 2022-5-10
+### Changed
+- It's now possible to set `Expires` attribute for the session cookie. Defaults to 86400 seconds.
+```php
+{
+  "sessionMaxAge" => 86400
+}
+```
+
+### Fixed
+- Restriction values from JSON was always cast to string, which meant the editor tried to submit strings to numeric fields. 
+
+## [2022.9.0] - 2022-30-9
 ### Added
 - Two new v3 API's: `api/v3/schema` and `api/v3/meta`, which correspond to the v2 ones (`api/v2/database/schemas` and `api/v2/meta`). The new `meta` does format the data different and let out some legacy properties. Check out swagger page.
 
@@ -15,6 +35,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Hide server version and OS from header and internal error pages. For this change to take effect you have to create a new base image.
 - Updated the QGIS gpg.key to 2022 version.
 - Deny all access to the .git folder in the apache server configuration.
+- Layers are not longer groupped in WMS capabilities because it's not possible to request a group. This would result in an error when GC2 tries to authorize access to the group instead of a single layer. 
 
 ## [2022.8.1] - 2022-11-8
 ### Changed

@@ -124,8 +124,10 @@ class Route
      */
     static public function getParam(string $parameter): ?string
     {
-        return urldecode(self::$params[$parameter]) ?? null;
+        if (!empty(self::$params[$parameter])) {
+            return urldecode(self::$params[$parameter]);
+        } else {
+            return null;
+        }
     }
-
-
 }

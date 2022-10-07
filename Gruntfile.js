@@ -62,7 +62,7 @@ module.exports = function (grunt) {
             //adhoc: {files: {'public/js/openlayers/OpenLayers.js': ['public/js/openlayers/OpenLayers.js']}},
             options: {
                 mangle: false,
-                compress : false
+                compress: false
             },
             publish: {
                 files: {
@@ -206,26 +206,25 @@ module.exports = function (grunt) {
             }
         },
         cacheBust: {
-            options: {
-                encoding: 'utf8',
-                algorithm: 'md5',
-                length: 16,
-                rename: false,
-                enableUrlFragmentHint: true,
-                baseDir: "public/",
-                ignorePatterns: ['php']
-            },
-            assets: {
-                files: [{
-                    src: [
-                        'public/admin.php',
-                        'public/apps/viewer/index.html',
-                        'public/apps/widgets/gc2map/index.html',
-                        'public/api/v3/js/async_loader.js',
-                        'public/api/v3/js/geocloud.js',
-                        'public/apps/widgets/gc2map/js/gc2map.js'
-                    ]
-                }]
+            taskName: {
+                options: {
+                    assets: ['js/admin/build/*', 'api/v1/js/*', 'api/v3/js/*', 'css/build/*', '/js/OpenLayers-2.12/OpenLayers.gc2.js'],
+                    encoding: 'utf8',
+                    algorithm: 'md5',
+                    length: 16,
+                    rename: false,
+                    enableUrlFragmentHint: true,
+                    baseDir: "public/",
+                    ignorePatterns: ['php']
+                },
+                src: [
+                    'public/admin.php',
+                    'public/apps/viewer/index.html',
+                    'public/apps/widgets/gc2map/index.html',
+                    'public/api/v3/js/async_loader.js',
+                    'public/api/v3/js/geocloud.js',
+                    'public/apps/widgets/gc2map/js/gc2map.js'
+                ]
             }
         },
         processhtml: {
@@ -300,12 +299,10 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-preprocess');
     grunt.loadNpmTasks('grunt-git');
     grunt.loadNpmTasks('grunt-shell');
-    grunt.loadNpmTasks('grunt-npm-install');
     grunt.loadNpmTasks('grunt-contrib-less');
 
-    grunt.registerTask('default', ['npm-install', 'less', 'cssmin', 'jshint', 'hogan', 'preprocess:debug', 'cacheBust']);
-    grunt.registerTask('production', ['npm-install', 'less', 'cssmin', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust',  'shell:chown', 'shell:composer']);
-    grunt.registerTask('migration', ['shell:migration']);
+    grunt.registerTask('default', ['less', 'cssmin', 'jshint', 'hogan', 'preprocess:debug', 'cacheBust']);
+    grunt.registerTask('production', ['less', 'cssmin', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust', 'shell:chown', 'shell:composer']);
 };
 
 
