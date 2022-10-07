@@ -10,7 +10,7 @@ include("html_header.php");
 use \app\conf\App;
 ?>
 
-<link rel="stylesheet" href="//fonts.googleapis.com/css=Open+Sans:700,300">
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:700,300">
 <link rel="stylesheet" type="text/css"
       href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 
