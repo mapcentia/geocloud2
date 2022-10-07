@@ -4,9 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [URELEASED]
-### Added 
-- Documentation on layers and authentication
+## [UNRELEASED]
+### Added
+- Added the following to documentation: description on how to enable extensions and a description on the traccar_api extension.
+- Documentation on layers and authentication.
 
 ### Changed
 - Upgraded Grunt
@@ -25,7 +26,6 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ### Fixed
 - Restriction values from JSON was always cast to string, which meant the editor tried to submit strings to numeric fields. 
-
 
 ## [2022.9.0] - 2022-30-9
 ### Added

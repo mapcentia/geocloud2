@@ -34,6 +34,17 @@ Ud over standardværktøjerne, er der udviddet funktionalitet som du kan læse m
 
     pages/advanced/*
 
+*****************************************************************
+Extensions
+*****************************************************************
+
+Det er muligt at tilføje extensions til GC2. Det gør det muligt, at udvikle sine egne extensions til GC2 eller at bruge en extension, der allerede er udviklet.
+
+.. toctree::
+    :maxdepth: 1
+    :glob:
+
+    pages/extensions/*
 
 *****************************************************************
 API
@@ -50,4 +61,4 @@ GC2 udstiller en del API der gør det muligt at bruge platformen i andre sammenh
 
 .. Include generic links to repo
 
-.. include:: ./_subs/GIT.rst 
+.. include:: ./_subs/GIT.rst
