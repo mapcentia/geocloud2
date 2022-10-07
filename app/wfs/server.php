@@ -1593,7 +1593,7 @@ function doParse(array $arr)
                                 continue;
                             }
                             $fields[] = $field;
-                            $role = $roleObj["data"][$user];
+                            $role = $roleObj["data"][$user] ?? "none";
                             if ($tableObj->workflow && ($role == "none" && $parentUser == false)) {
                                 makeExceptionReport("You don't have a role in the workflow of '{$typeName}'");
                             }
@@ -1725,7 +1725,7 @@ function doParse(array $arr)
                     //   continue;
                     // }
                     $fields[$fid][] = $pair['Name'];
-                    $role = $roleObj["data"][$user];
+                    $role = $roleObj["data"][$user] ?? "none";
                     if ($tableObj->workflow && ($role == "none" && $parentUser == false)) {
                         makeExceptionReport("You don't have a role in the workflow of '{$hey['typeName']}'");
                     }
@@ -1787,7 +1787,7 @@ function doParse(array $arr)
                 $forSql3['tables'][] = $hey['typeName'];
                 $forSql3['wheres'][] = parseFilter($hey['Filter'], $hey['typeName']);
                 $roleObj = $layerObj->getRole($postgisschema, $hey['typeName'], $user);
-                $role = $roleObj["data"][$user];
+                $role = $roleObj["data"][$user] ?? "none";
                 $tableObj = new table($postgisschema . "." . $hey["typeName"]);
                 if ($tableObj->workflow && ($role == "none" && $parentUser == false)) {
                     makeExceptionReport("You don't have a role in the workflow of '{$hey['typeName']}'");
