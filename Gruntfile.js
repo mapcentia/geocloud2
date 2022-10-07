@@ -208,7 +208,7 @@ module.exports = function (grunt) {
         cacheBust: {
             taskName: {
                 options: {
-                    assets: ['js/**', 'css/**'],
+                    assets: ['js/admin/build/*', 'api/v1/js/*', 'api/v3/js/*', 'css/build/*'],
                     encoding: 'utf8',
                     algorithm: 'md5',
                     length: 16,
