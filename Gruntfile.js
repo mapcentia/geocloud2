@@ -299,10 +299,9 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-preprocess');
     grunt.loadNpmTasks('grunt-git');
     grunt.loadNpmTasks('grunt-shell');
-    grunt.loadNpmTasks('grunt-npm-install');
     grunt.loadNpmTasks('grunt-contrib-less');
 
-    grunt.registerTask('default', ['npm-install', 'less', 'cssmin', 'jshint', 'hogan', 'preprocess:debug', 'cacheBust']);
+    grunt.registerTask('default', ['less', 'cssmin', 'jshint', 'hogan', 'preprocess:debug', 'cacheBust']);
     grunt.registerTask('production', ['less', 'cssmin', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust', 'shell:chown', 'shell:composer']);
 };
 
