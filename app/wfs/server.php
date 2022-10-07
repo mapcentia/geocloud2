@@ -1893,10 +1893,10 @@ function doParse(array $arr)
                 foreach ($originalFeature as $k => $v) {
                     if ($k != $primeryKey['attname']) {
                         if ($k == "gc2_version_end_date") {
-                            $intoArr[] = $k;
+                            $intoArr[] = "\"$k\"";
                             $selectArr[] = "now()";
                         } else {
-                            $intoArr[] = $selectArr[] = $k;
+                            $intoArr[] = $selectArr[] = "\"$k\"";
                         }
                     }
                 }

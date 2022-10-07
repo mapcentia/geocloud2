@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED]
+### Changed
+- Upgraded Grunt
+
+### Fixed
+- Qoute of fields when new version of record is inserted (Track changes). 
+
 ## [2022.10.0] - 2022-5-10
 ### Changed
 - It's now possible to set `Expires` attribute for the session cookie. Defaults to 86400 seconds.
