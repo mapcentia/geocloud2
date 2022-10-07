@@ -62,7 +62,7 @@ module.exports = function (grunt) {
             //adhoc: {files: {'public/js/openlayers/OpenLayers.js': ['public/js/openlayers/OpenLayers.js']}},
             options: {
                 mangle: false,
-                compress : false
+                compress: false
             },
             publish: {
                 files: {
@@ -206,26 +206,25 @@ module.exports = function (grunt) {
             }
         },
         cacheBust: {
-            options: {
-                encoding: 'utf8',
-                algorithm: 'md5',
-                length: 16,
-                rename: false,
-                enableUrlFragmentHint: true,
-                baseDir: "public/",
-                ignorePatterns: ['php']
-            },
-            assets: {
-                files: [{
-                    src: [
-                        'public/admin.php',
-                        'public/apps/viewer/index.html',
-                        'public/apps/widgets/gc2map/index.html',
-                        'public/api/v3/js/async_loader.js',
-                        'public/api/v3/js/geocloud.js',
-                        'public/apps/widgets/gc2map/js/gc2map.js'
-                    ]
-                }]
+            taskName: {
+                options: {
+                    assets: ['js/**', 'css/**'],
+                    encoding: 'utf8',
+                    algorithm: 'md5',
+                    length: 16,
+                    rename: false,
+                    enableUrlFragmentHint: true,
+                    baseDir: "public/",
+                    ignorePatterns: ['php']
+                },
+                src: [
+                    'public/admin.php',
+                    'public/apps/viewer/index.html',
+                    'public/apps/widgets/gc2map/index.html',
+                    'public/api/v3/js/async_loader.js',
+                    'public/api/v3/js/geocloud.js',
+                    'public/apps/widgets/gc2map/js/gc2map.js'
+                ]
             }
         },
         processhtml: {
@@ -304,8 +303,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-less');
 
     grunt.registerTask('default', ['npm-install', 'less', 'cssmin', 'jshint', 'hogan', 'preprocess:debug', 'cacheBust']);
-    grunt.registerTask('production', ['npm-install', 'less', 'cssmin', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust',  'shell:chown', 'shell:composer']);
-    grunt.registerTask('migration', ['shell:migration']);
+    grunt.registerTask('production', ['less', 'cssmin', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust', 'shell:chown', 'shell:composer']);
 };
 
 
