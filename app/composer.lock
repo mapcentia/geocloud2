@@ -1122,31 +1122,95 @@
             "time": "2014-12-02T06:11:22+00:00"
         },
         {
-            "name": "phpfastcache/phpfastcache",
-            "version": "8.0.4",
+            "name": "phpfastcache/couchdb",
+            "version": "1.0.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/PHPSocialNetwork/phpfastcache.git",
-                "reference": "f1a22a821a30b928b28d2ec73ed1b0245b5ab3f9"
+                "url": "https://github.com/PHPSocialNetwork/couchdb-client.git",
+                "reference": "4d4978b6825445f301d358f0a4117664d25bc5b0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPSocialNetwork/phpfastcache/zipball/f1a22a821a30b928b28d2ec73ed1b0245b5ab3f9",
-                "reference": "f1a22a821a30b928b28d2ec73ed1b0245b5ab3f9",
+                "url": "https://api.github.com/repos/PHPSocialNetwork/couchdb-client/zipball/4d4978b6825445f301d358f0a4117664d25bc5b0",
+                "reference": "4d4978b6825445f301d358f0a4117664d25bc5b0",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.4"
+            },
+            "conflict": {
+                "doctrine/couchdb": "*"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~4.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Doctrine\\CouchDB": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Benjamin Eberlei",
+                    "email": "kontakt@beberlei.de"
+                },
+                {
+                    "name": "Lukas Kahwe Smith",
+                    "email": "smith@pooteeweet.org"
+                },
+                {
+                    "name": "Georges.L",
+                    "email": "contact@geolim4.com"
+                }
+            ],
+            "description": "CouchDB Client (PhpFastCache fork)",
+            "homepage": "http://www.doctrine-project.org",
+            "keywords": [
+                "couchdb",
+                "persistence"
+            ],
+            "support": {
+                "source": "https://github.com/PHPSocialNetwork/couchdb-client/tree/master"
+            },
+            "time": "2017-04-21T18:52:02+00:00"
+        },
+        {
+            "name": "phpfastcache/phpfastcache",
+            "version": "8.0.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/PHPSocialNetwork/phpfastcache.git",
+                "reference": "60f7124532d29d273c989603bdfec891a3e71948"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/PHPSocialNetwork/phpfastcache/zipball/60f7124532d29d273c989603bdfec891a3e71948",
+                "reference": "60f7124532d29d273c989603bdfec891a3e71948",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "ext-mbstring": "*",
                 "php": ">=7.3",
+                "phpfastcache/couchdb": "^1.0",
                 "psr/cache": "~1.0.0",
                 "psr/simple-cache": "~1.0.0"
             },
             "conflict": {
-                "basho/riak": "*",
                 "doctrine/couchdb": "*"
             },
             "require-dev": {
+                "ext-gettext": "*",
                 "league/climate": "^3.5"
             },
             "suggest": {
@@ -1163,13 +1227,13 @@
                 "mongodb/mongodb": "^1.1",
                 "phpfastcache/couchdb": "~1.0.0",
                 "phpfastcache/phpssdb": "~1.0.0",
-                "phpfastcache/riak-client": "~1.4.4",
                 "predis/predis": "~1.1.0"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Phpfastcache\\": "lib/Phpfastcache/"
+                    "Phpfastcache\\": "lib/Phpfastcache/",
+                    "Phpfastcache\\Tests\\": "tests/lib/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -1224,7 +1288,7 @@
             ],
             "support": {
                 "issues": "https://github.com/PHPSocialNetwork/phpfastcache/issues",
-                "source": "https://github.com/PHPSocialNetwork/phpfastcache/tree/8.0.4"
+                "source": "https://github.com/PHPSocialNetwork/phpfastcache/tree/8.0.7"
             },
             "funding": [
                 {
@@ -1236,7 +1300,7 @@
                     "type": "patreon"
                 }
             ],
-            "time": "2020-12-21T19:35:04+00:00"
+            "time": "2021-08-12T11:46:36+00:00"
         },
         {
             "name": "phpoffice/phpexcel",
