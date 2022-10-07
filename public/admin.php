@@ -1,4 +1,4 @@
-<
+<?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
  * @copyright  2013-2019 MapCentia ApS
@@ -8,7 +8,7 @@
 
 include("html_header.php");
 use \app\conf\App;
->
+?>
 
 <link rel="stylesheet" href="//fonts.googleapis.com/css=Open+Sans:700,300">
 <link rel="stylesheet" type="text/css"
@@ -67,7 +67,7 @@ use \app\conf\App;
             <tr>
                 <td>
                     <input class="service-url" type="text" readonly="readonly"
-                           value="< echo \app\conf\App::$param['protocol'] : "http" >://< echo $_SERVER['HTTP_HOST']; >/wfs/< echo ($_SESSION['subuser']  $_SESSION['screen_name'] . "@" : "") . $_SESSION['parentdb']; >/< echo (\app\inc\Input::getPath()->part(3))  \app\inc\Input::getPath()->part(3) : "public"; >/< echo !empty(\app\conf\App::$param["epsg"])  \app\conf\App::$param["epsg"] : "4326" >"
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/wfs/<?php echo ($_SESSION['subuser'] ? $_SESSION['screen_name'] . "@" : "") . $_SESSION['parentdb']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ? \app\inc\Input::getPath()->part(3) : "public"; ?>/<?php echo !empty(\app\conf\App::$param["epsg"]) ? \app\conf\App::$param["epsg"] : "4326" ?>"
                     />
                 </td>
             </tr>
@@ -83,7 +83,7 @@ use \app\conf\App;
             <tr>
                 <td>
                     <input class="service-url" type="text" readonly="readonly"
-                           value="< echo \app\conf\App::$param['protocol'] : "http" >://< echo $_SERVER['HTTP_HOST']; >/ows/< echo ($_SESSION['subuser']  $_SESSION['screen_name'] . "@" : "") . $_SESSION['parentdb']; >/< echo (\app\inc\Input::getPath()->part(3)) : "public"; >/"/>
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/ows/<?php echo ($_SESSION['subuser'] ? $_SESSION['screen_name'] . "@" : "") . $_SESSION['parentdb']; ?>/<?php echo (\app\inc\Input::getPath()->part(3)) ?: "public"; ?>/"/>
                 </td>
             </tr>
             </tbody>
@@ -98,7 +98,7 @@ use \app\conf\App;
             <tr>
                 <td>
                     <input class="service-url" type="text" readonly="readonly"
-                           value="< echo \app\conf\App::$param['protocol'] : "http" >://< echo $_SERVER['HTTP_HOST']; >/mapcache/< echo ($_SESSION['subuser']  $_SESSION['screen_name'] . "@" : "") . $_SESSION['parentdb']; >/[wms|wmts|gmaps|tms]"
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/mapcache/<?php echo ($_SESSION['subuser'] ? $_SESSION['screen_name'] . "@" : "") . $_SESSION['parentdb']; ?>/[wms|wmts|gmaps|tms]"
                     />
                 </td>
             </tr>
@@ -114,7 +114,7 @@ use \app\conf\App;
             <tr>
                 <td>
                     <input class="service-url" type="text" readonly="readonly"
-                           value="< echo \app\conf\App::$param['protocol'] : "http" >://< echo $_SERVER['HTTP_HOST']; >/api/v1/sql/< echo ($_SESSION['subuser']  $_SESSION['screen_name'] . "@" : "") . $_SESSION['parentdb']; >=[query]&key=[your_api_key]"
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/sql/<?php echo ($_SESSION['subuser'] ? $_SESSION['screen_name'] . "@" : "") . $_SESSION['parentdb']; ?>?q=[query]&key=[your_api_key]"
                     />
                 </td>
             </tr>
@@ -130,7 +130,7 @@ use \app\conf\App;
             <tr>
                 <td>
                     <input class="service-url" type="text" readonly="readonly"
-                           value="< echo \app\conf\App::$param['protocol'] : "http" >://< echo $_SERVER['HTTP_HOST']; >/api/v1/elasticsearch/[map|bulk|search|delete]/< echo $_SESSION['parentdb']; >/[index]/[type]"
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/elasticsearch/[map|bulk|search|delete]/<?php echo $_SESSION['parentdb']; ?>/[index]/[type]"
                     />
                 </td>
             </tr>
@@ -154,7 +154,7 @@ use \app\conf\App;
                 str = string;
             }
             if (toolTip) {
-                str = " <span class='tt' ext:qtip='" + str + "' ext>[]</span>";
+                str = " <span class='tt' ext:qtip='" + str + "' ext>[?]</span>";
             }
         }
         return str;
@@ -166,7 +166,7 @@ use \app\conf\App;
     document.getElementById("loadscreentext").innerHTML = __("GC2 Admin is loading. Hang on...");
 </script>
 
-<script src="//maps.googleapis.com/maps/api/js=< echo App::$param["googleApiKey"]; >&v=3&libraries=places"></script>
+<script src="//maps.googleapis.com/maps/api/js=<?php echo App::$param["googleApiKey"]; ?>&v=3&libraries=places"></script>
 <script src="/js/OpenLayers-2.12/OpenLayers.gc2.js"></script>
 
 <!-- build:js /js/admin/build/all.min.js -->
