@@ -50,15 +50,15 @@ Session returnerer et JSON objekt::
 	  "_execution_time": 0.121
 	}
 
-``screen_name``= databasen
+``screen_name`` = databasen
 
-``session_id``= Session id til cookie baserede API'er
+``session_id`` = Session id til cookie baserede API'er
 
-``subuser``= Hvis user er Sub User, angives navnet her. Ellers ``false``
+``subuser`` = Hvis user er Sub User, angives navnet her. Ellers ``false``
 
-``api_key``= User API nøgle til public API'er
+``api_key`` = User API nøgle til public API'er
 
-``token``= JSON Web Token til  til public API'er (er ikke fuldt ud implementeret)
+``token`` = JSON Web Token til  til public API'er (er ikke fuldt ud implementeret)
 
 
 
@@ -127,7 +127,7 @@ Følgende parametre kan bruges:
 INSERT, UPDATE og DELETE
 -----------------------------------------------------------------
 
-Man kan ændre data ved INSERT, UPDATE og DELETE.  SQL API vil returnere antal af række, som er blevet påvirket af transaktionen.:
+Man kan ændre data ved INSERT, UPDATE og DELETE.  SQL API vil returnere antal af række, som er blevet påvirket af transaktionen::
 
 	--data '{
 	  "q":"DELETE FROM foo.bar",
@@ -137,7 +137,7 @@ Man kan ændre data ved INSERT, UPDATE og DELETE.  SQL API vil returnere antal a
 Bulk API
 -----------------------------------------------------------------
 
-Bulk API'et giver dig mulighed for at POST flere transaktioner, som vil blive kørt i samme transaktionsblok. Bulk API'et kræver GC2 API-nøglen i header, og indholdstypen skal indstilles til text/plain. SQLer skal være nye linjeseparerede.:
+Bulk API'et giver dig mulighed for at POST flere transaktioner, som vil blive kørt i samme transaktionsblok. Bulk API'et kræver GC2 API-nøglen i header, og indholdstypen skal indstilles til text/plain. SQLer skal være nye linjeseparerede::
 
 	curl -i \
 	  --header "Content-Type: text/plain" \
@@ -156,7 +156,7 @@ Feature
 
 Feature er et REST API til skabelse, læsning, opdatering og sletning (CRUD) af rækker i enhver redigerbar relation. Feature "wrapper" WFS-T servicen, således alle funktioner i denne service også virker i Feature. Dvs. Versionering, Workflow, Extensions og Tile Busting.
 
-Signaturen på Feature ved skabelse og opdatering.:
+Signaturen på Feature ved skabelse og opdatering::
 
 	http://swarm.gc2.io/api/v2/feature/[user]/[relation]/[srid]
 	
@@ -179,7 +179,7 @@ POST (skabelse)
 
 API key kan hentes vha. Session API
 
-Der kan sendes flere GeoJSON objekter ad gangen. Alle transaktioner skal kunne gennemføres ellers bliver ingen rækker indsat.:
+Der kan sendes flere GeoJSON objekter ad gangen. Alle transaktioner skal kunne gennemføres ellers bliver ingen rækker indsat::
 
 	curl --header 'GC2-API-KEY:xxxxx' -XPOST https://swarm.gc2.io/api/v2/feature/_cowiplan@horsens/_cowiplan.kommuneplanramme_attr.gc2_non_postgis/25832 -d '
 	{
@@ -212,7 +212,7 @@ Ved PUT skal den den primær nøgle indgå i GeoJSON objeket. Her er det planid
 
 API key kan hentes vha. Session API
 
-Der kan sendes flere GeoJSON objekter ad gangen. Alle transaktioner skal kunne gennemføres ellers bliver ingen rækker opdateret.:
+Der kan sendes flere GeoJSON objekter ad gangen. Alle transaktioner skal kunne gennemføres ellers bliver ingen rækker opdateret::
 
 	curl --header 'GC2-API-KEY:xxxxx' -XPOST https://swarm.gc2.io/api/v2/feature/_cowiplan@horsens/_cowiplan.kommuneplanramme_attr.gc2_non_postgis/25832 -d '
 	{
@@ -285,7 +285,7 @@ Du kan se mapping dokumentet ved at kalde denne::
 
 Det egentlige indeks i Elasticsearch vil blive navngivet: database_schema_table
 
-Dokumentstrukturen ii Elasticsearch
+Dokumentstrukturen i Elasticsearch
 
 De indekserede dokumenter er formateret som GeoJSON. Et eksempel på et GeoJSON dokument::
 
@@ -305,7 +305,7 @@ Eksponering af Elasticsearch search API
 
 GC2 eksponerer kun Search API'et i Elasticsearch. Du kan bruge GC2's API som du ville bruge Search API i Elasticsearch.
 
-Nedenfor er et eksempel på en GET med en URI search. De følgende eksempler bruger cURL-programmet, men enhver HTTP-klient kan bruges.:
+Nedenfor er et eksempel på en GET med en URI search. De følgende eksempler bruger cURL-programmet, men enhver HTTP-klient kan bruges::
 
 	curl -i --header "Content-Type: application/json" -X GET \
 	"https://gc2.io/api/v2/elasticsearch/search/dk/matrikel/jordstykke_view?q=properties.string1:Engelsholm&size=1&pretty"
@@ -327,7 +327,7 @@ Eksponering af Elasticsearch search API
 
 Hvis du hoster din egen GC2 server kan du opsætte Elasticsearch `index settings <https://www.elastic.co/guide/en/elasticsearch/guide/master/_index_settings.html>`_. herunder brugerdefinerede `analyzers <https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-custom-analyzer.html>`_. og `search analyzers. <https://www.elastic.co/guide/en/elasticsearch/reference/current/search-analyzer.html>`_. Analyzers kan herefter vælges i GC2 Admin.
 
-På GC2-serveren oprettes et dokument kaldet app/conf/elasticsearch_settings.json, som udfyldes  med indeksindstillingerne:
+På GC2-serveren oprettes et dokument kaldet app/conf/elasticsearch_settings.json, som udfyldes  med indeksindstillingerne::
 
 	{
 	  "settings": {

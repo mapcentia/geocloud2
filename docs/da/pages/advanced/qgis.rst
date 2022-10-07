@@ -4,7 +4,7 @@
 QGIS
 #################################################################
 
-`QGIS <https://www.qgis.org/>` desktop-programmet er et populært open source alternativ til bl.a. MapInfo og ArcMap. Flere og flere organisationer, heriblandt kommuner, er begyndt at anvende QGIS som et supplement til de kommercielle GIS produkter – nogle har endda taget skridtet fuldt ud og helt erstattet deres kommercielle desktop GIS med QGIS.
+`QGIS <https://www.qgis.org/>`_. desktop-programmet er et populært open source alternativ til bl.a. MapInfo og ArcMap. Flere og flere organisationer, heriblandt kommuner, er begyndt at anvende QGIS som et supplement til de kommercielle GIS produkter – nogle har endda taget skridtet fuldt ud og helt erstattet deres kommercielle desktop GIS med QGIS.
 
 GC2 har ”QGIS Server” indbygget. Denne serversoftware gør det muligt at udstille det du ser i dit desktop QGIS som en Web Map Service (WMS). Kort fortalt er QGIS MapServer en modificeret UMN MapServer, hvor grafikmotoren er skiftet ud med den, som sidder i desktop QGIS. Da GC2 allerede anvender MapServer som grafisk back-end, passer QGIS MapServer fint ind som et supplement.
 
