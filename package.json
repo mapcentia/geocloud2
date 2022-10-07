@@ -30,7 +30,7 @@
     "grunt-templates-hogan": "0.2.5"
   },
   "dependencies": {
-    "nconf": "~0.7.1",
+    "nconf": "~0.11.4",
     "pg": "^6.1.0",
     "request": "^2.53.0",
     "winston": "~0.8.3"
