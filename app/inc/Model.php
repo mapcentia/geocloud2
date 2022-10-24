@@ -98,7 +98,7 @@ class Model
         $this->postgisuser = Connection::$param['postgisuser'];
         $this->postgisdb = Connection::$param['postgisdb'];
         $this->postgispw = Connection::$param['postgispw'];
-        $this->postgisschema = isset(Connection::$param['postgisschema']) ? Connection::$param['postgisschema'] : null;
+        $this->postgisschema = Connection::$param['postgisschema'] ?? null;
     }
 
     /**
@@ -461,7 +461,7 @@ class Model
                     while ($rowC = $this->fetchRow($resC)) {
                         $foreignValues[] = ["value" => $rowC["value"], "alias" => (string)$rowC["text"]];
                     }
-                } elseif ($restriction == true && $restrictions != false && isset($restrictions[$row["column_name"]]) && $restrictions[$row["column_name"]] != "*") {
+                } elseif ($restriction && $restrictions && isset($restrictions[$row["column_name"]]) && $restrictions[$row["column_name"]] != "*") {
                     if (is_array($restrictions[$row["column_name"]])) {
                         foreach ($restrictions[$row["column_name"]] as $restriction) {
                             $foreignValues[] = ["value" => $restriction, "alias" => (string)$restriction];
@@ -471,7 +471,7 @@ class Model
                             $foreignValues[] = ["value" => $value, "alias" => (string)$alias];
                         }
                     }
-                } elseif ($restrictions[$row["column_name"]] == "*") {
+                } elseif (isset($restrictions[$row["column_name"]]) && $restrictions[$row["column_name"]] == "*") {
                     $t = new Table($table);
                     foreach ($t->getGroupByAsArray($row["column_name"])["data"] as $value) {
                         $foreignValues[] = ["value" => $value, "alias" => (string)$value];

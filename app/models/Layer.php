@@ -348,7 +348,7 @@ class Layer extends Table
                 }
 
                 // If session is sub-user we always check privileges
-                if (isset($_SESSION) && $_SESSION["subuser"]) {
+                if (isset($_SESSION["subuser"]) && $_SESSION["subuser"]) {
                     $privileges = (array)json_decode($row["privileges"]);
                     if (($privileges[$_SESSION['usergroup'] ?: $_SESSION['screen_name']] != "none" && $privileges[$_SESSION['usergroup'] ?: $_SESSION['screen_name']])) {
                         $response['data'][] = $arr;
