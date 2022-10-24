@@ -166,9 +166,17 @@ function getCmd(): void
     $fp = fopen($dir . "/" . $tempFile, 'w+');
     curl_setopt($ch, CURLOPT_FILE, $fp);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_exec($ch);
+    if (curl_errno($ch)) {
+        $error_msg = curl_error($ch);
+    }
     curl_close($ch);
     fclose($fp);
+    if (isset($error_msg)) {
+        print "\n" . $error_msg;
+        cleanUp();
+    }
 
     print "\nInfo: Staring inserting in temp table using ogr2ogr...";
 
@@ -249,7 +257,7 @@ function getCmdPaging(): void
         }
 
         if (!$pass) {
-            if ($count > 2) {
+            if ($count > 10) {
                 print "\nError: Too many recursive tries to fetch cell #{$cellNumber}";
                 cleanUp();
                 exit(1);
@@ -566,10 +574,9 @@ function getCmdPaging(): void
         exit(1);
     }
 
-    rsort($numberOfFeatures);
-    print "\nInfo: Highest number of features in cell: " . $numberOfFeatures[0];
-    $report[MAXCELLCOUNT] = $numberOfFeatures[0];
-
+    arsort($numberOfFeatures);
+    print "\nInfo: Highest number of features in cell: " . array_values($numberOfFeatures)[0] . (" (#" . ((int)array_keys($numberOfFeatures)[0] + 1)) . ")";
+    $report[MAXCELLCOUNT] = array_values($numberOfFeatures)[0];
 }
 
 function getCmdFile(): void
@@ -670,9 +677,17 @@ function getCmdZip(): void
     $fp = fopen($dir . "/" . $tempFile . "." . $extCheck2[0], 'w+');
     curl_setopt($ch, CURLOPT_FILE, $fp);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_exec($ch);
+    if (curl_errno($ch)) {
+        $error_msg = curl_error($ch);
+    }
     curl_close($ch);
     fclose($fp);
+    if (isset($error_msg)) {
+        print "\n" . $error_msg;
+        cleanUp();
+    }
     $ext = array("shp", "tab", "geojson", "gml", "kml", "mif", "gdb", "csv");
 
     // ZIP start

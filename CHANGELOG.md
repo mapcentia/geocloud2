@@ -4,9 +4,74 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED] - 2022-5-5
+## [UNRELEASED]
+### Changed
+- Upgraded Grunt
+
+### Fixed
+- Qoute of fields when new version of record is inserted (Track changes). 
+
+## [2022.10.0] - 2022-5-10
+### Changed
+- It's now possible to set `Expires` attribute for the session cookie. Defaults to 86400 seconds.
+```php
+{
+  "sessionMaxAge" => 86400
+}
+```
+
+### Fixed
+- Restriction values from JSON was always cast to string, which meant the editor tried to submit strings to numeric fields. 
+
+## [2022.9.0] - 2022-30-9
+### Added
+- Two new v3 API's: `api/v3/schema` and `api/v3/meta`, which correspond to the v2 ones (`api/v2/database/schemas` and `api/v2/meta`). The new `meta` does format the data different and let out some legacy properties. Check out swagger page.
+
+### Changed
+- Hide server version and OS from header and internal error pages. For this change to take effect you have to create a new base image.
+- Updated the QGIS gpg.key to 2022 version.
+- Deny all access to the .git folder in the apache server configuration.
+- Layers are not longer groupped in WMS capabilities because it's not possible to request a group. This would result in an error when GC2 tries to authorize access to the group instead of a single layer. 
+
+## [2022.8.1] - 2022-11-8
+### Changed
+- The snapshot list fetch now only include metadata - not the snapshot data itself. When activating a snapshot in Vidi the data is fetched. This way a long snapshot list will not hog Vidi down.
+
+## [2022.8.0] - 2022-2-8
+### Added
+- New meta settings for controlling zoom level visibility for vector layers in Vidi: `vector_min_zoom` and `vector_max_zoom`.
+- New meta setting for binding a tooltip to vector layers in Vidi: `tooltip_template`. This is a mustace/handlebars template where feature properties can be uses:
+```handlebars
+This is a label for feature <b>{{gid}}</b>
+```
+
+### Fixed
+- Optimized `Database::listAllSchemas` method using pg_catalog instead of information_schema.
+
+## [2022.6.1] - 2022-27-6
+### Added
+- New `Template` property in Structure tab. Input is a mustache template, which will in Vidi replace the actual value. All values of the feature can be used in template. Ideal for e.g. custom links/images with alt text. Will overrule `Content` and `Link` properties. 
+
+### Fixed
+- Doubled download in scheduler is fixed.
+- Creating and updating of a layers properties (also in structure tab) now uses prepared statements, so specific characters will not trip updates/inserts in database.
+
+## [2022.6.0] - 2022-20-6
+### Added
+- `Model::doesColumnExist` now uses `pg_attribute` instead of `information_schema` which speeds up the query many times.
+
+## [2022.5.1] - 2022-23-5
+### Added
+- Memcached can now be used for MapCache backend. For now the host and port is hardcoded to `memcached` and `11211`, so only a local dockerized Memcached server can be used. `docker/docker-compose.yml` is updated with Memcached.
+
+### Fixed
+- In WFS-t 1.0.0 it's now possible to provide primary key as an ordinary element, because 1.0.0 doesn't support `idgen`.  
+- In MapFiles files default geometry type is set to point, because both line and polygon can be drawn as points. The default will be used when a layer has GEOMETRY as type.
+
+## [2022.5.0] - 2022-12-5
 ### Fixed
 - All cache tags are now md5 encoded because they can contain illegal characters (tags are formed from relation names).
+- Create blank table function used 'WITH OIDS', which doesn't work in PostgreSQL > 14. It's removed from the CREATE statemant.
 
 ## [2022.4.1] - 2022-7-4
 ### Fixed
@@ -26,7 +91,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ### Fixed
 - When creating a sub-user the group was not set in the Setting model. This was only done when updating the sub-user.
 - Tags can now be appended again.
-- Tags presentation in footer is now nicer and no tags is writen out instead of showing `null` or `[]`.
+- Tags presentation in footer is now nicer and `no tags` is writen out instead of showing `null` or `[]`.
 
 ## [2022.3.1] - 2022-15-3
 ### Added
@@ -326,7 +391,7 @@ Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
 ### Changed
 - CalVer is now used with month identifier like this: YYYY.MM.Minor.Modifier.
 - The default primary key can now be set with `defaultPrimaryKey` in `\app\conf\App.php`. Before this was hardcoded to `gid` which still is the default if `defaultPrimaryKey` is empty.
-- Memcached added as an option for session handling and AppCache. The setup in `\app\conf\App.php` is changed too, so session handling and AppCache be set up independently:
+- Memcached added as an option for session handling and AppCache. The setup in `\app\conf\App.php` is changed too, so session handling and AppCache is set up independently:
 ```php
 [        
     "sessionHandler" => [

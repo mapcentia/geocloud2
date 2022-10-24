@@ -98,7 +98,7 @@ class Model
         $this->postgisuser = Connection::$param['postgisuser'];
         $this->postgisdb = Connection::$param['postgisdb'];
         $this->postgispw = Connection::$param['postgispw'];
-        $this->postgisschema = isset(Connection::$param['postgisschema']) ? Connection::$param['postgisschema'] : null;
+        $this->postgisschema = Connection::$param['postgisschema'] ?? null;
     }
 
     /**
@@ -461,20 +461,20 @@ class Model
                     while ($rowC = $this->fetchRow($resC)) {
                         $foreignValues[] = ["value" => $rowC["value"], "alias" => (string)$rowC["text"]];
                     }
-                } elseif ($restriction == true && $restrictions != false && isset($restrictions[$row["column_name"]]) && $restrictions[$row["column_name"]] != "*") {
+                } elseif ($restriction && $restrictions && isset($restrictions[$row["column_name"]]) && $restrictions[$row["column_name"]] != "*") {
                     if (is_array($restrictions[$row["column_name"]])) {
                         foreach ($restrictions[$row["column_name"]] as $restriction) {
                             $foreignValues[] = ["value" => $restriction, "alias" => (string)$restriction];
                         }
                     } elseif (is_object($restrictions[$row["column_name"]])) {
                         foreach ($restrictions[$row["column_name"]] as $alias => $value) {
-                            $foreignValues[] = ["value" => (string)$value, "alias" => (string)$alias];
+                            $foreignValues[] = ["value" => $value, "alias" => (string)$alias];
                         }
                     }
-                } elseif ($restrictions[$row["column_name"]] == "*") {
+                } elseif (isset($restrictions[$row["column_name"]]) && $restrictions[$row["column_name"]] == "*") {
                     $t = new Table($table);
                     foreach ($t->getGroupByAsArray($row["column_name"])["data"] as $value) {
-                        $foreignValues[] = ["value" => (string)$value, "alias" => (string)$value];
+                        $foreignValues[] = ["value" => $value, "alias" => (string)$value];
                     }
                 }
 
@@ -841,7 +841,7 @@ class Model
 
             $response = [];
             $bits = explode(".", $table);
-            $sql = "SELECT column_name FROM information_schema.columns WHERE table_schema='{$bits[0]}' AND table_name='{$bits[1]}' and column_name='{$column}'";
+            $sql = "SELECT true AS exists FROM pg_attribute WHERE attrelid = '{$bits[0]}.{$bits[1]}'::regclass AND attname = '{$column}' AND NOT attisdropped";
             $res = $this->prepare($sql);
 
             try {
@@ -854,11 +854,7 @@ class Model
             }
             $row = $this->fetchRow($res);
             $response['success'] = true;
-            if ($row) {
-                $response['exists'] = true;
-            } else {
-                $response['exists'] = false;
-            }
+            $response['exists'] = (bool)$row["exists"];
 
             try {
                 $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime

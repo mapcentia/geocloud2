@@ -49,6 +49,10 @@ RUN cd ~ &&\
 # Make php8.0-fpm run in the foreground
 RUN sed 's/;daemonize = yes/daemonize = no/' -i /etc/php/8.0/fpm/php-fpm.conf
 
+# Hide server version and os from header and internal error pages
+RUN sed -i '/ServerTokens OS/c\ServerTokens Prod' /etc/apache2/conf-enabled/security.conf
+RUN sed -i '/ServerSignature On/c\ServerSignature Off' /etc/apache2/conf-enabled/security.conf
+
 # Install Node.js and Grunt
 RUN curl -sL https://deb.nodesource.com/setup_14.x -o nodesource_setup.sh &&\
     bash nodesource_setup.sh &&\

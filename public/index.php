@@ -1,14 +1,13 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2022 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 ini_set("display_errors", "no");
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
-//error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 ob_start("ob_gzhandler");
 
 use app\controllers\Wms;
@@ -30,12 +29,11 @@ include_once("../app/inc/Globals.php");
 
 new App();
 
-$memoryLimit = isset(App::$param["memoryLimit"]) ? App::$param["memoryLimit"] : "128M";
+$memoryLimit = App::$param["memoryLimit"] ?? "128M";
 ini_set("memory_limit", $memoryLimit);
 ini_set("max_execution_time", "30");
 
 // Set session back-end. PHP will use default port if not set explicit
-
 if (!empty(App::$param["sessionHandler"]["type"]) && App::$param["sessionHandler"]["type"] != "files") {
     if (!empty(App::$param['sessionHandler']["host"])) {
         ini_set("session.save_handler", App::$param['sessionHandler']["type"]);
@@ -58,7 +56,7 @@ $executionStartTime = microtime(true);
 // Reserve some memory in case of the memory limit is reached
 $memoryReserve = str_repeat('*', 1024 * 1024);
 
-// Register a shutdown callback if fatal a error occurs
+// Register a shutdown callback if fatal an error occurs
 register_shutdown_function(function () {
     global $memoryReserve;
     global $executionStartTime;
@@ -90,12 +88,12 @@ try {
 }
 
 // Setup host
-App::$param['protocol'] = isset(App::$param['protocol']) ? App::$param['protocol'] : Util::protocol();
-App::$param['host'] = App::$param['host'] ?: App::$param['protocol'] . "://" . $_SERVER['SERVER_NAME'] . ($_SERVER['SERVER_PORT'] != "80" && $_SERVER['SERVER_PORT'] != "443" ? ":" . $_SERVER["SERVER_PORT"] : "");
-App::$param['userHostName'] = App::$param['userHostName'] ?: App::$param['host'];
+App::$param['protocol'] = App::$param['protocol'] ?? Util::protocol();
+App::$param['host'] = App::$param['host'] ?? App::$param['protocol'] . "://" . $_SERVER['SERVER_NAME'] . ($_SERVER['SERVER_PORT'] != "80" && $_SERVER['SERVER_PORT'] != "443" ? ":" . $_SERVER["SERVER_PORT"] : "");
+App::$param['userHostName'] = App::$param['userHostName'] ?? App::$param['host'];
 
 // Write Access-Control-Allow-Origin if origin is white listed
-$http_origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : null;
+$http_origin = $_SERVER['HTTP_ORIGIN'] ?? null;
 if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App::$param["AccessControlAllowOrigin"])) {
     header("Access-Control-Allow-Origin: " . $http_origin);
 } elseif (isset(App::$param["AccessControlAllowOrigin"]) && App::$param["AccessControlAllowOrigin"][0] == "*") {
@@ -309,6 +307,33 @@ if (Input::getPath()->part(1) == "api") {
     });
 
     Route::add("api/v3/sql", function () {
+        $jwt = Jwt::validate();
+        if ($jwt["success"]) {
+            Database::setDb($jwt["data"]["database"]);
+        } else {
+            echo Response::toJson($jwt);
+            exit();
+        }
+    });
+    Route::add("api/v3/meta/[query]", function () {
+        $jwt = Jwt::validate();
+        if ($jwt["success"]) {
+            Database::setDb($jwt["data"]["database"]);
+        } else {
+            echo Response::toJson($jwt);
+            exit();
+        }
+    });
+    Route::add("api/v3/schema", function () {
+        $jwt = Jwt::validate();
+        if ($jwt["success"]) {
+            Database::setDb($jwt["data"]["database"]);
+        } else {
+            echo Response::toJson($jwt);
+            exit();
+        }
+    });
+    Route::add("api/v3/import/[file]", function () {
         $jwt = Jwt::validate();
         if ($jwt["success"]) {
             Database::setDb($jwt["data"]["database"]);

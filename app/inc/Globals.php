@@ -232,6 +232,21 @@ class Globals
                     "title" => "Disable feature info",
                     "default" => false,
                 ],
+                [
+                    "name" => "vector_max_zoom",
+                    "type" => "text",
+                    "title" => "Max zoom",
+                ],
+                [
+                    "name" => "vector_min_zoom",
+                    "type" => "text",
+                    "title" => "Min zoom",
+                ],
+                [
+                    "name" => "tooltip_template",
+                    "type" => "textarea",
+                    "title" => "Tooltip template",
+                ],
             ]
 
         ],

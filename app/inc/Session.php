@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2022 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -22,8 +22,9 @@ class Session
      */
     public static function start(): void
     {
-        ini_set("session.cookie_lifetime", "86400");
-        ini_set("session.gc_maxlifetime", "86400");
+        $sessionMaxAge = App::$param["sessionMaxAge"] ?? 86400;
+        ini_set("session.cookie_lifetime", (string)$sessionMaxAge);
+        ini_set("session.gc_maxlifetime", (string)$sessionMaxAge);
         ini_set("session.gc_probability", "1");
         ini_set("session.gc_divisor", "1");
         if (Util::protocol() == "https") {
@@ -65,7 +66,7 @@ class Session
      */
     public static function authenticate(?string $redirect = " / ")
     {
-        if (isset($_SESSION['auth']) && $_SESSION['auth'] == true) {
+        if (isset($_SESSION['auth']) && $_SESSION['auth']) {
             return true;
         } elseif ($redirect) {
             Redirect::to($redirect);
@@ -80,7 +81,7 @@ class Session
      */
     public static function isAuth(): bool
     {
-        return isset($_SESSION['auth']) ? $_SESSION['auth'] : false;
+        return $_SESSION['auth'] ?? false;
     }
 
     /**

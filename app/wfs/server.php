@@ -1108,7 +1108,7 @@ function doQuery(string $queryType)
                         $gmlVersion = $outputFormat == "GML3" ? "3" : "2";
                         $longCrs = $version == "1.1.0" ? 1 : 0;
                         $flipAxis = $version == "1.1.0" && $srs == "4326" ? 16 : 0; // flip axis if lat/lon
-                        $options = (string)($longCrs + $flipAxis + 4 + 2);
+                        $options = (string)($longCrs + $flipAxis + 4);
                         $sql = str_replace("\"{$key}\"", "ST_AsGml({$gmlVersion},ST_Transform(\"{$key}\",{$srs}),5,{$options}) as \"{$key}\"", $sql);
                         $sql2 = "SELECT ST_Xmin(ST_Extent(ST_Transform(\"" . $key . "\",{$srs}))) AS TXMin,ST_Xmax(ST_Extent(ST_Transform(\"" . $key . "\",{$srs}))) AS TXMax, ST_Ymin(ST_Extent(ST_Transform(\"" . $key . "\",{$srs}))) AS TYMin,ST_Ymax(ST_Extent(ST_Transform(\"" . $key . "\",{$srs}))) AS TYMax ";
                     }
@@ -1579,21 +1579,22 @@ function doParse(array $arr)
                         $fields = array();
                         $values = array();
 
+                        // In case of UseExisting key generation
+                        // UseExisting is set implicit when gml:id attribut is provided in transaction
+                        if (!empty($gmlId)) {
+                            $fields[] = $primeryKey["attname"];
+                            $values[] = $gmlId;
+                        }
                         foreach ($feature as $field => $value) {
                             // If primary field is provided we skip it
-                            // Or else we get an duplicate key error
-                            // when using GenerateNew key generation
-                            if ($field == $primeryKey["attname"]) {
+                            // Or else we get a duplicate key error
+                            // when using GenerateNew key generation.
+                            // But not for 1.0.0 which doesn't support idgen
+                            if ($field == $primeryKey["attname"] && $version != "1.0.0" && !empty($gmlId)) {
                                 continue;
                             }
-                            // In case of UseExisting key generation
-                            if (!empty($gmlId)) {
-                                $fields[] = $primeryKey["attname"];
-                                $values[] = $gmlId;
-                                unset($gmlId);
-                            }
                             $fields[] = $field;
-                            $role = $roleObj["data"][$user];
+                            $role = $roleObj["data"][$user] ?? "none";
                             if ($tableObj->workflow && ($role == "none" && $parentUser == false)) {
                                 makeExceptionReport("You don't have a role in the workflow of '{$typeName}'");
                             }
@@ -1725,7 +1726,7 @@ function doParse(array $arr)
                     //   continue;
                     // }
                     $fields[$fid][] = $pair['Name'];
-                    $role = $roleObj["data"][$user];
+                    $role = $roleObj["data"][$user] ?? "none";
                     if ($tableObj->workflow && ($role == "none" && $parentUser == false)) {
                         makeExceptionReport("You don't have a role in the workflow of '{$hey['typeName']}'");
                     }
@@ -1787,7 +1788,7 @@ function doParse(array $arr)
                 $forSql3['tables'][] = $hey['typeName'];
                 $forSql3['wheres'][] = parseFilter($hey['Filter'], $hey['typeName']);
                 $roleObj = $layerObj->getRole($postgisschema, $hey['typeName'], $user);
-                $role = $roleObj["data"][$user];
+                $role = $roleObj["data"][$user] ?? "none";
                 $tableObj = new table($postgisschema . "." . $hey["typeName"]);
                 if ($tableObj->workflow && ($role == "none" && $parentUser == false)) {
                     makeExceptionReport("You don't have a role in the workflow of '{$hey['typeName']}'");
@@ -1893,10 +1894,10 @@ function doParse(array $arr)
                 foreach ($originalFeature as $k => $v) {
                     if ($k != $primeryKey['attname']) {
                         if ($k == "gc2_version_end_date") {
-                            $intoArr[] = $k;
+                            $intoArr[] = "\"$k\"";
                             $selectArr[] = "now()";
                         } else {
-                            $intoArr[] = $selectArr[] = $k;
+                            $intoArr[] = $selectArr[] = "\"$k\"";
                         }
                     }
                 }

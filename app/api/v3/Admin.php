@@ -232,7 +232,8 @@ class Admin extends Controller
     public function get_schema(): array
     {
         $admin = new \app\models\Admin();
-        return ["data" => $admin->install()];
+        $res = $admin->install();
+        return ["data" => $res, "success" => $res["success"], "message" => $res["message"]];
     }
 
     /**
@@ -264,7 +265,7 @@ class Admin extends Controller
         foreach ($dirs as $dir) {
             $this->rrmdir($dir, $result);
         }
-        return ["success" => true, "message" => "Unlinked files", "data" => $result];
+        return ["success" => true, "data" => $result];
     }
 
     /**
@@ -314,7 +315,7 @@ class Admin extends Controller
      */
     public function get_cachestats(): array
     {
-        return ["stats" => Cache::getStats()];
+        return ["success" => true, "data" => Cache::getStats()];
     }
 
     /**
@@ -340,6 +341,7 @@ class Admin extends Controller
      */
     public function get_cachecleanup(): array
     {
-        return Cache::clear();
+        $res = Cache::clear();
+        return ["data" => $res, "success" => $res["success"], "message" => $res["message"]];
     }
 }

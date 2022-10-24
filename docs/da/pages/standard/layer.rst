@@ -81,23 +81,23 @@ Vektor
 
 For at uploade vektor-filer og dermed danne lag på baggrund af disse, følges denne beskrivelse. Numre passer med :numref:`layer-create-vector`:
 
-1. Klik på ``Tilføj filer``, eller træk flere filer ad gangen ind i dialogboksen. Følg hjælpeteksten i boksen.
+#. Klik på ``Tilføj filer``, eller træk flere filer ad gangen ind i dialogboksen. Følg hjælpeteksten i boksen.
 
-2. Sæt koordinatsystem som filerne skal ende i . Dette kan f.eks. være ``25832`` for ``utm32`` eller ``4326`` for ``wgs84``.
+#. Sæt koordinatsystem som filerne skal ende i . Dette kan f.eks. være ``25832`` for ``utm32`` eller ``4326`` for ``wgs84``.
 
-3. Hvis man uploader ``.shp``-filer, er det en god idé at definere geometri-typen, ellers er der risiko for at geometrien bliver læst som blandet.
+#. Hvis man uploader ``.shp``-filer, er det en god idé at definere geometri-typen, ellers er der risiko for at geometrien bliver læst som blandet.
 
-4. Hvis attributterne i datafilerne indeholder ``ASCII``, skal ``encoding`` defineres korrekt. Eller kan tegn ikke vises korrekt (``Æ``, ``Ø``, ``Å`` blandt andet.)
+#. Hvis attributterne i datafilerne indeholder ``ASCII``, skal ``encoding`` defineres korrekt. Eller kan tegn ikke vises korrekt (``Æ``, ``Ø``, ``Å`` blandt andet.)
 
-5. Hvis data indeholder fejl, så spring disse over.
+#. Hvis data indeholder fejl, så spring disse over.
 
-6. Hvis der allerede eksisterer et lag med samme navn som filen man uploader, så overskriv det eksisterende lag.
+#. Hvis der allerede eksisterer et lag med samme navn som filen man uploader, så overskriv det eksisterende lag.
 
-7. Hvis der allerede eksisterer et lag med samme navn som filen man uploader, så overskriv ikke, men læg data i samme lag.
+#. Hvis der allerede eksisterer et lag med samme navn som filen man uploader, så overskriv ikke, men læg data i samme lag.
 
-8. Hvis denne er slået til bliver et lag med samme navn som filen man uplader ikke overskrevet eller lagt til - men derimod tømt og indhold fra den nye fil bliver lagt i laget. Man kan bruge denne funktion til at undgå at skulle fjerne views der afhænger af laget.
+#. Hvis denne er slået til bliver et lag med samme navn som filen man uplader ikke overskrevet eller lagt til - men derimod tømt og indhold fra den nye fil bliver lagt i laget. Man kan bruge denne funktion til at undgå at skulle fjerne views der afhænger af laget.
 
-9. Klik ``Start upload``
+#. Klik ``Start upload``
 
 Efter upload er færdig, er de nye datasæt tilgængelige i ``Map``-fanen, hvor det har fået en standard-tematisering, og i ``Database``-fanen hvor det er muligt at ændre lagets egenskaber.
 
@@ -118,10 +118,10 @@ Raster & billede
 
 For at uploade raster-filer og dermed danne lag på baggrund af disse, følges denne beskrivelse. Numre passer med :numref:`layer-create-raster`:
 
-1. Vælg fanen ``Tilføj Raster``
-2. Klik på ``Tilføj filer``, eller træk flere filer ad gangen ind i dialogboksen. Følg hjælpeteksten i boksen.
-3. Sæt koordinatsystem som filerne skal ende i . Dette kan f.eks. være ``25832`` for ``utm32`` eller ``4326`` for ``wgs84``.
-4. Klik ``Start upload``
+#. Vælg fanen ``Tilføj Raster``
+#. Klik på ``Tilføj filer``, eller træk flere filer ad gangen ind i dialogboksen. Følg hjælpeteksten i boksen.
+#. Sæt koordinatsystem som filerne skal ende i . Dette kan f.eks. være ``25832`` for ``utm32`` eller ``4326`` for ``wgs84``.
+#. Klik ``Start upload``
 
 Efter upload er færdig, er de nye datasæt tilgængelige i ``Map``-fanen, hvor det har fået en standard-tematisering, og i ``Database``-fanen hvor det er muligt at ændre lagets egenskaber.
 
@@ -130,14 +130,39 @@ Efter upload er færdig, er de nye datasæt tilgængelige i ``Map``-fanen, hvor 
 Database-view
 -----------------------------------------------------------------
 
-TBD
+Du kan skabe et view ovenpå en SELECT forespørgelse, der giver forespørgelsen et navn som du kan referere som en normal tabel. Views er meget veleget til fx at filtrere og sortere data, uden at skulle oprette en ny tabel.
 
-.. _layer_create_osm:
+Views kan bruges i næsten alle sammenhænge som en rigtig tabel.
 
-OSM
------------------------------------------------------------------
+Opret view
+*****************************************************************
 
-TBD
+.. figure:: ../../../_media/layer-create-view.png
+    :width: 400px
+    :align: center
+    :name: layer-create-map
+    :figclass: align-center
+
+    Opret nyt view
+
+#. Klik på "Nyt lag".
+#. Klik på "Database view".
+#. Giv view'et et navn.
+#. Skriv SELECT SQL, som skal definere view'et.
+#. MATERIALIZE
+#. Klik "Skab".
+
+En tabel og view skal have en primær-nøgle. GC2 detekterer primær-nøgler på tabeller, men views har ikke primær-nøgler, så derfor falder GC2 tilbage på feltet "gid". Dvs. at et view skal have et felt "gid" med unikke værdier. Det skal også have et geometri-felt, så det dukker op i listen over lag (der er ingen krav til navngivningen af geometri-felter). Hvis en tabel er oprettet gennem GC2, vil tabellen have gid som primær-nøgle. Så en SELECT som denne vil virke:
+
+``SELECT * FROM foo WHERE bar=1``
+
+Udvælges der ikke med * skal gid og geometri-felt vælges:
+
+``SELECT gid,the_geom FROM foo WHERE bar=1``
+
+Der kan også skabes et "gid" felt med "As" syntax. Her bliver der skabt et view med ét punkt:
+
+``SELECT 1 As gid, ST_SetSRID (ST_Point(-123.365556, 48.428611),4326)::geometry(Point,4326) AS the_geom``
 
 .. _layer_create_blank:
 

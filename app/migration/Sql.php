@@ -136,6 +136,7 @@ class Sql
                     userid               varchar,  
                     anonymous            bool,
                     file                 varchar,  
+                    tag                  varchar,
                     the_geom             geometry(POINT, 4326)
                 )";
         $sqls[] = "ALTER TABLE settings.symbols ADD COLUMN timestamp TIMESTAMP WITH TIME ZONE DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE";

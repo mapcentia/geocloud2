@@ -201,6 +201,11 @@ class Layer extends Table
             }
 
             while ($row = $this->fetchRow($res)) {
+                // TODO Here check priviliges and continue loop if user doesn't has accees
+                //if (isset($_SESSION) && $_SESSION["subuser"]) {
+                //    $privileges = (array)json_decode($row["privileges"]);
+                //}
+
                 $arr = array();
                 $schema = $row['f_table_schema'];
                 $rel = $row['f_table_schema'] . "." . $row['f_table_name'];
@@ -255,7 +260,9 @@ class Layer extends Table
                                 $key == "def" ||
                                 $key == "class" ||
                                 $key == "classwizard" ||
-                                $key == "meta"
+                                $key == "meta" ||
+                                $key == "tags" ||
+                                $key == "privileges"
                             ) && ($value)
                         ) {
                             $value = json_decode($value);
@@ -341,9 +348,9 @@ class Layer extends Table
                 }
 
                 // If session is sub-user we always check privileges
-                if (isset($_SESSION) && $_SESSION["subuser"]) {
+                if (isset($_SESSION["subuser"]) && $_SESSION["subuser"]) {
                     $privileges = (array)json_decode($row["privileges"]);
-                    if (($privileges[$_SESSION['usergroup'] ?: $_SESSION['screen_name']] != "none" && $privileges[$_SESSION['usergroup'] ?: $_SESSION['screen_name']] != false)) {
+                    if (($privileges[$_SESSION['usergroup'] ?: $_SESSION['screen_name']] != "none" && $privileges[$_SESSION['usergroup'] ?: $_SESSION['screen_name']])) {
                         $response['data'][] = $arr;
                     } elseif ($_SESSION['screen_name'] == $schema) {
                         $response['data'][] = $arr;
@@ -355,14 +362,13 @@ class Layer extends Table
                     $response['data'][] = $arr;
                 }
             }
-            $response['data'] = isset($response['data']) ? $response['data'] : array();
+            $response['data'] = $response['data'] ?? array();
 
             // Remove dups
             $response['data'] = array_unique($response['data'], SORT_REGULAR);
 
             // Reindex array
             $response['data'] = array_values($response['data']);
-
 
             // Resort data, because a mix of schema and tags search will not be sorted right
             usort($response['data'], function ($a, $b) {
@@ -694,7 +700,7 @@ class Layer extends Table
     {
         $privileges = json_decode($this->getValueFromKey($_key_, "privileges") ?: "{}");
         foreach (\app\inc\Session::getByKey('subusers') as $subuser) {
-            $privileges->$subuser = ($privileges->$subuser) ?: "none";
+            $privileges->$subuser = $privileges->$subuser ?? "none";
             if ($subuser != Connection::$param['postgisschema']) {
                 $response['data'][] = array("subuser" => $subuser, "privileges" => $privileges->$subuser, "group" => \app\inc\Session::getByKey("usergroups")[$subuser]);
             }
@@ -765,7 +771,7 @@ class Layer extends Table
     {
         $roles = json_decode($this->getValueFromKey($_key_, "roles") ?: "{}");
         foreach ($_SESSION['subusers'] as $subuser) {
-            $roles->$subuser = $roles->$subuser ?: "none";
+            $roles->$subuser = $roles->$subuser ?? "none";
             if ($subuser != Connection::$param['postgisschema']) {
                 $response['data'][] = array("subuser" => $subuser, "roles" => $roles->$subuser);
             }

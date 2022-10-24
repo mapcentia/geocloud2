@@ -574,15 +574,12 @@ class Table extends Model
     public function updateRecord($data, string $keyName, bool $raw = false, bool $append = false): array
     {
         $data = $this->makeArray($data);
-
         $this->clearCacheOnSchemaChanges();
-
         $response = [];
         $pairArr = [];
         $keyArr = [];
+        $keyArr2 = [];
         $valueArr = [];
-        $keyValue = "";
-        $where = "";
         foreach ($data as $set) {
             $set = $this->makeArray($set);
             foreach ($set as $row) {
@@ -599,7 +596,6 @@ class Table extends Model
                         Util::asyncRequest($url);
                     }
                 }
-
                 // Get key value
                 $pKeyValue = null;
                 foreach ($row as $key => $value) {
@@ -607,12 +603,10 @@ class Table extends Model
                         $pKeyValue = $value;
                     }
                 }
-
                 foreach ($row as $key => $value) {
                     if ($value === false) {
                         $value = null;
                     }
-                    $stripSlashes = false;
                     if ($this->table == "settings.geometry_columns_join") {
                         if ($key == "editable" || $key == "skipconflict") {
                             $value = $value ?: "0";
@@ -632,71 +626,42 @@ class Table extends Model
                         // If Meta when update the existing object, so not changed values persist
                         if ($key == "meta") {
                             $value = $value ?: "null";
-                            if ($raw == false) {
+                            if (!$raw) {
                                 $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["meta"], true);
-
                                 foreach ($value as $fKey => $fValue) {
                                     $rec[$fKey] = $fValue;
                                 }
                                 $value = json_encode($rec, JSON_UNESCAPED_UNICODE);
-                                $stripSlashes = false;
                             }
-
                         } else {
                             if (is_object($value) || is_array($value)) {
                                 $value = json_encode($value, JSON_UNESCAPED_UNICODE);
-                                $stripSlashes = false;
-                            } else {
-                                $stripSlashes = true;
                             }
                         }
-                    } else {
-                        $stripSlashes = true;
                     }
-
-                    $value = $this->db->quote($value);
-
-                    // TODO why are we stripping slashes?
-                    if ($stripSlashes) {
-                        $value = stripcslashes($value);
-                    }
-
-                    if ($key != $keyName) {
-                        $pairArr[] = "\"{$key}\"={$value}";
-                        $keyArr[] = "\"{$key}\"";
-                        $valueArr[] = $value;
-                    } else {
-                        $where = "\"{$key}\"={$value}";
-                        $keyValue = $value;
-                    }
+                    $pairArr[] = "\"{$key}\"=:{$key}";
+                    $valueArr[$key] = $value;
+                    $keyArr[] = "\"{$key}\"";
+                    $keyArr2[] = ":{$key}";
                 }
-
-                $sql = "UPDATE " . $this->doubleQuoteQualifiedName($this->table) . " SET ";
-                $sql .= implode(",", $pairArr);
-                $sql .= " WHERE {$where}";
-                $result = $this->execQuery($sql, "PDO", "transaction");
-
-                // If row does not exits, insert instead.
-                // ======================================
-
-                if ((!$result) && (!isset($this->PDOerror)) && (!$this->PDOerror)) {
-                    $sql = "INSERT INTO " . $this->doubleQuoteQualifiedName($this->table) . " ({$keyName}," . implode(",", $keyArr) . ") VALUES({$keyValue}," . implode(",", $valueArr) . ")";
-
-                    $this->execQuery($sql, "PDO", "transaction");
-                    $response['operation'] = "Row inserted";
-                }
-                if (!isset($this->PDOerror) || !$this->PDOerror) {
+                $sql = "INSERT INTO " . $this->doubleQuoteQualifiedName($this->table) . " (" . implode(",", $keyArr) . ") VALUES(" . implode(",", $keyArr2) . ")" .
+                    " ON CONFLICT ({$keyName}) DO UPDATE SET " . implode(",", $pairArr);
+                try {
+                    $result = $this->prepare($sql);
+                    $result->execute($valueArr);
                     $response['success'] = true;
                     $response['message'] = "Row updated";
-                } else {
+
+                } catch (PDOException $e) {
                     $response['success'] = false;
-                    $response['message'] = $this->PDOerror[0];
-                    $response['code'] = 406;
+                    $response['message'] = $e->getMessage();
+                    $response['code'] = 401;
                     return $response;
                 }
-                $pairArr = [];
                 $keyArr = [];
+                $keyArr2 = [];
                 $valueArr = [];
+                $pairArr=[];
             }
         }
         return $response;
@@ -818,6 +783,7 @@ class Table extends Model
                 $arr = $this->array_push_assoc($arr, "content", !empty($fieldconfArr[$key]->content) ? $fieldconfArr[$key]->content : null);
                 $arr = $this->array_push_assoc($arr, "linkprefix", !empty($fieldconfArr[$key]->linkprefix) ? $fieldconfArr[$key]->linkprefix : null);
                 $arr = $this->array_push_assoc($arr, "linksuffix", !empty($fieldconfArr[$key]->linksuffix) ? $fieldconfArr[$key]->linksuffix : null);
+                $arr = $this->array_push_assoc($arr, "template", !empty($fieldconfArr[$key]->template) ? $fieldconfArr[$key]->template : null);
                 $arr = $this->array_push_assoc($arr, "properties", !empty($fieldconfArr[$key]->properties) ? $fieldconfArr[$key]->properties : null);
                 $arr = $this->array_push_assoc($arr, "ignore", !empty($fieldconfArr[$key]->ignore) && $fieldconfArr[$key]->ignore);
                 $arr = $this->array_push_assoc($arr, "is_nullable", !empty($value['is_nullable']) && $value['is_nullable']);
@@ -1265,7 +1231,7 @@ class Table extends Model
             $table = "_" . $table;
         }
         $sql = "BEGIN;";
-        $sql .= "CREATE TABLE {$this->postgisschema}.{$table} (gid SERIAL PRIMARY KEY,id INT) WITH OIDS;";
+        $sql .= "CREATE TABLE {$this->postgisschema}.{$table} (gid SERIAL PRIMARY KEY,id INT);";
         $sql .= "SELECT AddGeometryColumn('" . $this->postgisschema . "','{$table}','the_geom',{$srid},'{$type}',2);"; // Must use schema prefix cos search path include public
         $sql .= "COMMIT;";
         $this->execQuery($sql, "PDO", "transaction");
@@ -1343,7 +1309,7 @@ class Table extends Model
     {
         $response = [];
         $res = $this->doesColumnExist($this->table, $field);
-        if ($this->PDOerror) {
+        if (isset($this->PDOerror)) {
             $response['success'] = true;
             $response['message'] = $res;
             return $response;
