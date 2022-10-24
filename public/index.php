@@ -1,14 +1,13 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2022 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 ini_set("display_errors", "no");
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
-//error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 ob_start("ob_gzhandler");
 
 use app\controllers\Wms;
@@ -35,7 +34,6 @@ ini_set("memory_limit", $memoryLimit);
 ini_set("max_execution_time", "30");
 
 // Set session back-end. PHP will use default port if not set explicit
-
 if (!empty(App::$param["sessionHandler"]["type"]) && App::$param["sessionHandler"]["type"] != "files") {
     if (!empty(App::$param['sessionHandler']["host"])) {
         ini_set("session.save_handler", App::$param['sessionHandler']["type"]);
