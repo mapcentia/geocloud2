@@ -30,7 +30,7 @@ include_once("../app/inc/Globals.php");
 
 new App();
 
-$memoryLimit = isset(App::$param["memoryLimit"]) ? App::$param["memoryLimit"] : "128M";
+$memoryLimit = App::$param["memoryLimit"] ?? "128M";
 ini_set("memory_limit", $memoryLimit);
 ini_set("max_execution_time", "30");
 
@@ -58,7 +58,7 @@ $executionStartTime = microtime(true);
 // Reserve some memory in case of the memory limit is reached
 $memoryReserve = str_repeat('*', 1024 * 1024);
 
-// Register a shutdown callback if fatal a error occurs
+// Register a shutdown callback if fatal an error occurs
 register_shutdown_function(function () {
     global $memoryReserve;
     global $executionStartTime;
@@ -95,7 +95,7 @@ App::$param['host'] = App::$param['host'] ?? App::$param['protocol'] . "://" . $
 App::$param['userHostName'] = App::$param['userHostName'] ?? App::$param['host'];
 
 // Write Access-Control-Allow-Origin if origin is white listed
-$http_origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : null;
+$http_origin = $_SERVER['HTTP_ORIGIN'] ?? null;
 if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App::$param["AccessControlAllowOrigin"])) {
     header("Access-Control-Allow-Origin: " . $http_origin);
 } elseif (isset(App::$param["AccessControlAllowOrigin"]) && App::$param["AccessControlAllowOrigin"][0] == "*") {
