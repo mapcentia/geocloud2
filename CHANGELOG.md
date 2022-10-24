@@ -23,7 +23,6 @@ and this project adheres to [CalVer](https://calver.org/).
 ### Fixed
 - Restriction values from JSON was always cast to string, which meant the editor tried to submit strings to numeric fields. 
 
-
 ## [2022.9.0] - 2022-30-9
 ### Added
 - Two new v3 API's: `api/v3/schema` and `api/v3/meta`, which correspond to the v2 ones (`api/v2/database/schemas` and `api/v2/meta`). The new `meta` does format the data different and let out some legacy properties. Check out swagger page.
