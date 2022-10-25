@@ -18,11 +18,6 @@ class UserFilter
     /**
      * @var string
      */
-    public $db;
-
-    /**
-     * @var string
-     */
     public $userName;
 
     /**
@@ -50,9 +45,8 @@ class UserFilter
      */
     public $schema;
 
-    public function __construct(string $db, string $userName, string $service, string $request, string $ipAddress, string $schema, string $layer)
+    public function __construct(string $userName, string $service, string $request, string $ipAddress, string $schema, string $layer)
     {
-        $this->db = $db;
         $this->userName = $userName;
         $this->service = $service;
         $this->request = $request;
