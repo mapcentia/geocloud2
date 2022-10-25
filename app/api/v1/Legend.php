@@ -50,8 +50,10 @@ class Legend extends Controller
                         if (sizeof($splitName) < 2) {
                             $mapFile = Input::getPath()->part(5) . "_" . $splitName[0] . "_wms.map";
                             if (file_exists($path . $mapFile)) {
-                                $map = ms_newMapobj($path . $mapFile);
-                                $arr = $map->getAllLayerNames();
+                                $map = new \mapObj($path . $mapFile);
+                                for ($i = 0; $i < $map->numlayers; $i++) {
+                                    $arr[] = $map->getLayer($i)->name;
+                                }
                             }
                         } else {
                             $newLayerNames[] = $layerName;
@@ -63,14 +65,12 @@ class Legend extends Controller
                     $layerNameWithOutPrefix = str_replace("v:", "", $layerName);
                     $splitName = explode(".", $layerNameWithOutPrefix);
                     $mapFile = Input::getPath()->part(5) . "_" . $splitName[0] . "_wms.map";
-                    $map = ms_newMapobj($path . $mapFile);
+                    $map = new \mapObj($path . $mapFile);
                     $layer = $map->getLayerByName($layerNameWithOutPrefix);
                     if ($layer) {
-
-                        $this->legendArr[$layerName]['title'] = $layer->getMetaData("ows_title");
-
-                        if ($layer->getMetaData("wms_get_legend_url")) {
-                            $icon = imagecreatefrompng($layer->getMetaData("wms_get_legend_url"));
+                        $this->legendArr[$layerName]['title'] = $layer->metadata->get("ows_title");
+                        if ($layer->metadata->get("wms_get_legend_url")) {
+                            $icon = imagecreatefrompng($layer->metadata->get("wms_get_legend_url"));
                             imagecolortransparent($icon, imagecolorallocatealpha($icon, 0, 0, 0, 127));
                             imagealphablending($icon, false);
                             imagesavealpha($icon, true);
@@ -84,10 +84,8 @@ class Legend extends Controller
                         } else {
                             for ($i = 0; $i < $layer->numclasses; $i++) {
                                 $class = $layer->getClass($i);
-                                $icon = $class->createLegendIcon(17, 17);
-                                ob_start();
-                                $icon->saveImage("", $map);
-                                $data = base64_encode(ob_get_clean());
+                                $icon = $class->createLegendIcon($map, $layer, 17, 17);
+                                $data = base64_encode($icon->getBytes());
                                 $this->legendArr[$layerName]['classes'][$i]['img'] = $data;
                                 $this->legendArr[$layerName]['classes'][$i]['name'] = $class->name;
                                 $this->legendArr[$layerName]['classes'][$i]['expression'] = $class->getExpressionString();
@@ -113,22 +111,17 @@ class Legend extends Controller
             return $response;
         }
         $mapFile = Input::getPath()->part(5) . "_" . Input::getPath()->part(6) . "_wms.map";
-        $map = ms_newMapobj($path . $mapFile);
-        if (Input::get("l")) {
-            $layerNames = explode(";", Input::get("l"));
-            foreach ($layerNames as $layerName) {
-                $layer = $map->getLayerByName($layerName);
+        $map = new \mapObj($path . $mapFile);
+        if (is_array($this->legendArr)) {
+            foreach ($this->legendArr as $key => $layer) {
+                $layer = $map->getLayerByName($key);
                 if ($layer) {
                     $layer->status = MS_ON;
                 }
             }
         }
         header('Content-type: image/png');
-        $legend = $map->drawLegend();
-        ob_start();
-        $legend->saveImage("", $map);
-        $data = ob_get_clean();
-        exit($data);
+        exit($map->drawLegend()->getBytes());
     }
 
     /**

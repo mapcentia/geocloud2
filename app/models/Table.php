@@ -380,7 +380,7 @@ class Table extends Model
         }
 
         while ($row = $this->fetchRow($result)) {
-            $privileges = json_decode($row["privileges"]);
+            $privileges = !empty($row["privileges"]) ? json_decode($row["privileges"]) : null;
             $arr = [];
             $prop = !empty($_SESSION['usergroup']) ? $_SESSION['usergroup'] : $_SESSION['screen_name'];
             if (empty($_SESSION["subuser"]) || (!empty($_SESSION["subuser"]) && $_SESSION['screen_name'] == Connection::$param['postgisschema'])
@@ -661,7 +661,7 @@ class Table extends Model
                 $keyArr = [];
                 $keyArr2 = [];
                 $valueArr = [];
-                $pairArr=[];
+                $pairArr = [];
             }
         }
         return $response;
@@ -680,12 +680,12 @@ class Table extends Model
         $fieldsForStore = [];
         $columnsForGrid = [];
         $type = "";
-        $fieldconfArr = (array)json_decode($this->geometryColumns["fieldconf"]);
+        $fieldconfArr = !empty($this->geometryColumns["fieldconf"]) ? (array)json_decode($this->geometryColumns["fieldconf"]) : null;
         foreach ($fieldconfArr as $key => $value) {
             if ($value->properties == "*") {
                 $table = new Table($this->table);
                 $distinctValues = $table->getGroupByAsArray($key);
-                $fieldconfArr[$key]->properties = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK, JSON_UNESCAPED_UNICODE);
+                $value->properties = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK, JSON_UNESCAPED_UNICODE);
             }
         }
         if ($this->geomType == "POLYGON" || $this->geomType == "MULTIPOLYGON") {
@@ -695,7 +695,7 @@ class Table extends Model
         } elseif ($this->geomType == "LINESTRING" || $this->geomType == "MULTILINESTRING" || $this->geomType == "LINE") {
             $type = "Path";
         }
-        if (substr($this->geomType, 0, 5) == "MULTI") {
+        if (!empty($this->geomType) && substr($this->geomType, 0, 5) == "MULTI") {
             $multi = true;
         } else {
             $multi = false;

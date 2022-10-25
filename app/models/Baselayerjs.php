@@ -88,8 +88,12 @@ class Baselayerjs extends Controller
         if (!empty(App::$param['mapAttribution'])) $overallSettings["mapAttribution"] = App::$param['mapAttribution'];
 
         $locales = array("en_US", "da_DK", "fr_FR", "es_ES", "it_IT", "de_DE", "ru_RU");
-        $arr = explode(",", $_SERVER['HTTP_ACCEPT_LANGUAGE']);
-        $requestedLan = !empty(App::$param['locale']) ? App::$param['locale'] : str_replace("-", "_", $arr[0]);
+        if (isset( $_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+            $arr = explode(",", $_SERVER['HTTP_ACCEPT_LANGUAGE']);
+            $requestedLan = !empty(App::$param['locale']) ? App::$param['locale'] : str_replace("-", "_", $arr[0]);
+        } else {
+            $requestedLan = $locales[0];
+        }
         // Match both language and country
         if (in_array($requestedLan, $locales)) {
             $overallSettings["gc2Al"] = $requestedLan;

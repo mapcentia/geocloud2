@@ -89,7 +89,7 @@ class Mapfile extends Controller
         FONTSET "/var/www/geocloud2/app/wms/fonts/fonts.txt"
         IMAGECOLOR 255 2 255
         UNITS METERS
-        INTERLACE OFF
+        #INTERLACE OFF
 
         OUTPUTFORMAT
         NAME "png"
@@ -535,7 +535,7 @@ class Mapfile extends Controller
                 "wms_group_abstract" "<?php echo $row['layergroup'] ?>"
                 "ows_srs"    "EPSG:<?php echo "{$row['srid']} {$row['wmsclientepsgs']}" ?>"
                 "ows_name"    "<?php echo $layerName; ?>"
-                "ows_abstract"    "<?php echo addslashes($row['f_table_abstract']); ?>"
+                "ows_abstract"    "<?php echo !empty($row['f_table_abstract']) ? addslashes($row['f_table_abstract']) : ""; ?>"
                 "wms_format"    "image/png"
                 "wms_extent" "<?php echo implode(" ", $extent) ?>"
                 "wms_enable_request"    "*"
@@ -1385,7 +1385,7 @@ class Mapfile extends Controller
                 $workflow = $postgisObject->doesColumnExist($rel, "gc2_status");
                 $meta = $postgisObject->getMetaData($rel);
                 $workflow = $workflow["exists"];
-                $arr = (array)json_decode($row['def']); // Cast stdclass to array
+                $arr = !empty($row['def']) ? (array)json_decode($row['def']) : []; // Cast stdclass to array
                 $props = array("label_column", "theme_column");
                 foreach ($props as $field) {
                     if (empty($arr[$field])) {
@@ -1396,7 +1396,7 @@ class Mapfile extends Controller
                 $sortedArr = array();
 
                 // Sort classes
-                $arr = $arr2 = (array)json_decode($row['class']);
+                $arr = $arr2 = !empty($row['class']) ? (array)json_decode($row['class']) : [];
                 for ($i = 0; $i < sizeof($arr); $i++) {
                     $last = 100000;
                     foreach ($arr2 as $key => $value) {
@@ -1479,10 +1479,10 @@ class Mapfile extends Controller
                 <?php ?>
                 TYPE <?php echo $type . "\n"; ?>
                 METADATA
-                "wfs_title"    "<?php if ($row['f_table_title']) echo addslashes($row['f_table_title']); else echo $row['f_table_name'] ?>"
+                "wfs_title"    "<?php if ($row['f_table_title']) echo (!empty($row['f_table_title']) ? addslashes($row['f_table_title']) : ""); else echo $row['f_table_name'] ?>"
                 "wfs_srs"    "EPSG:<?php echo "{$row['srid']} {$row['wmsclientepsgs']}" ?>"
                 "wfs_name"    "<?php echo $layerName; ?>"
-                "wfs_abstract"    "<?php echo addslashes($row['f_table_abstract']); ?>"
+                "wfs_abstract"    "<?php echo (!empty($row['f_table_abstract']) ? addslashes($row['f_table_abstract']) : ""); ?>"
                 "wfs_extent" "<?php echo implode(" ", $extent) ?>"
                 "gml_include_items" "all"
                 "wfs_featureid" "<?php echo $primeryKey['attname'] ?>"
@@ -1494,7 +1494,7 @@ class Mapfile extends Controller
                 "wfs_getfeature_formatlist" "kml,kmz"
                 END
                 UTFITEM   "<?php echo $primeryKey['attname'] ?>"
-                <?php $fields = json_decode($row['fieldconf'], true);
+                <?php $fields = !empty($row['fieldconf']) ? json_decode($row['fieldconf'], true) : null;
                 if (!empty($fields)) {
                     foreach ($fields as $field => $name) {
                         if (isset($meta[$field]) && !empty($name["mouseover"])) {

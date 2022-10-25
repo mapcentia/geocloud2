@@ -78,7 +78,7 @@ class Setting extends Model
         $arr = $this->getArray();
         if (!$_SESSION["subuser"]) {
             $arr->api_key = $apiKey;
-        } else {
+        } elseif (!empty($_SESSION["screen_name"]) && !empty($arr->api_key_subuser)) {
             $arr->api_key_subuser->{$_SESSION["screen_name"]} = $apiKey;
         }
         if (App::$param["encryptSettings"]) {
@@ -110,7 +110,7 @@ class Setting extends Model
         $arr = $this->getArray();
         if (!$_SESSION["subuser"]) {
             $arr->pw = $this->encryptPw($pw);
-        } else {
+        } elseif (!empty($_SESSION["screen_name"]) && !empty($arr->pw_subuser)) {
             $arr->pw_subuser->{$_SESSION["screen_name"]} = $this->encryptPw($pw);
         }
         if (App::$param["encryptSettings"]) {

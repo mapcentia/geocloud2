@@ -59,7 +59,7 @@ class UserManagementCest
         ]);
 
         $response = json_decode($I->grabResponse(), true);
-        $I->assertStringContainsString('_symbols_are_non_ascii', $response['data']['screenname']);
+        $I->assertStringContainsString('_symbols_o_are_non_ascii', $response['data']['screenname']);
 
         $I->sendPOST('/api/v2/session/start', json_encode([
             'user' => $this->userName . ' symbols ø § are non ascii',

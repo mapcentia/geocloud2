@@ -106,7 +106,7 @@ class Session extends Model
 
         if ($isAuthenticated) {
             // Login successful.
-            $properties = json_decode($row['properties']);
+            $properties = !empty($row["properties"]) ? json_decode($row["properties"]) : null;
             $_SESSION['zone'] = $row['zone'];
             $_SESSION['auth'] = true;
             $_SESSION['screen_name'] = $row['screenname'];

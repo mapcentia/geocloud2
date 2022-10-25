@@ -5,13 +5,13 @@ RUN export DEBIAN_FRONTEND=noninteractive
 ENV DEBIAN_FRONTEND noninteractive
 
 # Set php session timeout to one day
-RUN sed -i "s/session.gc_maxlifetime = 1440/session.gc_maxlifetime = 86400/g" /etc/php/8.0/fpm/php.ini
+RUN sed -i "s/session.gc_maxlifetime = 1440/session.gc_maxlifetime = 86400/g" /etc/php/8.1/fpm/php.ini
 # Set max upload file size
-RUN sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 1000M/g" /etc/php/8.0/fpm/php.ini
-RUN sed -i "s/post_max_size = 8M/post_max_size = 1000M/g" /etc/php/8.0/fpm/php.ini
+RUN sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 1000M/g" /etc/php/8.1/fpm/php.ini
+RUN sed -i "s/post_max_size = 8M/post_max_size = 1000M/g" /etc/php/8.1/fpm/php.ini
 
 # Install MapServer 7.6 from source
-RUN git clone https://github.com/mapserver/mapserver.git --branch main &&\
+RUN git clone https://github.com/mapserver/mapserver.git --branch branch-8-0 &&\
     cd mapserver &&\
     mkdir build &&\
     cd build &&\
@@ -32,7 +32,7 @@ RUN git clone https://github.com/mapserver/mapserver.git --branch main &&\
     make && make install &&\
     cp /mapserver/build/mapserv /usr/lib/cgi-bin/mapserv.fcgi
 
-RUN echo "extension=php_mapscript.so" >> /etc/php/8.0/fpm/php.ini
+RUN echo "extension=php_mapscriptng.so" >> /etc/php/8.1/fpm/php.ini
 
 # Instal MapCache from source
 RUN apt-get -y install libapr-memcache-dev
@@ -57,11 +57,6 @@ RUN wget -qO - https://qgis.org/downloads/qgis-2022.gpg.key | gpg --no-default-k
 # Symlink font for QGIS Server
 RUN ln -s /usr/share/fonts directory /usr/lib/x86_64-linux-gnu
 
-# Add some projections to Proj4
-RUN echo "<900913> +proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs <>" >> /usr/share/proj/epsg && \
-	echo "<34004> +proj=omerc +lonc=11.81 +lat_0=55.3333332 +x_0=-118947.024 +y_0=101112.545 +k=0.9999855 +alpha=1.190005 +gamma=0.0 +datum=WGS84" >> /usr/share/proj/epsg && \
-	echo "<34005> +proj=omerc +lonc=11.81 +lat_0=55.3333332 +x_0=-118947.024 +y_0=101112.545 +k=0.9999855 +alpha=1.190005 +gamma=0.0 +datum=WGS84" >> /usr/share/proj/epsg
-
 # Add the watch_mapcache_changes.sh
 COPY watch_mapcache_changes.sh /watch_mapcache_changes.sh
 RUN chmod +x /watch_mapcache_changes.sh
@@ -84,7 +79,7 @@ ADD conf/apache/mapcache.conf /etc/apache2/sites-enabled/
 ADD conf/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Add php-fpm config file from Docker repo
-ADD conf/fpm/www.conf /etc/php/8.0/fpm/pool.d/www.conf
+ADD conf/fpm/www.conf /etc/php/8.1/fpm/pool.d/www.conf
 
 # Add the check-if-fpm-is-alive script
 COPY check-fpm.sh /check-fpm.sh

@@ -1,5 +1,5 @@
 FROM mapcentia/gc2core:mapserver8
-MAINTAINER Martin Høgh 1<mh@mapcentia.com>
+MAINTAINER Martin Høgh<mh@mapcentia.com>
 
 RUN export DEBIAN_FRONTEND=noninteractive
 ENV DEBIAN_FRONTEND noninteractive
@@ -33,7 +33,7 @@ COPY conf/gc2/App.php /var/www/geocloud2/app/conf/
 COPY conf/gc2/Connection.php /var/www/geocloud2/app/conf/
 
 RUN apt-get -y install php-xdebug
-COPY conf/fpm/xdebug.ini  /etc/php/7.3/mods-available/
+COPY conf/fpm/xdebug.ini  /etc/php/8.1/mods-available/
 RUN phpenmod xdebug
 
 # Add Supervisor config and run the deamon

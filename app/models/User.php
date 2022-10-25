@@ -333,7 +333,7 @@ class User extends Model
 //                 A general exception is thown if the API
             }
         }
-        $row["properties"] = json_decode($row["properties"]);
+        $row["properties"] = !empty($row["properties"]) ? json_decode($row["properties"]) : null;
         $response['success'] = true;
         $response['message'] = 'User was created';
         $response['data'] = $row;
@@ -442,7 +442,7 @@ class User extends Model
             $response['code'] = 400;
             return $response;
         }
-        $row["properties"] = json_decode($row["properties"]);
+        $row["properties"] = !empty($row["properties"]) ? json_decode($row["properties"]) : null;
         $response['success'] = true;
         $response['message'] = "User was updated";
         $response['data'] = $row;
