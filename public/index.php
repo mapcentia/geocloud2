@@ -75,7 +75,6 @@ register_shutdown_function(function () {
         ];
         header("HTTP/1.0 {$code} " . Util::httpCodeText($code));
         echo $response->toJson($body);
-
     }
     return false;
 });

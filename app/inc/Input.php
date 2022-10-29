@@ -145,11 +145,11 @@ class Input
                 break;
         }
 
-        if (!reset($query) && $key == null)
+        if (!reset($query) && $key == null && sizeof($query) > 0)
             return str_replace("__gc2_plus__", "+", key($query));
         else {
             if ($key != null)
-                return isset($query[$key]) ? $query[$key] : null;
+                return $query[$key] ?? null;
             else
                 return $query;
         }

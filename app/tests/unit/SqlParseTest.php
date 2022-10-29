@@ -87,7 +87,7 @@ class SqlParseTest extends Unit
     // tests
     public function testTableWalkerRelationShouldFindRelationsInStatement()
     {
-        $string = "SELECT * FROM foo,bar";
+        $string = "SELECT * FROM (SELECT * FROM foo,bar) AS foo";
         $walker = new TableWalkerRelation();
 
         $factory = new sad_spirit\pg_builder\StatementFactory();

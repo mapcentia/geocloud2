@@ -39,6 +39,10 @@ class TableWalkerRule extends BlankWalker
     public function walkSelectStatement(Select $statement)
     {
         foreach ($statement->from->getIterator() as $from) {
+            // A sub-select doesn't have name
+            if (!isset($from->name)) {
+                continue;
+            }
             $schema = $from->name->schema->value ?? "public";
             $relation = $from->name->relation->value;
             $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $schema, $relation);

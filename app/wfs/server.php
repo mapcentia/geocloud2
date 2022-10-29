@@ -23,9 +23,8 @@ ini_set("max_execution_time", "0");
 header('Content-Type:text/xml; charset=UTF-8', TRUE);
 header('Connection:close', TRUE);
 
-include __DIR__ . "/../libs/PEAR/XML/Unserializer.php";
-include __DIR__ . "/../libs/PEAR/XML/Serializer.php";
-include __DIR__ . "/../libs/PEAR/Cache_Lite/Lite.php";
+include "/usr/share/php/XML/Unserializer.php";
+include "/usr/share/php/XML/Serializer.php";
 
 Util::disableOb();
 const FEATURE_LIMIT = 1000000;

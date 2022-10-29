@@ -543,7 +543,11 @@ class XML_Parser extends PEAR
      **/
     function _parseString($data, $eof = false)
     {
-        return xml_parse($this->parser, $data, $eof);
+        if ($this->parser) {
+            return xml_parse($this->parser, $data, $eof);
+        } else {
+            return null;
+        }
     }
 
     // }}}

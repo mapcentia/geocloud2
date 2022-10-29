@@ -106,7 +106,7 @@ class Keyvalue extends Model
         // HACK get rid of unnecessary meta in Vidi snapshots
         if (isset($urlVars["like"]) && $urlVars["like"] == "state_snapshot_%") {
             if (!is_array($response["data"][0])) {
-                $parsed = json_decode($response["data"]["value"], true);
+                $parsed = !empty($response["data"]["value"]) ? json_decode($response["data"]["value"], true) : [];
                 unset($parsed["snapshot"]);
                 if ($parsed)
                     $response["data"]["value"] = json_encode($parsed);

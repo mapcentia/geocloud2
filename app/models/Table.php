@@ -762,7 +762,7 @@ class Table extends Model
     {
         $response = [];
         $arr = array();
-        $fieldconfArr = (array)json_decode($this->geometryColumns["fieldconf"]);
+        $fieldconfArr = !empty($this->geometryColumns["fieldconf"]) ? (array)json_decode($this->geometryColumns["fieldconf"]) : [];
         if (!$this->metaData) {
             $response['data'] = array();
         }
