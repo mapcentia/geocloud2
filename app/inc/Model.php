@@ -854,7 +854,7 @@ class Model
             }
             $row = $this->fetchRow($res);
             $response['success'] = true;
-            $response['exists'] = (bool)$row["exists"];
+            $response['exists'] = isset($row["exists"]);
 
             try {
                 $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime

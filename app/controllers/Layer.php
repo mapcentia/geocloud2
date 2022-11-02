@@ -62,9 +62,19 @@ class Layer extends Controller
      */
     public function put_records(): array
     {
-        $data = (array)json_decode(urldecode(Input::get(null, true)));
-        $response = $this->auth($data["data"]->_key_);
-        return (!$response['success']) ? $response : $this->geometryJoinTable->updateRecord($data, "_key_", false, !empty(Input::getPath()->part(5)));
+        $data = json_decode(urldecode(Input::get(null, true)), true);
+        if (!is_array($data["data"][0])) {
+            $data["data"] = [0 => $data["data"]];
+        }
+        foreach ($data["data"] as $datum) {
+            $response = $this->auth($datum["_key_"]);
+            if ($response['success']) {
+                continue;
+            } else {
+                return $response;
+            }
+        }
+        return $this->geometryJoinTable->updateRecord($data, "_key_", false, !empty(Input::getPath()->part(5)));
     }
 
     /**
