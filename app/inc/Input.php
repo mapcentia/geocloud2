@@ -132,7 +132,7 @@ class Input
             }
         }
 
-        $query = "";
+        $query = [];
 
         switch (static::getMethod()) {
             case "get":
