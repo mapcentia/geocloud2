@@ -587,7 +587,7 @@ class Model
             $_schema = str_replace(".", "", $_schema);
         }
 
-        $row = $this->getColumns($_schema, $_table)[0];
+        $row = $this->getColumns($_schema, $_table)[0] ?? null;
 
         if (!$row) {
             return null;

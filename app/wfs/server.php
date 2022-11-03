@@ -141,10 +141,13 @@ if ($HTTP_RAW_POST_DATA) {
             }
             $HTTP_FORM_VARS["REQUEST"] = "GetFeature";
             foreach ($arr['Query'] as $queries) {
-                $HTTP_FORM_VARS["srsName"] = $queries['srsName'];
+                $HTTP_FORM_VARS["srsName"] = $queries['srsName'] ?? null;
                 $queries['typeName'] = dropAllNameSpaces($queries['typeName']);
+                if (!isset($HTTP_FORM_VARS["TYPENAME"])) {
+                    $HTTP_FORM_VARS["TYPENAME"] = "";
+                }
                 $HTTP_FORM_VARS["TYPENAME"] .= $queries['typeName'] . ",";
-                if ($queries['PropertyName'][0]) {
+                if (!empty($queries['PropertyName'][0])) {
                     foreach ($queries['PropertyName'] as $PropertyNames) {
                         // We check if typeName is prefix and add it if its not
                         if (strpos($PropertyNames, ".")) {
@@ -159,7 +162,7 @@ if ($HTTP_RAW_POST_DATA) {
                 }
             }
             $HTTP_FORM_VARS["TYPENAME"] = dropLastChrs($HTTP_FORM_VARS["TYPENAME"], 1);
-            $HTTP_FORM_VARS["PROPERTYNAME"] = dropLastChrs($HTTP_FORM_VARS["PROPERTYNAME"], 1);
+            $HTTP_FORM_VARS["PROPERTYNAME"] = !empty($HTTP_FORM_VARS["PROPERTYNAME"]) ? dropLastChrs($HTTP_FORM_VARS["PROPERTYNAME"], 1) : null;
             break;
         case "DescribeFeatureType":
             $HTTP_FORM_VARS["REQUEST"] = "DescribeFeatureType";
@@ -201,7 +204,7 @@ Log::write($logPath, $HTTP_RAW_POST_DATA);
 
 //HTTP_FORM_VARS is set in script if POST is used
 $HTTP_FORM_VARS = array_change_key_case($HTTP_FORM_VARS, CASE_UPPER); // Make keys case
-$HTTP_FORM_VARS["TYPENAME"] = dropAllNameSpaces($HTTP_FORM_VARS["TYPENAME"]);
+$HTTP_FORM_VARS["TYPENAME"] = !empty($HTTP_FORM_VARS["TYPENAME"]) ? dropAllNameSpaces($HTTP_FORM_VARS["TYPENAME"]) : null;
 $tables = explode(",", $HTTP_FORM_VARS["TYPENAME"]);
 $properties = !empty($HTTP_FORM_VARS["PROPERTYNAME"]) ? explode(",", dropAllNameSpaces($HTTP_FORM_VARS["PROPERTYNAME"])) : null;
 $featureids = !empty($HTTP_FORM_VARS["FEATUREID"]) ? explode(",", $HTTP_FORM_VARS["FEATUREID"]) : null;
@@ -1680,14 +1683,14 @@ function doParse(array $arr)
          * UPDATE
          */
         elseif ($key == "Update") {
-            if (!is_array($featureMember[0]) && isset($featureMember)) {
+            if (!isset($featureMember[0])) {
                 $featureMember = array(0 => $featureMember);
             }
             $fid = 0;
             foreach ($featureMember as $hey) {
                 $globalSrsName = $hey["srsName"] ?? null;
                 $hey["typeName"] = dropAllNameSpaces($hey["typeName"]);
-                if (!is_array($hey['Property'][0]) && isset($hey['Property'])) {
+                if (isset($hey['Property']) && !isset($hey['Property'][0])) {
                     $hey['Property'] = array(0 => $hey['Property']);
                 }
 
@@ -1707,6 +1710,10 @@ function doParse(array $arr)
 
                 // Check if table is versioned or has workflow. Add fields when clients doesn't send unaltered fields.
                 $tableObj = new table($postgisschema . "." . $hey["typeName"]);
+                $gc2_version_user_flag = false;
+                $gc2_version_start_date_flag = false;
+                $gc2_status_flag = false;
+                $gc2_workflow_flag = false;
                 foreach ($hey["Property"] as $v) {
                     if ($v["Name"] == "gc2_version_user") $gc2_version_user_flag = true;
                     if ($v["Name"] == "gc2_version_start_date") $gc2_version_start_date_flag = true;
@@ -1877,120 +1884,122 @@ function doParse(array $arr)
     }
 
     // Second we loop through updates
-    if (sizeof($forSql2['tables']) > 0) for ($i = 0; $i < sizeof($forSql2['tables']); $i++) {
-        if ($postgisObject->getGeometryColumns($postgisschema . "." . $forSql2['tables'][$i], "editable")) {
-            Tilecache::bust($postgisschema . "." . $forSql2['tables'][$i]);
-            $primeryKey = $postgisObject->getPrimeryKey($postgisschema . "." . $forSql2['tables'][$i]);
-            $tableObj = new table($postgisschema . "." . $forSql2['tables'][$i]);
-            $originalFeature = null;
-            if ($tableObj->versioning) {
-                // Get original feature
-                $query = "SELECT * FROM {$postgisschema}.{$forSql2['tables'][$i]} WHERE {$forSql2['wheres'][$i]}";
-                $res = $postgisObject->execQuery($query);
-                $originalFeature = $postgisObject->fetchRow($res);
-                // Check if feature is ended
-                if ($originalFeature["gc2_version_end_date"]) {
-                    makeExceptionReport("You can't change the history!");
-                }
-                // Clone original feature for ended version
-                $intoArr = array();
-                $selectArr = array();
-                foreach ($originalFeature as $k => $v) {
-                    if ($k != $primeryKey['attname']) {
-                        if ($k == "gc2_version_end_date") {
-                            $intoArr[] = "\"$k\"";
-                            $selectArr[] = "now()";
-                        } else {
-                            $intoArr[] = $selectArr[] = "\"$k\"";
-                        }
-                    }
-                }
-                $sql = "INSERT INTO \"{$postgisschema}\".\"{$forSql2['tables'][$i]}\"(";
-                $sql .= implode(",", $intoArr);
-                $sql .= ")";
-                $sql .= " SELECT ";
-                $sql .= implode(",", $selectArr);
-                $sql .= " FROM {$postgisschema}.{$forSql2['tables'][$i]}";
-                $sql .= " WHERE {$forSql2['wheres'][$i]}";
-                //makeExceptionReport($sql);
-
-                $postgisObject->execQuery($sql);
-            }
-            $sql = "UPDATE \"{$postgisschema}\".\"{$forSql2['tables'][$i]}\" SET ";
-            $roleObj = $layerObj->getRole($postgisschema, $forSql2['tables'][$i], $user);
-            $role = $roleObj["data"][$user];
-
-            foreach ($forSql2['fields'][$i] as $key => $field) {
-                if (is_array($forSql2['values'][$i][$key])) { // is geometry
-                    $value = "ST_Transform(ST_GeometryFromText('" . current($forSql2['values'][$i][$key]) . "'," . next($forSql2['values'][$i][$key]) . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $forSql2['tables'][$i], "srid") . ")";
-                } elseif ($field == "gc2_version_user") {
-                    $value = $postgisObject->quote($user);
-                } elseif ($field == "gc2_status") {
-                    switch ($role) {
-                        case "author":
-                            if ($originalFeature[$field] > 1) {
-                                makeExceptionReport("This feature has been " . ($originalFeature[$field] == 2 ? "reviewed" : "published") . ", so an author can't edit it.");
-                            }
-                            $value = 1;
-                            break;
-                        case "reviewer":
-                            if ($originalFeature[$field] > 2) {
-                                makeExceptionReport("This feature has been published, so a reviewer can't edit it.");
-                            }
-                            $value = 2;
-                            break;
-                        case "publisher":
-                            $value = 3;
-                            break;
-                        default:
-                            $value = $originalFeature[$field];
-                            break;
-                    }
-                } elseif ($field == "gc2_workflow") {
-                    switch ($role) {
-                        case "author":
-                            $value = "'{$originalFeature[$field]}'::hstore || hstore('author', '{$user}')";;
-                            break;
-                        case "reviewer":
-                            $value = "'{$originalFeature[$field]}'::hstore || hstore('reviewer', '{$user}')";;
-                            break;
-                        case "publisher":
-                            $value = "'{$originalFeature[$field]}'::hstore || hstore('publisher', '{$user}')";;
-                            break;
-                        default:
-                            $value = "'{$originalFeature[$field]}'::hstore";
-                            break;
-                    }
-                } elseif ($field == "gc2_version_start_date") {
-                    $value = "now()";
-                } elseif (empty($forSql2['values'][$i][$key]) && !is_numeric($forSql2['values'][$i][$key])) {
-                    $value = "NULL";
-                } else {
-                    $value = $postgisObject->quote($forSql2['values'][$i][$key]); // We need to escape the string
-                }
-                if ($field == $primeryKey['attname']) {
-                    // We need the original feature so, we can se if the pri key is changed
+    if (isset($forSql2['tables']) && (sizeof($forSql2['tables']) > 0)) {
+        for ($i = 0; $i < sizeof($forSql2['tables']); $i++) {
+            if ($postgisObject->getGeometryColumns($postgisschema . "." . $forSql2['tables'][$i], "editable")) {
+                Tilecache::bust($postgisschema . "." . $forSql2['tables'][$i]);
+                $primeryKey = $postgisObject->getPrimeryKey($postgisschema . "." . $forSql2['tables'][$i]);
+                $tableObj = new table($postgisschema . "." . $forSql2['tables'][$i]);
+                $originalFeature = null;
+                if ($tableObj->versioning) {
+                    // Get original feature
                     $query = "SELECT * FROM {$postgisschema}.{$forSql2['tables'][$i]} WHERE {$forSql2['wheres'][$i]}";
                     $res = $postgisObject->execQuery($query);
                     $originalFeature = $postgisObject->fetchRow($res);
-                    $newValue = (string)$forSql2['values'][$i][$key];
-                    $oldValue = (string)$originalFeature[$primeryKey['attname']];
-                    if ($oldValue != $newValue) {
-                        makeExceptionReport("It's not possible to update the primary key ({$primeryKey['attname']}). The value of the key is {$oldValue} and new value is {$newValue}");
+                    // Check if feature is ended
+                    if ($originalFeature["gc2_version_end_date"]) {
+                        makeExceptionReport("You can't change the history!");
                     }
+                    // Clone original feature for ended version
+                    $intoArr = array();
+                    $selectArr = array();
+                    foreach ($originalFeature as $k => $v) {
+                        if ($k != $primeryKey['attname']) {
+                            if ($k == "gc2_version_end_date") {
+                                $intoArr[] = "\"$k\"";
+                                $selectArr[] = "now()";
+                            } else {
+                                $intoArr[] = $selectArr[] = "\"$k\"";
+                            }
+                        }
+                    }
+                    $sql = "INSERT INTO \"{$postgisschema}\".\"{$forSql2['tables'][$i]}\"(";
+                    $sql .= implode(",", $intoArr);
+                    $sql .= ")";
+                    $sql .= " SELECT ";
+                    $sql .= implode(",", $selectArr);
+                    $sql .= " FROM {$postgisschema}.{$forSql2['tables'][$i]}";
+                    $sql .= " WHERE {$forSql2['wheres'][$i]}";
+                    //makeExceptionReport($sql);
+
+                    $postgisObject->execQuery($sql);
                 }
-                $pairs[] = "\"" . $field . "\" =" . $value;
+                $sql = "UPDATE \"{$postgisschema}\".\"{$forSql2['tables'][$i]}\" SET ";
+                $roleObj = $layerObj->getRole($postgisschema, $forSql2['tables'][$i], $user);
+                $role = $roleObj["data"][$user];
+
+                foreach ($forSql2['fields'][$i] as $key => $field) {
+                    if (is_array($forSql2['values'][$i][$key])) { // is geometry
+                        $value = "ST_Transform(ST_GeometryFromText('" . current($forSql2['values'][$i][$key]) . "'," . next($forSql2['values'][$i][$key]) . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $forSql2['tables'][$i], "srid") . ")";
+                    } elseif ($field == "gc2_version_user") {
+                        $value = $postgisObject->quote($user);
+                    } elseif ($field == "gc2_status") {
+                        switch ($role) {
+                            case "author":
+                                if ($originalFeature[$field] > 1) {
+                                    makeExceptionReport("This feature has been " . ($originalFeature[$field] == 2 ? "reviewed" : "published") . ", so an author can't edit it.");
+                                }
+                                $value = 1;
+                                break;
+                            case "reviewer":
+                                if ($originalFeature[$field] > 2) {
+                                    makeExceptionReport("This feature has been published, so a reviewer can't edit it.");
+                                }
+                                $value = 2;
+                                break;
+                            case "publisher":
+                                $value = 3;
+                                break;
+                            default:
+                                $value = $originalFeature[$field];
+                                break;
+                        }
+                    } elseif ($field == "gc2_workflow") {
+                        switch ($role) {
+                            case "author":
+                                $value = "'{$originalFeature[$field]}'::hstore || hstore('author', '{$user}')";;
+                                break;
+                            case "reviewer":
+                                $value = "'{$originalFeature[$field]}'::hstore || hstore('reviewer', '{$user}')";;
+                                break;
+                            case "publisher":
+                                $value = "'{$originalFeature[$field]}'::hstore || hstore('publisher', '{$user}')";;
+                                break;
+                            default:
+                                $value = "'{$originalFeature[$field]}'::hstore";
+                                break;
+                        }
+                    } elseif ($field == "gc2_version_start_date") {
+                        $value = "now()";
+                    } elseif (empty($forSql2['values'][$i][$key]) && !is_numeric($forSql2['values'][$i][$key])) {
+                        $value = "NULL";
+                    } else {
+                        $value = $postgisObject->quote($forSql2['values'][$i][$key]); // We need to escape the string
+                    }
+                    if ($field == $primeryKey['attname']) {
+                        // We need the original feature so, we can se if the pri key is changed
+                        $query = "SELECT * FROM {$postgisschema}.{$forSql2['tables'][$i]} WHERE {$forSql2['wheres'][$i]}";
+                        $res = $postgisObject->execQuery($query);
+                        $originalFeature = $postgisObject->fetchRow($res);
+                        $newValue = (string)$forSql2['values'][$i][$key];
+                        $oldValue = (string)$originalFeature[$primeryKey['attname']];
+                        if ($oldValue != $newValue) {
+                            makeExceptionReport("It's not possible to update the primary key ({$primeryKey['attname']}). The value of the key is {$oldValue} and new value is {$newValue}");
+                        }
+                    }
+                    $pairs[] = "\"" . $field . "\" =" . $value;
+                }
+                $sql .= implode(",", $pairs);
+                $sql .= " WHERE {$forSql2['wheres'][$i]} RETURNING \"{$primeryKey['attname']}\" as gid";
+                if ($tableObj->workflow) {
+                    $sql .= ",gc2_version_gid,gc2_status,gc2_workflow," . PgHStore::toPg($roleObj["data"]) . " as roles";
+                }
+                //makeExceptionReport($sql);
+                unset($pairs);
+                $sqls['update'][] = $sql;
+            } else {
+                $notEditable[$forSql2['tables'][0]] = true;
             }
-            $sql .= implode(",", $pairs);
-            $sql .= " WHERE {$forSql2['wheres'][$i]} RETURNING \"{$primeryKey['attname']}\" as gid";
-            if ($tableObj->workflow) {
-                $sql .= ",gc2_version_gid,gc2_status,gc2_workflow," . PgHStore::toPg($roleObj["data"]) . " as roles";
-            }
-            //makeExceptionReport($sql);
-            unset($pairs);
-            $sqls['update'][] = $sql;
-        } else {
-            $notEditable[$forSql2['tables'][0]] = true;
         }
     }
     // Third we loop through deletes
@@ -2120,7 +2129,7 @@ function doParse(array $arr)
 
 // TransactionResult
     $rowIdsChanged = []; // Global Array that holds ids from all affected rows. Can be used in post-processes
-    if (isset($postgisObject->PDOerror)) {
+    if (empty($postgisObject->PDOerror)) {
         echo $version == "1.1.0" ? '<wfs:TransactionResults/>' : '<wfs:TransactionResult handle="mygeocloud-WFS-default-handle"><wfs:Status><wfs:SUCCESS/></wfs:Status></wfs:TransactionResult>';
     } else {
         echo '<wfs:TransactionResult handle="mygeocloud-WFS-default-handle"><wfs:Status><wfs:FAILURE/></wfs:Status></wfs:TransactionResult>';
@@ -2262,7 +2271,7 @@ function doParse(array $arr)
         foreach ($sqls as $sql) {
             $postgisObject->execQuery($sql, "PDO", "transaction");
         }
-        if (sizeof($postgisObject->PDOerror) > 0) {
+        if (!empty($postgisObject->PDOerror)) {
             makeExceptionReport($postgisObject->PDOerror); // This output a exception and kills the script
         }
     }
@@ -2701,7 +2710,7 @@ function parseFilter($filter, string $table): string
         $st['schema'] = $postgisschema;
     }
     $primeryKey = $postgisObject->getPrimeryKey($st['schema'] . "." . $st['table']);
-    if (!is_array($filter[0]) && isset($filter) && !(isset($filter['And']) || isset($filter['Or']))) {
+    if (!isset($filter[0]) && !(isset($filter['And']) || isset($filter['Or']))) {
         $filter = array(0 => $filter);
     }
     $sridOfTable = $postgisObject->getGeometryColumns($table, "srid");
@@ -2806,10 +2815,10 @@ function parseFilter($filter, string $table): string
         }
 
         // FeatureID
-        if (!is_array($arr['FeatureId'][0]) && isset($arr['FeatureId'])) {
+        if (isset($arr['FeatureId']) && !isset($arr['FeatureId'][0])) {
             $arr['FeatureId'] = array(0 => $arr['FeatureId']);
         }
-        if (is_array($arr['FeatureId'])) foreach ($arr['FeatureId'] as $value) {
+        if (isset($arr['FeatureId'])) foreach ($arr['FeatureId'] as $value) {
             $value['fid'] = preg_replace("/{$table}\./", "", $value['fid']); // remove table name
             $where[] = "{$primeryKey['attname']}='" . $value['fid'] . "'";
         }
@@ -2855,7 +2864,7 @@ function parseFilter($filter, string $table): string
                 if (!$sridOfFilter) $sridOfFilter = $srs; // If no filter on BBOX we think it must be same as the requested srs
                 if (!$sridOfFilter) $sridOfFilter = $sridOfTable; // If still no filter on BBOX we set it to native srs
             }
-            if (is_array($arr['BBOX']['gml:Envelope'])) {
+            if (isset($arr['BBOX']['gml:Envelope'])) {
                 $coordsArr = array_merge(explode(" ", $arr['BBOX']['gml:Envelope']['gml:lowerCorner']), explode(" ", $arr['BBOX']['gml:Envelope']['gml:upperCorner']));
                 $sridOfFilter = parseEpsgCode($arr['BBOX']['gml:Envelope']['srsName']);
                 $axisOrder = getAxisOrder($arr['BBOX']['gml:Envelope']['srsName']);

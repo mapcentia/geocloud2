@@ -367,7 +367,7 @@ class Mapfile extends Controller
                 $workflow = $postgisObject->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}", "gc2_status");
                 $workflow = $workflow["exists"];
 
-                $arr = (array)json_decode($row['def']); // Cast stdclass to array
+                $arr = !empty($row['def']) ? json_decode($row['def'], true) : [];
                 $props = array("label_column", "theme_column");
                 foreach ($props as $field) {
                     if (empty($arr[$field]) || $arr[$field] == false) {
@@ -378,7 +378,7 @@ class Mapfile extends Controller
                 $sortedArr = array();
 
                 // Sort classes
-                $arr = $arr2 = (array)json_decode($row['class']);
+                $arr = $arr2 = !empty($row['class']) ? json_decode($row['class'], true) : [];
                 for ($i = 0; $i < sizeof($arr); $i++) {
                     $last = 100000;
                     foreach ($arr2 as $key => $value) {

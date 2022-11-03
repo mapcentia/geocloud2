@@ -19,10 +19,10 @@ class Util
 {
     /**
      * @param string $class
-     * @param object $object
+     * @param object|array $object
      * @return mixed
      */
-    public static function casttoclass(string $class, object $object)
+    public static function casttoclass(string $class, object|array $object): mixed
     {
         return unserialize(preg_replace('/^O:\d+:"[^"]++"/', 'O:' . strlen($class) . ':"' . $class . '"', serialize($object)));
     }
@@ -50,7 +50,7 @@ class Util
      * @param string $seperator
      * @return array<string>|bool|string
      */
-    public static function hex2RGB(string $hexStr, bool $returnAsString = false, string $seperator = ',')
+    public static function hex2RGB(string $hexStr, bool $returnAsString = false, string $seperator = ','): array|bool|string
     {
         $hexStr = preg_replace("/[^0-9A-Fa-f]/", '', $hexStr);
         // Gets a proper hex string
@@ -84,7 +84,7 @@ class Util
      * @param int|string $code
      * @return string|null
      */
-    public static function httpCodeText($code): ?string
+    public static function httpCodeText(int|string $code): string|null
     {
         $codes = array(
             200 => "OK",
@@ -262,10 +262,10 @@ class Util
      * @param string $url
      * @param int $connectTimeout
      * @param int $timeout
-     * @return mixed
+     * @return string|bool
      * @throws Exception
      */
-    public static function wget(string $url, int $connectTimeout = 10, int $timeout = 0)
+    public static function wget(string $url, int $connectTimeout = 10, int $timeout = 0): string|bool
     {
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
