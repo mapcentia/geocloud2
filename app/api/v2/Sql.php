@@ -133,7 +133,7 @@ class Sql extends Controller
         if (Input::get('base64') === true || Input::get('base64') === "true") {
             $this->q = Util::base64urlDecode(Input::get("q"));
         } else {
-            $this->q = urldecode(Input::get('q'));
+            $this->q = !empty(Input::get('q')) ? urldecode(Input::get('q')) : null;
         }
 
         if (!$this->q) {

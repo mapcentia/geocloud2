@@ -17,6 +17,7 @@ use Error;
 use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Phpfastcache\Exceptions\PhpfastcacheLogicException;
+use stdClass;
 
 
 /**
@@ -40,9 +41,9 @@ class Setting extends Model
     }
 
     /**
-     * @return object|null
+     * @return stdClass
      */
-    public function getArray(): ?object
+    public function getArray(): stdClass
     {
         if (App::$param["encryptSettings"]) {
             $secretKey = file_get_contents(App::$param["path"] . "app/conf/secret.key");
@@ -65,7 +66,7 @@ class Setting extends Model
         }
 
         $arr = $this->fetchRow($res);
-        return json_decode($arr['viewer']);
+        return json_decode($arr['viewer']) ?? new stdClass();
     }
 
     /**
@@ -78,7 +79,10 @@ class Setting extends Model
         $arr = $this->getArray();
         if (!$_SESSION["subuser"]) {
             $arr->api_key = $apiKey;
-        } elseif (!empty($_SESSION["screen_name"]) && !empty($arr->api_key_subuser)) {
+        } elseif (!empty($_SESSION["screen_name"])) {
+            if (!isset($arr->api_key_subuser)) {
+                $arr->api_key_subuser = new stdClass();
+            }
             $arr->api_key_subuser->{$_SESSION["screen_name"]} = $apiKey;
         }
         if (App::$param["encryptSettings"]) {
@@ -110,7 +114,10 @@ class Setting extends Model
         $arr = $this->getArray();
         if (!$_SESSION["subuser"]) {
             $arr->pw = $this->encryptPw($pw);
-        } elseif (!empty($_SESSION["screen_name"]) && !empty($arr->pw_subuser)) {
+        } elseif (!empty($_SESSION["screen_name"])) {
+            if (!isset($arr->pw_subuser)) {
+                $arr->pw_subuser = new stdClass();
+            }
             $arr->pw_subuser->{$_SESSION["screen_name"]} = $this->encryptPw($pw);
         }
         if (App::$param["encryptSettings"]) {
@@ -264,7 +271,7 @@ class Setting extends Model
     public function get(bool $unsetPw = false): array
     {
         $cacheType = "settings";
-        $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $_SESSION["screen_name"]);
+        $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . ($_SESSION["screen_name"] ?? ""));
 
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
