@@ -34,6 +34,7 @@ COPY conf/gc2/Connection.php /var/www/geocloud2/app/conf/
 
 RUN apt-get -y install php-xdebug
 COPY conf/fpm/xdebug.ini  /etc/php/8.1/mods-available/
+COPY conf/fpm/opcache.ini  /etc/php/8.1/mods-available/
 RUN phpenmod xdebug
 
 # Add Supervisor config and run the deamon

@@ -302,7 +302,7 @@ if (Input::getPath()->part(1) == "api") {
     });
 
     Route::add("api/v3/geofence", function () {
-            Database::setDb("mydb");
+        Database::setDb("mydb");
     });
 
     Route::add("api/v3/sql", function () {
