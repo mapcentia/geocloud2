@@ -7,16 +7,16 @@ Lag
 .. topic:: Overview
 
     :Date: |today|
-    :GC2-version: 2020.12.0
-    :Forfatter: `mapcentia <https://github.com/mapcentia>`_, `giovanniborella <https://github.com/giovanniborella>`_
+    :GC2-version: 2022.9.1
+    :Forfatter: `mapcentia <https://github.com/mapcentia>`_, `giovanniborella <https://github.com/giovanniborella>`_, `Bo Henriksen <https://github.com/BoMarconiHenriksen>`_
 
-.. contents:: 
+.. contents::
     :depth: 3
 
 
 *****************************************************************
 Lag
-***************************************************************** 
+*****************************************************************
 
 .. include:: ../../_subs/NOTE_GETTINGSTARTED.rst
 
@@ -187,32 +187,12 @@ TBD
 
 .. _layer_properties_privileges:
 
-Privilegier
------------------------------------------------------------------
+*****************************************************************
+Låse Lag Og Tildele Rettigheder
+*****************************************************************
 
-.. figure:: ../../../_media/layer-properties-privilegier.png
-    :width: 400px
-    :align: center
-    :name: layer-properties-privilegier
-    :figclass: align-center
-
-    Privilegier
-
-Det er muligt at styre rettighederne for den enkelte subuser under menupunktet ``Privilegier``
-
-Hvis man er logget ind som databaseuser er det muligt at sætte rettighederne for den enkelte subuser. Bemærk at dette ikke berører de lag der i forvejen er sat til offentlige. læs mere under :ref:`layer_properties_authentication`
-
-.. _layer_properties_meta:
-
-Meta
------------------------------------------------------------------
-
-TODO: grab from 08-setup-meta-vidi
-
-.. _layer_properties_authentication:
-
-Authentication
------------------------------------------------------------------
+Som udgangspunkt er alle lag åbne. Hvis man vil beskytte et lag, er det muligt at låse det.
+For at låse et lag vælges ``Read/Write`` i authentication kolonnen.
 
 Det er muligt at sætte rettighederne på lagniveau. Disse rettigheder gælder når man tilgår laget igennem Vidi eller eksterne klienter.
 
@@ -222,9 +202,61 @@ Det er muligt at sætte følgende niveauer:
 
 * ``Read/Write`` - Laget kan kun læses af brugere med adgang. For at læse eller skrive skal brugeren være logget ind.
 
-* ``None`` - Laget er åbent for alle. 
+* ``None`` - Laget er åbent for alle.
 
-Man kan yderligere styre rettigheder i :ref:`layer_properties_privileges`
+
+Privilegier
+=================================================================
+
+Det er muligt at styre rettighederne for den enkelte subbruger under menupunktet ``Privilegier``.
+
+.. image:: ../../../_media/layer-properties-privileges.png
+
+Hvis man er logget ind som databaseuser, er det muligt at sætte rettighederne for den enkelte subbruger. Bemærk at dette ikke berører de lag, der i forvejen er sat til offentlige.
+
+Eksempel - Authentication
+=================================================================
+
+I dette eksempel låses et lag og der tildeles rettigheder til det låste lag til en subbruger.
+
+Der er lavet en subbruger , der hedder reader, som skal have læse rettigheder til et lag.
+
+1. Login med din admin bruger, så du kan se alle subbrugere.
+2. Tryk på tandhjulet for se de lag, der ligger under subbrugeren.
+
+.. image:: ../../../_media/authentication-on-layer/click_on_gear.png
+
+3. Tilføj authentication ved at klikke på et lag og ændre ``Write`` til ``Read/Write`` i ``Authentication`` kolonnen til højre. Dobbel klik på write.
+
+.. image:: ../../../_media/authentication-on-layer/add_read_write_on_layer.png
+
+4. Tildel rettigheder ved at klikke på et lag og derefter ``Privilegier`` i øverste venstre hjørne.
+
+.. image:: ../../../_media/authentication-on-layer/click_on_layer_and_privilegier.png
+
+5. Klik på ``Kun Læse``.
+
+.. image:: ../../../_media/authentication-on-layer/add_read_privileger.png
+
+
+For at kunne se det låse lag, skal der logges ind ved at trykke på låse ikonet på Vidi.
+
+Kald Lag Med Authentication
+=================================================================
+
+Hvis du ønsker at kalde et lag, der har read/write authentication slået til kan det gøres på følgende måde.
+
+1. Klik på den tandhjulet for den subbruger, der har laget, som er låst.
+
+.. image:: ../../../_media/authentication-on-layer/click_on_gear.png
+
+2. Click på ``Tjenester`` og tilføj et password i ``HTTP Basic Auth password for WMS and WFS`` og click opdater.
+
+.. image:: ../../../_media/authentication-on-layer/basic_authentication.png
+
+3. Det er derefter muligt at logge ind med subbrugeren og det password du lige har lavet, hvis du f.eks. kalder nedenståenden url:
+
+https://myDomain.com/ows/[database]/[subbruger]/wfs?service=wfs&request=getfeature&version=2.0.0&TYPENAMES=[database:subbruger.lag&MAXFEATURES=1]
 
 .. _layer_faq:
 

@@ -8,7 +8,7 @@ Subuser
 
     :Date: |today|
     :GC2-version: 2020.12.0
-    :Forfatter: `giovanniborella <https://github.com/giovanniborella>`_
+    :Forfatter: `giovanniborella <https://github.com/giovanniborella>`_, `GEOsmeden <https://github.com/geosmeden>`_
 
 .. contents:: 
     :depth: 3
@@ -19,6 +19,8 @@ Subusers
 ***************************************************************** 
 
 .. include:: ../../_subs/NOTE_GETTINGSTARTED.rst
+
+.. include:: ../../_subs/WARNING_OLD_DOC.rst
 
 Subuser
 =================================================================
@@ -69,3 +71,69 @@ Når man efterfølgende opretter en subuser, vælger man hvilken "gruppe" den p�
 Når man efterfølgende skal håndtere de direkte privilegier i :ref:`layer_properties_privileges`, kan man nøjes med at sætte rettigheder for "gruppen" - og ikke den enkelte "bruger"
 
 TOOD: add image to explain idea
+
+Subuser oversigt
+-----------------------------------------------------------------
+
+.. figure:: ../../../_media/subuser-overwiev.png
+    :width: 600px
+    :align: center
+    :name: subuser-overwiev
+    :figclass: align-center
+
+    Opret subuser
+	
+Alle sub-brugere vises ude til højre på dashboardet hvor de kan slettes.
+
+Tildeling af privilegier
+-----------------------------------------------------------------
+
+.. figure:: ../../../_media/subuser-add-priviliges.png
+    :width: 600px
+    :align: center
+    :name: subuser-add-priviliges
+    :figclass: align-center
+
+    subuser tildel privilegier
+
+1. Start med at vælge hvilket lag du vil give sub-brugere adgang til. Klik på en lag-linje i Database-fanen, så den bliver grå. Klik derefter på Privilegier.
+#. I dialogen kan sub-brugere nu tildeles privilegier til laget. Der er fire niveauer: 'Ingen', 'Kun læse', 'Læse og skrive' og 'Alle'
+
+**Ingen**: Sub-brugeren har ingen adgang til laget. Dvs. sub-brugeren kan ikke se laget i GC2 Admin, Viewer og WMS/WFS.
+
+**Læse**: Kun læseadgang. Laget er synligt for sub-brugeren i GC2 Admin, Viewer og WMS/WFS.
+
+**Skrive**: Giver sub-brugeren adgang til at skrive til laget i GC2 Admin og gennem WFS.
+
+**Alle**:  sub-brugeren kan ændre laget egenskaber, såsom style og tabel-struktur.
+
+
+**Vigtigt!**
+
+.. figure:: ../../../_media/subuser-important-priviliges.png
+    :width: 600px
+    :align: center
+    :name: subuser-important-priviliges
+    :figclass: align-center
+
+    subuser authentication
+	
+Det er vigtigt at sætte lagets Authentication niveau til "Read/write", hvis nogle sub-brugere kun får tildelt læse-privilegier. Ved 'Write' har alle læse-privilegier, herunder sub-brugere.
+
+	
+Sub-bruger WMS/WFS password og API-nøgle
+-----------------------------------------------------------------
+
+.. figure:: ../../../_media/subuser-wms-wfs-password.png
+    :width: 600px
+    :align: center
+    :name: subuser-wms-wfs-password
+    :figclass: align-center
+
+    subuser tjenester dialogboks
+	
+Sub-brugerne skal selv vælge password til WMS/WFS og API-nøgle. Når sub-brugeren har logget ind på almindelig vis klikkes på:
+
+1. Tjenester for at få Service dialogen frem.
+#. Password vælges og der klikkes på Opdater.
+#. Evt. ny API nøgle skabes (Dette er ikke nødvendigt, da der bliver skabt en nøgle automatisk).
