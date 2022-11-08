@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNRELEASED]
+### Added
+- Added the following to documentation: description on how to enable extensions and a description on the traccar_api extension.
+- Documentation on layers and authentication.
+
 ### Changed
 - Upgraded Grunt
 
