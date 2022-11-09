@@ -645,8 +645,8 @@ class MultiPolygon extends GeometryFactory
         $str = "";
         $polys = array();
         $i = 0;
-        while ($this->shapeArray[$i]) {
-            if ($this->isIsland[$i + 1]) {
+        while (!empty($this->shapeArray[$i])) {
+            if (!empty($this->isIsland[$i + 1])) {
                 $_rings = array($this->shapeArray[$i]);
                 while ($this->isIsland[$i + 1]) {
                     array_push($_rings, $this->shapeArray[$i + 1]);
