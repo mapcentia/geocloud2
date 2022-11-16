@@ -15,11 +15,20 @@ class SqlParseTest extends Unit
     /**
      * @var UnitTester
      */
-    protected $tester;
-    protected $rules;
-    protected $request;
+    protected UnitTester $tester;
 
-    protected function _before()
+    /**
+     * @var array<array<string>>
+     */
+
+    protected array $rules;
+
+    /**
+     * @var array<string>
+     */
+    protected array $request;
+
+    protected function _before(): void
     {
         $this->rules = [
             [
@@ -31,7 +40,7 @@ class SqlParseTest extends Unit
                 "schema" => "*",
                 "access" => "limit",
                 "read_filter" => "test.userid='test'",
-                "write_filter" => null,
+                "write_filter" => "test.userid='test'",
                 "read_spatial_filter" => null,
                 "write_spatial_filter" => null,
             ],
@@ -44,7 +53,7 @@ class SqlParseTest extends Unit
                 "schema" => "*",
                 "access" => "limit",
                 "read_filter" => "foo.bar='test'",
-                "write_filter" => null,
+                "write_filter" => "foo.bar='test'",
                 "read_spatial_filter" => null,
                 "write_spatial_filter" => null,
             ],
@@ -57,7 +66,7 @@ class SqlParseTest extends Unit
                 "schema" => "*",
                 "access" => "limit",
                 "read_filter" => "listens.uid='test'",
-                "write_filter" => null,
+                "write_filter" => "listens.uid='test'",
                 "read_spatial_filter" => null,
                 "write_spatial_filter" => null,
             ],
@@ -80,12 +89,12 @@ class SqlParseTest extends Unit
         ];
     }
 
-    protected function _after()
+    protected function _after(): void
     {
     }
 
     // tests
-    public function testTableWalkerRelationShouldFindRelationsInStatement()
+    public function testTableWalkerRelationShouldFindRelationsInStatement(): void
     {
         $string = "SELECT * FROM (SELECT * FROM foo,bar) AS foo";
         $walker = new TableWalkerRelation();
@@ -98,7 +107,7 @@ class SqlParseTest extends Unit
         $this->assertContains('bar', $arr);
     }
 
-    public function testTableWalkerRuleShouldAddWhereClauseToSelect()
+    public function testTableWalkerRuleShouldAddWhereClauseToSelect(): void
     {
 
         $string = "WITH max_table as (
@@ -120,7 +129,7 @@ class SqlParseTest extends Unit
     }
 
 
-    public function testTableWalkerRuleShouldAddWhereClauseToDelete()
+    public function testTableWalkerRuleShouldAddWhereClauseToDelete(): void
     {
         $string = "WITH max_table as (
             SELECT uid, max(timestamp) - 10000 as mx
@@ -140,7 +149,7 @@ class SqlParseTest extends Unit
 
     }
 
-    public function testTableWalkerRuleShouldAddWhereClauseToUpdate()
+    public function testTableWalkerRuleShouldAddWhereClauseToUpdate(): void
     {
         $string = "WITH max_table as (
             SELECT uid, max(timestamp) - 10000 as mx
@@ -151,15 +160,16 @@ class SqlParseTest extends Unit
         $walker->setRules($this->rules);
         $factory = new sad_spirit\pg_builder\StatementFactory();
         $select = $factory->createFromString($string);
+        $select->returning[0] = "gid";
         $select->dispatch($walker);
         $alteredStatement = $factory->createFromAST($select)->getSql();
-//        die("\n" . $alteredStatement);
+        die("\n" . $alteredStatement);
         $this->assertStringContainsString("foo.bar = 'test'", $alteredStatement);
         $this->assertStringContainsString("test.userid = 'test'", $alteredStatement);
         $this->assertStringContainsString("listens.uid = 'test'", $alteredStatement);
     }
 
-    public function testTableWalkerRuleShouldAddWhereClauseToInsert()
+    public function testTableWalkerRuleShouldAddWhereClauseToInsert(): void
     {
         $string = "WITH upd AS (
   UPDATE listens SET sales_count = sales_count + 1 WHERE id =
@@ -171,9 +181,10 @@ INSERT INTO test SELECT *, current_timestamp FROM upd ON CONFLICT (did) DO UPDAT
         $walker->setRules($this->rules);
         $factory = new sad_spirit\pg_builder\StatementFactory();
         $select = $factory->createFromString($string);
+        $select->returning[0] = "gid";
         $select->dispatch($walker);
         $alteredStatement = $factory->createFromAST($select)->getSql();
-//        die("\n" . $alteredStatement);
+        die("\n" . $alteredStatement);
         $this->assertStringContainsString("foo.bar = 'test'", $alteredStatement);
         $this->assertStringContainsString("test.userid = 'test'", $alteredStatement);
         $this->assertStringContainsString("listens.uid = 'test'", $alteredStatement);

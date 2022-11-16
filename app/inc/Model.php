@@ -577,12 +577,12 @@ class Model
     {
         $response = [];
 
-        $_schema = sizeof(explode(".", $table)) > 1 ? explode(".", $table)[0] : null;
+        $_schema = sizeof(explode(".", $table)) > 1 ? explode(".", $table)[0] : "";
 
         $_table = sizeof(explode(".", $table)) > 1 ? explode(".", $table)[1] : $table;
 
         if (!$_schema) {
-            $_schema = $this->postgisschema;
+            $_schema = $this->postgisschema ?: "";
         } else {
             $_schema = str_replace(".", "", $_schema);
         }

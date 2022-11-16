@@ -19,7 +19,7 @@ class TableWalkerRelation extends BlankWalker
     /**
      * @var array<string>
      */
-    private $relations;
+    private array $relations = [];
 
     public function walkRelationReference(RelationReference $rangeItem): void
     {
@@ -31,7 +31,7 @@ class TableWalkerRelation extends BlankWalker
         $this->relations[] = $target->relation->schema . "." . $target->relation->relation;
     }
 
-    public function walkInsertTarget(nodes\range\InsertTarget $target)
+    public function walkInsertTarget(nodes\range\InsertTarget $target): void
     {
         $this->relations[] = $target->relation->schema . "." . $target->relation->relation;
     }
