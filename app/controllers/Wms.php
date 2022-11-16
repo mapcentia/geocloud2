@@ -138,6 +138,32 @@ class Wms extends Controller
     }
 
     /**
+     * @param string $db
+     * @param string $postgisschema
+     * @param string $layer
+     * @return false|mixed
+     */
+    private function getQGSfilePath(string $db, string $postgisschema, string $layer)
+    {
+        $path = App::$param['path'] . "/app/wms/mapfiles/";
+        $mapFile = $db . "_" . $postgisschema . "_wms.map";
+        $qgsFile = null;
+        if (file_exists($path . $mapFile)) {
+            $map = ms_newMapobj($path . $mapFile);
+            $layer = $map->getLayerByName($layer);
+            $conn = $layer->connection;
+            $par = parse_url($conn);
+            if (!empty($par["query"])) {
+                parse_str($par["query"], $result);
+                if (!empty($result["map"]) && explode(".", $result["map"])[1] == "qgs") {
+                    $qgsFile = $result["map"];
+                }
+            }
+        }
+        return $qgsFile ?: false;
+    }
+
+    /**
      * @param $db string
      * @param $postgisschema string
      * @throws PhpfastcacheInvalidArgumentException
@@ -146,50 +172,53 @@ class Wms extends Controller
     {
         $model = new Model();
         $useFilters = false;
-        $qgs = isset($_GET["qgs"]) ? base64_decode($_GET["qgs"]) : false;
         // Check if WMS filters are set
         if ((isset($_GET["filters"]) || (isset($_GET["labels"]) && $_GET["labels"] == "false")) && $this->service == "wms") {
             // Parse filter. Both base64 and base64url is tried
             $filters = isset($_GET["filters"]) ? json_decode(Util::base64urlDecode($_GET["filters"]), true) : null;
-            $layer = $this->layers[0];
-            $split = explode(".", $layer);
+            $layers = $this->layers[0];
             $name = md5(rand(1, 999999999) . microtime());
             $disableLabels = isset($_GET["labels"]) && $_GET["labels"] == "false";
-
+            $qgs = $this->getQGSfilePath($db, $postgisschema, explode(",", $layers)[0]);
             // If QGIS is used
             if ($qgs) {
                 $e = $qgs;
-                if ($e) {
-                    // Read the file
-                    $file = fopen($e, "r");
-                    $str = fread($file, filesize($e));
-                    fclose($file);
+                // Read the file
+                $file = fopen($e, "r");
+                $str = fread($file, filesize($e));
+                fclose($file);
 
-                    // Write out a tmp MapFile
-                    $mapFile = "/var/www/geocloud2/app/tmp/{$name}.qgs";
-                    $newMapFile = fopen($mapFile, "w");
-                    fwrite($newMapFile, $str);
-                    fclose($newMapFile);
+                // Write out a tmp MapFile
+                $mapFile = "/var/www/geocloud2/app/tmp/{$name}.qgs";
+                $newMapFile = fopen($mapFile, "w");
+                fwrite($newMapFile, $str);
+                fclose($newMapFile);
 
+                foreach (explode(",", $layers) as $layer) {
+                    $split = explode(".", $layer);
                     $versionWhere = $model->doesColumnExist("{$split[0]}.{$split[1]}", "gc2_version_gid")["exists"] ? "gc2_version_end_date IS NULL" : "";
-
+                    $where = "1=1";
                     if ($filters) {
                         $useFilters = true;
-                        $where = implode(" OR ", $filters[$layer]);
-                        if ($versionWhere) {
-                            $where = "({$where} AND {$versionWhere})";
+                        if (!empty($filters[$layer])) {
+                            $where = implode(" OR ", $filters[$layer]);
                         }
+                    }
+                    if ($versionWhere) {
+                        $where = "({$where} AND {$versionWhere})";
+                    }
+                    if (!empty($where)) {
                         $sedCmd = 'sed -i "/table=\"' . $split[0] . '\".\"' . $split[1] . '\"/s/sql=.*</sql=' . self::xmlEscape($where) . '</g" ' . $mapFile;
                         shell_exec($sedCmd);
                     }
-                    if ($disableLabels) {
-                        $useFilters = true;
-                        $sedCmd = 'sed -i "s/labelsEnabled=\"1\"/labelsEnabled=\"0\"/g" ' . $mapFile;
-                        shell_exec($sedCmd);
-                    }
-
-                    $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map={$mapFile}&" . $_SERVER["QUERY_STRING"];
                 }
+                if ($disableLabels) {
+                    $useFilters = true;
+                    $sedCmd = 'sed -i "s/labelsEnabled=\"1\"/labelsEnabled=\"0\"/g" ' . $mapFile;
+                    shell_exec($sedCmd);
+                }
+
+                $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map={$mapFile}&" . $_SERVER["QUERY_STRING"];
             } // MapServer is used
             else {
                 switch ($this->service) {
@@ -214,12 +243,15 @@ class Wms extends Controller
                 $newMapFile = fopen($tmpMapFile, "w");
                 fwrite($newMapFile, $str);
                 fclose($newMapFile);
-                if ($filters) {
-                    $useFilters = true;
-                    // Use sed to replace sql= parameter
-                    $where = implode(" OR ", $filters[$layer]);
-                    $sedCmd = 'sed -i "s;/\*FILTER_' . $split[0] . '.' . $split[1] . '\*/;WHERE ' . $where . ';g" ' . $tmpMapFile;
-                    shell_exec($sedCmd);
+                foreach (explode(",", $layers) as $layer) {
+                    $split = explode(".", $layer);
+                    if (!empty($filters[$layer])) {
+                        $useFilters = true;
+                        // Use sed to replace sql= parameter
+                        $where = implode(" OR ", $filters[$layer]);
+                        $sedCmd = 'sed -i "s;/\*FILTER_' . $split[0] . '.' . $split[1] . '\*/;WHERE ' . $where . ';g" ' . $tmpMapFile;
+                        shell_exec($sedCmd);
+                    }
                 }
                 if ($disableLabels) {
                     $useFilters = true;
