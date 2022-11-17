@@ -27,7 +27,6 @@ class Wms extends Controller
 {
     public $service;
     private $layers;
-    private $type;
     private $user;
 
     /**
@@ -140,23 +139,26 @@ class Wms extends Controller
     /**
      * @param string $db
      * @param string $postgisschema
-     * @param string $layer
+     * @param array $layers
      * @return false|mixed
      */
-    private function getQGSfilePath(string $db, string $postgisschema, string $layer)
+    private function getQGSfilePath(string $db, string $postgisschema, array $layers)
     {
         $path = App::$param['path'] . "/app/wms/mapfiles/";
         $mapFile = $db . "_" . $postgisschema . "_wms.map";
         $qgsFile = null;
-        if (file_exists($path . $mapFile)) {
-            $map = ms_newMapobj($path . $mapFile);
-            $layer = $map->getLayerByName($layer);
-            $conn = $layer->connection;
-            $par = parse_url($conn);
-            if (!empty($par["query"])) {
-                parse_str($par["query"], $result);
-                if (!empty($result["map"]) && explode(".", $result["map"])[1] == "qgs") {
-                    $qgsFile = $result["map"];
+        foreach ($layers as $layer) {
+            if (file_exists($path . $mapFile)) {
+                $map = ms_newMapobj($path . $mapFile);
+                $layer = $map->getLayerByName($layer);
+                $conn = $layer->connection;
+                $par = parse_url($conn);
+                if (!empty($par["query"])) {
+                    parse_str($par["query"], $result);
+                    if (!empty($result["map"]) && explode(".", $result["map"])[1] == "qgs") {
+                        $qgsFile = $result["map"];
+                        break;
+                    }
                 }
             }
         }
@@ -172,29 +174,34 @@ class Wms extends Controller
     {
         $model = new Model();
         $useFilters = false;
+        $layers = explode(",", $this->layers[0]);
+        $filters = isset($_GET["filters"]) ? json_decode(Util::base64urlDecode($_GET["filters"]), true) : null;
+        $qgs = $this->getQGSfilePath($db, $postgisschema, $layers);
+        // Filters and multiple layers are a no-go, because layers can be defined in different QGS files.
+        if ($filters && $qgs && sizeof($layers) > 1) {
+            self::report("One or more layers are served by QGIS Server. Filters don't work with multiple layers, where one or more is QGIS backed.");
+        }
+        // If multiple layer, when always use MapFile.
+        if (sizeof($layers)> 1) {
+            $qgs = false;
+        }
         // Check if WMS filters are set
-        if ((isset($_GET["filters"]) || (isset($_GET["labels"]) && $_GET["labels"] == "false")) && $this->service == "wms") {
+        if (($filters || (isset($_GET["labels"]) && $_GET["labels"] == "false")) && $this->service == "wms") {
             // Parse filter. Both base64 and base64url is tried
-            $filters = isset($_GET["filters"]) ? json_decode(Util::base64urlDecode($_GET["filters"]), true) : null;
-            $layers = $this->layers[0];
             $name = md5(rand(1, 999999999) . microtime());
             $disableLabels = isset($_GET["labels"]) && $_GET["labels"] == "false";
-            $qgs = $this->getQGSfilePath($db, $postgisschema, explode(",", $layers)[0]);
             // If QGIS is used
-            if ($qgs) {
-                $e = $qgs;
+            if ($qgs && sizeof($layers) == 1) {
                 // Read the file
-                $file = fopen($e, "r");
-                $str = fread($file, filesize($e));
+                $file = fopen($qgs, "r");
+                $str = fread($file, filesize($qgs));
                 fclose($file);
-
                 // Write out a tmp MapFile
                 $mapFile = "/var/www/geocloud2/app/tmp/{$name}.qgs";
                 $newMapFile = fopen($mapFile, "w");
                 fwrite($newMapFile, $str);
                 fclose($newMapFile);
-
-                foreach (explode(",", $layers) as $layer) {
+                foreach ($layers as $layer) {
                     $split = explode(".", $layer);
                     $versionWhere = $model->doesColumnExist("{$split[0]}.{$split[1]}", "gc2_version_gid")["exists"] ? "gc2_version_end_date IS NULL" : "";
                     $where = "1=1";
@@ -243,7 +250,8 @@ class Wms extends Controller
                 $newMapFile = fopen($tmpMapFile, "w");
                 fwrite($newMapFile, $str);
                 fclose($newMapFile);
-                foreach (explode(",", $layers) as $layer) {
+                $split = [];
+                foreach ($layers as $layer) {
                     $split = explode(".", $layer);
                     if (!empty($filters[$layer])) {
                         $useFilters = true;
@@ -295,9 +303,6 @@ class Wms extends Controller
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header_line) {
             $bits = explode(":", $header_line);
-            if ($bits[0] == "Content-Type") {
-                $this->type = trim($bits[1]);
-            }
             // Send text/xml instead of application/vnd.ogc.se_xml
             if (sizeof($bits) > 1 && $bits[0] == "Content-Type" && trim($bits[1]) == "application/vnd.ogc.se_xml") {
                 header("Content-Type: text/xml");
@@ -355,11 +360,12 @@ class Wms extends Controller
                        xmlns="http://www.opengis.net/ogc"
                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                        xsi:schemaLocation="http://www.opengis.net/ogc http://schemas.opengis.net/ows/1.0.0/owsExceptionReport.xsd">
-                       <ServiceException>';
+                       <ServiceException code="InvalidParameterValue">';
         print $value;
         echo '</ServiceException>
 	        </ServiceExceptionReport>';
         header("HTTP/1.0 200 " . Util::httpCodeText("200"));
+        header('Content-Type:text/xml; charset=UTF-8', TRUE);
         exit();
     }
 }
