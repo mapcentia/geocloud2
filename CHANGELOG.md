@@ -4,13 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED]
+## [2022.11.0]
 ### Added
 - Added the following to documentation: description on how to enable extensions and a description on the traccar_api extension.
 - Documentation on layers and authentication.
 
 ### Changed
-- Upgraded Grunt
+- Upgraded Grunt and packages.
+- Detection of QGIS backed layers in WMS requests. The client doesn't have to know about this when making the request.
+- WMS filters don't work with multiple layers, where one or more is QGIS backed and a WMS exception is now thrown in this case.
 
 ### Fixed
 - Qoute of fields when new version of record is inserted (Track changes). 
