@@ -41,7 +41,7 @@ class Layer extends Controller
      */
     public function get_records(): array
     {
-        return $this->table->getRecords(true);
+        return $this->table->getRecords(true, Input::getPath()->part(4));
     }
 
     /**
