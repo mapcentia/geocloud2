@@ -2333,7 +2333,7 @@ $(document).ready(function () {
                                                         Ext.getCmp('copyMetaFormKeys').clearValue();
                                                         (function () {
                                                             Ext.Ajax.request({
-                                                                url: '/api/v1/meta/' + parentdb + '/' + combo.getValue(),
+                                                                url: '/controllers/layer/records/' + combo.getValue(),
                                                                 method: 'GET',
                                                                 headers: {
                                                                     'Content-Type': 'application/json; charset=utf-8'

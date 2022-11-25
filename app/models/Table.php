@@ -288,7 +288,7 @@ class Table extends Model
      * @return array<mixed>
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function getRecords(bool $createKeyFrom = false): array
+    public function getRecords(bool $createKeyFrom = false, string $schema = null): array
     {
         $response['success'] = true;
         $response['message'] = "Layers loaded";
@@ -298,7 +298,11 @@ class Table extends Model
         $viewDefinitions = array();
         $matViewDefinitions = array();
 
-        $whereClause = Connection::$param["postgisschema"];
+        if (!empty($schema)) {
+           $whereClause = $schema;
+        } else {
+            $whereClause = Connection::$param["postgisschema"];
+        }
 
         if ($whereClause) {
             $sql = "SELECT * FROM settings.getColumns('f_table_schema=''{$whereClause}''','raster_columns.r_table_schema=''{$whereClause}''') ORDER BY sort_id";
