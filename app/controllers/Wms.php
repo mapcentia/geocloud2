@@ -149,7 +149,7 @@ class Wms extends Controller
         $qgsFile = null;
         foreach ($layers as $layer) {
             if (file_exists($path . $mapFile)) {
-                $map = ms_newMapobj($path . $mapFile);
+                $map = new \mapObj($path . $mapFile);
                 $layer = $map->getLayerByName($layer);
                 $conn = $layer->connection;
                 $par = parse_url($conn);
