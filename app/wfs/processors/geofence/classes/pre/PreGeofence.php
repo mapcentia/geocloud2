@@ -10,7 +10,7 @@ namespace app\wfs\processors\geofence\classes\pre;
 
 use app\inc\Input;
 use app\inc\Model;
-use app\models\Rules;
+use app\models\Rule;
 use app\wfs\processors\PreInterface;
 use app\models\Geofence as GeofenceModel;
 use app\inc\UserFilter;
@@ -114,8 +114,8 @@ class PreGeofence implements PreInterface
 //        print_r($userFilter);
         $geofence = new GeofenceModel($userFilter);
         // Get rules and set them
-        $rules = new Rules();
-        $rule = $geofence->authorize($rules->getRules());
+        $rules = new Rule();
+        $rule = $geofence->authorize($rules->get());
 //        die(print_r($rule, true));
 
         if ($rule["access"] == GeofenceModel::DENY_ACCESS) {

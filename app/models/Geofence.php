@@ -10,6 +10,10 @@ namespace app\models;
 
 use app\inc\Model;
 use app\inc\UserFilter;
+use Exception;
+use PDOException;
+use sad_spirit\pg_builder\Statement;
+use sad_spirit\pg_builder\StatementFactory;
 
 
 /**
@@ -21,7 +25,7 @@ class Geofence extends Model
     /**
      * @var UserFilter
      */
-    private $userFilter;
+    private UserFilter $userFilter;
 
     public const ALLOW_ACCESS = "allow";
     public const DENY_ACCESS = "deny";
@@ -38,6 +42,7 @@ class Geofence extends Model
     }
 
     /**
+     * @param array<mixed> $rules
      * @return array<mixed>
      */
     public function authorize(array $rules): array
@@ -66,6 +71,47 @@ class Geofence extends Model
         $response["filters"] = $filters;
         $response["success"] = true;
         return $response;
+    }
+
+    /**
+     * @param Statement $statement
+     * @param Sql $sql
+     * @param array<string> $filters
+     * @return array<mixed>
+     * @throws Exception
+     */
+    public function postProcessQuery(Statement $statement, Sql $sql, array $filters): array
+    {
+        $factory = new StatementFactory();
+        $sql->connect();
+        $sql->begin();
+        $statement->returning[0] = "*";
+        $str = $factory->createFromAST($statement)->getSql();
+        $str = "create temporary table foo on commit drop as with updated_rows as (" . $str . ") select * from updated_rows";
+        $trans = $sql->transaction($str);
+        if (!$trans["success"]) {
+            $sql->rollback();
+            $response['success'] = false;
+            $response['message'] = $trans["message"];
+            $response['code'] = 400;
+            return $response;
+        }
+        $select = "select * from foo where ${filters["write"]}";
+        $res = $sql->prepare($select);
+        try {
+            $res->execute();
+        } catch (PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 400;
+            return $response;
+        }
+        $count = $res->rowCount();
+        if ($trans["affected_rows"] > $count) {
+            $sql->rollback();
+            throw new Exception('LIMIT ERROR');
+        }
+       return $trans;
     }
 
 }

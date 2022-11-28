@@ -36,6 +36,14 @@ class TableWalkerRule extends BlankWalker
     /**
      * @throws Exception
      */
+    private static function throwException(): void
+    {
+        throw new Exception('DENY');
+    }
+
+    /**
+     * @throws Exception
+     */
     public function walkSelectStatement(Select $statement)
     {
         foreach ($statement->from->getIterator() as $from) {
@@ -48,11 +56,19 @@ class TableWalkerRule extends BlankWalker
             $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $schema, $relation);
             $geofence = new Geofence($userFilter);
             $response = $geofence->authorize($this->rules);
-            if (!empty($response["filters"]["read"])) $statement->where->and($response["filters"]["read"]);
+            if ($response["access"] == Geofence::DENY_ACCESS) {
+                self::throwException();
+            }
+            if (!empty($response["filters"]["read"])) {
+                $statement->where->and($response["filters"]["read"]);
+            }
         }
         parent::walkSelectStatement($statement);
     }
 
+    /**
+     * @throws Exception
+     */
     public function walkUpdateStatement(Update $statement)
     {
         foreach ($statement->from->getIterator() as $from) {
@@ -61,6 +77,9 @@ class TableWalkerRule extends BlankWalker
             $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $schema, $relation);
             $geofence = new Geofence($userFilter);
             $response = $geofence->authorize($this->rules);
+            if ($response["access"] == Geofence::DENY_ACCESS) {
+                self::throwException();
+            }
             if (!empty($response["filters"]["write"])) {
                 $statement->where->and($response["filters"]["write"]);
             }
@@ -70,12 +89,18 @@ class TableWalkerRule extends BlankWalker
         $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $schema, $relation);
         $geofence = new Geofence($userFilter);
         $response = $geofence->authorize($this->rules);
+        if (isset($response["access"]) && $response["access"] == Geofence::DENY_ACCESS) {
+            self::throwException();
+        }
         if (!empty($response["filters"]["write"])) {
             $statement->where->and($response["filters"]["write"]);
         }
         parent::walkUpdateStatement($statement);
     }
 
+    /**
+     * @throws Exception
+     */
     public function walkDeleteStatement(Delete $statement): void
     {
         foreach ($statement->using->getIterator() as $using) {
@@ -84,13 +109,32 @@ class TableWalkerRule extends BlankWalker
             $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $schema, $relation);
             $geofence = new Geofence($userFilter);
             $response = $geofence->authorize($this->rules);
+            if ($response["access"] == Geofence::DENY_ACCESS) {
+                self::throwException();
+            }
             if (!empty($response["filters"]["write"])) {
                 $statement->where->and($response["filters"]["write"]);
             }
         }
+        $schema = $statement->relation->relation->schema->value ?? "public";
+        $relation = $statement->relation->relation->relation->value;
+        $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $schema, $relation);
+        $geofence = new Geofence($userFilter);
+        $response = $geofence->authorize($this->rules);
+        if ($response["access"] == Geofence::DENY_ACCESS) {
+            self::throwException();
+        }
+        if (!empty($response["filters"]["write"])) {
+            $statement->where->and($response["filters"]["write"]);
+        }
+
+
         parent::walkDeleteStatement($statement);
     }
 
+    /**
+     * @throws Exception
+     */
     public function walkInsertStatement(Insert $statement)
     {
         $schema = $statement->relation->relation->schema->value ?? "public";
@@ -98,6 +142,9 @@ class TableWalkerRule extends BlankWalker
         $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $schema, $relation);
         $geofence = new Geofence($userFilter);
         $response = $geofence->authorize($this->rules);
+        if ($response["access"] == Geofence::DENY_ACCESS) {
+            self::throwException();
+        }
         if (!empty($statement->onConflict) && !empty($response["filters"]["read"])) {
             $statement->onConflict->where->and($response["filters"]["read"]);
         }
@@ -108,4 +155,5 @@ class TableWalkerRule extends BlankWalker
     {
         $this->rules = $rules;
     }
+
 }

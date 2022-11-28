@@ -27,6 +27,7 @@ class SqlParseTest extends Unit
      * @var array<string>
      */
     protected array $request;
+    protected array $requestWithNoMatch;
 
     protected function _before(): void
     {
@@ -87,6 +88,9 @@ class SqlParseTest extends Unit
         $this->request = [
             "silke", "sql", "get", "127.0.0.1"
         ];
+        $this->requestWithNoMatch = [
+            "stranger", "sql", "get", "127.0.0.1"
+        ];
     }
 
     protected function _after(): void
@@ -128,6 +132,19 @@ class SqlParseTest extends Unit
         $this->assertStringContainsString("listens.uid = 'test'", $alteredStatement);
     }
 
+    public function testTableWalkerRuleShouldNotAddWhereClauseToSelectWhenNoMatch(): void
+    {
+
+        $string = "SELECT * FROM test, foo";
+        $walker = new TableWalkerRule(...$this->requestWithNoMatch);
+        $walker->setRules($this->rules);
+        $factory = new sad_spirit\pg_builder\StatementFactory();
+        $select = $factory->createFromString($string);
+        $select->dispatch($walker);
+        $alteredStatement = $factory->createFromAST($select)->getSql();
+//        die("\n" . $alteredStatement);
+        $this->assertStringNotContainsString("where", $alteredStatement);
+    }
 
     public function testTableWalkerRuleShouldAddWhereClauseToDelete(): void
     {
@@ -160,10 +177,9 @@ class SqlParseTest extends Unit
         $walker->setRules($this->rules);
         $factory = new sad_spirit\pg_builder\StatementFactory();
         $select = $factory->createFromString($string);
-        $select->returning[0] = "gid";
         $select->dispatch($walker);
         $alteredStatement = $factory->createFromAST($select)->getSql();
-        die("\n" . $alteredStatement);
+//        die("\n" . $alteredStatement);
         $this->assertStringContainsString("foo.bar = 'test'", $alteredStatement);
         $this->assertStringContainsString("test.userid = 'test'", $alteredStatement);
         $this->assertStringContainsString("listens.uid = 'test'", $alteredStatement);
@@ -181,10 +197,9 @@ INSERT INTO test SELECT *, current_timestamp FROM upd ON CONFLICT (did) DO UPDAT
         $walker->setRules($this->rules);
         $factory = new sad_spirit\pg_builder\StatementFactory();
         $select = $factory->createFromString($string);
-        $select->returning[0] = "gid";
         $select->dispatch($walker);
         $alteredStatement = $factory->createFromAST($select)->getSql();
-        die("\n" . $alteredStatement);
+//        die("\n" . $alteredStatement);
         $this->assertStringContainsString("foo.bar = 'test'", $alteredStatement);
         $this->assertStringContainsString("test.userid = 'test'", $alteredStatement);
         $this->assertStringContainsString("listens.uid = 'test'", $alteredStatement);

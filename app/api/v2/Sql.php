@@ -14,9 +14,12 @@ use app\inc\Controller;
 use app\inc\Input;
 use app\inc\TableWalkerRelation;
 use app\inc\TableWalkerRule;
-use app\models\Rules;
+use app\inc\UserFilter;
+use app\models\Geofence;
+use app\models\Rule;
 use app\models\Setting;
 use app\models\Stream;
+use app\models\Geofence as GeofenceModel;
 use sad_spirit\pg_builder\StatementFactory;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Exception;
@@ -37,27 +40,27 @@ class Sql extends Controller
     /**
      * @var string
      */
-    private $q;
+    private string $q;
 
     /**
      * @var string
      */
-    private $apiKey;
+    private string $apiKey;
 
     /**
      * @var string
      */
-    private $data;
+    private string $data;
 
     /**
      * @var string|null
      */
-    private $subUser;
+    private ?string $subUser;
 
     /**
      * @var \app\models\Sql
      */
-    private $api;
+    private \app\models\Sql $api;
 
     /**
      *
@@ -67,12 +70,12 @@ class Sql extends Controller
     /**
      * @var array<mixed>
      */
-    private $cacheInfo;
+    private array $cacheInfo;
 
     /**
      * @var boolean
      */
-    private $streamFlag;
+    private bool $streamFlag;
 
 
     function __construct()
@@ -160,11 +163,11 @@ class Sql extends Controller
         $serializedResponse = $this->transaction($this->q, Input::get('client_encoding'));
 
         // Check if $this->data is set in SELECT section
-        if (!$this->data) {
+        if (!isset($this->data)) {
             $this->data = $serializedResponse;
         }
         $response = unserialize($this->data);
-        if ($this->cacheInfo) {
+        if (!empty($this->cacheInfo)) {
             $response["cache"] = $this->cacheInfo;
         }
         $response["peak_memory_usage"] = round(memory_get_peak_usage() / 1024) . " KB";
@@ -247,6 +250,7 @@ class Sql extends Controller
     private function transaction(string $sql, ?string $clientEncoding = null): string
     {
         $response = [];
+        $rule = new Rule();
         $walkerRelation = new TableWalkerRelation();
         $walkerRule = new TableWalkerRule($this->subUser ?: Connection::$param['postgisdb'], "sql", '', '');
         $factory = new StatementFactory();
@@ -265,24 +269,70 @@ class Sql extends Controller
         $select->dispatch($walkerRelation);
         $usedRelations = $walkerRelation->getRelations();
 
-
         // Check auth on relations
-        foreach ($usedRelations as $rel) {
-            $response = $this->ApiKeyAuthLayer($rel, $this->subUser, false, Input::get('key'), $usedRelations);
+        foreach ($usedRelations["all"] as $rel) {
+            $response = $this->ApiKeyAuthLayer($rel, $this->subUser, false, Input::get('key'), $usedRelations["all"]);
             if (!$response["success"]) {
                 return serialize($response);
             }
         }
-        // Get rules and set them
-        $rules = new Rules();
-        $walkerRule->setRules($rules->getRules());
-        $select->dispatch($walkerRule);
-        $this->q = $factory->createFromAST($select)->getSql();
 
-        if ($operation == "Delete" || $operation == "Update" || $operation == "Insert") {
+        // Get rules and set them
+        $rules = $rule->get();
+        $walkerRule->setRules($rules);
+        try {
+            $select->dispatch($walkerRule);
+        } catch (Exception $e) {
+            $response = [];
+            $response["code"] = 401;
+            $response["success"] = false;
+            $response["message"] = $e->getMessage();
+            return serialize($response);
+        }
+
+        if ($operation == "Update" || $operation == "Insert" || $operation == "Delete") {
+            if ($operation == "Insert") {
+                $split = explode(".", $usedRelations["insert"][0]);
+            } else {
+                $split = explode(".", $usedRelations["updateAndDelete"][0]);
+            }
+            $userFilter = new UserFilter($this->subUser ?: Connection::$param['postgisdb'], "sql", "*", "*", $split[0], $split[1]);
+            $geofence = new GeofenceModel($userFilter);
+            $auth = $geofence->authorize($rules);
+        } else {
+            $auth = null;
+        }
+
+        if ($operation == "Delete") {
+            $this->q = $factory->createFromAST($select)->getSql();
             $this->response = $this->api->transaction($this->q);
+            $response["statement"] = $this->q;
+            $response["filters"] = $auth["filters"];
+            $this->addAttr($response);
+        } elseif ($operation == "Update" || $operation == "Insert") {
+            $finaleStatement = $factory->createFromAST($select)->getSql();
+            if ($auth["access"] == Geofence::LIMIT_ACCESS) {
+                try {
+                    if (!empty($auth)) {
+                        $this->response = $geofence->postProcessQuery($select, $this->api, $auth["filters"]);
+                    }
+                } catch (Exception $e) {
+                    $response = [];
+                    $response["code"] = 401;
+                    $response["success"] = false;
+                    $response["message"] = $e->getMessage();
+                    $response["statement"] = $finaleStatement;
+                    $response["filters"] = $auth["filters"];
+                    return serialize($response);
+                }
+            } else {
+                $this->response = $this->api->transaction($this->q);
+            }
+            $response["filters"] = $auth["filters"];
+            $response["statement"] = $finaleStatement;
             $this->addAttr($response);
         } elseif ($operation == "Select" || $operation == "SetOpSelect") {
+            $this->q = $factory->createFromAST($select)->getSql();
             if ($this->streamFlag) {
                 $stream = new Stream();
                 $res = $stream->runSql($this->q);

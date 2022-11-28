@@ -10,7 +10,7 @@ namespace app\models;
 
 use app\inc\Model;
 
-class Rules extends Model
+class Rule extends Model
 {
 
     public function __construct()
@@ -21,7 +21,7 @@ class Rules extends Model
     /**
      * @return array
      */
-    public function getRules(): array
+    public function get(): array
     {
 
         $sql = "SELECT * FROM settings.geofence order by priority";

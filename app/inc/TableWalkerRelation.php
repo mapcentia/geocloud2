@@ -17,27 +17,31 @@ use sad_spirit\pg_builder\nodes\range\RelationReference;
 class TableWalkerRelation extends BlankWalker
 {
     /**
-     * @var array<string>
+     * @var array<array<string>>
      */
-    private array $relations = [];
+    private array $relations = ["all" => [], "insert" => [], "updateAndDelete" => []];
 
     public function walkRelationReference(RelationReference $rangeItem): void
     {
-        $this->relations[] = (string)$rangeItem->name;
+        $this->relations["all"][] = (string)$rangeItem->name;
     }
 
     public function walkUpdateOrDeleteTarget(UpdateOrDeleteTarget $target): void
     {
-        $this->relations[] = $target->relation->schema . "." . $target->relation->relation;
+        $rel =($target->relation->schema ?? "public") . "." . $target->relation->relation;
+        $this->relations["all"][] = $rel;
+        $this->relations["updateAndDelete"][] = $rel;
     }
 
     public function walkInsertTarget(nodes\range\InsertTarget $target): void
     {
-        $this->relations[] = $target->relation->schema . "." . $target->relation->relation;
+        $rel =($target->relation->schema ?? "public") . "." . $target->relation->relation;
+        $this->relations["all"][] = $rel;
+        $this->relations["insert"][] = $rel;
     }
 
     /**
-     * @return array<string>
+     * @return array<array<string>>
      */
     public function getRelations(): array
     {
