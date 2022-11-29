@@ -90,7 +90,6 @@ class Geofence extends Model
         $str = "create temporary table foo on commit drop as with updated_rows as (" . $str . ") select * from updated_rows";
         $trans = $sql->transaction($str);
         if (!$trans["success"]) {
-            $sql->rollback();
             $response['success'] = false;
             $response['message'] = $trans["message"];
             $response['code'] = 400;
@@ -111,6 +110,7 @@ class Geofence extends Model
             $sql->rollback();
             throw new Exception('LIMIT ERROR');
         }
+        $sql->commit();
        return $trans;
     }
 

@@ -290,6 +290,7 @@ class Sql extends Controller
             return serialize($response);
         }
 
+        // TODO Set this in TableWalkerRule
         if ($operation == "Update" || $operation == "Insert" || $operation == "Delete") {
             if ($operation == "Insert") {
                 $split = explode(".", $usedRelations["insert"][0]);
@@ -313,9 +314,7 @@ class Sql extends Controller
             $finaleStatement = $factory->createFromAST($select)->getSql();
             if ($auth["access"] == Geofence::LIMIT_ACCESS) {
                 try {
-                    if (!empty($auth)) {
-                        $this->response = $geofence->postProcessQuery($select, $this->api, $auth["filters"]);
-                    }
+                    $this->response = $geofence->postProcessQuery($select, $this->api, $auth["filters"]);
                 } catch (Exception $e) {
                     $response = [];
                     $response["code"] = 401;
@@ -333,7 +332,7 @@ class Sql extends Controller
             $this->addAttr($response);
         } elseif ($operation == "Select" || $operation == "SetOpSelect") {
             $this->q = $factory->createFromAST($select)->getSql();
-            if ($this->streamFlag) {
+            if (isset($this->streamFlag)) {
                 $stream = new Stream();
                 $res = $stream->runSql($this->q);
                 return ($res);
@@ -371,6 +370,7 @@ class Sql extends Controller
                         "query" => $this->q,
                     ]);
                 }
+                $response["statement"] = $this->q;
                 $this->addAttr($response);
                 echo serialize($this->response);
                 $this->data = ob_get_contents();
