@@ -884,47 +884,34 @@ class Model
         } else {
 
             $response = [];
-            $sql = "SELECT
-                    att2.attname AS \"child_column\",
-                    cl.relname AS \"parent_table\",
-                    nspname AS \"parent_schema\",
-                    att.attname AS \"parent_column\",
-                    conname
-                FROM
-                   (SELECT
-                        unnest(con1.conkey) AS \"parent\",
-                        unnest(con1.confkey) AS \"child\",
-                        con1.confrelid,
-                        con1.conrelid,
-                        con1.conname,
-                        ns.nspname
-                    FROM
-                        pg_class cl
-                        JOIN pg_namespace ns ON cl.relnamespace = ns.oid
-                        JOIN pg_constraint con1 ON con1.conrelid = cl.oid
-                    WHERE
-                        cl.relname = :table
+            $sql = "SELECT att2.attname    AS child_column,
+                       cl.relname      AS parent_table,
+                       ns.nspname    AS parent_schema,
+                       att.attname     AS parent_column,
+                       conname
+                FROM (SELECT unnest(con1.conkey)  AS parent,
+                             unnest(con1.confkey) AS child,
+                             con1.confrelid,
+                             con1.conrelid,
+                             con1.conname,
+                             ns.nspname
+                      FROM pg_class cl
+                               JOIN pg_namespace ns ON cl.relnamespace = ns.oid
+                               JOIN pg_constraint con1 ON con1.conrelid = cl.oid
+                      WHERE cl.relname = :table
                         AND ns.nspname = :schema
-                        AND con1.contype = 'f'
-                   ) con
-                   JOIN pg_attribute att ON
-                       att.attrelid = con.confrelid AND att.attnum = con.child
-                   JOIN pg_class cl ON
-                       cl.oid = con.confrelid
-                   JOIN pg_attribute att2 ON
-                       att2.attrelid = con.conrelid AND att2.attnum = con.parent";
+                        AND con1.contype = 'f') con
+                         JOIN pg_attribute att ON
+                    att.attrelid = con.confrelid AND att.attnum = con.child
+                         JOIN pg_class cl ON
+                    cl.oid = con.confrelid
+                         JOIN pg_attribute att2 ON
+                    att2.attrelid = con.conrelid AND att2.attnum = con.parent
+                        JOIN  pg_namespace ns on cl.relnamespace = ns.oid";
 
             $res = $this->prepare($sql);
             try {
                 $res->execute(["table" => $table, "schema" => $schema]);
-            } catch (PDOException $e) {
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 401;
-                return $response;
-            }
-
-            try {
                 $rows = $this->fetchAll($res);
             } catch (Exception $e) {
                 $response['success'] = false;
