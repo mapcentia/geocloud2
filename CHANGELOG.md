@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2022.12.0] - 2022-7-12
+### Added
+- The `Baselayerjs` API will now return two new properties for use in Dashbaord: disableDatabaseCreation and loginLogo
+
 ## [2022.11.0] - 2022-17-11
 ### Added
 - Added the following to documentation: description on how to enable extensions and a description on the traccar_api extension.
