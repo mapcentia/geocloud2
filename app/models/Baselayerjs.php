@@ -43,6 +43,7 @@ class Baselayerjs extends Controller
         $settingsRawJSON .= "\"epsg\": \"" . (!empty(App::$param['epsg']) ? App::$param['epsg'] : "4326") . "\",\n";
         $settingsRawJSON .= "\"extraShareFields\": " . (!empty(App::$param['extraShareFields']) ? "true" : "false") . ",\n";
         $settingsRawJSON .= "\"showDownloadOtionsInHeron\": " . ((App::$param['showDownloadOtionsInHeron']) ? "true" : "false") . ",\n";
+        $settingsRawJSON .= "\"disableDatabaseCreation\": " . (!empty(App::$param['disableDatabaseCreation']) ? "true" : "false") . ",\n";
         $settingsRawJSON .= "\"esIndexingInGui\": " . (!empty(App::$param['esIndexingInGui']) ? "true" : "false") . ",\n";
         $settingsRawJSON .= "\"hideUngroupedLayers\": " . (!empty(App::$param['hideUngroupedLayers']) ? "true" : "false") . ",\n";
         $settingsRawJSON .= "\"staticMapHost\": \"" . (!empty(App::$param['staticMapHost']) ? App::$param['staticMapHost'] : App::$param['host']) . "\",\n";
@@ -61,6 +62,7 @@ class Baselayerjs extends Controller
         $settingsRawJSON .= "\"enableWorkflow\": " . (!empty(App::$param['enableWorkflow']) ? json_encode(App::$param['enableWorkflow']) : "null") . ",\n";
         $settingsRawJSON .= "\"hereApp\": " . (!empty(App::$param['hereApp']) ? json_encode(App::$param['hereApp']) : "null") . ",\n";
         $settingsRawJSON .= "\"vidiUrl\": " . (!empty(App::$param['vidiUrl']) ? json_encode(App::$param['vidiUrl'], JSON_UNESCAPED_SLASHES) : "null") . ",\n";
+        $settingsRawJSON .= "\"loginLogo\": " . (!empty(App::$param['loginLogo']) ? json_encode(App::$param['loginLogo'], JSON_UNESCAPED_SLASHES) : "null") . ",\n";
         $settingsRawJSON .= "\"subDomainsForTiles\": " . (!empty(App::$param['subDomainsForTiles']) ? json_encode(App::$param['subDomainsForTiles']) : "null") . ",\n";
         $settingsRawJSON .= "\"colorPalette\": " . (!empty(App::$param['colorPalette']) ? json_encode(App::$param['colorPalette']) : "null") . ",\n";
         if ($settings = @file_get_contents(App::$param["path"] . "/app/conf/elasticsearch_settings.json")) {
