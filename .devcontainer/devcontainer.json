@@ -1,0 +1,42 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/docker-in-docker
+{
+  "name": "Docker in Docker",
+  "image": "mcr.microsoft.com/devcontainers/base:bullseye",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:1": {
+      "installZsh": "true",
+      "upgradePackages": "false",
+      "uid": "1000",
+      "gid": "1000",
+      "installOhMyZsh": "true",
+      "nonFreePackages": "true"
+    },
+    "ghcr.io/devcontainers/features/docker-from-docker:1": {},
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/guiyomh/features/vim:0": {},
+    "ghcr.io/shyim/devcontainers-features/php:0": {}
+  },
+
+  "postCreateCommand": "sudo chown 1000 ../geocloud2",
+
+  "remoteEnv": {
+    // the original host directory which is needed for volume
+    // mount commands from inside the container (Docker in Docker)
+    // https://github.com/microsoft/vscode-dev-containers/blob/main/containers/docker-from-docker/README.md#using-bind-mounts-when-working-with-docker-inside-the-container
+    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
+  }
+
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // "forwardPorts": [],
+
+  // Use 'postCreateCommand' to run commands after the container is created.
+  // "postCreateCommand": "docker --version",
+
+  // Configure tool-specific properties.
+  // "customizations": {},
+
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  // "remoteUser": "root"
+}
