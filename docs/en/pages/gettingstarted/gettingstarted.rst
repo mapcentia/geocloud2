@@ -1,62 +1,63 @@
 .. _gettingstarted:
 
 ============================================================
-Dokumentation for GC2
+Documentation for GC2
 ============================================================
 
-Her finder du dokumentation for GeoCloud2
+Here you can find documentation for GeoCloud2
 
-I dette dokument er dokumenteret hvordan GC2 bruges, og de forskellige komponenter virker. Der findes på samme måde en dokumentation til Vidi, som er en viewer løsning til brug for visning af data fra GC2, `Vidi dokumentation finder du her. <https://vidi.readthedocs.io/>`_
+In this document you can learn hoow GC2 is used, and how the different parts work.
 
-API dokumentation for GC2 laves i swagger. Det betyder at dokumentationen er tilgænglig i det site der skal arbejdes på. For at finde dokumentationen, skal der navigeres til en url på sitet, som har dette format <GC2 site url>/swagger-ui/
+API documentation for GC2 is made in swagger. This means that teh documentation on the site you work on. To find the dokumentation you will have to navigate to an url at your site. The url is made like this <GC2 site url>/swagger-ui/
 
-Det er vigtigt at der bruges den apidokumnetation, som ligger på det aktuelle site, for den vil passe til den version af GC2, som der programmeres mod. `Her kan du se et ekesempel på hvordan dokumentationen ser ud. <https://dk.gc2.io/swagger-ui/>`_
+It is important that you use the API-documentation on your actual site. IT will always apply to the version of GC2 that you develop on. `Here you can see an example of the dokumentation. <https://dk.gc2.io/swagger-ui/>`_
 
 
 *****************************************************************
-Kom godt i gang med GC2
+Get started using GC2
 *****************************************************************
 
 .. topic:: Overview
 
     :Date: |today|
     :GC2-version: 2020.12.0
-    :Forfatter: `giovanniborella <https://github.com/giovanniborella>`_, `GEOsmeden <https://github.com/geosmeden>`_
+    :Forfatter: `GEOsmeden <https://github.com/geosmeden>`_,
 
 .. contents:: 
     :depth: 3
 
 
-Hvad er GC2?
+What is GC2?
 ================================================================= 
 
-GeoCloud2 eller fremover GC2 er en enterprise platform for håndtering af geospatial data, kort-visualisering og spatiale værktøjer. Bygget på de bedste opensource og standard baserede programmer.
+GeoCloud2, hereafter GC2 will be used, is an enterprise platform for handling geospatial data, map-visualisation and spatiale tools. The platform is built on the best opensource and standard based programs.
 
-GC2 gør det nemt at starte med PostGIS, MapServer, QGIS Server, MapCache, Elasticsearch, GDAL/OGR2OGR. Brugerfladen i GC2, er et simpelt web-interface til administration af hele software-pakken.
+GC2 makes it easy to start using PostGIS, MapServer, QGIS Server, MapCache, Elasticsearch, GDAL/OGR2OGR. User interface to GC2, is a simple web-interface for administration of the software stack.
 
-Målet med GC2 er at gøre det nemt for organisationer at bruge opensource værktøjer til at bygge en geospatial infrastruktur.
+The aim for GC2 is to make it easy for organisations to use opensource tools to build a geospatial infrastructure.
 
-For at læse mere kan du gå til :ref:`readme`
+To read more go to :ref:`readme`
 
-Kom i gang
+Get started
 =================================================================
 
-TBD
+The url of your site is chosen when GC2 is installed. Navigate to the site url to get started.
+
 
 .. _gettingstarted_login:
 
 Log ind
 -----------------------------------------------------------------
 
-Url'en til GC2 vælges når GC2 installeres. Når man forbinder til GC2 bliver man mødt med log-in skærmen som det første. Her er det muligt at logge ind som database-bruger eller sub-bruger.
+Start by signing into GC2 at the front page. You can login as the Database user or a sub user.
 
-Først taster man brugernavn, derefter på ``Log ind``. Der bliver lavet et hurtigt tjek på om brugeren eksiterer. Hvis den gør, bliver det muligt at udfylde password. afslut med ``Log ind``.
+The first thing you see is the Dashboard, where a list of database schemas are displayed. Schemas represent a logical division of the database. Schema 'public' is a standard schema that always exist in the database, and should normally not be used.
 
-Det er muligt at bruge enten brugernavn eller email.
+enther the username and press ``Enter password``. It will then be checked if the user exist. If it does it will be possible to enter the password. after that press ``Sign in``.
 
-Hvis det lykkedes at logge ind bliver man automatisk bragt videre til :ref:`dashboard`
+If login succeeds it will automatically open the dashboard :ref:`dashboard`
 
-.. figure:: ../../../_media/gettingstarted-login.png
+.. figure:: ../../../_media/en/gettingstarted-login.png
     :width: 400px
     :align: center
     :name: gettingstarted-login
@@ -66,19 +67,19 @@ Hvis det lykkedes at logge ind bliver man automatisk bragt videre til :ref:`dash
 
 .. _gettingstarted_register:
 
-Tilmeld/opret databasebruger
+Register/create databaseuser/new database
 -----------------------------------------------------------------
 
 .. note::
-  Hvis du leder efter subusers, kan du læse mere her: :ref:`subuser`
+  If you are looking for subusers, read more here: :ref:`subuser`
 
-En databasebruger er ejeren af den database som data kommer til at leve i. Det er denne bruger der typisk bliver brugt til at administrere løsningen.
+A databaseuser is the owner of the database where data resides. It is this user that normally is used for administration of the site.
 
-For at oprette en database-bruger trykker man ``Tilmeld``. Følg herefter registrerings-formularen for at oprette en database-bruger.
+To create a database-user u press the ``Register``. Fill in the registration form to create a database user and the new database.
 
-Når man er færdig, kan man bruge oplysningerne til at logge ind.
+When done use the information to to log in.
 
-.. figure:: ../../../_media/gettingstarted-register.png
+.. figure:: ../../../_media/en/gettingstarted-register.png
     :width: 400px
     :align: center
     :name: gettingstarted-register
@@ -88,16 +89,16 @@ Når man er færdig, kan man bruge oplysningerne til at logge ind.
 
 .. _gettingstarted_dashboard:
 
-Kontrolcenter/Dashboard
+Dashboard
 =================================================================
 
-Når der er logget ind i GC2, så vises kontrolcenter/dashboardet. 
+When you are logge in to GC2, then u see the dashboard. 
 
-Kontrolcenter er stedet hvor man i venstre side kan se en oversigt over skemaer eller konfigurationer i databasen. I højre side vises en oversigt over Sub-brugere. Der kan også tilføjes Sub-brugere.
+The Dashboard is the place where there in the left side is a list of the schemes og configurations in the database. In the right side is a list of subusers. You can also create subusers here.
 
-I den blå topbar er der et spørgsmålstegn, som giver adgang til dokumentationen, og der kan åbnes en brugerprofil for den bruger der logget ind ved at klikke på brugernavnet. Se mere om brugerprofil her: :ref:`gettingstarted_userprofile`
+In the blue topbar is at questionmark, this gives acces to this documentation, and beside is the usenmae of the profile that is logged in. If you click the username it will open a userprofile. Read more ablout userprofile here: :ref:`gettingstarted_userprofile`
 
-.. figure:: ../../../_media/gettingstarted-dashboard.png
+.. figure:: ../../../_media/en/gettingstarted-dashboard.png
     :width: 550px
     :align: center
     :name: gettingstarted-dashboard
@@ -105,36 +106,36 @@ I den blå topbar er der et spørgsmålstegn, som giver adgang til dokumentation
 
     Kontrolcenter
 
-Skemaer
+Schemes
 -----------------------------------------------------------------
 
-Hvert skema under databasebrugeren bliver vist. Der er et filter-felt, som kan bruges til at filtrere i listen.
+Each scheme in the database will be shown. there is a filter option to filter the list.
 
-Skemaet ``public`` bliver som standard oprettet sammen med databasebrugeren, og bør nomalt ikke bruges til noget.
+The scheme ``public`` is always created when the dabase is created, and should not normally be used.
 
-Hvis der klikkes på et skema foldes det ud, og det er muligt at gøre følgende:
+If you click on a scheme it is unfolded and it is possible to either:
 
-* Åbne Vidi med lagene der er opsat i skemaet.
-* Gå til administrationsmodulet
+* Open Vidi with the layers in the current scheme.
+* Go to the administration page(the gear).
 
 
-Konfigurationer
+Configurations
 -----------------------------------------------------------------
 
-Konfigurationer er json filer, som gemmes i databasen. Konfigurationerne bruges til at styre opsætningen af Vidi. Dvs, det kan styres hvilke lag der vises, hvilke extensions og hvilke baggrundskort der er tilgængelige. 
+Configurations is json files that is stored in the database. Configurations are used to control the Vidi viewer. So this is where you control which layers and background layers is displayed, and which extensions are available. 
 
-Konfigurationerne oprettes her, og skal have et navn, der kan suppleres med en beskrivelse.
+The configurations are create here and must have a name, it can be supplied with a description too.
 
-For en grundig gennemgang af mulighederne i konfigurationerne, så læs afsnittet i Vidi dokumentationen `Vidi kørselskonfiguration <https://vidi.readthedocs.io/da/latest/pages/standard/91_run_configuration.html>`_
+For more information about the possibilities in the configurations, read the section in the Vidi dokumentation (currently only in danish) `Vidi kørselskonfiguration <https://vidi.readthedocs.io/da/latest/pages/standard/91_run_configuration.html>`_
 
 .. _gettingstarted_userprofile:
 
-Brugerprofil
+User profile
 -----------------------------------------------------------------
 
-Når der er logget ind i GC2, kan man tilgå sin brugerprofil i den blå topbar. Der klikkes på brugernavnet, og der åbnes en dialogboks, hvor der kan ses brugeroplysninger og skiftes password.
+When you are logged in to GC2, You can view the userprofile in the blue topbar. Click on the username, and a dialog will open, where it is possible to view user information and change password.
 
-.. figure:: ../../../_media/gettingstarted-userprofile.png
+.. figure:: ../../../_media/en/gettingstarted-userprofile.png
     :width: 550px
     :align: center
     :name: gettingstarted-dashboard
@@ -145,29 +146,29 @@ Når der er logget ind i GC2, kan man tilgå sin brugerprofil i den blå topbar.
 Subusers
 -----------------------------------------------------------------
 
-Her vises alle subusers. For at få mere information om subusers, kan du læse :ref:`subuser`
+This is a list of all subusers. Read more about subusers here :ref:`subuser`
 
 .. _gettingstarted_admin:
 
-Administrationsmodul
+Administration module
 =================================================================
 
-Administrationsmodulet er delt op i faner. Fanerne er nærmere beskrevet herunder.
+Administration module is divided in tabs. The tabs are explained below.
 
 .. _gettingstarted_admin_map:
 
-Kort
+Map
 -----------------------------------------------------------------
 
-I fanen "Kort" kan man i venstre side se en oversigt over de lag der er i skemaet. Hvis lagene ikke er sat op endnu, findes de under ungrouped. Ellers findes de i den gruppering der er lavet i database fanen, som beskrives senere. Over laglisten er der mulighed for at tilføje nye lag, og reloade siden, hvis der er lavet noget der ikke vises rigtigt.
+In the tab "Map" on the left side you can see an overview of the layers in the scheme. If the layers are not set up yet, they are found under ungrouped. Otherwise, they are found in the grouping made in the database tab, which is described later. Above the layer list, it is possible to add new layers and reload the page if something has been made that does not display correctly.
 
-Til højre for lagoversigten findes styling vinduet. Her kan der for hvert lag laves en opsætning af kartografien på laget. Der er en class wizard, som kan bruges til at lave en hurtig opsætning, som så efterfølgende kan justeres.
+To the right of the layer overview is the styling window. Here, a setup of the cartography on the layer can be made for each layer. There is a class wizard which can be used to make a quick setup, which can then be adjusted afterwards.
 
-I resten af fanen vises et kort, hvor de opsatte data kan se, når laget tændes i lag træet.
+In the rest of the tab, a map is displayed where the set data can be seen when the layer is switched on in the layer tree.
 
 .. _gettingstarted_admin_database:
 
-.. figure:: ../../../_media/gettingstarted-admin-map.png
+.. figure:: ../../../_media/en/gettingstarted-admin-map.png
     :width: 690px
     :align: center
     :name: gettingstarted-admin-map
@@ -181,9 +182,9 @@ I resten af fanen vises et kort, hvor de opsatte data kan se, når laget tændes
 Database
 -----------------------------------------------------------------
 
-I Databasefanen kan databasen administreres. Det er her de overordnede egenskaber på lag sættes og tabelstrukturen kan ændres.
+In the Database tab, the database can be managed. This is where the overall layer properties are set and the table structure can be changed.
 
-.. figure:: ../../../_media/gettingstarted-admin-database.png
+.. figure:: ../../../_media/en/gettingstarted-admin-database.png
     :width: 690px
     :align: center
     :name: gettingstarted-admin-database
@@ -191,60 +192,62 @@ I Databasefanen kan databasen administreres. Det er her de overordnede egenskabe
 
     Database
 
-Laglisten
+Layer list
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Øverste del af fanen er rummer en linje med forskllige funktioner. Under linjen findes laglisten.
+The upper part of the tab contains a line with different functions. Below the line is the layer list.
 
-.. figure:: ../../../_media/gettingstarted-admin-database-layerlist.png
+.. figure:: ../../../_media/en/gettingstarted-admin-database-layerlist.png
     :width: 690px
     :align: center
     :name: gettingstarted-database-layerlist
     :figclass: align-center
 
-    Lagliste
+    Layer list
 
-Lags egenskaber kan ændres ved at dobbeltklikke på det felt i listen, som ønskes ændret.  
+Layer properties can be changed by double-clicking on the field in the list that you want to change.
 
-1. Type: Lagets geometritype som kan være (MULTI)POINT, (MULTI)LINESTRING, (MULTI)POLYGON eller GEOMETRY. Sidste betyder, at laget kan have en blandning af flere forskellige typer. Lagets type kan ikke ændres.
-#. Navn: Det tekniske navn på laget. Hvis laget er importeret fra en fil svarer navnet på laget til filnavnet. Lagets tekniske navn kan ikke ændres.
-#. Titel: Lagets titel. Hvis titel er sat, er det den, som vises i lagtræ, signaturer, WMS/WFS titler mv.
-#. Beskrivelse: En beskrivende tekst til laget. Bruges i WMS/WFS abstract.
-#. Gruppe: Grupper anvendes til at inddele lagtræet i Map fanen og i Vieweren. Dette er combo felt: Enten skrives navnet på en ny gruppe eller der vælges en allerede eksisterende.
-#. Sort id: Placering af laget i laghierarki. Dvs. om et lag ligger ovenpå eller underneden et andet lag, når de vises sammen i Map fanen eller Vieweren.
-#. Authentication: Hvilket niveau af authentication ønskes for det enkelte lag i WMS og WFS tjenester? Write = authentication kun ved editering, Read/Write = authentication ved både læsning og editering, None = ingen authentication på laget.
-#. Skrivebar: Hvis slået fra, kan laget ikke editeres i Map fanen eller gennem WFS-T.
-#. Tile cache: Manuelt sletning af lagets tile cache. Dette er normalt ikke nødvendigt at gøre, da GC2 søger for sletning, når der er brug for det.
+1. Type: The geometry type of the layer which can be (MULTI)POINT, (MULTI)LINESTRING, (MULTI)POLYGON or GEOMETRY. The latter means that the layer can have a mixture of several different types. The layer type cannot be changed.
+#. Name: The technical name of the layer. If the layer is imported from a file, the name of the layer corresponds to the file name. The technical name of the layer cannot be changed.
+#. Title: The title of the team. If title is set, it is the one that appears in the layer tree, signatures, WMS/WFS titles, etc.
+#. Description: A descriptive text for the layer. Used in WMS/WFS abstract.
+#. Group: Groups are used to divide the layer tree in the Map tab and in the Viewer. This is a combo field: Either write the name of a new group or select an existing one.
+#. Black id: Position of the layer in layer hierarchy. That is whether a layer lies above or below another layer when they are displayed together in the Map tab or the Viewer.
+#. Authentication: What level of authentication is desired for the individual layer in WMS and WFS services? Write = authentication only when editing, Read/Write = authentication when both reading and editing, None = no authentication on the layer.
+#. Writable: If turned off, the layer cannot be edited in the Map tab or through WFS-T.
+#. Tile cache: Manual deletion of the layer's tile cache. This is usually not necessary to do as GC2 checks for deletion when needed.
 
-Tabelstruktur
+
+
+Tabelstructure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Når et lag i laglisten vælges, vises lagets tabelstruktur i sektion nedenunder. Her kan sættes egenskaber på kolonnerne. Egenskaber kan ændres ved at dobbeltklikke på det felt i listen, som ønskes ændret. Kolonner kan tilføjes og slettes.
+When a layer in the layer list is selected, the layer's table structure is displayed in the section below. Properties can be set on the columns here. Properties can be changed by double-clicking on the field in the list that you want to change. Columns can be added and deleted.
 
-.. figure:: ../../../_media/gettingstarted-admin-database-table-structure.png
+.. figure:: ../../../_media/en/gettingstarted-admin-database-table-structure.png
     :width: 690px
     :align: center
-    :name: gettingstarted-database-layerlist
+    :name: gettingstarted-database--tablestructure
     :figclass: align-center
 
     Tabelstruktur
 
-1. Sort id: I hvilken rækkefølge kan kolonnerne vises i ved forespørgelser i Vieweren. Kolonner med lavere Sort id vises øverest.
-#. Kolonne: Navn på kolonnen. Navnet kan ændres, men overvej at benytte Alias (4) i stedet for.
-#. Type: Kolonnens type. Kan ikke ændres.
+1. Sort id: In which order the columns can be displayed in queries in the Viewer. Columns with lower sort id are displayed at the top.
+#. Column: Name of the column. The name can be changed, but consider using Alias ​​(4) instead.
+#. Type: The type of the column. Can not be changed.
 #. ALLOW NULL:
-#. Alias: Et alias til kolonnen. Vises ved forespørgelser i Vieweren.
-#. Vis i klik-info: Skal kolonnen vises ved forespørgelser i Vieweren? Udgangspunktet er, at alle kolonner vises. Ændres der ved disse egenskaber, vises kun dem, som er tjekket af.
-#. VIS I MOUSE-OVER:
-#. SØGBAR:
-#. AKTIVER FILTRERING:
-#. Gør til link: Hvis indholdet i kolonnen er et link, kan det gøres aktivt i Vieweren ved forespørgelser.
-#. IMAGE:
-#. Link prefix: Hvis links fx mangler "http://" kan dette tilføjes her.
-#. EGENSKABER:
-#. Properties: Kan indeholde vilkårligt information til bruges i brugertilpassede applikationer.
-#. Tilføj ny kolonne: Tilføj en ny kolonne til lagets tabel.
-#. Slet kolonne: Slet den valgte kolonne.
+#. Alias: An alias for the column. Shown for queries in the Viewer.
+#. Show in click-info: Should the column be displayed for queries in the Viewer? The starting point is that all columns are displayed. If these properties are changed, only those that are checked will be displayed.
+#. SHOW IN MOUSE OVER:
+#. SEARCHABLE:
+#. ENABLE FILTERING:
+#. Make a link: If the content in the column is a link, it can be made active in the Viewer by queries.
+#. IMAGES:
+#. Link prefix: If links e.g. are missing "http://" this can be added here.
+#. PROPERTIES:
+#. Properties: Can contain arbitrary information for use in custom applications.
+#. Add New Column: Add a new column to the layer's table.
+#. Delete Column: Delete the selected column.
 
 Flyt lag mellem schemaer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
