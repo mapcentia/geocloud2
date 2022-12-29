@@ -8,9 +8,9 @@ Here you can find documentation for GeoCloud2
 
 In this document you can learn hoow GC2 is used, and how the different parts work.
 
-API documentation for GC2 is made in swagger. This means that teh documentation on the site you work on. To find the dokumentation you will have to navigate to an url at your site. The url is made like this <GC2 site url>/swagger-ui/
+API documentation for GC2 is made in swagger. This means that the documentation is on the site you work on. To find the dokumentation you will have to navigate to an url at your site. The url is made like this <GC2 site url>/swagger-ui/
 
-It is important that you use the API-documentation on your actual site. IT will always apply to the version of GC2 that you develop on. `Here you can see an example of the dokumentation. <https://dk.gc2.io/swagger-ui/>`_
+It is important that you use the API-documentation on your actual site. It will always apply to the version of GC2 that you develop on. `Here you can see an example of the dokumentation. <https://dk.gc2.io/swagger-ui/>`_
 
 
 *****************************************************************
@@ -46,7 +46,7 @@ The url of your site is chosen when GC2 is installed. Navigate to the site url t
 
 .. _gettingstarted_login:
 
-Log ind
+Login
 -----------------------------------------------------------------
 
 Start by signing into GC2 at the front page. You can login as the Database user or a sub user.
@@ -63,7 +63,7 @@ If login succeeds it will automatically open the dashboard :ref:`dashboard`
     :name: gettingstarted-login
     :figclass: align-center
 
-    Log ind
+    Log in
 
 .. _gettingstarted_register:
 
@@ -73,9 +73,9 @@ Register/create databaseuser/new database
 .. note::
   If you are looking for subusers, read more here: :ref:`subuser`
 
-A databaseuser is the owner of the database where data resides. It is this user that normally is used for administration of the site.
+A databaseuser is the owner of the database where data resides. It is the user that normally is used for administration of the site.
 
-To create a database-user u press the ``Register``. Fill in the registration form to create a database user and the new database.
+To create a database-user you press the ``Register``. Fill in the registration form to create a database user and the new database.
 
 When done use the information to to log in.
 
@@ -85,16 +85,16 @@ When done use the information to to log in.
     :name: gettingstarted-register
     :figclass: align-center
 
-    Opret databasebruger
+    Create database user
 
 .. _gettingstarted_dashboard:
 
 Dashboard
 =================================================================
 
-When you are logge in to GC2, then u see the dashboard. 
+When you are logged in to GC2, then you see the dashboard. 
 
-The Dashboard is the place where there in the left side is a list of the schemes og configurations in the database. In the right side is a list of subusers. You can also create subusers here.
+The Dashboard is the place where in the left side there is a list of the schemes og configurations in the database. In the right side is a list of subusers. You can also create subusers here.
 
 In the blue topbar is at questionmark, this gives acces to this documentation, and beside is the usenmae of the profile that is logged in. If you click the username it will open a userprofile. Read more ablout userprofile here: :ref:`gettingstarted_userprofile`
 
@@ -104,7 +104,7 @@ In the blue topbar is at questionmark, this gives acces to this documentation, a
     :name: gettingstarted-dashboard
     :figclass: align-center
 
-    Kontrolcenter
+    Dashboard
 
 Schemes
 -----------------------------------------------------------------
@@ -141,7 +141,7 @@ When you are logged in to GC2, You can view the userprofile in the blue topbar. 
     :name: gettingstarted-dashboard
     :figclass: align-center
 
-    Brugerprofil
+    User profile
 
 Subusers
 -----------------------------------------------------------------
@@ -230,7 +230,7 @@ When a layer in the layer list is selected, the layer's table structure is displ
     :name: gettingstarted-database--tablestructure
     :figclass: align-center
 
-    Tabelstruktur
+    Tabelstructure
 
 1. Sort id: In which order the columns can be displayed in queries in the Viewer. Columns with lower sort id are displayed at the top.
 #. Column: Name of the column. The name can be changed, but consider using Alias ​​(4) instead.
@@ -249,7 +249,7 @@ When a layer in the layer list is selected, the layer's table structure is displ
 #. Add New Column: Add a new column to the layer's table.
 #. Delete Column: Delete the selected column.
 
-Flyt lag mellem schemaer
+Move layers between schemes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: ../../../_media/gettingstarted-admin-database-movelayer-schema.png
@@ -258,12 +258,12 @@ Flyt lag mellem schemaer
     :name: gettingstarted-database-layerlist
     :figclass: align-center
 
-    Flyt lag mellem schemaer
+    Move layers between schemes
 
-1. Vælg et eller flere lag på laglisten (hold Shift eller Ctrl nede for at vælge flere) og klik "Flyt lag".
-#. Vælg hvilket schema de skal flyttes til.
+1. Select one or more layers in the layer list (hold Shift or Ctrl to select more) and click "Move Layer".
+#. Choose which scheme they should be moved to.
 
-Omdøb lag
+Rename layer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: ../../../_media/gettingstarted-admin-database-rename-layer.png
@@ -272,15 +272,15 @@ Omdøb lag
     :name: gettingstarted-database-layerlist
     :figclass: align-center
 
-    Omdøb lag
-	
-1. Vælg et enkelt lag og klik "Omdøb layer".
-#. Vælg et nyt navn til laget.
+   Rename layer
 
-Skab tabel fra bunden
+1. Select a single layer and click "Rename layer".
+#. Choose a new name for the layer.
+
+Create table from scratch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Du kan skabe en ny tom tabel fra bunden ved først at klikke på nyt lag
+You can create a new empty table from scratch by first clicking on new layer
 
 .. figure:: ../../../_media/gettingstarted-admin-database-create-table.png
     :width: 690px
@@ -297,30 +297,30 @@ Du kan skabe en ny tom tabel fra bunden ved først at klikke på nyt lag
     :name: gettingstarted-database-layerlist
     :figclass: align-center
 
-    Nyt lag dialogboks
-	
-1. Klik på Blank layer.
-#. giv den nye tabel et navn.
-#. Sæt EPSG kode for geometri-feltet.
-#. Sæt type kode for geometri-feltet.
+    New Layer dialog box
 
-Hvis du vil have en tabel uden geometri, så slettes geometri-feltet bare efter tabellen er oprettet.
+1. Click on Blank layer.
+#. give the new table a name.
+#. Set EPSG code for the geometry field.
+#. Set type code for the geometry field.
+
+If you want a table without geometry, the geometry field is just deleted after the table is created.
 
 
 .. _gettingstarted_admin_versioning:
 
-Versionering af data (Track changes)
------------------------------------------------------------------
+Versioning of data (Track changes)
+-------------------------------------------------- ---------------
 
-Ved versionering af data beholdes alle ændringer i tabellen. Dvs. at den fulde transaktions-historik beholdes. Versionering gør brugerne i stand til at gå tilbage i historien og se hvordan et lag så ud på et bestemt tidspunkt. Versionering virker også som journalisering af alle transaktioner foretaget på laget.
+When versioning data, all changes are retained in the table. That is that the full transaction history is kept. Versioning enables users to go back in history and see what a layer looked like at a specific point in time. Versioning also acts as journaling of all transactions made at the layer.
 
-Et versioneret lag fungerer ligesom alle andre lag og kan redigeres på normal vis. GC2 tager sig af versioneringen i baggrunden.
+A versioned layer works like any other layer and can be edited in the normal way. GC2 takes care of the versioning in the background.
 
-Versionering foregår i WFS laget. Dvs. at det fungerer både ved redigering i GC2's Map fane, men også igennem eksterne WFS editors som f.eks. QGIS.
+Versioning takes place in the WFS layer. So it will work both when editing in GC2's Map tab, but also through external WFS editors such as e.g. QGIS.
 
 .. include:: ../../_subs/WARNING_OLD_DOC.rst
 
-**Start "Tracking changes" på et lag**
+**Start "Tracking changes" on a layer**
 
 .. figure:: ../../../_media/versioning-start-tracking-changes.png
     :width: 600px
@@ -330,10 +330,10 @@ Versionering foregår i WFS laget. Dvs. at det fungerer både ved redigering i G
 
     start versioning
 
-1. Vælg lag ved at klikke på linjen så den bliver grå.
-#. Klik på "Start versionering".
+1. Select layer by clicking on the line so that it turns gray.
+#. Click "Start versioning".
 
-**Nye system-felter i tabellen**
+**New system fields in the table**
 
 .. figure:: ../../../_media/versioning-system-fields.png
     :width: 600px
@@ -341,22 +341,22 @@ Versionering foregår i WFS laget. Dvs. at det fungerer både ved redigering i G
     :name: versioning-system-fields
     :figclass: align-center
 
-    Nye felter
+    New fields
 
-Lagets tabel får fem nye system-felter (system-felter starter altid med "gc2_"). Felter indeholder versionsdata for hver enkelt feature i tabellen. System-felterne er:
+The layer's table gets five new system fields (system fields always start with "gc2_"). Fields contain version data for each feature in the table. The system fields are:
 
-**gc2_versions_gid** Er en nøgle, som relaterer en features forskellige versioner. Dvs. er to versioner af denne samme feature, har samme nøgleværdi.
+**gc2_versions_gid** Is a key that relates different versions of a feature. That is are two versions of this same feature, have the same key value.
 
-**gc2_version_start_date** Er et tidsstempel, som angiver hvornår versionen er oprettet. Alle features har en værdi i dette felt.
+**gc2_version_start_date** Is a timestamp indicating when the version was created. All features have a value in this field.
 
-**gc2_version_end_date** Er et tidsstempel, som angiver hvornår versionen er afsluttet. Kun afsluttede versioner har en værdi i dette felt og den aktuelle version har ikke værdi i dette felt.
+**gc2_version_end_date** Is a timestamp indicating when the version ended. Only completed versions have a value in this field and the current version does not have a value in this field.
 
-**gc2_version_uuid** Er en "universally unique identifier" som alle versioner får tildelt. Denne værdi er global unik.
+**gc2_version_uuid** Is a "universally unique identifier" that all versions are assigned. This value is globally unique.
 
-**gc2_version_user** Er den (sub-)bruger, der har skabt versionen.
+**gc2_version_user** Is the (sub-)user who created the version.
 
 
-**Versionsdata i tabellen**
+**Version data in the table**
 
 .. figure:: ../../../_media/versioning-versiondata.png
     :width: 600px
@@ -364,11 +364,11 @@ Lagets tabel får fem nye system-felter (system-felter starter altid med "gc2_")
     :name: versioning-versiondata
     :figclass: align-center
 
-    versionsdata
+    version data
 
-Dette er et eksempel på versionsdata i tabellen. Denne versionerede tabel har tre nye punkter, som hver har dato/tid for oprettelsen (gc2_version_start_date), et unikt id (gc2_version_uuid) samt hvilken bruger, der har oprettet punkterne (gc2_version_user).
+This is an example of version data in the table. This versioned table has three new items, each of which has the date/time of creation (gc2_version_start_date), a unique ID (gc2_version_uuid), and which user created the items (gc2_version_user).
 
-**Se alle versioner**
+**See all versions**
 
 .. figure:: ../../../_media/versioning-see-all-versions.png
     :width: 600px
@@ -376,12 +376,12 @@ Dette er et eksempel på versionsdata i tabellen. Denne versionerede tabel har t
     :name: versioning-see-all-versions
     :figclass: align-center
 
-    versionsdata
+    version data
 
-Som standard vises kun aktuelle features, dvs. dem uden en gc2_version_end_date. Det er muligt at se alle features på en gang.
+By default, only current features are displayed, i.e. those without a gc2_version_end_date. It is possible to see all features at once.
 
-1. Start redigering af laget.
-#. Vælg "all" under "Time slicing", som skal tjekkes af i boksen.
+1. Start editing the layer.
+#. Select "all" under "Time slicing", which must be checked in the box.
 #. Load features.
 
 .. figure:: ../../../_media/versioning-example.png
@@ -390,11 +390,11 @@ Som standard vises kun aktuelle features, dvs. dem uden en gc2_version_end_date.
     :name: versioning-example
     :figclass: align-center
 
-    Eksempel på versioner
-	
-Eksemplet viser to aktuelle punkter. Endvidere ses det, at punktet med **gc2_version_gid** = 2 findes i to versioner: En aktuel og en afsluttet. Dvs. at punktet har været redigeret. Punktet med **gc2_version_gid** = 1 er afsluttet og der er ikke andre versioner af dette punkt. Dvs. at punktet er slettet.
+    Example of versions
 
-Afsluttede versioner vise med rød, stiplet kant. Disse kan ikke redgieres.
+The example shows two actual points. Furthermore, it can be seen that the point with **gc2_version_gid** = 2 exists in two versions: One current and one completed. That is that the item has been edited. The item with **gc2_version_gid** = 1 is closed and there are no other versions of this item. That is that the point has been deleted.
+
+Finished versions show with a red dotted border. These cannot be edited.
 
 **Time slicing**
 	
@@ -406,10 +406,10 @@ Afsluttede versioner vise med rød, stiplet kant. Disse kan ikke redgieres.
 
     Timeslicing
 	
-Det er muligt at se hvordan et lag så ud på et bestemt tidspunkt.
+It is possible to see how a layer looked at a certain time.
 
-1. Start redigering af laget.
-#. Tjek "Time slicing" af og skriv en dato/tid i formatet yyyy-mm-dd hh:mm:ss fx 2015-06-30 14:34:00. Undlades tiden vil den blive sat til 00:00:00.
+1. Start editing the layer.
+#. Check "Time slicing" and enter a date/time in the format yyyy-mm-dd hh:mm:ss e.g. 2015-06-30 14:34:00. If the time is omitted, it will be set to 00:00:00.
 #. Load features.
 	
 	
@@ -419,11 +419,11 @@ Det er muligt at se hvordan et lag så ud på et bestemt tidspunkt.
     :name: versioning-timeslicing-example
     :figclass: align-center
 
-    Timeslicing eksempel
-	
-Ved Time slicing vises de versioner, som var aktuelle på den pågældende dato/tid. Dvs. at der kun vises én version pr. feature (**gc2_version_gid** værdierne er unikke). Eksemplet viser, at der var tre aktuelle punkter, hvoraf et stadig er aktuelt (det blå) og to, som senere enten er ændret eller slettet (røde). For de ændrede punkter viser **gc2_version_end_date** tidspunktet for ændringen.
-	
-	**Versionering i ekstern editor fx QGIS**
+    Timeslicing example
+
+With Time slicing, the versions that were current on the relevant date/time are displayed. That is that only one version is displayed per feature (**gc2_version_gid** values ​​are unique). The example shows that there were three current points, one of which is still current (the blue one) and two which have later either been changed or deleted (red). For the changed items, **gc2_version_end_date** shows the time of the change.
+
+**Versioning in external editor e.g. QGIS**
 	
 	
 .. figure:: ../../../_media/versioning-example-qgis.png
@@ -432,19 +432,19 @@ Ved Time slicing vises de versioner, som var aktuelle på den pågældende dato/
     :name: versioning-example-qgis
     :figclass: align-center
 
-    versionering i QGIS
+    versioning in QGIS
 
-Versionering foregår i WFS laget. Dvs. at det fungerer både ved redigering i GC2's Map fane, men også igennem eksterne WFS editors som f.eks. QGIS.
+Versioning takes place in the WFS layer. That is that it works both when editing in GC2's Map tab, but also through external WFS editors such as e.g. QGIS.
 
-Ved brug af standard WFS forbindelsesstrengen vises kun de aktuelle versioner. Dvs. at dette er ikke andersledes end for ikke-versionerede lag:
+When using the default WFS connection string, only the current versions are displayed. That is that this is no different than for non-versioned layers:
 
 http://example.com/wfs/mydb/public/4326
 
-Hvis alle versioner skal vises i QGIS bruges denne streng:
+If all versions are to be displayed in QGIS, use this string:
 
 http://example.com/wfs/mydb/public/4326/all
 
-Og ved Time slicing bruges denne: (Bemærk "T" mellem dato og tid)
+And with Time slicing this is used: (Note the "T" between date and time)
 
 http://example.com/wfs/mydb/public/4326/2015-06-30T14:34:00
 
@@ -454,13 +454,13 @@ http://example.com/wfs/mydb/public/4326/2015-06-30T14:34:00
 Workflow management
 -----------------------------------------------------------------
 
-Workflow giver mulighed for at kontrollere redigeringen af et lag i en typisk forfatter-redaktør-udgiver kæde.
+Workflow allows to control the editing of a layer in a typical author-editor-publisher chain.
 
-Et lag under workflow kontrol fungerer ligesom alle andre lag og kan redigeres på normal vis. GC2 tager sig af workflowet i baggrunden.
+A layer under workflow control works like any other layer and can be edited in the normal way. GC2 takes care of the workflow in the background.
 
-Workflow foregår i WFS laget. Dvs. at det fungerer både ved redigering i GC2's Map fane, men også igennem eksterne WFS editors som f.eks. QGIS.
+Workflow takes place in the WFS layer. That is that it works both when editing in GC2's Map tab, but also through external WFS editors such as e.g. QGIS.
 
-**Start "track changes" på laget.**
+**Start "track changes" on the layer.**
 
 .. figure:: ../../../_media/workflow-start-tracking-changes.png
     :width: 600px
@@ -469,14 +469,14 @@ Workflow foregår i WFS laget. Dvs. at det fungerer både ved redigering i GC2's
     :figclass: align-center
 
     start versioning
-	
-Workflow bygger oven på versionerings-systemet i GC2, så det er nødvendigt at starte "Track changes" på laget.
 
-1. Vælg et lag ved at klikke på linjen så den bliver grå.
-#. Klik på "Track changes". Læs mere om "Track changes"
-#. VIGTIGT! Husk at sætte Authentication niveauet til "Read/write" på laget.	
-	
-**Tildel privilegier til sub-brugere**
+Workflow builds on top of the versioning system in GC2, so it is necessary to start "Track changes" on the layer.
+
+1. Select a layer by clicking on the line so that it turns gray.
+#. Click on "Track changes". Read more about "Track changes"
+#. IMPORTANT! Remember to set the Authentication level to "Read/write" on the layer.
+
+**Give Privileges to Sub-Users**
 	
 .. figure:: ../../../_media/workflow-add-privileges.png
     :width: 600px
@@ -485,14 +485,14 @@ Workflow bygger oven på versionerings-systemet i GC2, så det er nødvendigt at
     :figclass: align-center
 
     Workflow
-	
-De sub-brugere, som skal have en rolle i workflowet, skal have tildelt privilegier til laget. Læs mere om sub-brugere og privilegier.
 
-1. Vælg et lag ved at klikke på linjen så den bliver grå.
-#. Klik på "Privilegier".
-#. Sæt privilegiet til "Læse og skrive" (eller "Alle") for hver sub-bruger, der skal have en rolle i workflowet.
-	
-**Start Workflow på laget**
+The sub-users who must have a role in the workflow must have been assigned privileges to the layer. Read more about sub-users and privileges.
+
+1. Select a layer by clicking on the line so that it turns gray.
+#. Click on "Privileges".
+#. Set the privilege to "Read and Write" (or "Everyone") for each sub-user that should have a role in the workflow.
+
+**Start Workflow on the layer**
 	
 .. figure:: ../../../_media/workflow-start-workflow.png
     :width: 600px
@@ -501,16 +501,16 @@ De sub-brugere, som skal have en rolle i workflowet, skal have tildelt privilegi
     :figclass: align-center
 
     Start Workflow
-	
-1. Start workflow på laget ved at klikke på "Workflow".
-#. Workflow dialogen vises.
-#. Lagets tabel får to nye system-felter (system-felter starter altid med "gc2_"). Felterne indeholder workflow-data for hver enkelt feature i tabellen. Felterne er:
 
-``gc2_status`` Indeholder featurens status, som er enten: 1 = Draft, 2 = Reviewed eller 3 = Published.
+1. Start workflow on the layer by clicking "Workflow".
+#. The Workflow dialog appears.
+#. The layer's table gets two new system fields (system fields always start with "gc2_"). The fields contain workflow data for each feature in the table. The fields are:
 
-``gc2_workflow`` Indeholder workflow-kæden.
+``gc2_status'' Contains the feature's status, which is either: 1 = Draft, 2 = Reviewed or 3 = Published.
 
-**Tildel roller i Workflowet**
+``gc2_workflow'' Contains the workflow chain.
+
+**Assign roles in the Workflow**
 	
 .. figure:: ../../../_media/workflow-add-roles.png
     :width: 600px
@@ -518,24 +518,24 @@ De sub-brugere, som skal have en rolle i workflowet, skal have tildelt privilegi
     :name: workflow-add-roles
     :figclass: align-center
 
-    Workflow roller
-	
-En sub-bruger kan have en af følgende roller i et workflow:
+    Workflow roles
 
-**Author** Kan oprette nye features. Kan også ændre en feature, som IKKE er Reviewed eller Published. Dvs. som ikke er kommet videre i workflowet.
+A sub-user can have one of the following roles in a workflow:
 
-**Reviewer** Kan ændre eller godkende en feature. Kan IKKE ændre en feature, som er Published.
+**Author** Can create new features. Can also change a feature that is NOT Reviewed or Published. That is which has not progressed in the workflow.
 
-**Publisher** Kan ændre eller godkende en feature til endelig udgivelse.
+**Reviewer** Can change or approve a feature. Cannot change a feature that is Published.
 
-Sub-brugere, som ikke har en rolle i workflowet, kan ikke lave ændringer i laget.
+**Publisher** Can modify or approve a feature for final release.
 
-En rolle kan varetages af to eller flere brugere. Fx kan et lag have to Authors.
+Sub-users who do not have a role in the workflow cannot make changes to the layer.
 
-Bemærk, at det ikke er nødvendigt, at alle roller er besatte. Fx hvis man ønsker at springe Reviewer ledet over, kan dette gøres.
-	
-	
-**Workflow fanen**
+A role can be held by two or more users. For example, a layer can have two Authors.
+
+Note that it is not necessary for all roles to be occupied. For example, if you want to skip the Reviewer led, this can be done.
+
+
+**Workflow tab**
 	
 .. figure:: ../../../_media/workflow-workflow-tab.png
     :width: 600px
@@ -543,42 +543,42 @@ Bemærk, at det ikke er nødvendigt, at alle roller er besatte. Fx hvis man øns
     :name: workflow-workflow-tab
     :figclass: align-center
 
-    Workflow fanen
-	
-Når et lag er under workflow-kontrol kan alle transaktioner på laget ses i fanen "Workflow". Hver linje er en transaktion. Listen viser kun transaktioner, som er relavante for brugeren, dvs. dem som brugeren skal tage action på.
+    The Workflow tab
 
-Eksemplet viser en transaktion på et punkt foretaget af Lilly, som er Author.
+When a layer is under workflow control, all transactions on the layer can be seen in the "Workflow" tab. Each line is a transaction. The list only shows transactions that are relevant to the user, i.e. those that the user must take action on.
 
-Hver transaktion har følgende værdier:
+The example shows a transaction on an item made by Lilly, who is the Author.
 
-**Operation** Er hvilken operation, der er foretaget på laget: insert, update eller delete.
+Each transaction has the following values:
 
-**Table** Hvilken tabel transaktionen udført på.
+**Operation** Is which operation was performed on the layer: insert, update or delete.
 
-**Fid**  Primærnøglens værdi på den feature transaktionen er udført på.
+**Table** Which table the transaction was performed on.
 
-**Version id** Versions-id'ets værdi på den feature transaktionen er udført på.
+**Fid** The value of the primary key on the feature the transaction was executed on.
 
-**Status** Den status featuren har efter transaktionen.
+**Version id** The version id value of the feature the transaction was performed on.
 
-**Latest edit by** Den sub-bruger, som har udført transaktionen.
+**Status** The status the feature has after the transaction.
 
-**Authored by** Den Author, der har oprettet featuren.
+**Latest edit by** The sub-user who performed the transaction.
 
-**Reviewed by** Den Reviewer, som har godkendt featuren.
+**Authored by** The Author who created the feature.
 
-**Published by** Den Publisher, som har godkendt featuren.
+**Reviewed by** The Reviewer who has approved the feature.
 
-**Created** Transaktionen tidsstempel.
+**Published by** The Publisher who has approved the feature.
 
-Knapper i Workflow
+**Created** The transaction timestamp.
 
-1. **Show all**. Viser alle transaktioner. Også den, som ikke er aktuelle for brugeren.
-#. **See/edit feature**. Skifter til Map fanen og loader featuren.
-#. **Check feature**. Godkender featuren. Svarer til en update af featuren uden at ændre den.
-	
-	
-**Efter "Review"**
+Buttons in Workflow
+
+1. **Show all**. Shows all transactions. Also the one that is not current for the user.
+#. **See/edit feature**. Switches to the Map tab and loads the feature.
+#. **Check feature**. Accept the feature. Corresponds to an update of the feature without changing it.
+
+
+**After "Review"**
 	
 .. figure:: ../../../_media/workflow-after-review.png
     :width: 600px
@@ -586,12 +586,12 @@ Knapper i Workflow
     :name: workflow-after-review
     :figclass: align-center
 
-    Workflow status
-	
-Eksemplet viser et punkt, som er reviewed (godkendt af Reviewer Carl). Punktet har nu status 2.
+   Workflow status
+
+The example shows an item that has been reviewed (approved by Reviewer Carl). The point now has status 2.
 
 
-**Efter "Publish"**
+**After "Publish"**
 	
 .. figure:: ../../../_media/workflow-after-publish.png
     :width: 600px
@@ -599,11 +599,11 @@ Eksemplet viser et punkt, som er reviewed (godkendt af Reviewer Carl). Punktet h
     :name: workflow-after-publish
     :figclass: align-center
 
-    Workflow status published
-	
-Eksemplet viser et punkt, som er published (godkendt af Publisher Julie). Punktet har nu status 3.
-	
-**Overspring i Workflow kæden**
+   Workflow status published
+
+The example shows an item that is published (approved by Publisher Julie). The item now has status 3.
+
+**Skip in the Workflow chain**
 	
 .. figure:: ../../../_media/workflow-skip-step.png
     :width: 600px
@@ -611,11 +611,11 @@ Eksemplet viser et punkt, som er published (godkendt af Publisher Julie). Punkte
     :name: workflow-skip-step
     :figclass: align-center
 
-    Workflow overspring
-	
-Det er muligt for en bruger at springe et lavere led i workflow-kæden over. Eksemplet viser, at reviewer Carl er sprunget over af publisher Julie.
-	
-**Workflow information i data**
+    Workflow skip
+
+It is possible for a user to skip a lower link in the workflow chain. The example shows that reviewer Carl has been skipped by publisher Julie.
+
+**Workflow information in data**
 	
 .. figure:: ../../../_media/workflow-display-data.png
     :width: 600px
@@ -623,15 +623,15 @@ Det er muligt for en bruger at springe et lavere led i workflow-kæden over. Eks
     :name: workflow-display-data
     :figclass: align-center
 
-    Workflow visning i data
-	
-Workflow informationerne til de enkelte features bliver gemt i lagets tabel i felterne **gc2_status** og **gc2_workflow**.
+    Workflow display in data
 
-**gc2_status** Angiver status 1-3.
+The workflow information for the individual features is stored in the layer's table in the fields **gc2_status** and **gc2_workflow**.
 
-**gc2_workflow** Indeholder workflow-kæden. Kæden er en liste i formen fx: "author"=>"lilly", "reviewer"=>"carl" Denne kæde viser, at punktet er oprettet af Lilly, reviewed af Carl, men stadig ikke godkendt af en publisher.
-	
-**Brug af ekstern editor i Workflow**
+**gc2_status** Indicates status 1-3.
+
+**gc2_workflow** Contains the workflow chain. The chain is a list in the form, for example: "author"=>"lilly", "reviewer"=>"carl" This chain shows that the item was created by Lilly, reviewed by Carl, but still not approved by a publisher.
+
+**Use of external editor in Workflow**
 	
 .. figure:: ../../../_media/workflow-in-qgis.png
     :width: 600px
@@ -639,11 +639,11 @@ Workflow informationerne til de enkelte features bliver gemt i lagets tabel i fe
     :name: workflow-in-qgis
     :figclass: align-center
 
-    Workflow i QGIS
-	
-Workflow foregår i WFS laget. Dvs. at det fungerer både ved redigering i GC2's Map fane, men også igennem eksterne WFS editors som f.eks. QGIS.
+    Workflow in QGIS
 
-Laget hentes ind og redigeres på sædvanlig vis i QGIS.
+Workflow takes place in the WFS layer. That is that it works both when editing in GC2's Map tab, but also through external WFS editors such as e.g. QGIS.
+
+The layer is imported and edited in the usual way in QGIS.
 	
 	
 	
