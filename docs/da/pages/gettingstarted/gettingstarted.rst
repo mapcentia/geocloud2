@@ -4,7 +4,7 @@
 Dokumentation for GC2
 ============================================================
 
-Her finder du dokumentation for GeoCloud2
+Her finder du dokumentation for GeoCloud2.
 
 I dette dokument er dokumenteret hvordan GC2 bruges, og de forskellige komponenter virker. Der findes på samme måde en dokumentation til Vidi, som er en viewer løsning til brug for visning af data fra GC2, `Vidi dokumentation finder du her. <https://vidi.readthedocs.io/>`_
 
