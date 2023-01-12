@@ -741,17 +741,16 @@ class Layer extends Table
     }
 
     /**
-     * @param $_key_
-     * @return array
+     * @param string $_key_
+     * @return array<mixed>
      */
-    public function updateLastmodified($_key_)
+    public function updateLastmodified(string $_key_): array
     {
-        $this->clearCacheOnSchemaChanges();
         $response = [];
         $object = (object)['lastmodified' => date('Y-m-d H:i:s'), '_key_' => $_key_];
         $table = new Table("settings.geometry_columns_join");
         $res = $table->updateRecord(["data" => $object], "_key_");
-        if ($res['success'] == true) {
+        if ($res['success']) {
             $response['success'] = true;
             $response['message'] = "Lastmodified updated.";
         } else {
