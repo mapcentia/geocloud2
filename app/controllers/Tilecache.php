@@ -3,7 +3,7 @@
  * @author     Martin Høgh <mh@mapcentia.com>
  * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- *  
+ *
  */
 
 namespace app\controllers;
@@ -77,20 +77,16 @@ class Tilecache extends Controller
                         return $response;
                     }
                 }
-                if ($searchStr) {
-                    $res = self::unlikeSQLiteFile($searchStr);
-                    if (!$res["success"]) {
-                        $response['success'] = false;
-                        $response['message'] = $res["message"];
-                        $response['code'] = '403';
-                        return $response;
-                    }
-                    $response['success'] = true;
-                    $response['message'] = "Tile cache deleted.";
-                } else {
+                $res = self::unlikeSQLiteFile($searchStr);
+                if (!$res["success"]) {
                     $response['success'] = false;
-                    $response['message'] = "No tile cache to delete.";
+                    $response['message'] = $res["message"];
+                    $response['code'] = '403';
+                    return $response;
                 }
+                $response['success'] = true;
+                $response['message'] = "Tile cache deleted.";
+
                 break;
 
             case "disk":
@@ -123,7 +119,7 @@ class Tilecache extends Controller
                 $dba = dba_open(App::$param['path'] . "app/wms/mapcache/bdb/" . Connection::$param["postgisdb"] . "/" . "feature.polygon/bdb_feature.polygon.db", "c", "db4");
 
                 $key = dba_firstkey($dba);
-                while ($key !== false && $key !== null) {
+                while ($key !== false) {
                     dba_delete($key, $dba);
                     $key = dba_nextkey($dba);
                 }
@@ -179,7 +175,7 @@ class Tilecache extends Controller
     {
         $layer = new \app\models\Layer();
         $meta = $layer->getAll($layerName, true, false, true, false, Database::getDb());
-        if (isset($meta["data"][0]["def"]->lock) && $meta["data"][0]["def"]->lock == true) {
+        if (isset($meta["data"][0]["def"]->lock) && $meta["data"][0]["def"]->lock) {
             $response['success'] = false;
             $response['message'] = "The layer is locked in the tile cache. Unlock it in the Tile cache settings.";
             $response['code'] = '406';
@@ -203,17 +199,17 @@ class Tilecache extends Controller
     {
         $layer = new \app\models\Layer();
         $meta = $layer->getAll($layerName, true, false, true, false, Database::getDb());
-        if (isset($meta["data"][0]["def"]->lock) && $meta["data"][0]["def"]->lock == true) {
+        if (isset($meta["data"][0]["def"]->lock) && $meta["data"][0]["def"]->lock) {
             $response['success'] = false;
             $response['message'] = "The layer is locked in the tile cache. Unlock it in the Tile cache settings.";
             $response['code'] = '406';
             return $response;
         }
         if ($dir) {
-            exec("rm -R {$dir} 2> /dev/null");
+            exec("rm -R $dir 2> /dev/null");
             if (strpos($dir, ".*") !== false) {
                 $dir = str_replace(".*", "", $dir);
-                exec("rm -R {$dir} 2> /dev/null");
+                exec("rm -R $dir 2> /dev/null");
             }
             $response['success'] = true;
         } else {

@@ -37,7 +37,7 @@ abstract class Cache
         $redisConfig = null;
         $memcachedConfig = null;
         if (!empty(App::$param['appCache']["host"])) {
-            $split = explode(":", App::$param['appCache']["host"] ?: "127.0.0.1:6379");
+            $split = explode(":", App::$param['appCache']["host"]);
 
             $redisConfig = [
                 'host' => $split[0],
