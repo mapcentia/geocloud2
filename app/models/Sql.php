@@ -73,11 +73,11 @@ class Sql extends Model
                 ($nlt ? "-nlt " . $nlt . " " : "") .
                 ($nln ? "-nln " . $nln . " " : "") .
                 "-preserve_fid " .
-                ($format == "ogr/GPX" ? "-lco 'FORCE_GPX_ROUTE=YES' " : "") .
+                ($format == "ogr/GPX" ? "-lco 'FORCE_GPX_TRACK=YES' " : "") .
                 "PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
                 "-sql \"" . $q . "\"";
 //            die($cmd);
-            exec($cmd . ' 2>&1', $out, $err);
+            exec($cmd . ' 2>&1', $out);
             if ($out) {
                 foreach ($out as $str) {
                     if (strpos($str, 'ERROR') !== false) {
@@ -89,23 +89,29 @@ class Sql extends Model
                     }
                 }
             }
-            $zip = new ZipArchive();
-            $zipPath = $path . ".zip";
-            if ($zip->open($zipPath, ZIPARCHIVE::CREATE) != TRUE) {
-                error_log("Could not open ZIP archive");
-            }
-            if (is_dir($path)) {
-                $zip->addGlob($path . "/*", 0, ["remove_all_path" => true]);
+            if ($format == "ogr/GPX") {
+                header("Content-type: application/gpx, application/octet-stream");
+                header("Content-Disposition: attachment; filename=\"{$fileOrFolder}\"");
+                readfile($path);
             } else {
-                $zip->addFile($path, $fileOrFolder);
+                $zip = new ZipArchive();
+                $zipPath = $path . ".zip";
+                if (!$zip->open($zipPath, ZIPARCHIVE::CREATE)) {
+                    error_log("Could not open ZIP archive");
+                }
+                if (is_dir($path)) {
+                    $zip->addGlob($path . "/*", 0, ["remove_all_path" => true]);
+                } else {
+                    $zip->addFile($path, $fileOrFolder);
+                }
+                if ($zip->status != ZIPARCHIVE::ER_OK) {
+                    error_log("Failed to write files to zip archive");
+                }
+                $zip->close();
+                header("Content-type: application/zip, application/octet-stream");
+                header("Content-Disposition: attachment; filename=\"{$fileOrFolder}.zip\"");
+                readfile($zipPath);
             }
-            if ($zip->status != ZIPARCHIVE::ER_OK) {
-                error_log("Failed to write files to zip archive");
-            }
-            $zip->close();
-            header("Content-type: application/zip, application/octet-stream");
-            header("Content-Disposition: attachment; filename=\"{$fileOrFolder}.zip\"");
-            readfile($zipPath);
             exit(0);
         }
         $sqlView = "CREATE TEMPORARY VIEW {$view} as {$q}";
@@ -182,7 +188,7 @@ class Sql extends Model
                     $arr = array();
                     foreach ($row as $key => $value) {
                         if ($arrayWithFields[$key]['type'] == "geometry") {
-                            $geometries[] = json_decode($row[$key]);
+                            $geometries[] = json_decode($value);
                         } elseif ($arrayWithFields[$key]['type'] == "json") {
                             $arr = $this->array_push_assoc($arr, $key, json_decode($value));
                         } else {
@@ -223,7 +229,7 @@ class Sql extends Model
         // ================
 
         elseif ($format == "csv" || $format == "excel") {
-            $withGeom = $geoformat ? true : false;
+            $withGeom = $geoformat;
             $separator = ";";
             $first = true;
             $lines = array();
