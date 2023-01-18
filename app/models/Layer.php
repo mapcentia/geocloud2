@@ -344,7 +344,8 @@ class Layer extends Table
                     $arr = $this->array_push_assoc($arr, "children", $refBy);
                 } else {
                     // Cached
-                    $arr = $this->array_push_assoc($arr, "children", !empty($this->getChildTables($row["f_table_schema"], $row["f_table_name"])["data"]) ? $this->getChildTables($row["f_table_schema"], $row["f_table_name"])["data"] : null);
+                    $ct = $this->getChildTables($row["f_table_schema"], $row["f_table_name"]);
+                    $arr = $this->array_push_assoc($arr, "children", !empty($ct["data"]) ? $ct["data"] : null);
                 }
 
                 // If session is sub-user we always check privileges

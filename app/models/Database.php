@@ -179,7 +179,7 @@ class Database extends Model
             return $response;
         }
         while ($row = $this->fetchRow($res)) {
-            $arr[] = array("schema" => $row['schema_name'], "count" => isset($count[$row['schema_name']]) ? $count[$row['schema_name']] : 0);
+            $arr[] = array("schema" => $row['schema_name'], "count" => $count[$row['schema_name']] ?? 0);
         }
         $response['success'] = true;
         $response['data'] = $arr;

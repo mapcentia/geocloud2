@@ -200,7 +200,7 @@ class Table extends Model
      */
     private function getType(array $field): array
     {
-        $field['isArray'] = preg_match("/\[]/", $field['type']) ? true : false;
+        $field['isArray'] = (bool)preg_match("/\[]/", $field['type']);
 
         if (preg_match("/smallint/", $field['type']) ||
             preg_match("/integer/", $field['type']) ||
