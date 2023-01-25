@@ -11,7 +11,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [2023.1.1] - 2023-10-1
 ### Changed
 - Do not `updateLastmodified` in when running cheduler jobs because it will bust app cache.
-- 
+
 ## [2023.1.0] - 2023-10-1
 ### Changed
 - Don't zip GPX files in the SQL API, because they are often opened by a handheld device witout the means to unzip. 
