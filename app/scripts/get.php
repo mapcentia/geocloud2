@@ -84,7 +84,6 @@ $downloadSchema = $options["downloadSchema"];
 $workingSchema = "_gc2scheduler";
 
 // Create lock file
-$lockDir = App::$param['path'] . "/app/tmp/scheduler_locks";
 $lockFile = $lockDir . "/" . $jobId . ".lock";
 
 $tmpDir = "/var/www/geocloud2/app/tmp/";
@@ -191,8 +190,7 @@ function getCmd(): void
         "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
         "'" . $dir . "/" . $tempFile . "' " .
         "-nln " . $workingSchema . "." . $randTableName . " " .
-        ($type == "AUTO" ? "" : "-nlt {$type}") .
-        "";
+        ($type == "AUTO" ? "" : "-nlt {$type}");
 
     exec($cmd . ' 2>&1', $out, $err);
 }
@@ -1112,8 +1110,8 @@ function cleanUp(int $success = 0): void
         }
         rmdir($dir . "/" . $tempFile);
     }
-    @unlink($dir . "/" . $tempFile);
-    @unlink($dir . "/" . $tempFile . ".gz"); // In case of gz file
+//    @unlink($dir . "/" . $tempFile);
+//    @unlink($dir . "/" . $tempFile . ".gz"); // In case of gz file
 
 
     // Update jobs table
