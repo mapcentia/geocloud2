@@ -95,7 +95,7 @@ class Geofence extends Model
             $response['code'] = 400;
             return $response;
         }
-        $select = "select * from foo where ${filters["write"]}";
+        $select = "select * from foo where {$filters["write"]}";
         $res = $sql->prepare($select);
         try {
             $res->execute();

@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [MASTER] - 2023-18-1
+¤¤¤ Added
+- Added `returning` property in return object from the SQL API, when doing transactions. So now a RETURNING statement will return key/values from the statement.
+
+### Fixed
+- Re-creating Mapfiles with the v3 Admin API resulted in default extents being set in OWS. Now the schema extent is set in each MapFile.
+
+## [2023.1.1] - 2023-10-1
+### Changed
+- Do not `updateLastmodified` in when running cheduler jobs because it will bust app cache.
+- 
+## [2023.1.0] - 2023-10-1
+### Changed
+- Don't zip GPX files in the SQL API, because they are often opened by a handheld device witout the means to unzip. 
+- Force GPX tracks instead of route, so two or more segments in multi lines don't render an error.
+
+## [2022.12.0] - 2022-7-12
+### Added
+- The `Baselayerjs` API will now return two new properties for use in Dashbaord: disableDatabaseCreation and loginLogo
+
 ## [2022.11.0] - 2022-17-11
 ### Added
 - Added the following to documentation: description on how to enable extensions and a description on the traccar_api extension.
