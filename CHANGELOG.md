@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
 ## [MASTER] - 2023-18-1
+¤¤¤ Added
+- Added `returning` property in return object from the SQL API, when doing transactions. So now a RETURNING statement will return key/values from the statement.
+
 ### Fixed
 - Re-creating Mapfiles with the v3 Admin API resulted in default extents being set in OWS. Now the schema extent is set in each MapFile.
 

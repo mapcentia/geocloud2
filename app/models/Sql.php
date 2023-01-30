@@ -12,6 +12,7 @@ use app\conf\App;
 use app\conf\Connection;
 use app\inc\Model;
 use Exception;
+use PDO;
 use PDOException;
 use PHPExcel_Reader_CSV;
 use PHPExcel_Writer_Excel2007;
@@ -332,15 +333,20 @@ class Sql extends Model
      */
     public function transaction(string $q): array
     {
-        $result = $this->execQuery($q, "PDO", "transaction");
-        if (!$this->PDOerror) {
-            $response['success'] = true;
-            $response['affected_rows'] = $result;
-        } else {
+        try {
+            $result = $this->prepare($q);
+            $result->execute();
+
+        } catch (PDOException $e) {
             $response['success'] = false;
-            $response['message'] = $this->PDOerror;
-            $response['code'] = 400;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 500;
+            return $response;
         }
+
+        $response['success'] = true;
+        $response['affected_rows'] = $result->rowCount();
+        $response['returning'] = $result->fetchAll(PDO::FETCH_NAMED);
         return $response;
     }
 
