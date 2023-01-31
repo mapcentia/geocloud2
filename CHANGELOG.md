@@ -4,8 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [MASTER] - 2023-18-1
-¤¤¤ Added
+## [2023.1.2] - 2023-31-1
+### Added
 - Added `returning` property in return object from the SQL API, when doing transactions. So now a RETURNING statement will return key/values from the statement.
 
 ### Fixed
