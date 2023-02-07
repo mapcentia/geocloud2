@@ -19,13 +19,13 @@
     "ghcr.io/shyim/devcontainers-features/php:0": {}
   },
 
-  "postCreateCommand": "sudo chown 1000 ../geocloud2",
+  "postCreateCommand": "sudo chown 1000 ../geocloud2 && npm install -g grunt-cli",
 
   "remoteEnv": {
     // the original host directory which is needed for volume
     // mount commands from inside the container (Docker in Docker)
     // https://github.com/microsoft/vscode-dev-containers/blob/main/containers/docker-from-docker/README.md#using-bind-mounts-when-working-with-docker-inside-the-container
-    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
+    // "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
   }
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.

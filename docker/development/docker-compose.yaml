@@ -8,8 +8,6 @@ services:
   gc2core:
     image: gc2core:dev
     privileged: true
-    volumes:
-      - ${LOCAL_WORKSPACE_FOLDER}:/var/www/geocloud2
     networks:
       - internal
       - default
@@ -36,8 +34,6 @@ services:
       - GC2_LOCALE=da_DK.UTF-8
   vidi:
     image: mapcentia/vidi
-    # volumes:
-    #   - vidi:/root/vidi
     networks:
       - internal
       - default
@@ -45,6 +41,3 @@ services:
       - "3000:3000"
     environment:
       - GC2_HOST=http://gc2core
-
-volumes:
-  geocloud2:
