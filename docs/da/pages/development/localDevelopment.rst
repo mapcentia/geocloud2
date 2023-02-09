@@ -45,10 +45,43 @@ Linux
 - VS Code - Download og installer [VS Code](https://code.visualstudio.com/)
 - VS Code Extensions Dev Containers created by Microsoft
 
+Git
+=================================================================
+
+Sørg for at git er sat rigtigt op ift. origin og upstream.
+
+Origin
+-----------------------------------------------------------------
+
+git remote add origin [URL_OF_YOUR_FORK]
+
+Eksempel:
+git remote add origin https://github.com/JohnDoe/geocloud2.git
+
+Upstream
+-----------------------------------------------------------------
+
+git remote add upstream [URL_OF_MAPCENTIA_PROJECT]
+
+Eksempel:
+git remote add upstream https://github.com/mapcentia/geocloud2.git
+
+Tjek at du har de rigtige url'er
+git remote -v
+
+Hent Tags Upstream
+-----------------------------------------------------------------
+
+git fetch --tags upstream
+
+Det er nu muligt at lave et image, der starter på en specifik version. Du kan evt. pushe tagsene til din egen fork.
+
+git push --tags origin
+
 GC2 Image
 =================================================================
 
-Du starter med at lave et GC2 image. Det gør du ved at gå til :file:`docker/development/Dockerfile`.
+Du starter med at lave et GC2 image. Det gør du ved at gå til mappen :file:`docker/development/Dockerfile`.
 
 I Dockerfilen tilføjer du dit github brugernavn, så koden der clones kommer fra din fork.
 
@@ -57,7 +90,7 @@ Det gøres i følgende step:
 RUN cd /var/www/ &&\
   git clone https://github.com/[ADD_GITHUB_USERNAME]/geocloud2.git --branch master
 
-Hvis du lavet en remote branch til din feature/bug fix så fjern --tags og lav en chekout på den pågldende branch.
+Hvis du lavet en remote branch til din feature/bug fix så fjern --tags og lav en chekout på den pågældende branch.
 Det gøres i følgende step:
 
 cd /var/www/geocloud2 &&\
@@ -75,7 +108,7 @@ Hvis du skal arbejde med en extension, så tilføj dit github brugernavn for den
 Derefter kører du scriptet :file:`buildGc2Image.sh dev`
 
 I docker-compose filen i samme mappe skal du være sikker, at tagget for det image du lige har bygget, er det samme som
-det tag i service: :file:`gc2core`.
+det tag i service: :file:`gc2core`. Ændres f.eks. til gc2core:dev
 
 Start Dev Containers
 =================================================================
