@@ -121,7 +121,7 @@ Når devcontaineren er bygget åbner VS Code et nyt vindue, hvor du ser koden in
 Start GC2 Vidi
 =================================================================
 
-I det VS Code vindue, der åbnede op åbner du en terminal og cd'er til development mappen :file:`cd docker/development`.
+I det VS Code vindue, der åbnede op :file:`åbner du en terminal` og cd'er til development mappen :file:`cd docker/development`.
 
 Derefter skriver du :file:`docker-compose up` for at starte GC2 Vidi.
 
@@ -129,11 +129,12 @@ Forbind Til gc2core Containeren
 =================================================================
 
 I nederste venstre hjørne klikker du på :file:`Dev Container: Docker in Docker` og vælger :file:`Attach to container`.
-Derefter vælger du :file:`development_gc2core` containeren.
+Derefter vælger du :file:`development_gc2core_1` containeren.
 
 Et nyt VS Code vindue åbner op, og du er nu inde i gc2core containeren.
 
-OBS! Hvis du bliver bedt om at vælge en mappe så vælg :file:`root`. Derefter skriver du:
+Er det første gang du åbner containeren vil der, til venstre, være en blå knap, hvor der står "Open Folder".
+Tryk på "Open Folder" knappen og vælg :file:`root` mappen. Derefter skriver du:
 
 cd ..
 
