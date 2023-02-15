@@ -52,3 +52,13 @@ apasswords
 #/app/composer.phar
 #/app/conf/processors/classes/pre/Pre_fot5.php
 /public/apps/widgets/gc2map/config/config.js
+
+# Added for devcontainers
+public/dashboard
+public/css
+public/apps/viewer/css
+public/apps/viewer/js
+public/apps/widgets/gc2map/css
+public/apps/widgets/gc2map/js
+public/api
+admin.php
