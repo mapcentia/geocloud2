@@ -18,7 +18,7 @@ RUN apt-get -y update
 
 # Install packages
 RUN apt-get -y install cron vim wget g++ build-essential git unzip rng-tools apache2-utils postgresql-client supervisor netcat \
-    apache2  apache2-dev php8.1-fpm php8.1-pgsql php8.1-redis php8.1-memcached php8.1-curl php8.1-sqlite3 php8.1-mbstring php8.1-gd php8.1-cli php8.1-mbstring php8.1-dev php8.1-zip \
+    apache2  apache2-dev php8.2-fpm php8.2-pgsql php8.2-redis php8.2-memcached php8.2-curl php8.2-sqlite3 php8.2-mbstring php8.2-gd php8.2-cli php8.2-mbstring php8.2-dev php8.2-zip \
     cmake libgdal-dev librsvg2-dev libpng++-dev libjpeg-dev libfreetype6-dev libproj-dev libfribidi-dev libharfbuzz-dev libcairo2-dev \
     libgeos++-dev libpython-all-dev curl libapache2-mod-fcgid libfcgi-dev xvfb osm2pgsql postgis  sudo \
     apt-transport-https ca-certificates software-properties-common \
@@ -46,8 +46,8 @@ RUN cd ~ &&\
     cp mdb-sqlite-1.0.2/lib/commons-logging-1.1.1.jar /usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/jre/lib/ext/ &&\
     cp mdb-sqlite-1.0.2/lib/commons-lang-2.4.jar /usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/jre/lib/ext/
 
-# Make php8.1-fpm run in the foreground
-RUN sed 's/;daemonize = yes/daemonize = no/' -i /etc/php/8.1/fpm/php-fpm.conf
+# Make php8.2-fpm run in the foreground
+RUN sed 's/;daemonize = yes/daemonize = no/' -i /etc/php/8.2/fpm/php-fpm.conf
 
 # Hide server version and os from header and internal error pages
 RUN sed -i '/ServerTokens OS/c\ServerTokens Prod' /etc/apache2/conf-enabled/security.conf
@@ -71,4 +71,4 @@ RUN a2enconf serve-cgi-bin
 RUN a2dismod deflate -f
 
 # Start fpm, so dirs are created
-RUN service php8.1-fpm start
+RUN service php8.2-fpm start

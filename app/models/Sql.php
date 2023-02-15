@@ -181,8 +181,8 @@ class Sql extends Model
                 while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
                     $arr = array();
                     foreach ($row as $key => $value) {
-                        if ($arrayWithFields[$key]['type'] == "geometry") {
-                            $geometries[] = json_decode($row[$key]);
+                        if ($arrayWithFields[$key]['type'] == "geometry" && $value !== null) {
+                            $geometries[] = json_decode($value);
                         } elseif ($arrayWithFields[$key]['type'] == "json") {
                             $arr = $this->array_push_assoc($arr, $key, json_decode($value));
                         } else {

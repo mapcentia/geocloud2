@@ -106,7 +106,7 @@ class SqlParseTest extends Unit
         $factory = new sad_spirit\pg_builder\StatementFactory();
         $select = $factory->createFromString($string);
         $select->dispatch($walker);
-        $arr = $walker->getRelations();
+        $arr = $walker->getRelations()["all"];
         $this->assertContains('foo', $arr);
         $this->assertContains('bar', $arr);
     }
@@ -140,10 +140,16 @@ class SqlParseTest extends Unit
         $walker->setRules($this->rules);
         $factory = new sad_spirit\pg_builder\StatementFactory();
         $select = $factory->createFromString($string);
-        $select->dispatch($walker);
-        $alteredStatement = $factory->createFromAST($select)->getSql();
-//        die("\n" . $alteredStatement);
-        $this->assertStringNotContainsString("where", $alteredStatement);
+        try {
+            $select->dispatch($walker);
+            throw new Exception("sdsd");
+        } catch (Exception $e) {
+            if ($e->getMessage() == "DENY") {
+
+            } else {
+               throw new Exception("TEST");
+            }
+        }
     }
 
     public function testTableWalkerRuleShouldAddWhereClauseToDelete(): void
@@ -199,7 +205,6 @@ INSERT INTO test SELECT *, current_timestamp FROM upd ON CONFLICT (did) DO UPDAT
         $select = $factory->createFromString($string);
         $select->dispatch($walker);
         $alteredStatement = $factory->createFromAST($select)->getSql();
-//        die("\n" . $alteredStatement);
         $this->assertStringContainsString("foo.bar = 'test'", $alteredStatement);
         $this->assertStringContainsString("test.userid = 'test'", $alteredStatement);
         $this->assertStringContainsString("listens.uid = 'test'", $alteredStatement);

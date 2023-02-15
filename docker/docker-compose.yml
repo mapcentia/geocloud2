@@ -76,6 +76,28 @@ services:
     environment:
       - GC2_USER=gc2
       - GC2_PASSWORD=1234
+
+  limesurvey:
+    image: acspri/limesurvey
+    ports:
+      - 8082:80
+    networks:
+      - default
+      - internal
+    environment:
+      LIMESURVEY_DB_PASSWORD: 1234
+      LIMESURVEY_DB_USER: gc2
+      LIMESURVEY_DB_HOST: postgis
+      LIMESURVEY_DB_NAME: mydb
+      LIMESURVEY_ADMIN_USER: admin
+      LIMESURVEY_ADMIN_PASSWORD: password
+      LIMESURVEY_ADMIN_NAME: Lime Administrator
+      LIMESURVEY_ADMIN_EMAIL: lime@lime.lime
+    volumes:
+      - ./plugins:/var/www/html/plugins
+      - ./upload:/var/www/html/upload
+      - ./config:/var/www/html/application/config
+
 #  elasticsearch:
 #    image: elasticsearch:7.17.6
 #    networks:

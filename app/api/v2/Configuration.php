@@ -23,7 +23,9 @@ use \OpenApi\Annotations as OA;
 class Configuration extends Controller
 {
 
-    private $keyvalue;
+    private Keyvalue $keyvalue;
+    private string $postgisdb;
+    private string $keyValuePrefix;
 
     /**
      * Configuration constructor.

@@ -13,7 +13,7 @@ RUN wget -qO - https://packages.sury.org/php/apt.gpg | apt-key add -
 RUN apt-get -y update
 
 # Install packages
-RUN apt-get -y install vim git php8.1-pgsql php8.1-cli curl \
+RUN apt-get -y install vim git php8.2-pgsql php8.2-cli curl \
     postgis postgresql-13-postgis-3 postgresql-13-pgrouting postgresql-13-ogr-fdw pgagent  postgresql-server-dev-13 libsybdb5 freetds-dev freetds-common gnupg gcc make \
     pgbouncer locales-all osm2pgsql supervisor \
     osm2pgsql unixodbc

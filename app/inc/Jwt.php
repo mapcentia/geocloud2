@@ -12,6 +12,7 @@ use app\conf\App;
 use app\models\Database;
 use app\models\Setting;
 use Exception;
+use Firebase\JWT\Key;
 use PDOException;
 
 
@@ -61,7 +62,7 @@ class Jwt
         }
 
         try {
-            $decoded = (array)\Firebase\JWT\JWT::decode($token, $secret, ['HS256']);
+            $decoded = (array)\Firebase\JWT\JWT::decode($token, new Key($secret, 'HS256'));
         } catch (Exception $exception) {
             $response["success"] = false;
             $response["message"] = $exception->getMessage();
@@ -110,7 +111,7 @@ class Jwt
             "superUser" => $isSubUser,
         ];
         return [
-            "token" => \Firebase\JWT\JWT::encode($token, $secret),
+            "token" => \Firebase\JWT\JWT::encode($token, $secret, "HS256"),
             "ttl" => self::TOKEN_TTL,
         ];
     }
