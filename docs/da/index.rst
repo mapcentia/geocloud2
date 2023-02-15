@@ -58,6 +58,18 @@ GC2 udstiller en del API der gør det muligt at bruge platformen i andre sammenh
 
     pages/api/*
 
+*****************************************************************
+Udvikling
+*****************************************************************
+
+Bidrag til udviklingen af GC2
+
+.. toctree::
+    :maxdepth: 1
+    :glob:
+
+    pages/development/*
+
 
 .. Include generic links to repo
 
