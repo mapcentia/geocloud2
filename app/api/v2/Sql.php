@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2022 MapCentia ApS
+ * @copyright  2013-2023 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -160,7 +160,7 @@ class Sql extends Controller
         $this->api->connect();
         $this->apiKey = $res['data']->api_key;
 
-        $serializedResponse = $this->transaction($this->q, Input::get('client_encoding'));
+        $serializedResponse = $this->transaction(Input::get('client_encoding'));
 
         // Check if $this->data is set in SELECT section
         if (!isset($this->data)) {
@@ -227,7 +227,7 @@ class Sql extends Controller
             foreach ($sqls as $q) {
                 $this->q = $q;
                 if ($this->q != "") {
-                    $res = unserialize($this->transaction($this->q));
+                    $res = unserialize($this->transaction());
                     if (!$res["success"]) {
                         $this->api->rollback();
                         return $res;
@@ -242,12 +242,11 @@ class Sql extends Controller
     }
 
     /**
-     * @param string $sql
      * @param string|null $clientEncoding
      * @return string
      * @throws PhpfastcacheInvalidArgumentException
      */
-    private function transaction(string $sql, ?string $clientEncoding = null): string
+    private function transaction(?string $clientEncoding = null): string
     {
         $response = [];
         $rule = new Rule();
@@ -300,35 +299,32 @@ class Sql extends Controller
             $userFilter = new UserFilter($this->subUser ?: Connection::$param['postgisdb'], "sql", "*", "*", $split[0], $split[1]);
             $geofence = new GeofenceModel($userFilter);
             $auth = $geofence->authorize($rules);
-        } else {
-            $auth = null;
-        }
 
-        if ($operation == "Delete") {
-            $this->q = $factory->createFromAST($select)->getSql();
-            $this->response = $this->api->transaction($this->q);
-            $response["statement"] = $this->q;
-            $response["filters"] = $auth["filters"];
-            $this->addAttr($response);
-        } elseif ($operation == "Update" || $operation == "Insert") {
-            $finaleStatement = $factory->createFromAST($select)->getSql();
-            if ($auth["access"] == Geofence::LIMIT_ACCESS) {
-                try {
-                    $this->response = $geofence->postProcessQuery($select, $this->api, $auth["filters"]);
-                } catch (Exception $e) {
-                    $response = [];
-                    $response["code"] = 401;
-                    $response["success"] = false;
-                    $response["message"] = $e->getMessage();
-                    $response["statement"] = $finaleStatement;
-                    $response["filters"] = $auth["filters"];
-                    return serialize($response);
-                }
-            } else {
+            if ($operation == "Delete") {
+                $this->q = $factory->createFromAST($select)->getSql();
                 $this->response = $this->api->transaction($this->q);
+                $response["statement"] = $this->q;
+                $response["filters"] = $auth["filters"];
+            } else {
+                $finaleStatement = $factory->createFromAST($select)->getSql();
+                if ($auth["access"] == Geofence::LIMIT_ACCESS) {
+                    try {
+                        $this->response = $geofence->postProcessQuery($select, $this->api, $auth["filters"]);
+                    } catch (Exception $e) {
+                        $response = [];
+                        $response["code"] = 401;
+                        $response["success"] = false;
+                        $response["message"] = $e->getMessage();
+                        $response["statement"] = $finaleStatement;
+                        $response["filters"] = $auth["filters"];
+                        return serialize($response);
+                    }
+                } else {
+                    $this->response = $this->api->transaction($this->q);
+                }
+                $response["filters"] = $auth["filters"];
+                $response["statement"] = $finaleStatement;
             }
-            $response["filters"] = $auth["filters"];
-            $response["statement"] = $finaleStatement;
             $this->addAttr($response);
         } elseif ($operation == "Select" || $operation == "SetOpSelect") {
             $this->q = $factory->createFromAST($select)->getSql();
@@ -352,7 +348,6 @@ class Sql extends Controller
                 $this->cacheInfo["hit"] = $CreationDate;
                 $this->cacheInfo["tags"] = $CachedString->getTags();
                 $this->cacheInfo["signature"] = md5(serialize($this->data));
-
             } else {
                 ob_start();
                 $format = Input::get('format') ?: "geojson";
@@ -384,7 +379,7 @@ class Sql extends Controller
             }
         } else {
             $this->response['success'] = false;
-            $this->response['message'] = "Check your SQL. Could not recognise it as either SELECT, INSERT, UPDATE or DELETE ({$operation})";
+            $this->response['message'] = "Check your SQL. Could not recognise it as either SELECT, INSERT, UPDATE or DELETE ($operation)";
             $this->response['code'] = 400;
         }
         return serialize($this->response);

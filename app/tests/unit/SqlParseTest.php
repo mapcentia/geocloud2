@@ -142,12 +142,10 @@ class SqlParseTest extends Unit
         $select = $factory->createFromString($string);
         try {
             $select->dispatch($walker);
-            throw new Exception("sdsd");
+            throw new Exception("dummy");
         } catch (Exception $e) {
-            if ($e->getMessage() == "DENY") {
-
-            } else {
-               throw new Exception("TEST");
+            if ($e->getMessage() != "DENY") {
+                $this->fail();
             }
         }
     }
@@ -198,7 +196,7 @@ class SqlParseTest extends Unit
     (SELECT sales_person FROM foo WHERE name = 'Acme Corporation')
     RETURNING *
 )
-INSERT INTO test SELECT *, current_timestamp FROM upd ON CONFLICT (did) DO UPDATE SET dname = EXCLUDED.dname";
+INSERT INTO test SELECT *, current_timestamp FROM foo ON CONFLICT (did) DO UPDATE SET dname = EXCLUDED.dname";
         $walker = new TableWalkerRule(...$this->request);
         $walker->setRules($this->rules);
         $factory = new sad_spirit\pg_builder\StatementFactory();

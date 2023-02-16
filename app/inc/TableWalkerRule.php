@@ -19,11 +19,11 @@ use sad_spirit\pg_builder\BlankWalker;
 
 class TableWalkerRule extends BlankWalker
 {
-    private $rules;
-    private $userName;
-    private $service;
-    private $request;
-    private $ipAddress;
+    private array $rules;
+    private string $userName;
+    private string $service;
+    private string $request;
+    private string $ipAddress;
 
     public function __construct($userName, $service, $request, $ipAddress)
     {
@@ -127,8 +127,6 @@ class TableWalkerRule extends BlankWalker
         if (!empty($response["filters"]["write"])) {
             $statement->where->and($response["filters"]["write"]);
         }
-
-
         parent::walkDeleteStatement($statement);
     }
 
