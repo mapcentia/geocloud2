@@ -2608,6 +2608,11 @@ function postListToWKT(string $str, string $axisOrder): string
 }
 
 /**
+ * EPSG:4326 longitude/latitude assumption
+ * http://www.opengis.net/gml/srs/epsg.xml#xxxx longitude/latitude strict
+ * urn:x-ogc:def:crs:EPSG:xxxx latitude/longitude strict
+ * urn:ogc:def:crs:EPSG::4326 latitude/longitude strict
+ *
  * @param string|null $epsg
  * @return string|null
  */
@@ -2623,6 +2628,11 @@ function getAxisOrder(?string $epsg): ?string
 }
 
 /**
+ * EPSG:4326 longitude/latitude assumption
+ * http://www.opengis.net/gml/srs/epsg.xml#xxxx longitude/latitude strict
+ * urn:x-ogc:def:crs:EPSG:xxxx latitude/longitude strict
+ * urn:ogc:def:crs:EPSG::4326 latitude/longitude strict
+ *
  * @param string|null $epsg
  * @return string|null
  */
@@ -2631,7 +2641,13 @@ function parseEpsgCode(?string $epsg): ?string
     if (!$epsg) {
         return null;
     }
-    $split = explode(":", $epsg);
+    if (strpos($epsg, "#") !== false) {
+        $separartor = "#";
+    } else {
+        $separartor = ":";
+    }
+
+    $split = explode($separartor, $epsg);
     $clean = end($split);
     return preg_replace("/[\w]\./", "", $clean);
 }
