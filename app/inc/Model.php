@@ -426,7 +426,8 @@ class Model
             }
             while ($row = $this->fetchRow($res)) {
                 $foreignValues = [];
-                if ($restriction == true && $restrictions == false) {
+                $domain = null;
+                if ($restriction && !$restrictions) {
                     foreach ($foreignConstrains as $value) {
                         if ($row["column_name"] == $value["child_column"] && $value["parent_column"] != $primaryKey) {
                             $sql = "SELECT {$value["parent_column"]} FROM {$value["parent_schema"]}.{$value["parent_table"]}";
@@ -445,7 +446,8 @@ class Model
                             }
                         }
                     }
-                } elseif ($restriction == true && $restrictions != false && isset($restrictions[$row["column_name"]]) && isset($restrictions[$row["column_name"]]->_rel)) {
+                } elseif ($restriction && $restrictions && isset($restrictions[$row["column_name"]]) && isset($restrictions[$row["column_name"]]->_rel)) {
+                    $domain = $restrictions[$row["column_name"]]->_rel;
                     $rel = $restrictions[$row["column_name"]];
                     $sql = "SELECT {$rel->_value} AS value, {$rel->_text} AS text FROM {$rel->_rel}";
                     try {
@@ -483,7 +485,8 @@ class Model
                     "type" => $row["udt_name"],
                     "full_type" => $row['full_type'],
                     "is_nullable" => $row['is_nullable'] ? false : true,
-                    "restriction" => sizeof($foreignValues) > 0 ? $foreignValues : null
+                    "domain" => $domain,
+                    "restriction" => sizeof($foreignValues) > 0 ? $foreignValues : null,
                 );
                 // Get type and srid of geometry
                 if ($row["udt_name"] == "geometry") {
