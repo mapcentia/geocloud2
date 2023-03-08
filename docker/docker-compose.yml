@@ -13,16 +13,31 @@ services:
     image: mapcentia/gc2core:ecw
     depends_on:
       - base
+#  ecw5:
+#    build: ./ecw5
+#    image: mapcentia/gc2core:ecw5
+#    depends_on:
+#      - base
   gdal:
     build: ./gdal
     image: mapcentia/gc2core:gdal
     depends_on:
       - ecw
+#  gdal_ecw5:
+#    build: ./gdal_ecw5
+#    image: mapcentia/gc2core:gdal_ecw5
+#    depends_on:
+#      - ecw5
   mapserver:
     build: ./mapserver
     image: mapcentia/gc2core:mapserver
     depends_on:
       - gdal
+#  mapserver_ecw5:
+#    build: ./mapserver
+#    image: mapcentia/gc2core:mapserver_ecw5
+#    depends_on:
+#      - gdal_ecw5
   gc2core:
     build: ./stable
     image: mapcentia/gc2core
@@ -85,34 +100,6 @@ services:
 #      - "9200:9200"
 #    environment:
 #      - "discovery.type=single-node"
-#  zookeeper:
-#    image: debezium/zookeeper:${DEBEZIUM_VERSION}
-#    ports:
-#      - 2181:2181
-#      - 2888:2888
-#      - 3888:3888
-#    networks:
-#      - internal
-#  kafka:
-#    image: debezium/kafka:${DEBEZIUM_VERSION}
-#    ports:
-#      - 9092:9092
-#    environment:
-#      - ZOOKEEPER_CONNECT=zookeeper:2181
-#    networks:
-#      - internal
-#  connect:
-#    image: debezium/connect:${DEBEZIUM_VERSION}
-#    ports:
-#      - 8083:8083
-#    networks:
-#      - internal
-#    environment:
-#      - BOOTSTRAP_SERVERS=kafka:9092
-#      - GROUP_ID=1
-#      - CONFIG_STORAGE_TOPIC=my_connect_configs
-#      - OFFSET_STORAGE_TOPIC=my_connect_offsets
-#      - STATUS_STORAGE_TOPIC=my_connect_statuses
 
 volumes:
   postgis_var_lib_postgresql:
