@@ -406,8 +406,43 @@ class Model
                   attnum                           AS ordinal_position,
                   atttypid :: REGTYPE              AS udt_name,
                   attnotnull                       AS is_nullable,
-                  format_type(atttypid, atttypmod) AS full_type
+                  format_type(atttypid, atttypmod) AS full_type,
+                  CASE  
+                      when atttypid in (1043) then
+                  atttypmod-4         
+       ELSE null       end       AS character_maximum_length 
+       ,
+                  CASE atttypid
+                     WHEN 21 /*int2*/ THEN 16
+                     WHEN 23 /*int4*/ THEN 32
+                     WHEN 20 /*int8*/ THEN 64
+                     WHEN 1700 /*numeric*/ THEN
+                          CASE WHEN atttypmod = -1
+                               THEN null
+                               ELSE ((atttypmod - 4) >> 16) & 65535     -- calculate the precision
+                               END
+                     WHEN 700 /*float4*/ THEN 24 /*FLT_MANT_DIG*/
+                     WHEN 701 /*float8*/ THEN 53 /*DBL_MANT_DIG*/
+                     ELSE null
+              END   AS numeric_precision,
+              CASE 
+                WHEN atttypid IN (21, 23, 20) THEN 0
+                WHEN atttypid IN (1700) THEN            
+                    CASE 
+                        WHEN atttypmod = -1 THEN null       
+                        ELSE (atttypmod - 4) & 65535            -- calculate the scale  
+                    END
+                   ELSE null
+              END AS numeric_scale
+       ,
+        case 
+          when attlen <> -1 then attlen
+          when atttypid in (1043, 25) then information_schema._pg_char_octet_length(information_schema._pg_truetypid(pg_attribute.*, t.*), information_schema._pg_truetypmod(pg_attribute.*, t.*))
+       end as max_bytes
+                  
                 FROM pg_attribute
+                  join pg_type t on atttypid = t.oid
+
                 WHERE attrelid = :table :: REGCLASS
                         AND attnum > 0
                         AND NOT attisdropped";
@@ -426,7 +461,7 @@ class Model
             }
             while ($row = $this->fetchRow($res)) {
                 $foreignValues = [];
-                $domain = null;
+                $reference = null;
                 if ($restriction && !$restrictions) {
                     foreach ($foreignConstrains as $value) {
                         if ($row["column_name"] == $value["child_column"] && $value["parent_column"] != $primaryKey) {
@@ -447,7 +482,7 @@ class Model
                         }
                     }
                 } elseif ($restriction && $restrictions && isset($restrictions[$row["column_name"]]) && isset($restrictions[$row["column_name"]]->_rel)) {
-                    $domain = $restrictions[$row["column_name"]]->_rel;
+                    $reference = $restrictions[$row["column_name"]]->_rel;
                     $rel = $restrictions[$row["column_name"]];
                     $sql = "SELECT {$rel->_value} AS value, {$rel->_text} AS text FROM {$rel->_rel}";
                     try {
@@ -484,8 +519,12 @@ class Model
                     "num" => $row["ordinal_position"],
                     "type" => $row["udt_name"],
                     "full_type" => $row['full_type'],
-                    "is_nullable" => $row['is_nullable'] ? false : true,
-                    "domain" => $domain,
+                    "is_nullable" => !$row['is_nullable'],
+                    "character_maximum_length" =>  $row["character_maximum_length"],
+                    "numeric_precision" => $row["numeric_precision"],
+                    "numeric_scale" => $row["numeric_scale"],
+                    "max_bytes" => $row["max_bytes"],
+                    "reference" => $reference,
                     "restriction" => sizeof($foreignValues) > 0 ? $foreignValues : null,
                 );
                 // Get type and srid of geometry
