@@ -120,6 +120,10 @@ tableStructure.init = function (record, db) {
         {
             name: 'properties',
             allowBlank: true
+        },
+        {
+            name: 'desc',
+            allowBlank: true
         }
     ]);
 
@@ -291,6 +295,15 @@ tableStructure.init = function (record, db) {
                     id: "alias",
                     header: __("Alias"),
                     dataIndex: "alias",
+                    sortable: true,
+                    editor: new Ext.form.TextField({
+                        allowBlank: true
+                    })
+                },
+                {
+                    id: "desc",
+                    header: __("Description"),
+                    dataIndex: "desc",
                     sortable: true,
                     editor: new Ext.form.TextField({
                         allowBlank: true
