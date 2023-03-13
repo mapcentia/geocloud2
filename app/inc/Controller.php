@@ -80,7 +80,8 @@ class Controller
     public function auth(?string $key = null, array $level = ["all" => true], bool $neverAllowSubUser = false): array
     {
         $response = [];
-        if (($_SESSION["subuser"] == true && $_SESSION['screen_name'] == Connection::$param['postgisschema']) && $neverAllowSubUser == false) {
+        $prop = $_SESSION['usergroup'] ?: $_SESSION['screen_name'];
+        if (($_SESSION["subuser"] && $prop == Connection::$param['postgisschema']) && !$neverAllowSubUser) {
             $response['success'] = true;
         } elseif ($_SESSION["subuser"]) {
             $text = "You don't have privileges to do this. Please contact the database owner, who can grant you privileges.";
@@ -91,7 +92,6 @@ class Controller
             } else {
                 $layer = new Layer();
                 $privileges = json_decode($layer->getValueFromKey($key, "privileges"));
-                $prop = $_SESSION['usergroup'] ?: $_SESSION['screen_name'];
                 $subuserLevel = $privileges->$prop;
                 if (!isset($level[$subuserLevel])) {
                     $response['success'] = false;
@@ -206,7 +206,7 @@ class Controller
                         switch ($transaction) {
                             case false:
 //                              if (($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none") && $subUser != $schema) {
-                                if ((empty($privileges[$userGroup ?: $subUser]) || (!empty($privileges[$userGroup ?: $subUser]) && $privileges[$userGroup ?: $subUser] == "none")) && $subUser != $schema) {
+                                if ((empty($privileges[$userGroup ?: $subUser]) || (!empty($privileges[$userGroup ?: $subUser]) && $privileges[$userGroup ?: $subUser] == "none")) && ($subUser != $schema && $userGroup != $schema)) {
                                     // Always let suusers read from layers open to all
                                     if ($auth == "Write") {
                                         $response['success'] = true;
@@ -222,9 +222,7 @@ class Controller
                                 }
                                 break;
                             case true:
-                                if (($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none" || $privileges[$userGroup ?: $subUser] == "read") && $subUser != $schema) {
-
-
+                                if (($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none" || $privileges[$userGroup ?: $subUser] == "read") && ($subUser != $schema && $userGroup != $schema)) {
                                     $response['success'] = false;
                                     $response['message'] = "You don't have privileges to edit '{$layer}'. Please contact the database owner, which can grant you privileges.";
                                     $response['code'] = 403;

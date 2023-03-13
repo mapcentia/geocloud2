@@ -387,7 +387,7 @@ class Table extends Model
             $privileges = !empty($row["privileges"]) ? json_decode($row["privileges"]) : null;
             $arr = [];
             $prop = !empty($_SESSION['usergroup']) ? $_SESSION['usergroup'] : $_SESSION['screen_name'];
-            if (empty($_SESSION["subuser"]) || (!empty($_SESSION["subuser"]) && $_SESSION['screen_name'] == Connection::$param['postgisschema'])
+            if (empty($_SESSION["subuser"]) || (!empty($_SESSION["subuser"]) && $prop == Connection::$param['postgisschema'])
                 || (!empty($_SESSION["subuser"]) && !empty($privileges->$prop) && $privileges->$prop != "none")) {
                 $relType = "t"; // Default
                 foreach ($row as $key => $value) {
