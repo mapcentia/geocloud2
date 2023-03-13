@@ -353,7 +353,7 @@ class Layer extends Table
                     $privileges = (array)json_decode($row["privileges"]);
                     if (($privileges[$_SESSION['usergroup'] ?: $_SESSION['screen_name']] != "none" && $privileges[$_SESSION['usergroup'] ?: $_SESSION['screen_name']])) {
                         $response['data'][] = $arr;
-                    } elseif ($_SESSION['screen_name'] == $schema) {
+                    } elseif ($_SESSION['screen_name'] == $schema || $_SESSION['usergroup'] == $schema) {
                         $response['data'][] = $arr;
                         // Always add layers with Write and None.
                     } elseif ($row["authentication"] == "None" || $row["authentication"] == "Write") {
