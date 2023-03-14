@@ -485,6 +485,9 @@ class Model
                     $reference = $restrictions[$row["column_name"]]->_rel;
                     $rel = $restrictions[$row["column_name"]];
                     $sql = "SELECT {$rel->_value} AS value, {$rel->_text} AS text FROM {$rel->_rel}";
+                    if (!empty($rel->_where)) {
+                        $sql.= " WHERE {$rel->_where}";
+                    }
                     try {
                         $resC = $this->prepare($sql);
                         $resC->execute();
