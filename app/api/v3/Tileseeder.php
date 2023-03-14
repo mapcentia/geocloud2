@@ -136,7 +136,7 @@ class Tileseeder extends Controller
      *       mediaType="application/json",
      *       @OA\Schema(
      *         type="object",
-     *         @OA\Property(property="data", type="array", @OA\Items(type="object", @OA\Items(type="string"))),
+     *         @OA\Property(property="data", type="array", @OA\Items(type="array", @OA\Items(type="string"))),
      *         @OA\Property(property="pid",type="integer", example=20326)
      *       )
      *     )

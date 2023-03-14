@@ -47,14 +47,14 @@ class Meta extends Controller
      *     name="query",
      *     in="path",
      *     required=false,
-     *     description="",
+     *     description="Can be a schema qualified relation name, a schame name, a tag in the form tag:name or combination of the three separated by comma.",
      *     @OA\Schema(
      *       type="string"
      *     )
      *   ),
      *   @OA\Response(
      *     response="200",
-     *     description="If select then the result will be data on choosen format. If transaction the number of effected rows is returned.",
+     *     description="If select then the result will be data in the requested format. If transaction the number of effected rows is returned.",
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(

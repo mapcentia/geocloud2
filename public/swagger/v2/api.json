@@ -14,7 +14,7 @@
                     "Configuration"
                 ],
                 "summary": "Returns all configurations (unpublished configurations are returned if authorized user is the author)",
-                "operationId": "app\\api\\v2\\Configuration::get_all",
+                "operationId": "773b535d36fe806133eb588ffea09dcf",
                 "parameters": [
                     {
                         "name": "userId",
@@ -39,7 +39,7 @@
                     "Configuration"
                 ],
                 "summary": "Returns specific configuration (unpublished configuration is returned if authorized user is the author)",
-                "operationId": "app\\api\\v2\\Configuration::get_specific",
+                "operationId": "9fd61264a1eb5256e099ff4777133936",
                 "parameters": [
                     {
                         "name": "userId",
@@ -71,7 +71,7 @@
                     "Configuration"
                 ],
                 "summary": "Deletes configuration",
-                "operationId": "app\\api\\v2\\Configuration::delete_index",
+                "operationId": "1f7a46420ae2d8703d641f952bc429ac",
                 "parameters": [
                     {
                         "name": "userId",
@@ -110,7 +110,7 @@
                     "Configuration"
                 ],
                 "summary": "Creates configuration",
-                "operationId": "app\\api\\v2\\Configuration::post_index",
+                "operationId": "c3571f61736fbdb58c307ed2029f2462",
                 "parameters": [
                     {
                         "name": "userId",
@@ -164,7 +164,7 @@
                     "Configuration"
                 ],
                 "summary": "Creates configuration",
-                "operationId": "app\\api\\v2\\Configuration::put_index",
+                "operationId": "7b42307dba27c01b389a44319cf8659f",
                 "parameters": [
                     {
                         "name": "userId",
@@ -227,7 +227,7 @@
                     "Database"
                 ],
                 "summary": "Returns available schemas",
-                "operationId": "app\\api\\v2\\Database::get_schemas",
+                "operationId": "486aabf6e040684937aed51646c677d3",
                 "responses": {
                     "200": {
                         "description": "Operation status"
@@ -246,7 +246,7 @@
                     "Database"
                 ],
                 "summary": "Returns databases found according to provided filters",
-                "operationId": "app\\api\\v2\\Database::get_search",
+                "operationId": "ed289095a2e2341b35747a0cda859cc6",
                 "parameters": [
                     {
                         "name": "userIdentifier",
@@ -271,7 +271,7 @@
                     "Keyvalue"
                 ],
                 "summary": "Get value by key",
-                "operationId": "app\\api\\v2\\Keyvalue::get_index",
+                "operationId": "dabb0775fbdc3ac18006a438355284bc",
                 "parameters": [
                     {
                         "name": "userId",
@@ -324,7 +324,7 @@
                     "Keyvalue"
                 ],
                 "summary": "Update value in store",
-                "operationId": "app\\api\\v2\\Keyvalue::put_index",
+                "operationId": "4df3fbd0e7e2992aec2278800fe65c05",
                 "parameters": [
                     {
                         "name": "userId",
@@ -392,7 +392,7 @@
                     "Keyvalue"
                 ],
                 "summary": "Create new key/value in store",
-                "operationId": "app\\api\\v2\\Keyvalue::post_index",
+                "operationId": "72388aea49bab29d1005ef19cb6e5029",
                 "parameters": [
                     {
                         "name": "userId",
@@ -460,7 +460,7 @@
                     "Keyvalue"
                 ],
                 "summary": "Delete a key/bvalue in store",
-                "operationId": "app\\api\\v2\\Keyvalue::delete_index",
+                "operationId": "f61844734415ef87656be68a9cdca4fb",
                 "parameters": [
                     {
                         "name": "userId",
@@ -511,7 +511,7 @@
                     "Session"
                 ],
                 "summary": "Starts the session",
-                "operationId": "app\\api\\v2\\Session::get_start",
+                "operationId": "991753050b4b789076922c43dac8bb37",
                 "parameters": [
                     {
                         "name": "user",
@@ -549,7 +549,7 @@
                     "Session"
                 ],
                 "summary": "Starts the session",
-                "operationId": "app\\api\\v2\\Session::post_start",
+                "operationId": "413f7f24ced4c3934b5dd27604cd6431",
                 "requestBody": {
                     "description": "Credentials",
                     "content": {
@@ -587,7 +587,7 @@
                     "Session"
                 ],
                 "summary": "Checks the session",
-                "operationId": "app\\api\\v2\\Session::get_index",
+                "operationId": "d187e72647c6b074c2f86d5c74ed2041",
                 "responses": {
                     "200": {
                         "description": "Operation status"
@@ -601,7 +601,7 @@
                     "Session"
                 ],
                 "summary": "Destroys the session",
-                "operationId": "app\\api\\v2\\Session::get_stop",
+                "operationId": "4085198ac8d0e842cba5d407f8a7ad78",
                 "responses": {
                     "200": {
                         "description": "Operation status"
@@ -615,7 +615,7 @@
                     "User"
                 ],
                 "summary": "Creates user",
-                "operationId": "app\\api\\v2\\User::post_index",
+                "operationId": "b7951be409b680081c0ccd2cd4404f84",
                 "requestBody": {
                     "description": "User data",
                     "content": {
@@ -681,7 +681,7 @@
                     "User"
                 ],
                 "summary": "Returns extended information about user (meta, schemas, groups). User data is available only for the actual user and his superuser",
-                "operationId": "app\\api\\v2\\User::get_default",
+                "operationId": "23ef591e7247bc7ef0d6a0322f475f9b",
                 "parameters": [
                     {
                         "name": "userId",
@@ -709,7 +709,7 @@
                     "User"
                 ],
                 "summary": "Updates user information. User can only update himself or its subuser.",
-                "operationId": "app\\api\\v2\\User::put_index",
+                "operationId": "53db3d65519ad0a2da4403bc5683c9ba",
                 "parameters": [
                     {
                         "name": "userId",
@@ -771,7 +771,7 @@
                     "User"
                 ],
                 "summary": "Deletes user. User can only delete himself or be deleted by its superuser.",
-                "operationId": "app\\api\\v2\\User::delete_index",
+                "operationId": "05b4b94c935e1edd9248a0c13536554b",
                 "parameters": [
                     {
                         "name": "userId",
@@ -801,7 +801,7 @@
                     "User"
                 ],
                 "summary": "Returns subusers",
-                "operationId": "app\\api\\v2\\User::get_subusers",
+                "operationId": "9c2383911fa8a7a881cd83bb856e01d0",
                 "parameters": [
                     {
                         "name": "userId",
