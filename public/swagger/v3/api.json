@@ -14,7 +14,7 @@
                     "Admin"
                 ],
                 "summary": "Write out all MapFiles for the given user/database",
-                "operationId": "app\\api\\v3\\Admin::get_mapfiles",
+                "operationId": "e835e23db4aa2edc5579f8a12f680ced",
                 "responses": {
                     "200": {
                         "description": "Returns a list of all created MapFiles",
@@ -55,7 +55,7 @@
                     "Admin"
                 ],
                 "summary": "Write out the MapCache for the given user/database",
-                "operationId": "app\\api\\v3\\Admin::get_mapcachefile",
+                "operationId": "40791950ec37a9a10269eccb01994845",
                 "responses": {
                     "200": {
                         "description": "Return the name of the created MapCacheFile",
@@ -91,7 +91,7 @@
                     "Admin"
                 ],
                 "summary": "Write out the QGIS files for the given database",
-                "operationId": "app\\api\\v3\\Admin::get_qgisfiles",
+                "operationId": "0ced1da1ed82882e880e8c3eef446f3c",
                 "responses": {
                     "200": {
                         "description": "Returns a list of all created QGIS files",
@@ -132,7 +132,7 @@
                     "Admin"
                 ],
                 "summary": "Run database migrations for the given user/database",
-                "operationId": "app\\api\\v3\\Admin::get_migrations",
+                "operationId": "cb53903df03ce39942ff6973056370d0",
                 "responses": {
                     "200": {
                         "description": "Run database migration in user database and also in mapcentia and gc2scheduler",
@@ -167,7 +167,7 @@
                     "Admin"
                 ],
                 "summary": "Install GC2 schema in a PostGIS enabled database",
-                "operationId": "app\\api\\v3\\Admin::get_schema",
+                "operationId": "9e55aecae7c13b741efc2234c248f67d",
                 "responses": {
                     "200": {
                         "description": "Create the settings schema. Returns error if schema already exists",
@@ -203,7 +203,7 @@
                     "Admin"
                 ],
                 "summary": "Clean up temporary files",
-                "operationId": "app\\api\\v3\\Admin::get_diskcleanup",
+                "operationId": "6e51a1bdfdbb7cea128abbef9b9e368a",
                 "responses": {
                     "200": {
                         "description": "Returns a list with unlinked files",
@@ -244,7 +244,7 @@
                     "Admin"
                 ],
                 "summary": "Get the cache stats",
-                "operationId": "app\\api\\v3\\Admin::get_cachestats",
+                "operationId": "01bfe2221c2336f64c5f5cbedcef5f66",
                 "responses": {
                     "200": {
                         "description": "Returns the cache stats. Output depends on caching back-end",
@@ -270,7 +270,7 @@
                     "Admin"
                 ],
                 "summary": "Clean up the cache",
-                "operationId": "app\\api\\v3\\Admin::get_cachecleanup",
+                "operationId": "7a21b0e3f3880f38060389ba59aafcdf",
                 "responses": {
                     "200": {
                         "description": "Clean up the cache for ALL users",
@@ -302,7 +302,7 @@
                     "Scheduler"
                 ],
                 "summary": "Start scheduled job by id.",
-                "operationId": "app\\api\\v3\\Geofence::get_index",
+                "operationId": "6c8f57a601cbcceb510ab364456f3c36",
                 "parameters": [
                     {
                         "name": "jobId",
@@ -332,7 +332,7 @@
                     "Grid"
                 ],
                 "summary": "Create a fishnet grid from an input polygon",
-                "operationId": "app\\api\\v3\\Grid::post_index",
+                "operationId": "f021edc77ef1948114805eaa7466f88f",
                 "requestBody": {
                     "description": "Fishnet parameters",
                     "content": {
@@ -388,7 +388,7 @@
                     "Import"
                 ],
                 "summary": "Import files. Must be zipped and can contain multiple files in sub-dirs",
-                "operationId": "app\\api\\v3\\Import::post_index",
+                "operationId": "c1561b717ece5d3326b17281790aac39",
                 "requestBody": {
                     "description": "Parameters",
                     "content": {
@@ -420,7 +420,7 @@
                     "Import"
                 ],
                 "summary": "Import uploades zip file",
-                "operationId": "app\\api\\v3\\Import::get_index",
+                "operationId": "c90a3f5378e5401ad6e0dfc1fe29ee88",
                 "parameters": [
                     {
                         "name": "file",
@@ -466,12 +466,12 @@
                     "Meta"
                 ],
                 "summary": "Get layer meta data",
-                "operationId": "app\\api\\v3\\Meta::get_index",
+                "operationId": "b587cf1c00ce81f4b8a6207337b29245",
                 "parameters": [
                     {
                         "name": "query",
                         "in": "path",
-                        "description": "",
+                        "description": "Can be a schema qualified relation name, a schame name, a tag in the form tag:name or combination of the three separated by comma.",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -480,7 +480,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "If select then the result will be data on choosen format. If transaction the number of effected rows is returned.",
+                        "description": "If select then the result will be data in the requested format. If transaction the number of effected rows is returned.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -503,7 +503,7 @@
                     "OAuth"
                 ],
                 "summary": "Get token",
-                "operationId": "app\\api\\v3\\Oauth::post_token",
+                "operationId": "bc3f606752bcc17301bf34221226bd9c",
                 "requestBody": {
                     "description": "OAuth password grant parameters",
                     "content": {
@@ -582,7 +582,7 @@
                     "Scheduler"
                 ],
                 "summary": "Start scheduled job by id.",
-                "operationId": "app\\api\\v3\\Scheduler::get_index",
+                "operationId": "bb935b6d796c691bc4cc1b7e6cfd420d",
                 "parameters": [
                     {
                         "name": "jobId",
@@ -612,7 +612,7 @@
                     "Schema"
                 ],
                 "summary": "Get available schemas",
-                "operationId": "app\\api\\v3\\Schema::get_index",
+                "operationId": "9adaba001a29d8a159addaa7760521d1",
                 "responses": {
                     "200": {
                         "description": "List of schemas with count of PostGIS tables",
@@ -650,7 +650,7 @@
                     "Sql"
                 ],
                 "summary": "Do SQL quyeries",
-                "operationId": "app\\api\\v3\\Sql::post_index",
+                "operationId": "bf38dfdb1ba98b813bd713b4992f82c3",
                 "requestBody": {
                     "description": "Parameters",
                     "content": {
@@ -717,7 +717,7 @@
                     "Tileseeder"
                 ],
                 "summary": "Get all running mapcache_seed processes started by user",
-                "operationId": "app\\api\\v3\\Tileseeder::get_index",
+                "operationId": "58b57136e60a53a96f4b373d357a5ffe",
                 "responses": {
                     "200": {
                         "description": "Operation status"
@@ -734,7 +734,7 @@
                     "Tileseeder"
                 ],
                 "summary": "Starts a mapcache_seed process",
-                "operationId": "app\\api\\v3\\Tileseeder::post_index",
+                "operationId": "213cca73dcb037fddfe7c7bb29765407",
                 "requestBody": {
                     "description": "mapcache_seed parameters",
                     "content": {
@@ -802,7 +802,7 @@
                     "Tileseeder"
                 ],
                 "summary": "Kills a mapcache_seed process by uuid. Use * to kill all processes started by user.",
-                "operationId": "app\\api\\v3\\Tileseeder::delete_index",
+                "operationId": "0d72c65446639a777b5a784fad17e81f",
                 "parameters": [
                     {
                         "name": "uuid",
@@ -824,7 +824,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "type": "object",
+                                                "type": "array",
                                                 "items": {
                                                     "type": "string"
                                                 }
@@ -854,7 +854,7 @@
                     "Tileseeder"
                 ],
                 "summary": "Get staus of a running job",
-                "operationId": "app\\api\\v3\\Tileseeder::get_log",
+                "operationId": "85ee38e15a4c6d0c2c6325f40a7dbf80",
                 "parameters": [
                     {
                         "name": "uuid",
@@ -869,6 +869,40 @@
                 "responses": {
                     "200": {
                         "description": "Operation status"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v3/xmlworkspace/{layer}": {
+            "get": {
+                "tags": [
+                    "ESRI"
+                ],
+                "summary": "Get XML Workspace document for ESRI software. Only schema - no data.",
+                "description": "TODO in >8.1 return type should be \"never\"",
+                "operationId": "f6f20a11951a071ec73430d9fb31c0b1",
+                "parameters": [
+                    {
+                        "name": "layer",
+                        "in": "path",
+                        "description": "Layer identifier - schema qualified relation name",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "XML Workspace document",
+                        "content": {
+                            "application/xml": {}
+                        }
                     }
                 },
                 "security": [

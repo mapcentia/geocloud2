@@ -341,6 +341,15 @@ if (Input::getPath()->part(1) == "api") {
             exit();
         }
     });
+    Route::add("api/v3/xmlworkspace/[layer]", function () {
+        $jwt = Jwt::validate();
+        if ($jwt["success"]) {
+            Database::setDb($jwt["data"]["database"]);
+        } else {
+            echo Response::toJson($jwt);
+            exit();
+        }
+    });
 
     Route::miss();
 
