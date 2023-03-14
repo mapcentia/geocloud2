@@ -284,18 +284,6 @@ class User extends Model
             $response['code'] = 400;
             return $response;
         }
-        if (isset($group)) {
-            $obj[$userId] = $group;
-            Database::setDb($this->parentdb);
-            $settings = new Setting();
-            if (!$settings->updateUserGroups((object)$obj)['success']) {
-                $response['success'] = false;
-                $response['message'] = "Could not update settings.";
-                $response['code'] = 400;
-                return $response;
-            }
-            Database::setDb("mapcentia");
-        }
 
         // Start email notification
         if (!empty(App::$param["signupNotification"])) {
@@ -398,17 +386,6 @@ class User extends Model
         if ($properties) $sQuery .= ", properties=:sProperties";
         if (isset($userGroup)) {
             $sQuery .= ", usergroup=:sUsergroup";
-            $obj[$user] = $userGroup;
-            Database::setDb($this->parentdb);
-            $settings = new Setting();
-            if (!$settings->updateUserGroups((object)$obj)['success']) {
-                $response['success'] = false;
-                $response['message'] = "Could not update settings.";
-                $response['code'] = 400;
-                return $response;
-            }
-            Database::setDb("mapcentia");
-
             $userGroups = Session::getByKey("usergroups") ?? [];
             $userGroups[$user] = !empty($userGroup) ? $userGroup : null;
             Session::set("usergroups", $userGroups);
