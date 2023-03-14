@@ -241,8 +241,8 @@ class Layer extends Table
                         $obj = json_decode($value, true);
                         if (is_array($obj)) {
                             foreach ($obj as $k => $val) {
-                                $props = json_decode(str_replace("'", '"', $obj[$k]["properties"]));
-                                if ($obj[$k]["properties"] == "*") {
+                                $props = json_decode($val["properties"]);
+                                if ($val["properties"] == "*") {
                                     $restrictions[$k] = "*";
                                 } elseif (is_object($props) || is_array($props)) {
                                     $restrictions[$k] = $props;
