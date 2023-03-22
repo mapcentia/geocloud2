@@ -9,11 +9,10 @@
 namespace app\api\v3;
 
 use app\inc\Controller;
-use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Route;
 use app\models\Layer;
-use app\inc\Session;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 
 /**
@@ -40,7 +39,7 @@ class Xmlworkspace extends Controller
     /**
      * TODO in >8.1 return type should be "never"
      * @return void
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
+     * @throws PhpfastcacheInvalidArgumentException
      * @OA\Get(
      *   path="/api/v3/xmlworkspace/{layer}",
      *   tags={"ESRI"},
@@ -68,17 +67,31 @@ class Xmlworkspace extends Controller
     {
         // Get the URI params from request½
         $jwt = Jwt::validate()["data"];
+        $db = $jwt["database"];
+        $search = Route::getParam("layer");
+        header('Content-type: application/xml; charset=utf-8');
+        echo $this->create($search, $db);
+        exit();
+    }
+
+    /**
+     * @param string $query
+     * @param string $db
+     * @param array|null $include
+     * @return string
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public function create(string $query, string $db, array $include = null): string
+    {
         $intTypes = ["integer"];
         $textTypes = ["text", "character varying"];
         $dateTypes = ["timestamp with time zone", "timestamp without time zone", "date"];
-        $db = $jwt["database"];
-        $datasetName = explode(".", Route::getParam("layer"))[1];
-        $arr = $this->layers->getAll(Route::getParam("layer"), Session::isAuth(), Input::get("iex"), Input::get("parse"), Input::get("es"), $db);
-        //print_r($arr["data"][0]["fields"]);
-        //die();
+        $datasetName = explode(".", $query)[1];
+        $arr = $this->layers->getAll($query, false, false, false, false, $db);
         $fields = $arr["data"][0]["fields"];
         $alreadyPassedDomains = [];
-        header('Content-type: application/xml; charset=utf-8');
+
+        ob_start();
         echo "<esri:Workspace xmlns:esri='http://www.esri.com/schemas/ArcGIS/10.8'
                 xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xs='http://www.w3.org/2001/XMLSchema'>";
         echo "<WorkspaceDefinition xsi:type='esri:WorkspaceDefinition'>";
@@ -86,6 +99,9 @@ class Xmlworkspace extends Controller
         echo "    <Version></Version>";
         echo "    <Domains xsi:type='esri:ArrayOfDomain'>";
         foreach ($fields as $key => $field) {
+            if ($include && !in_array($key, $include)) {
+                continue;
+            }
             if ($field["reference"] && !in_array($field["reference"], $alreadyPassedDomains)) {
                 $referenceName = explode(".", $field["reference"])[1];
                 echo "        <Domain xsi:type='esri:CodedValueDomain'>";
@@ -123,6 +139,9 @@ class Xmlworkspace extends Controller
         echo "            <Fields xsi:type='esri:Fields'>";
         echo "                <FieldArray xsi:type='esri:ArrayOfField'>";
         foreach ($fields as $key => $field) {
+            if ($include && !in_array($key, $include)) {
+                continue;
+            }
             if (in_array($field["type"], $intTypes)) {
                 $esriType = "esriFieldTypeInteger";
             } elseif (in_array($field["type"], $textTypes)) {
@@ -290,7 +309,7 @@ class Xmlworkspace extends Controller
         echo "<WorkspaceData xsi:type='esri:WorkspaceData'></WorkspaceData>";
         echo "<WorkspaceData xsi:type='esri:WorkspaceData'></WorkspaceData>";
         echo "</esri:Workspace>";
-        die();
+        return ob_get_clean();
     }
 }
 
