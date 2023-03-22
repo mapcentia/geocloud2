@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2023.3.1] - 2023-22-3
+### Added
+- ESRI XML Workspace export added to v3 API. Check swagger docs.
+
 ## [2023.3.0] - 2023-20-3
 ### Changed
 - New field `properties` in `setting.symbols`, which Vidi Symbols extension sets. Remember to run migrations in databases.
