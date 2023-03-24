@@ -177,7 +177,7 @@ class Xmlworkspace extends Controller
                         break;
                     case "LineString":
                     case "MultiLineString":
-                        $geomType = "esriGeometryLineString";
+                        $geomType = "esriGeometryPolyline";
                         break;
                     case "Polygon":
                     case "MultiPolygon":
