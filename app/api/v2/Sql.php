@@ -246,7 +246,7 @@ class Sql extends Controller
      * @return string
      * @throws PhpfastcacheInvalidArgumentException
      */
-    private function transaction(?string $clientEncoding = null): string
+    private function transaction(string|null $clientEncoding = null): string
     {
         $response = [];
         $rule = new Rule();
@@ -309,7 +309,7 @@ class Sql extends Controller
                 $finaleStatement = $factory->createFromAST($select)->getSql();
                 if ($auth["access"] == Geofence::LIMIT_ACCESS) {
                     try {
-                        $this->response = $geofence->postProcessQuery($select, $this->api, $auth["filters"]);
+                        $this->response = $geofence->postProcessQuery($select, $this->api, $auth["filters"], $finaleStatement);
                     } catch (Exception $e) {
                         $response = [];
                         $response["code"] = 401;

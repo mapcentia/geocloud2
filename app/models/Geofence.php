@@ -10,6 +10,7 @@ namespace app\models;
 
 use app\inc\Model;
 use app\inc\UserFilter;
+use \app\models\Sql;
 use Exception;
 use PDOException;
 use sad_spirit\pg_builder\Statement;
@@ -80,7 +81,7 @@ class Geofence extends Model
      * @return array<mixed>
      * @throws Exception
      */
-    public function postProcessQuery(Statement $statement, Sql $sql, array $filters): array
+    public function postProcessQuery(Statement $statement, Sql $sql, array $filters, string $finaleStatement): array
     {
         $factory = new StatementFactory();
         $sql->connect();
@@ -107,9 +108,13 @@ class Geofence extends Model
         }
         $count = $res->rowCount();
         if ($trans["affected_rows"] > $count) {
-            $sql->rollback();
             throw new Exception('LIMIT ERROR');
         }
+        $sql->rollback();
+        // Post query done - running the actual statement
+        $sql->connect();
+        $sql->begin();
+        $trans = $sql->transaction($finaleStatement);
         $sql->commit();
         return $trans;
     }
