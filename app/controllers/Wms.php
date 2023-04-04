@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2023 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -76,16 +76,13 @@ class Wms extends Controller
                 if (strtolower($k) == "layers" || strtolower($k) == "layer" || strtolower($k) == "typename" || strtolower($k) == "typenames") {
                     $this->layers[] = $v;
                 }
-
                 // Get the service. wms, wfs or UTFGRID
                 if (strtolower($k) == "service") {
                     $this->service = strtolower($v);
                 } elseif (strtolower($k) == "format" && ($v == "json" || $v == "mvt")) {
                     $this->service = "utfgrid";
-
                 }
             }
-
             // If IP not trusted, when check auth on layers
             if (!$trusted) {
                 foreach ($this->layers as $layer) {
@@ -94,10 +91,8 @@ class Wms extends Controller
                     $this->basicHttpAuthLayer($layer, $db, $subUser);
                 }
             }
-
             $this->get($db, $postgisschema);
         }
-
         // Only WFS uses POST
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Parse the XML request
@@ -151,7 +146,7 @@ class Wms extends Controller
         $qgsFile = null;
         foreach ($layers as $layer) {
             if (file_exists($path . $mapFile)) {
-                $map = new mapObj($path . $mapFile, null);
+                $map = new mapObj($path . $mapFile);
                 $layer = $map->getLayerByName($layer);
                 if (empty($layer->connection)) {
                     break;
@@ -234,7 +229,6 @@ class Wms extends Controller
                     $sedCmd = 'sed -i "s/labelsEnabled=\"1\"/labelsEnabled=\"0\"/g" ' . $mapFile;
                     shell_exec($sedCmd);
                 }
-
                 $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=$mapFile&" . $_SERVER["QUERY_STRING"];
             } // MapServer is used
             else {
@@ -267,7 +261,6 @@ class Wms extends Controller
                 $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=$tmpMapFile&{$_SERVER["QUERY_STRING"]}";
             }
         }
-
         if (!$useFilters) {
             // Set MapFile for either WMS or WFS
             if ($qgs && !$this->service == "utfgrid") {
@@ -280,12 +273,10 @@ class Wms extends Controller
                 $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/$mapFile&{$_SERVER["QUERY_STRING"]}";
             }
         }
-
         if (!isset($url)) {
             echo "Could not create internal URL to MapServer";
             exit();
         }
-
         header("X-Powered-By: GC2 WMS");
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -310,6 +301,13 @@ class Wms extends Controller
         exit();
     }
 
+    /**
+     * @param string $db
+     * @param string $postgisschema
+     * @param string $data
+     * @param string $layer
+     * @return never
+     */
     private function post(string $db, string $postgisschema, string $data, string $layer): never
     {
         // Check rules
@@ -388,7 +386,10 @@ class Wms extends Controller
             $userFilter = new UserFilter($this->subUser ?: $this->user, "wms", "*", "*", $split[0], $split[1]);
             $geofence = new Geofence($userFilter);
             $auth = $geofence->authorize($rules);
-            if ($auth["access"] == "limit" && !empty($auth["filters"]["read"])) {
+            if ($auth["access"] == "deny") {
+                self::report("DENY");
+            }
+            elseif ($auth["access"] == "limit" && !empty($auth["filters"]["read"])) {
                 $filters[$layer][] = $auth["filters"]["read"];
             }
         }

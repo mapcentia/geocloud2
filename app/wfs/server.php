@@ -1273,7 +1273,12 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
         $select = $factory->createFromString($countSql);
         $rules = $rule->get();
         $walkerRule->setRules($rules);
-        $select->dispatch($walkerRule);
+        // Try DENY
+        try {
+            $select->dispatch($walkerRule);
+        } catch (Exception $e) {
+            makeExceptionReport($e->getMessage());
+        }
         $countSql = $factory->createFromAST($select)->getSql();
         // Rewrite done
         try {
@@ -1323,7 +1328,12 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     $select = $factory->createFromString($fullSql);
     $rules = $rule->get();
     $walkerRule->setRules($rules);
-    $select->dispatch($walkerRule);
+    // Try DENY
+    try {
+        $select->dispatch($walkerRule);
+    } catch (Exception $e) {
+        makeExceptionReport($e->getMessage());
+    }
     $fullSql = $factory->createFromAST($select)->getSql();
     // Rewrite done
     try {
