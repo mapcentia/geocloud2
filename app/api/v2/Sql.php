@@ -32,7 +32,7 @@ use app\inc\Util;
 class Sql extends Controller
 {
     /**
-     * @var array<mixed>
+     * @var array
      */
     public $response;
 
@@ -67,7 +67,7 @@ class Sql extends Controller
     const USEDRELSKEY = "checked_relations";
 
     /**
-     * @var array<mixed>
+     * @var array
      */
     private array $cacheInfo;
 
@@ -83,7 +83,7 @@ class Sql extends Controller
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function get_index(): array
@@ -174,7 +174,7 @@ class Sql extends Controller
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function post_index(): array
@@ -397,11 +397,13 @@ class Sql extends Controller
 
     /**
      * @param string $classname
-     * @return string
+     * @return string|false
      */
-    private static function getClassName(string $classname): string
+    private static function getClassName(string $classname): string|false
     {
-        if ($pos = strrpos($classname, '\\')) return substr($classname, $pos + 1);
-        return $pos;
+        if ($pos = strrpos($classname, '\\')) {
+            return substr($classname, $pos + 1);
+        }
+        return false;
     }
 }
