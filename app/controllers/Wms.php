@@ -11,8 +11,12 @@ namespace app\controllers;
 use app\conf\App;
 use app\inc\Controller;
 use app\inc\Model;
+use app\inc\UserFilter;
 use app\inc\Util;
 use app\inc\Input;
+use app\models\Geofence;
+use app\models\Rule;
+use mapObj;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use XML_Unserializer;
 
@@ -25,9 +29,11 @@ include __DIR__ . "/../libs/PEAR/XML/Unserializer.php";
  */
 class Wms extends Controller
 {
-    public $service;
-    private $layers;
-    private $user;
+    public null|string $service;
+    private array $layers;
+    private null|string $user;
+    private Rule $rules;
+    private null|string $subUser;
 
     /**
      * Wms constructor.
@@ -40,6 +46,7 @@ class Wms extends Controller
         header("Cache-Control: no-store");
 
         $this->layers = [];
+        $this->rules = new Rule();
         $postgisschema = Input::getPath()->part(3);
         $db = Input::getPath()->part(2);
         $this->user = $db;
@@ -51,6 +58,7 @@ class Wms extends Controller
         } else {
             $subUser = null;
         }
+        $this->subUser = $subUser;
 
         $trusted = false;
         foreach (App::$param["trustedAddresses"] as $address) {
@@ -97,33 +105,27 @@ class Wms extends Controller
             $request = Input::get(null, true);
             $unserializer->unserialize($request);
             $arr = $unserializer->getUnserializedData();
-
             // Get service. Only WFS for now
             $this->service = strtolower($arr["service"]);
-
             $typeName = !empty($arr["wfs:Query"]["typeName"]) ? $arr["wfs:Query"]["typeName"] : $arr["Query"]["typeName"];
 
             if (empty($typeName)) {
                 $typeName = !empty($arr["wfs:Query"]["typeNames"]) ? $arr["wfs:Query"]["typeNames"] : $arr["Query"]["typeNames"];
             }
-
             // In case of a POST DescribeFeatureType
             if (empty($typeName)) {
                 $typeName = !empty($arr["wfs:TypeName"]) ? $arr["wfs:TypeName"] : $arr["TypeName"];
             }
-
             if (empty($typeName)) {
                 self::report("Could not get the typeName from the requests");
             }
-
             // Strip name space if any
             $layer = sizeof(explode(":", $typeName)) > 1 ? explode(":", $typeName)[1] : $typeName;
-
             // If IP not trusted, when check auth on layer
             if (!$trusted) {
                 $this->basicHttpAuthLayer($layer, $db, $subUser);
             }
-            $this->post($db, $postgisschema, $request);
+            $this->post($db, $postgisschema, $request, $typeName);
         }
     }
 
@@ -140,17 +142,20 @@ class Wms extends Controller
      * @param string $db
      * @param string $postgisschema
      * @param array $layers
-     * @return false|mixed
+     * @return string|bool
      */
-    private function getQGSfilePath(string $db, string $postgisschema, array $layers)
+    private function getQGSfilePath(string $db, string $postgisschema, array $layers): string|bool
     {
         $path = App::$param['path'] . "/app/wms/mapfiles/";
         $mapFile = $db . "_" . $postgisschema . "_wms.map";
         $qgsFile = null;
         foreach ($layers as $layer) {
             if (file_exists($path . $mapFile)) {
-                $map = new \mapObj($path . $mapFile);
+                $map = new mapObj($path . $mapFile, null);
                 $layer = $map->getLayerByName($layer);
+                if (empty($layer->connection)) {
+                    break;
+                }
                 $conn = $layer->connection;
                 $par = parse_url($conn);
                 if (!empty($par["query"])) {
@@ -170,23 +175,28 @@ class Wms extends Controller
      * @param $postgisschema string
      * @throws PhpfastcacheInvalidArgumentException
      */
-    private function get(string $db, string $postgisschema): void
+    private function get(string $db, string $postgisschema): never
     {
+        $layers = [];
         $model = new Model();
         $useFilters = false;
-        $layers = explode(",", $this->layers[0]);
-        $filters = isset($_GET["filters"]) ? json_decode(Util::base64urlDecode($_GET["filters"]), true) : null;
+        if (sizeof($this->layers) > 0) {
+            $layers = explode(",", $this->layers[0]);
+        }
+        $filters = isset($_GET["filters"]) ? json_decode(Util::base64urlDecode($_GET["filters"]), true) : [];
         $qgs = $this->getQGSfilePath($db, $postgisschema, $layers);
         // Filters and multiple layers are a no-go, because layers can be defined in different QGS files.
         if ($filters && $qgs && sizeof($layers) > 1) {
             self::report("One or more layers are served by QGIS Server. Filters don't work with multiple layers, where one or more is QGIS backed.");
         }
         // If multiple layer, when always use MapFile.
-        if (sizeof($layers)> 1) {
+        if (sizeof($layers) > 1) {
             $qgs = false;
         }
+        // Check rules
+        $filters = $this->setFilterFromRules($layers, $filters);
         // Check if WMS filters are set
-        if (($filters || (isset($_GET["labels"]) && $_GET["labels"] == "false")) && $this->service == "wms") {
+        if ($filters || (isset($_GET["labels"]) && $_GET["labels"] == "false")) {
             // Parse filter. Both base64 and base64url is tried
             $name = md5(rand(1, 999999999) . microtime());
             $disableLabels = isset($_GET["labels"]) && $_GET["labels"] == "false";
@@ -197,22 +207,22 @@ class Wms extends Controller
                 $str = fread($file, filesize($qgs));
                 fclose($file);
                 // Write out a tmp MapFile
-                $mapFile = "/var/www/geocloud2/app/tmp/{$name}.qgs";
+                $mapFile = "/var/www/geocloud2/app/tmp/$name.qgs";
                 $newMapFile = fopen($mapFile, "w");
                 fwrite($newMapFile, $str);
                 fclose($newMapFile);
                 foreach ($layers as $layer) {
                     $split = explode(".", $layer);
-                    $versionWhere = $model->doesColumnExist("{$split[0]}.{$split[1]}", "gc2_version_gid")["exists"] ? "gc2_version_end_date IS NULL" : "";
+                    $versionWhere = $model->doesColumnExist("$split[0].$split[1]", "gc2_version_gid")["exists"] ? "gc2_version_end_date IS NULL" : "";
                     $where = "1=1";
                     if ($filters) {
                         $useFilters = true;
                         if (!empty($filters[$layer])) {
-                            $where = implode(" OR ", $filters[$layer]);
+                            $where = implode(" AND ", $filters[$layer]);
                         }
                     }
                     if ($versionWhere) {
-                        $where = "({$where} AND {$versionWhere})";
+                        $where = "($where AND $versionWhere)";
                     }
                     if (!empty($where)) {
                         $sedCmd = 'sed -i "/table=\"' . $split[0] . '\".\"' . $split[1] . '\"/s/sql=.*</sql=' . self::xmlEscape($where) . '</g" ' . $mapFile;
@@ -225,38 +235,24 @@ class Wms extends Controller
                     shell_exec($sedCmd);
                 }
 
-                $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map={$mapFile}&" . $_SERVER["QUERY_STRING"];
+                $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=$mapFile&" . $_SERVER["QUERY_STRING"];
             } // MapServer is used
             else {
-                switch ($this->service) {
-                    case "wfs":
-                        $mapFile = $db . "_" . $postgisschema . "_wfs.map";
-                        break;
-
-                    default:
-                        $mapFile = $db . "_" . $postgisschema . "_wms.map";
-                        break;
-                }
-
-                $path = "/var/www/geocloud2/app/wms/mapfiles/{$mapFile}";
-
-                // Read the file
-                $file = fopen($path, "r");
-                $str = fread($file, filesize($path));
-                fclose($file);
-
+                $mapFile = match ($this->service) {
+                    "wfs" => $db . "_" . $postgisschema . "_wfs.map",
+                    default => $db . "_" . $postgisschema . "_wms.map",
+                };
+                $path = "/var/www/geocloud2/app/wms/mapfiles/$mapFile";
                 // Write out a tmp MapFile
-                $tmpMapFile = "/var/www/geocloud2/app/tmp/{$name}.map";
-                $newMapFile = fopen($tmpMapFile, "w");
-                fwrite($newMapFile, $str);
-                fclose($newMapFile);
+                $tmpMapFile = $this->writeTmpMapFile($path);
                 $split = [];
                 foreach ($layers as $layer) {
+                    $layer = sizeof(explode(":", $layer)) > 1 ? explode(":", $layer)[1] : $layer;
                     $split = explode(".", $layer);
                     if (!empty($filters[$layer])) {
                         $useFilters = true;
                         // Use sed to replace sql= parameter
-                        $where = implode(" OR ", $filters[$layer]);
+                        $where = implode(" AND ", $filters[$layer]);
                         $sedCmd = 'sed -i "s;/\*FILTER_' . $split[0] . '.' . $split[1] . '\*/;WHERE ' . $where . ';g" ' . $tmpMapFile;
                         shell_exec($sedCmd);
                     }
@@ -268,26 +264,20 @@ class Wms extends Controller
                     $sedCmd = 'sed -i "/#START_LABEL2_' . $split[0] . '.' . $split[1] . '/,/#END_LABEL2_' . $split[0] . '.' . $split[1] . '/c\ " ' . $tmpMapFile;
                     shell_exec($sedCmd);
                 }
-                $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map={$tmpMapFile}&" . $_SERVER["QUERY_STRING"];
+                $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=$tmpMapFile&{$_SERVER["QUERY_STRING"]}";
             }
         }
 
         if (!$useFilters) {
             // Set MapFile for either WMS or WFS
             if ($qgs && !$this->service == "utfgrid") {
-                $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map={$qgs}&" . $_SERVER["QUERY_STRING"];
+                $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=$qgs&{$_SERVER["QUERY_STRING"]}";
             } else {
-                switch ($this->service) {
-                    case "utfgrid":
-                    case "wfs":
-                        $mapFile = $db . "_" . $postgisschema . "_wfs.map";
-                        break;
-
-                    default:
-                        $mapFile = $db . "_" . $postgisschema . "_wms.map";
-                        break;
-                }
-                $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/{$mapFile}&" . $_SERVER["QUERY_STRING"];
+                $mapFile = match ($this->service) {
+                    "utfgrid", "wfs" => $db . "_" . $postgisschema . "_wfs.map",
+                    default => $db . "_" . $postgisschema . "_wms.map",
+                };
+                $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/$mapFile&{$_SERVER["QUERY_STRING"]}";
             }
         }
 
@@ -320,19 +310,35 @@ class Wms extends Controller
         exit();
     }
 
-    private function post($db, $postgisschema, $data)
+    private function post(string $db, string $postgisschema, string $data, string $layer): never
     {
+        // Check rules
+        $filters = [];
+        $layers[] = $layer;
+        $filters = $this->setFilterFromRules($layers, $filters);
         // Set MapFile. For now this can only be WFS
-        switch ($this->service) {
-            case "wfs":
-                $mapFile = $db . "_" . $postgisschema . "_wfs.map";
-                break;
-            default:
-                $mapFile = $db . "_" . $postgisschema . "_wms.map";
-                break;
+        $mapFile = match ($this->service) {
+            "wfs" => $db . "_" . $postgisschema . "_wfs.map",
+            default => $db . "_" . $postgisschema . "_wms.map",
+        };
+        if (sizeof($filters) > 0) {
+            $path = "/var/www/geocloud2/app/wms/mapfiles/$mapFile";
+            // Write out a tmp MapFile
+            $tmpMapFile = $this->writeTmpMapFile($path);
+            foreach ($layers as $layer) {
+                $layer = sizeof(explode(":", $layer)) > 1 ? explode(":", $layer)[1] : $layer;
+                $split = explode(".", $layer);
+                if (!empty($filters[$layer])) {
+                    // Use sed to replace sql= parameter
+                    $where = implode(" AND ", $filters[$layer]);
+                    $sedCmd = 'sed -i "s;/\*FILTER_' . $split[0] . '.' . $split[1] . '\*/;WHERE ' . $where . ';g" ' . $tmpMapFile;
+                    shell_exec($sedCmd);
+                }
+            }
+            $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=$tmpMapFile";
+        } else {
+            $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/$mapFile";
         }
-
-        $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/{$mapFile}";
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
@@ -347,11 +353,10 @@ class Wms extends Controller
         exit();
     }
 
-
     /**
      * @param string $value
      */
-    private static function report(string $value): void
+    private static function report(string $value): never
     {
         ob_get_clean();
         ob_start();
@@ -359,13 +364,53 @@ class Wms extends Controller
                        version="1.2.0"
                        xmlns="http://www.opengis.net/ogc"
                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                       xsi:schemaLocation="http://www.opengis.net/ogc http://schemas.opengis.net/ows/1.0.0/owsExceptionReport.xsd">
+                       xsi:schemaLocation="http://www.opengis.net/ogc https://schemas.opengis.net/ows/1.0.0/owsExceptionReport.xsd">
                        <ServiceException code="InvalidParameterValue">';
         print $value;
         echo '</ServiceException>
 	        </ServiceExceptionReport>';
         header("HTTP/1.0 200 " . Util::httpCodeText("200"));
-        header('Content-Type:text/xml; charset=UTF-8', TRUE);
+        header('Content-Type:text/xml; charset=UTF-8');
         exit();
+    }
+
+    /**
+     * @param array $layers
+     * @param array $filters
+     * @return array
+     */
+    private function setFilterFromRules(array $layers, array $filters): array
+    {
+        $rules = $this->rules->get();
+        foreach ($layers as $layer) {
+            $layer = sizeof(explode(":", $layer)) > 1 ? explode(":", $layer)[1] : $layer;
+            $split = explode(".", $layer);
+            $userFilter = new UserFilter($this->subUser ?: $this->user, "wms", "*", "*", $split[0], $split[1]);
+            $geofence = new Geofence($userFilter);
+            $auth = $geofence->authorize($rules);
+            if ($auth["access"] == "limit" && !empty($auth["filters"]["read"])) {
+                $filters[$layer][] = $auth["filters"]["read"];
+            }
+        }
+        return $filters;
+    }
+
+    /**
+     * @param string $path
+     * @return string
+     */
+    private function writeTmpMapFile(string $path): string
+    {
+        // Read the file
+        $file = fopen($path, "r");
+        $str = fread($file, filesize($path));
+        fclose($file);
+        // Write out a tmp MapFile
+        $name = md5(rand(1, 999999999) . microtime());
+        $tmpMapFile = "/var/www/geocloud2/app/tmp/$name.map";
+        $newMapFile = fopen($tmpMapFile, "w");
+        fwrite($newMapFile, $str);
+        fclose($newMapFile);
+        return $tmpMapFile;
     }
 }
