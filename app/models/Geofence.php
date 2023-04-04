@@ -60,10 +60,9 @@ class Geofence extends Model
                 if ($rule["access"] == self::LIMIT_ACCESS) {
                     $filters["read"] = $rule["read_filter"];
                     $filters["write"] = $rule["write_filter"];
-                    $filters["read_spatial"] = $rule["read_spatial_filter"];
-                    $filters["write_spatial"] = $rule["write_spatial_filter"];
                 }
                 $response["access"] = $rule["access"];
+                $response["request"] = $rule["request"];
                 break;
             }
         }

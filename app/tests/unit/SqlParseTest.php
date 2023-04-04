@@ -42,8 +42,6 @@ class SqlParseTest extends Unit
                 "access" => "limit",
                 "read_filter" => "test.userid='test'",
                 "write_filter" => "test.userid='test'",
-                "read_spatial_filter" => null,
-                "write_spatial_filter" => null,
             ],
             [
                 "username" => "silke",
@@ -55,8 +53,6 @@ class SqlParseTest extends Unit
                 "access" => "limit",
                 "read_filter" => "foo.bar='test'",
                 "write_filter" => "foo.bar='test'",
-                "read_spatial_filter" => null,
-                "write_spatial_filter" => null,
             ],
             [
                 "username" => "silke",
@@ -68,8 +64,6 @@ class SqlParseTest extends Unit
                 "access" => "limit",
                 "read_filter" => "listens.uid='test'",
                 "write_filter" => "listens.uid='test'",
-                "read_spatial_filter" => null,
-                "write_spatial_filter" => null,
             ],
             [
                 "username" => "*",
@@ -81,8 +75,6 @@ class SqlParseTest extends Unit
                 "access" => "deny",
                 "read_filter" => null,
                 "write_filter" => null,
-                "read_spatial_filter" => null,
-                "write_spatial_filter" => null,
             ],
         ];
         $this->request = [

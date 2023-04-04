@@ -250,7 +250,6 @@ class Sql extends Controller
         $response = [];
         $rule = new Rule();
         $walkerRelation = new TableWalkerRelation();
-        $walkerRule = new TableWalkerRule($this->subUser ?: Connection::$param['postgisdb'], "sql", '', '');
         $factory = new StatementFactory();
         try {
             $select = $factory->createFromString($this->q);
@@ -264,6 +263,7 @@ class Sql extends Controller
             );
         }
         $operation = self::getClassName(get_class($select));
+        $walkerRule = new TableWalkerRule($this->subUser ?: Connection::$param['postgisdb'], "sql", strtolower($operation), '');
         $select->dispatch($walkerRelation);
         $usedRelations = $walkerRelation->getRelations();
 
@@ -295,7 +295,7 @@ class Sql extends Controller
             } else {
                 $split = explode(".", $usedRelations["updateAndDelete"][0]);
             }
-            $userFilter = new UserFilter($this->subUser ?: Connection::$param['postgisdb'], "sql", "*", "*", $split[0], $split[1]);
+            $userFilter = new UserFilter($this->subUser ?: Connection::$param['postgisdb'], "sql", strtolower($operation), "*", $split[0], $split[1]);
             $geofence = new Geofence($userFilter);
             $auth = $geofence->authorize($rules);
             if ($operation == "Delete") {

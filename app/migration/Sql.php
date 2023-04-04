@@ -119,9 +119,7 @@ class Sql
                     schema               varchar default '*'::character varying,
                     access               varchar default 'deny'::character varying,
                     read_filter          text,
-                    read_spatial_filter  text,
-                    write_filter         text,
-                    write_spatial_filter text
+                    write_filter         text
                 )";
         $sqls[] = "ALTER TABLE settings.key_value ADD COLUMN created TIMESTAMP WITH TIME ZONE DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE";
         $sqls[] = "ALTER TABLE settings.key_value ADD COLUMN updated TIMESTAMP WITH TIME ZONE DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE";

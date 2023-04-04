@@ -39,8 +39,6 @@ class GeofenceTest extends Unit
                 "access" => "limit",
                 "read_filter" => null,
                 "write_filter" => "userid=1",
-                "read_spatial_filter" => null,
-                "write_spatial_filter" => null,
             ],
             [
                 "username" => "*",
@@ -52,8 +50,6 @@ class GeofenceTest extends Unit
                 "access" => "deny",
                 "read_filter" => null,
                 "write_filter" => null,
-                "read_spatial_filter" => null,
-                "write_spatial_filter" => null,
             ],
         ];
 

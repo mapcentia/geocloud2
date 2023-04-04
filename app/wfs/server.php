@@ -248,12 +248,6 @@ if (!$trusted) {
 }
 // End HTTP basic authentication
 
-// Start rules
-$rule = new Rule();
-$walkerRelation = new TableWalkerRelation();
-$walkerRule = new TableWalkerRule($user, "wfs", '', '');
-$factory = new StatementFactory();
-// End rules
 
 if (!(empty($properties[0]))) {
     foreach ($properties as $property) {
@@ -1254,15 +1248,19 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     global $server;
     global $version;
     global $maxFeatures;
-    global $factory;
-    global $rule;
-    global $walkerRule;
     global $fullSql;
+    global $user;
     ob_start();
 
     if (!$postgisObject->db) {
         $postgisObject->connect();
     }
+    // Start rules
+    $rule = new Rule();
+    $walkerRelation = new TableWalkerRelation();
+    $walkerRule = new TableWalkerRule($user, "wfs", 'select', '');
+    $factory = new StatementFactory();
+    // End rules
 
     $featureCount = "";
     if ($maxFeatures) {
@@ -1547,11 +1545,6 @@ function doParse(array $arr)
     global $rowIdsChanged;
     global $logFile;
     global $version;
-    global $walkerRule;
-    global $rule;
-    global $factory;
-    global $geofence;
-    global $walkerRelation;
 
     ob_start();
 
@@ -1561,6 +1554,11 @@ function doParse(array $arr)
 
     $workflowData = [];
     $notEditable = [];
+
+    // Start rules
+    $rule = new Rule();
+    $walkerRelation = new TableWalkerRelation();
+    // End rules
 
     foreach ($arr as $key => $featureMember) {
 
@@ -1572,6 +1570,8 @@ function doParse(array $arr)
             if (!is_array($featureMember[0]) && isset($featureMember)) {
                 $featureMember = array(0 => $featureMember);
             }
+            $walkerRule = new TableWalkerRule($user, "wfs", 'insert', '');
+            $factory = new StatementFactory();
             foreach ($featureMember as $hey) {
                 $primeryKey = null;
                 $globalSrsName = $hey["srsName"] ?? null;
@@ -1729,6 +1729,8 @@ function doParse(array $arr)
                 $featureMember = array(0 => $featureMember);
             }
             $fid = 0;
+            $walkerRule = new TableWalkerRule($user, "wfs", 'update', '');
+            $factory = new StatementFactory();
             foreach ($featureMember as $hey) {
                 $globalSrsName = $hey["srsName"] ?? null;
                 $hey["typeName"] = dropAllNameSpaces($hey["typeName"]);
@@ -1818,6 +1820,8 @@ function doParse(array $arr)
             if (!is_array($featureMember[0]) && isset($featureMember)) {
                 $featureMember = array(0 => $featureMember);
             }
+            $walkerRule = new TableWalkerRule($user, "wfs", 'delete', '');
+            $factory = new StatementFactory();
             foreach ($featureMember as $hey) {
                 $hey['typeName'] = dropAllNameSpaces($hey['typeName']);
                 if (!isset($hey['Filter'])) {
@@ -2998,6 +3002,7 @@ function numberOfDimensions(array $array): int
         $it->getDepth() >= $d and $d = $it->getDepth();
     return ++$d;
 }
+
 function getClassName(string $classname): string
 {
     if ($pos = strrpos($classname, '\\')) return substr($classname, $pos + 1);
