@@ -19,7 +19,6 @@ use app\models\Geofence;
 use app\models\Rule;
 use app\models\Setting;
 use app\models\Stream;
-use app\models\Geofence as GeofenceModel;
 use sad_spirit\pg_builder\StatementFactory;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Exception;
@@ -297,9 +296,8 @@ class Sql extends Controller
                 $split = explode(".", $usedRelations["updateAndDelete"][0]);
             }
             $userFilter = new UserFilter($this->subUser ?: Connection::$param['postgisdb'], "sql", "*", "*", $split[0], $split[1]);
-            $geofence = new GeofenceModel($userFilter);
+            $geofence = new Geofence($userFilter);
             $auth = $geofence->authorize($rules);
-
             if ($operation == "Delete") {
                 $this->q = $factory->createFromAST($select)->getSql();
                 $this->response = $this->api->transaction($this->q);
@@ -309,7 +307,7 @@ class Sql extends Controller
                 $finaleStatement = $factory->createFromAST($select)->getSql();
                 if ($auth["access"] == Geofence::LIMIT_ACCESS) {
                     try {
-                        $this->response = $geofence->postProcessQuery($select, $this->api, $auth["filters"], $finaleStatement);
+                        $geofence->postProcessQuery($select, $rules);
                     } catch (Exception $e) {
                         $response = [];
                         $response["code"] = 401;
@@ -319,9 +317,8 @@ class Sql extends Controller
                         $response["filters"] = $auth["filters"];
                         return serialize($response);
                     }
-                } else {
-                    $this->response = $this->api->transaction($this->q);
                 }
+                $this->response = $this->api->transaction($finaleStatement);
                 $response["filters"] = $auth["filters"];
                 $response["statement"] = $finaleStatement;
             }

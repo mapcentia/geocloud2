@@ -31,6 +31,8 @@ class Sql extends Model
      */
     private $srs;
 
+    public $model;
+
     /**
      * Sql constructor.
      * @param string $srs
@@ -38,6 +40,8 @@ class Sql extends Model
     function __construct($srs = "900913")
     {
         parent::__construct();
+
+        $this->model = $this;
         $this->srs = $srs;
     }
 

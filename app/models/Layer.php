@@ -241,7 +241,7 @@ class Layer extends Table
                         $obj = json_decode($value, true);
                         if (is_array($obj)) {
                             foreach ($obj as $k => $val) {
-                                $props = !empty($val["properties"]) ? json_decode( $val["properties"]) : null;
+                                $props = !empty($val["properties"]) ? json_decode($val["properties"]) : null;
                                 if ($val["properties"] == "*") {
                                     $restrictions[$k] = "*";
                                 } elseif (is_object($props) || is_array($props)) {
@@ -941,7 +941,7 @@ class Layer extends Table
     {
         $row = $this->getColumns($schema, $table);
         $response['success'] = true;
-        $response['data'] = json_decode($row[0]['roles'], true);
+        $response['data'] = isset($row[0]['roles']) ? json_decode($row[0]['roles'], true) : null;
         return $response;
     }
 

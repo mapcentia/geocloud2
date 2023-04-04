@@ -14,8 +14,14 @@ use app\inc\PgHStore;
 use app\inc\Util;
 use app\models\Table;
 use app\models\Layer;
+use app\inc\TableWalkerRelation;
+use app\inc\TableWalkerRule;
+use app\inc\UserFilter;
+use app\models\Geofence;
+use app\models\Rule;
 use app\conf\Connection;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use sad_spirit\pg_builder\StatementFactory;
 
 
 ini_set("max_execution_time", "0");
@@ -82,9 +88,7 @@ $uri = str_replace("index.php", "", $_SERVER['REDIRECT_URL']);
 $uri = str_replace("//", "/", $uri);
 
 $thePath = $host . $uri;
-//$thePath = "http://docker_gc2core_1" . $uri;
 $server = $host;
-//$server = "http://docker_gc2core_1";
 $BBox = null;
 
 $currentTable = null;
@@ -244,6 +248,13 @@ if (!$trusted) {
 }
 // End HTTP basic authentication
 
+// Start rules
+$rule = new Rule();
+$walkerRelation = new TableWalkerRelation();
+$walkerRule = new TableWalkerRule($user, "wfs", '', '');
+$factory = new StatementFactory();
+// End rules
+
 if (!(empty($properties[0]))) {
     foreach ($properties as $property) {
         $__u = explode(".", $property); // Is it "/" for get method?
@@ -311,9 +322,9 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
         print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         doQuery("Select");
         print "</wfs:FeatureCollection>";
-        print "\n<!--";
-        print_r($wheres);
-        print "-->";
+        print "\n<!--\n";
+        print_r($fullSql);
+        print "\n-->";
         break;
     case "DESCRIBEFEATURETYPE":
         getXSD($postgisObject);
@@ -1243,6 +1254,10 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     global $server;
     global $version;
     global $maxFeatures;
+    global $factory;
+    global $rule;
+    global $walkerRule;
+    global $fullSql;
     ob_start();
 
     if (!$postgisObject->db) {
@@ -1254,6 +1269,13 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
         $featureCount = $maxFeatures;
     } else {
         $countSql = "SELECT COUNT(*) {$from} LIMIT " . FEATURE_LIMIT;
+        // Rewrite according to rules
+        $select = $factory->createFromString($countSql);
+        $rules = $rule->get();
+        $walkerRule->setRules($rules);
+        $select->dispatch($walkerRule);
+        $countSql = $factory->createFromAST($select)->getSql();
+        // Rewrite done
         try {
             $res = $postgisObject->prepare($countSql);
             $res->execute();
@@ -1297,6 +1319,13 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     }
 
     $fullSql = $sql . $from . " LIMIT " . ($maxFeatures ?? FEATURE_LIMIT);
+    // Rewrite according to rules
+    $select = $factory->createFromString($fullSql);
+    $rules = $rule->get();
+    $walkerRule->setRules($rules);
+    $select->dispatch($walkerRule);
+    $fullSql = $factory->createFromAST($select)->getSql();
+    // Rewrite done
     try {
         $postgisObject->prepare("DECLARE curs CURSOR FOR {$fullSql}")->execute();
         $innerStatement = $postgisObject->prepare("FETCH 1 FROM curs");
@@ -1343,7 +1372,7 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
                         }
                     }
                     $str .= writeTag("open", $gmlNameSpace, $fieldName, $imageAttr, True, False, true);
-                    $str .= (string)$fieldValue;
+                    $str .= $fieldValue;
                     $str .= writeTag("close", $gmlNameSpace, $fieldName, null, False, True, true);
                 }
             } elseif (!empty($tableObj->metaData[$fieldName]) && $tableObj->metaData[$fieldName]['type'] == "geometry") {
@@ -1377,26 +1406,22 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
 }
 
 /**
- *
- *
- * @param unknown $str
- * @param unknown $no
- * @return unknown
+ * @param string $str
+ * @param int $no
+ * @return string
  */
-function dropLastChrs($str, $no)
+function dropLastChrs(string $str, int $no): string
 {
     $strLen = strlen($str);
     return substr($str, 0, ($strLen) - $no);
 }
 
 /**
- *
- *
- * @param unknown $str
- * @param unknown $no
- * @return unknown
+ * @param string $str
+ * @param int $no
+ * @return string
  */
-function dropFirstChrs($str, $no)
+function dropFirstChrs(string $str, int $no): string
 {
     $strLen = strlen($str);
     return substr($str, $no, $strLen);
@@ -1423,17 +1448,19 @@ function dropAllNameSpaces($tag)
 }
 
 /**
- *
- *
- * @param unknown $field
- * @return unknown
+ * @param string $field
+ * @return string
  */
-function altFieldNameToUpper($field)
+function altFieldNameToUpper(string $field): string
 {
     return strtoupper($field);
 }
 
-function changeFieldName($field)
+/**
+ * @param string $field
+ * @return string
+ */
+function changeFieldName(string $field): string
 {
     if ($field == "ref") {
         return "aendret_navn_paa_element";
@@ -1452,7 +1479,7 @@ function changeFieldName($field)
  * @param unknown $value
  * @return unknown
  */
-function altFieldValue($field, $value)
+function altFieldValue(string $field, string $value): string|bool
 {
     global $ODEUMhostName;
     if ($value == -1 || $value == -3600) {
@@ -1510,6 +1537,11 @@ function doParse(array $arr)
     global $rowIdsChanged;
     global $logFile;
     global $version;
+    global $walkerRule;
+    global $rule;
+    global $factory;
+    global $geofence;
+    global $walkerRelation;
 
     ob_start();
 
@@ -2090,6 +2122,37 @@ function doParse(array $arr)
     if (isset($sqls)) {
         foreach ($sqls as $operation => $sql) {
             foreach ($sql as $singleSql) {
+                // Rewrite according to rules
+                $select = $factory->createFromString($singleSql);
+                $rules = $rule->get();
+                $walkerRule->setRules($rules);
+                // Try DENY
+                try {
+                    $select->dispatch($walkerRule);
+                } catch (Exception $e) {
+                    makeExceptionReport($e->getMessage());
+                }
+                $statement = $factory->createFromAST($select);
+                $singleSql = $statement->getSql();
+                // Rewrite done
+                echo "\n<!-- $singleSql -->";
+                $select->dispatch($walkerRelation);
+                $usedRelations = $walkerRelation->getRelations();
+                if ($operation == "insert") {
+                    $split = explode(".", $usedRelations["insert"][0]);
+                } else {
+                    $split = explode(".", $usedRelations["updateAndDelete"][0]);
+                }
+                $userFilter = new UserFilter($user, "wfs", "*", "*", $split[0], $split[1]);
+                $geofence = new Geofence($userFilter);
+                // Try post proccesing
+                if ($operation != "delete") {
+                    try {
+                        $geofence->postProcessQuery($select, $rules);
+                    } catch (Exception $e) {
+                        makeExceptionReport($e->getMessage());
+                    }
+                }
                 $results[$operation][] = $postgisObject->execQuery($singleSql); // Returning PDOStatement object
             }
         }
@@ -2348,7 +2411,7 @@ function makeExceptionReport($value, array $attributes = []): void
     die();
 }
 
-//print("<!-- Memory used: " . round(memory_get_peak_usage() / 1024) . " KB -->\n");
+print("\n<!-- Memory used: " . round(memory_get_peak_usage() / 1024) . " KB -->\n");
 //print($sessionComment);
 // Make sure all is flushed
 echo str_pad("", 4096);
@@ -2924,4 +2987,9 @@ function numberOfDimensions(array $array): int
     foreach ($it as $v)
         $it->getDepth() >= $d and $d = $it->getDepth();
     return ++$d;
+}
+function getClassName(string $classname): string
+{
+    if ($pos = strrpos($classname, '\\')) return substr($classname, $pos + 1);
+    return $pos;
 }

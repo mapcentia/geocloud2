@@ -10,9 +10,7 @@ namespace app\models;
 
 use app\inc\Model;
 use app\inc\UserFilter;
-use \app\models\Sql;
 use Exception;
-use PDOException;
 use sad_spirit\pg_builder\Statement;
 use sad_spirit\pg_builder\StatementFactory;
 
@@ -76,47 +74,36 @@ class Geofence extends Model
 
     /**
      * @param Statement $statement
-     * @param Sql $sql
+     * @param Sql $model
      * @param array<string> $filters
      * @return array<mixed>
      * @throws Exception
      */
-    public function postProcessQuery(Statement $statement, Sql $sql, array $filters, string $finaleStatement): array
+    public function postProcessQuery(Statement $statement, array $rules): bool
     {
+        $filters = $this->authorize($rules)["filters"];
+        if (sizeof($filters) == 0) {
+            return true;
+        }
+        $model = new Model();
+        $model->connect();
+        $model->begin();
         $factory = new StatementFactory();
-        $sql->connect();
-        $sql->begin();
         $statement->returning[0] = "*";
         $str = $factory->createFromAST($statement)->getSql();
         $str = "create temporary table foo on commit drop as with updated_rows as (" . $str . ") select * from updated_rows";
-        $trans = $sql->transaction($str);
-        if (!$trans["success"]) {
-            $response['success'] = false;
-            $response['message'] = $trans["message"];
-            $response['code'] = 400;
-            return $response;
-        }
+        $result = $model->prepare($str);
+        $result->execute();
         $select = "select * from foo where {$filters["write"]}";
-        $res = $sql->prepare($select);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
+        $res = $model->prepare($select);
+        $res->execute();
         $count = $res->rowCount();
-        if ($trans["affected_rows"] > $count) {
+        if ($result->rowCount() > $count) {
             throw new Exception('LIMIT ERROR');
         }
-        $sql->rollback();
-        // Post query done - running the actual statement
-        $sql->connect();
-        $sql->begin();
-        $trans = $sql->transaction($finaleStatement);
-        $sql->commit();
-        return $trans;
+        $model->rollback();
+
+        return true;
     }
 
 }
