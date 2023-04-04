@@ -44,7 +44,7 @@ class TableWalkerRule extends BlankWalker
     /**
      * @throws Exception
      */
-    public function walkSelectStatement(Select $statement)
+    public function walkSelectStatement(Select $statement): void
     {
         foreach ($statement->from->getIterator() as $from) {
             // A sub-select doesn't have name
@@ -69,7 +69,7 @@ class TableWalkerRule extends BlankWalker
     /**
      * @throws Exception
      */
-    public function walkUpdateStatement(Update $statement)
+    public function walkUpdateStatement(Update $statement): void
     {
         foreach ($statement->from->getIterator() as $from) {
             $schema = $from->name->schema->value ?? "public";
@@ -133,7 +133,7 @@ class TableWalkerRule extends BlankWalker
     /**
      * @throws Exception
      */
-    public function walkInsertStatement(Insert $statement)
+    public function walkInsertStatement(Insert $statement): void
     {
         $schema = $statement->relation->relation->schema->value ?? "public";
         $relation = $statement->relation->relation->relation->value;
