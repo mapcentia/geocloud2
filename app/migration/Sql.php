@@ -109,8 +109,8 @@ class Sql
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER roles TYPE JSONB USING roles::jsonb";
         $sqls[] = "CREATE TABLE settings.geofence
                     (
-                    id                   serial not null,
-                    priority             integer,
+                    id                   serial UNIQUE NOT NULL,
+                    priority             integer NOT NULL default 1::int,
                     username             varchar default '*'::character varying,
                     service              varchar default '*'::character varying,
                     request              varchar default '*'::character varying,
@@ -119,7 +119,10 @@ class Sql
                     schema               varchar default '*'::character varying,
                     access               varchar default 'deny'::character varying,
                     read_filter          text,
-                    write_filter         text
+                    write_filter         text,
+                    CHECK (service in ('*', 'sql', 'ows', 'wfst')),
+                    CHECK (request in ('*', 'select', 'insert', 'update', 'delete')),
+                    CHECK (access in ('*', 'allow', 'deny', 'limit'))
                 )";
         $sqls[] = "ALTER TABLE settings.key_value ADD COLUMN created TIMESTAMP WITH TIME ZONE DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE";
         $sqls[] = "ALTER TABLE settings.key_value ADD COLUMN updated TIMESTAMP WITH TIME ZONE DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE";
