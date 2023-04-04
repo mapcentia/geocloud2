@@ -1258,7 +1258,7 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     // Start rules
     $rule = new Rule();
     $walkerRelation = new TableWalkerRelation();
-    $walkerRule = new TableWalkerRule($user, "wfs", 'select', '');
+    $walkerRule = new TableWalkerRule($user, "wfst", 'select', '');
     $factory = new StatementFactory();
     // End rules
 
@@ -1570,7 +1570,7 @@ function doParse(array $arr)
             if (!is_array($featureMember[0]) && isset($featureMember)) {
                 $featureMember = array(0 => $featureMember);
             }
-            $walkerRule = new TableWalkerRule($user, "wfs", 'insert', '');
+            $walkerRule = new TableWalkerRule($user, "wfst", 'insert', '');
             $factory = new StatementFactory();
             foreach ($featureMember as $hey) {
                 $primeryKey = null;
@@ -1729,7 +1729,7 @@ function doParse(array $arr)
                 $featureMember = array(0 => $featureMember);
             }
             $fid = 0;
-            $walkerRule = new TableWalkerRule($user, "wfs", 'update', '');
+            $walkerRule = new TableWalkerRule($user, "wfst", 'update', '');
             $factory = new StatementFactory();
             foreach ($featureMember as $hey) {
                 $globalSrsName = $hey["srsName"] ?? null;
@@ -1820,7 +1820,7 @@ function doParse(array $arr)
             if (!is_array($featureMember[0]) && isset($featureMember)) {
                 $featureMember = array(0 => $featureMember);
             }
-            $walkerRule = new TableWalkerRule($user, "wfs", 'delete', '');
+            $walkerRule = new TableWalkerRule($user, "wfst", 'delete', '');
             $factory = new StatementFactory();
             foreach ($featureMember as $hey) {
                 $hey['typeName'] = dropAllNameSpaces($hey['typeName']);

@@ -383,7 +383,7 @@ class Wms extends Controller
         foreach ($layers as $layer) {
             $layer = sizeof(explode(":", $layer)) > 1 ? explode(":", $layer)[1] : $layer;
             $split = explode(".", $layer);
-            $userFilter = new UserFilter($this->subUser ?: $this->user, "wms", "select", "*", $split[0], $split[1]);
+            $userFilter = new UserFilter($this->subUser ?: $this->user, "ows", "select", "*", $split[0], $split[1]);
             $geofence = new Geofence($userFilter);
             $auth = $geofence->authorize($rules);
             if ($auth["access"] == "deny") {
