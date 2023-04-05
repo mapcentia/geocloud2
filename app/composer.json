@@ -9,7 +9,7 @@
         "phpoffice/phpexcel": "^1.8",
         "phayes/geophp": "^1.2",
         "phpfastcache/phpfastcache": "^9.1",
-        "zircote/swagger-php": "^4.4",
+        "zircote/swagger-php": "3.3.7",
         "firebase/php-jwt": "^6.3",
         "predis/predis": "^2.0",
         "guzzlehttp/guzzle": "^7.5",
