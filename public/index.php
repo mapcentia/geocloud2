@@ -301,8 +301,14 @@ if (Input::getPath()->part(1) == "api") {
         }
     });
 
-    Route::add("api/v3/geofence", function () {
-        Database::setDb("mydb");
+    Route::add("api/v3/geofence/[id]", function () {
+        $jwt = Jwt::validate();
+        if ($jwt["success"]) {
+            Database::setDb($jwt["data"]["database"]);
+        } else {
+            echo Response::toJson($jwt);
+            exit();
+        }
     });
 
     Route::add("api/v3/sql", function () {
