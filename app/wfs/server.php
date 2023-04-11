@@ -2157,7 +2157,7 @@ function doParse(array $arr)
                 } else {
                     $split = explode(".", $usedRelations["updateAndDelete"][0]);
                 }
-                $userFilter = new UserFilter($user, "wfs", "*", "*", $split[0], $split[1]);
+                $userFilter = new UserFilter($user, "wfs", $operation, "*", $split[0], $split[1]);
                 $geofence = new Geofence($userFilter);
                 // Try post proccesing
                 if ($operation != "delete") {
