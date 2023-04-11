@@ -118,8 +118,7 @@ class Sql
                     iprange              varchar default '*'::character varying,
                     schema               varchar default '*'::character varying,
                     access               varchar default 'deny'::character varying,
-                    read_filter          text,
-                    write_filter         text,
+                    filter         text,
                     CHECK (service in ('*', 'sql', 'ows', 'wfst')),
                     CHECK (request in ('*', 'select', 'insert', 'update', 'delete')),
                     CHECK (access in ('*', 'allow', 'deny', 'limit'))

@@ -76,8 +76,7 @@ class Geofence extends Controller
      *         @OA\Property(property="layer",type="string", example="*"),
      *         @OA\Property(property="schema",type="string", example="*"),
      *         @OA\Property(property="access",type="string", example="limit"),
-     *         @OA\Property(property="read_filter",type="string", example="userid='joe'"),
-     *         @OA\Property(property="write_filter",type="string", example="userid='joe'")
+     *         @OA\Property(property="filter",type="string", example="userid='joe'")
      *       )
      *     )
      *   ),
@@ -96,8 +95,7 @@ class Geofence extends Controller
      *         @OA\Property(property="layer",type="string", example="*"),
      *         @OA\Property(property="schema",type="string", example="*"),
      *         @OA\Property(property="access",type="string", example="limit"),
-     *         @OA\Property(property="read_filter",type="string", example="userid='joe'"),
-     *         @OA\Property(property="write_filter",type="string", example="userid='joe'")
+     *         @OA\Property(property="filter",type="string", example="userid='joe'")
      *       )
      *     )
      *   )
@@ -132,8 +130,7 @@ class Geofence extends Controller
      *         @OA\Property(property="layer",type="string", example="*"),
      *         @OA\Property(property="schema",type="string", example="*"),
      *         @OA\Property(property="access",type="string", example="limit"),
-     *         @OA\Property(property="read_filter",type="string", example="userid='joe'"),
-     *         @OA\Property(property="write_filter",type="string", example="userid='joe'")
+     *         @OA\Property(property="filter",type="string", example="userid='joe'")
      *       )
      *     )
      *   ),
@@ -152,8 +149,7 @@ class Geofence extends Controller
      *         @OA\Property(property="layer",type="string", example="*"),
      *         @OA\Property(property="schema",type="string", example="*"),
      *         @OA\Property(property="access",type="string", example="limit"),
-     *         @OA\Property(property="read_filter",type="string", example="userid='joe'"),
-     *         @OA\Property(property="write_filter",type="string", example="userid='joe'")
+     *         @OA\Property(property="filter",type="string", example="userid='joe'")
      *       )
      *     )
      *   )

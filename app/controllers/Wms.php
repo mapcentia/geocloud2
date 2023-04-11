@@ -389,8 +389,8 @@ class Wms extends Controller
             if ($auth["access"] == "deny") {
                 self::report("DENY");
             }
-            elseif ($auth["access"] == "limit" && !empty($auth["filters"]["read"])) {
-                $filters[$layer][] = $auth["filters"]["read"];
+            elseif ($auth["access"] == "limit" && !empty($auth["filters"]["filter"])) {
+                $filters[$layer][] = $auth["filters"]["filter"];
             }
         }
         return $filters;

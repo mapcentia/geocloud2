@@ -60,8 +60,7 @@ class Geofence extends Model
                 ($this->userFilter->request == $rule["request"] || $rule["request"] == "*")
             ) {
                 if ($rule["access"] == self::LIMIT_ACCESS) {
-                    $filters["read"] = $rule["read_filter"];
-                    $filters["write"] = $rule["write_filter"];
+                    $filters["filter"] = $rule["filter"];
                 }
                 $response["access"] = $rule["access"];
                 $response["request"] = $rule["request"];
@@ -81,8 +80,9 @@ class Geofence extends Model
      */
     public function postProcessQuery(Statement $statement, array $rules): bool
     {
-        $filters = $this->authorize($rules)["filters"];
-        if (empty($filters["write"])) {
+        $auth = $this->authorize($rules);
+        $filters = $auth["filters"];
+        if (empty($filters["filter"])) {
             return true;
         }
         $model = new Model();
@@ -94,7 +94,7 @@ class Geofence extends Model
         $str = "create temporary table foo on commit drop as with updated_rows as (" . $str . ") select * from updated_rows";
         $result = $model->prepare($str);
         $result->execute();
-        $select = "select * from foo where {$filters["write"]}";
+        $select = "select * from foo where {$filters["filter"]}";
         $res = $model->prepare($select);
         $res->execute();
         $count = $res->rowCount();

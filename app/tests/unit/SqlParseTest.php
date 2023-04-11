@@ -40,8 +40,7 @@ class SqlParseTest extends Unit
                 "request" => "*",
                 "schema" => "*",
                 "access" => "limit",
-                "read_filter" => "test.userid='test'",
-                "write_filter" => "test.userid='test'",
+                "filter" => "test.userid='test'",
             ],
             [
                 "username" => "silke",
@@ -51,8 +50,7 @@ class SqlParseTest extends Unit
                 "request" => "*",
                 "schema" => "*",
                 "access" => "limit",
-                "read_filter" => "foo.bar='test'",
-                "write_filter" => "foo.bar='test'",
+                "filter" => "foo.bar='test'",
             ],
             [
                 "username" => "silke",
@@ -62,8 +60,7 @@ class SqlParseTest extends Unit
                 "request" => "*",
                 "schema" => "*",
                 "access" => "limit",
-                "read_filter" => "listens.uid='test'",
-                "write_filter" => "listens.uid='test'",
+                "filter" => "listens.uid='test'",
             ],
             [
                 "username" => "*",
@@ -73,8 +70,7 @@ class SqlParseTest extends Unit
                 "request" => "*",
                 "schema" => "*",
                 "access" => "deny",
-                "read_filter" => null,
-                "write_filter" => null,
+                "filter" => null,
             ],
         ];
         $this->request = [
