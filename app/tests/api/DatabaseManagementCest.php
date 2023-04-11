@@ -33,6 +33,7 @@ class DatabaseManagementCest
     private $subUserEmail2;
     private $userId2;
     private $subUserId2;
+    private $token;
 
     public function __construct()
     {
@@ -205,6 +206,21 @@ class DatabaseManagementCest
         $sessionCookie = $I->capturePHPSESSID();
         $I->assertFalse(empty($sessionCookie));
         $this->subUserAuthCookie2 = $sessionCookie;
+    }
+
+    public function shouldGetTokenForFirstSubUser(\ApiTester $I)
+    {
+
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v3/oauth/token', json_encode([
+            'grant_type' => 'password',
+            'username' => $this->subUserName,
+            'password' => $this->password,
+            'database' => \app\inc\Model::toAscii($this->userName, [] , "_"),
+        ]));
+        $I->seeResponseIsJson();
+        $I->seeResponseCodeIs(200);
+        $this->token = json_decode($I->grabResponse(), true)["access_token"];
     }
 
     public function shouldListSchemasForSuperUser(\ApiTester $I)
