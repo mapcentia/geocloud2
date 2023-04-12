@@ -298,30 +298,23 @@ class Sql extends Controller
             $userFilter = new UserFilter($this->subUser ?: Connection::$param['postgisdb'], "sql", strtolower($operation), "*", $split[0], $split[1]);
             $geofence = new Geofence($userFilter);
             $auth = $geofence->authorize($rules);
-            if ($operation == "Delete") {
-                $this->q = $factory->createFromAST($select)->getSql();
-                $this->response = $this->api->transaction($this->q);
-                $response["statement"] = $this->q;
-                $response["filters"] = $auth["filters"];
-            } else {
-                $finaleStatement = $factory->createFromAST($select)->getSql();
-                if ($auth["access"] == Geofence::LIMIT_ACCESS) {
-                    try {
-                        $geofence->postProcessQuery($select, $rules);
-                    } catch (Exception $e) {
-                        $response = [];
-                        $response["code"] = 401;
-                        $response["success"] = false;
-                        $response["message"] = $e->getMessage();
-                        $response["statement"] = $finaleStatement;
-                        $response["filters"] = $auth["filters"];
-                        return serialize($response);
-                    }
+            $finaleStatement = $factory->createFromAST($select)->getSql();
+            if ($auth["access"] == Geofence::LIMIT_ACCESS) {
+                try {
+                    $geofence->postProcessQuery($select, $rules);
+                } catch (Exception $e) {
+                    $response = [];
+                    $response["code"] = 401;
+                    $response["success"] = false;
+                    $response["message"] = $e->getMessage();
+                    $response["statement"] = $finaleStatement;
+                    $response["filters"] = $auth["filters"];
+                    return serialize($response);
                 }
-                $this->response = $this->api->transaction($finaleStatement);
-                $response["filters"] = $auth["filters"];
-                $response["statement"] = $finaleStatement;
             }
+            $this->response = $this->api->transaction($finaleStatement);
+            $response["filters"] = $auth["filters"];
+            $response["statement"] = $finaleStatement;
             $this->addAttr($response);
         } elseif ($operation == "Select" || $operation == "SetOpSelect") {
             $this->q = $factory->createFromAST($select)->getSql();
