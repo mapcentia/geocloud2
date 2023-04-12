@@ -94,11 +94,14 @@ class Geofence extends Model
         $str = "create temporary table foo on commit drop as with updated_rows as (" . $str . ") select * from updated_rows";
         $result = $model->prepare($str);
         $result->execute();
-        $select = "select * from foo where {$filters["filter"]}";
+        $select = "select count(*) from foo where {$filters["filter"]}";
         $res = $model->prepare($select);
         $res->execute();
-        $count = $res->rowCount();
-        if ($result->rowCount() > $count) {
+        $row = $res->fetch();
+        if ($result->rowCount() == 0) {
+            throw new Exception('COUNT 0 ERROR');
+        }
+        if ($result->rowCount() > $row["count"]) {
             throw new Exception('LIMIT ERROR');
         }
         $model->rollback();
