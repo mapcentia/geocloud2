@@ -51,7 +51,7 @@ $layerObj = new Layer();
 $srs = Input::getPath()->part(4);
 
 $timeSlice = Input::getPath()->part(5);
-if ($timeSlice != "all") {
+if (!empty($timeSlice) && $timeSlice != "all") {
     $unixTime = strtotime(urldecode($timeSlice));
     if ($unixTime) {
         $timeSlice = date("Y-m-d G:i:s.u", $unixTime);
