@@ -263,7 +263,6 @@ class Sql extends Controller
             );
         }
         $operation = self::getClassName(get_class($select));
-        $walkerRule = new TableWalkerRule($this->subUser ?: Connection::$param['postgisdb'], "sql", strtolower($operation), '');
         $select->dispatch($walkerRelation);
         $usedRelations = $walkerRelation->getRelations();
 
@@ -276,6 +275,7 @@ class Sql extends Controller
         }
 
         // Get rules and set them
+        $walkerRule = new TableWalkerRule(!empty($response["isauth"]) ? $this->subUser ?: Connection::$param['postgisdb'] : "*", "sql", strtolower($operation), '');
         $rules = $rule->get();
         $walkerRule->setRules($rules);
         try {

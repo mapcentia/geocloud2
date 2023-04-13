@@ -220,7 +220,6 @@ $service = !empty($HTTP_FORM_VARS["SERVICE"]) ? $HTTP_FORM_VARS["SERVICE"] : ($H
 $maxFeatures = !empty($HTTP_FORM_VARS["MAXFEATURES"]) ? $HTTP_FORM_VARS["MAXFEATURES"] : null;
 $outputFormat = !empty($HTTP_FORM_VARS["OUTPUTFORMAT"]) ? $HTTP_FORM_VARS["OUTPUTFORMAT"] : ($version == "1.1.0" ? "GML3" : "GML2");
 $srs = $srsName ? parseEpsgCode($srsName) : ($srs ?: App::$param["epsg"] ?: null);
-//die($outputFormat);
 
 if (!empty($HTTP_FORM_VARS["FILTER"])) {
     $wheres[$HTTP_FORM_VARS["TYPENAME"]] = parseFilter($HTTP_FORM_VARS["FILTER"], $HTTP_FORM_VARS["TYPENAME"]);
@@ -1258,7 +1257,7 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     // Start rules
     $rule = new Rule();
     $walkerRelation = new TableWalkerRelation();
-    $walkerRule = new TableWalkerRule($user, "wfst", 'select', '');
+    $walkerRule = new TableWalkerRule(isAuth() ? $user : "*", "wfst", 'select', '');
     $factory = new StatementFactory();
     // End rules
 
@@ -1570,7 +1569,7 @@ function doParse(array $arr)
             if (!is_array($featureMember[0]) && isset($featureMember)) {
                 $featureMember = array(0 => $featureMember);
             }
-            $walkerRule = new TableWalkerRule($user, "wfst", 'insert', '');
+            $walkerRule = new TableWalkerRule(isAuth() ? $user : "*", "wfst", 'insert', '');
             $factory = new StatementFactory();
             foreach ($featureMember as $hey) {
                 $primeryKey = null;
@@ -1729,7 +1728,7 @@ function doParse(array $arr)
                 $featureMember = array(0 => $featureMember);
             }
             $fid = 0;
-            $walkerRule = new TableWalkerRule($user, "wfst", 'update', '');
+            $walkerRule = new TableWalkerRule(isAuth() ? $user : "*", "wfst", 'update', '');
             $factory = new StatementFactory();
             foreach ($featureMember as $hey) {
                 $globalSrsName = $hey["srsName"] ?? null;
@@ -1820,7 +1819,7 @@ function doParse(array $arr)
             if (!is_array($featureMember[0]) && isset($featureMember)) {
                 $featureMember = array(0 => $featureMember);
             }
-            $walkerRule = new TableWalkerRule($user, "wfst", 'delete', '');
+            $walkerRule = new TableWalkerRule(isAuth() ? $user : "*", "wfst", 'delete', '');
             $factory = new StatementFactory();
             foreach ($featureMember as $hey) {
                 $hey['typeName'] = dropAllNameSpaces($hey['typeName']);
@@ -3007,4 +3006,22 @@ function getClassName(string $classname): string
 {
     if ($pos = strrpos($classname, '\\')) return substr($classname, $pos + 1);
     return $pos;
+}
+
+function isAuth(): bool
+{
+    global $user;
+    $auth = false;
+    $sess = $_SESSION;
+    if (isset($_SESSION) && sizeof($_SESSION) > 0) {
+        if (!empty($sess["subuser"]) && ($user == $sess["screen_name"])) {
+            $auth = true;
+        } elseif (!empty($sess["http_auth"]) && ($user == $sess["http_auth"])) {
+            $auth = true;
+        }
+    } elseif (isset($_SERVER['PHP_AUTH_USER']) ) {
+        $user = explode("@", $_SERVER['PHP_AUTH_USER'])[0];
+        $auth = true;
+    }
+    return $auth;
 }

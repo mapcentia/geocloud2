@@ -383,17 +383,34 @@ class Wms extends Controller
         foreach ($layers as $layer) {
             $layer = sizeof(explode(":", $layer)) > 1 ? explode(":", $layer)[1] : $layer;
             $split = explode(".", $layer);
-            $userFilter = new UserFilter($this->subUser ?: $this->user, "ows", "select", "*", $split[0], $split[1]);
+            $userFilter = new UserFilter($this->isAuth() ? $this->subUser ?: $this->user : "*", "ows", "select", "*", $split[0], $split[1]);
             $geofence = new Geofence($userFilter);
             $auth = $geofence->authorize($rules);
             if ($auth["access"] == "deny") {
                 self::report("DENY");
-            }
-            elseif ($auth["access"] == "limit" && !empty($auth["filters"]["filter"])) {
+            } elseif ($auth["access"] == "limit" && !empty($auth["filters"]["filter"])) {
                 $filters[$layer][] = $auth["filters"]["filter"];
             }
         }
         return $filters;
+    }
+
+    private function isAuth(): bool
+    {
+        global $user;
+        $auth = false;
+        $sess = $_SESSION;
+        if (isset($_SESSION) && sizeof($_SESSION) > 0) {
+            if (!empty($sess["subuser"]) && ($user == $sess["screen_name"])) {
+                $auth = true;
+            } elseif (!empty($sess["http_auth"]) && ($user == $sess["http_auth"])) {
+                $auth = true;
+            }
+        } elseif (isset($_SERVER['PHP_AUTH_USER'])) {
+            $user = explode("@", $_SERVER['PHP_AUTH_USER'])[0];
+            $auth = true;
+        }
+        return $auth;
     }
 
     /**

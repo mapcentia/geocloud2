@@ -177,19 +177,20 @@ class Controller
         }
 
         $postgisObject = new Model();
+        $settings_viewer = new Setting();
+        $response = $settings_viewer->get();
+        $userGroup = $response["data"]->userGroups->$subUser ?? null;
+        if ($subUser) {
+            $apiKey = $response['data']->api_key_subuser->$subUser;
+        } else {
+            $apiKey = $response['data']->api_key;
+        }
+        $isKeyCorrect =($apiKey == $inputApiKey && $apiKey != false) || !empty($_SESSION["auth"]);
+        $response = [];
+        $response['isauth'] = $isKeyCorrect;
         $auth = $postgisObject->getGeometryColumns($layer, "authentication");
         if ($auth == "Read/write" || $auth == "Write") {
-            $settings_viewer = new Setting();
-            $response = $settings_viewer->get();
-            $userGroup = $response["data"]->userGroups->$subUser ?? null;
-            if ($subUser) {
-                $apiKey = $response['data']->api_key_subuser->$subUser;
-            } else {
-                $apiKey = $response['data']->api_key;
-            }
-
             $rows = $postgisObject->getColumns($schema, $unQualifiedName);
-
             foreach ($rows as $row) {
                 // Check if we got the right layer from the database
                 if (!$row["f_table_schema"] == $schema || !$row["f_table_name"] == $unQualifiedName) {
@@ -197,7 +198,6 @@ class Controller
                 }
                 if ($subUser) {
                     $privileges = (array)json_decode($row["privileges"]);
-                    $response = array();
                     $response['auth_level'] = $auth;
                     if (($apiKey == $inputApiKey && $apiKey != false) || !empty($_SESSION["auth"])) {
                         $response['privileges'] = $privileges[$userGroup] ?? $privileges[$subUser];
@@ -205,7 +205,6 @@ class Controller
                         $response[Sql::USEDRELSKEY] = $rels;
                         switch ($transaction) {
                             case false:
-//                              if (($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none") && $subUser != $schema) {
                                 if ((empty($privileges[$userGroup ?: $subUser]) || (!empty($privileges[$userGroup ?: $subUser]) && $privileges[$userGroup ?: $subUser] == "none")) && ($subUser != $schema && $userGroup != $schema)) {
                                     // Always let suusers read from layers open to all
                                     if ($auth == "Write") {
@@ -249,22 +248,20 @@ class Controller
                         return $response;
                     }
                 } else {
-                    $response = array();
                     $response['auth_level'] = $auth;
                     $response[Sql::USEDRELSKEY] = $rels;
                     $response['session'] = !empty($_SESSION["screen_name"]) ? $_SESSION["screen_name"] : null;
 
                     if ($auth == "Read/write" || ($transaction)) {
-                        if (($apiKey == $inputApiKey && $apiKey != false) || !empty($_SESSION["auth"])) {
+                        if (($apiKey == $inputApiKey && $apiKey) || !empty($_SESSION["auth"])) {
                             $response['success'] = true;
                             $response['code'] = 200;
-                            return $response;
                         } else {
                             $response['success'] = false;
                             $response['message'] = "Not the right key!";
                             $response['code'] = 403;
-                            return $response;
                         }
+                        return $response;
                     } else {
                         $response['success'] = true;
                         $response['code'] = 200;
@@ -276,6 +273,7 @@ class Controller
             $response3['success'] = true;
             $response3['session'] = !empty($_SESSION["screen_name"]) ? $_SESSION["screen_name"] : null;
             $response3['auth_level'] = $auth;
+            $response3['isauth'] = $isKeyCorrect;
             $response3[Sql::USEDRELSKEY] = $rels;
             return $response3;
         }
