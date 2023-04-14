@@ -577,7 +577,7 @@ function getCapabilities(\app\inc\Model $postgisObject)
 
     $settings = new \app\models\Setting();
     $extents = $settings->get()["data"]->extents;
-    $bbox = property_exists($extents, $postgisschema) ? $extents->$postgisschema : [-20037508.34, -20037508.34, 20037508.34, 20037508.34]; // Is in EPSG:3857
+    $bbox = is_object($extents) && property_exists($extents, $postgisschema) ? $extents->$postgisschema : [-20037508.34, -20037508.34, 20037508.34, 20037508.34]; // Is in EPSG:3857
     $cache = [];
     while ($row = $postgisObject->fetchRow($result)) {
         if ($row['type'] != "RASTER" && $row['type'] != null) {
@@ -1546,6 +1546,7 @@ function doParse(array $arr)
     global $version;
 
     ob_start();
+    $HTTP_FORM_VARS["TRANSACTION"] = true;
 
     // We start sql BEGIN block
     $postgisObject->connect();

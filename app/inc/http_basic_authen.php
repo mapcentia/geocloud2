@@ -73,7 +73,7 @@ if (sizeof($dbSplit) == 2 || !empty($_SESSION["subuser"])) { // is Sub-user
         while ($row = $postgisObject->fetchRow($res, "assoc")) {
             $privileges = json_decode($row["privileges"]);
             $prop = $userGroup ?: $subUser;
-            if (($privileges->$prop == false || $privileges->$prop == "none") && ($prop != $postgisschema)) {
+            if (($privileges->$prop == false || $privileges->$prop == "none" || ($privileges->$prop == "read" && !empty($HTTP_FORM_VARS["TRANSACTION"]))) && ($prop != $postgisschema)) {
                 makeExceptionReport(array("You don't have privileges to this layer. Please contact the database owner, which can grant you privileges."));
             }
         }
