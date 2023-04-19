@@ -1,19 +1,29 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2023 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\api\v2;
 
+use app\inc\Controller;
 use app\inc\Input;
 use app\inc\Route;
 use app\inc\Response;
+use app\libs\GeometryFactory;
+use app\libs\gmlConverter;
 use app\models\Database;
 use app\models\Layer;
+use Error;
+use Exception;
+use geoPHP;
 use GuzzleHttp\Client;
+use GuzzleHttp\Cookie\CookieJar;
+use GuzzleHttp\Exception\GuzzleException;
+use PDOException;
+use XML_Unserializer;
 
 include_once(__DIR__ . "../../../vendor/phayes/geophp/geoPHP.inc");
 include_once(__DIR__ . "../../../libs/phpgeometry_class.php");
@@ -26,20 +36,20 @@ include_once(__DIR__ . "../../../libs/PEAR/XML/Serializer.php");
  * Class Feature
  * @package app\api\v2
  */
-class Feature extends \app\inc\Controller
+class Feature extends Controller
 {
-    private $transactionHeader;
-    private $geometryfactory;
-    private $sourceSrid;
-    private $wfsUrl;
-    private $db;
-    private $schema;
-    private $table;
-    private $geom;
-    private $field;
-    private $key;
-    private $user;
-    private $client;
+    private string $transactionHeader;
+    private GeometryFactory $geometryfactory;
+    private ?string $sourceSrid;
+    private string $wfsUrl;
+    private string $db;
+    private string $schema;
+    private string $table;
+    private string $geom;
+    private mixed $field;
+    private ?string $key;
+    private ?string $user;
+    private Client $client;
 
     /**
      * Feature constructor.
@@ -54,7 +64,7 @@ class Feature extends \app\inc\Controller
         ]);
 
         // Set properties
-        $this->wfsUrl = "http://127.0.0.1/wfs/%s/%s/%s";
+        $this->wfsUrl = "http://localhost/wfs/%s/%s/%s";
         $this->sourceSrid = Route::getParam("srid");
         $this->db = Database::getDb();
         $this->schema = explode(".", Route::getParam("layer"))[0];
@@ -71,25 +81,11 @@ class Feature extends \app\inc\Controller
             die(Response::toJson($response));
         }
 
-        // Check privileges of user on layer
-        $rel = $this->schema . "." . $this->table;
-        try {
-            $response = $this->ApiKeyAuthLayer($rel, $this->sUser, true, Input::getApiKey(), [$rel]);
-        } catch (\PDOException $e) {
-            header("HTTP/1.1 401 Unauthorized");
-            die($e->getMessage());
-        }
-
-        if (!$response["success"]) {
-            header("HTTP/1.1 401 Unauthorized");
-            die(Response::toJson($response));
-        }
-
         $layer = new Layer();
         $this->field = $layer->getAll(Route::getParam("layer"), true, false, false, false, $this->db)["data"][0]["pkey"];
 
         // Init geometryfactory
-        $this->geometryfactory = new \app\libs\GeometryFactory();
+        $this->geometryfactory = new GeometryFactory();
 
         // Set transaction xml header
         $this->transactionHeader = "<wfs:Transaction xmlns:wfs=\"http://www.opengis.net/wfs\" service=\"WFS\" version=\"1.1.0\"
@@ -103,22 +99,20 @@ class Feature extends \app\inc\Controller
      */
     private function decodeCode(string $code): string
     {
-        $str = preg_replace_callback(
+        return preg_replace_callback(
             "@\\\(x)?([0-9a-f]{2,3})@",
             function ($m) {
                 return chr($m[1] ? hexdec($m[2]) : octdec($m[2]));
             },
             $code
         );
-        //$str = preg_replace('/\r|\n/', '\n', trim($str));
-        return $str;
     }
 
-    public function get_index()
+    public function get_index(): array
     {
         $response = [];
 
-        $unserializer = new \XML_Unserializer(array(
+        $unserializer = new XML_Unserializer(array(
             'parseAttributes' => false,
             'typeHints' => false
         ));
@@ -128,7 +122,7 @@ class Feature extends \app\inc\Controller
         // GET the transaction
         try {
             $res = $this->client->get($url . "?service=WFS&version=1.1.0&request=GetFeature&typeName={$this->table}&FEATUREID={$this->table}.{$this->key}");
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 500;
@@ -160,19 +154,19 @@ class Feature extends \app\inc\Controller
         }
 
         // Convert GML to WKT
-        $gmlConverter = new \app\libs\gmlConverter();
+        $gmlConverter = new gmlConverter();
         $wkt = $gmlConverter->gmlToWKT($xml)[0][0];
 
         // Convert WKT to GeoJSON
         if ($wkt) {
             try {
-                $json = \geoPHP::load($wkt, 'wkt')->out('json');
-            } catch (\Exception $e) {
+                $json = geoPHP::load($wkt, 'wkt')->out('json');
+            } catch (Exception $e) {
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
                 $response['code'] = "500";
                 return $response;
-            } catch (\Error $e) {
+            } catch (Error $e) {
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
                 $response['code'] = "500";
@@ -186,7 +180,7 @@ class Feature extends \app\inc\Controller
             }
         }
 
-        $jArr = [
+        return [
             "type" => "FeatureCollection",
             "features" => [[
                 "type" => "Feature",
@@ -194,12 +188,11 @@ class Feature extends \app\inc\Controller
                 "geometry" => json_decode($json)
             ]]
         ];
-
-        return $jArr;
     }
 
     /**
-     * @return array<mixed>
+     * @return array
+     * @throws GuzzleException
      */
     public function post_index(): array
     {
@@ -229,11 +222,11 @@ class Feature extends \app\inc\Controller
 
             try {
                 // Get GML from WKT geom and catch error if geom is missing
-                $wkt = \geoPHP::load(json_encode($feature), 'json')->out('wkt');
+                $wkt = geoPHP::load(json_encode($feature), 'json')->out('wkt');
                 $xml .= "<feature:{$this->geom}>\n";
                 $xml .= $this->geometryfactory->createGeometry($wkt, "EPSG:" . $this->sourceSrid)->toGML();
                 $xml .= "</feature:{$this->geom}>\n";
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Pass. Geom is not required
             }
 
@@ -255,7 +248,8 @@ class Feature extends \app\inc\Controller
     }
 
     /**
-     * @return array<mixed>
+     * @return array
+     * @throws GuzzleException
      */
     public function put_index(): array
     {
@@ -290,14 +284,14 @@ class Feature extends \app\inc\Controller
 
             // Get GML from WKT geom and catch error if geom is missing
             try {
-                $wkt = \geoPHP::load(json_encode($feature), 'json')->out('wkt');
+                $wkt = geoPHP::load(json_encode($feature), 'json')->out('wkt');
                 $xml .= "<wfs:Property>\n";
                 $xml .= "<wfs:Name>{$this->geom}</wfs:Name>\n";
                 $xml .= "<wfs:Value>\n";
                 $xml .= $this->geometryfactory->createGeometry($wkt, "EPSG:" . $this->sourceSrid)->toGML();
                 $xml .= "</wfs:Value>\n";
                 $xml .= "</wfs:Property>\n";
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Pass. Geom is not required
             }
 
@@ -328,6 +322,7 @@ class Feature extends \app\inc\Controller
 
     /**
      * @return array
+     * @throws GuzzleException
      */
     public function delete_index(): array
     {
@@ -349,23 +344,26 @@ class Feature extends \app\inc\Controller
     /**
      * @param $xml
      * @return array<mixed>
+     * @throws GuzzleException
      */
     private function commit(string $xml): array
     {
         //echo $xml;
         $response = [];
 
-        $unserializer = new \XML_Unserializer(array(
-            'parseAttributes' => TRUE,
-            'typeHints' => FALSE
+        $unserializer = new XML_Unserializer(array(
+            'parseAttributes' => true,
+            'typeHints' => false,
         ));
 
         $url = sprintf($this->wfsUrl, $this->user, $this->schema, $this->sourceSrid);
 
         // POST the transaction
         try {
-            $res = $this->client->post($url, ['body' => $xml]);
-        } catch (\Exception $e) {
+            $res = $this->client->post($url, ['body' => $xml, 'cookies' => CookieJar::fromArray([
+                'PHPSESSID' => Input::getCookies()["PHPSESSID"] ?? ""
+            ], 'localhost')]);
+        } catch (Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 500;
@@ -398,6 +396,5 @@ class Feature extends \app\inc\Controller
         $response['success'] = true;
         $response['message'] = $arr;
         return $response;
-
     }
 }
