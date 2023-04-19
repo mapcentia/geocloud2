@@ -790,7 +790,7 @@ class XML_Unserializer extends PEAR
             break;
         case XML_UNSERIALIZER_WHITESPACE_TRIM:
         default:
-            $data = !empty($this->_dataStack[$this->_depth]) ? trim($this->_dataStack[$this->_depth]) : null;
+            $data = isset($this->_dataStack[$this->_depth]) ? trim($this->_dataStack[$this->_depth]) : null;
             break;
         }
 
@@ -839,7 +839,7 @@ class XML_Unserializer extends PEAR
 
         // unserialize an array
         case 'array':
-            if (!empty($data) && trim($data) !== '') {
+            if (isset($data) && trim($data) !== '') {
                 if ($value['guessType'] === true) {
                     $data = $this->_guessAndSetType($data);
                 }
