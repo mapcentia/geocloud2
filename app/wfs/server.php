@@ -105,6 +105,7 @@ $limits = array();
 $unserializer_options = array(
     "parseAttributes" => true,
     "contentName" => "_content",
+//    "guessTypes" => true,
 );
 $unserializer = new XML_Unserializer($unserializer_options);
 
@@ -1576,10 +1577,6 @@ function doParse(array $arr)
                 $primeryKey = null;
                 $globalSrsName = $hey["srsName"] ?? null;
                 foreach ($hey as $typeName => $feature) {
-                    //print_r($feature);
-                    //echo "TEST\n";
-                    //ob_flush();
-                    //$feature = $feature[0];
                     $gmlId = null;
                     $typeName = dropAllNameSpaces($typeName);
                     if (is_array($feature)) { // Skip handles
