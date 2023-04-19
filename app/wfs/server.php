@@ -2160,12 +2160,10 @@ function doParse(array $arr)
                 $userFilter = new UserFilter($user, "wfs", $operation, "*", $split[0], $split[1]);
                 $geofence = new Geofence($userFilter);
                 // Try post proccesing
-                if ($operation != "delete") {
-                    try {
-                        $geofence->postProcessQuery($select, $rules);
-                    } catch (Exception $e) {
-                        makeExceptionReport($e->getMessage());
-                    }
+                try {
+                    $geofence->postProcessQuery($select, $rules);
+                } catch (Exception $e) {
+                    makeExceptionReport($e->getMessage());
                 }
                 $results[$operation][] = $postgisObject->execQuery($singleSql); // Returning PDOStatement object
             }
@@ -3020,7 +3018,7 @@ function isAuth(): bool
         } elseif (!empty($sess["http_auth"]) && ($user == $sess["http_auth"])) {
             $auth = true;
         }
-    } elseif (isset($_SERVER['PHP_AUTH_USER']) ) {
+    } elseif (isset($_SERVER['PHP_AUTH_USER'])) {
         $user = explode("@", $_SERVER['PHP_AUTH_USER'])[0];
         $auth = true;
     }
