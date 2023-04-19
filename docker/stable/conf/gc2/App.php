@@ -12,12 +12,6 @@ class App
      * @var array<mixed>
      */
     static $param = array(
-        // The hostname of the server
-        "host" => "",
-
-        // The hostname of the user module. Normally this is the same as the host above
-        "userHostName" => "",
-
         //Server path where GeoCLoud is installed.
         "path" => "/var/www/geocloud2/",
 
@@ -56,14 +50,14 @@ class App
         "baseLayers" => array(
             array("id" => "stamenToner", "name" => "Stamen Toner"),
             array("id" => "osm", "name" => "OSM"),
-            array("id" => "mapQuestOSM", "name" => "MapQuset OSM"),
-            array("id" => "googleStreets", "name" => "Google Street"),
-            array("id" => "googleHybrid", "name" => "Google Hybrid"),
-            array("id" => "googleSatellite", "name" => "Google Satellite"),
-            array("id" => "googleTerrain", "name" => "Google Terrain"),
-            //array("id" => "bingRoad", "name" => "Bing Road"),
-            //array("id" => "bingAerial", "name" => "Bing Aerial"),
-            //array("id" => "bingAerialWithLabels", "name" => "Bing Aerial With Labels"),
+//            array("id" => "mapQuestOSM", "name" => "MapQuset OSM"),
+//            array("id" => "googleStreets", "name" => "Google Street"),
+//            array("id" => "googleHybrid", "name" => "Google Hybrid"),
+//            array("id" => "googleSatellite", "name" => "Google Satellite"),
+//            array("id" => "googleTerrain", "name" => "Google Terrain"),
+//            array("id" => "bingRoad", "name" => "Bing Road"),
+//            array("id" => "bingAerial", "name" => "Bing Aerial"),
+//            array("id" => "bingAerialWithLabels", "name" => "Bing Aerial With Labels"),
         ),
 
         // Bing key
