@@ -37,20 +37,6 @@ class Controller
      */
     function __construct()
     {
-        // Set sub-user property from the "user" url parameter.
-        // This is just a helper for action controllers
-        // so less boilerplate is needed
-        // ====================================================
-        if ($db = Route::getParam("user")) {
-            $dbSplit = explode("@", $db);
-            if (sizeof($dbSplit) == 2) {
-                $this->sUser = $dbSplit[0];
-            } elseif (isset($_SESSION["subuser"])) {
-                $this->sUser = !empty($_SESSION["screen_name"]) ? $_SESSION["screen_name"] : null;
-            } else {
-                $this->sUser = null;
-            }
-        }
         $this->response = [];
     }
 
@@ -199,7 +185,7 @@ class Controller
                 if ($subUser) {
                     $privileges = (array)json_decode($row["privileges"]);
                     $response['auth_level'] = $auth;
-                    if (($apiKey == $inputApiKey && $apiKey != false) || !empty($_SESSION["auth"])) {
+                    if (($apiKey == $inputApiKey && $apiKey) || !empty($_SESSION["auth"])) {
                         $response['privileges'] = $privileges[$userGroup] ?? $privileges[$subUser];
                         $response['session'] = $_SESSION['subuser'] ? $_SESSION["screen_name"] . '@' . $_SESSION["parentdb"] : null;
                         $response[Sql::USEDRELSKEY] = $rels;

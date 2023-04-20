@@ -808,6 +808,38 @@ class DatabaseManagementCest
         $I->seeResponseIsXml();
         $I->seeResponseContains('<wfs:totalInserted>1</wfs:totalInserted>');
     }
+    public function shouldChangeTheAuthenticationLevelFromReadwriteToWrite(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
+        $I->sendPUT('/controllers/layer/records/public.parkeringsomraade.the_geom', json_encode([
+            'data' => [
+                "authentication" => "Write",
+                "_key_" => "public.parkeringsomraade.the_geom",
+            ],
+        ]));
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'message' => 'Row updated',
+        ]);
+    }
+    public function shouldNotUpdateDataFromSqlApiAsSuperUserOutsideSession(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/sql/' . $this->userId, json_encode(
+            [
+                'q' => 'UPDATE public.parkeringsomraade SET gid=1 WHERE gid=1',
+                'key' => 'dymmy'
+            ]
+        ));
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::FORBIDDEN);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => false,
+        ]);
+    }
     // *************************************
     // End of testing read/write access
     // *************************************

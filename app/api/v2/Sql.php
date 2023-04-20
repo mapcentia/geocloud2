@@ -92,10 +92,10 @@ class Sql extends Controller
         // /{user}
         $r = func_get_arg(0);
         $dbSplit = explode("@", $r["user"]);
-        if (sizeof($dbSplit) == 2) {
-            $this->subUser = $dbSplit[0];
-        } elseif (!empty($_SESSION["subuser"])) {
+        if (!empty($_SESSION["subuser"])) {
             $this->subUser = $_SESSION["screen_name"];
+        } else if (sizeof($dbSplit) == 2) {
+            $this->subUser = $dbSplit[0];
         } else {
             $this->subUser = null;
         }
@@ -265,10 +265,19 @@ class Sql extends Controller
         $operation = self::getClassName(get_class($select));
         $select->dispatch($walkerRelation);
         $usedRelations = $walkerRelation->getRelations();
+        $usedRelationsWithType = [];
 
         // Check auth on relations
+        foreach (array_merge($usedRelations["insert"], $usedRelations["updateAndDelete"]) as $rel) {
+            $usedRelationsWithType[$rel] = "t";
+        }
         foreach ($usedRelations["all"] as $rel) {
-            $response = $this->ApiKeyAuthLayer($rel, $this->subUser, false, Input::get('key'), $usedRelations["all"]);
+            if (!isset($usedRelationsWithType[$rel])) {
+                $usedRelationsWithType[$rel] = "s";
+            }
+        }
+        foreach ($usedRelationsWithType as $rel => $type) {
+            $response = $this->ApiKeyAuthLayer($rel, $this->subUser, $type == "t", Input::get('key'), $usedRelationsWithType);
             if (!$response["success"]) {
                 return serialize($response);
             }
