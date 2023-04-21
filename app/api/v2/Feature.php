@@ -12,6 +12,7 @@ use app\inc\Controller;
 use app\inc\Input;
 use app\inc\Route;
 use app\inc\Response;
+use app\inc\Session;
 use app\libs\GeometryFactory;
 use app\libs\gmlConverter;
 use app\models\Database;
@@ -22,7 +23,6 @@ use geoPHP;
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\GuzzleException;
-use PDOException;
 use XML_Unserializer;
 
 include_once(__DIR__ . "../../../vendor/phayes/geophp/geoPHP.inc");
@@ -80,6 +80,7 @@ class Feature extends Controller
             header("HTTP/1.1 400 Bad Request");
             die(Response::toJson($response));
         }
+
 
         $layer = new Layer();
         $this->field = $layer->getAll(Route::getParam("layer"), true, false, false, false, $this->db)["data"][0]["pkey"];
@@ -348,7 +349,26 @@ class Feature extends Controller
      */
     private function commit(string $xml): array
     {
-        //echo $xml;
+        $split = explode("@", $this->user);
+        if (sizeof($split) > 1) {
+            $user = $split[0];
+            $db = $split[1];
+        } else {
+            $user = $db = $this->user;
+        }
+        // Check privileges of user on layer
+        $rel = $this->schema . "." . $this->table;
+        try {
+            $response = $this->ApiKeyAuthLayer($rel,  sizeof($split) > 1 ? $user : null, true, Input::getApiKey(), [$rel]);
+        } catch (\PDOException $e) {
+            header("HTTP/1.1 401 Unauthorized");
+            die($e->getMessage());
+        }
+
+        if (!$response["success"]) {
+            header("HTTP/1.1 401 Unauthorized");
+            die(Response::toJson($response));
+        }
         $response = [];
 
         $unserializer = new XML_Unserializer(array(
@@ -358,10 +378,21 @@ class Feature extends Controller
 
         $url = sprintf($this->wfsUrl, $this->user, $this->schema, $this->sourceSrid);
 
+        if (empty(Input::getCookies()["PHPSESSID"])) {
+            Session::start();
+            Session::set("auth", true);
+            Session::set("screen_name", $user);
+            Session::set("parentdb", $db);
+            Session::set("subuser", sizeof($split) > 1);
+            Session::write();
+            $id = Session::getId();
+        } else {
+            $id = Input::getCookies()["PHPSESSID"];
+        }
         // POST the transaction
         try {
             $res = $this->client->post($url, ['body' => $xml, 'cookies' => CookieJar::fromArray([
-                'PHPSESSID' => Input::getCookies()["PHPSESSID"] ?? ""
+                "PHPSESSID" => $id,
             ], 'localhost')]);
         } catch (Exception $e) {
             $response['success'] = false;
