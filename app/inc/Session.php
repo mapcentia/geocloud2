@@ -85,6 +85,22 @@ class Session
     }
 
     /**
+     * @return string
+     */
+    public static function getId(): string
+    {
+        return session_id();
+    }
+
+    /**
+     * @return void
+     */
+    public static function write(): void
+    {
+        session_write_close();
+    }
+
+    /**
      * @return string|null
      */
     public static function getUser(): ?string
