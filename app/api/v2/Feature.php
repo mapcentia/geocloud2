@@ -23,6 +23,8 @@ use geoPHP;
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\GuzzleException;
+use PDOException;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use XML_Unserializer;
 
 include_once(__DIR__ . "../../../vendor/phayes/geophp/geoPHP.inc");
@@ -53,6 +55,7 @@ class Feature extends Controller
 
     /**
      * Feature constructor.
+     * @throws PhpfastcacheInvalidArgumentException
      */
     function __construct()
     {
@@ -80,7 +83,6 @@ class Feature extends Controller
             header("HTTP/1.1 400 Bad Request");
             die(Response::toJson($response));
         }
-
 
         $layer = new Layer();
         $this->field = $layer->getAll(Route::getParam("layer"), true, false, false, false, $this->db)["data"][0]["pkey"];
@@ -123,7 +125,7 @@ class Feature extends Controller
         // GET the transaction
         try {
             $res = $this->client->get($url . "?service=WFS&version=1.1.0&request=GetFeature&typeName={$this->table}&FEATUREID={$this->table}.{$this->key}");
-        } catch (Exception $e) {
+        } catch (GuzzleException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 500;
@@ -194,6 +196,7 @@ class Feature extends Controller
     /**
      * @return array
      * @throws GuzzleException
+     * @throws PhpfastcacheInvalidArgumentException
      */
     public function post_index(): array
     {
@@ -327,7 +330,6 @@ class Feature extends Controller
      */
     public function delete_index(): array
     {
-
         // Start build the WFS transaction
         $xml = $this->transactionHeader;
 
@@ -343,9 +345,10 @@ class Feature extends Controller
     }
 
     /**
-     * @param $xml
-     * @return array<mixed>
+     * @param string $xml
+     * @return array
      * @throws GuzzleException
+     * @throws PhpfastcacheInvalidArgumentException
      */
     private function commit(string $xml): array
     {
@@ -360,7 +363,7 @@ class Feature extends Controller
         $rel = $this->schema . "." . $this->table;
         try {
             $response = $this->ApiKeyAuthLayer($rel,  sizeof($split) > 1 ? $user : null, true, Input::getApiKey(), [$rel]);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             header("HTTP/1.1 401 Unauthorized");
             die($e->getMessage());
         }
