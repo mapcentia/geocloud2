@@ -515,6 +515,23 @@ class DatabaseManagementCest
         ]);
     }
 
+    public function shouldNotUpdateDataFromSqlApiAsSubUserWithKey(\ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/sql/' . $this->subUserId . "@" . $this->userId, json_encode(
+            [
+                'q' => 'UPDATE public.parkeringsomraade SET gid=1 WHERE gid=1',
+                'key' => $this->subUserApiKey,
+            ]
+        ));
+        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::FORBIDDEN);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => false,
+            'isauth' => true
+        ]);
+    }
+
     // Sub user SQL API request to protected data source with wrong API key
     public function shouldNotGetDataFromSqlApiAsSubUserWithWrongApiKey(\ApiTester $I)
     {
@@ -529,6 +546,7 @@ class DatabaseManagementCest
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => false,
+            'isauth' => false,
         ]);
     }
 
@@ -546,6 +564,9 @@ class DatabaseManagementCest
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
+            'auth_check' => [
+                'isauth' => true,
+            ]
         ]);
     }
 
@@ -808,6 +829,7 @@ class DatabaseManagementCest
         $I->seeResponseIsXml();
         $I->seeResponseContains('<wfs:totalInserted>1</wfs:totalInserted>');
     }
+
     public function shouldChangeTheAuthenticationLevelFromReadwriteToWrite(\ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
@@ -825,6 +847,7 @@ class DatabaseManagementCest
             'message' => 'Row updated',
         ]);
     }
+
     public function shouldNotUpdateDataFromSqlApiAsSuperUserOutsideSession(\ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
