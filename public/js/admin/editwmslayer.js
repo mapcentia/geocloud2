@@ -1,6 +1,6 @@
 /*
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2023 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *  
  */
@@ -34,7 +34,7 @@ wmsLayer.init = function (record) {
                 if (forStore.hasOwnProperty(i)) {
                     wmsLayer.fieldsForStore.push(forStore[i].name);
                     wmsLayer.fieldsForStoreBrackets.push("[" + forStore[i].name + "]");
-                    if (forStore[i].type === "number" || forStore[i].type === "int") {
+                    if (forStore[i].type === "number" || forStore[i].type === "int" || forStore[i].type === "double") {
                         wmsLayer.numFieldsForStore.push(forStore[i].name);
                     }
                 }
