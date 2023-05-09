@@ -2551,7 +2551,7 @@ function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null,
             case "gml:MultiPoint":
                 $str .= "MULTIPOINT(";
                 $arr = [];
-                if (isset($value["gml:pointMember"][0]["gml:Point"])) {
+                if (isset(reset($value["gml:pointMember"])["gml:Point"])) {
                     foreach ($value["gml:pointMember"] as $member) {
                         $arr[] = toWkt($member, true, $axisOrder)[0];
                     }
@@ -2559,7 +2559,7 @@ function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null,
                     $arr[] = toWkt($value["gml:pointMember"], true, $axisOrder)[0];
                 }
                 // MapInfo v15 uses pointMembers instead of pointMember
-                if (isset($value["gml:pointMembers"][0]["gml:Point"])) {
+                if (isset($value["gml:pointMembers"]) && is_array($value["gml:pointMembers"]) && isset(reset($value["gml:pointMembers"])["gml:Point"])) {
                     foreach ($value["gml:pointMembers"] as $member) {
                         $arr[] = toWkt($member, true, $axisOrder)[0];
                     }
