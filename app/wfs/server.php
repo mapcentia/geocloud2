@@ -2572,7 +2572,7 @@ function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null,
             case "gml:MultiLineString":
                 $str .= "MULTILINESTRING(";
                 $arr = [];
-                if (isset($value["gml:lineStringMember"][0]["gml:LineString"])) {
+                if (isset(reset($value["gml:lineStringMember"])["gml:LineString"])) {
                     foreach ($value["gml:lineStringMember"] as $member) {
                         $arr[] = toWkt($member, true, $axisOrder)[0];
                     }
@@ -2584,7 +2584,7 @@ function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null,
             case "gml:MultiCurve":
                 $str .= "MULTILINESTRING(";
                 $arr = [];
-                if (isset($value["gml:curveMember"][0]["gml:LineString"])) {
+                if (isset(reset($value["gml:curveMember"])["gml:LineString"])) {
                     foreach ($value["gml:curveMember"] as $member) {
                         $arr[] = toWkt($member, true, $axisOrder)[0];
                     }
@@ -2596,7 +2596,7 @@ function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null,
             case "gml:MultiPolygon":
                 $str .= "MULTIPOLYGON(";
                 $arr = [];
-                if (isset($value["gml:polygonMember"][0]["gml:Polygon"])) {
+                if (isset(reset($value["gml:polygonMember"])["gml:Polygon"])) {
                     foreach ($value["gml:polygonMember"] as $member) {
                         $arr[] = toWkt($member, true, $axisOrder)[0];
                     }
@@ -2608,7 +2608,7 @@ function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null,
             case "gml:MultiSurface":
                 $str .= "MULTIPOLYGON(";
                 $arr = [];
-                if (isset($value["gml:surfaceMember"][0]["gml:Polygon"])) {
+                if (isset(reset($value["gml:surfaceMember"])["gml:Polygon"])) {
                     foreach ($value["gml:surfaceMember"] as $member) {
                         $arr[] = toWkt($member, true, $axisOrder)[0];
                     }
