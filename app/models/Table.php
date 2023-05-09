@@ -897,7 +897,9 @@ class Table extends Model
             $response['code'] = "406";
             return $response;
         }
-        $this->execQuery($sql, "PDO", "transaction");
+        if (!empty($sql)) {
+            $this->execQuery($sql, "PDO", "transaction");
+        }
         if ((!$this->PDOerror) || (!$sql)) {
             $response['success'] = true;
         } else {
