@@ -113,11 +113,6 @@ class GeometryFactory
                 }
             }
         }
-        if ($this->getGeomType() == "MULTIPOINT")// if multipoint when split the string again
-        {
-            preg_match_all("/[^a-z|,]*[0-9]/", $wktArray[0], $__array); // regex is used exstract coordinates
-            $wktArray = $__array[0];
-        }
         return ($wktArray);
     }
 
