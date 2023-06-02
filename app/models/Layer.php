@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2023 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -12,6 +12,7 @@ use app\conf\App;
 use app\conf\Connection;
 use app\inc\Cache;
 use app\inc\Globals;
+use app\inc\Session;
 use Error;
 use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
@@ -93,12 +94,12 @@ class Layer extends Table
     {
         // If user is signed in with another user than the requested,
         // when consider the user as not signed in.
-        if ($db != \app\inc\Session::getUser()) {
+        if ($db != Session::getUser()) {
             //$auth = null;
         }
 
         $cacheType = "meta";
-        $cacheId = md5($this->postgisdb . "_" . \app\inc\Session::getUser() . "_" . $cacheType . "_" . md5($query . "_" . "(int)$auth" . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es));
+        $cacheId = md5($this->postgisdb . "_" . Session::getUser() . "_" . $cacheType . "_" . md5($query . "_" . "(int)$auth" . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es));
 
         $CachedString = Cache::getItem($cacheId);
 
@@ -241,7 +242,14 @@ class Layer extends Table
                         $obj = json_decode($value, true);
                         if (is_array($obj)) {
                             foreach ($obj as $k => $val) {
-                                $props = !empty($val["properties"]) ? json_decode($val["properties"]) : null;
+                                $props = null;
+                                if (!empty($val["properties"])) {
+                                    $props = json_decode($val["properties"]);
+                                }
+                                // We check if JSON is written with single quotes
+                                if ($props == null) {
+                                    $props = json_decode(str_replace("'", "\"", $val["properties"]));
+                                }
                                 if ($val["properties"] == "*") {
                                     $restrictions[$k] = "*";
                                 } elseif (is_object($props) || is_array($props)) {
@@ -699,10 +707,10 @@ class Layer extends Table
     public function getPrivileges(string $_key_): array
     {
         $privileges = json_decode($this->getValueFromKey($_key_, "privileges") ?: "{}");
-        foreach (\app\inc\Session::getByKey('subusers') as $subuser) {
+        foreach (Session::getByKey('subusers') as $subuser) {
             $privileges->$subuser = $privileges->$subuser ?? "none";
             if ($subuser != Connection::$param['postgisschema']) {
-                $response['data'][] = array("subuser" => $subuser, "privileges" => $privileges->$subuser, "group" => \app\inc\Session::getByKey("usergroups")[$subuser]);
+                $response['data'][] = array("subuser" => $subuser, "privileges" => $privileges->$subuser, "group" => Session::getByKey("usergroups")[$subuser]);
             }
         }
         if (!isset($response['data'])) {
