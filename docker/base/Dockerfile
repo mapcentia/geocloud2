@@ -1,29 +1,30 @@
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 MAINTAINER Martin Høgh<mh@mapcentia.com>
 
 RUN export DEBIAN_FRONTEND=noninteractive
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN sed -i "s#deb http://deb.debian.org/debian bullseye main#deb http://deb.debian.org/debian bullseye main contrib non-free#g" /etc/apt/sources.list &&\
-    sed -i "s#deb http://security.debian.org/debian-security bullseye/updates main#deb http://security.debian.org/debian-security bullseye/updates main contrib non-free#g" /etc/apt/sources.list &&\
-    sed -i "s#deb http://deb.debian.org/debian bullseye-updates main#deb http://deb.debian.org/debian bullseye-updates main contrib non-free#g" /etc/apt/sources.list
+#RUN sed -i "s#deb http://deb.debian.org/debian bullseye main#deb http://deb.debian.org/debian bullseye main contrib non-free#g" /etc/apt/sources.list &&\
+#    sed -i "s#deb http://security.debian.org/debian-security bullseye/updates main#deb http://security.debian.org/debian-security bullseye/updates main contrib non-free#g" /etc/apt/sources.list &&\
+#    sed -i "s#deb http://deb.debian.org/debian bullseye-updates main#deb http://deb.debian.org/debian bullseye-updates main contrib non-free#g" /etc/apt/sources.list
 
 RUN apt-get -y update
 RUN apt-get -y install wget gnupg2
 
 # Add PHP8 repo
-RUN echo "deb https://packages.sury.org/php/ bullseye main" |  tee /etc/apt/sources.list.d/sury-php.list
+RUN echo "deb https://packages.sury.org/php/ bookworm main" |  tee /etc/apt/sources.list.d/sury-php.list
 RUN wget -qO - https://packages.sury.org/php/apt.gpg | apt-key add -
 RUN apt-get -y update
 
 # Install packages
-RUN apt-get -y install cron vim wget g++ build-essential git unzip rng-tools apache2-utils postgresql-client supervisor netcat \
+RUN apt-get -y install cron vim wget g++ build-essential git unzip rng-tools apache2-utils postgresql-client supervisor \
     apache2  apache2-dev php8.2-fpm php8.2-pgsql php8.2-redis php8.2-memcached php8.2-curl php8.2-sqlite3 php8.2-mbstring php8.2-gd php8.2-cli php8.2-mbstring php8.2-dev php8.2-zip \
     cmake libgdal-dev librsvg2-dev libpng++-dev libjpeg-dev libfreetype6-dev libproj-dev libfribidi-dev libharfbuzz-dev libcairo2-dev \
-    libgeos++-dev libpython-all-dev curl libapache2-mod-fcgid libfcgi-dev xvfb osm2pgsql postgis  sudo \
+    libgeos++-dev curl libapache2-mod-fcgid libfcgi-dev xvfb osm2pgsql postgis sudo \
     apt-transport-https ca-certificates software-properties-common \
-    libprotobuf-c-dev libprotobuf-dev libprotobuf-c1 libprotobuf23 protobuf-compiler protobuf-c-compiler libtool \
-    python3-dev bison python3-setuptools
+    libprotobuf-c-dev libprotobuf-dev libprotobuf-c1 libprotobuf32 protobuf-compiler protobuf-c-compiler libtool \
+    python3-dev bison python3-setuptools python3.11-minimal
+
 # Compile SWIG > 4.0.0 to get PHP8 support
 RUN git clone https://github.com/swig/swig.git &&\
     cd swig &&\
