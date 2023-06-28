@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2023 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -210,7 +210,7 @@ Log::write($logPath, $HTTP_RAW_POST_DATA);
 //HTTP_FORM_VARS is set in script if POST is used
 $HTTP_FORM_VARS = array_change_key_case($HTTP_FORM_VARS, CASE_UPPER); // Make keys case
 $HTTP_FORM_VARS["TYPENAME"] = !empty($HTTP_FORM_VARS["TYPENAME"]) ? dropAllNameSpaces($HTTP_FORM_VARS["TYPENAME"]) : null;
-$tables = explode(",", $HTTP_FORM_VARS["TYPENAME"]);
+$tables = !empty($HTTP_FORM_VARS["TYPENAME"]) ? explode(",", $HTTP_FORM_VARS["TYPENAME"]) : null;
 $properties = !empty($HTTP_FORM_VARS["PROPERTYNAME"]) ? explode(",", dropAllNameSpaces($HTTP_FORM_VARS["PROPERTYNAME"])) : null;
 $featureids = !empty($HTTP_FORM_VARS["FEATUREID"]) ? explode(",", $HTTP_FORM_VARS["FEATUREID"]) : null;
 $bbox = !empty($HTTP_FORM_VARS["BBOX"]) ? explode(",", $HTTP_FORM_VARS["BBOX"]) : null;
@@ -242,7 +242,7 @@ if (strcasecmp($outputFormat, "XMLSCHEMA") != 0 && strcasecmp($outputFormat, "GM
 // Start HTTP basic authentication
 if (!$trusted) {
     $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"], "authentication");
-    if ($auth == "Read/write") {
+    if ($auth == "Read/write" || !empty(Input::getAuthUser())) {
         include(__DIR__ . "/../inc/http_basic_authen.php");
     }
 }
@@ -1707,7 +1707,7 @@ function doParse(array $arr)
                         // Start HTTP basic authentication
                         if (!$trusted) {
                             $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $typeName, "authentication");
-                            if ($auth == "Write" or $auth == "Read/write") {
+                            if ($auth == "Write" || $auth == "Read/write" || !empty(Input::getAuthUser())) {
                                 $HTTP_FORM_VARS["TYPENAME"] = $typeName;
                                 include(__DIR__ . "/../inc/http_basic_authen.php");
                             }
@@ -1800,7 +1800,7 @@ function doParse(array $arr)
                 // Start HTTP basic authentication
                 if (!$trusted) {
                     $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
-                    if ($auth == "Write" or $auth == "Read/write") {
+                    if ($auth == "Write" || $auth == "Read/write" || !empty(Input::getAuthUser())) {
                         $HTTP_FORM_VARS["TYPENAME"] = $hey['typeName'];
                         include(__DIR__ . "/../inc/http_basic_authen.php");
                     }
@@ -1851,7 +1851,7 @@ function doParse(array $arr)
                 // Start HTTP basic authentication
                 if (!$trusted) {
                     $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
-                    if ($auth == "Write" or $auth == "Read/write") {
+                    if ($auth == "Write" || $auth == "Read/write" || !empty(Input::getAuthUser())) {
                         $HTTP_FORM_VARS["TYPENAME"] = $hey['typeName'];
                         include(__DIR__ . "./../inc/http_basic_authen.php");
                     }

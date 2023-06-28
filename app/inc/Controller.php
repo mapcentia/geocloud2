@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2023 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -133,7 +133,7 @@ class Controller
             $auth = $postgisObject->getGeometryColumns($layer, "authentication");
             $layerSplit = explode(".", $layer);
             $HTTP_FORM_VARS["TYPENAME"] = $layerSplit[1];
-            if ($auth == "Read/write") {
+            if ($auth == "Read/write" || !empty(Input::getAuthUser())) {
                 include(__DIR__ . '/http_basic_authen.php');
             }
             $_SESSION[$key] = true;

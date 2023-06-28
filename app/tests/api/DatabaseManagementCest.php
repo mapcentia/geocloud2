@@ -660,7 +660,7 @@ class DatabaseManagementCest
                 </Insert>
             </Transaction>';
         $username = $this->subUserId . "@" . $this->userId;
-        $password = '1234';
+        $password = $this->password;
         $I->amHttpAuthenticated($username, $password);
         $I->haveHttpHeader('Content-Type', 'application/xml');
         $I->sendPost('/wfs/' . $username . '/public', $xml);
@@ -785,7 +785,7 @@ class DatabaseManagementCest
     {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded   ');
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
-        $I->sendPUT('/controllers/setting/pw', "pw=1234");
+        $I->sendPUT('/controllers/setting/pw', "pw=$this->password");
         $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
@@ -821,7 +821,7 @@ class DatabaseManagementCest
                 </Insert>
             </Transaction>';
         $username = $this->subUserId . "@" . $this->userId;
-        $password = '1234';
+        $password = $this->password;
         $I->amHttpAuthenticated($username, $password);
         $I->haveHttpHeader('Content-Type', 'application/xml');
         $I->sendPost('/wfs/' . $username . '/public', $xml);
