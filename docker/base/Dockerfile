@@ -33,20 +33,6 @@ RUN git clone https://github.com/swig/swig.git &&\
     cmake .. &&\
     make && make install
 
-# Install Java 8 for MSACCESSS support in GDAL
-RUN wget -O - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | apt-key add - &&\
-    add-apt-repository -y https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/ &&\
-    apt-get -y update &&\
-    apt-get -y install adoptopenjdk-8-hotspot adoptopenjdk-8-hotspot-jre
-
-# Get libs for MS Access support in GDAL
-RUN cd ~ &&\
-    wget https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/mdb-sqlite/mdb-sqlite-1.0.2.tar.bz2 &&\
-    tar -vxjf mdb-sqlite-1.0.2.tar.bz2 &&\
-    cp mdb-sqlite-1.0.2/lib/jackcess-1.1.14.jar /usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/jre/lib/ext/ &&\
-    cp mdb-sqlite-1.0.2/lib/commons-logging-1.1.1.jar /usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/jre/lib/ext/ &&\
-    cp mdb-sqlite-1.0.2/lib/commons-lang-2.4.jar /usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/jre/lib/ext/
-
 # Make php8.2-fpm run in the foreground
 RUN sed 's/;daemonize = yes/daemonize = no/' -i /etc/php/8.2/fpm/php-fpm.conf
 
@@ -55,14 +41,14 @@ RUN sed -i '/ServerTokens OS/c\ServerTokens Prod' /etc/apache2/conf-enabled/secu
 RUN sed -i '/ServerSignature On/c\ServerSignature Off' /etc/apache2/conf-enabled/security.conf
 
 # Install Node.js and Grunt
-RUN curl -sL https://deb.nodesource.com/setup_14.x -o nodesource_setup.sh &&\
-    bash nodesource_setup.sh &&\
-    apt-get install -y nodejs
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
+SHELL [ "/bin/bash", "-l", "-c" ]
+ENV NVM_DIR "$HOME/.nvm" && \
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && \
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
-
+RUN nvm install 14
 RUN npm install -g grunt-cli
-
-ENV LD_LIBRARY_PATH /usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/jre/lib/amd64/server
 
 # Enable Apache2 modules
 RUN a2enmod rewrite headers expires include actions alias fcgid proxy proxy_http proxy_ajp proxy_balancer proxy_connect proxy_html xml2enc proxy_wstunnel proxy_fcgi http2

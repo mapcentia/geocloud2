@@ -64,10 +64,6 @@ RUN chmod +x /watch_mapcache_changes.sh
 # Add the reload.js
 COPY reload.js /reload.js
 
-RUN curl -sL https://deb.nodesource.com/setup_14.x -o nodesource_setup.sh &&\
-    bash nodesource_setup.sh &&\
-    apt-get install -y nodejs
-
 RUN mkdir /mapcache
 RUN cp /root/mapcache/mapcache.xml /mapcache/
 

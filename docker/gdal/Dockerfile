@@ -11,11 +11,7 @@ RUN wget http://download.osgeo.org/gdal/3.4.3/gdal343.zip && \
     ./configure \
     --with-python=yes \
     --with-libkml=yes \
-    --with-ecw=/usr/local \
-    --with-java=/usr/lib/jvm/adoptopenjdk-8-hotspot-amd64 \
-    --with-jvm=/usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/lib/amd64 \
-    --with-mdb=yes \
-    --with-jvm-lib-add-rpath=yes
+    --with-ecw=/usr/local
 
 RUN cd gdal-3.4.3 &&\
     make

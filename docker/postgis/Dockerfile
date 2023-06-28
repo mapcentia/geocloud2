@@ -1,11 +1,17 @@
 FROM debian:bullseye-slim
 MAINTAINER Martin Høgh<mh@mapcentia.com>
 
-RUN  export DEBIAN_FRONTEND=noninteractive
-ENV  DEBIAN_FRONTEND noninteractive
+RUN export DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get -y update
-RUN apt-get -y install wget gnupg2
+RUN apt-get -y install wget gnupg2 curl
+
+# Install msodbcsql18
+RUN sh -c "curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -" && \
+  curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
+  apt-get update && \
+    ACCEPT_EULA=Y apt-get install -y msodbcsql18
 
 # Add PHP8 repo
 RUN echo "deb https://packages.sury.org/php/ bullseye main" |  tee /etc/apt/sources.list.d/sury-php.list
@@ -17,11 +23,6 @@ RUN apt-get -y install vim git php8.2-pgsql php8.2-cli curl \
     postgis postgresql-13-postgis-3 postgresql-13-pgrouting postgresql-13-ogr-fdw pgagent  postgresql-server-dev-13 libsybdb5 freetds-dev freetds-common gnupg gcc make \
     pgbouncer locales-all osm2pgsql supervisor \
     osm2pgsql unixodbc
-
-# Install msodbcsql17
-RUN wget https://packages.microsoft.com/debian/10/prod/pool/main/m/msodbcsql17/msodbcsql17_17.4.2.1-1_amd64.deb && \
-    export ACCEPT_EULA=Y && \
-    dpkg -i msodbcsql17_17.4.2.1-1_amd64.deb
 
 # Set MinProtocol to TLSv1.0 because some SQL Server doesn't support 1.2
 RUN sed -i "s#MinProtocol = TLSv1.2#MinProtocol = TLSv1.0#g" /etc/ssl/openssl.cnf

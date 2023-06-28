@@ -94,6 +94,11 @@ services:
     ports:
       - "5432:5432"
     environment:
+      - POSTGIS_HOST=postgis
+      - POSTGIS_DB=postgres
+      - POSTGIS_USER=gc2
+      - POSTGIS_PORT=5432
+      - POSTGIS_PW=1234
       - GC2_USER=gc2
       - GC2_PASSWORD=1234
 
