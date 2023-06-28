@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2023 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -86,9 +86,9 @@ if (empty($_SESSION['auth']) || $_SESSION['parentdb'] != $db) {
         $settings = $settingsModel->get();
     }
     // mod_php
-    if (isset($_SERVER['PHP_AUTH_USER'])) {
-        $username = $_SERVER['PHP_AUTH_USER'];
-        $password = $_SERVER['PHP_AUTH_PW'];
+    if (!empty(Input::getAuthUser())) {
+        $username = Input::getAuthUser();
+        $password = Input::getAuthPw();
 
         // most other servers
     } elseif (isset($_SERVER['HTTP_AUTHENTICATION'])) {

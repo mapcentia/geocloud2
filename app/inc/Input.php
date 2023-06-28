@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2023 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -83,9 +83,9 @@ class Input
     }
 
     /**
-     * @return mixed|null
+     * @return string|null
      */
-    public static function getJwtToken()
+    public static function getJwtToken(): string|null
     {
         if (isset($_SERVER["HTTP_AUTHORIZATION"])) {
             list($type, $data) = explode(" ", $_SERVER["HTTP_AUTHORIZATION"], 2);
@@ -116,17 +116,33 @@ class Input
     }
 
     /**
+     * @return string|null
+     */
+    public static function getAuthUser(): string|null
+    {
+        return $_SERVER['PHP_AUTH_USER'];
+    }
+
+    /**
+     * @return string|null
+     */
+    public static function getAuthPw(): string|null
+    {
+        return $_SERVER['PHP_AUTH_PW'];
+    }
+
+    /**
      * @param string|null $key
      * @param bool $raw
-     * @return array|mixed|string
+     * @return mixed
      */
-    public static function get(string $key = null, bool $raw = false)
+    public static function get(string $key = null, bool $raw = false): mixed
     {
 
         if (isset(self::$params)) {
 
             if (isset($key)) {
-                return isset(self::$params[$key]) ? self::$params[$key] : null;
+                return self::$params[$key] ?? null;
             } else {
                 return self::$params;
             }
@@ -161,7 +177,7 @@ class Input
      * @param bool $raw
      * @return array<mixed>
      */
-    static function parseQueryString(string $str, bool $raw = false): array
+    private static function parseQueryString(string $str, bool $raw = false): array
     {
         $op = [];
         $str = str_replace("+", "__gc2_plus__", $str);
