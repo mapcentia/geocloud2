@@ -10,6 +10,7 @@ use app\inc\Input;
 use app\models\Setting;
 
 $db = Input::getPath()->part(2);
+$schema = Input::getPath()->part(3);
 $dbSplit = explode("@", $db);
 
 if (!function_exists("makeExceptionReport")) {
@@ -59,11 +60,12 @@ if (sizeof($dbSplit) == 2 || !empty($_SESSION["subuser"])) { // is Sub-user
     $settings = $settingsModel->get();
     $userGroup = !empty($settings["data"]->userGroups->$subUser) ? $settings["data"]->userGroups->$subUser : null;
 
-    if ($dbSplit[0] != $postgisschema) {
+    if ($dbSplit[0] != $schema) {
         $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ LIKE :schema";
         $res = $postgisObject->prepare($sql);
         try {
-            $res->execute(array("schema" => $postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"] . ".%"));
+            //die($schema);
+            $res->execute(array("schema" => $schema . "." . $HTTP_FORM_VARS["TYPENAME"] . ".%"));
         } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -73,7 +75,7 @@ if (sizeof($dbSplit) == 2 || !empty($_SESSION["subuser"])) { // is Sub-user
         while ($row = $postgisObject->fetchRow($res, "assoc")) {
             $privileges = json_decode($row["privileges"]);
             $prop = $userGroup ?: $subUser;
-            if (($privileges->$prop == false || $privileges->$prop == "none" || ($privileges->$prop == "read" && !empty($HTTP_FORM_VARS["TRANSACTION"]))) && ($prop != $postgisschema)) {
+            if (($privileges->$prop == false || $privileges->$prop == "none" || ($privileges->$prop == "read" && !empty($HTTP_FORM_VARS["TRANSACTION"]))) && ($prop != $schema)) {
                 makeExceptionReport(array("You don't have privileges to this layer. Please contact the database owner, which can grant you privileges."));
             }
         }
