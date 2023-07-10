@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 MAINTAINER Martin Høgh<mh@mapcentia.com>
 
 RUN export DEBIAN_FRONTEND=noninteractive
@@ -14,13 +14,13 @@ RUN sh -c "curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add 
     ACCEPT_EULA=Y apt-get install -y msodbcsql18
 
 # Add PHP8 repo
-RUN echo "deb https://packages.sury.org/php/ bullseye main" |  tee /etc/apt/sources.list.d/sury-php.list
+RUN echo "deb https://packages.sury.org/php/ bookworm main" |  tee /etc/apt/sources.list.d/sury-php.list
 RUN wget -qO - https://packages.sury.org/php/apt.gpg | apt-key add -
 RUN apt-get -y update
 
 # Install packages
 RUN apt-get -y install vim git php8.2-pgsql php8.2-cli curl \
-    postgis postgresql-13-postgis-3 postgresql-13-pgrouting postgresql-13-ogr-fdw pgagent  postgresql-server-dev-13 libsybdb5 freetds-dev freetds-common gnupg gcc make \
+    postgis postgresql-15-postgis-3 postgresql-15-pgrouting postgresql-15-ogr-fdw pgagent  postgresql-server-dev-15 libsybdb5 freetds-dev freetds-common gnupg gcc make \
     pgbouncer locales-all osm2pgsql supervisor \
     osm2pgsql unixodbc
 
@@ -42,7 +42,7 @@ RUN mkdir /var/www &&\
 	git clone https://github.com/mapcentia/geocloud2.git
 
 # Add config files from Docker repo
-COPY conf/postgresql/pg_hba.conf /etc/postgresql/13/main/
+COPY conf/postgresql/pg_hba.conf /etc/postgresql/15/main/
 COPY conf/gc2/geometry_columns_join.sql /var/www/geocloud2/public/install/
 
 # Copy GC2 config files from GIT repo, so we can create the template database and run migrations
@@ -50,7 +50,7 @@ COPY conf/gc2/App.php /var/www/geocloud2/app/conf/App.php
 COPY conf/gc2/Connection.php /var/www/geocloud2/app/conf/Connection.php
 
 # Make config in PostGreSQL
-RUN echo "listen_addresses='*'" >> /etc/postgresql/13/main/postgresql.conf
+RUN echo "listen_addresses='*'" >> /etc/postgresql/15/main/postgresql.conf
 
 # Expose standard for PostGreSQL and pgboucer
 EXPOSE 5432 6432
