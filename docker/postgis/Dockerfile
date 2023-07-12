@@ -20,7 +20,7 @@ RUN apt-get -y update
 
 # Install packages
 RUN apt-get -y install vim git php8.2-pgsql php8.2-cli curl \
-    postgis postgresql-15-postgis-3 postgresql-15-pgrouting postgresql-15-ogr-fdw pgagent  postgresql-server-dev-15 libsybdb5 freetds-dev freetds-common gnupg gcc make \
+    postgis postgresql-15-postgis-3 postgresql-15-pgrouting postgresql-15-ogr-fdw pgagent tdsodbc postgresql-server-dev-15 libsybdb5 freetds-dev freetds-common gnupg gcc make \
     pgbouncer locales-all osm2pgsql supervisor \
     osm2pgsql unixodbc
 
@@ -28,13 +28,12 @@ RUN apt-get -y install vim git php8.2-pgsql php8.2-cli curl \
 RUN sed -i "s#MinProtocol = TLSv1.2#MinProtocol = TLSv1.0#g" /etc/ssl/openssl.cnf
 
 # Install tds_fdw
-#RUN export TDS_FDW_VERSION="2.0.2" &&\
-#    wget https://github.com/tds-fdw/tds_fdw/archive/v${TDS_FDW_VERSION}.tar.gz &&\
-#    tar -xvzf v${TDS_FDW_VERSION}.tar.gz &&\
-#    cd tds_fdw-${TDS_FDW_VERSION}/ &&\
-#    make USE_PGXS=1 &&\
-#    make USE_PGXS=1 &&\
-#    install
+RUN export TDS_FDW_VERSION="2.0.3" &&\
+    wget https://github.com/tds-fdw/tds_fdw/archive/v${TDS_FDW_VERSION}.tar.gz &&\
+    tar -xvzf v${TDS_FDW_VERSION}.tar.gz &&\
+    cd tds_fdw-${TDS_FDW_VERSION}/ &&\
+    make USE_PGXS=1 &&\
+    make USE_PGXS=1 install
 
 # Clone GC2 from GitHub
 RUN mkdir /var/www &&\
