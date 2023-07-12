@@ -7,7 +7,7 @@ ENV  DEBIAN_FRONTEND noninteractive
 # Install packages
 RUN apt-get -y update
 RUN apt-get -y install vim git php-pgsql php-cli wget curl \
-    postgis postgresql-11-postgis-2.5 postgresql-11-pgrouting postgresql-11-ogr-fdw pgagent  postgresql-server-dev-11 libsybdb5 freetds-dev freetds-common gnupg gcc make \
+    postgis postgresql-11-postgis-2.5 postgresql-11-pgrouting postgresql-11-ogr-fdw pgagent tdsodbc postgresql-server-dev-11 libsybdb5 freetds-dev freetds-common gnupg gcc make \
     pgbouncer locales-all osm2pgsql supervisor \
     osm2pgsql unixodbc
 
@@ -20,13 +20,12 @@ RUN wget https://packages.microsoft.com/debian/10/prod/pool/main/m/msodbcsql17/m
 RUN sed -i "s#MinProtocol = TLSv1.2#MinProtocol = TLSv1.0#g" /etc/ssl/openssl.cnf
 
 # Install tds_fdw
-#RUN export TDS_FDW_VERSION="2.0.2" &&\
-#    wget https://github.com/tds-fdw/tds_fdw/archive/v${TDS_FDW_VERSION}.tar.gz &&\
-#    tar -xvzf v${TDS_FDW_VERSION}.tar.gz &&\
-#    cd tds_fdw-${TDS_FDW_VERSION}/ &&\
-#    make USE_PGXS=1 &&\
-#    make USE_PGXS=1 &&\
-#    install
+RUN export TDS_FDW_VERSION="2.0.3" &&\
+    wget https://github.com/tds-fdw/tds_fdw/archive/v${TDS_FDW_VERSION}.tar.gz &&\
+    tar -xvzf v${TDS_FDW_VERSION}.tar.gz &&\
+    cd tds_fdw-${TDS_FDW_VERSION}/ &&\
+    make USE_PGXS=1 &&\
+    make USE_PGXS=1 install
 
 # Clone GC2 from GitHub
 RUN mkdir /var/www &&\
