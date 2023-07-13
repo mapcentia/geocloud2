@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2023.7.0] - 2023-13-7
+### Fixed
+- Security bug in OWS.
+
 ## [2023.6.0] - 2023-2-6
 ### Fixed
 - It's now possible to use single quotes in field properties JSON. The single quotes will be replaced with double quotes in the code but only after trying to parse the original JSON. 

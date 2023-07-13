@@ -175,5 +175,21 @@ class Input
         }
         return $op;
     }
+
+    /**
+     * @return string|null
+     */
+    public static function getAuthUser(): ?string
+    {
+        return $_SERVER['PHP_AUTH_USER'];
+    }
+
+    /**
+     * @return string|null
+     */
+    public static function getAuthPw(): ?string
+    {
+        return $_SERVER['PHP_AUTH_PW'];
+    }
 }
 

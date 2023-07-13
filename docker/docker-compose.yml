@@ -80,7 +80,7 @@ services:
       - "11211:11211"
   postgis:
     build: ./postgis
-    image: mapcentia/postgis11
+    image: mapcentia/postgis13
     volumes:
       - postgis_var_lib_postgresql:/var/lib/postgresql
     networks:
