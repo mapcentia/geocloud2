@@ -247,7 +247,7 @@ class Layer extends Table
                                     $props = json_decode($val["properties"]);
                                 }
                                 // We check if JSON is written with single quotes
-                                if ($props == null) {
+                                if ($props == null && !empty($val["properties"])) {
                                     $props = json_decode(str_replace("'", "\"", $val["properties"]));
                                 }
                                 if ($val["properties"] == "*") {
