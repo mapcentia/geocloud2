@@ -274,7 +274,7 @@ class Wms extends Controller
 
         if (!$useFilters) {
             // Set MapFile for either WMS or WFS
-            if ($qgs && !$this->service == "utfgrid") {
+            if ($qgs && $this->service != "utfgrid") {
                 $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map={$qgs}&" . $_SERVER["QUERY_STRING"];
             } else {
                 switch ($this->service) {
