@@ -1374,7 +1374,7 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
                         //$imageAttr = array("width" => $fieldProperties["width"], "height" => $fieldProperties["height"]);
                     } else {
                         $imageAttr = null;
-                        if (!empty($fieldValue) && ($tableObj->metaData[$fieldName]["type"] === "string" || $tableObj->metaData[$fieldName]["type"] === "text")) {
+                        if (!empty($fieldValue) && (in_array($tableObj->metaData[$fieldName]["type"], ["string", "text", "json", "jsonb"]))) {
                             $fieldValue = "<![CDATA[" . $fieldValue . "]]>";
                             $fieldValue = str_replace("&", "&#38;", $fieldValue);
                         }
