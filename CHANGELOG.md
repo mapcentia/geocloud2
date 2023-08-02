@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNREALISED]
+### Changed
+- JSON/JSONB fields are now embed in CDATA block in WFS-t, because values are treated as strings.
+
 ## [2023.4.0] - 2023-24-4
 ### Fixed
 - It's noew possible to select "double" type in combo-boxes for numberic selection.
