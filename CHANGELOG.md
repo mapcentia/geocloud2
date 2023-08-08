@@ -4,8 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNREALISED]
+## [2023.8.0] - 2023-8-8
 ### Changed
+- Multiple WMS filters now use AND instead of OR.
 - JSON/JSONB fields are now embed in CDATA block in WFS-t, because values are treated as strings.
 
 ## [2023.7.0] - 2023-13-7
