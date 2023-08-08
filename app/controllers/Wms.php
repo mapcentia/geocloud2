@@ -256,7 +256,7 @@ class Wms extends Controller
                     if (!empty($filters[$layer])) {
                         $useFilters = true;
                         // Use sed to replace sql= parameter
-                        $where = implode(" OR ", $filters[$layer]);
+                        $where = implode(" AND ", $filters[$layer]);
                         $sedCmd = 'sed -i "s;/\*FILTER_' . $split[0] . '.' . $split[1] . '\*/;WHERE ' . $where . ';g" ' . $tmpMapFile;
                         shell_exec($sedCmd);
                     }
