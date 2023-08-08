@@ -208,7 +208,7 @@ class Wms extends Controller
                     if ($filters) {
                         $useFilters = true;
                         if (!empty($filters[$layer])) {
-                            $where = implode(" OR ", $filters[$layer]);
+                            $where = implode(" AND ", $filters[$layer]);
                         }
                     }
                     if ($versionWhere) {
