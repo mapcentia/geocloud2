@@ -308,6 +308,11 @@ if (!isset($HTTP_FORM_VARS["REQUEST"])) {
     makeExceptionReport("No request", ["exceptionCode" => "MissingParameterValue", "locator" => "request"]);
 }
 
+// Check if layer is enabled
+if (!$postgisObject->getGeometryColumns($postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"], "*")["enableows"]) {
+    makeExceptionReport("Layer is not enabled", ["exceptionCode" => "InvalidParameterValue", "locator" => "typename"]);
+}
+
 switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
     case "GETCAPABILITIES":
         getCapabilities($postgisObject);
@@ -569,7 +574,7 @@ function getCapabilities(\app\inc\Model $postgisObject)
         writeTag("close", null, "Operations", null, False, True);
     }
 
-    $sql = "SELECT * from settings.getColumns('f_table_schema=''{$postgisschema}''','raster_columns.r_table_schema=''{$postgisschema}''') order by sort_id";
+    $sql = "SELECT * from settings.getColumns('f_table_schema=''{$postgisschema}'' AND enableows=true','raster_columns.r_table_schema=''{$postgisschema}'' AND enableows=true') order by sort_id";
 
     $result = $postgisObject->execQuery($sql);
     if ($postgisObject->PDOerror) {

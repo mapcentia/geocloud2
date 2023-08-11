@@ -375,5 +375,13 @@ class Geometrycolums
                 'is_nullable' => true,
                 'restriction' => NULL,
             ),
+        'enableows' =>
+            array(
+                'num' => 35,
+                'type' => 'boolean',
+                'full_type' => 'boolean',
+                'is_nullable' => false,
+                'restriction' => NULL,
+            ),
     );
 }

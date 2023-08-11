@@ -855,6 +855,12 @@ $(document).ready(function () {
 
                 },
                 {
+                    xtype: 'checkcolumn',
+                    header: __("OWS"),
+                    dataIndex: 'enableows',
+                    width: 30
+                },
+                {
                     header: __("Sort id"),
                     dataIndex: 'sort_id',
                     sortable: true,

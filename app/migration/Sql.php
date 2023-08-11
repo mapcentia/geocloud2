@@ -141,6 +141,7 @@ class Sql
                 )";
         $sqls[] = "ALTER TABLE settings.symbols ADD COLUMN timestamp TIMESTAMP WITH TIME ZONE DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE";
         $sqls[] = "ALTER TABLE settings.symbols ADD COLUMN properties jsonb";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN enableows BOOL DEFAULT TRUE NOT NULL";
 
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
@@ -246,7 +247,8 @@ class Sql
                         geometry_columns_join.wmsclientepsgs,
                         geometry_columns_join.featureid,
                         geometry_columns_join.note,
-                        geometry_columns_join.legend_url
+                        geometry_columns_join.legend_url,
+                        geometry_columns_join.enableows
                       FROM geometry_columns
                         LEFT JOIN
                         settings.geometry_columns_join ON
@@ -298,7 +300,8 @@ class Sql
                         geometry_columns_join.wmsclientepsgs,
                         geometry_columns_join.featureid,
                         geometry_columns_join.note,
-                        geometry_columns_join.legend_url
+                        geometry_columns_join.legend_url,
+                        geometry_columns_join.enableows
 
                       FROM raster_columns
                         LEFT JOIN
@@ -352,7 +355,8 @@ class Sql
                         geometry_columns_join.wmsclientepsgs,
                         geometry_columns_join.featureid,
                         geometry_columns_join.note,
-                        geometry_columns_join.legend_url
+                        geometry_columns_join.legend_url,
+                        geometry_columns_join.enableows
 
                       FROM non_postgis_tables
                         LEFT JOIN
@@ -405,7 +409,8 @@ class Sql
                         geometry_columns_join.wmsclientepsgs,
                         geometry_columns_join.featureid,
                         geometry_columns_join.note,
-                        geometry_columns_join.legend_url
+                        geometry_columns_join.legend_url,
+                        geometry_columns_join.enableows
 
                       FROM non_postgis_matviews
                         LEFT JOIN
@@ -463,7 +468,8 @@ class Sql
                                 geometry_columns_join.wmsclientepsgs,
                                 geometry_columns_join.featureid,
                                 geometry_columns_join.note,
-                                geometry_columns_join.legend_url
+                                geometry_columns_join.legend_url,
+                                geometry_columns_join.enableows
 
                               FROM geometry_columns
                                 LEFT JOIN
@@ -518,7 +524,8 @@ class Sql
                                 geometry_columns_join.wmsclientepsgs,
                                 geometry_columns_join.featureid,
                                 geometry_columns_join.note,
-                                geometry_columns_join.legend_url
+                                geometry_columns_join.legend_url,
+                                geometry_columns_join.enableows
 
                               FROM raster_columns
                                 LEFT JOIN
@@ -574,7 +581,8 @@ class Sql
                                 geometry_columns_join.wmsclientepsgs,
                                 geometry_columns_join.featureid,
                                 geometry_columns_join.note,
-                                geometry_columns_join.legend_url
+                                geometry_columns_join.legend_url,
+                                geometry_columns_join.enableows
 
                               FROM non_postgis_tables
 
@@ -631,8 +639,9 @@ class Sql
                                 geometry_columns_join.wmsclientepsgs,
                                 geometry_columns_join.featureid,
                                 geometry_columns_join.note,
-                                geometry_columns_join.legend_url
-
+                                geometry_columns_join.legend_url,
+                                geometry_columns_join.enableows
+                                
                               FROM non_postgis_matviews
 
                               LEFT JOIN

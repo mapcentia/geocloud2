@@ -342,7 +342,7 @@ class Mapfile extends Controller
         # Start of layers
         #
         <?php
-        $sql = "SELECT * FROM settings.getColumns('f_table_schema=''" . Connection::$param['postgisschema'] . "''','raster_columns.r_table_schema=''" . Connection::$param['postgisschema'] . "''') ORDER BY sort_id";
+        $sql = "SELECT * FROM settings.getColumns('f_table_schema=''" . Connection::$param['postgisschema'] . "'' AND enableows=true','raster_columns.r_table_schema=''" . Connection::$param['postgisschema'] . "'' AND enableows=true') ORDER BY sort_id";
         $result = $postgisObject->execQuery($sql);
         if ($postgisObject->PDOerror) {
             ob_get_clean();
@@ -1360,7 +1360,7 @@ class Mapfile extends Controller
         # Start of layers
         #
         <?php
-        $sql = "SELECT * FROM settings.getColumns('f_table_schema=''" . Connection::$param['postgisschema'] . "''','raster_columns.r_table_schema=''" . Connection::$param['postgisschema'] . "''') ORDER BY sort_id";
+        $sql = "SELECT * FROM settings.getColumns('f_table_schema=''" . Connection::$param['postgisschema'] . "'' AND enableows=true','raster_columns.r_table_schema=''" . Connection::$param['postgisschema'] . "'' AND enableows=true') ORDER BY sort_id";
         $result = $postgisObject->execQuery($sql);
         if ($postgisObject->PDOerror) {
             ob_get_clean();

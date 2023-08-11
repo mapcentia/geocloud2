@@ -299,7 +299,7 @@ class Table extends Model
         $matViewDefinitions = array();
 
         if (!empty($schema)) {
-           $whereClause = $schema;
+            $whereClause = $schema;
         } else {
             $whereClause = Connection::$param["postgisschema"];
         }
@@ -612,7 +612,7 @@ class Table extends Model
                         $value = null;
                     }
                     if ($this->table == "settings.geometry_columns_join") {
-                        if ($key == "editable" || $key == "skipconflict") {
+                        if (in_array($key, ["editable", "skipconflict", "enableows"])) {
                             $value = $value ?: "0";
                         }
                         if ($key == "tags") {

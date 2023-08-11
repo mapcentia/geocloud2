@@ -918,7 +918,7 @@ class Layer extends Table
             $response['code'] = 400;
             return $response;
         }
-        $booleanFields = array("editable", "baselayer", "tilecache", "not_querable", "single_tile", "enablesqlfilter", "skipconflict");
+        $booleanFields = array("editable", "baselayer", "tilecache", "not_querable", "single_tile", "enablesqlfilter", "skipconflict", "enableows");
         $row = $this->fetchRow($res);
         foreach ($row as $k => $v) {
             if (in_array($k, $booleanFields)) {
