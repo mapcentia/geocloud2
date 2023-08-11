@@ -309,8 +309,9 @@ if (!isset($HTTP_FORM_VARS["REQUEST"])) {
 }
 
 // Check if layer is enabled
-if (!$postgisObject->getGeometryColumns($postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"], "*")["enableows"]) {
-    makeExceptionReport("Layer is not enabled", ["exceptionCode" => "InvalidParameterValue", "locator" => "typename"]);
+$isEnabled = false;
+if ($postgisObject->getGeometryColumns($postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"], "*")["enableows"]) {
+    $isEnabled = true;
 }
 
 switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
@@ -318,6 +319,9 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
         getCapabilities($postgisObject);
         break;
     case "GETFEATURE":
+        if (!$isEnabled) {
+            makeExceptionReport("Layer is not enabled", ["exceptionCode" => "InvalidParameterValue", "locator" => "typename"]);
+        }
         print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         doQuery("Select");
         print "</wfs:FeatureCollection>";
@@ -326,6 +330,9 @@ switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
         print "\n-->";
         break;
     case "DESCRIBEFEATURETYPE":
+        if (!$isEnabled) {
+            makeExceptionReport("Layer is not enabled", ["exceptionCode" => "InvalidParameterValue", "locator" => "typename"]);
+        }
         getXSD($postgisObject);
         break;
     case "TRANSACTION":
