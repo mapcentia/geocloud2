@@ -23,14 +23,14 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 class Controller
 {
     /**
-     * @var array<mixed>
+     * @var array
      */
-    public $response;
+    public array $response;
 
     /**
      * @var string|null
      */
-    protected $sUser;
+    protected ?string $sUser;
 
     /**
      * Controller constructor.
@@ -60,7 +60,7 @@ class Controller
      * @param string|null $key
      * @param array<bool> $level
      * @param bool $neverAllowSubUser
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function auth(?string $key = null, array $level = ["all" => true], bool $neverAllowSubUser = false): array
@@ -108,10 +108,10 @@ class Controller
         }
         global $postgisdb;
         $postgisdb = $user;
-        $settings_viewer = new Setting();
-        $res = $settings_viewer->get();
+        $settings = new Setting();
+        $res = $settings->get();
         $apiKey = $res['data']->api_key;
-        if ($apiKey == $key && $key != false) {
+        if ($apiKey == $key && $key) {
             return true;
         } else {
             return false;
@@ -142,14 +142,14 @@ class Controller
 
     /**
      * @param string $layer
-     * @param string|null $subUser
      * @param bool $transaction
-     * @param string|null $inputApiKey
      * @param array<string> $rels
-     * @return array<mixed>|null
+     * @param string|null $subUser
+     * @param string|null $inputApiKey
+     * @return array|null
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function ApiKeyAuthLayer(string $layer, ?string $subUser = null, bool $transaction, ?string $inputApiKey = null, array $rels): ?array
+    public function ApiKeyAuthLayer(string $layer, bool $transaction, array $rels, ?string $subUser = null, ?string $inputApiKey = null): ?array
     {
         // Check if layer has schema prefix and add 'public' if no.
         $bits = explode(".", $layer);
@@ -163,17 +163,30 @@ class Controller
         }
 
         $postgisObject = new Model();
-        $settings_viewer = new Setting();
-        $response = $settings_viewer->get();
+        $settings = new Setting();
+        $response = $settings->get();
         $userGroup = $response["data"]->userGroups->$subUser ?? null;
         if ($subUser) {
             $apiKey = $response['data']->api_key_subuser->$subUser;
         } else {
             $apiKey = $response['data']->api_key;
         }
-        $isKeyCorrect =($apiKey == $inputApiKey && $apiKey != false) || !empty($_SESSION["auth"]);
+        $isKeyCorrect = $apiKey == $inputApiKey && $apiKey != false;
+
+        $check = false;
+        if ($_SESSION["auth"]) {
+            if ($subUser && $subUser == $_SESSION["screen_name"] && $_SESSION["parentdb"] == Connection::$param["postgisdb"]) {
+                $check = true;
+            } elseif (!$subUser && $_SESSION["screen_name"] == Connection::$param["postgisdb"]) {
+                $check = true;
+            }
+        }
+
+        $isAuth = $isKeyCorrect || $check;
+        $session = $_SESSION["subuser"] ? $_SESSION["screen_name"] . '@' . $_SESSION["parentdb"] : $_SESSION["screen_name"] ?? null;
+
         $response = [];
-        $response['isauth'] = $isKeyCorrect;
+        $response['is_auth'] = $isAuth;
         $auth = $postgisObject->getGeometryColumns($layer, "authentication");
         if ($auth == "Read/write" || $auth == "Write") {
             $rows = $postgisObject->getColumns($schema, $unQualifiedName);
@@ -185,9 +198,9 @@ class Controller
                 if ($subUser) {
                     $privileges = (array)json_decode($row["privileges"]);
                     $response['auth_level'] = $auth;
-                    if (($apiKey == $inputApiKey && $apiKey) || !empty($_SESSION["auth"])) {
+                    if ($isAuth) {
                         $response['privileges'] = $privileges[$userGroup] ?? $privileges[$subUser];
-                        $response['session'] = $_SESSION['subuser'] ? $_SESSION["screen_name"] . '@' . $_SESSION["parentdb"] : null;
+                        $response['session'] = $session;
                         $response[Sql::USEDRELSKEY] = $rels;
                         switch ($transaction) {
                             case false:
@@ -199,17 +212,17 @@ class Controller
                                         break;
                                     }
                                     $response['success'] = false;
-                                    $response['message'] = "You don't have privileges to see '{$layer}'. Please contact the database owner, which can grant you privileges.";
+                                    $response['message'] = "You don't have privileges to see '$layer'. Please contact the database owner, which can grant you privileges.";
                                     $response['code'] = 403;
                                 } else {
                                     $response['success'] = true;
                                     $response['code'] = 200;
                                 }
                                 break;
-                            case true:
-                                if (($privileges[$userGroup ?: $subUser] == false || $privileges[$userGroup ?: $subUser] == "none" || $privileges[$userGroup ?: $subUser] == "read") && ($subUser != $schema && $userGroup != $schema)) {
+                            default:
+                                if ((!$privileges[$userGroup ?: $subUser] || $privileges[$userGroup ?: $subUser] == "none" || $privileges[$userGroup ?: $subUser] == "read") && ($subUser != $schema && $userGroup != $schema)) {
                                     $response['success'] = false;
-                                    $response['message'] = "You don't have privileges to edit '{$layer}'. Please contact the database owner, which can grant you privileges.";
+                                    $response['message'] = "You don't have privileges to edit '$layer'. Please contact the database owner, which can grant you privileges.";
                                     $response['code'] = 403;
                                 } else {
                                     $response['success'] = true;
@@ -217,11 +230,10 @@ class Controller
                                 }
                                 break;
                         }
-                        return $response;
                     } else {
                         $response[Sql::USEDRELSKEY] = $rels;
                         $response['privileges'] = $privileges[$userGroup] ?? $privileges[$subUser];
-                        $response['session'] = !empty($_SESSION["screen_name"]) ? $_SESSION["screen_name"] : null;
+                        $response['session'] = $session;
 
                         if ($auth == "Read/write" || ($transaction)) {
                             $response['success'] = false;
@@ -231,15 +243,14 @@ class Controller
                             $response['success'] = true;
                             $response['code'] = 200;
                         }
-                        return $response;
                     }
                 } else {
                     $response['auth_level'] = $auth;
                     $response[Sql::USEDRELSKEY] = $rels;
-                    $response['session'] = !empty($_SESSION["screen_name"]) ? $_SESSION["screen_name"] : null;
+                    $response['session'] = $session;
 
                     if ($auth == "Read/write" || ($transaction)) {
-                        if (($apiKey == $inputApiKey && $apiKey) || !empty($_SESSION["auth"])) {
+                        if ($isAuth) {
                             $response['success'] = true;
                             $response['code'] = 200;
                         } else {
@@ -247,19 +258,18 @@ class Controller
                             $response['message'] = "Not the right key!";
                             $response['code'] = 403;
                         }
-                        return $response;
                     } else {
                         $response['success'] = true;
                         $response['code'] = 200;
-                        return $response;
                     }
                 }
+                return $response;
             }
         } else {
             $response3['success'] = true;
-            $response3['session'] = !empty($_SESSION["screen_name"]) ? $_SESSION["screen_name"] : null;
+            $response3['session'] = $session;
             $response3['auth_level'] = $auth;
-            $response3['isauth'] = $isKeyCorrect;
+            $response3['is_auth'] = $isAuth;
             $response3[Sql::USEDRELSKEY] = $rels;
             return $response3;
         }

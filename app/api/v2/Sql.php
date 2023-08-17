@@ -34,7 +34,7 @@ class Sql extends Controller
     /**
      * @var array
      */
-    public $response;
+    public array $response;
 
     /**
      * @var string
@@ -92,9 +92,7 @@ class Sql extends Controller
         // /{user}
         $r = func_get_arg(0);
         $dbSplit = explode("@", $r["user"]);
-        if (!empty($_SESSION["subuser"])) {
-            $this->subUser = $_SESSION["screen_name"];
-        } else if (sizeof($dbSplit) == 2) {
+        if (sizeof($dbSplit) == 2) {
             $this->subUser = $dbSplit[0];
         } else {
             $this->subUser = null;
@@ -277,14 +275,14 @@ class Sql extends Controller
             }
         }
         foreach ($usedRelationsWithType as $rel => $type) {
-            $response = $this->ApiKeyAuthLayer($rel, $this->subUser, $type == "t", Input::get('key'), $usedRelationsWithType);
+            $response = $this->ApiKeyAuthLayer($rel, $type == "t", $usedRelationsWithType, $this->subUser, Input::get('key'));
             if (!$response["success"]) {
                 return serialize($response);
             }
         }
 
         // Get rules and set them
-        $walkerRule = new TableWalkerRule(!empty($response["isauth"]) ? $this->subUser ?: Connection::$param['postgisdb'] : "*", "sql", strtolower($operation), '');
+        $walkerRule = new TableWalkerRule(!empty($response["is_auth"]) ? $this->subUser ?: Connection::$param['postgisdb'] : "*", "sql", strtolower($operation), '');
         $rules = $rule->get();
         $walkerRule->setRules($rules);
         try {

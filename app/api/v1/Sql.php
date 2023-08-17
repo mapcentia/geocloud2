@@ -26,7 +26,7 @@ class Sql extends \app\inc\Controller
     /**
      * @var array
      */
-    public $response;
+    public array $response;
 
     /**
      * @var string
@@ -218,7 +218,7 @@ class Sql extends \app\inc\Controller
 
         // Check auth on relations
         foreach ($this->usedRelations as $rel) {
-            $response = $this->ApiKeyAuthLayer($rel, $this->subUser, false, Input::get('key'), $this->usedRelations);
+            $response = $this->ApiKeyAuthLayer($rel, false, $this->usedRelations, $this->subUser, Input::get('key'));
             if (!$response["success"]) {
                 return serialize($response);
             }
@@ -240,7 +240,7 @@ class Sql extends \app\inc\Controller
                     return serialize($this->response);
                 }
                 array_push($this->usedRelations, $table["no_quotes"]);
-                $response = $this->ApiKeyAuthLayer($table["no_quotes"], $this->subUser, true, Input::get('key'), $this->usedRelations);
+                $response = $this->ApiKeyAuthLayer($table["no_quotes"], true, $this->usedRelations, $this->subUser, Input::get('key'));
                 if (!$response["success"]) {
                     return serialize($response);
                 }
@@ -261,7 +261,7 @@ class Sql extends \app\inc\Controller
                     $this->response['code'] = 406;
                     return serialize($this->response);
                 }
-                $response = $this->ApiKeyAuthLayer($table["no_quotes"], $this->subUser, true, Input::get('key'), $this->usedRelations);
+                $response = $this->ApiKeyAuthLayer($table["no_quotes"], true, $this->usedRelations, $this->subUser, Input::get('key'));
                 if (!$response["success"]) {
                     return serialize($response);
                 }
@@ -283,7 +283,7 @@ class Sql extends \app\inc\Controller
                     return serialize($this->response);
                 }
                 array_push($this->usedRelations, $table["no_quotes"]);
-                $response = $this->ApiKeyAuthLayer($table["no_quotes"], $this->subUser, true, Input::get('key'), $this->usedRelations);
+                $response = $this->ApiKeyAuthLayer($table["no_quotes"], true, $this->usedRelations, $this->subUser, Input::get('key'));
                 if (!$response["success"]) {
                     return serialize($response);
                 }
