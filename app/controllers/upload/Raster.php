@@ -21,7 +21,7 @@ use \app\conf\App;
 class Raster extends \app\inc\Controller
 {
     protected $file;
-    public $response;
+    public array $response;
 
     /**
      * Raster constructor.

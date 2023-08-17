@@ -26,7 +26,7 @@ class Qgis extends Controller
     /**
      * @var
      */
-    public $response;
+    public array $response;
 
     /**
      * Qgis constructor.

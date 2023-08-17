@@ -30,7 +30,7 @@ foreach ($arr['data'] as $db) {
 
             foreach ($sqls as $sql) {
                 $result = $conn->execQuery($sql, "PDO", "transaction");
-                if ($conn->PDOerror[0]) {
+                if (isset($conn->PDOerror[0])) {
                     echo "-";
                 } else {
                     echo "+";

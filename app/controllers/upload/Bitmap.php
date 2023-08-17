@@ -21,7 +21,7 @@ use \app\conf\App;
 class Bitmap extends \app\inc\Controller
 {
     protected $file;
-    public $response;
+    public array $response;
 
     /**
      * Bitmap constructor.

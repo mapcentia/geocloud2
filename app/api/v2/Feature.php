@@ -362,7 +362,7 @@ class Feature extends Controller
         // Check privileges of user on layer
         $rel = $this->schema . "." . $this->table;
         try {
-            $response = $this->ApiKeyAuthLayer($rel,  sizeof($split) > 1 ? $user : null, true, Input::getApiKey(), [$rel]);
+            $response = $this->ApiKeyAuthLayer($rel, true, [$rel], sizeof($split) > 1 ? $user : null, Input::getApiKey());
         } catch (PDOException $e) {
             header("HTTP/1.1 401 Unauthorized");
             die($e->getMessage());
