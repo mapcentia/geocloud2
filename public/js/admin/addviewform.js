@@ -71,7 +71,7 @@ addView.init = function () {
                         }
                         var param = "q=CREATE " + (values.matview === "on" ? "MATERIALIZED" : "") + " VIEW " + schema + "." + safeName + " AS " + encodeURIComponent(values.select) + "&key=" + settings.api_key;
                         Ext.Ajax.request({
-                            url: '/api/v1/sql/' + (subUser ? screenName + "@" + parentdb : screenName),
+                            url: '/api/v2/sql/' + (subUser ? screenName + "@" + parentdb : screenName),
                             method: 'post',
                             params: param,
                             success: function () {

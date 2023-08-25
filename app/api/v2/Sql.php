@@ -143,8 +143,8 @@ class Sql extends Controller
             return $response;
         }
 
-        $settings_viewer = new Setting();
-        $res = $settings_viewer->get();
+        $settings = new Setting();
+        $res = $settings->get();
 
         // Check if success
         // ================
@@ -197,8 +197,8 @@ class Sql extends Controller
                 ]
             );
 
-            $settings_viewer = new Setting();
-            $res = $settings_viewer->get();
+            $settings = new Setting();
+            $res = $settings->get();
 
             // Check if success
             // ================
