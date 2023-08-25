@@ -128,15 +128,12 @@ if (Input::getPath()->part(1) == "api") {
         Database::setDb("mapcentia");
     });
     Route::add("api/v1/sql", function () {
-        if (empty(Input::get("key"))) {
-            Session::start();
-        }
-        $db = Input::getPath()->part(4);
-        $dbSplit = explode("@", $db);
-        if (sizeof($dbSplit) == 2) {
-            $db = $dbSplit[1];
-        }
-        Database::setDb($db);
+        die(Response::toJson(
+            [
+                "code" => 410,
+                "message"=> "v1 SQL API is gone. Use v2 or v3",
+                ]
+        ));
     });
     Route::add("api/v1/elasticsearch/{action}/{user}/[indices]/[type]", function () {
         $r = func_get_arg(0);
@@ -156,7 +153,7 @@ if (Input::getPath()->part(1) == "api") {
     // V2
     //======================
     Route::add("api/v2/sql/{user}/[method]", function () {
-        if (empty(Input::get("key")) || Input::get("key") == "null") { // Only start session if no API key is provided
+        if ((empty(Input::get("key")) || Input::get("key") == "null") && empty(json_decode(Input::getBody())->key)) { // Only start session if no API key is provided
             Session::start();
         }
         $r = func_get_arg(0);
