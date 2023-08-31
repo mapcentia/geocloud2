@@ -13,31 +13,31 @@ services:
     image: mapcentia/gc2core:ecw
     depends_on:
       - base
-#  ecw5:
-#    build: ./ecw5
-#    image: mapcentia/gc2core:ecw5
-#    depends_on:
-#      - base
+  ecw5:
+    build: ./ecw5
+    image: mapcentia/gc2core:ecw5
+    depends_on:
+      - base
   gdal:
     build: ./gdal
     image: mapcentia/gc2core:gdal
     depends_on:
       - ecw
-#  gdal_ecw5:
-#    build: ./gdal_ecw5
-#    image: mapcentia/gc2core:gdal_ecw5
-#    depends_on:
-#      - ecw5
+  gdal_ecw5:
+    build: ./gdal_ecw5
+    image: mapcentia/gc2core:gdal_ecw5
+    depends_on:
+      - ecw5
   mapserver:
     build: ./mapserver
     image: mapcentia/gc2core:mapserver
     depends_on:
       - gdal
-#  mapserver_ecw5:
-#    build: ./mapserver
-#    image: mapcentia/gc2core:mapserver_ecw5
-#    depends_on:
-#      - gdal_ecw5
+  mapserver_ecw5:
+    build: ./mapserver_ecw5
+    image: mapcentia/gc2core:mapserver_ecw5
+    depends_on:
+      - gdal_ecw5
   gc2core:
     build: ./stable
     image: mapcentia/gc2core
