@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2023.8.1] - 2023-31-8
+### Changed
+- Removed EPSG:900913 and replaced with EPSG:3857
+
 ## [2023.8.0] - 2023-8-8
 ### Changed
 - Multiple WMS filters now use AND instead of OR.
@@ -35,7 +39,7 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [2023.2.0] - 2023-28-2
 ### Fixed
-- WFS-t didn't parse EPSG format http://www.opengis.net/gml/srs/epsg.xml#xxxx the right way, which resultated in a SQL error.
+- WFS-t didn't parse EPSG format http://www.opengis.net/gml/srs/epsg.xml#xxxx the right way, which resulted in a SQL error.
 
 ## [2023.1.2] - 2023-31-1
 ### Added
@@ -46,7 +50,7 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [2023.1.1] - 2023-10-1
 ### Changed
-- Do not `updateLastmodified` in when running cheduler jobs because it will bust app cache.
+- Do not `updateLastmodified` in when running scheduler jobs because it will bust app cache.
 
 ## [2023.1.0] - 2023-10-1
 ### Changed
@@ -68,7 +72,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - WMS filters don't work with multiple layers, where one or more is QGIS backed and a WMS exception is now thrown in this case.
 
 ### Fixed
-- Qoute of fields when new version of record is inserted (Track changes). 
+- Quote of fields when new version of record is inserted (Track changes). 
 
 ## [2022.10.0] - 2022-5-10
 ### Changed
