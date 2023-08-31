@@ -119,7 +119,7 @@ var mygeocloud_ol = (function () {
                 dataType: (defaults.jsonp) ? 'jsonp' : 'json',
                 data: 'q=' + encodeURIComponent(sql) + '&srs=' + defaults.projection + '&lifetime=' + defaults.lifetime + '&client_encoding=' + defaults.clientEncoding,
                 jsonp: (defaults.jsonp) ? 'jsonp_callback' : false,
-                url: host + '/api/v1/sql/' + db,
+                url: host + '/api/v2/sql/' + db,
                 type: defaults.method,
                 success: function (response) {
                     if (response.success === false && doNotShowAlertOnError === undefined) {

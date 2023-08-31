@@ -114,7 +114,7 @@ use \app\conf\App;
             <tr>
                 <td>
                     <input class="service-url" type="text" readonly="readonly"
-                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v1/sql/<?php echo ($_SESSION['subuser'] ? $_SESSION['screen_name'] . "@" : "") . $_SESSION['parentdb']; ?>?q=[query]&key=[your_api_key]"
+                           value="<?php echo \app\conf\App::$param['protocol'] ?: "http" ?>://<?php echo $_SERVER['HTTP_HOST']; ?>/api/v2/sql/<?php echo ($_SESSION['subuser'] ? $_SESSION['screen_name'] . "@" : "") . $_SESSION['parentdb']; ?>?q=[query]&key=[your_api_key]"
                     />
                 </td>
             </tr>

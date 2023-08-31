@@ -155,7 +155,7 @@ class Staticmap extends \app\inc\Controller
                 var store = new geocloud.sqlStore({
                     db: '{$db}',
                     sql: '" . rawurlencode($sql) . "',
-                    uri: '/api/v1/sql',
+                    uri: '/api/v2/sql',
                     async: false
                 });
                 map.addGeoJsonStore(store);

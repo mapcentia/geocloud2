@@ -190,7 +190,7 @@ Viewer = function () {
                         $("#filter-submit .spinner").hide();
                         if (sqlFilterStore.geoJSON) {
                             cloud.zoomToExtentOfgeoJsonStore(sqlFilterStore);
-                            $("#sql-filter-res").append("<a target='_blank' href='/api/v1/sql/" + db + "?q=" + encodeURIComponent(this.sql).replace(/'/g, "%27") + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection + '&client_encoding=' + this.defaults.clientEncoding + "'>" + __("Get result as GeoJSON") + "</a>");
+                            $("#sql-filter-res").append("<a target='_blank' href='/api/v2/sql/" + db + "?q=" + encodeURIComponent(this.sql).replace(/'/g, "%27") + '&srs=' + this.defaults.projection + '&lifetime=' + this.defaults.lifetime + "&srs=" + this.defaults.projection + '&client_encoding=' + this.defaults.clientEncoding + "'>" + __("Get result as GeoJSON") + "</a>");
                         } else {
                             alert(__("Query did not return any features"));
                         }

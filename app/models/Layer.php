@@ -1059,7 +1059,7 @@ class Layer extends Table
                 "name" => "GeoJSON",
                 "description" => App::$param["ckan"]["descForGeoJson"],
                 "format" => "geojson",
-                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $qualifiedName . " LIMIT 1000&srs=4326"
+                "url" => $gc2Host . "/api/v2/sql/" . Database::getDb() . "?q=SELECT * FROM " . $qualifiedName . " LIMIT 1000&srs=4326"
             ),
             array(
                 "id" => $id . "-wms",
@@ -1094,14 +1094,14 @@ class Layer extends Table
                 "name" => "CSV",
                 "description" => App::$param["ckan"]["descForCSV"],
                 "format" => "csv",
-                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $qualifiedName . " LIMIT 1000&srs=4326&format=csv&allstr=1&alias=" . $qualifiedName
+                "url" => $gc2Host . "/api/v2/sql/" . Database::getDb() . "?q=SELECT * FROM " . $qualifiedName . " LIMIT 1000&srs=4326&format=csv&allstr=1&alias=" . $qualifiedName
             ),
             array(
                 "id" => $id . "-excel",
                 "name" => "XLSX",
                 "description" => App::$param["ckan"]["descForExcel"],
                 "format" => "xlsx",
-                "url" => $gc2Host . "/api/v1/sql/" . Database::getDb() . "?q=SELECT * FROM " . $qualifiedName . " LIMIT 1000&srs=4326&format=excel&alias=" . $qualifiedName
+                "url" => $gc2Host . "/api/v2/sql/" . Database::getDb() . "?q=SELECT * FROM " . $qualifiedName . " LIMIT 1000&srs=4326&format=excel&alias=" . $qualifiedName
             ),
         );
 
