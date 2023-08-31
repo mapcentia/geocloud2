@@ -288,7 +288,7 @@ $(document).ready(function () {
                         }
                         sql = sql + " ORDER BY round(ST_Distance(ST_Transform(\"" + f_geometry_column + "\",3857), ST_GeomFromText('POINT(" + coords.x + " " + coords.y + ")',3857)))";
                     } else {
-                        sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',900913)," + srid + "),\"" + f_geometry_column + "\")";
+                        sql = "SELECT * FROM " + value + " WHERE ST_Intersects(ST_Transform(ST_geomfromtext('POINT(" + coords.x + " " + coords.y + ")',3857)," + srid + "),\"" + f_geometry_column + "\")";
                         if (versioning) {
                             sql = sql + " AND gc2_version_end_date IS NULL";
                         }
@@ -424,7 +424,7 @@ $(document).ready(function () {
                         }
                         return p;
                     };
-                    var p = transformPoint(place.geometry.location.lng(), place.geometry.location.lat(), "EPSG:4326", "EPSG:900913");
+                    var p = transformPoint(place.geometry.location.lng(), place.geometry.location.lat(), "EPSG:4326", "EPSG:3857");
                     var point = new OpenLayers.LonLat(p.x, p.y);
                     map.setCenter(point, 17);
                     try {
@@ -4618,7 +4618,7 @@ $(document).ready(function () {
                                 return false;
                             }
                             Ext.Ajax.request({
-                                url: '/api/v1/extent/' + parentdb + '/' + e.id + '/900913',
+                                url: '/api/v1/extent/' + parentdb + '/' + e.id + '/3857',
                                 method: 'get',
                                 headers: {
                                     'Content-Type': 'application/json; charset=utf-8'
@@ -5034,12 +5034,12 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     layer = new OpenLayers.Layer.Vector("vector", {
         strategies: [new OpenLayers.Strategy.Fixed(), saveStrategy],
         protocol: new OpenLayers.Protocol.WFS.v1_0_0({
-            url: "/wfs/" + (subUser ? screenName + "@" + parentdb : screenName) + "/" + schema + "/900913" + (timeSlice ? "/" + timeSlice : "") + "?",
+            url: "/wfs/" + (subUser ? screenName + "@" + parentdb : screenName) + "/" + schema + "/3857" + (timeSlice ? "/" + timeSlice : "") + "?",
             version: "1.0.0",
             featureType: layerName,
             featureNS: "http:" + "//" + location.hostname + (location.port ? ":" + location.port : "") + "/" + parentdb + "/" + schema,
             featurePrefix: schema,
-            srsName: "EPSG:900913",
+            srsName: "EPSG:3857",
             geometryName: geomField, // must be dynamamic
             defaultFilter: wfsFilter
         }),

@@ -26,7 +26,7 @@ class Sql_to_es extends Model
      * Sql_to_es constructor.
      * @param string $srs
      */
-    function __construct($srs = "900913")
+    function __construct($srs = "3857")
     {
         parent::__construct();
         $this->srs = $srs;

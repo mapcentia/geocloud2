@@ -55,7 +55,7 @@ class Processqgis extends Controller
         $this->table = new Table("settings.geometry_columns_join");
         $this->layer = new Layer();
         $this->qgis = new \app\models\Qgis();
-        $this->sridStr = "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:25832";
+        $this->sridStr = "EPSG:4326 EPSG:3857 EPSG:25832";
     }
 
     /**
@@ -263,7 +263,7 @@ class Processqgis extends Controller
             $data = new stdClass();
             $data->_key_ = $layerKey;
             $data->wmssource = $url;
-            $data->wmsclientepsgs = "EPSG:4326 EPSG:3857 EPSG:900913 EPSG:25832";
+            $data->wmsclientepsgs = "EPSG:4326 EPSG:3857 EPSG:25832";
 
             $data = array("data" => $data);
             $res = $this->table->updateRecord($data, "_key_");

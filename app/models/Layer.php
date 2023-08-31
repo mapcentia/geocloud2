@@ -215,7 +215,7 @@ class Layer extends Table
                 $versioning = $resVersioning["exists"];
                 $extent = null;
                 if ($row['type'] != "RASTER" && $includeExtent == true) {
-                    $srsTmp = "900913";
+                    $srsTmp = "3857";
                     $sqls = "SELECT ST_Xmin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS xmin,ST_Xmax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS xmax, ST_Ymin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS ymin,ST_Ymax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS ymax  FROM {$row['f_table_schema']}.{$row['f_table_name']}";
                     $resExtent = $this->prepare($sqls);
                     try {
