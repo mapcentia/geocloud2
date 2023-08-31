@@ -134,7 +134,7 @@ class Mapcachefile extends \app\inc\Controller
                 </metadata>
                 <extent>-20037508.3427892480 -20037508.3427892480 20037508.3427892480 20037508.3427892480</extent>
                 <srs>EPSG:3857</srs>
-                <srsalias>EPSG:900913</srsalias>
+                <srsalias>EPSG:3857</srsalias>
                 <units>m</units>
                 <size>256 256</size>
                 <resolutions>156543.0339280410 78271.51696402048 39135.75848201023 19567.87924100512 9783.939620502561

@@ -168,7 +168,7 @@ class Sql extends Controller
             return $res;
         }
 
-        $srs = Input::get('srs') ?: "900913";
+        $srs = Input::get('srs') ?: "3857";
         $this->api = new \app\models\Sql($srs);
         $this->api->connect();
         $this->apiKey = $res['data']->api_key;

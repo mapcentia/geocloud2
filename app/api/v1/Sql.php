@@ -327,7 +327,7 @@ class Sql extends \app\inc\Controller
             } else {
                 //echo "Not cached";
                 ob_start();
-                $srs = Input::get('srs') ?: "900913";
+                $srs = Input::get('srs') ?: "3857";
 
                 $format = Input::get('format') ?: "geojson";
                 if (!in_array($format, ["geojson", "csv", "excel"])) {
