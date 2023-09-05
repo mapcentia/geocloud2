@@ -34,7 +34,7 @@ wmsLayer.init = function (record) {
                 if (forStore.hasOwnProperty(i)) {
                     wmsLayer.fieldsForStore.push(forStore[i].name);
                     wmsLayer.fieldsForStoreBrackets.push("[" + forStore[i].name + "]");
-                    if (forStore[i].type === "number" || forStore[i].type === "int" || forStore[i].type === "double") {
+                    if (forStore[i].type === "number" || forStore[i].type === "int" || forStore[i].type === "double" || forStore[i].type === "decimal" ) {
                         wmsLayer.numFieldsForStore.push(forStore[i].name);
                     }
                 }
