@@ -247,6 +247,11 @@ class Globals
                     "type" => "textarea",
                     "title" => "Tooltip template",
                 ],
+                [
+                    "name" => "line_highlight_style",
+                    "type" => "textarea",
+                    "title" => "Line highlight style",
+                ],
             ]
 
         ],
