@@ -10,9 +10,10 @@ RUN sed -i "s/session.gc_maxlifetime = 1440/session.gc_maxlifetime = 86400/g" /e
 RUN sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 1000M/g" /etc/php/7.3/fpm/php.ini
 RUN sed -i "s/post_max_size = 8M/post_max_size = 1000M/g" /etc/php/7.3/fpm/php.ini
 
-# Install MapServer 7.6 from source
-RUN git clone https://github.com/mapserver/mapserver.git --branch branch-7-6 &&\
+# Install MapServer 7.6.4 from source
+RUN git clone https://github.com/mapserver/mapserver.git &&\
     cd mapserver &&\
+    git checkout tags/rel-7-6-4 &&\
     mkdir build &&\
     cd build &&\
     cmake -DCMAKE_INSTALL_PREFIX=/opt \
