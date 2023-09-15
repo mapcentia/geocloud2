@@ -284,6 +284,12 @@ class Globals
                     "title" => "Immutable",
                     "default" => false,
                 ],
+                [
+                    "name" => "filter_html_template",
+                    "type" => "textarea",
+                    "title" => "HTML template",
+                ],
+
             ]
 
         ],
