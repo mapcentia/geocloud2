@@ -129,15 +129,7 @@ abstract class Cache
      */
     static public function deleteItemsByTagsAll(array $tags): void
     {
-        self::$instanceCache->deleteItemsByTags($tags, TaggableCacheItemPoolInterface::TAG_STRATEGY_ALL); // V8
-    }
-
-    /**
-     * @param array<string> $tags
-     */
-    static public function deleteItemsByTags(array $tags): void
-    {
-        self::$instanceCache->deleteItemsByTags($tags, TaggableCacheItemPoolInterface::TAG_STRATEGY_ONE);
+        self::$instanceCache->deleteItemsByTags($tags, TaggableCacheItemPoolInterface::TAG_STRATEGY_ONE); // V8
     }
 
     /**

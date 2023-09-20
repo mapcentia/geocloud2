@@ -188,10 +188,12 @@ class Table extends Model
         $this->metaData = array_map(array($this, "getType"), $this->metaData);
     }
 
-    private function clearCacheOnSchemaChanges(): void
+    private function clearCacheOnSchemaChanges($relName = null): void
     {
-        // We clear all cache, because it can take long time to clear by tag
-        Cache::clear();
+        $relName = $relName ?: $this->table;
+        $arr = ["relExist", "columns", "metadata", "prikey", "columnExist", "childTables", $relName, $this->postgisdb];
+        Cache::deleteItemsByTagsAll($arr);
+        Cache::deleteItemsByTagsAll(["meta", $this->postgisdb]);
     }
 
     /**

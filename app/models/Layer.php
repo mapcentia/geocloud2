@@ -42,17 +42,14 @@ class Layer extends Table
      */
     private function clearCacheOnSchemaChanges(): void
     {
-        // We clear all cache, because it can take long time to clear by tag
-        Cache::clear();
+        $arr = ["meta", $this->postgisdb];
+        Cache::deleteItemsByTagsAll($arr);
     }
 
-    /**
-     *
-     */
-    private function clearCacheOfColumns(): void
+    private function clearCacheOfColumns($relName): void
     {
-        // We clear all cache, because it can take long time to clear by tag
-        Cache::clear();
+        $arr = ["columns", $relName, $this->postgisdb];
+        Cache::deleteItemsByTagsAll($arr);
     }
 
     /**

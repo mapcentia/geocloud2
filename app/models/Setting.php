@@ -35,8 +35,10 @@ class Setting extends Model
      */
     private function clearCacheOnSchemaChanges(): void
     {
-        // We clear all cache, because it can take long time to clear by tag
-        Cache::clear();
+        $arr = ["settings"];
+        foreach ($arr as $tag) {
+            Cache::deleteItemsByTagsAll([$tag, $this->postgisdb]);
+        }
     }
 
     /**
