@@ -125,7 +125,7 @@ class Table extends Model
 
         if ($this->schema != "settings") {
             $cacheType = "relExist";
-            $cacheRel = md5($this->table);
+            $cacheRel = ($this->table);
             $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
             $CachedString = Cache::getItem($cacheId);
             if ($CachedString != null && $CachedString->isHit()) {
@@ -190,10 +190,10 @@ class Table extends Model
 
     private function clearCacheOnSchemaChanges($relName = null): void
     {
-        $relName = $relName ?: $this->table;
-        $arr = ["relExist", "columns", "metadata", "prikey", "columnExist", "childTables", $relName, $this->postgisdb];
-        Cache::deleteItemsByTagsAll($arr);
+        // We clear cache for the Meta API, which is not tagged with a specific relation
         Cache::deleteItemsByTagsAll(["meta", $this->postgisdb]);
+        // We clear all cache for the specific relation
+        Cache::deleteItemsByTagsAll([md5($relName), $this->postgisdb]);
     }
 
     /**
@@ -523,7 +523,7 @@ class Table extends Model
      */
     public function destroy(): array
     {
-        $this->clearCacheOnSchemaChanges();
+        $this->clearCacheOnSchemaChanges($this->table);
         $response = [];
         $sql = "DROP TABLE {$this->table} CASCADE;";
         $res = $this->prepare($sql);
@@ -580,7 +580,6 @@ class Table extends Model
     public function updateRecord($data, string $keyName, bool $raw = false, bool $append = false): array
     {
         $data = $this->makeArray($data);
-        $this->clearCacheOnSchemaChanges();
         $response = [];
         $pairArr = [];
         $keyArr = [];
@@ -589,6 +588,9 @@ class Table extends Model
         foreach ($data as $set) {
             $set = $this->makeArray($set);
             foreach ($set as $row) {
+                $spl = explode(".", $row->_key_);
+                $tableName = $spl[0]. "." . $spl[1];
+                $this->clearCacheOnSchemaChanges($tableName);
                 if (isset(App::$param["ckan"])) {
                     // Delete package from CKAN if "Update" is being set to false
                     if (isset($row->meta->ckan_update) and $row->meta->ckan_update === false) {
@@ -817,7 +819,7 @@ class Table extends Model
      */
     public function purgeFieldConf(string $_key_): array
     {
-        $this->clearCacheOnSchemaChanges();
+        $this->clearCacheOnSchemaChanges($this->table);
         $this->metaData = $this->getMetaData($this->table);
         $this->setType();
         $fieldconfArr = (array)json_decode($this->geometryColumns["fieldconf"]);
@@ -840,7 +842,7 @@ class Table extends Model
      */
     public function updateColumn($data, string $key): array // Only geometry tables
     {
-        $this->clearCacheOnSchemaChanges();
+        $this->clearCacheOnSchemaChanges($this->table);
         $response = [];
         $this->purgeFieldConf($key);
         $data = $this->makeArray($data);
@@ -919,7 +921,7 @@ class Table extends Model
      */
     public function deleteColumn($data, string $_key_): array // Only geometry tables
     {
-        $this->clearCacheOnSchemaChanges();
+        $this->clearCacheOnSchemaChanges($this->table);
         $response = [];
         $data = $this->makeArray($data);
         $sql = "";
@@ -958,7 +960,7 @@ class Table extends Model
      */
     public function addColumn(array $data): array
     {
-        $this->clearCacheOnSchemaChanges();
+        $this->clearCacheOnSchemaChanges($this->table);
         $response = [];
         $safeColumn = self::toAscii($data['column'], array(), "_");
         $sql = "";
@@ -1040,7 +1042,7 @@ class Table extends Model
      */
     public function addVersioning(): array
     {
-        $this->clearCacheOnSchemaChanges();
+        $this->clearCacheOnSchemaChanges($this->table);
         $response = [];
         $this->begin();
         $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_version_gid SERIAL NOT NULL";
@@ -1109,7 +1111,7 @@ class Table extends Model
      */
     public function removeVersioning(): array
     {
-        $this->clearCacheOnSchemaChanges();
+        $this->clearCacheOnSchemaChanges($this->table);
         $response = [];
         $this->begin();
         $sql = "ALTER TABLE {$this->table} DROP COLUMN gc2_version_gid";
@@ -1178,7 +1180,7 @@ class Table extends Model
      */
     public function addWorkflow(): array
     {
-        $this->clearCacheOnSchemaChanges();
+        $this->clearCacheOnSchemaChanges($this->table);
         $response = [];
         $this->begin();
         $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_status integer";
@@ -1230,7 +1232,7 @@ class Table extends Model
      */
     public function create(string $table, string $type, int $srid = 4326): array
     {
-        $this->clearCacheOnSchemaChanges();
+        //$this->clearCacheOnSchemaChanges();
         $response = [];
         $this->PDOerror = null;
         $table = self::toAscii($table, array(), "_");
@@ -1259,7 +1261,7 @@ class Table extends Model
      */
     public function createAsRasterTable(int $srid = 4326): array
     {
-        $this->clearCacheOnSchemaChanges();
+        //$this->clearCacheOnSchemaChanges();
         $response = [];
         $this->PDOerror = NULL;
         $table = $this->tableWithOutSchema;

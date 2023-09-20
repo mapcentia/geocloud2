@@ -48,8 +48,8 @@ class Layer extends Table
 
     private function clearCacheOfColumns($relName): void
     {
-        $arr = ["columns", $relName, $this->postgisdb];
-        Cache::deleteItemsByTagsAll($arr);
+        // We clear the geometry columns cache for the specific relation
+        Cache::deleteItemsByTagsAll(["columns", md5($relName), $this->postgisdb]);
     }
 
     /**
@@ -725,7 +725,9 @@ class Layer extends Table
      */
     public function updatePrivileges(object $data): array
     {
-        $this->clearCacheOfColumns();
+        $spl = explode(".", $data->_key_);
+        $tableName = $spl[0] . "." . $spl[1];
+        $this->clearCacheOfColumns($tableName);
         $this->clearCacheOnSchemaChanges();
 
         $table = new Table("settings.geometry_columns_join");
@@ -734,7 +736,7 @@ class Layer extends Table
         $privileges['privileges'] = json_encode($privilege);
         $privileges['_key_'] = $data->_key_;
         $res = $table->updateRecord(json_decode(json_encode($privileges)), "_key_");
-        if ($res['success'] == true) {
+        if ($res['success']) {
             $response['success'] = true;
             $response['message'] = "Privileges updates";
         } else {
