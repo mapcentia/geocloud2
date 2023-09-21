@@ -1534,7 +1534,7 @@ class Table extends Model
                 -- Recursion: Initial Query
                 SELECT
                     0 AS \"level\",
-                    :relName AS \"dep_name\",   --  <- define dependent object HERE
+                    :relName::varchar collate \"C\" AS \"dep_name\",   --  <- define dependent object HERE
                     '' AS \"dep_table\",
                     '' AS \"dep_type\",
                     '' AS \"ref_name\",
