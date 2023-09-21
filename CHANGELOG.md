@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2023.9.1] - 2023-21-9
+### Fixed
+- Table::getDependTree now works with PostgreSQL version > 12
+
 ## [2023.9.0] - 2023-12-9
 ### Added
 - A new GC2 Meta option `line_highlight_style` is added. If set with a Leaflet style object an extra line is drawn below the ordinary vector line, which gives a border or highlight effect.
