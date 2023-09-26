@@ -25,7 +25,6 @@ header('Connection:close', TRUE);
 
 include __DIR__ . "/../libs/PEAR/XML/Unserializer.php";
 include __DIR__ . "/../libs/PEAR/XML/Serializer.php";
-include __DIR__ . "/../libs/PEAR/Cache_Lite/Lite.php";
 
 Util::disableOb();
 const FEATURE_LIMIT = 1000000;
