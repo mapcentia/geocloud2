@@ -81,7 +81,7 @@ class PostGeofence implements PostInterface
                         $filter = " AND {$rule["filters"]["write"]}";
                     }
                     if (!empty($rule["filters"]["write_spatial"])) {
-                        $spatialFilter = " AND st_intersects(fkg.{$typeName}.geometri, ST_transform(({$rule["filters"]["write_spatial"]}), 25832))";
+                        $spatialFilter = " AND st_intersects(fkg.{$typeName}.geometri, ({$rule["filters"]["write_spatial"]}))";
                     }
 
                     $sql = $sql . $filter;
