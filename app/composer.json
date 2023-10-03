@@ -10,7 +10,7 @@
         "phayes/geophp": "^1.2",
         "phpfastcache/phpfastcache": "^8.0",
         "zircote/swagger-php": "^3.0",
-        "firebase/php-jwt": "^5.0",
+        "firebase/php-jwt": "^6.0",
         "predis/predis": "^1.1",
         "league/flysystem": "^1.0",
         "league/flysystem-aws-s3-v3": "^1.0",
