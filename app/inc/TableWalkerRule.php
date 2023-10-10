@@ -57,7 +57,7 @@ class TableWalkerRule extends BlankWalker
             $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $schema, $relation);
             $geofence = new Geofence($userFilter);
             $response = $geofence->authorize($this->rules);
-            if ($response["access"] == Geofence::DENY_ACCESS) {
+            if (isset($response["access"]) && $response["access"] == Geofence::DENY_ACCESS) {
                 $this->throwException($schema . "." . $relation);
             }
             if (!empty($response["filters"]["filter"])) {
