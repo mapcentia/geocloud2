@@ -6,7 +6,6 @@
     "require": {
         "wildbit/postmark-php": "^2.2",
         "odesk/phystrix": "^2.0",
-        "phpoffice/phpexcel": "^1.8",
         "phayes/geophp": "^1.2",
         "phpfastcache/phpfastcache": "^8.0",
         "zircote/swagger-php": "^3.0",
@@ -27,7 +26,7 @@
         "peppeocchi/php-cron-scheduler": "^3.1",
         "sad_spirit/pg_builder": "v1.0.0-beta",
         "ext-gd": "*",
-        "phpoffice/phpspreadsheet": "^1.29"
+        "phpoffice/phpspreadsheet": "^1.20"
     },
     "require-dev": {
         "codeception/module-asserts": "^1.3",
