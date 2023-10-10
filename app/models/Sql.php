@@ -14,8 +14,8 @@ use app\inc\Model;
 use Exception;
 use PDO;
 use PDOException;
-use PHPExcel_Reader_CSV;
-use PHPExcel_Writer_Excel2007;
+use PhpOffice\PhpSpreadsheet\Reader\Csv;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use ZipArchive;
 
@@ -235,7 +235,10 @@ class Sql extends Model
             $fieldConf = null;
 
             if ($aliasesFrom) {
-                $fieldConf = json_decode($this->getGeometryColumns($aliasesFrom, "fieldconf"));
+                $c = $this->getGeometryColumns($aliasesFrom, "fieldconf");
+                if ($c) {
+                    $fieldConf = json_decode($this->getGeometryColumns($aliasesFrom, "fieldconf"));
+                }
             }
 
             try {
@@ -264,7 +267,7 @@ class Sql extends Model
 
                     foreach ($arr as $value) {
                         // Each embedded double-quote characters must be represented by a pair of double-quote characters.
-                        $value = str_replace('"', '""', $value);
+                        $value = $value !== null ? str_replace('"', '""', $value) : null;
 
                         // Any text is quoted
                         if ($csvAllToStr) {
@@ -285,20 +288,20 @@ class Sql extends Model
                 // ================
 
                 if ($format == "excel") {
-                    include __DIR__ . '../vendor/phpoffice/phpexcel/Classes/PHPExcel/IOFactory.php';
                     $file = tempnam(sys_get_temp_dir(), 'excel_');
                     $handle = fopen($file, "w");
                     fwrite($handle, $csv);
                     $csv = null;
 
-                    $objReader = new PHPExcel_Reader_CSV();
+                    $objReader = new Csv();
                     $objReader->setDelimiter($separator);
+                    $objReader->setTestAutoDetect(false);
                     $objPHPExcel = $objReader->load($file);
 
                     fclose($handle);
                     unlink($file);
 
-                    $objWriter = new PHPExcel_Writer_Excel2007($objPHPExcel);
+                    $objWriter = new Xlsx($objPHPExcel);
 
                     // We'll be outputting an excel file
                     header('Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

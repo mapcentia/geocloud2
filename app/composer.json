@@ -27,7 +27,8 @@
         "ext-gd": "*",
         "softcreatr/jsonpath": "^0.8.1",
         "aws/aws-sdk-php": "^3.263",
-        "league/flysystem-aws-s3-v3": "^3.13"
+        "league/flysystem-aws-s3-v3": "^3.13",
+        "phpoffice/phpspreadsheet": "^1.29"
     },
     "require-dev": {
         "phpstan/phpstan": "^1.8",
