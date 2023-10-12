@@ -177,7 +177,7 @@ class Feature extends Controller
             }
         }
 
-        foreach ($arr["gml:featureMember"][$this->schema . ":" . $this->table] as $key => $prop) {
+        foreach ($arr["gml:featureMembers"][$this->schema . ":" . $this->table] as $key => $prop) {
             if (!is_array($prop)) {
                 $props[explode(":", $key)[1]] = $prop;
             }
