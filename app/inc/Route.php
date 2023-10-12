@@ -41,13 +41,13 @@ class Route
 
         for ($i = 0; $i < $sizeOfRouteSignature; $i++) {
             if ($routeSignature[$i][0] == '{' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == '}') {
-                if (!empty($requestSignature[$i])) {
+                if (isset($requestSignature[$i])) {
                     $r[trim($routeSignature[$i], "{}")] = trim($requestSignature[$i], "{}");
                 } else {
                     $signatureMatch = false;
                 }
             } else if ($routeSignature[$i][0] == '[' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == ']') {
-                if (!empty($requestSignature[$i])) {
+                if (isset($requestSignature[$i])) {
                     $r[trim($routeSignature[$i], "[]")] = trim($requestSignature[$i], "[]");
                 }
             } else {
@@ -124,7 +124,7 @@ class Route
      */
     static public function getParam(string $parameter): ?string
     {
-        if (!empty(self::$params[$parameter])) {
+        if (isset(self::$params[$parameter])) {
             return urldecode(self::$params[$parameter]);
         } else {
             return null;
