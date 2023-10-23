@@ -100,7 +100,7 @@ class Jwt
      * @param bool $isSubUser
      * @return array<mixed>
      */
-    public static function createJWT(string $secret, string $db, string $userId, bool $isSubUser): array
+    public static function createJWT(string $secret, string $db, string $userId, bool $isSubUser, string|null $userGroup): array
     {
         $token = [
             "iss" => App::$param["host"],
@@ -109,6 +109,7 @@ class Jwt
             "iat" => time(),
             "database" => $db,
             "superUser" => $isSubUser,
+            "userGroup" => $userGroup,
         ];
         return [
             "token" => \Firebase\JWT\JWT::encode($token, $secret, "HS256"),

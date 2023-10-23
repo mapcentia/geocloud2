@@ -373,6 +373,7 @@ class Model
      * @param string|null $cacheKey
      * @return array<mixed>
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws PDOException
      */
     public function getMetaData(string $table, bool $temp = false, bool $restriction = false, array $restrictions = null, string $cacheKey = null): array
     {
@@ -459,6 +460,7 @@ class Model
                 $response['code'] = 401;
                 return $response;
             }
+            $index = $this->getIndexes($_schema, $_table);
             while ($row = $this->fetchRow($res)) {
                 $foreignValues = [];
                 $reference = null;
@@ -486,7 +488,7 @@ class Model
                     $rel = $restrictions[$row["column_name"]];
                     $sql = "SELECT {$rel->_value} AS value, {$rel->_text} AS text FROM {$rel->_rel}";
                     if (!empty($rel->_where)) {
-                        $sql.= " WHERE {$rel->_where}";
+                        $sql .= " WHERE {$rel->_where}";
                     }
                     try {
                         $resC = $this->prepare($sql);
@@ -523,12 +525,14 @@ class Model
                     "type" => $row["udt_name"],
                     "full_type" => $row['full_type'],
                     "is_nullable" => !$row['is_nullable'],
-                    "character_maximum_length" =>  $row["character_maximum_length"],
+                    "character_maximum_length" => $row["character_maximum_length"],
                     "numeric_precision" => $row["numeric_precision"],
                     "numeric_scale" => $row["numeric_scale"],
                     "max_bytes" => $row["max_bytes"],
                     "reference" => $reference,
                     "restriction" => sizeof($foreignValues) > 0 ? $foreignValues : null,
+                    "primary_key" => !empty($index[$row["column_name"]]["primary_key"]),
+                    "index_method" => $index[$row["column_name"]]["index_method"] ?? null,
                 );
                 // Get type and srid of geometry
                 if ($row["udt_name"] == "geometry") {
@@ -1099,5 +1103,60 @@ class Model
             "success" => true,
             "data" => $row["count"],
         ];
+    }
+
+    /**
+     * @param string|null $schema
+     * @param string $table
+     * @return array
+     */
+    public function getIndexes(string|null $schema, string $table): array
+    {
+        $response = [];
+        $sql = "SELECT
+                    n.nspname AS schema,
+                    t.relname AS table,
+                    c.relname AS index,
+                    a.amname AS index_method,
+                    opc.operator_classes,
+                    pg_get_indexdef(i.indexrelid) AS index_definition,
+                    att.attname AS column_name,
+                    CASE
+                        WHEN pkcon.conname IS NOT NULL THEN 'Primary Key'
+                        ELSE ''
+                    END AS primary_key  -- Added primary key indication
+                FROM
+                    pg_catalog.pg_namespace n
+                JOIN
+                    pg_catalog.pg_class c ON c.relnamespace = n.oid
+                JOIN
+                    pg_catalog.pg_index i ON i.indexrelid = c.oid
+                JOIN
+                    pg_catalog.pg_am a ON a.oid = c.relam
+                JOIN
+                    pg_catalog.pg_class t ON t.oid = i.indrelid
+                CROSS JOIN LATERAL (
+                    SELECT ARRAY (SELECT opc.opcname
+                                 FROM unnest(i.indclass::oid[]) WITH ORDINALITY o(oid, ord)
+                                 JOIN pg_opclass opc ON opc.oid = o.oid
+                                 ORDER BY o.ord)
+                   ) opc(operator_classes)
+                JOIN
+                    pg_attribute att ON att.attnum = ANY(i.indkey) AND att.attrelid = t.oid
+                LEFT JOIN
+                    pg_constraint pkcon ON pkcon.conrelid = t.oid AND pkcon.contype = 'p' AND att.attnum = ANY(pkcon.conkey)
+                WHERE
+                    n.nspname !~ '^pg_'
+                AND
+                    c.relkind = 'i'
+                    AND n.nspname = :schema
+                AND t.relname = :table
+                ORDER BY 1, 2, 3, 4;";
+        $res = $this->prepare($sql);
+        $res->execute(["schema" => $schema, "table" => $table]);
+        while ($row = $this->fetchRow($res)) {
+            $response[$row["column_name"]] = $row;
+        }
+        return $response;
     }
 }

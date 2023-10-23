@@ -30,7 +30,7 @@ class Session extends Model
     /**
      * @return array<string, array<string, mixed>>
      */
-    public function check() : array
+    public function check(): array
     {
         $response = [];
         if (isset($_SESSION['auth']) && $_SESSION['auth'] == true) {
@@ -115,7 +115,7 @@ class Session extends Model
             $_SESSION["properties"] = $properties;
 
             $_SESSION['email'] = $row['email'];
-            $_SESSION['usergroup'] = $row['usergroup'] ?: false;
+            $_SESSION['usergroup'] = $row['usergroup'] ?: null;
             $_SESSION['created'] = strtotime($row['created']);
             $_SESSION['postgisschema'] = $schema;
 
@@ -128,6 +128,7 @@ class Session extends Model
             $response['data']['subuser'] = (bool)$row['parentdb'];
             $response['data']['email'] = $row['email'];
             $response['data']['properties'] = $properties;
+            $response['data']['usergroup'] = $_SESSION['usergroup'];
 
             if (!$tokenOnly) { //NOT OAuth
                 // Fetch sub-users
@@ -158,7 +159,7 @@ class Session extends Model
                 Database::setDb($response['data']['parentdb']);
                 $settings_viewer = new Setting();
                 $superUserApiKey = $settings_viewer->getApiKeyForSuperUser();
-                $token = Jwt::createJWT($superUserApiKey, $response['data']['parentdb'], $response['data']['screen_name'], !$response['data']['subuser']);
+                $token = Jwt::createJWT($superUserApiKey, $response['data']['parentdb'], $response['data']['screen_name'], !$response['data']['subuser'], $response['data']['usergroup']);
                 return [
                     "access_token" => $token['token'],
                     "token_type" => "bearer",
