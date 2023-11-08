@@ -12,6 +12,7 @@ use app\models\Geofence;
 use Exception;
 use sad_spirit\pg_builder\Delete;
 use sad_spirit\pg_builder\Insert;
+use sad_spirit\pg_builder\nodes\range\RelationReference;
 use sad_spirit\pg_builder\Select;
 use sad_spirit\pg_builder\Update;
 use sad_spirit\pg_builder\BlankWalker;
@@ -24,6 +25,8 @@ class TableWalkerRule extends BlankWalker
     private string $service;
     private string $request;
     private string $ipAddress;
+
+    private const DEFAULT_SCHEMA = "public";
 
     public function __construct($userName, $service, $request, $ipAddress)
     {
@@ -46,19 +49,54 @@ class TableWalkerRule extends BlankWalker
      */
     public function walkSelectStatement(Select $statement): void
     {
+        global $relations;
         $this->request = "select";
+        $relations = [];
         foreach ($statement->from->getIterator() as $from) {
-            // A sub-select doesn't have name
-            if (!isset($from->name)) {
-                continue;
+
+            $getLeft = function ($from, &$relations) use (&$getRight, &$getLeft) {
+                if (isset($from->right) && $from->right instanceof RelationReference) {
+                    $getRight($from, $relations);
+                }
+                if ($from->left instanceof RelationReference) {
+                    $relations[] = [
+                        "schema" => ($from->left->name->schema->value ?? self::DEFAULT_SCHEMA),
+                        "table" => $from->left->name->relation->value
+                    ];
+                } else {
+                    $getLeft($from->left, $relations);
+                }
+            };
+            $getRight = function ($from, &$relations) use (&$getRight) {
+                if ($from->right instanceof RelationReference) {
+                    $relations[] = [
+                        "schema" => ($from->right->name->schema->value ?? self::DEFAULT_SCHEMA),
+                        "table" => $from->right->name->relation->value
+                    ];
+                } else {
+                    $getRight($from->right, $relations);
+                }
+            };
+            // Check if we have a join
+            if (isset($from->left)) {
+                $getLeft($from, $relations);
+            } else {
+                // A sub-select doesn't have name
+                if (!isset($from->name)) {
+                    continue;
+                }
+                $relations[] = [
+                    "schema" => ($from->name->schema->value ?? self::DEFAULT_SCHEMA),
+                    "table" => $from->name->relation->value
+                ];
             }
-            $schema = $from->name->schema->value ?? "public";
-            $relation = $from->name->relation->value;
-            $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $schema, $relation);
+        }
+        foreach ($relations as $relation) {
+            $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $relation["schema"], $relation["table"]);
             $geofence = new Geofence($userFilter);
             $response = $geofence->authorize($this->rules);
             if (isset($response["access"]) && $response["access"] == Geofence::DENY_ACCESS) {
-                $this->throwException($schema . "." . $relation);
+                $this->throwException($relation["schema"] . "." . $relation["table"]);
             }
             if (!empty($response["filters"]["filter"])) {
                 $statement->where->and($response["filters"]["filter"]);

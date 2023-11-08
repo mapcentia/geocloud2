@@ -119,6 +119,23 @@ class SqlParseTest extends Unit
         $this->assertStringContainsString("test.userid = 'test'", $alteredStatement);
         $this->assertStringContainsString("listens.uid = 'test'", $alteredStatement);
     }
+    public function testTableWalkerRuleShouldAddWhereClauseToJoin(): void
+    {
+
+        $string = "SELECT uid
+            FROM LISTENS JOIN foo ON listens.uid = foo.id JOIN test ON test.userid = foo.bar";
+
+        $walker = new TableWalkerRule(...$this->request);
+        $walker->setRules($this->rules);
+
+        $factory = new sad_spirit\pg_builder\StatementFactory();
+        $select = $factory->createFromString($string);
+        $select->dispatch($walker);
+        $alteredStatement = $factory->createFromAST($select)->getSql();
+        $this->assertStringContainsString("foo.bar = 'test'", $alteredStatement);
+        $this->assertStringContainsString("test.userid = 'test'", $alteredStatement);
+        $this->assertStringContainsString("listens.uid = 'test'", $alteredStatement);
+    }
 
     public function testTableWalkerRuleShouldNotAddWhereClauseToSelectWhenNoMatch(): void
     {
@@ -130,11 +147,9 @@ class SqlParseTest extends Unit
         $select = $factory->createFromString($string);
         try {
             $select->dispatch($walker);
-            throw new Exception("dummy");
+            $this->fail();
         } catch (Exception $e) {
-            if ($e->getMessage() != "DENY") {
-                $this->fail();
-            }
+            $this->assertStringContainsString("DENY", $e->getMessage());
         }
     }
 
