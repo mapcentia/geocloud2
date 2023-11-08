@@ -54,7 +54,7 @@ class TableWalkerRule extends BlankWalker
         $relations = [];
         foreach ($statement->from->getIterator() as $from) {
 
-            $getLeft = function ($from, &$relations) use (&$getRight, &$getLeft) {
+            $getLeft = function ($from, &$relations) use (&$getRight, &$getLeft): void {
                 if (isset($from->right) && $from->right instanceof RelationReference) {
                     $getRight($from, $relations);
                 }
@@ -67,7 +67,7 @@ class TableWalkerRule extends BlankWalker
                     $getLeft($from->left, $relations);
                 }
             };
-            $getRight = function ($from, &$relations) use (&$getRight) {
+            $getRight = function ($from, &$relations) use (&$getRight): void {
                 if ($from->right instanceof RelationReference) {
                     $relations[] = [
                         "schema" => ($from->right->name->schema->value ?? self::DEFAULT_SCHEMA),
@@ -112,7 +112,7 @@ class TableWalkerRule extends BlankWalker
     {
         $this->request = "update";
         foreach ($statement->from->getIterator() as $from) {
-            $schema = $from->name->schema->value ?? "public";
+            $schema = $from->name->schema->value ?? self::DEFAULT_SCHEMA;
             $relation = $from->name->relation->value;
             $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $schema, $relation);
             $geofence = new Geofence($userFilter);
@@ -124,7 +124,7 @@ class TableWalkerRule extends BlankWalker
                 $statement->where->and($response["filters"]["filter"]);
             }
         }
-        $schema = $statement->relation->relation->schema->value ?? "public";
+        $schema = $statement->relation->relation->schema->value ?? self::DEFAULT_SCHEMA;
         $relation = $statement->relation->relation->relation->value;
         $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $schema, $relation);
         $geofence = new Geofence($userFilter);
@@ -145,7 +145,7 @@ class TableWalkerRule extends BlankWalker
     {
         $this->request = "delete";
         foreach ($statement->using->getIterator() as $using) {
-            $schema = $using->name->schema->value ?? "public";
+            $schema = $using->name->schema->value ?? self::DEFAULT_SCHEMA;
             $relation = $using->name->relation->value;
             $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $schema, $relation);
             $geofence = new Geofence($userFilter);
@@ -157,7 +157,7 @@ class TableWalkerRule extends BlankWalker
                 $statement->where->and($response["filters"]["filter"]);
             }
         }
-        $schema = $statement->relation->relation->schema->value ?? "public";
+        $schema = $statement->relation->relation->schema->value ?? self::DEFAULT_SCHEMA;
         $relation = $statement->relation->relation->relation->value;
         $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $schema, $relation);
         $geofence = new Geofence($userFilter);
@@ -177,7 +177,7 @@ class TableWalkerRule extends BlankWalker
     public function walkInsertStatement(Insert $statement): void
     {
         $this->request = "insert";
-        $schema = $statement->relation->relation->schema->value ?? "public";
+        $schema = $statement->relation->relation->schema->value ?? self::DEFAULT_SCHEMA;
         $relation = $statement->relation->relation->relation->value;
         $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $schema, $relation);
         $geofence = new Geofence($userFilter);
