@@ -248,7 +248,7 @@ class Sql extends Controller
         $response = [];
         $rule = new Rule();
         $walkerRelation = new TableWalkerRelation();
-        $factory = new StatementFactory();
+        $factory = new StatementFactory(PDOCompatible: true);
         try {
             $select = $factory->createFromString($this->q);
         } catch (Exception $e) {
