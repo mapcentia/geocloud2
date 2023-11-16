@@ -64,7 +64,7 @@ class Meta extends Controller
      *   )
      * )
      */
-    public function get_index()
+    public function get_index(): array
     {
         $jwt = Jwt::validate()["data"];
         $out = [];

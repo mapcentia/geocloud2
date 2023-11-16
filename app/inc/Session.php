@@ -53,9 +53,9 @@ class Session
     }
 
     /**
-     * @return array<mixed>
+     * @return array|null
      */
-    public static function get(): array
+    public static function get(): array|null
     {
         return $_SESSION;
     }

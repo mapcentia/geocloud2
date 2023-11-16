@@ -24,7 +24,7 @@ class Xmlworkspace extends Controller
     /**
      * @var Layer
      */
-    private $layers;
+    private Layer $layers;
 
     /**
      *
@@ -32,13 +32,11 @@ class Xmlworkspace extends Controller
     function __construct()
     {
         parent::__construct();
-
         $this->layers = new Layer();
     }
 
     /**
-     * TODO in >8.1 return type should be "never"
-     * @return void
+     * @return never
      * @throws PhpfastcacheInvalidArgumentException
      * @OA\Get(
      *   path="/api/v3/xmlworkspace/{layer}",
@@ -63,7 +61,7 @@ class Xmlworkspace extends Controller
      *   )
      * )
      */
-    public function get_index()
+    public function get_index(): never
     {
         // Get the URI params from request½
         $jwt = Jwt::validate()["data"];
@@ -105,7 +103,7 @@ class Xmlworkspace extends Controller
             if ($field["reference"] && !in_array($field["reference"], $alreadyPassedDomains)) {
                 $referenceName = explode(".", $field["reference"])[1];
                 echo "        <Domain xsi:type='esri:CodedValueDomain'>";
-                echo "            <DomainName>{$referenceName}</DomainName>";
+                echo "            <DomainName>$referenceName</DomainName>";
                 echo "            <FieldType>esriFieldTypeInteger</FieldType>";
                 echo "            <MergePolicy>esriMPTDefaultValue</MergePolicy>";
                 echo "            <SplitPolicy>esriSPTDefaultValue</SplitPolicy>";
@@ -126,8 +124,8 @@ class Xmlworkspace extends Controller
         echo "    </Domains>";
         echo "    <DatasetDefinitions xsi:type='esri:ArrayOfDataElement'>";
         echo "        <DataElement xsi:type='esri:DEFeatureClass'>";
-        echo "            <CatalogPath>/FC={$datasetName}</CatalogPath>";
-        echo "            <Name>{$datasetName}</Name>";
+        echo "            <CatalogPath>/FC=$datasetName</CatalogPath>";
+        echo "            <Name>$datasetName</Name>";
         echo "            <MetadataRetrieved>false</MetadataRetrieved>";
         echo "            <DatasetType>esriDTFeatureClass</DatasetType>";
         echo "            <DSID>3</DSID>";
@@ -162,9 +160,9 @@ class Xmlworkspace extends Controller
             echo "                      <Name>$key</Name>";
             echo "                      <Type>$esriType</Type>";
             echo "                      <IsNullable>true</IsNullable>";
-            echo "                      <Length>{$length}</Length>";
-            echo "                      <Precision>{$precision}</Precision>";
-            echo "                      <Scale>{$scale}</Scale>";
+            echo "                      <Length>$length</Length>";
+            echo "                      <Precision>$precision</Precision>";
+            echo "                      <Scale>$scale</Scale>";
             echo "                      <AliasName></AliasName>";
 //            echo "                      <Required>true</Required>";
 //            echo "                      <DefaultValue xsi:type='xs:string'></DefaultValue>";
@@ -189,7 +187,7 @@ class Xmlworkspace extends Controller
                 echo "  
                             <GeometryDef xsi:type='esri:GeometryDef'>
                                 <AvgNumPoints>0</AvgNumPoints>
-                                <GeometryType>{$geomType}</GeometryType>
+                                <GeometryType>$geomType</GeometryType>
                                 <HasM>false</HasM>
                                 <HasZ>false</HasZ>
                                 <SpatialReference xsi:type='esri:ProjectedCoordinateSystem'>
@@ -215,7 +213,7 @@ class Xmlworkspace extends Controller
             if ($field["reference"]) {
                 $referenceName = explode(".", $field["reference"])[1];
                 echo "        <Domain xsi:type='esri:CodedValueDomain'>";
-                echo "            <DomainName>{$referenceName}</DomainName>";
+                echo "            <DomainName>$referenceName</DomainName>";
                 echo "            <FieldType>esriFieldTypeInteger</FieldType>";
                 echo "            <MergePolicy>esriMPTDefaultValue</MergePolicy>";
                 echo "            <SplitPolicy>esriSPTDefaultValue</SplitPolicy>";

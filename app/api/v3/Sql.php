@@ -25,7 +25,7 @@ class Sql extends Controller
     /**
      * @var V2Sql
      */
-    private $v2;
+    private V2Sql $v2;
 
     public function __construct()
     {
