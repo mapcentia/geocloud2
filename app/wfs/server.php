@@ -1271,7 +1271,7 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     $rule = new Rule();
     $walkerRelation = new TableWalkerRelation();
     $walkerRule = new TableWalkerRule(isAuth() ? $user : "*", "wfst", 'select', '');
-    $factory = new StatementFactory();
+    $factory = new StatementFactory(PDOCompatible: true);
     // End rules
 
     $featureCount = "";
@@ -1289,7 +1289,7 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
         } catch (Exception $e) {
             makeExceptionReport($e->getMessage());
         }
-        $countSql = $factory->createFromAST($select)->getSql();
+        $countSql = $factory->createFromAST($select, true)->getSql();
         // Rewrite done
         try {
             $res = $postgisObject->prepare($countSql);
@@ -1344,7 +1344,7 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     } catch (Exception $e) {
         makeExceptionReport($e->getMessage());
     }
-    $fullSql = $factory->createFromAST($select)->getSql();
+    $fullSql = $factory->createFromAST($select, true)->getSql();
     // Rewrite done
     try {
         $postgisObject->prepare("DECLARE curs CURSOR FOR {$fullSql}")->execute();
@@ -1584,7 +1584,7 @@ function doParse(array $arr)
                 $featureMember = array(0 => $featureMember);
             }
             $walkerRule = new TableWalkerRule(isAuth() ? $user : "*", "wfst", 'insert', '');
-            $factory = new StatementFactory();
+            $factory = new StatementFactory(PDOCompatible: true);
             foreach ($featureMember as $hey) {
                 $primeryKey = null;
                 $globalSrsName = $hey["srsName"] ?? null;
@@ -1739,7 +1739,7 @@ function doParse(array $arr)
             }
             $fid = 0;
             $walkerRule = new TableWalkerRule(isAuth() ? $user : "*", "wfst", 'update', '');
-            $factory = new StatementFactory();
+            $factory = new StatementFactory(PDOCompatible: true);
             foreach ($featureMember as $hey) {
                 $globalSrsName = $hey["srsName"] ?? null;
                 $hey["typeName"] = dropAllNameSpaces($hey["typeName"]);
@@ -1830,7 +1830,7 @@ function doParse(array $arr)
                 $featureMember = array(0 => $featureMember);
             }
             $walkerRule = new TableWalkerRule(isAuth() ? $user : "*", "wfst", 'delete', '');
-            $factory = new StatementFactory();
+            $factory = new StatementFactory(PDOCompatible: true);
             foreach ($featureMember as $hey) {
                 $hey['typeName'] = dropAllNameSpaces($hey['typeName']);
                 if (!isset($hey['Filter'])) {
@@ -2155,7 +2155,7 @@ function doParse(array $arr)
                 } catch (Exception $e) {
                     makeExceptionReport($e->getMessage());
                 }
-                $statement = $factory->createFromAST($select);
+                $statement = $factory->createFromAST($select, true);
                 $singleSql = $statement->getSql();
                 // Rewrite done
                 echo "\n<!-- $singleSql -->";

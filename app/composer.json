@@ -23,7 +23,7 @@
         "ext-zip": "*",
         "ext-zlib": "*",
         "peppeocchi/php-cron-scheduler": "^4.0",
-        "sad_spirit/pg_builder": "2.1",
+        "sad_spirit/pg_builder": "^2.3",
         "ext-gd": "*",
         "softcreatr/jsonpath": "^0.8.1",
         "aws/aws-sdk-php": "^3.263",

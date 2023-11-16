@@ -305,7 +305,7 @@ class Sql extends Controller
             $userFilter = new UserFilter($this->subUser ?: Connection::$param['postgisdb'], "sql", strtolower($operation), "*", $split[0], $split[1]);
             $geofence = new Geofence($userFilter);
             $auth = $geofence->authorize($rules);
-            $finaleStatement = $factory->createFromAST($select)->getSql();
+            $finaleStatement = $factory->createFromAST($select, true)->getSql();
             if ($auth["access"] == Geofence::LIMIT_ACCESS) {
                 try {
                     $geofence->postProcessQuery($select, $rules);
@@ -324,7 +324,7 @@ class Sql extends Controller
             $response["statement"] = $finaleStatement;
             $this->addAttr($response);
         } elseif ($operation == "Select" || $operation == "SetOpSelect") {
-            $this->q = $factory->createFromAST($select)->getSql();
+            $this->q = $factory->createFromAST($select, true)->getSql();
             if (isset($this->streamFlag)) {
                 $stream = new Stream();
                 $res = $stream->runSql($this->q);

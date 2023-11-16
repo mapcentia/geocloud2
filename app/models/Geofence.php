@@ -90,7 +90,7 @@ class Geofence extends Model
         $model->begin();
         $factory = new StatementFactory(PDOCompatible: true);
         $statement->returning[0] = "*";
-        $str = $factory->createFromAST($statement)->getSql();
+        $str = $factory->createFromAST($statement, true)->getSql();
         $str = "create temporary table foo on commit drop as with updated_rows as (" . $str . ") select * from updated_rows";
         $result = $model->prepare($str);
         $result->execute();

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "35df2dcf5d4d94f0053511b1006fd4e8",
+    "content-hash": "c4936c3cc2100adf69c83db55f26b3df",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -2148,16 +2148,16 @@
         },
         {
             "name": "sad_spirit/pg_builder",
-            "version": "v2.1.0",
+            "version": "v2.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sad-spirit/pg-builder.git",
-                "reference": "c37c44cb71a6594b2c56c1f6b28d15ea303fcc95"
+                "reference": "dc93990a8c24a3c1f4774e85741a2f7f676235dd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sad-spirit/pg-builder/zipball/c37c44cb71a6594b2c56c1f6b28d15ea303fcc95",
-                "reference": "c37c44cb71a6594b2c56c1f6b28d15ea303fcc95",
+                "url": "https://api.github.com/repos/sad-spirit/pg-builder/zipball/dc93990a8c24a3c1f4774e85741a2f7f676235dd",
+                "reference": "dc93990a8c24a3c1f4774e85741a2f7f676235dd",
                 "shasum": ""
             },
             "require": {
@@ -2165,16 +2165,16 @@
                 "php": ">=7.2.0"
             },
             "conflict": {
-                "sad_spirit/pg_wrapper": "<2.0"
+                "sad_spirit/pg_wrapper": "<2.2"
             },
             "require-dev": {
                 "ext-pdo_pgsql": "*",
                 "ext-pgsql": "*",
-                "phpstan/phpstan": "^1.8.8",
+                "phpstan/phpstan": "^1.10.15",
                 "phpunit/phpunit": "^8.0|^9.0",
                 "psr/cache": "^1.0",
-                "sad_spirit/pg_wrapper": "^2.0.0",
-                "vimeo/psalm": "^4.16"
+                "sad_spirit/pg_wrapper": "^2.2.0",
+                "vimeo/psalm": "^4.30"
             },
             "suggest": {
                 "ext-pdo_pgsql": "Used for running built queries",
@@ -2211,9 +2211,9 @@
             ],
             "support": {
                 "issues": "https://github.com/sad-spirit/pg-builder/issues",
-                "source": "https://github.com/sad-spirit/pg-builder/tree/v2.1.0"
+                "source": "https://github.com/sad-spirit/pg-builder/tree/v2.3.1"
             },
-            "time": "2022-11-04T09:58:20+00:00"
+            "time": "2023-11-15T19:31:22+00:00"
         },
         {
             "name": "softcreatr/jsonpath",
