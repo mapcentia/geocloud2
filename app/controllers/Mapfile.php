@@ -382,10 +382,10 @@ class Mapfile extends Controller
                 for ($i = 0; $i < sizeof($arr); $i++) {
                     $last = 100000;
                     foreach ($arr2 as $key => $value) {
-                        if ($value->sortid < $last) {
+                        if ($value["sortid"] < $last) {
                             $temp = $value;
                             $del = $key;
-                            $last = $value->sortid;
+                            $last = $value["sortid"];
                         }
                     }
                     $sortedArr[] = $temp;
@@ -1400,10 +1400,10 @@ class Mapfile extends Controller
                 for ($i = 0; $i < sizeof($arr); $i++) {
                     $last = 100000;
                     foreach ($arr2 as $key => $value) {
-                        if ($value->sortid < $last) {
+                        if ($value["sortid"] < $last) {
                             $temp = $value;
                             $del = $key;
-                            $last = $value->sortid;
+                            $last = $value["sortid"];
                         }
                     }
                     array_push($sortedArr, $temp);
