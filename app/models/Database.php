@@ -29,7 +29,7 @@ class Database extends Model
     private function createUser(string $name): void
     {
         $this->connect();
-        $sql = "CREATE USER {$name}";
+        $sql = "CREATE USER \"$name\"";
         $this->db->query($sql);
     }
 
@@ -40,7 +40,7 @@ class Database extends Model
     public function dropUser(string $name): void
     {
         $this->connect();
-        $sql = "DROP USER {$name}";
+        $sql = "DROP USER \"$name\"";
         $this->db->query($sql);
     }
 
@@ -51,7 +51,7 @@ class Database extends Model
     public function dropDatabase(string $name): void
     {
         $this->connect();
-        $sql = "DROP DATABASE {$name}";
+        $sql = "DROP DATABASE \"$name\"";
         $this->db->query($sql);
     }
 
@@ -61,7 +61,7 @@ class Database extends Model
      */
     public function createSchema(string $name): array
     {
-        $sql = "CREATE SCHEMA " . self::toAscii($name, null, "_");
+        $sql = "CREATE SCHEMA \"" . self::toAscii($name, null, "_") . "\"";
         $this->execQuery($sql);
         if (!$this->PDOerror) {
             $response['success'] = true;
