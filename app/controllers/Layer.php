@@ -138,7 +138,7 @@ class Layer extends Controller
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function put_name(): array

@@ -283,7 +283,7 @@ class Layer extends Table
 
                 $arr = $this->array_push_assoc($arr, "versioning", $versioning);
 
-                if ($includeExtent == true) {
+                if ($includeExtent) {
                     $arr = $this->array_push_assoc($arr, "extent", $extent);
                 }
                 // Is indexed?
@@ -340,13 +340,22 @@ class Layer extends Table
 
                 // Restrictions
                 // Cached
-                $arr = $this->array_push_assoc($arr, "fields", $this->getMetaData($rel, false, true, $restrictions));
+                $fieldConf = json_decode($arr["fieldconf"], true);
+                $fields = $this->getMetaData($rel, false, true, $restrictions);
+
+                uksort($fields, function($a, $b) use ($fieldConf) {
+                    $sortIdA = $fieldConf[$a]['sort_id'];
+                    $sortIdB = $fieldConf[$b]['sort_id'];
+
+                    return $sortIdA - $sortIdB;
+                });
+                $arr = $this->array_push_assoc($arr, "fields", $fields);
 
                 // References
                 if (!empty($row["meta"]) &&
-                    json_decode($row["meta"]) != false &&
+                    json_decode($row["meta"]) &&
                     isset(json_decode($row["meta"], true)["referenced_by"]) &&
-                    json_decode($row["meta"], true)["referenced_by"] != false
+                    json_decode($row["meta"], true)["referenced_by"]
                 ) {
                     $refBy = json_decode(json_decode($row["meta"], true)["referenced_by"], true);
                     $arr = $this->array_push_assoc($arr, "children", $refBy);
@@ -524,7 +533,7 @@ class Layer extends Table
      * @param $value mixed
      * @return array
      */
-    private function array_push_assoc(array $array, $key, $value)
+    private function array_push_assoc(array $array, string $key, mixed $value): array
     {
         $array[$key] = $value;
         return $array;
