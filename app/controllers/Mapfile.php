@@ -361,10 +361,12 @@ class Mapfile extends Controller
                     $extent = $this->bbox;
                 }
 
-                $versioning = $postgisObject->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}", "gc2_version_gid");
+                $rel = "{$row['f_table_schema']}.{$row['f_table_name']}";
+                $versioning = $postgisObject->doesColumnExist($rel, "gc2_version_gid");
                 $versioning = $versioning["exists"];
 
-                $workflow = $postgisObject->doesColumnExist("{$row['f_table_schema']}.{$row['f_table_name']}", "gc2_status");
+                $meta = $postgisObject->getMetaData($rel);
+                $workflow = $postgisObject->doesColumnExist($rel, "gc2_status");
                 $workflow = $workflow["exists"];
 
                 $arr = !empty($row['def']) ? json_decode($row['def'], true) : [];
@@ -472,7 +474,27 @@ class Mapfile extends Controller
                         } else {
                             $dataSql = $row['data'];
                         }
-                        echo "DATA \"" . strtolower($row['f_geometry_column']) . " FROM (SELECT * FROM ($dataSql) as \\\"$layerName\\\" /*FILTER_$layerName*/) as foo USING UNIQUE {$primeryKey['attname']} USING srid={$row['srid']}\"\n";
+                        $fieldConf = !empty($row['fieldconf']) ? json_decode($row['fieldconf'], true) : [];
+                        $includeItemsStr = "all";
+                        uksort($meta, function($a, $b) use ($fieldConf) {
+                            $sortIdA = $fieldConf[$a]['sort_id'];
+                            $sortIdB = $fieldConf[$b]['sort_id'];
+                            return $sortIdA - $sortIdB;
+                        });
+                        // We always want to select all fields
+                        if (sizeof($meta) > 0) {
+                            $selectStr = implode("\\\",\\\"", array_keys($meta));
+                        }
+                        // Filter out ignored fields
+                        $meta = array_filter($meta, function($item, $key) use (&$fieldConf) {
+                            if (empty($fieldConf[$key]['ignore'])) {
+                                return $item;
+                            }
+                        }, ARRAY_FILTER_USE_BOTH);
+                        if (sizeof($meta) > 0) {
+                            $includeItemsStr = implode(",", array_keys($meta));
+                        }
+                        echo "DATA \"" . strtolower($row['f_geometry_column']) . " FROM (SELECT \\\"$selectStr\\\" FROM ($dataSql) as \\\"$layerName\\\" /*FILTER_$layerName*/) as foo USING UNIQUE {$primeryKey['attname']} USING srid={$row['srid']}\"\n";
                         ?>
                         CONNECTIONTYPE POSTGIS
                         CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . (!empty(Connection::$param['mapserverhost']) ? Connection::$param['mapserverhost'] : Connection::$param['postgishost']); ?><?php echo " port=" . ((!empty(Connection::$param['mapserverport']) ? Connection::$param['mapserverport'] : Connection::$param['postgisport']) ?: "5432") ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?><?php if (!Connection::$param['pgbouncer']) echo " options='-c client_encoding=UTF8'" ?>"
@@ -539,17 +561,8 @@ class Mapfile extends Controller
                 "wms_format"    "image/png"
                 "wms_extent" "<?php echo implode(" ", $extent) ?>"
                 "wms_enable_request"    "*"
-                "gml_include_items" "all"
-                "wms_include_items" "all"
-                "wfs_featureid" "<?php echo $primeryKey['attname'] ?>"
-                "gml_types" "auto"
+                "wms_include_items" "<?php echo $includeItemsStr ?>"
                 "wms_exceptions_format" "application/vnd.ogc.se_xml"
-                "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
-                "gml_<?php echo $row['f_geometry_column'] ?>_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
-                <?php if ($row['wmssource'] && empty($row['legend_url'])) {
-                    $wmsCon = str_replace(array("layers", "LAYERS"), "LAYER", $row['wmssource']);
-                    echo "\"wms_get_legend_url\" \"{$wmsCon}&REQUEST=getlegendgraphic\"\n";
-                } ?>
                 <?php if (!empty($row['legend_url'])) {
                     echo "\"wms_get_legend_url\" \"{$row['legend_url']}\"\n";
                 } ?>
@@ -562,8 +575,6 @@ class Mapfile extends Controller
                 TEMPLATE "test"
                 <?php
                 if (is_array($classArr['data']) and (!$row['wmssource'])) {
-//                    print_r($classArr['data']);
-//                    die();
                     foreach ($classArr['data'] as $class) {
                         ?>
                         CLASS
@@ -1428,26 +1439,18 @@ class Mapfile extends Controller
                     $type = $layerArr['data'][0]['geotype'];
                 } else {
                     switch ($row['type']) {
+                        case "MULTIPOINT":
                         case "POINT":
                             $type = "POINT";
                             break;
+                        case "MULTILINESTRING":
+                        case "GEOMETRY":
                         case "LINESTRING":
                             $type = "LINE";
                             break;
+                        case "MULTIPOLYGON":
                         case "POLYGON":
                             $type = "POLYGON";
-                            break;
-                        case "MULTIPOINT":
-                            $type = "POINT";
-                            break;
-                        case "MULTILINESTRING":
-                            $type = "LINE";
-                            break;
-                        case "MULTIPOLYGON":
-                            $type = "POLYGON";
-                            break;
-                        case "GEOMETRY":
-                            $type = "LINE";
                             break;
                         case "RASTER":
                             $type = "RASTER";
@@ -1472,7 +1475,27 @@ class Mapfile extends Controller
                 } else {
                     $dataSql = $row['data'];
                 }
-                echo "DATA \"" . strtolower($row['f_geometry_column']) . " FROM (SELECT * FROM ($dataSql) as \\\"$layerName\\\" /*FILTER_$layerName*/) as foo USING UNIQUE {$primeryKey['attname']} USING srid={$row['srid']}\"\n";
+                $fieldConf = !empty($row['fieldconf']) ? json_decode($row['fieldconf'], true) : [];
+                $includeItemsStr = "all";
+                uksort($meta, function($a, $b) use ($fieldConf) {
+                    $sortIdA = $fieldConf[$a]['sort_id'];
+                    $sortIdB = $fieldConf[$b]['sort_id'];
+                    return $sortIdA - $sortIdB;
+                });
+                // We always want to select all fields
+                if (sizeof($meta) > 0) {
+                    $selectStr = implode("\\\",\\\"", array_keys($meta));
+                }
+                // Filter out ignored fields
+                $meta = array_filter($meta, function($item, $key) use (&$fieldConf) {
+                    if (empty($fieldConf[$key]['ignore'])) {
+                        return $item;
+                    }
+                }, ARRAY_FILTER_USE_BOTH);
+                if (sizeof($meta) > 0) {
+                    $includeItemsStr = implode(",", array_keys($meta));
+                }
+                echo "DATA \"" . strtolower($row['f_geometry_column']) . " FROM (SELECT \\\"$selectStr\\\" FROM ($dataSql) as \\\"$layerName\\\" /*FILTER_$layerName*/) as foo USING UNIQUE {$primeryKey['attname']} USING srid={$row['srid']}\"\n";
                 ?>
                 CONNECTIONTYPE POSTGIS
                 CONNECTION "user=<?php echo Connection::$param['postgisuser']; ?> dbname=<?php echo Connection::$param['postgisdb']; ?><?php if (Connection::$param['postgishost']) echo " host=" . (!empty(Connection::$param['mapserverhost']) ? Connection::$param['mapserverhost'] : Connection::$param['postgishost']); ?><?php echo " port=" . ((!empty(Connection::$param['mapserverport']) ? Connection::$param['mapserverport'] : Connection::$param['postgisport']) ?: "5432") ?><?php if (Connection::$param['postgispw']) echo " password=" . Connection::$param['postgispw']; ?><?php if (!Connection::$param['pgbouncer']) echo " options='-c client_encoding=UTF8'" ?>"
@@ -1484,7 +1507,7 @@ class Mapfile extends Controller
                 "wfs_name"    "<?php echo $layerName; ?>"
                 "wfs_abstract"    "<?php echo (!empty($row['f_table_abstract']) ? addslashes($row['f_table_abstract']) : ""); ?>"
                 "wfs_extent" "<?php echo implode(" ", $extent) ?>"
-                "gml_include_items" "all"
+                "gml_include_items" "<?php echo $includeItemsStr ?>"
                 "wfs_featureid" "<?php echo $primeryKey['attname'] ?>"
                 "gml_types" "auto"
                 "wfs_geomtype" "<?php echo $row['type'];

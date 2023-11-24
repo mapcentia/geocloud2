@@ -343,12 +343,19 @@ class Layer extends Table
                 $fieldConf = json_decode($arr["fieldconf"], true);
                 $fields = $this->getMetaData($rel, false, true, $restrictions);
 
+                // Sort fields
                 uksort($fields, function($a, $b) use ($fieldConf) {
                     $sortIdA = $fieldConf[$a]['sort_id'];
                     $sortIdB = $fieldConf[$b]['sort_id'];
 
                     return $sortIdA - $sortIdB;
                 });
+                // Filter out ignored fields
+                $fields = array_filter($fields, function($item, $key) use (&$fieldConf) {
+                    if (empty($fieldConf[$key]['ignore'])) {
+                        return $item;
+                    }
+                }, ARRAY_FILTER_USE_BOTH);
                 $arr = $this->array_push_assoc($arr, "fields", $fields);
 
                 // References

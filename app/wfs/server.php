@@ -798,7 +798,6 @@ function getXSD(\app\inc\Model $postgisObject)
         $result = $postgisObject->execQuery($sql);
         if ($postgisObject->PDOerror) {
             makeExceptionReport("Relation doesn't exist", ["exceptionCode" => "InvalidParameterValue"]);
-            //makeExceptionReport($postgisObject->PDOerror);
         }
         while ($row = $postgisObject->fetchRow($result)) {
             $tables[] = $row['f_table_name'];
@@ -857,6 +856,12 @@ function getXSD(\app\inc\Model $postgisObject)
         usort($arr, function ($a, $b) {
             return $a[0] - $b[0];
         });
+        // Filter out ignored fields
+        $arr = array_filter($arr, function($item, $key) use (&$fieldConfArr) {
+            if (empty($fieldConfArr[$item[1]]['ignore'])) {
+                return $item;
+            }
+        }, ARRAY_FILTER_USE_BOTH);
         $fieldsArr[$table] = array();
         foreach ($arr as $value) {
             $fieldsArr[$table][] = $value[1];
@@ -1086,7 +1091,7 @@ function doQuery(string $queryType)
                 }
                 $primeryKey = $tableObj->getPrimeryKey($postgisschema . "." . $table);
                 $geomField = $tableObj->getGeometryColumns($postgisschema . "." . $table, "f_geometry_column");
-                $fieldConfArr = (array)json_decode($geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.{$geomField}", "fieldconf"));
+                $fieldConfArr = json_decode($geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.{$geomField}", "fieldconf"), true);
                 $sql = "SELECT ";
                 $fieldsArr = [];
                 $wheresFlag = false;
@@ -1105,8 +1110,8 @@ function doQuery(string $queryType)
                 // Start sorting the fields by sort_id
                 $arr = array();
                 foreach ($fieldsArr[$table] as $value) {
-                    if (!empty($fieldConfArr[$value]->sort_id)) {
-                        $arr[] = array($fieldConfArr[$value]->sort_id, $value);
+                    if (!empty($fieldConfArr[$value]["sort_id"])) {
+                        $arr[] = array($fieldConfArr[$value]["sort_id"], $value);
                     } else {
                         $arr[] = array(0, $value);
                     }
@@ -1114,6 +1119,12 @@ function doQuery(string $queryType)
                 usort($arr, function ($a, $b) {
                     return $a[0] - $b[0];
                 });
+                // Filter out ignored fields
+                $arr = array_filter($arr, function($item, $key) use (&$fieldConfArr) {
+                    if (empty($fieldConfArr[$item[1]]['ignore'])) {
+                        return $item;
+                    }
+                }, ARRAY_FILTER_USE_BOTH);
                 $fieldsArr[$table] = array();
                 foreach ($arr as $value) {
                     $fieldsArr[$table][] = $value[1];
@@ -1378,7 +1389,7 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
                 if (!empty($gmlUseAltFunctions['changeFieldName'])) {
                     $fieldName = changeFieldName($fieldName);
                 }
-                $fieldProperties = !empty($fieldConfArr[$fieldName]->properties) ? (array)json_decode($fieldConfArr[$fieldName]->properties) : null;
+                $fieldProperties = !empty($fieldConfArr[$fieldName]->properties) ? json_decode($fieldConfArr[$fieldName]->properties, true) : null;
 
                 // Important to use $FieldValue !== or else will int 0 evaluate to false
                 if ($fieldValue !== false && ($fieldName != "fid" && $fieldName != "FID")) {
