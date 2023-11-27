@@ -340,7 +340,11 @@ class Layer extends Table
 
                 // Restrictions
                 // Cached
-                $fieldConf = json_decode($arr["fieldconf"], true);
+                if (is_object($arr["fieldconf"])){
+                    $fieldConf = json_decode(json_encode($arr["fieldconf"]), true);
+                }  else {
+                    $fieldConf = json_decode($arr["fieldconf"], true);
+                }
                 $fields = $this->getMetaData($rel, false, true, $restrictions);
 
                 // Sort fields
