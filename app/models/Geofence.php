@@ -53,10 +53,10 @@ class Geofence extends Model
         foreach ($rules as $rule) {
             if (
                 ($this->userFilter->userName == $rule["username"] || $rule["username"] == "*") &&
-                ($this->userFilter->layer == $rule["layer"] || $rule["layer"] == "*") &&
                 ($this->userFilter->service == $rule["service"] || $rule["service"] == "*") &&
                 ($this->userFilter->ipAddress == $rule["iprange"] || $rule["iprange"] == "*") &&
-                ($this->userFilter->schema == $rule["schema"] || $rule["schema"] == "*") &&
+                ($this->userFilter->schema == $rule["schema"] || fnmatch($rule["schema"], $this->userFilter->schema)) &&
+                ($this->userFilter->layer == $rule["layer"] || fnmatch($rule["layer"], $this->userFilter->layer)) &&
                 ($this->userFilter->request == $rule["request"] || $rule["request"] == "*")
             ) {
                 if ($rule["access"] == self::LIMIT_ACCESS) {
