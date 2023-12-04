@@ -11,6 +11,7 @@ error_reporting(E_ERROR | E_WARNING | E_PARSE);
 ob_start("ob_gzhandler");
 
 use app\controllers\Wms;
+use app\exceptions\GC2Exception;
 use app\inc\Input;
 use app\inc\Session;
 use app\inc\Route;
@@ -285,6 +286,7 @@ try {
                 exit();
             }
         });
+
         Route::add("api/v3/grid", function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
@@ -292,16 +294,6 @@ try {
                     echo Response::toJson(Response::SUPER_USER_ONLY);
                     exit();
                 }
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route::add("api/v3/geofence/[id]", function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);
             } else {
                 echo Response::toJson($jwt);
@@ -318,33 +310,7 @@ try {
                 exit();
             }
         });
-        Route::add("api/v3/meta/[query]", function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-        Route::add("api/v3/schema", function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-        Route::add("api/v3/import/[file]", function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
+
         Route::add("api/v3/xmlworkspace/[layer]", function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
@@ -354,7 +320,132 @@ try {
                 exit();
             }
         });
-        Route::add("api/v3/table/{table}/[id]", function () {
+        //======================
+        // V4 with OAuth
+        //======================
+        Route::add("api/v4/oauth", function () {
+            Database::setDb("mapcentia");
+        });
+
+        Route::add("api/v4/geofence/[id]", function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                if (!$jwt["data"]["superUser"]) {
+                    echo Response::toJson(Response::SUPER_USER_ONLY);
+                    exit();
+                }
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
+        Route::add("api/v4/sql", function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
+        Route::add("api/v4/meta/[query]", function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
+        Route::add("api/v4/schema", function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
+        Route::add("api/v4/import/[file]", function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
+        Route::add("api/v4/table/[table]", function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
+        Route::add("api/v4/column/{table}/{column}", function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
+        Route::add("api/v4/index/{table}/{column}/{type}", function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
+        Route::add("api/v4/key/{table}/[column]", function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
+        Route::add("api/v4/constraint/{action}/{table}/{column}", function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
+        Route::add("api/v4/user/all", function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                if (!$jwt["data"]["superUser"]) {
+                    echo Response::toJson(Response::SUPER_USER_ONLY);
+                    exit();
+                }
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
+        Route::add("api/v4/user/[userId]", function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);
@@ -462,9 +553,17 @@ try {
     } else {
         Route::miss();
     }
+} catch (GC2Exception $exception) {
+    $response["success"] = false;
+    $response["message"] = $exception->getMessage();
+    $response["code"] = $exception->getCode();
+    $response["errorCode"] = $exception->getErrorCode();
+    echo Response::toJson($response);
+    exit();
 } catch (Exception $exception) {
     $response["success"] = false;
     $response["message"] = $exception->getMessage();
+    $response["code"] = 500;
     echo Response::toJson($response);
     exit();
 }

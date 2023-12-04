@@ -375,7 +375,7 @@ class Model
      * @throws PhpfastcacheInvalidArgumentException
      * @throws PDOException
      */
-    public function getMetaData(string $table, bool $temp = false, bool $restriction = false, array $restrictions = null, string $cacheKey = null): array
+    public function getMetaData(string $table, bool $temp = false, bool $restriction = true, array $restrictions = null, string $cacheKey = null): array
     {
         $cacheType = "metadata";
         $cacheRel = md5($cacheKey ?: $table);
@@ -398,7 +398,7 @@ class Model
                 $_schema = str_replace(".", "", $_schema);
             }
 
-            if ($restriction == true && !$restrictions) {
+            if ($restriction && !$restrictions) {
                 $foreignConstrains = $this->getForeignConstrains($_schema, $_table)["data"];
                 $primaryKey = $this->getPrimeryKey($table)['attname'];
             }
@@ -447,59 +447,42 @@ class Model
                 WHERE attrelid = :table :: REGCLASS
                         AND attnum > 0
                         AND NOT attisdropped";
-            try {
-                $res = $this->prepare($sql);
-                if ($temp) {
-                    $res->execute(array("table" => "\"" . $table . "\""));
-                } else {
-                    $res->execute(array("table" => "\"" . $_schema . "\".\"" . $_table . "\""));
-                }
-            } catch (PDOException $e) {
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 401;
-                return $response;
+            $res = $this->prepare($sql);
+            if ($temp) {
+                $res->execute(array("table" => "\"" . $table . "\""));
+            } else {
+                $res->execute(array("table" => "\"" . $_schema . "\".\"" . $_table . "\""));
             }
             $index = $this->getIndexes($_schema, $_table);
             while ($row = $this->fetchRow($res)) {
                 $foreignValues = [];
-                $reference = null;
+                $references = [];
                 if ($restriction && !$restrictions) {
                     foreach ($foreignConstrains as $value) {
                         if ($row["column_name"] == $value["child_column"] && $value["parent_column"] != $primaryKey) {
+                            $references[] = $value["parent_schema"] . "." . $value["parent_table"] . "." . $value["parent_column"];
                             $sql = "SELECT {$value["parent_column"]} FROM {$value["parent_schema"]}.{$value["parent_table"]}";
-                            try {
-                                $resC = $this->prepare($sql);
-                                $resC->execute();
-
-                            } catch (PDOException $e) {
-                                $response['success'] = false;
-                                $response['message'] = $e->getMessage();
-                                $response['code'] = 401;
-                                return $response;
-                            }
+                            $resC = $this->prepare($sql);
+                            $resC->execute();
                             while ($rowC = $this->fetchRow($resC)) {
                                 $foreignValues[] = ["value" => $rowC[$value["parent_column"]], "alias" => (string)$rowC[$value["parent_column"]]];
                             }
                         }
                     }
-                } elseif ($restriction && $restrictions && isset($restrictions[$row["column_name"]]) && isset($restrictions[$row["column_name"]]->_rel)) {
-                    $reference = $restrictions[$row["column_name"]]->_rel;
+                    if (sizeof($references) == 1) {
+                        $references = $references[0];
+                    } elseif (sizeof($references) == 0) {
+                        $references = null;
+                    }
+                } elseif (isset($restrictions[$row["column_name"]]->_rel) && $restriction && $restrictions) {
+                    $references = $restrictions[$row["column_name"]]->_rel . "." . $restrictions[$row["column_name"]]->_value;
                     $rel = $restrictions[$row["column_name"]];
                     $sql = "SELECT {$rel->_value} AS value, {$rel->_text} AS text FROM {$rel->_rel}";
                     if (!empty($rel->_where)) {
                         $sql .= " WHERE {$rel->_where}";
                     }
-                    try {
-                        $resC = $this->prepare($sql);
-                        $resC->execute();
-
-                    } catch (PDOException $e) {
-                        $response['success'] = false;
-                        $response['message'] = $e->getMessage();
-                        $response['code'] = 401;
-                        return $response;
-                    }
+                    $resC = $this->prepare($sql);
+                    $resC->execute();
                     while ($rowC = $this->fetchRow($resC)) {
                         $foreignValues[] = ["value" => $rowC["value"], "alias" => (string)$rowC["text"]];
                     }
@@ -529,10 +512,11 @@ class Model
                     "numeric_precision" => $row["numeric_precision"],
                     "numeric_scale" => $row["numeric_scale"],
                     "max_bytes" => $row["max_bytes"],
-                    "reference" => $reference,
+                    "reference" => $references,
                     "restriction" => sizeof($foreignValues) > 0 ? $foreignValues : null,
-                    "primary_key" => !empty($index[$row["column_name"]]["primary_key"]),
-                    "index_method" => $index[$row["column_name"]]["index_method"] ?? null,
+                    "is_primary" => !empty($index["is_primary"][$row["column_name"]]),
+                    "is_unique" => !empty($index["is_unique"][$row["column_name"]]),
+                    "index_method" => !empty($index["index_method"][$row["column_name"]]) ? implode(",", $index["index_method"][$row["column_name"]]) : null,
                 );
                 // Get type and srid of geometry
                 if ($row["udt_name"] == "geometry") {
@@ -542,12 +526,8 @@ class Model
                     $arr[$row["column_name"]]["srid"] = $matches[0];
                 }
             }
-            try {
-                $CachedString->set($arr)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-                $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
-            } catch (Error $exception) {
-                //die($exception->getMessage());
-            }
+            $CachedString->set($arr)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
+            $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $arr;
         }
@@ -714,7 +694,7 @@ class Model
      */
     public static function explodeTableName(?string $table): array
     {
-        if (!isset(explode(".", $table)[1])) {
+        if ($table && !isset(explode(".", $table)[1])) {
             return ["schema" => null, "table" => $table];
         }
         preg_match("/[^.]*/", $table, $matches);
@@ -1121,10 +1101,8 @@ class Model
                     opc.operator_classes,
                     pg_get_indexdef(i.indexrelid) AS index_definition,
                     att.attname AS column_name,
-                    CASE
-                        WHEN pkcon.conname IS NOT NULL THEN 'Primary Key'
-                        ELSE ''
-                    END AS primary_key  -- Added primary key indication
+                    i.indisunique                 AS is_unique,
+                    i.indisprimary                AS is_primary
                 FROM
                     pg_catalog.pg_namespace n
                 JOIN
@@ -1155,7 +1133,9 @@ class Model
         $res = $this->prepare($sql);
         $res->execute(["schema" => $schema, "table" => $table]);
         while ($row = $this->fetchRow($res)) {
-            $response[$row["column_name"]] = $row;
+            $response["index_method"][$row["column_name"]][] = $row["index_method"];
+            $response["is_primary"][$row["column_name"]] = $row["is_primary"];
+            $response["is_unique"][$row["column_name"]] = $row["is_unique"];
         }
         return $response;
     }
