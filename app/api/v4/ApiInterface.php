@@ -1,6 +1,6 @@
 <?php
 
-namespace app\api\v3;
+namespace app\api\v4;
 interface ApiInterface
 {
     public function get_index(): array;

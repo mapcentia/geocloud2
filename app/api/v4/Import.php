@@ -1,12 +1,12 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2022 MapCentia ApS
+ * @copyright  2013-2023 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
-namespace app\api\v3;
+namespace app\api\v4;
 
 use app\conf\App;
 use app\conf\Connection;
@@ -21,7 +21,7 @@ use ZipArchive;
 
 /**
  * Class Sql
- * @package app\api\v3
+ * @package app\api\v4
  */
 class Import extends Controller
 {
@@ -32,9 +32,8 @@ class Import extends Controller
 
     /**
      * @return array<mixed>
-     * @throws PhpfastcacheInvalidArgumentException
      * @OA\Post(
-     *   path="/api/v3/import",
+     *   path="/api/v4/import",
      *   tags={"Import"},
      *   summary="Import files. Must be zipped and can contain multiple files in sub-dirs",
      *   security={{"bearerAuth":{}}},
@@ -154,7 +153,7 @@ class Import extends Controller
      * @throws Exception
      *
      * @OA\Get(
-     *   path="/api/v3/import/{file}",
+     *   path="/api/v4/import/{file}",
      *   tags={"Import"},
      *   summary="Import uploades zip file",
      *   security={{"bearerAuth":{}}},

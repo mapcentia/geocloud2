@@ -1,12 +1,12 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2022 MapCentia ApS
+ * @copyright  2013-2023 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
-namespace app\api\v3;
+namespace app\api\v4;
 
 use app\inc\Controller;
 use app\inc\Input;
@@ -17,7 +17,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 /**
  * Class Meta
- * @package app\api\v3
+ * @package app\api\v4
  */
 class Meta extends Controller
 {
@@ -39,7 +39,7 @@ class Meta extends Controller
      * @return array<mixed>
      * @throws PhpfastcacheInvalidArgumentException
      * @OA\Get(
-     *   path="/api/v3/meta/{query}",
+     *   path="/api/v4/meta/{query}",
      *   tags={"Meta"},
      *   summary="Get layer meta data",
      *   security={{"bearerAuth":{}}},

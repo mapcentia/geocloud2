@@ -6,7 +6,7 @@
  *
  */
 
-namespace app\api\v3;
+namespace app\api\v4;
 
 use app\inc\Controller;
 use app\inc\Route;
@@ -16,7 +16,7 @@ use app\models\Geofence as GeofenceModel;
 
 /**
  * Class Geofence
- * @package app\api\v3
+ * @package app\api\v4
  */
 class Geofence extends Controller
 {
@@ -32,7 +32,7 @@ class Geofence extends Controller
      * @return array
      *
      * @OA\Get(
-     *   path="/api/v3/geofence",
+     *   path="/api/v4/geofence",
      *   tags={"Geofence"},
      *   summary="Get all geofence rules",
      *   security={{"bearerAuth":{}}},
@@ -59,7 +59,7 @@ class Geofence extends Controller
      * @return array
      *
      * @OA\Post(
-     *   path="/api/v3/geofence",
+     *   path="/api/v4/geofence",
      *   tags={"Geofence"},
      *   summary="Create a new geofence rule",
      *   security={{"bearerAuth":{}}},
@@ -112,7 +112,7 @@ class Geofence extends Controller
      * @return array
      *
      * @OA\Put(
-     *   path="/api/v3/geofence",
+     *   path="/api/v4/geofence",
      *   tags={"Geofence"},
      *   summary="Updates a geofence rule",
      *   security={{"bearerAuth":{}}},
@@ -166,7 +166,7 @@ class Geofence extends Controller
      * @return array
      *
      * @OA\Delete(
-     *   path="/api/v3/geofence/{id}",
+     *   path="/api/v4/geofence/{id}",
      *   tags={"Geofence"},
      *   summary="Deletes a geofence rule",
      *   security={{"bearerAuth":{}}},

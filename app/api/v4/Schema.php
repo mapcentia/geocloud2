@@ -6,7 +6,7 @@
  *
  */
 
-namespace app\api\v3;
+namespace app\api\v4;
 
 use app\inc\Controller;
 use app\models\User as UserModel;
@@ -17,7 +17,7 @@ use Exception;
 
 /**
  * Class Database
- * @package app\api\v3
+ * @package app\api\v4
  */
 class Schema extends Controller
 {
@@ -33,7 +33,7 @@ class Schema extends Controller
     /**
      * @return array<mixed>
      * @OA\Get(
-     *   path="/api/v3/schema",
+     *   path="/api/v4/schema",
      *   tags={"Schema"},
      *   summary="Get available schemas",
      *   security={{"bearerAuth":{}}},
