@@ -14,6 +14,7 @@ use app\inc\Model;
 use app\inc\Util;
 use Exception;
 use PDOException;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 
 /**
@@ -55,13 +56,13 @@ class Session extends Model
     /**
      * @param string $sUserID
      * @param string $pw
-     * @param string $schema
-     * @param bool $parentdb
+     * @param string|null $schema
+     * @param string|null $parentdb
      * @param bool $tokenOnly
      * @return array<string, array<string, mixed>|bool|string|int>
-     * @throws Exception
+     * @throws PhpfastcacheInvalidArgumentException
      */
-    public function start(string $sUserID, string $pw, $schema = "public", $parentdb = false, bool $tokenOnly = false): array
+    public function start(string $sUserID, string $pw, string|null $schema = "public", string|null $parentdb = null, bool $tokenOnly = false): array
     {
         $response = [];
         $pw = Util::format($pw, true);
@@ -83,7 +84,7 @@ class Session extends Model
         $rows = $this->fetchAll($res);
 
         // If there are more than one records found, eliminate options by specifying the parent database
-        if (sizeof($rows) > 1 && $parentdb !== false) {
+        if (sizeof($rows) > 1 && $parentdb) {
             $sQuery = "SELECT * FROM users WHERE ((screenname = :sUserID OR email = :sEmail) AND parentdb = :parentDb)";
             $res = $this->prepare($sQuery);
             $res->execute([
