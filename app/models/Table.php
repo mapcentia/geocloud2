@@ -62,7 +62,7 @@ class Table extends Model
     /**
      * @var bool|mixed
      */
-    public $exits;
+    public mixed $exists;
 
     /**
      * @var bool|int|string
@@ -120,7 +120,7 @@ class Table extends Model
             $table = str_replace(".", "", $_schema) . "." . $_table;
         }
         $this->tableWithOutSchema = $_table;
-        $this->schema = str_replace(".", "", $_schema);
+        if (!empty($_schema)) $this->schema = str_replace(".", "", $_schema);
         $this->table = $table;
 
         if ($this->schema != "settings") {
@@ -129,7 +129,7 @@ class Table extends Model
             $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
             $CachedString = Cache::getItem($cacheId);
             if ($CachedString != null && $CachedString->isHit()) {
-                $this->exits = $CachedString->get();
+                $this->exists = $CachedString->get();
             } else {
                 $sql = "SELECT 1 FROM " . $this->doubleQuoteQualifiedName($table) . " LIMIT 1";
                 try {
@@ -138,12 +138,12 @@ class Table extends Model
 
                 }
                 if ($this->PDOerror) {
-                    $this->exits = false;
+                    $this->exists = false;
                 } else {
-                    $this->exits = true;
+                    $this->exists = true;
                 }
                 try {
-                    $CachedString->set($this->exits)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
+                    $CachedString->set($this->exists)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
                     $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
                 } catch (Error $exception) {
                     die($exception->getMessage());
@@ -151,14 +151,14 @@ class Table extends Model
                 Cache::save($CachedString);
             }
 
-            if ($this->exits) {
+            if ($this->exists) {
                 $this->geometryColumns = $this->getGeometryColumns($this->table, "*");
                 $this->metaData = $this->getMetaData($this->table, $temp);
                 $this->geomField = $this->geometryColumns["f_geometry_column"];
                 $this->geomType = $this->geometryColumns["type"];
                 $this->primaryKey = $this->getPrimeryKey($this->table);
                 $this->setType();
-                $this->exits = true;
+                $this->exists = true;
                 $res = $this->doesColumnExist($this->table, "gc2_version_gid");
                 $this->versioning = $res["exists"];
                 $res = $this->doesColumnExist($this->table, "gc2_status");
@@ -171,7 +171,7 @@ class Table extends Model
             $this->geomType = null;
             $this->primaryKey["attname"] = "_key_";
             $this->setType();
-            $this->exits = true;
+            $this->exists = true;
             $this->versioning = false;
             $this->workflow = false;
         }
@@ -523,23 +523,15 @@ class Table extends Model
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
-        $sql = "DROP TABLE {$this->table} CASCADE;";
+        $sql = "DROP TABLE $this->table CASCADE;";
         $res = $this->prepare($sql);
         try {
             $res->execute();
         } catch (PDOException $e) {
-            $this->rollback();
-            $sql = "DROP VIEW {$this->table} CASCADE;";
+//            $this->rollback();
+            $sql = "DROP VIEW $this->table CASCADE;";
             $res = $this->prepare($sql);
-            try {
-                $res->execute();
-            } catch (PDOException $e) {
-                $this->rollback();
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 400;
-                return $response;
-            }
+            $res->execute();
         }
         $response['success'] = true;
         return $response;
@@ -713,7 +705,7 @@ class Table extends Model
         foreach ($fieldsArr as $value) {
             if (isset($fieldconfArr[$value]) && is_object($fieldconfArr[$value])) {
                 if (!$isSorted) {
-                    $isSorted = $fieldconfArr[$value]->sort_id ? true : false;
+                    $isSorted = (bool)$fieldconfArr[$value]->sort_id;
                 }
             } else {
                 $fieldconfArr[$value] = new stdClass();
@@ -818,7 +810,7 @@ class Table extends Model
         $this->clearCacheOnSchemaChanges();
         $this->metaData = $this->getMetaData($this->table);
         $this->setType();
-        $fieldconfArr = (array)json_decode($this->geometryColumns["fieldconf"]);
+        $fieldconfArr = $this->geometryColumns["fieldconf"] === null ? [] : (array)json_decode($this->geometryColumns["fieldconf"]);
         foreach ($fieldconfArr as $key => $value) {
             if (!$this->metaData[$key]) {
                 unset($fieldconfArr[$key]);
@@ -833,7 +825,7 @@ class Table extends Model
     /**
      * @param mixed $data
      * @param string $key
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function updateColumn($data, string $key): array // Only geometry tables
@@ -843,7 +835,7 @@ class Table extends Model
         $this->purgeFieldConf($key);
         $data = $this->makeArray($data);
         $sql = "";
-        $fieldconfArr = (array)json_decode($this->geometryColumns["fieldconf"]);
+        $fieldconfArr = $this->geometryColumns["fieldconf"] == null ? [] : (array)json_decode($this->geometryColumns["fieldconf"]);
         foreach ($data as $value) {
             $safeColumn = $value->column;
             if ($this->metaData[$value->id]["is_nullable"] != $value->is_nullable) {
@@ -976,6 +968,9 @@ class Table extends Model
         }
         // We set the data type
         switch ($data['type']) {
+            case "String":
+                $type = "varchar(255)";
+                break;
             case "Integer":
                 $type = "integer";
                 break;
@@ -1018,8 +1013,8 @@ class Table extends Model
             case "Geometry":
                 $type = "geometry(Geometry,4326)";
                 break;
-            default: // String included here
-                $type = "varchar(255)";
+            default:
+                $type = $data["type"];
                 break;
         }
         $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ADD COLUMN \"{$safeColumn}\" {$type};";
@@ -1224,11 +1219,12 @@ class Table extends Model
     /**
      * Creates a geometry table
      * @param string $table
-     * @param string $type
-     * @param int $srid
+     * @param string|null $type
+     * @param int|null $srid
+     * @param bool|null $minium
      * @return array<mixed>
      */
-    public function create(string $table, string $type, int $srid = 4326): array
+    public function create(string $table, ?string $type = null, ?int $srid = 4326, ?bool $minimum = false): array
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
@@ -1238,8 +1234,14 @@ class Table extends Model
             $table = "_" . $table;
         }
         $sql = "BEGIN;";
-        $sql .= "CREATE TABLE {$this->postgisschema}.{$table} (gid SERIAL PRIMARY KEY,id INT);";
-        $sql .= "SELECT AddGeometryColumn('" . $this->postgisschema . "','{$table}','the_geom',{$srid},'{$type}',2);"; // Must use schema prefix cos search path include public
+        if ($minimum) {
+            $sql .= "CREATE TABLE {$this->postgisschema}.{$table} ();";
+        } else {
+            $sql .= "CREATE TABLE {$this->postgisschema}.{$table} (gid SERIAL PRIMARY KEY,id INT);";
+        }
+        if ($type && $srid) {
+            $sql .= "SELECT AddGeometryColumn('" . $this->postgisschema . "','{$table}','the_geom',{$srid},'{$type}',2);"; // Must use schema prefix cos search path include public
+        }
         $sql .= "COMMIT;";
         $this->execQuery($sql, "PDO", "transaction");
         if (!isset($this->PDOerror[0])) {
@@ -1523,7 +1525,7 @@ class Table extends Model
     {
         $response = [];
         $response["data"] = [];
-        if (!$this->exits) {
+        if (!$this->exists) {
             $response['success'] = false;
             $response['message'] = "Relation doesn't exists";
             $response['code'] = 401;
@@ -1673,6 +1675,137 @@ class Table extends Model
 
         $response['success'] = true;
         return $response;
+    }
 
+    /**
+     * @param string $column
+     * @param string $type
+     * @param $unique
+     * @return array
+     * @throws PDOException
+     */
+    public function createIndex(string $column, string $type = "btree", bool $unique = false): array
+    {
+        $u = $unique ? "UNIQUE" : "";
+        $sql = "CREATE $u INDEX \"{$this->tableWithOutSchema}_{$column}_{$type}\" ON {$this->doubleQuoteQualifiedName($this->table)} USING {$type} ({$column})";
+        $res = $this->prepare($sql);
+        $res->execute();
+        $response["success"] = true;
+        $response["message"] = "Index created";
+        return $response;
+    }
+
+    /**
+     * @param string $column
+     * @param string $type
+     * @return array
+     * @throws PDOException
+     */
+    public function dropIndex(string $column, string $type = "btree"): array
+    {
+        $sql = "DROP INDEX \"{$this->schema}\".\"{$this->tableWithOutSchema}_{$column}_{$type}\"";
+        $res = $this->prepare($sql);
+        $res->execute();
+        $response["success"] = true;
+        $response["message"] = "Index created";
+        return $response;
+    }
+
+    /**
+     * @param array $columns
+     * @return array
+     * @throws PDOException
+     */
+    public function addPrimaryKey(array $columns): array
+    {
+        $this->clearCacheOnSchemaChanges();
+        $response = [];
+        $sql = "ALTER TABLE {$this->table} ADD PRIMARY KEY (";
+        foreach ($columns as $column) {
+            $sql .= "\"{$column}\",";
+        }
+        $sql = rtrim($sql, ",");
+        $sql .= ")";
+        $res = $this->prepare($sql);
+        $res->execute();
+        $response["success"] = true;
+        $response["message"] = "Primary key added";
+        return $response;
+    }
+
+    /**
+     * @return array
+     * @throws PDOException
+     */
+    public function dropPrimaryKey(): array
+    {
+        $this->clearCacheOnSchemaChanges();
+        $response = [];
+        $sql = "ALTER TABLE {$this->table} DROP CONSTRAINT \"{$this->tableWithOutSchema}_pkey\"";
+        $res = $this->prepare($sql);
+        $res->execute();
+        $response["success"] = true;
+        $response["message"] = "Primary key dropped";
+        return $response;
+    }
+
+    public function addUniqueConstraint(string $column): array
+    {
+        $this->clearCacheOnSchemaChanges();
+        $response = [];
+        $sql = "ALTER TABLE {$this->table} ADD CONSTRAINT \"{$this->tableWithOutSchema}_{$column}_unique\" UNIQUE (\"$column\")";
+        $res = $this->prepare($sql);
+        $res->execute();
+        $response["success"] = true;
+        $response["message"] = "Unique constrain added";
+        return $response;
+    }
+
+    public function dropUniqueConstraint(string $column): array
+    {
+        $this->clearCacheOnSchemaChanges();
+        $response = [];
+        $sql = "ALTER TABLE {$this->table} DROP CONSTRAINT \"{$this->tableWithOutSchema}_{$column}_unique\"";
+        $res = $this->prepare($sql);
+        $res->execute();
+        $response["success"] = true;
+        $response["message"] = "Unique constrain dropped";
+        return $response;
+    }
+
+    /**
+     * @param string $column
+     * @param string $referencedTable
+     * @param string $referencedColumn
+     * @throw PDOException
+     * @return array
+     */
+    public function addForeignConstraint(string $column, string $referencedTable, string $referencedColumn): array
+    {
+        $this->clearCacheOnSchemaChanges();
+        $response = [];
+        $sql = "ALTER TABLE {$this->table} ADD CONSTRAINT \"{$this->tableWithOutSchema}_{$column}_foreign\" FOREIGN KEY (\"$column\") REFERENCES $referencedTable (\"$referencedColumn\")";
+        $res = $this->prepare($sql);
+        $res->execute();
+        $response["success"] = true;
+        $response["message"] = "Foreign constrain added";
+        return $response;
+    }
+
+    /**
+     * @param string $column
+     * @throw PDOException
+     * @return array
+     */
+    public function dropForeignConstraint(string $column): array
+    {
+        $this->clearCacheOnSchemaChanges();
+        $response = [];
+        $sql = "ALTER TABLE {$this->table} DROP CONSTRAINT \"{$this->tableWithOutSchema}_{$column}_foreign\"";
+        $res = $this->prepare($sql);
+        $res->execute();
+        $response["success"] = true;
+        $response["message"] = "Foreign constrain dropped";
+        return $response;
     }
 }
