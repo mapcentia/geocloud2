@@ -51,15 +51,30 @@ then
     exit 1
 fi
 
-##################
+################
+function cleanup
+################
+{
+        rm dump.bak -R
+        psql postgres -c "DROP DATABASE IF EXISTS $tmpdb"
+}
+
+####################
+function throw_error
+####################
+{
+    echo "$1 DATE: `date +%Y-%m-%d:%H:%M:%S`"
+    cleanup
+    exit 1
+}
+
+#################
 function if_error
-##################
+#################
 {
     if [ $? -ne 0 ]; then # check return code passed to function
         echo "$1 DATE: `date +%Y-%m-%d:%H:%M:%S`"
-        #Clean up
-        rm dump.bak -R
-        psql postgres -c "DROP DATABASE IF EXISTS $tmpdb"
+        cleanup
         exit $?
     fi
 }
@@ -122,6 +137,13 @@ for MATVIEW in `psql -qAt -c "SELECT schemaname||'.'||matviewname AS mview FROM 
         done
 
 # Check if settings schema is available in target.
+result=$(psql -t -c "SELECT COUNT(*) FROM settings.key_value")
+if [ $result -gt 0 ]; then
+    echo "View key_value has at least one row"
+else
+    throw_error "View key_value is empty"
+fi
+
 psql -c "SELECT * FROM settings.geometry_columns_view" >/dev/null;
 if_error "The Settings schema is missing";
 
