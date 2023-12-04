@@ -1086,7 +1086,7 @@ function doQuery(string $queryType)
             foreach ($tables as $table) {
                 $HTTP_FORM_VARS["TYPENAME"] = $table;
                 $tableObj = new table($postgisschema . "." . $table);
-                if (!$tableObj->exits) {
+                if (!$tableObj->exists) {
                     makeExceptionReport("Relation doesn't exist", ["exceptionCode" => "InvalidParameterValue", "locator" => "typeName"]);
                 }
                 $primeryKey = $tableObj->getPrimeryKey($postgisschema . "." . $table);
