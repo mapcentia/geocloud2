@@ -174,7 +174,7 @@ class Controller
         $isKeyCorrect = $apiKey == $inputApiKey && $apiKey != false;
 
         $check = false;
-        if ($_SESSION["auth"]) {
+        if (!empty($_SESSION["auth"])) {
             if ($subUser && $subUser == $_SESSION["screen_name"] && $_SESSION["parentdb"] == Connection::$param["postgisdb"]) {
                 $check = true;
             } elseif (!$subUser && $_SESSION["screen_name"] == Connection::$param["postgisdb"]) {
@@ -183,7 +183,7 @@ class Controller
         }
 
         $isAuth = $isKeyCorrect || $check;
-        $session = $_SESSION["subuser"] ? $_SESSION["screen_name"] . '@' . $_SESSION["parentdb"] : $_SESSION["screen_name"] ?? null;
+        $session = !empty($_SESSION["subuser"]) ? $_SESSION["screen_name"] . '@' . $_SESSION["parentdb"] : $_SESSION["screen_name"] ?? null;
 
         $response = [];
         $response['is_auth'] = $isAuth;
