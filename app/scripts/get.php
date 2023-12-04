@@ -851,7 +851,7 @@ if ($err) {
 print "\nInfo: Inserting in temp table done, proceeding...";
 if ($deleteAppend == "1") {
     print "\nInfo: Delete/append is enabled.";
-    if (!$table->exits) { // If table doesn't exists, when do not try to delete/append
+    if (!$table->exists) { // If table doesn't exists, when do not try to delete/append
         print "\nNotice: Table doesn't exists.";
         $o = "-overwrite";
     } else {
