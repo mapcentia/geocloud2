@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2023 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -16,6 +16,7 @@ use Exception;
 use PDOException;
 use Postmark\PostmarkClient;
 use Postmark\Models\PostmarkException;
+use app\exceptions\GC2Exception;
 
 
 /**
@@ -55,8 +56,7 @@ class User extends Model
             $response['success'] = true;
             $response['data'] = $rows;
         } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror;
+            throw New GC2Exception($this->PDOerror, 400);
         }
         return $response;
     }
@@ -95,6 +95,7 @@ class User extends Model
 
     /**
      * @return array<mixed>
+     * @throws GC2Exception
      */
     public function getData(): array
     {
@@ -103,10 +104,7 @@ class User extends Model
         $res->execute(array(":sUserID" => $this->userId, ":parentDb" => $this->parentdb));
         $row = $this->fetchRow($res);
         if (!$row['userid']) {
-            $response['success'] = false;
-            $response['message'] = "User identifier $this->userId was not found (parent database: " . ($this->parentdb ?: 'null') . ")";
-            $response['code'] = 404;
-            return $response;
+            throw New GC2Exception("User identifier $this->userId was not found (parent database: " . ($this->parentdb ?: 'null') . ")", 404, null, 'USER_NOT_FOUND');
         }
         if (!empty($row['properties'])) {
             $row['properties'] = json_decode($row['properties']);
@@ -115,26 +113,22 @@ class User extends Model
             $response['success'] = true;
             $response['data'] = $row;
         } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror;
+            throw New GC2Exception($this->PDOerror, 400);
         }
         return $response;
     }
 
     /**
      * @param array<string|bool> $data
-     * @return array<mixed>
+     * @return array
+     * @throws GC2Exception
      */
     public function createUser(array $data): array
     {
         $mandatoryParameters = ['name', 'email', 'password'];
         foreach ($mandatoryParameters as $item) {
             if (empty($data[$item])) {
-                return array(
-                    'code' => 400,
-                    'success' => false,
-                    'message' => "$item has to be provided"
-                );
+                throw New GC2Exception("$item has to be provided", 400, null, "MISSING_PARAMETER");
             }
         }
 
@@ -152,16 +146,10 @@ class User extends Model
                 $res->execute([":sDatabase" => $parentDb]);
                 $row = $this->fetchRow($res);
             } catch (Exception $e) {
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 400;
-                return $response;
+                throw New GC2Exception($e->getMessage());
             }
             if (!$row) {
-                $response['success'] = false;
-                $response['message'] = "Database '{$parentDb}' doesn't exist";
-                $response['code'] = 400;
-                return $response;
+                throw New GC2Exception("Database '{$parentDb}' doesn't exist", 400, null, "PARENT_DATABASE_NOT_FOUND");
             }
         }
         if ($properties) {
@@ -179,31 +167,16 @@ class User extends Model
                 $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE screenname = '" . $userId . "' AND parentdb = '" . $this->userId . "'");
                 $result = $this->fetchRow($res);
                 if ($result['count'] > 0) {
-                    return array(
-                        'code' => 400,
-                        'success' => false,
-                        'errorCode' => 'SUB_USER_ALREADY_EXISTS',
-                        'message' => "User identifier $userId already exists for parent database " . $this->userId
-                    );
+                    throw New GC2Exception("User identifier $userId already exists for parent database " . $this->userId, 400, null, 'SUB_USER_ALREADY_EXISTS');
                 }
                 $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE screenname = '" . $userId . "' AND parentdb ISNULL");
                 $result = $this->fetchRow($res);
                 if ($result['count'] > 0) {
-                    return array(
-                        'code' => 400,
-                        'success' => false,
-                        'errorCode' => 'PARENT_USER_EXISTS_WITH_NAME',
-                        'message' => "User identifier $userId already exists as database"
-                    );
+                    throw New GC2Exception("User identifier $userId already exists as database", 400, null, 'PARENT_USER_EXISTS_WITH_NAME');
                 }
 
             } else {
-                return array(
-                    'code' => 400,
-                    'success' => false,
-                    'errorCode' => 'USER_ALREADY_EXISTS',
-                    'message' => "User identifier $userId already exists"
-                );
+                throw New GC2Exception("User identifier $userId already exists", 400, null, 'USER_ALREADY_EXISTS');
             }
         }
 
@@ -219,23 +192,13 @@ class User extends Model
         $res = $this->execQuery($sql);
         $result = $this->fetchRow($res);
         if ($result['count'] > 0) {
-            return array(
-                'code' => 400,
-                'success' => false,
-                'errorCode' => 'EMAIL_ALREADY_EXISTS',
-                'message' => "Email $email already exists"
-            );
+            throw New GC2Exception("Email $email already exists", 400, null, 'EMAIL_ALREADY_EXISTS');
         }
 
         // Check if the password is strong enough
         $passwordCheckResults = Setting::checkPasswordStrength($password);
         if (sizeof($passwordCheckResults) > 0) {
-            return array(
-                'code' => 400,
-                'success' => false,
-                'errorCode' => 'WEAK_PASSWORD',
-                'message' => 'Password does not meet following requirements: ' . implode(', ', $passwordCheckResults)
-            );
+            throw New GC2Exception('Password does not meet following requirements: ' . implode(', ', $passwordCheckResults), 400, null, 'WEAK_PASSWORD');
         }
 
         $encryptedPassword = Setting::encryptPwSecure($password);
@@ -254,11 +217,7 @@ class User extends Model
                 } catch (PDOException $e) {
                     // Pass
                 }
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['test'] = Session::getUser();
-                $response['code'] = 400;
-                return $response;
+                throw New GC2Exception($e->getMessage(), 400);
             }
         }
 
@@ -278,11 +237,7 @@ class User extends Model
 
             $row = $this->fetchRow($res);
         } catch (Exception $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['test'] = Session::getUser();
-            $response['code'] = 400;
-            return $response;
+            throw New GC2Exception($e->getMessage(), 400);
         }
 
         // Start email notification
@@ -341,6 +296,7 @@ class User extends Model
     /**
      * @param array<string> $data
      * @return array<bool|string|int|string[]>
+     * @throws Exception
      */
     public function updateUser(array $data): array
     {
@@ -349,16 +305,11 @@ class User extends Model
         // Check if such email already exists
         $email = null;
         if (isset($data["email"])) {
-            $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE email = '" . $data["email"] . "'");
+            $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE email = '" . $data["email"] . "' AND screenname <> '" . $user . "'");
             $result = $this->fetchRow($res);
             if ($result['count'] > 0) {
-                return array(
-                    'code' => 400,
-                    'success' => false,
-                    'message' => "Email " . $data["email"] . " already exists"
-                );
+                    throw New Exception("Email " . $data["email"] . " already exists");
             }
-
             $email = $data["email"];
         }
 
@@ -367,13 +318,9 @@ class User extends Model
         if (isset($data["password"])) {
             $passwordCheckResults = Setting::checkPasswordStrength(Util::format($data["password"], true));
             if (sizeof($passwordCheckResults) > 0) {
-                return array(
-                    'code' => 400,
-                    'success' => false,
-                    'message' => 'Password does not meet following requirements: ' . implode(', ', $passwordCheckResults)
-                );
-            }
+                   throw New Exception("Password does not meet following requirements: " . implode(", ", $passwordCheckResults));
 
+            }
             $password = Setting::encryptPwSecure(Util::format($data["password"], true));
         }
 
@@ -408,16 +355,10 @@ class User extends Model
             if ($properties) $res->bindParam(":sProperties", $properties);
             $res->bindParam(":sUserID", $user);
             if (!empty($data["parentdb"])) $res->bindParam(":sParentDb", $data["parentdb"]);
-
-
             $res->execute();
             $row = $this->fetchRow($res);
         } catch (Exception $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['test'] = Session::getUser();
-            $response['code'] = 400;
-            return $response;
+            throw New GC2Exception($e->getMessage(), 400);
         }
         $row["properties"] = !empty($row["properties"]) ? json_decode($row["properties"]) : null;
         $response['success'] = true;
@@ -429,6 +370,7 @@ class User extends Model
     /**
      * @param string $data
      * @return array<bool|string|int>
+     * @throws GC2Exception
      */
     public function deleteUser(string $data): array
     {
@@ -438,11 +380,7 @@ class User extends Model
             $res = $this->prepare($sQuery);
             $res->execute([":sUserID" => $user, ":parentDb" => $this->userId]);
         } catch (Exception $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['test'] = Session::getUser();
-            $response['code'] = 400;
-            return $response;
+            throw New GC2Exception($e->getMessage(), 400);
         }
         $subusers = Session::getByKey("subusers");
         $subuserEmails = Session::getByKey("subuserEmails");
