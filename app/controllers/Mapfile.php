@@ -563,6 +563,10 @@ class Mapfile extends Controller
                 "wms_enable_request"    "*"
                 "wms_include_items" "<?php echo $includeItemsStr ?>"
                 "wms_exceptions_format" "application/vnd.ogc.se_xml"
+                <?php if ($row['wmssource'] && empty($row['legend_url'])) {
+                    $wmsCon = str_replace(array("layers", "LAYERS"), "LAYER", $row['wmssource']);
+                    echo "\"wms_get_legend_url\" \"{$wmsCon}&REQUEST=getlegendgraphic\"\n";
+                } ?>
                 <?php if (!empty($row['legend_url'])) {
                     echo "\"wms_get_legend_url\" \"{$row['legend_url']}\"\n";
                 } ?>
