@@ -8,6 +8,7 @@
 
 namespace app\models;
 
+use app\exceptions\GC2Exception;
 use app\inc\Globals;
 use app\inc\Model;
 use app\conf\Connection;
@@ -828,7 +829,7 @@ class Table extends Model
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function updateColumn($data, string $key): array // Only geometry tables
+    public function updateColumn(object $data, string $key): array // Only geometry tables
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
@@ -1244,14 +1245,12 @@ class Table extends Model
         }
         $sql .= "COMMIT;";
         $this->execQuery($sql, "PDO", "transaction");
-        if (!isset($this->PDOerror[0])) {
-            $response['success'] = true;
-            $response['tableName'] = $table;
-            $response['message'] = "Layer created";
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror[0];
+        if (isset($this->PDOerror[0])) {
+            throw new GC2Exception($this->PDOerror[0]);
         }
+        $response['success'] = true;
+        $response['tableName'] = $table;
+        $response['message'] = "Layer created";
         return $response;
     }
 

@@ -9,6 +9,7 @@
 
 namespace app\api\v4;
 
+use app\exceptions\GC2Exception;
 use app\models\Table as TableModel;
 use Exception;
 
@@ -48,7 +49,17 @@ trait ApiTrait
             }
         }
         if (!$isAuthorized) {
-            throw new Exception("Not authorized");
+            throw new GC2Exception("Not authorized");
+        }
+    }
+
+    /**
+     * @throws GC2Exception
+     */
+    public function doesTableExist(): void
+    {
+        if (!$this->table->exists) {
+            throw new GC2Exception("Table not found", 404, null, "TABLE_NOT_FOUND");
         }
     }
 }

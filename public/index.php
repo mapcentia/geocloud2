@@ -391,7 +391,7 @@ try {
             }
         });
 
-        Route::add("api/v4/column/{table}/{column}", function () {
+        Route::add("api/v4/column/{table}/[column]", function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);

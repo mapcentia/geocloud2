@@ -33,7 +33,9 @@ class Table implements ApiInterface
     {
         $table = Route::getParam("table");
         $jwt = Jwt::validate()["data"];
-        $this->check($table, $jwt["uid"], $jwt["superUser"]);
+        if ($table) {
+            $this->check($table, $jwt["uid"], $jwt["superUser"]);
+        }
     }
 
     /**
@@ -61,7 +63,6 @@ class Table implements ApiInterface
      *       type="object",
      *       @OA\Property(property="message", type="string", description="Success message"),
      *       @OA\Property(property="success", type="boolean", example=true),
-     *       @OA\Property(property="data", type="object",
      *       @OA\Property(property="columns", type="object", additionalProperties={
      *         "type": "object",
      *         "properties": {
@@ -90,11 +91,9 @@ class Table implements ApiInterface
     {
         $response = [];
         $this->table = new TableModel($this->qualifiedName);
-        if (!$this->table->exists) {
-            throw new GC2Exception("Table not found", 404, null, "TABLE_NOT_FOUND");
-        }
+        $this->doesTableExist();
         $response["success"] = true;
-        $response["data"]["columns"] = $this->table->metaData;
+        $response["columns"] = $this->table->metaData;
         return $response;
     }
 
@@ -124,12 +123,20 @@ class Table implements ApiInterface
      *     )
      *   )
      * )
+     * @throws GC2Exception
      */
     public function post_index(): array
     {
         $this->table = new TableModel(null);
-        $this->table->postgisschema = $this->schema;
-        return $this->table->create($this->unQualifiedName, null, null, true);
+        $body = Input::getBody();
+        $data = json_decode($body);
+        $this->table->postgisschema = $data->schema ?? "public";
+        $res = $this->table->create($data->name, null, null, true);
+        return [
+            "success" => true,
+            "message" => "Table created",
+            "table_name" => $res["tableName"]
+        ];
 
     }
 
@@ -149,6 +156,16 @@ class Table implements ApiInterface
      *       type="string"
      *     )
      *   ),
+     *   @OA\RequestBody(
+     *      description="New name of relation",
+     *      @OA\MediaType(
+     *        mediaType="application/json",
+     *        @OA\Schema(
+     *          type="object",
+     *          @OA\Property(property="name",type="string", example="new_name")
+     *        )
+     *      )
+     *    ),
      *   @OA\Response(
      *     response=200,
      *     description="Successful operation",
@@ -164,13 +181,11 @@ class Table implements ApiInterface
     public function put_index(): array
     {
         $this->table = new TableModel($this->qualifiedName);
-        if (!$this->table->exists) {
-            throw new GC2Exception("Table not found", 404, null, "TABLE_NOT_FOUND");
-        }
+        $this->doesTableExist();
         $layer = new Layer();
         $body = Input::getBody();
         $data = json_decode($body);
-        return $layer->rename($this->qualifiedName, $data->data);
+        return $layer->rename($this->qualifiedName, $data);
     }
 
     /**
@@ -204,9 +219,7 @@ class Table implements ApiInterface
     public function delete_index(): array
     {
         $this->table = new TableModel($this->qualifiedName);
-        if (!$this->table->exists) {
-            throw new GC2Exception("Table not found", 404, null, "TABLE_NOT_FOUND");
-        }
+        $this->doesTableExist();
         return $this->table->destroy();
     }
 }
