@@ -294,7 +294,7 @@ class Model
      * @param string $queryType
      * @return null|integer|PDOStatement|resource
      */
-    public function execQuery(string $query, string $conn = "PDO", string $queryType = "select")
+    public function execQuery(string $query, string $conn = "PDO", string $queryType = "select"): mixed
     {
         $result = null;
         switch ($conn) {
