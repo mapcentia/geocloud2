@@ -9,6 +9,7 @@
 namespace app\api\v2;
 
 use app\conf\Connection;
+use app\exceptions\GC2Exception;
 use app\inc\Cache;
 use app\inc\Controller;
 use app\inc\Input;
@@ -31,51 +32,23 @@ use app\inc\Util;
  */
 class Sql extends Controller
 {
-    /**
-     * @var array
-     */
     public array $response;
 
-    /**
-     * @var string
-     */
-    private string $q;
+    private string|null $q;
 
-    /**
-     * @var string
-     */
     private string $apiKey;
 
-    /**
-     * @var string
-     */
     private string $data;
 
-    /**
-     * @var string|null
-     */
     private ?string $subUser;
 
-    /**
-     * @var \app\models\Sql
-     */
     private \app\models\Sql $api;
 
-    /**
-     *
-     */
     const USEDRELSKEY = "checked_relations";
 
-    /**
-     * @var array
-     */
     private array $cacheInfo;
 
-    /**
-     * @var boolean
-     */
     private bool $streamFlag;
-
 
     function __construct()
     {
@@ -85,6 +58,7 @@ class Sql extends Controller
     /**
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws GC2Exception
      */
     public function get_index(): array
     {
@@ -137,10 +111,7 @@ class Sql extends Controller
         }
 
         if (!$this->q) {
-            $response['success'] = false;
-            $response['code'] = 403;
-            $response['message'] = "Query is missing (the 'q' parameter)";
-            return $response;
+            throw new GC2Exception("Query is missing (the 'q' parameter)", 403, null, "MISSING_PARAMETER");
         }
 
         $settings = new Setting();
@@ -174,6 +145,7 @@ class Sql extends Controller
     /**
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws GC2Exception
      */
     public function post_index(): array
     {
@@ -211,11 +183,7 @@ class Sql extends Controller
             $this->apiKey = $res['data']->api_key;
 
             if (empty(Input::getBody())) {
-                return [
-                    "success" => false,
-                    "message" => "Empty text body",
-                    "code" => "400"
-                ];
+                throw new GC2Exception("Empty text body", 403, null, "EMPTY_BODY");
             }
 
             $sqls = explode("\n", Input::getBody());
@@ -242,6 +210,7 @@ class Sql extends Controller
      * @param string|null $clientEncoding
      * @return string
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws Exception
      */
     private function transaction(string|null $clientEncoding = null): string
     {
@@ -249,17 +218,7 @@ class Sql extends Controller
         $rule = new Rule();
         $walkerRelation = new TableWalkerRelation();
         $factory = new StatementFactory(PDOCompatible: true);
-        try {
-            $select = $factory->createFromString($this->q);
-        } catch (Exception $e) {
-            return serialize(
-                [
-                    "success" => false,
-                    "message" => $e->getMessage(),
-                    "code" => 400,
-                ]
-            );
-        }
+        $select = $factory->createFromString($this->q);
         $operation = self::getClassName(get_class($select));
         $select->dispatch($walkerRelation);
         $usedRelations = $walkerRelation->getRelations();
@@ -285,15 +244,7 @@ class Sql extends Controller
         $walkerRule = new TableWalkerRule(!empty($response["is_auth"]) ? $this->subUser ?: Connection::$param['postgisdb'] : "*", "sql", strtolower($operation), '');
         $rules = $rule->get();
         $walkerRule->setRules($rules);
-        try {
-            $select->dispatch($walkerRule);
-        } catch (Exception $e) {
-            $response = [];
-            $response["code"] = 401;
-            $response["success"] = false;
-            $response["message"] = $e->getMessage();
-            return serialize($response);
-        }
+        $select->dispatch($walkerRule);
 
         // TODO Set this in TableWalkerRule
         if ($operation == "Update" || $operation == "Insert" || $operation == "Delete") {
@@ -327,8 +278,7 @@ class Sql extends Controller
             $this->q = $factory->createFromAST($select, true)->getSql();
             if (isset($this->streamFlag)) {
                 $stream = new Stream();
-                $res = $stream->runSql($this->q);
-                return ($res);
+                $stream->runSql($this->q);
             }
             $lifetime = (Input::get('lifetime')) ?: 0;
             $key = md5(Connection::$param["postgisdb"] . "_" . $this->q . "_" . $lifetime);
@@ -352,16 +302,6 @@ class Sql extends Controller
                 $csvAllToStr = Input::get('allstr') ?: null;
                 $alias = Input::get('alias') ?: null;
                 $this->response = $this->api->sql($this->q, $clientEncoding, $format, $geoformat, $csvAllToStr, $alias);
-                if (!$this->response["success"]) {
-                    return serialize([
-                        "success" => false,
-                        "code" => 500,
-                        "format" => $format,
-                        "geoformat" => $geoformat,
-                        "message" => $this->response["message"],
-                        "query" => $this->q,
-                    ]);
-                }
                 $response["statement"] = $this->q;
                 $this->addAttr($response);
                 echo serialize($this->response);
@@ -375,9 +315,7 @@ class Sql extends Controller
                 ob_get_clean();
             }
         } else {
-            $this->response['success'] = false;
-            $this->response['message'] = "Check your SQL. Could not recognise it as either SELECT, INSERT, UPDATE or DELETE ($operation)";
-            $this->response['code'] = 400;
+            throw new GC2Exception("Check your SQL. Could not recognise it as either SELECT, INSERT, UPDATE or DELETE ($operation)", 403, null, "SQL_STATEMENT_NOT_RECOGNISED");
         }
         return serialize($this->response);
     }

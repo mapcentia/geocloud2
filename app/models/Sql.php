@@ -11,10 +11,10 @@ namespace app\models;
 use app\conf\App;
 use app\conf\Connection;
 use app\inc\Model;
-use Exception;
 use PDO;
 use PDOException;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
+use PhpOffice\PhpSpreadsheet\Reader\Exception;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use ZipArchive;
@@ -29,15 +29,15 @@ class Sql extends Model
     /**
      * @var string
      */
-    private $srs;
+    private string $srs;
 
-    public $model;
+    public Sql $model;
 
     /**
      * Sql constructor.
      * @param string $srs
      */
-    function __construct($srs = "3857")
+    function __construct(string $srs = "3857")
     {
         parent::__construct();
 
@@ -54,8 +54,8 @@ class Sql extends Model
      * @param string|null $aliasesFrom
      * @param string|null $nlt
      * @param string|null $nln
-     * @return array<mixed>
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws Exception|\PhpOffice\PhpSpreadsheet\Writer\Exception|PhpfastcacheInvalidArgumentException|PDOException
      */
     public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, ?string $nlt = null, ?string $nln = null): array
     {
@@ -68,7 +68,7 @@ class Sql extends Model
         $view = self::toAscii($name, null, "_");
         $formatSplit = explode("/", $format);
         if (sizeof($formatSplit) == 2 && $formatSplit[0] == "ogr") {
-            $fileOrFolder = $nln ? $nln.$name: $view;
+            $fileOrFolder = $nln ? $nln . $name : $view;
             $fileOrFolder .= "." . self::toAscii($formatSplit[1], null, "_");
             $path = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__vectors/" . $fileOrFolder;
             $cmd = "ogr2ogr " .
@@ -82,10 +82,10 @@ class Sql extends Model
                 "PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
                 "-sql \"" . $q . "\"";
 //            die($cmd);
-            exec($cmd . ' 2>&1', $out, $err);
+            exec($cmd . ' 2>&1', $out);
             if ($out) {
                 foreach ($out as $str) {
-                    if (strpos($str, 'ERROR') !== false) {
+                    if (str_contains($str, 'ERROR')) {
                         return [
                             'success' => false,
                             "message" => $out,
@@ -96,7 +96,7 @@ class Sql extends Model
             }
             $zip = new ZipArchive();
             $zipPath = $path . ".zip";
-            if ($zip->open($zipPath, ZIPARCHIVE::CREATE) != TRUE) {
+            if (!$zip->open($zipPath, ZIPARCHIVE::CREATE)) {
                 error_log("Could not open ZIP archive");
             }
             if (is_dir($path)) {
@@ -109,20 +109,14 @@ class Sql extends Model
             }
             $zip->close();
             header("Content-type: application/zip, application/octet-stream");
-            header("Content-Disposition: attachment; filename=\"{$fileOrFolder}.zip\"");
+            header("Content-Disposition: attachment; filename=\"$fileOrFolder.zip\"");
             readfile($zipPath);
             exit(0);
         }
-        $sqlView = "CREATE TEMPORARY VIEW {$view} as {$q}";
+        $sqlView = "CREATE TEMPORARY VIEW $view as $q";
         $res = $this->prepare($sqlView);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
+        $res->execute();
+
         $arrayWithFields = $this->getMetaData($view, true, false, null, $q); // Temp VIEW
         $postgisVersion = $this->postgisVersion();
         $bits = explode(".", $postgisVersion["version"]);
@@ -135,18 +129,18 @@ class Sql extends Model
         foreach ($arrayWithFields as $key => $arr) {
             if ($arr['type'] == "geometry") {
                 if ($format == "geojson" || (($format == "csv" || $format == "excel") && $geoformat == "geojson")) {
-                    $fieldsArr[] = "ST_asGeoJson(ST_Transform({$ST_Force2D}(\"" . $key . "\")," . $this->srs . ")) as \"" . $key . "\"";
+                    $fieldsArr[] = "ST_asGeoJson(ST_Transform($ST_Force2D(\"$key\"),$this->srs)) as \"$key\"";
                 } elseif ($format == "csv" || $format == "excel") {
-                    $fieldsArr[] = "ST_asText(ST_Transform({$ST_Force2D}(\"" . $key . "\")," . $this->srs . ")) as \"" . $key . "\"";
+                    $fieldsArr[] = "ST_asText(ST_Transform($ST_Force2D(\"$key\"),$this->srs)) as \"$key\"";
                 }
             } elseif ($arr['type'] == "bytea") {
-                $fieldsArr[] = "encode(\"" . $key . "\",'escape') as \"" . $key . "\"";
+                $fieldsArr[] = "encode(\"$key\",'escape') as \"$key\"";
             } else {
-                $fieldsArr[] = "\"{$key}\"";
+                $fieldsArr[] = "\"$key\"";
             }
         }
         $sql = implode(",", $fieldsArr);
-        $sql = "SELECT {$sql} FROM {$view} LIMIT {$limit}";
+        $sql = "SELECT $sql FROM $view LIMIT $limit";
 
         $this->begin();
 
@@ -155,23 +149,17 @@ class Sql extends Model
             $this->execQuery("SET work_mem TO '" . App::$param["SqlApiSettings"]["work_mem"] . "'");
         }
         if (!empty(App::$param["SqlApiSettings"]["statement_timeout"])) {
-            $this->execQuery("SET LOCAL statement_timeout = " . (string)App::$param["SqlApiSettings"]["statement_timeout"]);
+            $this->execQuery("SET LOCAL statement_timeout = " . App::$param["SqlApiSettings"]["statement_timeout"]);
         } else {
             $this->execQuery("SET LOCAL statement_timeout = 60000");
         }
 
         if ($clientEncoding) {
-            $this->execQuery("set client_encoding='{$clientEncoding}'");
+            $this->execQuery("set client_encoding='$clientEncoding'");
         }
-        try {
-            $this->prepare("DECLARE curs CURSOR FOR {$sql}")->execute();
-            $innerStatement = $this->prepare("FETCH 1 FROM curs");
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
+
+        $this->prepare("DECLARE curs CURSOR FOR $sql")->execute();
+        $innerStatement = $this->prepare("FETCH 1 FROM curs");
 
         $geometries = null;
         $fieldsForStore = [];
@@ -182,35 +170,29 @@ class Sql extends Model
         // ==============
 
         if ($format == "geojson") {
-            try {
-                while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
-                    $arr = array();
-                    foreach ($row as $key => $value) {
-                        if ($arrayWithFields[$key]['type'] == "geometry" && $value !== null) {
-                            $geometries[] = json_decode($value);
-                        } elseif ($arrayWithFields[$key]['type'] == "json") {
-                            $arr = $this->array_push_assoc($arr, $key, json_decode($value));
-                        } else {
-                            $arr = $this->array_push_assoc($arr, $key, $value);
-                        }
-                    }
-                    if ($geometries == null) {
-                        $features[] = array("type" => "Feature", "properties" => $arr);
-                    } elseif (count($geometries) == 1) {
-                        $features[] = array("type" => "Feature", "geometry" => $geometries[0], "properties" => $arr);
+            while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
+                $arr = array();
+                foreach ($row as $key => $value) {
+                    if ($arrayWithFields[$key]['type'] == "geometry" && $value !== null) {
+                        $geometries[] = json_decode($value);
+                    } elseif ($arrayWithFields[$key]['type'] == "json") {
+                        $arr = $this->array_push_assoc($arr, $key, json_decode($value));
                     } else {
-                        $features[] = array("type" => "Feature", "properties" => $arr, "geometry" => array("type" => "GeometryCollection", "geometries" => $geometries));
+                        $arr = $this->array_push_assoc($arr, $key, $value);
                     }
-                    $geometries = null;
                 }
-                $this->execQuery("CLOSE curs");
-                $this->commit();
-            } catch (Exception $e) {
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 410;
-                return $response;
+                if ($geometries == null) {
+                    $features[] = array("type" => "Feature", "properties" => $arr);
+                } elseif (count($geometries) == 1) {
+                    $features[] = array("type" => "Feature", "geometry" => $geometries[0], "properties" => $arr);
+                } else {
+                    $features[] = array("type" => "Feature", "properties" => $arr, "geometry" => array("type" => "GeometryCollection", "geometries" => $geometries));
+                }
+                $geometries = null;
             }
+            $this->execQuery("CLOSE curs");
+            $this->commit();
+
             foreach ($arrayWithFields as $key => $value) {
                 $fieldsForStore[] = array("name" => $key, "type" => $value['type']);
                 $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $value['type'], "typeObj" => !empty($value['typeObj']) ? $value['typeObj'] : null);
@@ -228,7 +210,7 @@ class Sql extends Model
         // ================
 
         elseif ($format == "csv" || $format == "excel") {
-            $withGeom = $geoformat ? true : false;
+            $withGeom = $geoformat;
             $separator = ";";
             $first = true;
             $lines = array();
@@ -241,84 +223,77 @@ class Sql extends Model
                 }
             }
 
-            try {
-                while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
-                    $arr = array();
-                    $fields = array();
+            while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
+                $arr = array();
+                $fields = array();
 
-                    foreach ($row as $key => $value) {
-                        if ($arrayWithFields[$key]['type'] == "geometry") {
-                            if ($withGeom) {
-                                $arr = $this->array_push_assoc($arr, $key, $value);
-                            }
-                        } else {
+                foreach ($row as $key => $value) {
+                    if ($arrayWithFields[$key]['type'] == "geometry") {
+                        if ($withGeom) {
                             $arr = $this->array_push_assoc($arr, $key, $value);
                         }
+                    } else {
+                        $arr = $this->array_push_assoc($arr, $key, $value);
                     }
-                    // Create first lines with field names
-                    if ($first) {
-                        foreach ($arr as $key => $value) {
-                            $fields[] = ($fieldConf && isset($fieldConf->$key->alias) && $fieldConf->$key->alias != "") ? "\"{$fieldConf->$key->alias}\"" : $key;
-                        }
-                        $lines[] = implode($separator, $fields);
-                        $first = false;
-                        $fields = array();
-                    }
-
-                    foreach ($arr as $value) {
-                        // Each embedded double-quote characters must be represented by a pair of double-quote characters.
-                        $value = $value !== null ? str_replace('"', '""', $value) : null;
-
-                        // Any text is quoted
-                        if ($csvAllToStr) {
-                            $fields[] = "\"{$value}\"";
-
-                        } else {
-                            $fields[] = !is_numeric($value) ? "\"{$value}\"" : $value;
-
-                        }
+                }
+                // Create first lines with field names
+                if ($first) {
+                    foreach ($arr as $key => $value) {
+                        $fields[] = ($fieldConf && isset($fieldConf->$key->alias) && $fieldConf->$key->alias != "") ? "\"{$fieldConf->$key->alias}\"" : $key;
                     }
                     $lines[] = implode($separator, $fields);
+                    $first = false;
+                    $fields = array();
                 }
-                $this->execQuery("CLOSE curs");
-                $this->commit();
-                $csv = implode("\n", $lines);
 
-                // Convert to Excel
-                // ================
+                foreach ($arr as $value) {
+                    // Each embedded double-quote characters must be represented by a pair of double-quote characters.
+                    $value = $value !== null ? str_replace('"', '""', $value) : null;
 
-                if ($format == "excel") {
-                    $file = tempnam(sys_get_temp_dir(), 'excel_');
-                    $handle = fopen($file, "w");
-                    fwrite($handle, $csv);
-                    $csv = null;
+                    // Any text is quoted
+                    if ($csvAllToStr) {
+                        $fields[] = "\"$value\"";
 
-                    $objReader = new Csv();
-                    $objReader->setDelimiter($separator);
-                    $objReader->setTestAutoDetect(false);
-                    $objPHPExcel = $objReader->load($file);
+                    } else {
+                        $fields[] = !is_numeric($value) ? "\"$value\"" : $value;
 
-                    fclose($handle);
-                    unlink($file);
-
-                    $objWriter = new Xlsx($objPHPExcel);
-
-                    // We'll be outputting an excel file
-                    header('Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-
-                    // It will be called file.xlsx
-                    header('Content-Disposition: attachment; filename="file.xlsx"');
-
-                    // Write file to the browser
-                    $objWriter->save('php://output');
-                    die();
+                    }
                 }
-            } catch (Exception $e) {
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 410;
-                return $response;
+                $lines[] = implode($separator, $fields);
             }
+            $this->execQuery("CLOSE curs");
+            $this->commit();
+            $csv = implode("\n", $lines);
+
+            // Convert to Excel
+            // ================
+
+            if ($format == "excel") {
+                $file = tempnam(sys_get_temp_dir(), 'excel_');
+                $handle = fopen($file, "w");
+                fwrite($handle, $csv);
+
+                $objReader = new Csv();
+                $objReader->setDelimiter($separator);
+                $objReader->setTestAutoDetect(false);
+                $objPHPExcel = $objReader->load($file);
+
+                fclose($handle);
+                unlink($file);
+
+                $objWriter = new Xlsx($objPHPExcel);
+
+                // We'll be outputting an Excel file
+                header('Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+                // It will be called file.xlsx
+                header('Content-Disposition: attachment; filename="file.xlsx"');
+
+                // Write file to the browser
+                $objWriter->save('php://output');
+                die();
+            }
+
             $response['success'] = true;
             $response['csv'] = $csv;
             return $response;
@@ -330,21 +305,12 @@ class Sql extends Model
 
     /**
      * @param string $q
-     * @return array<mixed>
+     * @return array
      */
     public function transaction(string $q): array
     {
-        try {
-            $result = $this->prepare($q);
-            $result->execute();
-
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 500;
-            return $response;
-        }
-
+        $result = $this->prepare($q);
+        $result->execute();
         $response['success'] = true;
         $response['affected_rows'] = $result->rowCount();
         $response['returning'] = $result->fetchAll(PDO::FETCH_NAMED);
@@ -352,12 +318,12 @@ class Sql extends Model
     }
 
     /**
-     * @param array<mixed> $array
+     * @param array $array
      * @param string $key
      * @param mixed $value
-     * @return array<mixed>
+     * @return array
      */
-    private function array_push_assoc(array $array, string $key, $value): array
+    private function array_push_assoc(array $array, string $key, mixed $value): array
     {
         $array[$key] = $value;
         return $array;

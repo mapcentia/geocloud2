@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2023 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -897,12 +897,12 @@ class Model
     }
 
     /**
-     * @param string $schema
+     * @param string|null $schema
      * @param string $table
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function getForeignConstrains(string $schema, string $table): array
+    public function getForeignConstrains(string|null $schema, string $table): array
     {
         $cacheType = "foreignConstrain";
         $cacheRel = md5($schema . "." . $table);
