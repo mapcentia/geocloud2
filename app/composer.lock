@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c4936c3cc2100adf69c83db55f26b3df",
+    "content-hash": "6537da38df11330984ce173f63a49e42",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -2214,6 +2214,70 @@
                 "source": "https://github.com/sad-spirit/pg-builder/tree/v2.3.1"
             },
             "time": "2023-11-15T19:31:22+00:00"
+        },
+        {
+            "name": "sad_spirit/pg_wrapper",
+            "version": "v2.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sad-spirit/pg-wrapper.git",
+                "reference": "943bb656460db78af7fb1759f9e2ac5497e16d54"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sad-spirit/pg-wrapper/zipball/943bb656460db78af7fb1759f9e2ac5497e16d54",
+                "reference": "943bb656460db78af7fb1759f9e2ac5497e16d54",
+                "shasum": ""
+            },
+            "require": {
+                "ext-ctype": "*",
+                "ext-json": "*",
+                "php": ">=7.2.0"
+            },
+            "require-dev": {
+                "ext-pgsql": "*",
+                "phpstan/phpstan": "^1.3",
+                "phpunit/phpunit": "^8.0|^9.0",
+                "psr/cache": "^1.0",
+                "vimeo/psalm": "^4.16"
+            },
+            "suggest": {
+                "ext-pgsql": "Used for communicating with PostgreSQL",
+                "psr/cache-implementation": "Used for DB metadata caching"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "sad_spirit\\pg_wrapper\\": "src/sad_spirit/pg_wrapper"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-2-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Alexey Borzov",
+                    "email": "avb@php.net"
+                }
+            ],
+            "description": "Converter of complex PostgreSQL types and an OO wrapper for PHP's pgsql extension",
+            "keywords": [
+                "array",
+                "composite",
+                "conversion",
+                "database",
+                "datetime",
+                "geometric",
+                "postgres",
+                "postgresql",
+                "range"
+            ],
+            "support": {
+                "issues": "https://github.com/sad-spirit/pg-wrapper/issues",
+                "source": "https://github.com/sad-spirit/pg-wrapper/tree/v2.3.0"
+            },
+            "time": "2023-09-15T06:38:46+00:00"
         },
         {
             "name": "softcreatr/jsonpath",
