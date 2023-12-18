@@ -14,7 +14,6 @@ use app\models\Session;
 use Exception;
 use TypeError;
 
-
 /**
  * Class Oauth
  * @package app\api\v4
