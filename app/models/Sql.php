@@ -18,6 +18,7 @@ use PhpOffice\PhpSpreadsheet\Reader\Exception;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use ZipArchive;
+use sad_spirit\pg_wrapper\converters\DefaultTypeConverterFactory;
 
 
 /**
@@ -165,6 +166,7 @@ class Sql extends Model
         $fieldsForStore = [];
         $columnsForGrid = [];
         $features = [];
+        $typeConverterFactory = new DefaultTypeConverterFactory();
 
         // GeoJSON output
         // ==============
@@ -175,10 +177,14 @@ class Sql extends Model
                 foreach ($row as $key => $value) {
                     if ($arrayWithFields[$key]['type'] == "geometry" && $value !== null) {
                         $geometries[] = json_decode($value);
-                    } elseif ($arrayWithFields[$key]['type'] == "json") {
-                        $arr = $this->array_push_assoc($arr, $key, json_decode($value));
                     } else {
-                        $arr = $this->array_push_assoc($arr, $key, $value);
+                        try {
+                            $convertedValue = $typeConverterFactory->getConverterForTypeSpecification($arrayWithFields[$key]['type'])->input($value);
+                            $arr = $this->array_push_assoc($arr, $key, $convertedValue);
+                        } catch (\Exception $e) {
+                            $arr = $this->array_push_assoc($arr, $key, $value);
+                        }
+
                     }
                 }
                 if ($geometries == null) {
