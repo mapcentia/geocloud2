@@ -15,16 +15,18 @@
 
 namespace app\controllers\upload;
 
-use \app\inc\Response;
-use \app\conf\Connection;
-use \app\inc\Session;
-use \app\models\Table;
+use app\inc\Controller;
+use app\inc\Model;
+use app\inc\Response;
+use app\conf\Connection;
+use app\inc\Session;
+use app\models\Table;
 
-class Processbitmap extends \app\inc\Controller
+class Processbitmap extends Controller
 {
     public function get_index()
     {
-        $safeName = \app\inc\Model::toAscii($_REQUEST['name'], array(), "_");
+        $safeName = Model::toAscii($_REQUEST['name'], array(), "_");
         if (is_numeric($safeName[0])) {
             $safeName = "_" . $safeName;
         }

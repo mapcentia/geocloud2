@@ -1,19 +1,24 @@
 <?php
+
+use app\conf\App;
+use app\conf\Connection;
 use app\migration\Sql;
+use app\models\Database;
+
 header("Content-type: text/plain");
 include_once(__DIR__ ."/../conf/App.php");
 include_once(__DIR__ ."/../conf/Connection.php");
 include_once(__DIR__ ."/../inc/Model.php");
 include_once(__DIR__ ."/../models/Database.php");
 include_once(__DIR__ ."/Sql.php");
-new \app\conf\App();
-\app\conf\Connection::$param["postgisschema"] = "public";
-$database = new \app\models\Database();
+new App();
+Connection::$param["postgisschema"] = "public";
+$database = new Database();
 $arr = $database->listAllDbs();
 foreach ($arr['data'] as $db) {
     if ($db != "rdsadmin" && $db != "template1" AND $db != "template0" AND $db != "postgres" AND $db != "postgis_template") {
         if (1 === 1) {
-            \app\models\Database::setDb($db);
+            Database::setDb($db);
             $conn = new \app\inc\Model();
 
             switch ($db) {

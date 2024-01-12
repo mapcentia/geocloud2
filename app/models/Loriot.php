@@ -9,6 +9,7 @@
 namespace app\models;
 
 use app\inc\Model;
+use PDOException;
 
 class Loriot extends Model
 {
@@ -44,7 +45,7 @@ class Loriot extends Model
 
         try {
             $res->execute($defaults);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response["success"] = false;
             $response["message"] = $e->getMessage();
             $response["code"] = "401";

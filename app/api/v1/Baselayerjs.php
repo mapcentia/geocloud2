@@ -15,11 +15,13 @@
 
 namespace app\api\v1;
 
+use app\inc\Controller;
+
 /**
  * Class Baselayerjs
  * @package app\api\v1
  */
-class Baselayerjs extends \app\inc\Controller
+class Baselayerjs extends Controller
 {
     /**
      * Baselayerjs constructor.

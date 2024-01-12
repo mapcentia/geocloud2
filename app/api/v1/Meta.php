@@ -8,18 +8,22 @@
 
 namespace app\api\v1;
 
-use \app\inc\Input;
-use \app\inc\Route;
-use \app\inc\Session;
+use app\inc\Controller;
+use app\inc\Input;
+use app\inc\Route;
+use app\inc\Session;
+use app\models\Layer;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Phpfastcache\Exceptions\PhpfastcacheLogicException;
 
 /**
  * Class Meta
  * @package app\api\v1
  */
-class Meta extends \app\inc\Controller
+class Meta extends Controller
 {
     /**
-     * @var \app\models\Layer
+     * @var Layer
      */
     private $layers;
 
@@ -30,13 +34,13 @@ class Meta extends \app\inc\Controller
     {
         parent::__construct();
 
-        $this->layers = new \app\models\Layer();
+        $this->layers = new Layer();
     }
 
     /**
      * @return array
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException
-     * @throws \Phpfastcache\Exceptions\PhpfastcacheLogicException
+     * @throws PhpfastcacheInvalidArgumentException
+     * @throws PhpfastcacheLogicException
      */
     public function get_index()
     {

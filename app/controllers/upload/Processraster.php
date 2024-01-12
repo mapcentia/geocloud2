@@ -15,12 +15,15 @@
 
 namespace app\controllers\upload;
 
-use \app\conf\App;
-use \app\inc\Response;
-use \app\conf\Connection;
-use \app\inc\Session;
+use app\conf\App;
+use app\inc\Controller;
+use app\inc\Model;
+use app\inc\Response;
+use app\conf\Connection;
+use app\inc\Session;
+use app\models\Classification;
 
-class Processraster extends \app\inc\Controller
+class Processraster extends Controller
 {
     /**
      * Processraster constructor.
@@ -33,7 +36,7 @@ class Processraster extends \app\inc\Controller
     public function get_index()
     {
         $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__raster";
-        $safeName = \app\inc\Model::toAscii($_REQUEST['name'], array(), "_");
+        $safeName = Model::toAscii($_REQUEST['name'], array(), "_");
 
         if (is_numeric($safeName[0])) {
             $safeName = "_" . $safeName;
@@ -78,12 +81,12 @@ class Processraster extends \app\inc\Controller
             $response['message'] = "Raster layer <b>{$safeName}</b> is created";
 
             $key = Connection::$param["postgisschema"] . "." . $safeName . ".rast";
-            $class = new \app\models\Classification($key);
+            $class = new Classification($key);
             $arr = $class->getAll();
 
             if (empty($arr['data'])) {
                 $class->insert();
-                $class->update("0", \app\models\Classification::createClass("POLYGON"));
+                $class->update("0", Classification::createClass("POLYGON"));
             }
            /* if ($_REQUEST['displayfile']) {
                 $join = new Table("settings.geometry_columns_join");

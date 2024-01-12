@@ -8,9 +8,12 @@
 
 namespace app\api\v2;
 
-use \app\inc\Route;
-use \app\inc\Input;
-use \GuzzleHttp\Client;
+use app\inc\Controller;
+use app\inc\Route;
+use app\inc\Input;
+use Exception;
+use GuzzleHttp\Client;
+use XML_Unserializer;
 
 include_once(__DIR__ . "../../../libs/PEAR/XML/Unserializer.php");
 include_once(__DIR__ . "../../../libs/PEAR/XML/Serializer.php");
@@ -19,7 +22,7 @@ include_once(__DIR__ . "../../../libs/PEAR/XML/Serializer.php");
  * Class Qgis
  * @package app\api\v1
  */
-class Sqlwrapper extends \app\inc\Controller
+class Sqlwrapper extends Controller
 {
     /**
      * Sqlwrapper constructor.
@@ -52,7 +55,7 @@ class Sqlwrapper extends \app\inc\Controller
             //die($getFeatureInfoUrl);
             try {
                 $res = $client->get($getFeatureInfoUrl);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
                 $response['code'] = 400;
@@ -61,7 +64,7 @@ class Sqlwrapper extends \app\inc\Controller
 
             $xml = $res->getBody();
 
-            $unserializer = new \XML_Unserializer(array(
+            $unserializer = new XML_Unserializer(array(
                 'parseAttributes' => false,
                 'typeHints' => false
             ));
@@ -107,7 +110,7 @@ class Sqlwrapper extends \app\inc\Controller
         // POST the transaction
         try {
             $res = $client->post($url, ['form_params' => $form]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 400;

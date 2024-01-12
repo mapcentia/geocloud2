@@ -15,9 +15,14 @@
 
 namespace app\api\v1;
 
-use \app\inc\Input;
+use app\conf\App;
+use app\inc\Controller;
+use app\inc\Input;
+use app\inc\Response;
+use app\inc\Util;
+use Cache_Lite;
 
-class Staticmap extends \app\inc\Controller
+class Staticmap extends Controller
 {
 
     function __construct()
@@ -55,14 +60,14 @@ class Staticmap extends \app\inc\Controller
 
         $id = $db . "_" . $baseLayer . "_" . $layers . "_" . $center . "_" . $zoom . "_" . $size . "_" . $bbox . "_" . $sql;
         $lifetime = (Input::get('lifetime')) ? : 0;
-        $options = array('cacheDir' => \app\conf\App::$param['path'] . "app/tmp/", 'lifeTime' => $lifetime);
-        $Cache_Lite = new \Cache_Lite($options);
+        $options = array('cacheDir' => App::$param['path'] . "app/tmp/", 'lifeTime' => $lifetime);
+        $Cache_Lite = new Cache_Lite($options);
         if ($data = $Cache_Lite->get($id)) {
             //echo "Cached";
         } else {
             ob_start();
             $fileName = md5(time() . rand(10000, 99999) . microtime());
-            $file = \app\conf\App::$param["path"] . "/app/tmp/_" . $fileName . "." . $type;
+            $file = App::$param["path"] . "/app/tmp/_" . $fileName . "." . $type;
             $cmd = "xvfb-run -- wkhtmltoimage " .
                 "--height {$sizeArr[1]} --width {$sizeArr[0]} --quality 90 --javascript-delay 1000 " .
                 "\"" . "http://127.0.0.1" . "/api/v1/staticmap/html/{$db}?baselayer={$baseLayer}&layers={$layers}&center={$center}&zoom={$zoom}&size={$size}&bbox={$bbox}&sql={$sql}\" " .
@@ -81,8 +86,8 @@ class Staticmap extends \app\inc\Controller
                 $response['success'] = false;
                 $response['message'] = "Could not create image";
                 $response['code'] = 406;
-                header("HTTP/1.0 {$response['code']} " . \app\inc\Util::httpCodeText($response['code']));
-                echo \app\inc\Response::toJson($response);
+                header("HTTP/1.0 {$response['code']} " . Util::httpCodeText($response['code']));
+                echo Response::toJson($response);
                 exit();
             }
             header('Content-type: image/png');
@@ -125,7 +130,7 @@ class Staticmap extends \app\inc\Controller
         echo "
         <script src='/js/leaflet/leaflet.js'></script>
         <script src='/js/openlayers/proj4js-combined.js'></script>
-        <script src='" . \app\conf\App::$param['host'] . "/api/v3/js/geocloud.js'></script>
+        <script src='" . App::$param['host'] . "/api/v3/js/geocloud.js'></script>
         <div id='map' style='width: {$size[0]}px; height: {$size[1]}px'></div>
         <style>
         body {margin: 0px; padding: 0px;}
@@ -138,9 +143,9 @@ class Staticmap extends \app\inc\Controller
                 var map = new geocloud.map({
                     el: 'map'
                 });
-                map.bingApiKey = '" . \app\conf\App::$param['bingApiKey'] . "'
-                map.addBaseLayer({$baseLayer}, '{$db}');
-                map.setBaseLayer({$baseLayer});";
+                map.bingApiKey = '" . App::$param['bingApiKey'] . "'
+                map.addBaseLayer({$baseLayer}, '{$db}')
+                map.setBaseLayer({$baseLayer})";
         if (!$sql) {
             if ($bbox) {
                 $bboxArr = explode(",", Input::get("bbox"));

@@ -1,5 +1,7 @@
 <?php
 
+use Codeception\Util\HttpCode;
+
 class UserManagementCest
 {
     private $date;
@@ -42,7 +44,7 @@ class UserManagementCest
         $this->secondSubUserEmail = 'anothersubtest' . ($buildId ?: $this->date->getTimestamp()) . '@example.com';
     }
 
-    public function shouldCreateSuperUserWitnNonASCIICharactersInNameAndAllowAuthorizeWithName(\ApiTester $I)
+    public function shouldCreateSuperUserWitnNonASCIICharactersInNameAndAllowAuthorizeWithName(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendPOST('/api/v2/user', json_encode([
@@ -51,7 +53,7 @@ class UserManagementCest
             'password' => 'A1abcabcabc',
         ]));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -69,7 +71,7 @@ class UserManagementCest
         $sessionCookie = $I->capturePHPSESSID();
         $I->assertFalse(empty($sessionCookie));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -81,7 +83,7 @@ class UserManagementCest
         ]);
     }
 
-    public function shouldCreateSuperUser(\ApiTester $I)
+    public function shouldCreateSuperUser(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendPOST('/api/v2/user', json_encode([
@@ -90,7 +92,7 @@ class UserManagementCest
             'password' => 'A1abcabcabc',
         ]));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -101,7 +103,7 @@ class UserManagementCest
         $this->userId = $response->data->screenname;
     }
 
-    public function shouldLetSuperUserAuthorize(\ApiTester $I)
+    public function shouldLetSuperUserAuthorize(ApiTester $I)
     {
         $I->sendPOST('/api/v2/session/start', json_encode([
             'user' => $this->userId,
@@ -112,7 +114,7 @@ class UserManagementCest
         $I->assertFalse(empty($sessionCookie));
         $this->userAuthCookie = $sessionCookie;
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -124,7 +126,7 @@ class UserManagementCest
         ]);
     }
 
-    public function shouldCreateSubUser(\ApiTester $I)
+    public function shouldCreateSubUser(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
@@ -135,7 +137,7 @@ class UserManagementCest
             'subuser' => true
         ]));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
 
         $response = json_decode($I->grabResponse());
@@ -150,7 +152,7 @@ class UserManagementCest
         ]);
     }
 
-    public function shouldLetSubUserAuthorize(\ApiTester $I)
+    public function shouldLetSubUserAuthorize(ApiTester $I)
     {
         $I->sendPOST('/api/v2/session/start', json_encode([
             'user' => $this->subUserId,
@@ -161,7 +163,7 @@ class UserManagementCest
         $I->assertFalse(empty($sessionCookie));
         $this->subUserAuthCookie = $sessionCookie;
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -173,7 +175,7 @@ class UserManagementCest
         ]);
     }
 
-    public function shouldCreateSubuserForDifferentSuperuserWithExistingName(\ApiTester $I)
+    public function shouldCreateSubuserForDifferentSuperuserWithExistingName(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendPOST('/api/v2/user', json_encode([
@@ -182,7 +184,7 @@ class UserManagementCest
             'password' => 'A1abcabcabc',
         ]));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $response = json_decode($I->grabResponse());
         $this->secondUserId = $response->data->screenname;
 
@@ -195,7 +197,7 @@ class UserManagementCest
         $I->assertFalse(empty($sessionCookie));
         $this->secondUserAuthCookie = $sessionCookie;
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
 
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->secondUserAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
@@ -205,7 +207,7 @@ class UserManagementCest
             'password' => 'A1abcabcabc',
         ]));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -216,14 +218,14 @@ class UserManagementCest
         ]);
     }
 
-    public function shouldNotAllowSubUserWithConflictingNameAuthorizeWithNameOnly(\ApiTester $I)
+    public function shouldNotAllowSubUserWithConflictingNameAuthorizeWithNameOnly(ApiTester $I)
     {
         $I->sendPOST('/api/v2/session/start', json_encode([
             'user' => $this->subUserName,
             'password' => 'A1abcabcabc',
         ]));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::UNAUTHORIZED);
+        $I->seeResponseCodeIs(HttpCode::UNAUTHORIZED);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => false,
@@ -231,7 +233,7 @@ class UserManagementCest
         ]);
     }
 
-    public function shouldAllowSubUserWithConflictingNameAuthorizeWithNameAndDatabase(\ApiTester $I)
+    public function shouldAllowSubUserWithConflictingNameAuthorizeWithNameAndDatabase(ApiTester $I)
     {
         $I->sendPOST('/api/v2/session/start', json_encode([
             'user' => $this->subUserName,
@@ -239,7 +241,7 @@ class UserManagementCest
             'password' => 'A1abcabcabc',
         ]));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -251,14 +253,14 @@ class UserManagementCest
         ]);
     }
 
-    public function shouldAllowSubUserWithConflictingNameAuthorizeWithEmail(\ApiTester $I)
+    public function shouldAllowSubUserWithConflictingNameAuthorizeWithEmail(ApiTester $I)
     {
         $I->sendPOST('/api/v2/session/start', json_encode([
             'user' => 'another_' . $this->subUserEmail,
             'password' => 'A1abcabcabc',
         ]));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -266,13 +268,13 @@ class UserManagementCest
         ]);
     }
 
-    public function shouldListSubUsersOfSuperUser(\ApiTester $I)
+    public function shouldListSubUsersOfSuperUser(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendGET('/api/v2/user/' . $this->userId . '/subusers');
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -287,20 +289,20 @@ class UserManagementCest
         ]);
     }
 
-    public function shouldNotListSubUsersOfSubUser(\ApiTester $I)
+    public function shouldNotListSubUsersOfSubUser(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendGET('/api/v2/user/' . $this->subUserId . '/subusers');
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::FORBIDDEN);
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => false,
         ]);
     }
 
-    public function shouldNotCreateUserWithSameName(\ApiTester $I)
+    public function shouldNotCreateUserWithSameName(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendPOST('/api/v2/user', json_encode([
@@ -309,7 +311,7 @@ class UserManagementCest
             'password' => 'A1abcabcabc',
         ]));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::BAD_REQUEST);
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => false,
@@ -320,7 +322,7 @@ class UserManagementCest
         $I->assertStringContainsString('already exists', $response);
     }
 
-    public function shouldNotCreateUserWithSameEmail(\ApiTester $I)
+    public function shouldNotCreateUserWithSameEmail(ApiTester $I)
     {
         $I->sendPOST('/api/v2/user', json_encode([
             'name' => $this->userName . ' random name',
@@ -328,7 +330,7 @@ class UserManagementCest
             'password' => 'A1abcabcabc',
         ]));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::BAD_REQUEST);
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => false,
@@ -339,7 +341,7 @@ class UserManagementCest
         $I->assertStringContainsString('already exists', $response);
     }
 
-    public function shouldNotCreateUserWithWeakPassword(\ApiTester $I)
+    public function shouldNotCreateUserWithWeakPassword(ApiTester $I)
     {
         $I->sendPOST('/api/v2/user', json_encode([
             'name' => $this->userName . ' another random name',
@@ -347,7 +349,7 @@ class UserManagementCest
             'password' => 'abc',
         ]));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::BAD_REQUEST);
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => false,
@@ -358,11 +360,11 @@ class UserManagementCest
         ('Password does not meet following requirements', $response);
     }
 
-    public function superUserShouldGetInformationAboutHimself(\ApiTester $I)
+    public function superUserShouldGetInformationAboutHimself(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->sendGET('/api/v2/user/' . $this->userId);
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -373,11 +375,11 @@ class UserManagementCest
         ]);
     }
 
-    public function subUserShouldGetInformationAboutHimself(\ApiTester $I)
+    public function subUserShouldGetInformationAboutHimself(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
         $I->sendGET('/api/v2/user/' . $this->subUserId);
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -388,11 +390,11 @@ class UserManagementCest
         ]);
     }
 
-    public function superUserShouldGetInformationAboutHisSubUser(\ApiTester $I)
+    public function superUserShouldGetInformationAboutHisSubUser(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->sendGET('/api/v2/user/' . $this->subUserId);
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -403,7 +405,7 @@ class UserManagementCest
         ]);
     }
 
-    public function userShouldUpdateHimself(\ApiTester $I)
+    public function userShouldUpdateHimself(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->sendPUT('/api/v2/user/' . $this->userId, json_encode([
@@ -411,7 +413,7 @@ class UserManagementCest
             'password' => 'AB123oooooabc',
         ]));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -419,7 +421,7 @@ class UserManagementCest
         ]);
     }
 
-    public function shouldLetUserAuthorizeAfterPasswordChange(\ApiTester $I)
+    public function shouldLetUserAuthorizeAfterPasswordChange(ApiTester $I)
     {
         $I->sendPOST('/api/v2/session/start', json_encode([
             'user' => $this->userId,
@@ -429,7 +431,7 @@ class UserManagementCest
         $sessionCookie = $I->capturePHPSESSID();
         $I->assertFalse(empty($sessionCookie));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -441,14 +443,14 @@ class UserManagementCest
         ]);
     }
 
-    public function userShouldUpdateHisPasswordOnlyIfCurrentOneIsProvided(\ApiTester $I)
+    public function userShouldUpdateHisPasswordOnlyIfCurrentOneIsProvided(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->sendPUT('/api/v2/user/' . $this->userId, json_encode([
             'password' => 'AB123oooooabc',
         ]));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::FORBIDDEN);
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => false,
@@ -456,7 +458,7 @@ class UserManagementCest
         ]);
     }
 
-    public function userShouldUpdateHisSubUser(\ApiTester $I)
+    public function userShouldUpdateHisSubUser(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->sendPUT('/api/v2/user/' . $this->subUserId, json_encode([
@@ -464,7 +466,7 @@ class UserManagementCest
             'email' => 'newsubuseremail' . $this->date->getTimestamp() . '@test.com'
         ]));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -472,12 +474,12 @@ class UserManagementCest
         ]);
     }
 
-    public function superUserShouldDeleteHisSubUser(\ApiTester $I)
+    public function superUserShouldDeleteHisSubUser(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->sendDELETE('/api/v2/user/' . $this->subUserId);
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -485,24 +487,24 @@ class UserManagementCest
         ]);
     }
 
-    public function shouldReturn404OnDeletedSubUser(\ApiTester $I)
+    public function shouldReturn404OnDeletedSubUser(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->sendGET('/api/v2/user/' . $this->subUserId);
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::NOT_FOUND);
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => false
         ]);
     }
 
-    public function superUserShouldDeleteHimself(\ApiTester $I)
+    public function superUserShouldDeleteHimself(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->sendDELETE('/api/v2/user/' . $this->userId);
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,

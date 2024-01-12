@@ -8,7 +8,8 @@
 
 namespace app\models;
 
-use \app\inc\Model;
+use app\inc\Model;
+use PDOException;
 
 class Admin extends Model
 {
@@ -61,7 +62,7 @@ class Admin extends Model
         try {
             $res = $this->prepare($sql);
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -99,7 +100,7 @@ class Admin extends Model
         try {
             $res = $this->prepare($sql);
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -113,7 +114,7 @@ class Admin extends Model
         try {
             $res = $this->prepare($sql);
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -127,7 +128,7 @@ class Admin extends Model
         try {
             $res = $this->prepare($sql);
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -139,7 +140,7 @@ class Admin extends Model
         try {
             $res = $this->prepare($sql);
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();

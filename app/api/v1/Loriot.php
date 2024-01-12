@@ -15,13 +15,14 @@
 
 namespace app\api\v1;
 
-use \app\inc\Input;
+use app\inc\Controller;
+use app\inc\Input;
 
 /**
  * Class Loriot
  * @package app\api\v1
  */
-class Loriot extends \app\inc\Controller
+class Loriot extends Controller
 {
     /**
      * Loriot constructor.

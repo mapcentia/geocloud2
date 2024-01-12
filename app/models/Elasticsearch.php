@@ -8,6 +8,7 @@
 
 namespace app\models;
 
+use app\conf\App;
 use app\inc\Model;
 
 /**
@@ -29,7 +30,7 @@ class Elasticsearch extends Model
     {
         parent::__construct();
 
-        $this->host = \app\conf\App::$param['esHost'] ?: "http://127.0.0.1";
+        $this->host = App::$param['esHost'] ?: "http://127.0.0.1";
         $split = explode(":", $this->host);
         if (!empty($split[2])) {
             $this->port = $split[2];
@@ -115,7 +116,7 @@ class Elasticsearch extends Model
     {
         $split = explode(".", $table);
         $type = $split[1];
-        $tableObj = new \app\models\Table($table);
+        $tableObj = new Table($table);
         $schema = $tableObj->getMapForEs();
         $map =
                 array("properties" =>
@@ -127,7 +128,7 @@ class Elasticsearch extends Model
                     )
 
         );
-        $layer = new \app\models\Layer();
+        $layer = new Layer();
         $esTypes = $layer->getElasticsearchMapping($table);
         $arr = array();
         foreach ($esTypes["data"] as $key => $value) {

@@ -15,11 +15,13 @@
 
 namespace app\api\v1;
 
+use app\inc\Controller;
+
 /**
  * Class Getheader
  * @package app\api\v1
  */
-class Getheader extends \app\inc\Controller
+class Getheader extends Controller
 {
     /**
      * @return array|false

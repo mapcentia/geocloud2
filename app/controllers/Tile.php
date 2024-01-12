@@ -8,10 +8,11 @@
 
 namespace app\controllers;
 
-use \app\inc\Response;
-use \app\inc\Input;
+use app\inc\Controller;
+use app\inc\Response;
+use app\inc\Input;
 
-class Tile extends \app\inc\Controller
+class Tile extends Controller
 {
     private $wmslayer;
 

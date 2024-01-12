@@ -8,10 +8,11 @@
 
 namespace app\controllers;
 
-use \app\inc\Input;
-use \app\conf\Connection;
+use app\inc\Controller;
+use app\inc\Input;
+use app\conf\Connection;
 
-class Database extends \app\inc\Controller
+class Database extends Controller
 {
     private $db;
     private $request;
@@ -20,7 +21,7 @@ class Database extends \app\inc\Controller
     {
         parent::__construct();
 
-        $this->request = \app\inc\Input::getPath();
+        $this->request = Input::getPath();
         $this->db = new \app\models\Database();
     }
 

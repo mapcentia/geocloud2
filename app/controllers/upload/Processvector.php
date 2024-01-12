@@ -11,6 +11,7 @@ namespace app\controllers\upload;
 
 use app\conf\App;
 use app\controllers\Tilecache;
+use app\exceptions\GC2Exception;
 use app\inc\Controller;
 use app\inc\Response;
 use app\conf\Connection;
@@ -40,7 +41,7 @@ class Processvector extends Controller
 
     /**
      * @return array<mixed>
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws PhpfastcacheInvalidArgumentException|GC2Exception
      */
     public function get_index(): array
     {

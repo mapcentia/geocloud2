@@ -13,6 +13,7 @@ use app\inc\Cache;
 use app\inc\Controller;
 use app\inc\Globals;
 use app\inc\Input;
+use mapObj;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Phpfastcache\Exceptions\PhpfastcacheLogicException;
 
@@ -50,7 +51,7 @@ class Legend extends Controller
                         if (sizeof($splitName) < 2) {
                             $mapFile = Input::getPath()->part(5) . "_" . $splitName[0] . "_wms.map";
                             if (file_exists($path . $mapFile)) {
-                                $map = new \mapObj($path . $mapFile);
+                                $map = new mapObj($path . $mapFile);
                                 for ($i = 0; $i < $map->numlayers; $i++) {
                                     $arr[] = $map->getLayer($i)->name;
                                 }
@@ -65,7 +66,7 @@ class Legend extends Controller
                     $layerNameWithOutPrefix = str_replace("v:", "", $layerName);
                     $splitName = explode(".", $layerNameWithOutPrefix);
                     $mapFile = Input::getPath()->part(5) . "_" . $splitName[0] . "_wms.map";
-                    $map = new \mapObj($path . $mapFile);
+                    $map = new mapObj($path . $mapFile);
                     $layer = $map->getLayerByName($layerNameWithOutPrefix);
                     if ($layer) {
                         $this->legendArr[$layerName]['title'] = $layer->metadata->get("ows_title");
@@ -111,7 +112,7 @@ class Legend extends Controller
             return $response;
         }
         $mapFile = Input::getPath()->part(5) . "_" . Input::getPath()->part(6) . "_wms.map";
-        $map = new \mapObj($path . $mapFile);
+        $map = new mapObj($path . $mapFile);
         if (is_array($this->legendArr)) {
             foreach ($this->legendArr as $key => $layer) {
                 $layer = $map->getLayerByName($key);

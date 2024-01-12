@@ -8,9 +8,10 @@
 
 namespace app\controllers;
 
-use \app\inc\Input;
+use app\inc\Controller;
+use app\inc\Input;
 
-class Drawing extends \app\inc\Controller
+class Drawing extends Controller
 {
     public $drawing;
     public $username;

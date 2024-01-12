@@ -1,5 +1,7 @@
 <?php
 
+use Codeception\Util\HttpCode;
+
 class DatabaseManagementCest
 {
     private $date;
@@ -57,7 +59,7 @@ class DatabaseManagementCest
         $this->subUserEmail2 = 'anotherdatabasesubtest' . ($buildId ?: $this->date->getTimestamp()) . '@example.com';
     }
 
-    public function shouldPrepareForTestFirstUser(\ApiTester $I)
+    public function shouldPrepareForTestFirstUser(ApiTester $I)
     {
         // Create a super and subuser
         $I->haveHttpHeader('Content-Type', 'application/json');
@@ -66,7 +68,7 @@ class DatabaseManagementCest
             'email' => $this->userEmail,
             'password' => $this->password,
         ]));
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $response = json_decode($I->grabResponse());
         $this->userId = $response->data->screenname;
 
@@ -92,12 +94,12 @@ class DatabaseManagementCest
             'createschema' => true
         ]));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $response = json_decode($I->grabResponse());
         $this->subUserId = $response->data->screenname;
     }
 
-    public function shouldStartSessionWithFirstSubuser(\ApiTester $I)
+    public function shouldStartSessionWithFirstSubuser(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->sendPOST('/api/v2/session/start', json_encode([
@@ -114,7 +116,7 @@ class DatabaseManagementCest
 
     }
 
-    public function shouldPrepareForTestSecondUser(\ApiTester $I)
+    public function shouldPrepareForTestSecondUser(ApiTester $I)
     {
         // Create another super and subuser
         $I->haveHttpHeader('Content-Type', 'application/json');
@@ -124,7 +126,7 @@ class DatabaseManagementCest
             'password' => $this->password,
         ]));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $response = json_decode($I->grabResponse());
         $this->userId1 = $response->data->screenname;
 
@@ -147,7 +149,7 @@ class DatabaseManagementCest
             'createschema' => true
         ]));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $response = json_decode($I->grabResponse());
         $this->subUserId1 = $response->data->screenname;
 
@@ -161,7 +163,7 @@ class DatabaseManagementCest
         $this->subUserAuthCookie1 = $sessionCookie;
     }
 
-    public function shouldPrepareForTestThirdUser(\ApiTester $I)
+    public function shouldPrepareForTestThirdUser(ApiTester $I)
     {
         // Create another super and subuser
         $I->haveHttpHeader('Content-Type', 'application/json');
@@ -171,7 +173,7 @@ class DatabaseManagementCest
             'password' => $this->password,
         ]));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $response = json_decode($I->grabResponse());
         $this->userId2 = $response->data->screenname;
 
@@ -194,7 +196,7 @@ class DatabaseManagementCest
             'createschema' => true
         ]));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $response = json_decode($I->grabResponse());
         $this->subUserId2 = $response->data->screenname;
 
@@ -208,7 +210,7 @@ class DatabaseManagementCest
         $this->subUserAuthCookie2 = $sessionCookie;
     }
 
-    public function shouldGetTokenForFirstSubUser(\ApiTester $I)
+    public function shouldGetTokenForFirstSubUser(ApiTester $I)
     {
 
         $I->haveHttpHeader('Content-Type', 'application/json');
@@ -223,13 +225,13 @@ class DatabaseManagementCest
         $this->token = json_decode($I->grabResponse(), true)["access_token"];
     }
 
-    public function shouldListSchemasForSuperUser(\ApiTester $I)
+    public function shouldListSchemasForSuperUser(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendGET('/api/v2/database/schemas');
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -240,25 +242,25 @@ class DatabaseManagementCest
         ]);
     }
 
-    public function shouldListDatabasesForSubUserUsingName(\ApiTester $I)
+    public function shouldListDatabasesForSubUserUsingName(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendGET('/api/v2/database/search?userIdentifier=' . urlencode($this->subUserName));
 
         $response = json_decode($I->grabResponse());
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->assertEquals(2, sizeof($response->databases));
     }
 
-    public function shouldListDatabasesForSubUserUsingNameAndSearchingForUsersWithSameEmail(\ApiTester $I)
+    public function shouldListDatabasesForSubUserUsingNameAndSearchingForUsersWithSameEmail(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendGET('/api/v2/database/search?userIdentifier=' . urlencode($this->subUserEmail1));
 
         $response = json_decode($I->grabResponse());
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->assertEquals(2, sizeof($response->databases));
 
@@ -266,31 +268,31 @@ class DatabaseManagementCest
         $I->assertEquals($response->databases[1]->parentdb, $this->userId2);
     }
 
-    public function shouldSetBasicAuthPasswordForSubUser(\ApiTester $I)
+    public function shouldSetBasicAuthPasswordForSubUser(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendPUT('/controllers/setting/pw', "pw=" . $this->password);
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseContainsJson([
             'success' => true,
             'message' => 'Password saved',
         ]);
     }
 
-    public function shouldSetBasicAuthPasswordForSuperUser(\ApiTester $I)
+    public function shouldSetBasicAuthPasswordForSuperUser(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded');
         $I->sendPUT('/controllers/setting/pw', "pw=" . $this->password);
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseContainsJson([
             'success' => true,
             'message' => 'Password saved',
         ]);
     }
 
-    public function shouldUploadGmlFile(\ApiTester $I)
+    public function shouldUploadGmlFile(ApiTester $I)
     {
         $data = ["key" => "value"];
         $files = [
@@ -298,7 +300,7 @@ class DatabaseManagementCest
         ];
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->sendPOST('/controllers/upload/vector', $data, $files);
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -306,11 +308,11 @@ class DatabaseManagementCest
         ]);
     }
 
-    public function shouldProcessGmlFile(\ApiTester $I)
+    public function shouldProcessGmlFile(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->sendGET('/controllers/upload/processvector?srid=25832&file=Parkeringsomraade.gml&name=Parkeringsomraade&type=polygon&encoding=UTF8&ignoreerrors=false&overwrite=false&append=false&delete=false');
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -323,7 +325,7 @@ class DatabaseManagementCest
     // *************************************
 
     // Super user SQL API request to unprotected data source from outside session
-    public function shouldGetDataFromSqlApiAsSuperUserOutsideSession(\ApiTester $I)
+    public function shouldGetDataFromSqlApiAsSuperUserOutsideSession(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->sendPOST('/api/v2/sql/' . $this->userId, json_encode(
@@ -332,7 +334,7 @@ class DatabaseManagementCest
                 'key' => 'dymmy'
             ]
         ));
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -340,16 +342,16 @@ class DatabaseManagementCest
     }
 
     // Super user WFS-t request to unprotected data source from outside session
-    public function shouldGetDataFromWfstAsSuperUserOutsideSession(\ApiTester $I)
+    public function shouldGetDataFromWfstAsSuperUserOutsideSession(ApiTester $I)
     {
         $I->sendGET('/wfs/' . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsXml();
         $I->seeXmlResponseMatchesXpath('/wfs:FeatureCollection/gml:featureMember');
     }
 
     // Set Read and Write protection on the layer
-    public function shouldChangeTheAuthenticationLevelFromWriteToReadwrite(\ApiTester $I)
+    public function shouldChangeTheAuthenticationLevelFromWriteToReadwrite(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
@@ -359,7 +361,7 @@ class DatabaseManagementCest
                 "_key_" => "public.parkeringsomraade.the_geom",
             ],
         ]));
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -368,7 +370,7 @@ class DatabaseManagementCest
     }
 
     // Super user SQL API request to protected data source from outside session
-    public function shouldNotGetDataFromSqlApiAsSuperUserOutsideSession(\ApiTester $I)
+    public function shouldNotGetDataFromSqlApiAsSuperUserOutsideSession(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->sendPOST('/api/v2/sql/' . $this->userId, json_encode(
@@ -377,7 +379,7 @@ class DatabaseManagementCest
                 'key' => 'dymmy'
             ]
         ));
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::FORBIDDEN);
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => false,
@@ -387,37 +389,37 @@ class DatabaseManagementCest
     // WFS-t tests start on protected layers
 
     // Super user WFS-t request to protected data source from outside session
-    public function shouldNotGetDataFromWfstAsSuperUserOutsideSession(\ApiTester $I)
+    public function shouldNotGetDataFromWfstAsSuperUserOutsideSession(ApiTester $I)
     {
         $I->sendGET('/wfs/' . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::UNAUTHORIZED);
+        $I->seeResponseCodeIs(HttpCode::UNAUTHORIZED);
     }
 
     // Sub user WFS-t request to protected data source from outside session
-    public function shouldNotGetDataFromWfstAsSubUserOutsideSession(\ApiTester $I)
+    public function shouldNotGetDataFromWfstAsSubUserOutsideSession(ApiTester $I)
     {
         $I->sendGET('/wfs/' . $this->subUserId . "@" . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsXml();
         $I->canSeeResponseContains('ServiceExceptionReport');
     }
 
     // Super user WFS-t request to protected data source from inside session
-    public function shouldGetDataFromWfstAsSuperUserInsideSession(\ApiTester $I)
+    public function shouldGetDataFromWfstAsSuperUserInsideSession(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
         $I->sendGET('/wfs/' . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsXml();
         $I->seeXmlResponseMatchesXpath('/wfs:FeatureCollection/gml:featureMember');
     }
 
     // Sub user WFS-t request to protected data source from inside session
-    public function shouldNotGetDataFromWfstAsSubUserInsideSession(\ApiTester $I)
+    public function shouldNotGetDataFromWfstAsSubUserInsideSession(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
         $I->sendGET('/wfs/' . $this->subUserId . "@" . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsXml();
         $I->canSeeResponseContains('ServiceExceptionReport');
     }
@@ -425,7 +427,7 @@ class DatabaseManagementCest
     // WFS-t tests end
 
     // Super user SQL API request to protected data source with API key
-    public function shouldGetDataFromSqlApiAsSuperUserWithApiKey(\ApiTester $I)
+    public function shouldGetDataFromSqlApiAsSuperUserWithApiKey(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->sendPOST('/api/v2/sql/' . $this->userId, json_encode(
@@ -434,7 +436,7 @@ class DatabaseManagementCest
                 'key' => $this->userApiKey
             ]
         ));
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -442,7 +444,7 @@ class DatabaseManagementCest
     }
 
     // Super user SQL API request to protected data source from inside session
-    public function shouldGetDataFromSqlApiAsSuperUserInsideSession(\ApiTester $I)
+    public function shouldGetDataFromSqlApiAsSuperUserInsideSession(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
@@ -451,7 +453,7 @@ class DatabaseManagementCest
                 'q' => 'SELECT * FROM public.parkeringsomraade LIMIT 1',
             ]
         ));
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -460,7 +462,7 @@ class DatabaseManagementCest
 
 
     // Sub user SQL API request to protected data source from outside session
-    public function shouldNotGetDataFromSqlApiAsSubUserOutsideSession(\ApiTester $I)
+    public function shouldNotGetDataFromSqlApiAsSubUserOutsideSession(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->sendPOST('/api/v2/sql/' . $this->userId, json_encode(
@@ -469,7 +471,7 @@ class DatabaseManagementCest
                 'key' => 'dymmy'
             ]
         ));
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::FORBIDDEN);
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => false,
@@ -478,7 +480,7 @@ class DatabaseManagementCest
 
 
     // Sub user SQL API request to protected data source from inside session
-    public function shouldNotGetDataFromSqlApiAsSubUserInsideSession(\ApiTester $I)
+    public function shouldNotGetDataFromSqlApiAsSubUserInsideSession(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/json');
@@ -487,7 +489,7 @@ class DatabaseManagementCest
                 'q' => 'SELECT * FROM public.parkeringsomraade LIMIT 1',
             ]
         ));
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::FORBIDDEN);
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => false,
@@ -496,7 +498,7 @@ class DatabaseManagementCest
 
 
     // Set read privileges on data source to sub user
-    public function shouldGiveReadPrivilegesToSubUser(\ApiTester $I)
+    public function shouldGiveReadPrivilegesToSubUser(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
@@ -507,7 +509,7 @@ class DatabaseManagementCest
                 "_key_" => "public.parkeringsomraade.the_geom",
             ],
         ]));
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -515,7 +517,7 @@ class DatabaseManagementCest
         ]);
     }
 
-    public function shouldNotUpdateDataFromSqlApiAsSubUserWithKey(\ApiTester $I)
+    public function shouldNotUpdateDataFromSqlApiAsSubUserWithKey(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->sendPOST('/api/v2/sql/' . $this->subUserId . "@" . $this->userId, json_encode(
@@ -524,7 +526,7 @@ class DatabaseManagementCest
                 'key' => $this->subUserApiKey,
             ]
         ));
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::FORBIDDEN);
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => false,
@@ -533,7 +535,7 @@ class DatabaseManagementCest
     }
 
     // Sub user SQL API request to protected data source with wrong API key
-    public function shouldNotGetDataFromSqlApiAsSubUserWithWrongApiKey(\ApiTester $I)
+    public function shouldNotGetDataFromSqlApiAsSubUserWithWrongApiKey(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->sendPOST('/api/v2/sql/' . $this->subUserId . "@" . $this->userId, json_encode(
@@ -542,7 +544,7 @@ class DatabaseManagementCest
                 'key' => 'dymmy'
             ]
         ));
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::FORBIDDEN);
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => false,
@@ -551,7 +553,7 @@ class DatabaseManagementCest
     }
 
     // Sub user SQL API request to protected data source with right API key
-    public function shouldGetDataFromSqlApiAsSubUserWithApiKey(\ApiTester $I)
+    public function shouldGetDataFromSqlApiAsSubUserWithApiKey(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->sendPOST('/api/v2/sql/' . $this->subUserId . "@" . $this->userId, json_encode(
@@ -560,7 +562,7 @@ class DatabaseManagementCest
                 'key' => $this->subUserApiKey,
             ]
         ));
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -571,7 +573,7 @@ class DatabaseManagementCest
     }
 
     // Sub user SQL API request to protected data source from within session
-    public function shouldGetDataFromSqlApiAsSubUserFromWithinSession(\ApiTester $I)
+    public function shouldGetDataFromSqlApiAsSubUserFromWithinSession(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
@@ -581,7 +583,7 @@ class DatabaseManagementCest
             ]
         ));
 
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -590,16 +592,16 @@ class DatabaseManagementCest
 
 
     // Sub user WFS-t request to protected data source from inside session
-    public function shouldGetDataFromWfstAsSubUserInsideSession(\ApiTester $I)
+    public function shouldGetDataFromWfstAsSubUserInsideSession(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
         $I->sendGET('/wfs/' . $this->subUserId . "@" . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsXml();
         $I->seeXmlResponseMatchesXpath('/wfs:FeatureCollection/gml:featureMember');
     }
 
-    public function shouldNotInsertFeatureFromWfstAsSubUserFromWithInSessionAndWithoutWritePrivileges(\ApiTester $I)
+    public function shouldNotInsertFeatureFromWfstAsSubUserFromWithInSessionAndWithoutWritePrivileges(ApiTester $I)
     {
         $xml = '<Transaction xmlns="http://www.opengis.net/wfs" service="WFS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://127.0.0.1:8080/database_test_super_user_name_1652789277/public http://127.0.0.1:8080/wfs/database_test_super_user_name_1652789277/public/25832?SERVICE=WFS&amp;REQUEST=DescribeFeatureType&amp;VERSION=1.0.0&amp;TYPENAME=public:parkeringsomraade"
@@ -628,12 +630,12 @@ class DatabaseManagementCest
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->sendPost('/wfs/' . $this->subUserId . "@" . $this->userId . '/public', $xml);
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsXml();
         $I->seeXmlResponseMatchesXpath('/ows:ExceptionReport');
     }
 
-    public function shouldNotInsertFeatureFromWfstAsSubUserWithBasicAuthAndWithoutWritePrivileges(\ApiTester $I)
+    public function shouldNotInsertFeatureFromWfstAsSubUserWithBasicAuthAndWithoutWritePrivileges(ApiTester $I)
     {
         $xml = '<Transaction xmlns="http://www.opengis.net/wfs" service="WFS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://127.0.0.1:8080/database_test_super_user_name_1652789277/public http://127.0.0.1:8080/wfs/database_test_super_user_name_1652789277/public/25832?SERVICE=WFS&amp;REQUEST=DescribeFeatureType&amp;VERSION=1.0.0&amp;TYPENAME=public:parkeringsomraade"
@@ -664,12 +666,12 @@ class DatabaseManagementCest
         $I->amHttpAuthenticated($username, $password);
         $I->haveHttpHeader('Content-Type', 'application/xml');
         $I->sendPost('/wfs/' . $username . '/public', $xml);
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsXml();
         $I->seeXmlResponseMatchesXpath('/ows:ExceptionReport');
     }
 
-    public function shouldGiveWritePrivilegesToSubUser(\ApiTester $I)
+    public function shouldGiveWritePrivilegesToSubUser(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
@@ -680,7 +682,7 @@ class DatabaseManagementCest
                 "_key_" => "public.parkeringsomraade.the_geom",
             ],
         ]));
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -688,7 +690,7 @@ class DatabaseManagementCest
         ]);
     }
 
-    public function shouldInsertFeatureFromWfstAsSubUserFromWithInSession(\ApiTester $I)
+    public function shouldInsertFeatureFromWfstAsSubUserFromWithInSession(ApiTester $I)
     {
         $xml = '<Transaction xmlns="http://www.opengis.net/wfs" service="WFS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://127.0.0.1:8080/database_test_super_user_name_1652789277/public http://127.0.0.1:8080/wfs/database_test_super_user_name_1652789277/public/25832?SERVICE=WFS&amp;REQUEST=DescribeFeatureType&amp;VERSION=1.0.0&amp;TYPENAME=public:parkeringsomraade"
@@ -717,12 +719,12 @@ class DatabaseManagementCest
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->sendPost('/wfs/' . $this->subUserId . "@" . $this->userId . '/public', $xml);
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsXml();
         $I->seeResponseContains('<wfs:totalInserted>1</wfs:totalInserted>');
     }
 
-    public function shouldUpdateFeatureFromWfstAsSubUserFromWithInSession(\ApiTester $I)
+    public function shouldUpdateFeatureFromWfstAsSubUserFromWithInSession(ApiTester $I)
     {
         $xml = '<Transaction xmlns="http://www.opengis.net/wfs" service="WFS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://127.0.0.1:8080/database_test_super_user_name_1652789277/public http://127.0.0.1:8080/wfs/database_test_super_user_name_1652789277/public/25832?SERVICE=WFS&amp;REQUEST=DescribeFeatureType&amp;VERSION=1.0.0&amp;TYPENAME=public:parkeringsomraade"
@@ -754,12 +756,12 @@ class DatabaseManagementCest
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->sendPost('/wfs/' . $this->subUserId . "@" . $this->userId . '/public', $xml);
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsXml();
         $I->seeResponseContains('<wfs:totalUpdated>1</wfs:totalUpdated>');
     }
 
-    public function shouldDeleteFeatureFromWfstAsSubUserFromWithInSession(\ApiTester $I)
+    public function shouldDeleteFeatureFromWfstAsSubUserFromWithInSession(ApiTester $I)
     {
         $xml = '
 <Transaction xmlns="http://www.opengis.net/wfs" service="WFS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -776,17 +778,17 @@ class DatabaseManagementCest
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->sendPost('/wfs/' . $this->subUserId . "@" . $this->userId . '/public', $xml);
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsXml();
         $I->seeResponseContains('<wfs:totalDeleted>1</wfs:totalDeleted>');
     }
 
-    public function shouldSetSubUserBasicAuthPwd(\ApiTester $I)
+    public function shouldSetSubUserBasicAuthPwd(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/x-www-form-urlencoded   ');
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
         $I->sendPUT('/controllers/setting/pw', "pw=$this->password");
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -794,7 +796,7 @@ class DatabaseManagementCest
         ]);
     }
 
-    public function shouldInsertFeatureFromWfstAsSubUserWithBasicAuth(\ApiTester $I)
+    public function shouldInsertFeatureFromWfstAsSubUserWithBasicAuth(ApiTester $I)
     {
         $xml = '<Transaction xmlns="http://www.opengis.net/wfs" service="WFS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://127.0.0.1:8080/database_test_super_user_name_1652789277/public http://127.0.0.1:8080/wfs/database_test_super_user_name_1652789277/public/25832?SERVICE=WFS&amp;REQUEST=DescribeFeatureType&amp;VERSION=1.0.0&amp;TYPENAME=public:parkeringsomraade"
@@ -825,12 +827,12 @@ class DatabaseManagementCest
         $I->amHttpAuthenticated($username, $password);
         $I->haveHttpHeader('Content-Type', 'application/xml');
         $I->sendPost('/wfs/' . $username . '/public', $xml);
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsXml();
         $I->seeResponseContains('<wfs:totalInserted>1</wfs:totalInserted>');
     }
 
-    public function shouldChangeTheAuthenticationLevelFromReadwriteToWrite(\ApiTester $I)
+    public function shouldChangeTheAuthenticationLevelFromReadwriteToWrite(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
@@ -840,7 +842,7 @@ class DatabaseManagementCest
                 "_key_" => "public.parkeringsomraade.the_geom",
             ],
         ]));
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
+        $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
@@ -848,7 +850,7 @@ class DatabaseManagementCest
         ]);
     }
 
-    public function shouldNotUpdateDataFromSqlApiAsSuperUserOutsideSession(\ApiTester $I)
+    public function shouldNotUpdateDataFromSqlApiAsSuperUserOutsideSession(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->sendPOST('/api/v2/sql/' . $this->userId, json_encode(
@@ -857,7 +859,7 @@ class DatabaseManagementCest
                 'key' => 'dymmy'
             ]
         ));
-        $I->seeResponseCodeIs(\Codeception\Util\HttpCode::FORBIDDEN);
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => false,

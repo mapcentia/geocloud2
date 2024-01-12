@@ -1427,7 +1427,7 @@ class Mapfile extends Controller
                 }
                 $arr = $sortedArr;
                 for ($i = 0; $i < sizeof($arr); $i++) {
-                    $arrNew[$i] = (array)\app\inc\Util::casttoclass('stdClass', $arr[$i]);
+                    $arrNew[$i] = (array)Util::casttoclass('stdClass', $arr[$i]);
                     $arrNew[$i]['id'] = $i;
                 }
                 $classArr = array("data" => !empty($arrNew) ? $arrNew : null);

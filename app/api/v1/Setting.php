@@ -15,7 +15,9 @@
 
 namespace app\api\v1;
 
-class Setting extends \app\inc\Controller
+use app\inc\Controller;
+
+class Setting extends Controller
 {
     private $settings;
 

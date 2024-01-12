@@ -8,8 +8,11 @@
 
 namespace app\models;
 
+use app\conf\App;
 use app\inc\Model;
+use Exception;
 use GuzzleHttp\Client;
+use PDOException;
 
 /**
  * Class Sql_to_es
@@ -68,7 +71,7 @@ class Sql_to_es extends Model
         $response = [];
         $i = 0;
 
-        $esUrl = \app\conf\App::$param['esHost'] ?: "http://127.0.0.1";
+        $esUrl = App::$param['esHost'] ?: "http://127.0.0.1";
         $split = explode(":", $esUrl);
         if (!empty($split[2])) {
             $port = $split[2];
@@ -100,7 +103,7 @@ class Sql_to_es extends Model
 
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->rollback();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -136,7 +139,7 @@ class Sql_to_es extends Model
 
             $innerStatement = $this->prepare("FETCH 1 FROM curs");
 
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 400;
@@ -190,7 +193,7 @@ class Sql_to_es extends Model
             // Index the last bulk
             if ($json) {
                 $esResponse = $client->post($esUrl, ['body' => $json]);
-            };
+            }
             $obj = json_decode($esResponse->getBody(), true);
             if (isset($obj["errors"]) && $obj["errors"] == true) {
                 $errors = true;
@@ -200,7 +203,7 @@ class Sql_to_es extends Model
             $this->execQuery("CLOSE curs");
             $this->commit();
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 410;

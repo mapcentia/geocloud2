@@ -15,11 +15,14 @@
 
 namespace app\api\v1;
 
+use app\inc\Controller;
+use app\models\Database;
+
 /**
  * Class Schema
  * @package app\api\v1
  */
-class Schema extends \app\inc\Controller
+class Schema extends Controller
 {
     /**
      * Schema constructor.
@@ -28,7 +31,7 @@ class Schema extends \app\inc\Controller
     {
         parent::__construct();
 
-        $this->db = new \app\models\Database();
+        $this->db = new Database();
     }
 
     /**

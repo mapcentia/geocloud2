@@ -8,8 +8,13 @@
 
 namespace app\models;
 
+use app\conf\App;
+use app\inc\ColorBrewer;
 use app\inc\Model;
 use app\inc\Util;
+use PDO;
+use PDOException;
+use stdClass;
 
 
 /**
@@ -33,10 +38,10 @@ class Classification extends Model
         parent::__construct();
         $this->layer = $table;
         $bits = explode(".", $this->layer);
-        $this->table = new \app\models\Table($bits[0] . "." . $bits[1]);
-        $this->tile = new \app\models\Tile($table);
+        $this->table = new Table($bits[0] . "." . $bits[1]);
+        $this->tile = new Tile($table);
         // Check if geom type is overridden
-        $def = new \app\models\Tile($table);
+        $def = new Tile($table);
         $this->def = $def->get();
         if (($this->def['data'][0]['geotype']) && $this->def['data'][0]['geotype'] != "Default") {
             $this->geometryType = $this->def['data'][0]['geotype'];
@@ -126,7 +131,7 @@ class Classification extends Model
     private function store($data)
     {
         $tableObj = new Table("settings.geometry_columns_join");
-        $obj = new \stdClass;
+        $obj = new stdClass;
         $obj->class = $data;
         $obj->_key_ = $this->layer;
         $tableObj->updateRecord($obj, "_key_");
@@ -141,7 +146,7 @@ class Classification extends Model
     private function storeWizard($data)
     {
         $tableObj = new Table("settings.geometry_columns_join");
-        $obj = new \stdClass;
+        $obj = new stdClass;
         $obj->classwizard = $data;
         $obj->_key_ = $this->layer;
         $tableObj->updateRecord($obj, "_key_");
@@ -247,7 +252,7 @@ class Classification extends Model
             return $response;
         }
         $this->reset();
-        $layer = new \app\models\Layer();
+        $layer = new Layer();
         $geometryType = ($this->geometryType) ?: $layer->getValueFromKey($this->layer, "type");
         $res = $this->update("0", self::createClass($geometryType, $layer->getValueFromKey($this->layer, "f_table_title") ?: $layer->getValueFromKey($this->layer, "f_table_name"), null, 10, "#" . $color, $data));
         if ($res['success']) {
@@ -271,14 +276,14 @@ class Classification extends Model
             $response['code'] = 400;
             return $response;
         }
-        $layer = new \app\models\Layer();
+        $layer = new Layer();
         $geometryType = ($this->geometryType) ?: $layer->getValueFromKey($this->layer, "type");
         $fieldObj = $this->table->metaData[$field];
         $query = "SELECT distinct({$field}) as value FROM " . $this->table->table . " ORDER BY {$field}";
         $res = $this->prepare($query);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 400;
@@ -294,7 +299,7 @@ class Classification extends Model
             return $response;
         }
         if ($data->custom->colorramp !== false && $data->custom->colorramp != "-1") {
-            $colorBrewer = \app\inc\ColorBrewer::getQualitative($data->custom->colorramp);
+            $colorBrewer = ColorBrewer::getQualitative($data->custom->colorramp);
         }
         $cArr = array();
         foreach ($rows as $key => $row) {
@@ -335,7 +340,7 @@ class Classification extends Model
             $response['code'] = 400;
             return $response;
         }
-        $layer = new \app\models\Layer();
+        $layer = new Layer();
         $geometryType = ($this->geometryType) ?: $layer->getValueFromKey($this->layer, "type");
         if ($geometryType == "RASTER") {
             $parts = explode(".", $this->layer);
@@ -343,7 +348,7 @@ class Classification extends Model
             $res = $this->prepare($setSchema);
             try {
                 $res->execute();
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
                 $response['code'] = 400;
@@ -356,7 +361,7 @@ class Classification extends Model
         $res = $this->prepare($query);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 400;
@@ -401,13 +406,13 @@ class Classification extends Model
             $response['code'] = 400;
             return $response;
         }
-        $layer = new \app\models\Layer();
+        $layer = new Layer();
         $geometryType = $layer->getValueFromKey($this->layer, "type");
         $query = "SELECT count(*) AS count FROM " . $this->table->table;
         $res = $this->prepare($query);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 400;
@@ -420,7 +425,7 @@ class Classification extends Model
         $res = $this->prepare($query);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 400;
@@ -432,7 +437,7 @@ class Classification extends Model
         $top = null;
         $u = 0;
         for ($i = 1; $i <= $count; $i++) {
-            $row = $res->fetch(\PDO::FETCH_ASSOC);
+            $row = $res->fetch(PDO::FETCH_ASSOC);
             if ($i == 1) {
                 $bottom = $row[$field];
             }
@@ -471,7 +476,7 @@ class Classification extends Model
 
     public function createCluster($distance, $data)
     {
-        $layer = new \app\models\Layer();
+        $layer = new Layer();
         $geometryType = ($this->geometryType) ?: $layer->getValueFromKey($this->layer, "type");
         if ($geometryType != "POINT" && $geometryType != "MULTIPOINT") {
             $response['success'] = false;
@@ -501,7 +506,7 @@ class Classification extends Model
             return $response;
         }
         //Set single class
-        if (\app\conf\App::$param["mapserver_ver_7"]) {
+        if (App::$param["mapserver_ver_7"]) {
             $ClusterFeatureCount = "Cluster_FeatureCount";
         } else {
             $ClusterFeatureCount = "Cluster:FeatureCount";
@@ -550,7 +555,7 @@ class Classification extends Model
         $res = $this->prepare($query);
         try {
             $res->execute(array("from" => $from));
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 400;

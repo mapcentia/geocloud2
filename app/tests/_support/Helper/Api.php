@@ -4,7 +4,10 @@ namespace Helper;
 // here you can define custom actions
 // all public methods declared in helper class will be available in $I
 
-class Api extends \Codeception\Module
+use Codeception\Module;
+use Symfony\Component\BrowserKit\Client;
+
+class Api extends Module
 {
     public function capturePHPSESSID()
     {
@@ -13,7 +16,7 @@ class Api extends \Codeception\Module
     }
 
     /**
-     * @return \Symfony\Component\HttpKernel\Client|\Symfony\Component\BrowserKit\Client $client
+     * @return \Symfony\Component\HttpKernel\Client|Client $client
      */
     protected function getClient()
     {

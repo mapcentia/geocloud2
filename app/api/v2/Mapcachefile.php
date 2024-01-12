@@ -15,11 +15,13 @@
 
 namespace app\api\v2;
 
+use app\inc\Controller;
+
 /**
  * Class Files
  * @package app\api\v1
  */
-class Mapcachefile extends \app\inc\Controller
+class Mapcachefile extends Controller
 {
     /**
      * @var \app\controllers\Mapcachefile 

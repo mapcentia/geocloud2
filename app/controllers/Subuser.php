@@ -8,15 +8,17 @@
 
 namespace app\controllers;
 
+use app\inc\Controller;
 use app\inc\Input;
 use app\inc\Session;
 use app\inc\Route;
+use app\models\User;
 
 /**
  * Class Subuser
  * @package app\controllers
  */
-class Subuser extends \app\inc\Controller
+class Subuser extends Controller
 {
     /**
      * User constructor.
@@ -31,7 +33,7 @@ class Subuser extends \app\inc\Controller
      */
     function get_index(): array
     {
-        $user = new \app\models\User(Session::getUser());
+        $user = new User(Session::getUser());
         return $user->getData();
     }
 
@@ -40,7 +42,7 @@ class Subuser extends \app\inc\Controller
      */
     function post_index(): array
     {
-        $user = new \app\models\User(Session::getUser());
+        $user = new User(Session::getUser());
         if (!Session::isAuth()) {
             $response['success'] = false;
             $response['message'] = "User unauthorized";
@@ -55,7 +57,7 @@ class Subuser extends \app\inc\Controller
      */
     function put_index(): array
     {
-        $user = new \app\models\User(Session::getUser());
+        $user = new User(Session::getUser());
         if (!Session::isAuth()) {
             $response['success'] = false;
             $response['message'] = "User unauthorized";
@@ -70,7 +72,7 @@ class Subuser extends \app\inc\Controller
      */
     function delete_index(): array
     {
-        $user = new \app\models\User(Session::getUser());
+        $user = new User(Session::getUser());
         if (!Session::isAuth()) {
             $response['success'] = false;
             $response['message'] = "User unauthorized";

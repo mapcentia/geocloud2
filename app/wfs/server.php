@@ -12,6 +12,7 @@ use app\inc\Input;
 use app\inc\Log;
 use app\inc\PgHStore;
 use app\inc\Util;
+use app\models\Setting;
 use app\models\Table;
 use app\models\Layer;
 use app\inc\TableWalkerRelation;
@@ -588,7 +589,7 @@ function getCapabilities(\app\inc\Model $postgisObject)
         makeExceptionReport($postgisObject->PDOerror);
     }
 
-    $settings = new \app\models\Setting();
+    $settings = new Setting();
     $extents = $settings->get()["data"]->extents;
     $bbox = is_object($extents) && property_exists($extents, $postgisschema) ? $extents->$postgisschema : [-20037508.34, -20037508.34, 20037508.34, 20037508.34]; // Is in EPSG:3857
     $cache = [];
@@ -652,7 +653,7 @@ function getCapabilities(\app\inc\Model $postgisObject)
                     if (empty($row2['txmin'])) {
                         throw new PDOException('No estimated extent');
                     }
-                } catch (\PDOException $e) {
+                } catch (PDOException $e) {
 
                     $sql = "with box as (select ST_extent(st_transform(ST_MakeEnvelope({$bbox[0]},{$bbox[1]},{$bbox[2]},{$bbox[3]},3857),4326)) AS a) select ST_xmin(a) as txmin,ST_ymin(a) as tymin,ST_xmax(a) as txmax,ST_ymax(a) as tymax  from box";
                     $resultExtent = $postgisObject->execQuery($sql);
@@ -952,7 +953,7 @@ function getXSD(\app\inc\Model $postgisObject)
                 } elseif ($tableObj->metaData[$atts["name"]]['type'] == "string") {
                     unset($atts["type"]);
                 } else {
-                    if ($tableObj->metaData[$atts["name"]]['isArray']) {
+                    if ($tableObj->metaData[$atts["name"]]['is_array']) {
                         $atts["type"] = "xsd:string";
                     } else {
                         $atts["type"] = "xsd:" . $tableObj->metaData[$atts["name"]]['type'];
@@ -2023,13 +2024,13 @@ function doParse(array $arr)
                     } elseif ($field == "gc2_workflow") {
                         switch ($role) {
                             case "author":
-                                $value = "'{$originalFeature[$field]}'::hstore || hstore('author', '{$user}')";;
+                                $value = "'{$originalFeature[$field]}'::hstore || hstore('author', '{$user}')";
                                 break;
                             case "reviewer":
-                                $value = "'{$originalFeature[$field]}'::hstore || hstore('reviewer', '{$user}')";;
+                                $value = "'{$originalFeature[$field]}'::hstore || hstore('reviewer', '{$user}')";
                                 break;
                             case "publisher":
-                                $value = "'{$originalFeature[$field]}'::hstore || hstore('publisher', '{$user}')";;
+                                $value = "'{$originalFeature[$field]}'::hstore || hstore('publisher', '{$user}')";
                                 break;
                             default:
                                 $value = "'{$originalFeature[$field]}'::hstore";
@@ -2121,13 +2122,13 @@ function doParse(array $arr)
                         $workflow = $originalFeature["gc2_workflow"];
                         switch ($role) {
                             case "author":
-                                $value = "'{$workflow}'::hstore || hstore('author', '{$user}')";;
+                                $value = "'{$workflow}'::hstore || hstore('author', '{$user}')";
                                 break;
                             case "reviewer":
-                                $value = "'{$workflow}'::hstore || hstore('reviewer', '{$user}')";;
+                                $value = "'{$workflow}'::hstore || hstore('reviewer', '{$user}')";
                                 break;
                             case "publisher":
-                                $value = "'{$workflow}'::hstore || hstore('publisher', '{$user}')";;
+                                $value = "'{$workflow}'::hstore || hstore('publisher', '{$user}')";
                                 break;
                             default:
                                 $value = "'{$workflow}'::hstore";

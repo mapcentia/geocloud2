@@ -9,12 +9,12 @@
 ini_set("display_errors", "On");
 error_reporting(3);
 
-use \app\conf\App;
-use \app\conf\Connection;
-use \app\inc\Model;
-use \app\inc\Util;
-use \app\models\Database;
-use \app\models\Layer;
+use app\conf\App;
+use app\conf\Connection;
+use app\inc\Model;
+use app\inc\Util;
+use app\models\Database;
+use app\models\Layer;
 
 
 header("Content-type: text/plain");
@@ -32,14 +32,14 @@ $useGfs = false;
 $outputTable = "grid";
 
 
-new \app\conf\App();
+new App();
 Database::setDb($db);
 $database = new Model();
 
-$pl = file_get_contents(\app\conf\App::$param["path"] . "app/scripts/sql/st_fishnet.sql");
+$pl = file_get_contents(App::$param["path"] . "app/scripts/sql/st_fishnet.sql");
 $database->execQuery($pl, "PG");
 
-print_r(\app\conf\Connection::$param);
+print_r(Connection::$param);
 
 $database->connect();
 

@@ -15,13 +15,14 @@
 
 namespace app\api\v2;
 
-use \app\inc\Route;
+use app\inc\Controller;
+use app\inc\Route;
 
 /**
  * Class Qgis
  * @package app\api\v1
  */
-class Qgis extends \app\inc\Controller
+class Qgis extends Controller
 {
     /**
      * @var \app\models\Qgis

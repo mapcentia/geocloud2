@@ -8,7 +8,7 @@
 
 include_once(__DIR__ . "/../conf/App.php");
 
-use \app\conf\App;
+use app\conf\App;
 
 new App();
 

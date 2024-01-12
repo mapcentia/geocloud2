@@ -10,6 +10,8 @@
 namespace app\models;
 
 use app\inc\Model;
+use Exception;
+use PDOException;
 
 class Tileseeder extends Model
 {
@@ -33,7 +35,7 @@ class Tileseeder extends Model
         $arr = ["uuid" => $data["uuid"], "name" => $data["name"], "pid" => $data["pid"], "host" => $_SERVER["SERVER_ADDR"]];
         try {
             $res->execute($arr);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response["success"] = false;
             $response["message"] = $e->getMessage();
             return $response;
@@ -46,7 +48,7 @@ class Tileseeder extends Model
 
     /**
      * @return array
-     * @throws \Exception
+     * @throws Exception
      */
     public function getAll(): array
     {
@@ -55,7 +57,7 @@ class Tileseeder extends Model
         $res = $this->prepare($sql);
         try {
             $res->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response["success"] = false;
             $response["message"] = $e->getMessage();
             return $response;
@@ -76,7 +78,7 @@ class Tileseeder extends Model
         $res = $this->prepare($sql);
         try {
             $res->execute(["pid" => $pid]);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response["success"] = false;
             $response["message"] = $e->getMessage();
             return $response;
@@ -97,7 +99,7 @@ class Tileseeder extends Model
         $res = $this->prepare($sql);
         try {
             $res->execute(["uuid" => $uuid]);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $response["success"] = false;
             $response["message"] = $e->getMessage();
             return $response;

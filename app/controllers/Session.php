@@ -9,7 +9,9 @@
 namespace app\controllers;
 
 
-class Session extends \app\inc\Controller
+use app\inc\Controller;
+
+class Session extends Controller
 {
 
     public function get_log()

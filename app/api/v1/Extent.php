@@ -15,16 +15,18 @@
 
 namespace app\api\v1;
 
-use \app\inc\Input;
+use app\inc\Controller;
+use app\inc\Input;
+use app\models\Layer;
 
 /**
  * Class Extent
  * @package app\api\v1
  */
-class Extent extends \app\inc\Controller
+class Extent extends Controller
 {
     /**
-     * @var \app\models\Layer
+     * @var Layer
      */
     private $layers;
 
@@ -35,7 +37,7 @@ class Extent extends \app\inc\Controller
     {
         parent::__construct();
 
-        $this->layers = new \app\models\Layer();
+        $this->layers = new Layer();
     }
 
     /**

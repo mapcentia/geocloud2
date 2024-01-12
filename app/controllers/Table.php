@@ -8,9 +8,11 @@
 
 namespace app\controllers;
 
-use \app\inc\Input;
+use app\conf\Connection;
+use app\inc\Controller;
+use app\inc\Input;
 
-class Table extends \app\inc\Controller
+class Table extends Controller
 {
     private $table;
 
@@ -27,7 +29,7 @@ class Table extends \app\inc\Controller
         $name = $table->create($_REQUEST['name'], $_REQUEST['type'], $_REQUEST['srid']);
         // Set layer editable
         $join = new \app\models\Table("settings.geometry_columns_join");
-        $data = (array)json_decode(urldecode('{"data":{"editable":true,"_key_":"' . \app\conf\Connection::$param["postgisschema"] . '.' . $name['tableName'] . '.the_geom"}}'));
+        $data = (array)json_decode(urldecode('{"data":{"editable":true,"_key_":"' . Connection::$param["postgisschema"] . '.' . $name['tableName'] . '.the_geom"}}'));
         $response = $this->auth();
         return (!$response['success']) ? $response : $join->updateRecord($data, "_key_");
     }

@@ -8,9 +8,10 @@
 
 namespace app\controllers;
 
+use app\inc\Controller;
 use app\inc\Input;
 
-class Setting extends \app\inc\Controller
+class Setting extends Controller
 {
     private $settings;
 

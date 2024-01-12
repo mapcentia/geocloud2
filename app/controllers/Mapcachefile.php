@@ -8,15 +8,16 @@
 
 namespace app\controllers;
 
-use \app\conf\App;
-use \app\conf\Connection;
-use \app\inc\Model;
+use app\conf\App;
+use app\conf\Connection;
+use app\inc\Controller;
+use app\inc\Model;
 
 /**
  * Class Mapcachefile
  * @package app\controllers
  */
-class Mapcachefile extends \app\inc\Controller
+class Mapcachefile extends Controller
 {
     /**
      * @param $file string
@@ -146,7 +147,7 @@ class Mapcachefile extends \app\inc\Controller
                 </resolutions>
             </grid>
             <?php
-            $grids = \app\controllers\Mapcache::getGrids();
+            $grids = Mapcache::getGrids();
             foreach ($grids as $grid) {
                 echo $grid . "\n";
             }
@@ -463,7 +464,7 @@ class Mapcachefile extends \app\inc\Controller
 
                 foreach ($unique as $v2) {
                     $layers = array();
-                    $tileSetName = "gc2_group." . $k . "." . ($v2 ? \app\inc\Model::toAscii($v2, array(), "_") : "ungrouped");
+                    $tileSetName = "gc2_group." . $k . "." . ($v2 ? Model::toAscii($v2, array(), "_") : "ungrouped");
                     foreach ($groupArr[$k] as $h => $j) {
                         if ($j == $v2) {
                             $layers[] = $h;
@@ -535,12 +536,12 @@ class Mapcachefile extends \app\inc\Controller
             <!-- start extra -->
 
             <?php
-            $sources = \app\controllers\Mapcache::getSources();
+            $sources = Mapcache::getSources();
             foreach ($sources as $source) {
                 echo $source . "\n";
             }
 
-            $tileSets = \app\controllers\Mapcache::getTileSets();
+            $tileSets = Mapcache::getTileSets();
             foreach ($tileSets as $tileSet) {
                 echo $tileSet . "\n";
             }

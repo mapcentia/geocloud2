@@ -15,17 +15,19 @@
 
 namespace app\api\v1;
 
-use \app\inc\Input;
+use app\inc\Controller;
+use app\inc\Input;
+use app\models\Table;
 
 /**
  * Class Decodeimg
  * @package app\api\v1
  */
-class Decodeimg extends \app\inc\Controller
+class Decodeimg extends Controller
 {
 
     /**
-     * @var \app\models\Table
+     * @var Table
      */
     private $table;
 
@@ -35,7 +37,7 @@ class Decodeimg extends \app\inc\Controller
     function __construct()
     {
         parent::__construct();
-        $this->table = new \app\models\Table(Input::getPath()->part(5));
+        $this->table = new Table(Input::getPath()->part(5));
     }
 
     /**

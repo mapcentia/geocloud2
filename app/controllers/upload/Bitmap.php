@@ -15,10 +15,11 @@
 
 namespace app\controllers\upload;
 
-use \app\conf\Connection;
-use \app\conf\App;
+use app\conf\Connection;
+use app\conf\App;
+use app\inc\Controller;
 
-class Bitmap extends \app\inc\Controller
+class Bitmap extends Controller
 {
     protected $file;
     public array $response;

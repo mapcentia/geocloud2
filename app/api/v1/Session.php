@@ -8,13 +8,14 @@
 
 namespace app\api\v1;
 
-use \app\inc\Input;
+use app\inc\Controller;
+use app\inc\Input;
 
 /**
  * Class Session
  * @package app\api\v1
  */
-class Session extends \app\inc\Controller
+class Session extends Controller
 {
     /**
      * @var \app\models\Session

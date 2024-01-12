@@ -8,9 +8,10 @@
 
 namespace app\controllers;
 
-use \app\inc\Input;
+use app\inc\Controller;
+use app\inc\Input;
 
-class Classification extends \app\inc\Controller
+class Classification extends Controller
 {
     private $class;
 
