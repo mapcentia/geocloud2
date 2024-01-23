@@ -32,8 +32,7 @@ class User extends AbstractApi
      */
     function __construct()
     {
-        $this->jwt = Jwt::validate()["data"];
-        $this->user = new UserModel($this->jwt["uid"], $this->jwt["database"]);
+
     }
 
     private static function convertUserObject(array $user): array
@@ -258,6 +257,7 @@ class User extends AbstractApi
 
     public function validate(): void
     {
-        // TODO: Implement validate() method.
+        $this->jwt = Jwt::validate()["data"];
+        $this->user = new UserModel($this->jwt["uid"], $this->jwt["database"]);
     }
 }

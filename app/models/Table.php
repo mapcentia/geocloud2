@@ -46,12 +46,10 @@ class Table extends Model
     function __construct(?string $table, bool $temp = false)
     {
         parent::__construct();
-
         // Make sure db connection is init
         if (!$this->db) {
             $this->connect();
         }
-
         $_schema = $this->explodeTableName($table)["schema"];
         $_table = $this->explodeTableName($table)["table"];
         if (!$_schema) {
@@ -64,7 +62,7 @@ class Table extends Model
             $table = str_replace(".", "", $_schema) . "." . $_table;
         }
         $this->tableWithOutSchema = $_table;
-        if (!empty($_schema)) $this->schema = str_replace(".", "", $_schema);
+        $this->schema = !empty($_schema) ? str_replace(".", "", $_schema) : null;
         $this->table = $table;
 
         if ($this->schema != "settings") {
@@ -776,35 +774,36 @@ class Table extends Model
     }
 
     /**
-     * @param mixed $data
+     * @param array $data
      * @param string $_key_
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws GC2Exception
      */
-    public function deleteColumn(mixed $data, string $_key_): array // Only geometry tables
+    public function deleteColumn(array $data, string $_key_): array
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
         $data = $this->makeArray($data);
         $sql = "";
-        $fieldconfArr = (array)json_decode($this->geometryColumns["fieldconf"]);
+        $fieldconfArr = json_decode($this->geometryColumns["fieldconf"] ?? "{}", true);
         foreach ($data as $value) {
             if (in_array($value, $this->sysCols)) {
-                $response['success'] = false;
-                $response['message'] = "You can't drop a system column";
-                $response['code'] = 400;
-                return $response;
+                throw new GC2Exception("You can't drop a system column", 400);
             }
             $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " DROP COLUMN \"$value\"";
             unset($fieldconfArr[$value]);
         }
         $this->execQuery($sql, "PDO", "transaction");
-            $conf['fieldconf'] = json_encode($fieldconfArr, JSON_UNESCAPED_UNICODE);
-            $conf['f_table_name'] = $this->table;
-            $geometryColumnsObj = new Table("settings.geometry_columns_join");
-            $geometryColumnsObj->updateRecord(json_decode(json_encode($conf, JSON_UNESCAPED_UNICODE)), "f_table_name");
-            $response['success'] = true;
-            $response['message'] = "Column deleted";
+        // TODO is needed
+//        if (false) {
+//            $conf['fieldconf'] = json_encode($fieldconfArr, JSON_UNESCAPED_UNICODE);
+//            $conf['f_table_name'] = $this->table;
+//            $geometryColumnsObj = new Table("settings.geometry_columns_join");
+//            $geometryColumnsObj->updateRecord(json_decode(json_encode($conf, JSON_UNESCAPED_UNICODE)), "f_table_name");
+//        }
+        $response['success'] = true;
+        $response['message'] = "Column deleted";
         $this->purgeFieldConf($_key_);
         return $response;
     }

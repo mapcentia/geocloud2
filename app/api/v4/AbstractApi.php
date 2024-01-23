@@ -11,6 +11,7 @@ namespace app\api\v4;
 use app\exceptions\GC2Exception;
 use app\models\Database;
 use app\models\Table as TableModel;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use ReflectionClass;
 
 /**
@@ -19,11 +20,13 @@ use ReflectionClass;
 abstract class AbstractApi
 {
     public TableModel $table;
-    public string|null $qualifiedName;
-    public string|null $unQualifiedName;
-    public string|null $schema;
-    public string|null $column;
-    public string|null $indexType;
+    public ?string $qualifiedName;
+    public ?string $unQualifiedName;
+    public ?string $schema;
+    public ?string $column;
+    public ?bool $key;
+    public ?string $index;
+    public ?string $constraint;
     public array $jwt;
 
     abstract public function validate(): void;
@@ -36,24 +39,47 @@ abstract class AbstractApi
     /**
      * @param string|null $schema
      * @param string|null $relation
+     * @param string|null $key
+     * @param string|null $column
+     * @param string|null $index
+     * @param string|null $constraint
      * @param string $userName
      * @param bool $superUser
      * @return void
      * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
      */
-    public function check(string|null $schema, string|null $relation, string $userName, bool $superUser): void
+    public function check(?string $schema, ?string $relation, ?string $key, ?string $column, ?string $index, ?string $constraint, string $userName, bool $superUser): void
     {
+        $this->unQualifiedName = $relation;
         $this->schema = $schema;
+        $this->key = $key;
+        $this->column = $column;
+        $this->index = $index;
+        $this->constraint = $constraint;
+
         if (!$superUser && !($userName == $this->schema || $this->schema == "public")) {
             throw new GC2Exception("Not authorized", 403, null, "UNAUTHORIZED");
         }
-        $this->unQualifiedName = $relation;
         $this->qualifiedName = $relation ? $schema . "." . $relation : null;
         if (!empty($this->schema)) {
             $this->doesSchemaExist();
         }
         if ($this->qualifiedName) {
             $this->doesTableExist();
+            $this->table = new TableModel($this->qualifiedName);
+        }
+        if ($this->key) {
+            $this->doesKeyExist();
+        }
+        if (!empty($this->column)) {
+            $this->doesColumnExist();
+        }
+        if (!empty($this->index)) {
+            $this->doesIndexExist();
+        }
+        if (!empty($this->constraint)) {
+            $this->doesConstraintExist();
         }
     }
 
@@ -96,7 +122,7 @@ abstract class AbstractApi
     public function doesIndexExist(): void
     {
         $indices = $this->table->getIndexes($this->schema, $this->unQualifiedName)["index_method"][$this->column];
-        if (!in_array($this->indexType, $indices)) {
+        if (!$indices || !in_array($this->index, $indices)) {
             throw new GC2Exception("Index not found", 404, null, "INDEX_NOT_FOUND");
         }
     }
@@ -117,6 +143,9 @@ abstract class AbstractApi
         if (!$flag) {
             throw new GC2Exception("Key not found", 404, null, "KEY_NOT_FOUND");
         }
+    }
+    private function doesConstraintExist()
+    {
     }
 
     /**
@@ -149,4 +178,5 @@ abstract class AbstractApi
             }
         }
     }
+
 }

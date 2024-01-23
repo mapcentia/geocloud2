@@ -608,7 +608,7 @@ class Model
      */
     public static function explodeTableName(?string $table): array
     {
-        if ($table && !isset(explode(".", $table)[1])) {
+        if (!$table || !isset(explode(".", $table)[1])) {
             return ["schema" => null, "table" => $table];
         }
         preg_match("/[^.]*/", $table, $matches);

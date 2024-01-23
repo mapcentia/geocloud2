@@ -80,7 +80,7 @@ class Constraint extends AbstractApi
 
     public function delete_index(): array
     {
-        switch ($this->constraintType) {
+        switch ($this->constraint) {
             case "foreign":
                 $this->table->dropForeignConstraint($this->column);
                 break;
@@ -117,15 +117,9 @@ class Constraint extends AbstractApi
     {
         $table = Route2::getParam("table");
         $schema = Route2::getParam("schema");
-        $this->column = Route2::getParam("column");
-        $this->constraintType = Route2::getParam("constraint");
+        $column = Route2::getParam("column");
+        $constraint = Route2::getParam("constraint");
         $this->jwt = Jwt::validate()["data"];
-        $this->check($schema, $table, $this->jwt["uid"], $this->jwt["superUser"]);
-        $this->table = new TableModel($this->qualifiedName);
-        $this->doesColumnExist();
-        // Validate index if not POST
-        if ($this->constraintType && Input::getMethod() != "post") {
-            // $this->doesConstraintExist();
-        }
+        $this->check($schema, $table, null, $column, null, $constraint, $this->jwt["uid"], $this->jwt["superUser"]);
     }
 }

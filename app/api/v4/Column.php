@@ -79,7 +79,12 @@ class Column extends AbstractApi
      */
     public function get_index(): array
     {
-        return $this->table->getMetaData($this->qualifiedName)[$this->column];
+        $res = $this->table->getMetaData($this->qualifiedName);
+        if ($this->column) {
+            return $res[$this->column];
+        } else {
+            return $res;
+        }
     }
 
 
@@ -257,15 +262,8 @@ class Column extends AbstractApi
     {
         $table = Route2::getParam("table");
         $schema = Route2::getParam("schema");
-        $this->column = Route2::getParam("column");
+        $column = Route2::getParam("column");
         $this->jwt = Jwt::validate()["data"];
-        $this->check($schema, $table, $this->jwt["uid"], $this->jwt["superUser"]);
-        $this->table = new TableModel($this->qualifiedName);
-        // Validate column if not POST
-        if ($this->column && Input::getMethod() != "post") {
-            $this->doesColumnExist();
-
-        }
-
+        $this->check($schema, $table, null, $column, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }
 }

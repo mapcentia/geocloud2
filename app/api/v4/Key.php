@@ -20,7 +20,6 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 #[AcceptableMethods(['POST', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Key extends AbstractApi {
 
-    public string|null $key;
 
     /**
      * @throws Exception
@@ -102,12 +101,8 @@ class Key extends AbstractApi {
     {
         $table = Route2::getParam("table");
         $schema = Route2::getParam("schema");
+        $key = Input::getMethod() != 'post';
         $this->jwt = Jwt::validate()["data"];
-        $this->check($schema, $table, $this->jwt["uid"], $this->jwt["superUser"]);
-        $this->table = new TableModel($this->qualifiedName);
-        // Validate key if not POST
-        if (Input::getMethod() != "post") {
-            $this->doesKeyExist();
-        }
+        $this->check($schema, $table, $key, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }
 }

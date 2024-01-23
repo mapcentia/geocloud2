@@ -10,13 +10,11 @@ namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
 use app\models\Database;
-use app\models\Layer;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Route2;
 use Exception;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
-use stdClass;
 
 
 /**
@@ -246,15 +244,7 @@ class Schema extends AbstractApi
         if (empty($schema) && in_array(Input::getMethod(), ['put', 'delete'])) {
             throw new GC2Exception("", 406);
         }
-        // Validate schema if not POST
-        if (Input::getMethod() != "post") {
-            $this->check($schema, null, $this->jwt["uid"], $this->jwt["superUser"]);
-        } else {
-            $this->schema = $schema;
-            if ($this->schema) {
-                $this->doesSchemaExist();
-            }
-        }
+        $this->check($schema, null, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
         $this->schemaObj = new Database();
     }
 }

@@ -85,9 +85,9 @@ class Table extends AbstractApi
     public function get_index(): array
     {
         if (!empty($this->qualifiedName)) {
-            $columns =  $this->table->metaData;
+            $columns = $this->table->metaData;
             $response = [];
-            foreach($columns as $key => $column) {
+            foreach ($columns as $key => $column) {
                 $response["columns"][$key] = $column;
             }
             return $response;
@@ -242,13 +242,6 @@ class Table extends AbstractApi
         if (empty($table) && in_array(Input::getMethod(), ['put', 'delete'])) {
             throw new GC2Exception("", 406);
         }
-        // Validate schema/table if not POST
-        if (Input::getMethod() != "post") {
-            $this->check($schema, $table, $this->jwt["uid"], $this->jwt["superUser"]);
-            $this->table = new TableModel($this->qualifiedName);
-        } else {
-            $this->schema = $schema;
-            $this->doesSchemaExist();
-        }
+        $this->check($schema, $table, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }
 }

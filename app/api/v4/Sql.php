@@ -8,6 +8,7 @@
 
 namespace app\api\v4;
 
+use app\exceptions\GC2Exception;
 use app\inc\Controller;
 use app\inc\Input;
 use app\inc\Jwt;
@@ -35,7 +36,7 @@ class Sql extends Controller
 
     /**
      * @return array
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws PhpfastcacheInvalidArgumentException|GC2Exception
      * @OA\Post(
      *   path="/api/v4/sql",
      *   tags={"Sql"},

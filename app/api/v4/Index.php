@@ -60,7 +60,7 @@ class Index extends AbstractApi
      */
     public function delete_index(): array
     {
-        $this->table->dropIndex($this->column, $this->indexType);
+        $this->table->dropIndex($this->column, $this->index);
         return ["code" => "204"];
     }
 
@@ -68,15 +68,9 @@ class Index extends AbstractApi
     {
         $table = Route2::getParam("table");
         $schema = Route2::getParam("schema");
-        $this->column = Route2::getParam("column");
-        $this->indexType = Route2::getParam("index");
+        $column = Route2::getParam("column");
+        $index = Route2::getParam("index");
         $this->jwt = Jwt::validate()["data"];
-        $this->check($schema, $table, $this->jwt["uid"], $this->jwt["superUser"]);
-        $this->table = new TableModel($this->qualifiedName);
-        $this->doesColumnExist();
-        // Validate index if not POST
-        if ($this->indexType && Input::getMethod() != "post") {
-            $this->doesIndexExist();
-        }
+        $this->check($schema, $table, null, $column, $index, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }
 }
