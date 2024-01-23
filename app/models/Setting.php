@@ -51,20 +51,13 @@ class Setting extends Model
         } else {
             $sql = "SELECT viewer FROM settings.viewer";
         }
-
         try {
             $res = $this->execQuery($sql);
         } catch (PDOException $e) {
-            throw new PDOException($e->getMessage());
-        }
-
-        // Hack. Fall back to unencrypted if error. Preventing fail if changing from unencrypted to encrypted.
-        if (isset($this->PDOerror[0])) {
-            $this->PDOerror = null;
+            // Hack. Fall back to unencrypted if error. Preventing fail if changing from unencrypted to encrypted.
             $sql = "SELECT viewer FROM settings.viewer";
             $res = $this->execQuery($sql);
         }
-
         $arr = $this->fetchRow($res);
         return json_decode($arr['viewer']) ?? new stdClass();
     }
@@ -92,15 +85,9 @@ class Setting extends Model
             $sql = "UPDATE settings.viewer SET viewer='" . json_encode($arr) . "'";
         }
         $this->execQuery($sql, "PDO", "transaction");
-        if (!isset($this->PDOerror[0])) {
-            $response['success'] = true;
-            $response['message'] = "API key updated";
-            $response['key'] = $apiKey;
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror;
-            $response['code'] = 400;
-        }
+        $response['success'] = true;
+        $response['message'] = "API key updated";
+        $response['key'] = $apiKey;
         return $response;
     }
 
@@ -127,14 +114,8 @@ class Setting extends Model
             $sql = "UPDATE settings.viewer SET viewer='" . json_encode($arr) . "'";
         }
         $this->execQuery($sql, "PDO", "transaction");
-        if (!$this->PDOerror) {
-            $response['success'] = true;
-            $response['message'] = "Password saved";
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror;
-            $response['code'] = 400;
-        }
+        $response['success'] = true;
+        $response['message'] = "Password saved";
         return $response;
     }
 
@@ -165,14 +146,8 @@ class Setting extends Model
             $sql = "UPDATE settings.viewer SET viewer='" . json_encode($arr) . "'";
         }
         $this->execQuery($sql, "PDO", "transaction");
-        if (!$this->PDOerror) {
-            $response['success'] = true;
-            $response['message'] = "Extent saved";
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror;
-            $response['code'] = 400;
-        }
+        $response['success'] = true;
+        $response['message'] = "Extent saved";
         return $response;
     }
 
@@ -208,14 +183,8 @@ class Setting extends Model
             $sql = "UPDATE settings.viewer SET viewer='" . json_encode($arr) . "'";
         }
         $this->execQuery($sql, "PDO", "transaction");
-        if (!$this->PDOerror) {
-            $response['success'] = true;
-            $response['message'] = ($extentrestrict->extent) ? "Extent locked" : "Extent unlocked";
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror;
-            $response['code'] = 400;
-        }
+        $response['success'] = true;
+        $response['message'] = ($extentrestrict->extent) ? "Extent locked" : "Extent unlocked";
         return $response;
     }
 
@@ -252,14 +221,8 @@ class Setting extends Model
             $sql = "UPDATE settings.viewer SET viewer='" . json_encode($arr) . "'";
         }
         $this->execQuery($sql, "PDO", "transaction");
-        if (!$this->PDOerror) {
-            $response['success'] = true;
-            $response['message'] = "Usergroups updated";
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror;
-            $response['code'] = 400;
-        }
+        $response['success'] = true;
+        $response['message'] = "Usergroups updated";
         return $response;
     }
 
@@ -306,14 +269,9 @@ class Setting extends Model
             if ($unsetPw) {
                 unset($arr->pw);
             }
-            if (!$this->PDOerror) {
-                $response['success'] = true;
-                $response['data'] = $arr;
-            } else {
-                $response['success'] = false;
-                $response['message'] = $this->PDOerror;
-                $response['code'] = 400;
-            }
+            $response['success'] = true;
+            $response['data'] = $arr;
+
             // Get userGroups from mapcentia database
             Database::setDb("mapcentia");
             $users = new Model();
@@ -329,13 +287,8 @@ class Setting extends Model
             }
             $response["data"]->userGroups = (object)$userGroups;
             Database::setDb($this->postgisdb);
-            try {
-                $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-                $CachedString->addTags([$cacheType, $this->postgisdb]);
-
-            } catch (Error $exception) {
-                die($exception->getMessage());
-            }
+            $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
+            $CachedString->addTags([$cacheType, $this->postgisdb]);
             Cache::save($CachedString);
             $response["cache"]["hit"] = false;
         }
@@ -348,20 +301,12 @@ class Setting extends Model
     public function getForPublic(): array
     {
         $arr = $this->getArray();
-
         unset($arr->pw);
         unset($arr->pw_subuser);
         unset($arr->api_key);
         unset($arr->api_key_subuser);
-
-        if (!$this->PDOerror) {
-            $response['success'] = true;
-            $response['data'] = $arr;
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror;
-            $response['code'] = 400;
-        }
+        $response['success'] = true;
+        $response['data'] = $arr;
         return $response;
     }
 
