@@ -19,13 +19,12 @@ use Exception;
  * Class User
  * @package app\api\v2
  */
-class User implements ApiInterface
+class User extends AbstractApi
 {
     /**
      * @var UserModel
      */
     private UserModel $user;
-    private mixed $jwt;
 
     /**
      * User constructor.
@@ -255,5 +254,10 @@ class User implements ApiInterface
         }
         $currentUserId = $this->jwt["uid"];
         return $this->user->getSubusers($currentUserId);
+    }
+
+    public function validate(): void
+    {
+        // TODO: Implement validate() method.
     }
 }

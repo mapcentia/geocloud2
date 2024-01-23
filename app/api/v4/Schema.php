@@ -1,59 +1,260 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2022 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\api\v4;
 
-use app\inc\Controller;
-use app\models\User as UserModel;
-use app\models\Database as DatabaseModel;
-use app\inc\Session;
+use app\exceptions\GC2Exception;
+use app\models\Database;
+use app\models\Layer;
+use app\inc\Input;
+use app\inc\Jwt;
+use app\inc\Route2;
 use Exception;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use stdClass;
 
 
 /**
- * Class Database
+ * Class Sql
  * @package app\api\v4
  */
-class Schema extends Controller
+#[AcceptableMethods(['GET', 'PUT', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
+class Schema extends AbstractApi
 {
 
+    private Database $schemaObj;
+
     /**
-     * User constructor.
+     * @throws Exception
      */
-    function __construct()
+    public function __construct()
     {
-        parent::__construct();
+
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      * @OA\Get(
-     *   path="/api/v4/schema",
-     *   tags={"Schema"},
-     *   summary="Get available schemas",
+     *   path="/api/table/v4/table/{table}",
+     *   tags={"Table"},
+     *   summary="Get description of table",
      *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="table",
+     *     in="path",
+     *     required=true,
+     *     description="Name of relation (table, view, etc.) Can be schema qualified",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
      *   @OA\Response(
-     *     response="200",
-     *     description="List of schemas with count of PostGIS tables",
-     *     @OA\MediaType(
-     *       mediaType="application/json",
-     *       @OA\Schema(
-     *         type="object",
-     *         @OA\Property(property="data", type="array", @OA\Items(type="object")),
-     *         @OA\Property(property="success",type="boolean", example=true)
+     *     response=200,
+     *     description="Successful operation",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       @OA\Property(property="message", type="string", description="Success message"),
+     *       @OA\Property(property="success", type="boolean", example=true),
+     *       @OA\Property(property="columns", type="object", additionalProperties={
+     *         "type": "object",
+     *         "properties": {
+     *           "num": { "type":"number", "example":1},
+     *           "full_type": {"type": "string", "example":"varchar(255)"},
+     *           "is_nullable": {"type": "boolean", "example": true},
+     *           "character_maximum_length": {"type": "number", "example": 255},
+     *           "numeric_precision": {"type": "number", "example": 255},
+     *           "numeric_scale": {"type": "number", "example": 255},
+     *           "max_bytes": {"type": "number", "example": 255},
+     *           "reference": {"type": "string", "example": "my.table.field"},
+     *           "restriction": {"type": "object", "example": ""},
+     *           "geom_type": {"type": "string", "nullable": true, "example": "Point"},
+     *           "srid": {"type": "string", "nullable": true, "example": "4326"},
+     *           "is_primary": {"type": "boolean", "example": false},
+     *           "is_unique": {"type": "boolean", "example": false},
+     *           "index_method": {"type": "string", "nullable": true, "example"="btree"},
+     *         }
+     *       })
      *       )
      *     )
      *   )
      * )
      */
-    function get_index(): array
+    public function get_index(): array
     {
-        $database = new DatabaseModel();
-        return $database->listAllSchemas();
+        $schemas = $this->schemaObj->listAllSchemas()["data"];
+        $response = [];
+        if ($this->jwt['superUser'] && empty($this->schema)) {
+            foreach ($schemas as $schema) {
+                $response["schemas"][] = ["schema" => $schema["schema"]];
+            }
+        } else {
+            $response = ["schema" => $this->schema];
+        }
+        return $response;
+    }
+
+    /**
+     * @return array
+     * @OA\Post(
+     *   path="/api/table/v4",
+     *   tags={"Table"},
+     *   summary="Create a new table",
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="table",
+     *     in="path",
+     *     required=true,
+     *     description="Name of relation (table, view, etc.) Can be schema qualified",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=200,
+     *     description="Successful operation",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       @OA\Property(property="message", type="string", description="Success message"),
+     *       @OA\Property(property="success", type="boolean", example=true),
+     *     )
+     *   )
+     * )
+     * @throws GC2Exception
+     */
+    public function post_index(): array
+    {
+        if (!$this->jwt['superUser']) {
+            throw new GC2Exception("", 403);
+        }
+        // Throw exception if tried with schema resource
+        if (!empty(Route2::getParam("schema"))) {
+            $this->postWithResource();
+        }
+        $body = Input::getBody();
+        $data = json_decode($body);
+        $this->schemaObj->createSchema($data->schema);
+        header("Location: /api/v4/schemas/$this->schema");
+        $res["code"] = "201";
+        return $res;
+    }
+
+    /**
+     * @return array
+     * @OA\Put(
+     *   path="/api/table/v4/table/{table}",
+     *   tags={"Table"},
+     *   summary="Rename a table",
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="table",
+     *     in="path",
+     *     required=true,
+     *     description="New name of relation (table, view, etc.) Can be schema qualified",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\RequestBody(
+     *      description="New name of relation",
+     *      @OA\MediaType(
+     *        mediaType="application/json",
+     *        @OA\Schema(
+     *          type="object",
+     *          @OA\Property(property="name",type="string", example="new_name")
+     *        )
+     *      )
+     *    ),
+     *   @OA\Response(
+     *     response=200,
+     *     description="Successful operation",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       @OA\Property(property="message", type="string", description="Success message"),
+     *       @OA\Property(property="success", type="boolean", example=true),
+     *     )
+     *   )
+     * )
+     * @throws GC2Exception|PhpfastcacheInvalidArgumentException
+     */
+    public function put_index(): array
+    {
+        if (!$this->jwt['superUser']) {
+            throw new GC2Exception("", 403);
+        }
+        $body = Input::getBody();
+        $data = json_decode($body);
+        $r = $this->schemaObj->renameSchema($this->schema, $data->schema);
+        header("Location: /api/v4/schemas/{$r['data']['name']}");
+        $res["code"] = "303";
+        return $res;
+    }
+
+    /**
+     * @return array
+     * @OA\Delete(
+     *   path="/api/table/v4/table/{table}",
+     *   tags={"Table"},
+     *   summary="Delete a table",
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="table",
+     *     in="path",
+     *     required=true,
+     *     description="Name of relation (table, view, etc.), which should be deleted. Can be schema qualified",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=200,
+     *     description="Successful operation",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       @OA\Property(property="message", type="string", description="Success message"),
+     *       @OA\Property(property="success", type="boolean", example=true),
+     *     )
+     *   )
+     * )
+     * @throws GC2Exception
+     */
+    public function delete_index(): array
+    {
+        if (!$this->jwt['superUser']) {
+            throw new GC2Exception("", 403);
+        }
+        $body = Input::getBody();
+        $data = json_decode($body);
+        $r = $this->schemaObj->deleteSchema($this->schema);
+        header("Location: /api/v4/schemas/{$r['data']['name']}");
+        $res["code"] = "204";
+        return $res;
+    }
+
+    /**
+     * @throws GC2Exception
+     */
+    public function validate(): void
+    {
+        $schema = Route2::getParam("schema");
+        $this->jwt = Jwt::validate()["data"];
+        // Put and delete on table collection is not allowed
+        if (empty($schema) && in_array(Input::getMethod(), ['put', 'delete'])) {
+            throw new GC2Exception("", 406);
+        }
+        // Validate schema if not POST
+        if (Input::getMethod() != "post") {
+            $this->check($schema, null, $this->jwt["uid"], $this->jwt["superUser"]);
+        } else {
+            $this->schema = $schema;
+            if ($this->schema) {
+                $this->doesSchemaExist();
+            }
+        }
+        $this->schemaObj = new Database();
     }
 }

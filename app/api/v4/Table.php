@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2023 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -13,37 +13,32 @@ use app\models\Layer;
 use app\models\Table as TableModel;
 use app\inc\Input;
 use app\inc\Jwt;
-use app\inc\Route;
+use app\inc\Route2;
 use Exception;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use stdClass;
 
 
 /**
  * Class Sql
  * @package app\api\v4
  */
-class Table implements ApiInterface
+#[AcceptableMethods(['GET', 'PUT', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
+class Table extends AbstractApi
 {
-    use ApiTrait;
-
     /**
      * @throws Exception
      */
     public function __construct()
     {
-        $table = Route::getParam("table");
-        $jwt = Jwt::validate()["data"];
-        if ($table) {
-            $this->check($table, $jwt["uid"], $jwt["superUser"]);
-        }
+
     }
 
     /**
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
-     * @throws GC2Exception
      * @OA\Get(
-     *   path="/api/v4/table/{table}",
+     *   path="/api/table/v4/table/{table}",
      *   tags={"Table"},
      *   summary="Get description of table",
      *   security={{"bearerAuth":{}}},
@@ -89,18 +84,24 @@ class Table implements ApiInterface
      */
     public function get_index(): array
     {
-        $response = [];
-        $this->table = new TableModel($this->qualifiedName);
-        $this->doesTableExist();
-        $response["success"] = true;
-        $response["columns"] = $this->table->metaData;
-        return $response;
+        if (!empty($this->qualifiedName)) {
+            $columns =  $this->table->metaData;
+            $response = [];
+            foreach($columns as $key => $column) {
+                $response["columns"][$key] = $column;
+            }
+            return $response;
+
+        } else {
+            return ["test" => "hej"];
+        }
+
     }
 
     /**
      * @return array
      * @OA\Post(
-     *   path="/api/v4/table/{table}",
+     *   path="/api/table/v4",
      *   tags={"Table"},
      *   summary="Create a new table",
      *   security={{"bearerAuth":{}}},
@@ -124,26 +125,29 @@ class Table implements ApiInterface
      *   )
      * )
      * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
      */
     public function post_index(): array
     {
-        $this->table = new TableModel(null);
+        // Throw exception if tried with table resource
+        if (!empty(Route2::getParam("table"))) {
+            $this->postWithResource();
+        }
         $body = Input::getBody();
         $data = json_decode($body);
-        $this->table->postgisschema = $data->schema ?? "public";
-        $res = $this->table->create($data->name, null, null, true);
-        return [
-            "success" => true,
-            "message" => "Table created",
-            "table_name" => $res["tableName"]
-        ];
-
+        $this->table = new TableModel(null);
+        $this->table->postgisschema = $this->schema;
+        $r = $this->table->create($data->table, null, null, true);
+        $this->check($this->schema, $r["tableName"], $this->jwt["uid"], $this->jwt["superUser"]);
+        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName");
+        $res["code"] = "201";
+        return $res;
     }
 
     /**
      * @return array
      * @OA\Put(
-     *   path="/api/v4/table/{table}",
+     *   path="/api/table/v4/table/{table}",
      *   tags={"Table"},
      *   summary="Rename a table",
      *   security={{"bearerAuth":{}}},
@@ -180,18 +184,21 @@ class Table implements ApiInterface
      */
     public function put_index(): array
     {
-        $this->table = new TableModel($this->qualifiedName);
-        $this->doesTableExist();
+        //TODO set schema
         $layer = new Layer();
         $body = Input::getBody();
         $data = json_decode($body);
-        return $layer->rename($this->qualifiedName, $data);
+        $arg = new stdClass();
+        $arg->name = $data->table;
+        $r = $layer->rename($this->qualifiedName, $arg);
+        header("Location: /api/v4/schemas/$this->schema/tables/{$r["name"]}");
+        return ["code" => "303"];
     }
 
     /**
      * @return array
      * @OA\Delete(
-     *   path="/api/v4/table/{table}",
+     *   path="/api/table/v4/table/{table}",
      *   tags={"Table"},
      *   summary="Delete a table",
      *   security={{"bearerAuth":{}}},
@@ -214,12 +221,34 @@ class Table implements ApiInterface
      *     )
      *   )
      * )
-     * @throws GC2Exception|PhpfastcacheInvalidArgumentException
+     * @throws PhpfastcacheInvalidArgumentException
      */
     public function delete_index(): array
     {
-        $this->table = new TableModel($this->qualifiedName);
-        $this->doesTableExist();
-        return $this->table->destroy();
+        $this->table->destroy();
+        return ["code" => "204"];
+    }
+
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public function validate(): void
+    {
+        $table = Route2::getParam("table");
+        $schema = Route2::getParam("schema");
+        $this->jwt = Jwt::validate()["data"];
+        // Put and delete on table collection is not allowed
+        if (empty($table) && in_array(Input::getMethod(), ['put', 'delete'])) {
+            throw new GC2Exception("", 406);
+        }
+        // Validate schema/table if not POST
+        if (Input::getMethod() != "post") {
+            $this->check($schema, $table, $this->jwt["uid"], $this->jwt["superUser"]);
+            $this->table = new TableModel($this->qualifiedName);
+        } else {
+            $this->schema = $schema;
+            $this->doesSchemaExist();
+        }
     }
 }

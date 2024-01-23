@@ -8,9 +8,10 @@
 
 namespace app\api\v4;
 
+use app\exceptions\GC2Exception;
 use app\inc\Input;
 use app\inc\Jwt;
-use app\inc\Route;
+use app\inc\Route2;
 use app\models\Table as TableModel;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
@@ -19,18 +20,16 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
  * Class Sql
  * @package app\api\v4
  */
-class Index implements ApiInterface
+#[AcceptableMethods(['POST', 'DELETE', 'HEAD', 'OPTIONS'])]
+class Index extends AbstractApi
 {
-    use ApiTrait;
-
     /**
+     * @throws GC2Exception|PhpfastcacheInvalidArgumentException
      */
     public function __construct()
     {
-        $table = Route::getParam("table");
-        $jwt = Jwt::validate()["data"];
-        $this->check($table, $jwt["uid"], $jwt["superUser"]);
     }
+
     public function get_index(): array
     {
         // TODO: Implement get_index() method.
@@ -41,13 +40,14 @@ class Index implements ApiInterface
      */
     public function post_index(): array
     {
-        $this->table = new TableModel($this->qualifiedName);
-        $column = Route::getParam("column");
-        $type = Route::getParam("type");
         $body = Input::getBody();
         $data = json_decode($body);
         $unique = $data->unique;
-        return $this->table->createIndex($column, $type, $unique);
+        $indexType = $data->type ?? "btree";
+        $this->table->createIndex($this->column, $indexType, $unique);
+        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/columns/$this->column/indices/$indexType");
+        $res["code"] = "201";
+        return $res;
     }
 
     public function put_index(): array
@@ -60,9 +60,23 @@ class Index implements ApiInterface
      */
     public function delete_index(): array
     {
+        $this->table->dropIndex($this->column, $this->indexType);
+        return ["code" => "204"];
+    }
+
+    public function validate(): void
+    {
+        $table = Route2::getParam("table");
+        $schema = Route2::getParam("schema");
+        $this->column = Route2::getParam("column");
+        $this->indexType = Route2::getParam("index");
+        $this->jwt = Jwt::validate()["data"];
+        $this->check($schema, $table, $this->jwt["uid"], $this->jwt["superUser"]);
         $this->table = new TableModel($this->qualifiedName);
-        $column = Route::getParam("column");
-        $type = Route::getParam("type");
-        return $this->table->dropIndex($column, $type);
+        $this->doesColumnExist();
+        // Validate index if not POST
+        if ($this->indexType && Input::getMethod() != "post") {
+            $this->doesIndexExist();
+        }
     }
 }

@@ -1,14 +1,14 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-20203MapCentia ApS
+ * @copyright  2013-20204 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\api\v4;
 
-use app\inc\Controller;
+use app\exceptions\GC2Exception;
 use app\inc\Input;
 use app\models\Session;
 use Exception;
@@ -18,26 +18,22 @@ use TypeError;
  * Class Oauth
  * @package app\api\v4
  */
-class Oauth extends Controller
+#[AcceptableMethods(['POST', 'HEAD', 'OPTIONS'])]
+class Oauth extends AbstractApi
 {
-    /**
-     * @var Session
-     */
-    private $session;
+    public Session $session;
 
     public function __construct()
     {
-        parent::__construct();
-        $this->session = new Session();
     }
 
     /**
      * @return array<string, array<string, mixed>|bool|string|int>
      *
      * @OA\Post(
-     *   path="/api/v4/oauth/token",
+     *   path="/api/v4/oauth",
      *   tags={"OAuth"},
-     *   summary="Get token",
+     *   summary="Create token",
      *   @OA\RequestBody(
      *     description="OAuth password grant parameters",
      *     @OA\MediaType(
@@ -70,8 +66,9 @@ class Oauth extends Controller
      *   )
      * )
      */
-    public function post_token(): array
+    public function post_index(): array
     {
+        $this->session = new Session();
         $data = json_decode(Input::getBody(), true) ?: [];
         if (!empty($data["username"]) && !empty($data["password"])) {
             try {
@@ -96,5 +93,28 @@ class Oauth extends Controller
                 "code" => 400
             ];
         }
+    }
+
+    /**
+     */
+    public function get_index(): array
+    {
+    }
+
+    /**
+     */
+    public function put_index(): array
+    {
+    }
+
+    /**
+     */
+    public function delete_index(): array
+    {
+    }
+
+    public function validate(): void
+    {
+        // TODO: Implement validateUser() method.
     }
 }

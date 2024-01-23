@@ -10,9 +10,21 @@ ini_set("display_errors", "no");
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
 ob_start("ob_gzhandler");
 
+use app\api\v4\Oauth;
+use app\api\v4\Constraint;
+use app\api\v4\Geofence;
+use app\api\v4\Import;
+use app\api\v4\Index;
+use app\api\v4\Key;
+use app\api\v4\Column;
+use app\api\v4\Meta;
+use app\api\v4\Schema;
+use app\api\v4\Sql;
+use app\api\v4\Table;
 use app\controllers\Wms;
 use app\exceptions\GC2Exception;
 use app\inc\Input;
+use app\inc\Route2;
 use app\inc\Session;
 use app\inc\Route;
 use app\inc\Util;
@@ -320,14 +332,86 @@ try {
                 exit();
             }
         });
-        //======================
-        // V4 with OAuth
-        //======================
-        Route::add("api/v4/oauth", function () {
+        //==========================
+        // V4 with OAuth and Route2
+        //==========================
+        Route2::add("api/oauth/v4", new Oauth(), function () {
             Database::setDb("mapcentia");
         });
 
-        Route::add("api/v4/geofence/[id]", function () {
+        Route2::add("api/v4/schemas/[schema]", new Schema(), function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
+        Route2::add("api/v4/schemas/{schema}/tables/[table]", new Table(), function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
+        Route2::add("api/v4/schemas/{schema}/tables/{table}/key", new Key(), function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
+        Route2::add("api/v4/schemas/{schema}/tables/{table}/columns/[column]", new Column(), function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
+
+        Route2::add("api/v4/schemas/{schema}/tables/{table}/columns/{column}/indices/[index]", new Index(), function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
+
+        Route2::add("api/v4/schemas/{schema}/tables/{table}/columns/{column}/constraints/[constraint]", new Constraint(), function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
+        Route2::add("api/user/v4/id/[userId]", \app\api\v4\User::class, function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
+        Route2::add("api/geofence/v4/[id]", Geofence::class, function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 if (!$jwt["data"]["superUser"]) {
@@ -341,7 +425,7 @@ try {
             }
         });
 
-        Route::add("api/v4/sql", function () {
+        Route2::add("api/sql/v4", Sql::class, function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);
@@ -351,7 +435,7 @@ try {
             }
         });
 
-        Route::add("api/v4/meta/[query]", function () {
+        Route2::add("api/meta/v4/[query]", Meta::class, function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);
@@ -361,7 +445,7 @@ try {
             }
         });
 
-        Route::add("api/v4/schema", function () {
+        Route2::add("api/schema/v4", Schema::class, function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);
@@ -371,7 +455,7 @@ try {
             }
         });
 
-        Route::add("api/v4/import/[file]", function () {
+        Route2::add("api/import/v4/[file]", new Import(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);
@@ -380,81 +464,6 @@ try {
                 exit();
             }
         });
-
-        Route::add("api/v4/table/[table]", function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route::add("api/v4/column/{table}/[column]", function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route::add("api/v4/index/{table}/{column}/{type}", function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route::add("api/v4/key/{table}/[column]", function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route::add("api/v4/constraint/{action}/{table}/{column}", function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route::add("api/v4/user/all", function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                if (!$jwt["data"]["superUser"]) {
-                    echo Response::toJson(Response::SUPER_USER_ONLY);
-                    exit();
-                }
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route::add("api/v4/user/[userId]", function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
         Route::miss();
 
     } elseif (Input::getPath()->part(1) == "admin") {

@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2023 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -11,7 +11,7 @@ namespace app\api\v4;
 use app\exceptions\GC2Exception;
 use app\inc\Input;
 use app\inc\Jwt;
-use app\inc\Route;
+use app\inc\Route2;
 use app\models\Table as TableModel;
 use Exception;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
@@ -22,24 +22,20 @@ use stdClass;
  * Class Sql
  * @package app\api\v4
  */
-class Column implements ApiInterface
+#[AcceptableMethods(['GET', 'PUT', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
+class Column extends AbstractApi
 {
-    use ApiTrait;
 
     /**
      * @throws Exception
      */
     public function __construct()
     {
-        $table = Route::getParam("table");
-        $jwt = Jwt::validate()["data"];
-        $this->check($table, $jwt["uid"], $jwt["superUser"]);
     }
 
     /**
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
-     * @throws GC2Exception
      * @OA\Get(
      *   path="/api/v4/table/{table}/{column})",
      *   tags={"Column"},
@@ -83,16 +79,7 @@ class Column implements ApiInterface
      */
     public function get_index(): array
     {
-        $response = [];
-        $this->table = new TableModel($this->qualifiedName);
-        $this->doesTableExist();
-        $column = Route::getParam("column");
-        $response["success"] = true;
-        if (!isset($this->table->metaData[$column])) {
-            throw new GC2Exception("Column not found", 404, null, "COLUMN_NOT_FOUND");
-        }
-        $response["column"] = $this->table->metaData[$column];
-        return $response;
+        return $this->table->getMetaData($this->qualifiedName)[$this->column];
     }
 
 
@@ -139,14 +126,16 @@ class Column implements ApiInterface
      */
     public function post_index(): array
     {
-        $this->table = new TableModel($this->qualifiedName);
-        $this->doesTableExist();
         $body = Input::getBody();
         $data = json_decode($body);
-        return $this->table->addColumn([
-            "column" => $data->name,
+        $r = $this->table->addColumn([
+            "column" => $data->column,
             "type" => $data->type,
         ]);
+        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/columns/{$r["data"][0]}");
+        $res = $this->table->getMetaData($this->qualifiedName)[$r["data"][0]];
+        $res["code"] = "201";
+        return $res;
     }
 
     /**
@@ -183,8 +172,7 @@ class Column implements ApiInterface
      *        @OA\Schema(
      *          type="object",
      *          @OA\Property(property="type",type="string", example="varchar(255)"),
-     *          @OA\Property(property="name",type="string", example="my_column"),
-     *          @OA\Property(property="is_nullable",type="boolean", example=true)
+     *          @OA\Property(property="name",type="string", example="my_column")
      *        )
      *      )
      *    ),
@@ -203,19 +191,15 @@ class Column implements ApiInterface
      */
     public function put_index(): array
     {
-        $this->table = new TableModel($this->qualifiedName);
-        $this->doesTableExist();
-        $column = Route::getParam("column");
         $body = Input::getBody();
         $data = json_decode($body);
         $obj = new stdClass();
-        $obj->id = $column;
-        $obj->column = $data->name;
+        $obj->id = $this->column;
+        $obj->column = $data->column;
         $obj->type = $data->type;
-        if (!empty($data->is_nullable)) {
-            $obj->is_nullable = $data->is_nullable;
-        }
-        return $this->table->updateColumn($obj, $column);
+        $r = $this->table->updateColumn($obj, $this->column, true);
+        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/columns/{$r["name"]}");
+        return ["code" => "303"];
     }
 
     /**
@@ -256,14 +240,32 @@ class Column implements ApiInterface
      *   )
      * )
      * @throws PhpfastcacheInvalidArgumentException
-     * @throws GC2Exception
      */
     public function delete_index(): array
     {
         $this->table = new TableModel($this->qualifiedName);
-        $this->doesTableExist();
-        $column = Route::getParam("column");
-        return $this->table->deleteColumn([$column], "");
+        $column = Route2::getParam("column");
+        $this->table->deleteColumn([$column], "");
+        return ["code" => "204"];
     }
 
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public function validate(): void
+    {
+        $table = Route2::getParam("table");
+        $schema = Route2::getParam("schema");
+        $this->column = Route2::getParam("column");
+        $this->jwt = Jwt::validate()["data"];
+        $this->check($schema, $table, $this->jwt["uid"], $this->jwt["superUser"]);
+        $this->table = new TableModel($this->qualifiedName);
+        // Validate column if not POST
+        if ($this->column && Input::getMethod() != "post") {
+            $this->doesColumnExist();
+
+        }
+
+    }
 }
