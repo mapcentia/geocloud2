@@ -20,7 +20,7 @@ new App();
 $database = new Database();
 Database::setDb($db);
 $model = new Layer();
-$layers = $model->getAll($schema = false, $layer = false, true, $includeExtent = false, $parse = false, $es = false);
+$layers = $model->getAll($es = false, $layer = false, $schema = false, true, $includeExtent = false, $parse = false);
 foreach ($layers["data"] as $layer) {
     if ($layer["f_table_schema"] != "sqlapi") {
         $url = "http://gc2core/api/v1/ckan/" . $db . "?id=" . $layer["_key_"] . "&key=" . $apiKey . "&host=" . $host;

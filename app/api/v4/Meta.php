@@ -68,7 +68,7 @@ class Meta extends Controller
     {
         $jwt = Jwt::validate()["data"];
         $out = [];
-        $res = $this->layers->getAll(Route::getParam("query"), true, Input::get("iex"), true, false, $jwt["database"]);
+        $res = $this->layers->getAll($jwt["database"], true, Route::getParam("query"), Input::get("iex"), true, false);
         $rows = $res["data"];
         foreach ($rows as $row) {
             $out[$row["_key_"]] = [

@@ -32,7 +32,7 @@ foreach ($arr['data'] as $db) {
     if ($db != "template1" AND $db != "template0" AND $db != "postgres" AND $db != "postgis_template" AND $db != "mapcentia") {
         Database::setDb($db);
         $layer = new Layer();
-        $meta = $layer->getAll(null, null, true, false, true, true);
+        $meta = $layer->getAll(true, null, null, true, false, true);
 
         /*$url = "http://{$host}/api/v1/elasticsearch/delete/{$db}*";
         $ch = curl_init($url);

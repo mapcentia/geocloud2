@@ -85,7 +85,7 @@ class Xmlworkspace extends Controller
         $textTypes = ["text", "character varying"];
         $dateTypes = ["timestamp with time zone", "timestamp without time zone", "date"];
         $datasetName = explode(".", $query)[1];
-        $arr = $this->layers->getAll($query, false, false, false, false, $db);
+        $arr = $this->layers->getAll($db, false, $query, false, false, false);
         $fields = $arr["data"][0]["fields"];
         $alreadyPassedDomains = [];
 

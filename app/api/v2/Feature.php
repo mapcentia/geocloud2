@@ -85,7 +85,7 @@ class Feature extends Controller
         }
 
         $layer = new Layer();
-        $this->field = $layer->getAll(Route::getParam("layer"), true, false, false, false, $this->db)["data"][0]["pkey"];
+        $this->field = $layer->getAll($this->db, true, Route::getParam("layer"), false, false, false)["data"][0]["pkey"];
 
         // Init geometryfactory
         $this->geometryfactory = new GeometryFactory();
