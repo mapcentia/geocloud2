@@ -596,7 +596,6 @@ class Layer extends Table
     /**
      * @param array $tables
      * @return array
-     * @throws GC2Exception
      */
     public function delete(array $tables): array
     {
@@ -615,7 +614,6 @@ class Layer extends Table
                 $response['ckan_delete'] = $ckanRes["success"];
             }
             $res->execute();
-
         }
         $this->commit();
         $response['success'] = true;
