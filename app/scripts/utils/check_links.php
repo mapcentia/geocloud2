@@ -84,11 +84,13 @@ while ($row = $model->fetchRow($res)) {
         if (empty($url) || ctype_space($url)) {
             continue;
         }
-        $ch = curl_init(trim($url));
+        $orgUrl = $url;
+        $url = fixUrlEncoding($url);
+        $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
         curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 20);
         curl_setopt($ch, CURLOPT_CERTINFO, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
@@ -101,7 +103,8 @@ while ($row = $model->fetchRow($res)) {
         }
 
         if ($httpcode != 200) {
-            print $field . " " . $url . " " . $httpcode . "\n";
+            print "ORG   " . $field . " " . $orgUrl . "\n";
+            print "CLEAN " . $field . " " . $url . " CODE " . $httpcode . "\n\n";
             $sql = "INSERT INTO {$result} SELECT * FROM {$relation} WHERE objekt_id=:id";
             $res2 = $model->prepare($sql);
             try {
@@ -115,5 +118,35 @@ while ($row = $model->fetchRow($res)) {
     }
 }
 
+function fixUrlEncoding(string $url): string
+{
+    $url = trim($url);
+    $scheme = parse_url($url, PHP_URL_SCHEME);
+    $host   = parse_url($url, PHP_URL_HOST);
+    $path   = parse_url($url, PHP_URL_PATH);
+    $query  = parse_url($url, PHP_URL_QUERY);
+    if (empty($scheme)) {
+        return $url;
+    }
+    $path = str_replace(" ", "%20", $path);
+    $path = str_replace("ø", "%C3%B8", $path);
+    $path = str_replace("æ", "%C3%A6", $path);
+    $path = str_replace("å", "%C3%A5", $path);
+
+    $path = str_replace("Ø", "%C3%98", $path);
+    $path = str_replace("Æ", "%C3%86", $path);
+    $path = str_replace("Å", "%C3%85", $path);
+
+    $query = str_replace(" ", "%20", $query);
+    $query = str_replace("ø", "%C3%B8", $query);
+    $query = str_replace("æ", "%C3%A6", $query);
+    $query = str_replace("å", "%C3%A5", $query);
+
+    $query = str_replace("Ø", "%C3%98", $query);
+    $query = str_replace("Æ", "%C3%86", $query);
+    $query = str_replace("Å", "%C3%85", $query);
+    $ini   = $scheme . '://' . $host . $path . (!empty($query) ? "?" . str_replace(" ", "+", $query) : "") ;
+    return $ini;
+}
 
 

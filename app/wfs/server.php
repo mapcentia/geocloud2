@@ -8,6 +8,7 @@
 
 use app\conf\App;
 use app\controllers\Tilecache;
+use app\exceptions\GC2Exception;
 use app\inc\Input;
 use app\inc\Log;
 use app\inc\PgHStore;
@@ -584,9 +585,10 @@ function getCapabilities(\app\inc\Model $postgisObject)
 
     $sql = "SELECT * from settings.getColumns('f_table_schema=''{$postgisschema}'' AND enableows=true','raster_columns.r_table_schema=''{$postgisschema}'' AND enableows=true') order by sort_id";
 
-    $result = $postgisObject->execQuery($sql);
-    if ($postgisObject->PDOerror) {
-        makeExceptionReport($postgisObject->PDOerror);
+    try {
+        $result = $postgisObject->execQuery($sql);
+    } catch (PDOException $e) {
+        makeExceptionReport($e->getMessage());
     }
 
     $settings = new Setting();
@@ -796,8 +798,9 @@ function getXSD(\app\inc\Model $postgisObject)
     if (!$tables[0]) {
         $tables = array();
         $sql = "SELECT f_table_name,f_geometry_column,srid FROM public.geometry_columns WHERE f_table_schema='{$postgisschema}'";
-        $result = $postgisObject->execQuery($sql);
-        if ($postgisObject->PDOerror) {
+        try {
+            $result = $postgisObject->execQuery($sql);
+        } catch (PDOException) {
             makeExceptionReport("Relation doesn't exist", ["exceptionCode" => "InvalidParameterValue"]);
         }
         while ($row = $postgisObject->fetchRow($result)) {
@@ -820,8 +823,9 @@ function getXSD(\app\inc\Model $postgisObject)
         }
         $fields = implode(",", $fieldsArr[$table]);
         $sql = "SELECT '{$fields}' FROM \"" . $postgisschema . "\".\"" . $table . "\" LIMIT 1";
-        $result = $postgisObject->execQuery($sql);
-        if ($postgisObject->PDOerror) {
+        try {
+            $postgisObject->execQuery($sql);
+        } catch (PDOException) {
             makeExceptionReport("Relation doesn't exist", ["exceptionCode" => "InvalidParameterValue"]);
         }
         $atts["name"] = $table . "Type";
@@ -858,7 +862,7 @@ function getXSD(\app\inc\Model $postgisObject)
             return $a[0] - $b[0];
         });
         // Filter out ignored fields
-        $arr = array_filter($arr, function($item, $key) use (&$fieldConfArr) {
+        $arr = array_filter($arr, function ($item, $key) use (&$fieldConfArr) {
             if (empty($fieldConfArr[$item[1]]['ignore'])) {
                 return $item;
             }
@@ -1121,7 +1125,7 @@ function doQuery(string $queryType)
                     return $a[0] - $b[0];
                 });
                 // Filter out ignored fields
-                $arr = array_filter($arr, function($item, $key) use (&$fieldConfArr) {
+                $arr = array_filter($arr, function ($item, $key) use (&$fieldConfArr) {
                     if (empty($fieldConfArr[$item[1]]['ignore'])) {
                         return $item;
                     }
@@ -1555,6 +1559,7 @@ function altUseCdataOnStrings($value, $name)
 /**
  * @param array<mixed> $arr
  * @throws PhpfastcacheInvalidArgumentException
+ * @throws GC2Exception
  */
 function doParse(array $arr)
 {
@@ -2191,9 +2196,8 @@ function doParse(array $arr)
         }
     }
 
-    // If a layer is not editable, PDOerror is set.
     if (sizeof($notEditable) > 0) {
-        $postgisObject->PDOerror[0] = "Layer not editable";
+        makeExceptionReport("Layer not editable");
     }
     // TransactionSummary
     echo '<wfs:TransactionSummary>';
@@ -2225,19 +2229,7 @@ function doParse(array $arr)
 
 // TransactionResult
     $rowIdsChanged = []; // Global Array that holds ids from all affected rows. Can be used in post-processes
-    if (empty($postgisObject->PDOerror)) {
-        echo $version == "1.1.0" ? '<wfs:TransactionResults/>' : '<wfs:TransactionResult handle="mygeocloud-WFS-default-handle"><wfs:Status><wfs:SUCCESS/></wfs:Status></wfs:TransactionResult>';
-    } else {
-        echo '<wfs:TransactionResult handle="mygeocloud-WFS-default-handle"><wfs:Status><wfs:FAILURE/></wfs:Status></wfs:TransactionResult>';
-        foreach ($postgisObject->PDOerror as $str) {
-        }
-        $postgisObject->rollback();
-        $results['insert'] = NULL; // Was object
-        $results['update'] = NULL; // Was object
-        $results['delete'] = 0;
-        makeExceptionReport($postgisObject->PDOerror, ["exceptionCode" => "InvalidParameterValue"]); // This output a exception and kills the script
-//        makeExceptionReport("Database error", ["exceptionCode" => "InvalidParameterValue"]);
-    }
+    echo $version == "1.1.0" ? '<wfs:TransactionResults/>' : '<wfs:TransactionResult handle="mygeocloud-WFS-default-handle"><wfs:Status><wfs:SUCCESS/></wfs:Status></wfs:TransactionResult>';
 
 // InsertResult
     if (isset($results['insert'][0]) && $results['insert'][0]->rowCount() > 0) {
@@ -2364,11 +2356,12 @@ function doParse(array $arr)
             $sqls[] = $sql;
         }
         // We fire the sqls
-        foreach ($sqls as $sql) {
-            $postgisObject->execQuery($sql, "PDO", "transaction");
-        }
-        if (!empty($postgisObject->PDOerror)) {
-            makeExceptionReport($postgisObject->PDOerror); // This output a exception and kills the script
+        try {
+            foreach ($sqls as $sql) {
+                $postgisObject->execQuery($sql, "PDO", "transaction");
+            }
+        } catch (PDOException $e) {
+            makeExceptionReport($e->getMessage());
         }
     }
 

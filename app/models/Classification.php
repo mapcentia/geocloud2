@@ -54,77 +54,68 @@ class Classification extends Model
         return $array;
     }
 
+    /**
+     * @return array
+     */
     public function getAll()
     {
         $sql = "SELECT class FROM settings.geometry_columns_join WHERE _key_='{$this->layer}'";
         $result = $this->execQuery($sql);
-        if (!$this->PDOerror) {
-            $arrNew = array();
-            $sortedArr = array();
-            $response['success'] = true;
-            $row = $this->fetchRow($result, "assoc");
-            $arr = $arr2 = (array)json_decode($row['class']);
-            for ($i = 0; $i < sizeof($arr); $i++) {
-                $last = 10000;
-                foreach ($arr2 as $key => $value) {
-                    if ($value->sortid < $last) {
-                        $temp = $value;
-                        $del = $key;
-                        $last = $value->sortid;
-                    }
+        $arrNew = array();
+        $sortedArr = array();
+        $response['success'] = true;
+        $row = $this->fetchRow($result, "assoc");
+        $arr = $arr2 = (array)json_decode($row['class']);
+        for ($i = 0; $i < sizeof($arr); $i++) {
+            $last = 10000;
+            foreach ($arr2 as $key => $value) {
+                if ($value->sortid < $last) {
+                    $temp = $value;
+                    $del = $key;
+                    $last = $value->sortid;
                 }
-                array_push($sortedArr, $temp);
-                unset($arr2[$del]);
-                $temp = null;
             }
-            for ($i = 0; $i < sizeof($arr); $i++) {
-                $arrNew[$i] = (array)Util::casttoclass('stdClass', $arr[$i]);
-                $arrNew[$i]['id'] = $i;
-            }
-            $response['data'] = $arrNew;
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror[0];
-            $response['code'] = 400;
+            array_push($sortedArr, $temp);
+            unset($arr2[$del]);
+            $temp = null;
         }
+        for ($i = 0; $i < sizeof($arr); $i++) {
+            $arrNew[$i] = (array)Util::casttoclass('stdClass', $arr[$i]);
+            $arrNew[$i]['id'] = $i;
+        }
+        $response['data'] = $arrNew;
         return $response;
     }
 
     public function get($id)
     {
         $classes = $this->getAll();
-        if (!$this->PDOerror) {
-            $response['success'] = true;
-            $arr = $classes['data'][$id];
-            unset($arr['id']);
-            foreach ($arr as $key => $value) {
-                if ($value === null) { // Never send null to client
-                    $arr[$key] = "";
-                }
+        $response['success'] = true;
+        $arr = $classes['data'][$id];
+        unset($arr['id']);
+        foreach ($arr as $key => $value) {
+            if ($value === null) { // Never send null to client
+                $arr[$key] = "";
             }
-            $props = array(
-                "name" => "Unnamed Class",
-                "label" => false,
-                "label_text" => "",
-                "label2_text" => "",
-                "force_label" => false,
-                "color" => "#FF0000",
-                "outlinecolor" => "#FF0000",
-                "size" => "2",
-                "width" => "1");
-            foreach ($arr as $value) {
-                foreach ($props as $key2 => $value2) {
-                    if (!isset($arr[$key2])) {
-                        $arr[$key2] = $value2;
-                    }
-                }
-            }
-            $response['data'] = array($arr);
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror[0];
-            $response['code'] = 400;
         }
+        $props = array(
+            "name" => "Unnamed Class",
+            "label" => false,
+            "label_text" => "",
+            "label2_text" => "",
+            "force_label" => false,
+            "color" => "#FF0000",
+            "outlinecolor" => "#FF0000",
+            "size" => "2",
+            "width" => "1");
+        foreach ($arr as $value) {
+            foreach ($props as $key2 => $value2) {
+                if (!isset($arr[$key2])) {
+                    $arr[$key2] = $value2;
+                }
+            }
+        }
+        $response['data'] = array($arr);
         return $response;
     }
 
@@ -135,12 +126,7 @@ class Classification extends Model
         $obj->class = $data;
         $obj->_key_ = $this->layer;
         $tableObj->updateRecord($obj, "_key_");
-        if (empty($tableObj->PDOerror)) {
-            $response = true;
-        } else {
-            $response = false;
-        }
-        return $response;
+        return true;
     }
 
     private function storeWizard($data)
@@ -150,12 +136,7 @@ class Classification extends Model
         $obj->classwizard = $data;
         $obj->_key_ = $this->layer;
         $tableObj->updateRecord($obj, "_key_");
-        if (empty($tableObj->PDOerror)) {
-            $response = true;
-        } else {
-            $response = false;
-        }
-        return $response;
+        return true;
     }
 
     public function insert()

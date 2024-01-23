@@ -15,7 +15,6 @@ use app\inc\Util;
 use Exception;
 use PDOException;
 use Postmark\PostmarkClient;
-use Postmark\Models\PostmarkException;
 use app\exceptions\GC2Exception;
 
 
@@ -44,7 +43,7 @@ class User extends Model
     }
 
     /**
-     * @return array<bool|array<mixed>>
+     * @return array<bool|array>
      * @throws Exception
      */
     public function getAll(): array
@@ -52,12 +51,8 @@ class User extends Model
         $query = "SELECT * FROM users WHERE email<>''";
         $res = $this->execQuery($query);
         $rows = $this->fetchAll($res);
-        if (!$this->PDOerror) {
-            $response['success'] = true;
-            $response['data'] = $rows;
-        } else {
-            throw New GC2Exception($this->PDOerror, 400);
-        }
+        $response['success'] = true;
+        $response['data'] = $rows;
         return $response;
     }
 
@@ -94,7 +89,7 @@ class User extends Model
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      * @throws GC2Exception
      */
     public function getData(): array
@@ -104,17 +99,13 @@ class User extends Model
         $res->execute(array(":sUserID" => $this->userId, ":parentDb" => $this->parentdb));
         $row = $this->fetchRow($res);
         if (!$row['userid']) {
-            throw New GC2Exception("User identifier $this->userId was not found (parent database: " . ($this->parentdb ?: 'null') . ")", 404, null, 'USER_NOT_FOUND');
+            throw new GC2Exception("User identifier $this->userId was not found (parent database: " . ($this->parentdb ?: 'null') . ")", 404, null, 'USER_NOT_FOUND');
         }
         if (!empty($row['properties'])) {
             $row['properties'] = json_decode($row['properties']);
         }
-        if (!$this->PDOerror) {
-            $response['success'] = true;
-            $response['data'] = $row;
-        } else {
-            throw New GC2Exception($this->PDOerror, 400);
-        }
+        $response['success'] = true;
+        $response['data'] = $row;
         return $response;
     }
 
@@ -128,7 +119,7 @@ class User extends Model
         $mandatoryParameters = ['name', 'email', 'password'];
         foreach ($mandatoryParameters as $item) {
             if (empty($data[$item])) {
-                throw New GC2Exception("$item has to be provided", 400, null, "MISSING_PARAMETER");
+                throw new GC2Exception("$item has to be provided", 400, null, "MISSING_PARAMETER");
             }
         }
 
@@ -141,15 +132,11 @@ class User extends Model
         $properties = (empty($data['properties']) ? null : $data['properties']);
         if ($parentDb) {
             $sql = "SELECT 1 from pg_database WHERE datname=:sDatabase";
-            try {
-                $res = $this->prepare($sql);
-                $res->execute([":sDatabase" => $parentDb]);
-                $row = $this->fetchRow($res);
-            } catch (Exception $e) {
-                throw New GC2Exception($e->getMessage());
-            }
+            $res = $this->prepare($sql);
+            $res->execute([":sDatabase" => $parentDb]);
+            $row = $this->fetchRow($res);
             if (!$row) {
-                throw New GC2Exception("Database '{$parentDb}' doesn't exist", 400, null, "PARENT_DATABASE_NOT_FOUND");
+                throw new GC2Exception("Database '$parentDb' doesn't exist", 400, null, "PARENT_DATABASE_NOT_FOUND");
             }
         }
         if ($properties) {
@@ -167,16 +154,16 @@ class User extends Model
                 $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE screenname = '" . $userId . "' AND parentdb = '" . $this->userId . "'");
                 $result = $this->fetchRow($res);
                 if ($result['count'] > 0) {
-                    throw New GC2Exception("User identifier $userId already exists for parent database " . $this->userId, 400, null, 'SUB_USER_ALREADY_EXISTS');
+                    throw new GC2Exception("User identifier $userId already exists for parent database " . $this->userId, 400, null, 'SUB_USER_ALREADY_EXISTS');
                 }
                 $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE screenname = '" . $userId . "' AND parentdb ISNULL");
                 $result = $this->fetchRow($res);
                 if ($result['count'] > 0) {
-                    throw New GC2Exception("User identifier $userId already exists as database", 400, null, 'PARENT_USER_EXISTS_WITH_NAME');
+                    throw new GC2Exception("User identifier $userId already exists as database", 400, null, 'PARENT_USER_EXISTS_WITH_NAME');
                 }
 
             } else {
-                throw New GC2Exception("User identifier $userId already exists", 400, null, 'USER_ALREADY_EXISTS');
+                throw new GC2Exception("User identifier $userId already exists", 400, null, 'USER_ALREADY_EXISTS');
             }
         }
 
@@ -192,13 +179,13 @@ class User extends Model
         $res = $this->execQuery($sql);
         $result = $this->fetchRow($res);
         if ($result['count'] > 0) {
-            throw New GC2Exception("Email $email already exists", 400, null, 'EMAIL_ALREADY_EXISTS');
+            throw new GC2Exception("Email $email already exists", 400, null, 'EMAIL_ALREADY_EXISTS');
         }
 
         // Check if the password is strong enough
         $passwordCheckResults = Setting::checkPasswordStrength($password);
         if (sizeof($passwordCheckResults) > 0) {
-            throw New GC2Exception('Password does not meet following requirements: ' . implode(', ', $passwordCheckResults), 400, null, 'WEAK_PASSWORD');
+            throw new GC2Exception('Password does not meet following requirements: ' . implode(', ', $passwordCheckResults), 400, null, 'WEAK_PASSWORD');
         }
 
         $encryptedPassword = Setting::encryptPwSecure($password);
@@ -217,28 +204,22 @@ class User extends Model
                 } catch (PDOException $e) {
                     // Pass
                 }
-                throw New GC2Exception($e->getMessage(), 400);
+                throw new GC2Exception($e->getMessage(), 400);
             }
         }
 
         $sQuery = "INSERT INTO users (screenname,pw,email,parentdb,usergroup,zone,properties) VALUES(:sUserID, :sPassword, :sEmail, :sParentDb, :sUsergroup, :sZone, :sProperties) RETURNING screenname,parentdb,email,usergroup,zone,properties";
-
-        try {
-            $res = $this->prepare($sQuery);
-            $res->execute(array(
-                ":sUserID" => $userId,
-                ":sPassword" => $encryptedPassword,
-                ":sEmail" => $email,
-                ":sParentDb" => $parentDb ?: $this->userId,
-                ":sUsergroup" => $group,
-                ":sZone" => $zone,
-                ":sProperties" => $properties,
-            ));
-
-            $row = $this->fetchRow($res);
-        } catch (Exception $e) {
-            throw New GC2Exception($e->getMessage(), 400);
-        }
+        $res = $this->prepare($sQuery);
+        $res->execute(array(
+            ":sUserID" => $userId,
+            ":sPassword" => $encryptedPassword,
+            ":sEmail" => $email,
+            ":sParentDb" => $parentDb ?: $this->userId,
+            ":sUsergroup" => $group,
+            ":sZone" => $zone,
+            ":sProperties" => $properties,
+        ));
+        $row = $this->fetchRow($res);
 
         // Start email notification
         if (!empty(App::$param["signupNotification"])) {
@@ -260,21 +241,13 @@ class User extends Model
                     'TrackOpens' => false,
                     'Subject' => App::$param["signupNotification"]["others"]["subject"],
                     'HtmlBody' => "<p>
-                                        Navn: {$userId}<br>
+                                        Navn: $userId<br>
                                         E-mail: {$email}
                                    </p>",
                 ];
             }
 
-            try {
-                $client->sendEmailBatch($messages);
-            } catch (PostmarkException $ex) {
-//                echo $ex->httpStatusCode . "\n";
-//                echo $ex->postmarkApiErrorCode . "\n";
-
-            } catch (Exception $generalException) {
-//                 A general exception is thown if the API
-            }
+            $client->sendEmailBatch($messages);
         }
         $row["properties"] = !empty($row["properties"]) ? json_decode($row["properties"]) : null;
         $response['success'] = true;
@@ -308,7 +281,7 @@ class User extends Model
             $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE email = '" . $data["email"] . "' AND screenname <> '" . $user . "'");
             $result = $this->fetchRow($res);
             if ($result['count'] > 0) {
-                    throw New Exception("Email " . $data["email"] . " already exists");
+                throw new Exception("Email " . $data["email"] . " already exists");
             }
             $email = $data["email"];
         }
@@ -318,7 +291,7 @@ class User extends Model
         if (isset($data["password"])) {
             $passwordCheckResults = Setting::checkPasswordStrength(Util::format($data["password"], true));
             if (sizeof($passwordCheckResults) > 0) {
-                   throw New Exception("Password does not meet following requirements: " . implode(", ", $passwordCheckResults));
+                throw new Exception("Password does not meet following requirements: " . implode(", ", $passwordCheckResults));
 
             }
             $password = Setting::encryptPwSecure(Util::format($data["password"], true));
@@ -343,23 +316,18 @@ class User extends Model
         } else {
             $sQuery .= " WHERE screenname=:sUserID RETURNING screenname,email,usergroup,properties";
         }
-
-        try {
-            $res = $this->prepare($sQuery);
-            if ($password) $res->bindParam(":sPassword", $password);
-            if ($email) $res->bindParam(":sEmail", $email);
-            if (isset($userGroup)) {
-                $str = $userGroup !== "" ? $userGroup : null;
-                $res->bindParam(":sUsergroup", $str);
-            }
-            if ($properties) $res->bindParam(":sProperties", $properties);
-            $res->bindParam(":sUserID", $user);
-            if (!empty($data["parentdb"])) $res->bindParam(":sParentDb", $data["parentdb"]);
-            $res->execute();
-            $row = $this->fetchRow($res);
-        } catch (Exception $e) {
-            throw New GC2Exception($e->getMessage(), 400);
+        $res = $this->prepare($sQuery);
+        if ($password) $res->bindParam(":sPassword", $password);
+        if ($email) $res->bindParam(":sEmail", $email);
+        if (isset($userGroup)) {
+            $str = $userGroup !== "" ? $userGroup : null;
+            $res->bindParam(":sUsergroup", $str);
         }
+        if ($properties) $res->bindParam(":sProperties", $properties);
+        $res->bindParam(":sUserID", $user);
+        if (!empty($data["parentdb"])) $res->bindParam(":sParentDb", $data["parentdb"]);
+        $res->execute();
+        $row = $this->fetchRow($res);
         $row["properties"] = !empty($row["properties"]) ? json_decode($row["properties"]) : null;
         $response['success'] = true;
         $response['message'] = "User was updated";
@@ -376,12 +344,8 @@ class User extends Model
     {
         $user = $data ? Model::toAscii($data, NULL, "_") : null;
         $sQuery = "DELETE FROM users WHERE screenname=:sUserID AND parentdb=:parentDb";
-        try {
-            $res = $this->prepare($sQuery);
-            $res->execute([":sUserID" => $user, ":parentDb" => $this->userId]);
-        } catch (Exception $e) {
-            throw New GC2Exception($e->getMessage(), 400);
-        }
+        $res = $this->prepare($sQuery);
+        $res->execute([":sUserID" => $user, ":parentDb" => $this->userId]);
         $subusers = Session::getByKey("subusers");
         $subuserEmails = Session::getByKey("subuserEmails");
         if (!empty($subusers) && !empty($subuserEmails)) {
@@ -398,7 +362,7 @@ class User extends Model
 
     /**
      * @param string $userId
-     * @return array<mixed>
+     * @return array
      */
     public function getSubusers(string $userId): array
     {

@@ -12,7 +12,9 @@ use app\conf\App;
 use app\inc\Model;
 use Exception;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use PDOException;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 /**
  * Class Sql_to_es
@@ -65,6 +67,7 @@ class Sql_to_es extends Model
      * @param $priKey
      * @param $db
      * @return array
+     * @throws PhpfastcacheInvalidArgumentException|GuzzleException
      */
     public function runSql($q, $schema, $rel, $priKey, $db)
     {

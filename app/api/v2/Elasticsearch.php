@@ -8,6 +8,7 @@
 
 namespace app\api\v2;
 
+use app\exceptions\GC2Exception;
 use app\inc\Controller;
 use app\inc\Input;
 use app\inc\Model;
@@ -17,6 +18,8 @@ use app\conf\App;
 use app\models\Sql_to_es;
 use Exception;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 ini_set('max_execution_time', '0');
 
@@ -285,6 +288,9 @@ class Elasticsearch extends Controller
 
     /**
      * @return array|mixed
+     * @throws GC2Exception
+     * @throws GuzzleException
+     * @throws PhpfastcacheInvalidArgumentException
      */
     public function post_river()
     {

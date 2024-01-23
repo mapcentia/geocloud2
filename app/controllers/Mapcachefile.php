@@ -154,11 +154,6 @@ class Mapcachefile extends Controller
             $arr = array();
             $table = null;
             $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ NOTNULL ORDER BY sort_id";
-            $result = $postgisObject->execQuery($sql);
-            if ($postgisObject->PDOerror) {
-                ob_get_clean();
-                return false;
-            }
             while ($row = $postgisObject->fetchRow($result)) {
                 if ($row['f_table_schema'] != "sqlapi") {
                     $layerArr[$row['f_table_schema']][] = $row['f_table_schema'] . "." . $row['f_table_name'];

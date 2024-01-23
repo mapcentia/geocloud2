@@ -187,17 +187,10 @@ class Admin extends Controller
             foreach ($sqls as $sql) {
                 try {
                     $conn->execQuery($sql, "PDO", "transaction");
-                } catch (PDOException $e) {
-                    $response["success"] = false;
-                    $response["message"] = $e->getMessage();
-                    return $response;
-                }
-                if ($conn->PDOerror[0]) {
-                    $data[$db] .= "-";
-                } else {
                     $data[$db] .= "+";
+                } catch (PDOException $e) {
+                    $data[$db] .= "-";
                 }
-                $conn->PDOerror = NULL;
             }
             $conn->db = NULL;
             $conn = NULL;

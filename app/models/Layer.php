@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2023 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -10,6 +10,7 @@ namespace app\models;
 
 use app\conf\App;
 use app\conf\Connection;
+use app\exceptions\GC2Exception;
 use app\inc\Cache;
 use app\inc\Globals;
 use app\inc\Session;
@@ -26,16 +27,13 @@ use Phpfastcache\Exceptions\PhpfastcacheLogicException;
 class Layer extends Table
 {
     /**
-     * @var array<mixed>
+     * @var array
      */
-    private static $recordStore = [];
+    private static array $recordStore = [];
 
     function __construct()
     {
-        try {
-            parent::__construct("settings.geometry_columns_view");
-        } catch (PDOException $e) {
-        }
+        parent::__construct("settings.geometry_columns_view");
     }
 
     /**
@@ -87,7 +85,7 @@ class Layer extends Table
      * @param bool|null $parse
      * @param bool|null $es
      * @param string $db
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function getAll(?string $query = null, ?bool $auth, ?bool $includeExtent = false, ?bool $parse = false, ?bool $es = false, string $db): array
@@ -120,16 +118,15 @@ class Layer extends Table
             $layers = [];
             $tags = [];
             $sqls = [];
-            $preOrder = null;
 
             if ($query) {
                 foreach (explode(",", $query) as $part) {
                     // Check for schema qualified rels
-                    if (sizeof($bits = explode(".", $part)) > 1) {
+                    if (sizeof(explode(".", $part)) > 1) {
                         $layers[] = $part;
 
                     } // Check for tags
-                    elseif (sizeof($bits = explode(":", $part)) > 1 && explode(":", $part)[0] == "tag") {
+                    elseif (sizeof(explode(":", $part)) > 1 && explode(":", $part)[0] == "tag") {
                         $tags[] = explode(":", $part)[1];
                     } else {
                         $schemata[] = $part;
@@ -145,38 +142,31 @@ class Layer extends Table
 
             if (sizeof($schemata) > 0) {
                 $schemaStr = "''" . implode("'',''", $schemata) . "''";
-                $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema in ({$schemaStr}) AND {$where}','raster_columns.r_table_schema in ({$schemaStr}) AND {$where}'))";
+                $sqls[] = "(SELECT *, ($case) as sort FROM settings.getColumns('f_table_schema in ($schemaStr) AND $where','raster_columns.r_table_schema in ($schemaStr) AND $where'))";
             }
 
             if (sizeof($layers) > 0) {
                 foreach ($layers as $layer) {
                     $split = explode(".", $layer);
-                    $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('f_table_schema = ''{$split[0]}'' AND f_table_name = ''{$split[1]}'' AND {$where}','raster_columns.r_table_schema = ''{$split[0]}'' AND raster_columns.r_table_name = ''{$split[1]}'' AND {$where}'))";
+                    $sqls[] = "(SELECT *, ($case) as sort FROM settings.getColumns('f_table_schema = ''$split[0]'' AND f_table_name = ''$split[1]'' AND $where','raster_columns.r_table_schema = ''$split[0]'' AND raster_columns.r_table_name = ''$split[1]'' AND $where'))";
                 }
             }
 
             if (sizeof($tags) > 0) {
                 foreach ($tags as $tag) {
                     $tag = urldecode($tag);
-                    $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('tags ? ''{$tag}'' AND {$where}','tags ? ''{$tag}'' AND {$where}'))";
+                    $sqls[] = "(SELECT *, ($case) as sort FROM settings.getColumns('tags ? ''$tag'' AND $where','tags ? ''$tag'' AND $where'))";
                 }
             }
 
             if (sizeof($schemata) == 0 && sizeof($layers) == 0 && sizeof($tags) == 0) {
-                $sqls[] = "(SELECT *, ({$case}) as sort FROM settings.getColumns('{$where}','{$where}'))";
+                $sqls[] = "(SELECT *, ($case) as sort FROM settings.getColumns('$where','$where'))";
             }
 
             $sql = implode(" UNION ALL ", $sqls);
 
-            try {
-                $res = $this->prepare($sql);
-                $res->execute();
-            } catch (PDOException $e) {
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 401;
-                return $response;
-            }
+            $res = $this->prepare($sql);
+            $res->execute();
 
             // Check if Es is online
             // =====================
@@ -214,18 +204,11 @@ class Layer extends Table
                 $resVersioning = $this->doesColumnExist($rel, "gc2_version_gid");  // Is cached
                 $versioning = $resVersioning["exists"];
                 $extent = null;
-                if ($row['type'] != "RASTER" && $includeExtent == true) {
+                if ($row['type'] != "RASTER" && $includeExtent) {
                     $srsTmp = "3857";
                     $sqls = "SELECT ST_Xmin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS xmin,ST_Xmax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS xmax, ST_Ymin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS ymin,ST_Ymax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS ymax  FROM {$row['f_table_schema']}.{$row['f_table_name']}";
                     $resExtent = $this->prepare($sqls);
-                    try {
-                        $resExtent->execute();
-                    } catch (PDOException $e) {
-                        $response['success'] = false;
-                        $response['message'] = $e->getMessage();
-                        $response['code'] = 401;
-                        return $response;
-                    }
+                    $resExtent->execute();
                     $extent = $this->fetchRow($resExtent);
                 }
                 $restrictions = [];
@@ -292,7 +275,7 @@ class Layer extends Table
                     if (mb_substr($type, 0, 1, 'utf-8') == "_") {
                         $type = "a" . $type;
                     }
-                    $url = $esUrl . "/{$this->postgisdb}_{$row['f_table_schema']}_{$type}/_mapping/";
+                    $url = $esUrl . "/{$this->postgisdb}_{$row['f_table_schema']}_$type/_mapping/";
                     $ch = curl_init($url);
                     curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
                     curl_setopt($ch, CURLOPT_NOBODY, true);    // we don't need body
@@ -305,7 +288,7 @@ class Layer extends Table
                     if ($httpcode == "200") {
                         $arr = $this->array_push_assoc($arr, "indexed_in_es", true);
                         // Get mapping
-                        $url = "{$esUrl}/{$this->postgisdb}_{$row['f_table_schema']}_{$type}/_mapping/{$type}/";
+                        $url = "$esUrl/{$this->postgisdb}_{$row['f_table_schema']}_$type/_mapping/$type/";
                         $ch = curl_init($url);
                         curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
                         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
@@ -340,22 +323,24 @@ class Layer extends Table
 
                 // Restrictions
                 // Cached
-                if (is_object($arr["fieldconf"])){
+                if (is_object($arr["fieldconf"])) {
                     $fieldConf = json_decode(json_encode($arr["fieldconf"]), true);
-                }  else {
+                } elseif (!empty($arr["fieldconf"])) {
                     $fieldConf = json_decode($arr["fieldconf"], true);
+                } else {
+                    $fieldConf = [];
                 }
                 $fields = $this->getMetaData($rel, false, true, $restrictions);
 
                 // Sort fields
-                uksort($fields, function($a, $b) use ($fieldConf) {
+                uksort($fields, function ($a, $b) use ($fieldConf) {
                     $sortIdA = $fieldConf[$a]['sort_id'];
                     $sortIdB = $fieldConf[$b]['sort_id'];
 
                     return $sortIdA - $sortIdB;
                 });
                 // Filter out ignored fields
-                $fields = array_filter($fields, function($item, $key) use (&$fieldConf) {
+                $fields = array_filter($fields, function ($item, $key) use (&$fieldConf) {
                     if (empty($fieldConf[$key]['ignore'])) {
                         return $item;
                     }
@@ -415,27 +400,13 @@ class Layer extends Table
             if (App::$param["reverseLayerOrder"]) {
                 $response['data'] = array_reverse($response['data']);
             }
-
-            if (!isset($this->PDOerror)) {
-                $response['auth'] = $auth ?: false;
-                $response['success'] = true;
-                $response['message'] = "geometry_columns_view fetched";
-            } else {
-                $response['success'] = false;
-                $response['message'] = $this->PDOerror[0];
-                $response['code'] = 401;
-            }
-
-            try {
-                $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-                $CachedString->addTags([$cacheType, $this->postgisdb]);
-            } catch (Error $exception) {
-                // Pass
-            }
+            $response['auth'] = $auth ?: false;
+            $response['success'] = true;
+            $response['message'] = "geometry_columns_view fetched";
+            $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
+            $CachedString->addTags([$cacheType, $this->postgisdb]);
             Cache::save($CachedString);
-
             $response["cache"]["hit"] = false;
-
         }
         return $response;
     }
@@ -450,22 +421,17 @@ class Layer extends Table
         $arr = [];
         $sql = "SELECT f_table_schema AS schemas FROM settings.geometry_columns_view WHERE f_table_schema IS NOT NULL AND f_table_schema!='sqlapi' GROUP BY f_table_schema";
         $result = $this->execQuery($sql);
-        if (!$this->PDOerror) {
-            while ($row = $this->fetchRow($result)) {
-                $arr[] = array("schema" => $row["schemas"], "desc" => null);
-            }
-            $response['success'] = true;
-            $response['data'] = $arr;
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror;
+        while ($row = $this->fetchRow($result)) {
+            $arr[] = array("schema" => $row["schemas"], "desc" => null);
         }
+        $response['success'] = true;
+        $response['data'] = $arr;
         return $response;
     }
 
     /**
      * @param string $_key_
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function getElasticsearchMapping(string $_key_): array
@@ -479,7 +445,7 @@ class Layer extends Table
         $table = new Table($keySplit[0] . "." . $keySplit[1], false);
         $elasticsearchArr = (array)json_decode($this->getGeometryColumns($keySplit[0] . "." . $keySplit[1], "elasticsearch"));
         foreach ($table->metaData as $key => $value) {
-            $esType = $elasticsearch->mapPg2EsType($value['type'], !empty($value['geom_type']) && $value['geom_type'] == "POINT" ? true : false);
+            $esType = $elasticsearch->mapPg2EsType($value['type'], !empty($value['geom_type']) && $value['geom_type'] == "POINT");
             $arr = $this->array_push_assoc($arr, "id", $key);
             $arr = $this->array_push_assoc($arr, "column", $key);
             $arr = $this->array_push_assoc($arr, "elasticsearchtype", $elasticsearchArr[$key]->elasticsearchtype ?: $esType["type"]);
@@ -504,10 +470,10 @@ class Layer extends Table
     /**
      * @param $data
      * @param $_key_
-     * @return mixed
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function updateElasticsearchMapping($data, $_key_)
+    public function updateElasticsearchMapping($data, $_key_): array
     {
         $this->clearCacheOnSchemaChanges();
         $table = new Table("settings.geometry_columns_join");
@@ -523,17 +489,9 @@ class Layer extends Table
         }
         $conf['elasticsearch'] = json_encode($elasticsearchArr);
         $conf['_key_'] = $_key_;
-
         $table->updateRecord(json_decode(json_encode($conf)), "_key_");
-        //$this->execQuery($sql, "PDO", "transaction");
-        if ((!$this->PDOerror)) {
-            $response['success'] = true;
-            $response['message'] = "Map updated";
-        } else {
-            $response['code'] = 400;
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror[0];
-        }
+        $response['success'] = true;
+        $response['message'] = "Map updated";
         return $response;
     }
 
@@ -553,9 +511,10 @@ class Layer extends Table
     /**
      * @param $tableName
      * @param $data
-     * @return mixed
+     * @return array
+     * @throws GC2Exception
      */
-    public function rename($tableName, $data)
+    public function rename($tableName, $data): array
     {
         $this->clearCacheOnSchemaChanges();
         $split = explode(".", $tableName);
@@ -564,153 +523,98 @@ class Layer extends Table
             $newName = "_" . $newName;
         }
         $this->begin();
-        $whereClauseG = "f_table_schema=''{$split[0]}'' AND f_table_name=''{$split[1]}''";
-        $whereClauseR = "r_table_schema=''{$split[0]}'' AND r_table_name=''{$split[1]}''";
-        $query = "SELECT * FROM settings.getColumns('{$whereClauseG}','{$whereClauseR}') ORDER BY sort_id";
+        $whereClauseG = "f_table_schema=''$split[0]'' AND f_table_name=''$split[1]''";
+        $whereClauseR = "r_table_schema=''$split[0]'' AND r_table_name=''$split[1]''";
+        $query = "SELECT * FROM settings.getColumns('$whereClauseG','$whereClauseR') ORDER BY sort_id";
         $res = $this->prepare($query);
         try {
             $res->execute();
             while ($row = $this->fetchRow($res)) {
-                $query = "UPDATE settings.geometry_columns_join SET _key_ = '{$row['f_table_schema']}.{$newName}.{$row['f_geometry_column']}' WHERE _key_ ='{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}'";
+                $query = "UPDATE settings.geometry_columns_join SET _key_ = '{$row['f_table_schema']}.$newName.{$row['f_geometry_column']}' WHERE _key_ ='{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}'";
                 $resUpdate = $this->prepare($query);
                 try {
                     $resUpdate->execute();
                 } catch (PDOException $e) {
                     $this->rollback();
-                    $response['success'] = false;
-                    $response['message'] = $e->getMessage();
-                    $response['code'] = 400;
-                    return $response;
+                    throw new GC2Exception($e->getMessage(), 400, null);
                 }
             }
-            $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($tableName) . " RENAME TO {$newName}";
+            $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($tableName) . " RENAME TO $newName";
             $res = $this->prepare($sql);
             try {
                 $res->execute();
             } catch (PDOException $e) {
                 $this->rollback();
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 400;
-                return $response;
+                throw new GC2Exception($e->getMessage(), 400, null);
             }
         } catch (PDOException $e) {
             $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
+            throw new GC2Exception($e->getMessage(), 400, null);
         }
         $this->commit();
         $response['success'] = true;
         $response['message'] = "Layer renamed";
+        $response['name'] = $newName;
         return $response;
     }
 
     /**
      * @param $tables
      * @param $schema
-     * @return mixed
+     * @return array
      */
-    public function setSchema($tables, $schema)
+    public function setSchema($tables, $schema): array
     {
         $this->clearCacheOnSchemaChanges();
         $this->begin();
         foreach ($tables as $table) {
             $bits = explode(".", $table);
-            $whereClauseG = "f_table_schema=''{$bits[0]}'' AND f_table_name=''{$bits[1]}''";
-            $whereClauseR = "r_table_schema=''{$bits[0]}'' AND r_table_name=''{$bits[1]}''";
-            $query = "SELECT * FROM settings.getColumns('{$whereClauseG}','{$whereClauseR}') ORDER BY sort_id";
+            $whereClauseG = "f_table_schema=''$bits[0]'' AND f_table_name=''$bits[1]''";
+            $whereClauseR = "r_table_schema=''$bits[0]'' AND r_table_name=''$bits[1]''";
+            $query = "SELECT * FROM settings.getColumns('$whereClauseG','$whereClauseR') ORDER BY sort_id";
             $res = $this->prepare($query);
-            try {
-                $res->execute();
-            } catch (PDOException $e) {
-                $this->rollback();
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 401;
-                return $response;
-            }
+            $res->execute();
             while ($row = $this->fetchRow($res)) {
                 // First delete keys from destination schema if they exists
-                $query = "DELETE FROM settings.geometry_columns_join WHERE _key_ = '{$schema}.{$bits[1]}.{$row['f_geometry_column']}'";
+                $query = "DELETE FROM settings.geometry_columns_join WHERE _key_ = '$schema.$bits[1].{$row['f_geometry_column']}'";
                 $resDelete = $this->prepare($query);
-                try {
-                    $resDelete->execute();
-                } catch (PDOException $e) {
-                    $this->rollback();
-                    $response['success'] = false;
-                    $response['message'] = $e->getMessage();
-                    $response['code'] = 400;
-                    return $response;
-                }
-                $query = "UPDATE settings.geometry_columns_join SET _key_ = '{$schema}.{$bits[1]}.{$row['f_geometry_column']}' WHERE _key_ ='{$bits[0]}.{$bits[1]}.{$row['f_geometry_column']}'";
+                $resDelete->execute();
+                $query = "UPDATE settings.geometry_columns_join SET _key_ = '$schema.$bits[1].{$row['f_geometry_column']}' WHERE _key_ ='$bits[0].$bits[1].{$row['f_geometry_column']}'";
                 $resUpdate = $this->prepare($query);
-                try {
-                    $resUpdate->execute();
-                } catch (PDOException $e) {
-                    $this->rollback();
-                    $response['success'] = false;
-                    $response['message'] = $e->getMessage();
-                    $response['code'] = 400;
-                    return $response;
-                }
+                $resUpdate->execute();
             }
-            $query = "ALTER TABLE " . $this->doubleQuoteQualifiedName($table) . " SET SCHEMA {$schema}";
+            $query = "ALTER TABLE " . $this->doubleQuoteQualifiedName($table) . " SET SCHEMA $schema";
             $res = $this->prepare($query);
-            try {
-                $res->execute();
-            } catch (PDOException $e) {
-                $this->rollback();
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 401;
-                return $response;
-            }
+            $res->execute();
         }
         $this->commit();
         $response['success'] = true;
-        $response['message'] = sizeof($tables) . " tables moved to {$schema}";
+        $response['message'] = sizeof($tables) . " tables moved to $schema";
         return $response;
     }
 
     /**
      * @param array $tables
      * @return array
+     * @throws GC2Exception
      */
-    public function delete(array $tables)
+    public function delete(array $tables): array
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
         $this->begin();
         foreach ($tables as $table) {
             $check = $this->isTableOrView($table);
-            if (!$check["success"]) {
-                $response['success'] = false;
-                $response['message'] = $check["message"];
-                $response['code'] = 500;
-                return $response;
-            }
             $type = $check["data"];
-            $query = "DROP {$type} " . $this->doubleQuoteQualifiedName($table) . " CASCADE";
-
+            $query = "DROP $type " . $this->doubleQuoteQualifiedName($table) . " CASCADE";
             $res = $this->prepare($query);
-
             // Delete package from CKAN
             if (isset(App::$param["ckan"])) {
                 $uuid = $this->getUuid($table);
                 $ckanRes = $this->deleteCkan($uuid["uuid"]);
                 $response['ckan_delete'] = $ckanRes["success"];
             }
-            try {
-                $res->execute();
-            } catch (PDOException $e) {
-                $this->rollback();
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 401;
-                return $response;
-            }
+            $res->execute();
 
         }
         $this->commit();
@@ -721,7 +625,7 @@ class Layer extends Table
 
     /**
      * @param string $_key_
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function getPrivileges(string $_key_): array
@@ -743,7 +647,7 @@ class Layer extends Table
 
     /**
      * @param object $data
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function updatePrivileges(object $data): array
@@ -757,7 +661,7 @@ class Layer extends Table
         $privileges['privileges'] = json_encode($privilege);
         $privileges['_key_'] = $data->_key_;
         $res = $table->updateRecord(json_decode(json_encode($privileges)), "_key_");
-        if ($res['success'] == true) {
+        if ($res['success']) {
             $response['success'] = true;
             $response['message'] = "Privileges updates";
         } else {
@@ -772,27 +676,21 @@ class Layer extends Table
      * @param $_key_
      * @return array
      */
-    public function updateLastmodified($_key_)
+    public function updateLastmodified($_key_): array
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
         $object = (object)['lastmodified' => date('Y-m-d H:i:s'), '_key_' => $_key_];
         $table = new Table("settings.geometry_columns_join");
-        $res = $table->updateRecord(["data" => $object], "_key_");
-        if ($res['success'] == true) {
-            $response['success'] = true;
-            $response['message'] = "Lastmodified updated.";
-        } else {
-            $response['success'] = false;
-            $response['message'] = $res['message'];
-            $response['code'] = 403;
-        }
+        $table->updateRecord(["data" => $object], "_key_");
+        $response['success'] = true;
+        $response['message'] = "Lastmodified updated.";
         return $response;
     }
 
     /**
      * @param string $_key_
-     * @return array<array<mixed>|bool|string>
+     * @return array<array|bool|string>
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function getRoles(string $_key_): array
@@ -825,119 +723,96 @@ class Layer extends Table
         $role->{$data->subuser} = $data->roles;
         $roles['roles'] = json_encode($role);
         $roles['_key_'] = $data->_key_;
-        $res = $table->updateRecord(json_decode(json_encode($roles)), "_key_");
-        if ($res['success'] == true) {
-            $response['success'] = true;
-            $response['message'] = "Roles updates";
-        } else {
-            $response['success'] = false;
-            $response['message'] = $res['message'];
-            $response['code'] = 403;
-        }
+        $table->updateRecord(json_decode(json_encode($roles)), "_key_");
+        $response['success'] = true;
+        $response['message'] = "Roles updates";
         return $response;
     }
 
-    public function getExtent($_key_, $srs = "4326")
+    /**
+     * @param string $_key_
+     * @param string $srs
+     * @return array
+     */
+    public function getExtent(string $_key_, string $srs = "4326"): array
     {
         $split = explode(".", $_key_);
         $srsTmp = $srs;
-        $sql = "SELECT ST_Xmin(ST_Extent(public.ST_Transform(\"" . $split[2] . "\",$srsTmp))) AS xmin,ST_Xmax(ST_Extent(public.ST_Transform(\"" . $split[2] . "\",$srsTmp))) AS xmax, ST_Ymin(ST_Extent(public.ST_Transform(\"" . $split[2] . "\",$srsTmp))) AS ymin,ST_Ymax(ST_Extent(public.ST_Transform(\"" . $split[2] . "\",$srsTmp))) AS ymax  FROM {$split[0]}.{$split[1]}";
+        $sql = "SELECT ST_Xmin(ST_Extent(public.ST_Transform(\"" . $split[2] . "\",$srsTmp))) AS xmin,ST_Xmax(ST_Extent(public.ST_Transform(\"" . $split[2] . "\",$srsTmp))) AS xmax, ST_Ymin(ST_Extent(public.ST_Transform(\"" . $split[2] . "\",$srsTmp))) AS ymin,ST_Ymax(ST_Extent(public.ST_Transform(\"" . $split[2] . "\",$srsTmp))) AS ymax  FROM $split[0].$split[1]";
         $resExtent = $this->prepare($sql);
-        try {
-            $resExtent->execute();
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 403;
-            return $response;
-        }
+        $resExtent->execute();
         $extent = $this->fetchRow($resExtent);
         $response['success'] = true;
         $response['extent'] = $extent;
         return $response;
     }
 
-    public function getEstExtent($_key_, $srs = "4326")
+    /**
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public function getEstExtent($_key_, $srs = "4326"): array
     {
         $split = explode(".", $_key_);
         $nativeSrs = $this->getGeometryColumns($split[0] . "." . $split[1], "srid");
         $sql = "WITH bb AS (SELECT ST_astext(ST_Transform(ST_setsrid(ST_EstimatedExtent('" . $split[0] . "', '" . $split[1] . "', '" . $split[2] . "')," . $nativeSrs . ")," . $srs . ")) as geom) ";
         $sql .= "SELECT ST_Xmin(ST_Extent(geom)) AS TXMin,ST_Xmax(ST_Extent(geom)) AS TXMax, ST_Ymin(ST_Extent(geom)) AS TYMin,ST_Ymax(ST_Extent(geom)) AS TYMax  FROM bb";
         $result = $this->prepare($sql);
-        try {
-            $result->execute();
-            $row = $this->fetchRow($result);
-            $extent = array("xmin" => $row['txmin'], "ymin" => $row['tymin'], "xmax" => $row['txmax'], "ymax" => $row['tymax']);
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 403;
-            return $response;
-        }
+        $result->execute();
+        $row = $this->fetchRow($result);
+        $extent = array("xmin" => $row['txmin'], "ymin" => $row['tymin'], "xmax" => $row['txmax'], "ymax" => $row['tymax']);
         $response['success'] = true;
         $response['extent'] = $extent;
         return $response;
     }
 
-    public function getEstExtentAsGeoJSON($_key_, $srs = "4326")
+    /**
+     * @param string $_key_
+     * @param string $srs
+     * @return array
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public function getEstExtentAsGeoJSON(string $_key_, string $srs = "4326"): array
     {
         $split = explode(".", $_key_);
         $nativeSrs = $this->getGeometryColumns($split[0] . "." . $split[1], "srid");
         $sql = "SELECT ST_asGeojson(ST_Transform(ST_setsrid(ST_EstimatedExtent('" . $split[0] . "', '" . $split[1] . "', '" . $split[2] . "')," . $nativeSrs . ")," . $srs . ")) as geojson";
         $result = $this->prepare($sql);
-        try {
-            $result->execute();
-            $row = $this->fetchRow($result);
-            $extent = $row["geojson"];
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e;
-            $response['code'] = 403;
-            return $response;
-        }
+        $result->execute();
+        $row = $this->fetchRow($result);
+        $extent = $row["geojson"];
         $response['success'] = true;
         $response['extent'] = $extent;
         return $response;
     }
 
-    public function getCount($_key_)
+    /**
+     * @param string $_key_
+     * @return array
+     */
+    public function getCount(string $_key_): array
     {
         $split = explode(".", $_key_);
         $sql = "SELECT count(*) AS count FROM " . $split[0] . "." . $split[1];
         $result = $this->prepare($sql);
-        try {
-            $result->execute();
-            $row = $this->fetchRow($result);
-            $count = $row['count'];
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e;
-            $response['code'] = 403;
-            return $response;
-        }
+        $result->execute();
+        $row = $this->fetchRow($result);
+        $count = $row['count'];
         $response['success'] = true;
         $response['count'] = $count;
         return $response;
     }
 
     /**
-     * @param $to
-     * @param $from
-     * @return array|mixed
+     * @param string $to
+     * @param string $from
+     * @return array
      */
-    public function copyMeta($to, $from)
+    public function copyMeta(string $to, string $from): array
     {
         $this->clearCacheOnSchemaChanges();
         $query = "SELECT * FROM settings.geometry_columns_join WHERE _key_ =:from";
         $res = $this->prepare($query);
-        try {
-            $res->execute(array("from" => $from));
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
+        $res->execute(array("from" => $from));
         $booleanFields = array("editable", "baselayer", "tilecache", "not_querable", "single_tile", "enablesqlfilter", "skipconflict", "enableows");
         $row = $this->fetchRow($res);
         foreach ($row as $k => $v) {
@@ -973,7 +848,13 @@ class Layer extends Table
         return $response;
     }
 
-    public function updateCkan($key, $gc2Host)
+    /**
+     * @param string $key
+     * @param string $gc2Host
+     * @return array
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public function updateCkan(string $key, string $gc2Host): array
     {
         $gc2Host = $gc2Host ?: App::$param["host"];
         $metaConfig = App::$param["metaConfig"];
@@ -981,20 +862,9 @@ class Layer extends Table
 
         $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ =:key";
         $res = $this->prepare($sql);
-        try {
-
-            $res->execute(array("key" => $key));
-
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
-        }
+        $res->execute(array("key" => $key));
         $row = $this->fetchRow($res);
-
         $id = $row["uuid"];
-
         // Check if dataset already exists
         $ch = curl_init($ckanApiUrl . "/api/3/action/package_show?id=" . $id);
         curl_setopt($ch, CURLOPT_NOBODY, true);
@@ -1168,10 +1038,7 @@ class Layer extends Table
         $packageBuffer = curl_exec($ch);
         $info = curl_getinfo($ch);
         curl_close($ch);
-        if ($info["http_code"] != 200) {
-            $response['json'] = $packageBuffer;
-            return $response;
-        } else {
+        if ($info["http_code"] == 200) {
             // Get list of resource views, so we can see if the views already exists
             $ch = curl_init($ckanApiUrl . "/api/3/action/resource_view_list?id=" . $id . "-html");
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
@@ -1206,9 +1073,9 @@ class Layer extends Table
             curl_exec($ch);
             curl_close($ch);
 
-            $response['json'] = $packageBuffer;
-            return $response;
         }
+        $response['json'] = $packageBuffer;
+        return $response;
     }
 
     public static function deleteCkan($key)
@@ -1230,18 +1097,15 @@ class Layer extends Table
         return json_decode($buffer, true);
     }
 
-    public function getTags()
+    /**
+     * @return array
+     */
+    public function getTags(): array
     {
         $sql = "SELECT tags FROM settings.geometry_columns_join WHERE tags NOTNULL AND tags <> 'null' AND tags <> '\"null\"'";
         $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
-        }
+        $res->execute();
+
         $arr = array();
         while ($row = $this->fetchRow($res)) {
             if (isset($row["tags"]) && json_decode($row["tags"])) {
@@ -1258,19 +1122,16 @@ class Layer extends Table
         return $response;
     }
 
-    function getGroups($field)
+    /**
+     * @param string $field
+     * @return array
+     */
+    function getGroups(string $field): array
     {
         $arr = [];
-        $sql = "SELECT {$field} AS {$field} FROM settings.geometry_columns_join WHERE {$field} IS NOT NULL GROUP BY {$field}";
+        $sql = "SELECT $field AS $field FROM settings.geometry_columns_join WHERE $field IS NOT NULL GROUP BY $field";
         $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
-        }
+        $res->execute();
 
         while ($row = $this->fetchRow($res)) {
             $arr[] = array("group" => $row[$field]);

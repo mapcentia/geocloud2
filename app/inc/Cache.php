@@ -27,7 +27,7 @@ abstract class Cache
     /**
      * @var ExtendedCacheItemPoolInterface
      */
-    static public $instanceCache;
+    static public ExtendedCacheItemPoolInterface $instanceCache;
 
     /**
      * @throws Exception

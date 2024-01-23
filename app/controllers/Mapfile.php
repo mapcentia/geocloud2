@@ -344,10 +344,6 @@ class Mapfile extends Controller
         <?php
         $sql = "SELECT * FROM settings.getColumns('f_table_schema=''" . Connection::$param['postgisschema'] . "'' AND enableows=true','raster_columns.r_table_schema=''" . Connection::$param['postgisschema'] . "'' AND enableows=true') ORDER BY sort_id";
         $result = $postgisObject->execQuery($sql);
-        if ($postgisObject->PDOerror) {
-            ob_get_clean();
-            return false;
-        }
         while ($row = $postgisObject->fetchRow($result)) {
             if ($row['srid'] > 1) {
 
@@ -1377,10 +1373,6 @@ class Mapfile extends Controller
         <?php
         $sql = "SELECT * FROM settings.getColumns('f_table_schema=''" . Connection::$param['postgisschema'] . "'' AND enableows=true','raster_columns.r_table_schema=''" . Connection::$param['postgisschema'] . "'' AND enableows=true') ORDER BY sort_id";
         $result = $postgisObject->execQuery($sql);
-        if ($postgisObject->PDOerror) {
-            ob_get_clean();
-            return false;
-        }
         while ($row = $postgisObject->fetchRow($result)) {
             if ($row['srid'] > 1) {
 

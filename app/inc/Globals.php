@@ -20,12 +20,12 @@ class Globals
     /**
      * @var int
      */
-    public static $cacheTtl = 1;
+    public static int $cacheTtl = 1;
 
     /**
      * @var array[]
      */
-    static public $metaConfig =[
+    static public array $metaConfig =[
         [
             "fieldsetName" => "CKAN",
             "fields" => [
@@ -49,6 +49,12 @@ class Globals
                     "type" => "textarea",
                     "title" => "Long description",
                 ],
+                [
+                    "name" => "buffer_conflict",
+                    "type" => "text",
+                    "title" => "Buffer",
+                ],
+
             ]
         ],
         [

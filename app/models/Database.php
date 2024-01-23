@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -62,14 +62,10 @@ class Database extends Model
     public function createSchema(string $name): array
     {
         $sql = "CREATE SCHEMA \"" . self::toAscii($name, null, "_") . "\"";
-        $this->execQuery($sql);
-        if (!$this->PDOerror) {
-            $response['success'] = true;
-            $response['message'] = "Schema created";
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror[0];
-        }
+        $res = $this->prepare($sql);
+        $res->execute();
+        $response['success'] = true;
+        $response['message'] = "Schema created";
         return $response;
     }
 
@@ -83,32 +79,19 @@ class Database extends Model
     public function createdb(string $screenName, string $template, string $encoding = "UTF8"): bool
     {
         $this->createUser($screenName);
-
         $sql = "CREATE DATABASE {$screenName}
-			    WITH ENCODING='{$encoding}'
-       			TEMPLATE={$template}
+			    WITH ENCODING='$encoding'
+       			TEMPLATE=$template
        			CONNECTION LIMIT=-1;
 			";
         $this->db->query($sql);
-
-        $sql = "GRANT ALL PRIVILEGES ON DATABASE {$screenName} to {$screenName}";
+        $sql = "GRANT ALL PRIVILEGES ON DATABASE $screenName to $screenName";
         $this->db->query($sql);
-
         $postgisUser = explode('@', $this->postgisuser)[0];
-        $sql = "GRANT {$screenName} to {$postgisUser}";
+        $sql = "GRANT $screenName to $postgisUser";
         $this->db->query($sql);
-
         $this->changeOwner($screenName, $screenName);
-
-        if (!$this->PDOerror) {
-            return true;
-        } else {
-            $sql = "DROP DATABASE {$screenName}";
-            $this->execQuery($sql);
-            $sql = "DROP USER {$screenName}";
-            $this->execQuery($sql);
-            return false;
-        }
+        return true;
     }
 
     /**
@@ -117,7 +100,7 @@ class Database extends Model
      */
     public function doesDbExist(string $name): array
     {
-        $sql = "SELECT 1 AS check FROM pg_database WHERE datname='{$name}'";
+        $sql = "SELECT 1 AS \"check\" FROM pg_database WHERE datname='$name'";
         $row = $this->fetchRow($this->execQuery($sql));
         if ($row['check']) {
             $response['success'] = true;
@@ -135,21 +118,16 @@ class Database extends Model
         $sql = "SELECT datname FROM pg_catalog.pg_database";
         $result = $this->execQuery($sql);
         $arr = [];
-        if (!$this->PDOerror) {
-            while ($row = $this->fetchRow($result)) {
-                $arr[] = $row['datname'];
-            }
-            $response['success'] = true;
-            $response['data'] = $arr;
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror;
+        while ($row = $this->fetchRow($result)) {
+            $arr[] = $row['datname'];
         }
+        $response['success'] = true;
+        $response['data'] = $arr;
         return $response;
     }
 
     /**
-     * @return array<bool|string|int|array<mixed>>
+     * @return array<bool|string|int|array>
      */
     public function listAllSchemas(): array
     {
@@ -179,7 +157,7 @@ class Database extends Model
             return $response;
         }
         while ($row = $this->fetchRow($res)) {
-            $arr[] = array("schema" => $row['schema_name'], "count" => isset($count[$row['schema_name']]) ? $count[$row['schema_name']] : 0);
+            $arr[] = array("schema" => $row['schema_name'], "count" => $count[$row['schema_name']] ?? 0);
         }
         $response['success'] = true;
         $response['data'] = $arr;
@@ -201,7 +179,7 @@ class Database extends Model
         $this->begin();
 
         //Database
-        $sql = "ALTER DATABASE {$db} OWNER TO {$newOwner}";
+        $sql = "ALTER DATABASE $db OWNER TO $newOwner";
         $this->db->query($sql);
 
         // Schema
@@ -210,40 +188,40 @@ class Database extends Model
         $rows1 = $this->fetchAll($res);
 
         // tables
-        $sql = "SELECT '\"'||schemaname||'\".\"'||tablename||'\"' AS table FROM pg_tables WHERE schemaname NOT LIKE 'pg_%' AND schemaname<>'information_schema'";
-        $res = $this->db->query($sql);
+        $sql = "SELECT '\"'||schemaname||'\".\"'||tablename||'\"' AS \"table\" FROM pg_tables WHERE schemaname NOT LIKE 'pg_%' AND schemaname<>'information_schema'";
+        $this->db->query($sql);
         $res = $this->execQuery($sql);
         $rows2 = $this->fetchAll($res);
 
 
-        $sql = "SELECT '\"'||table_schema||'\".\"'||table_name||'\"' AS table FROM information_schema.views WHERE table_schema NOT LIKE 'pg_%' AND table_schema<>'information_schema'";
+        $sql = "SELECT '\"'||table_schema||'\".\"'||table_name||'\"' AS \"table\" FROM information_schema.views WHERE table_schema NOT LIKE 'pg_%' AND table_schema<>'information_schema'";
         $res = $this->db->query($sql);
         $rows3 = $this->fetchAll($res);
 
 
-        $sql = "SELECT '\"'||sequence_schema||'\".\"'||sequence_name||'\"' AS table FROM information_schema.sequences WHERE sequence_schema NOT LIKE 'pg_%' AND sequence_schema<>'information_schema'";
+        $sql = "SELECT '\"'||sequence_schema||'\".\"'||sequence_name||'\"' AS \"table\" FROM information_schema.sequences WHERE sequence_schema NOT LIKE 'pg_%' AND sequence_schema<>'information_schema'";
         $res = $this->db->query($sql);
         $rows4 = $this->fetchAll($res);
 
         foreach ($rows1 as $row) {
-            $sql = "ALTER SCHEMA {$row["schema_name"]} OWNER TO {$newOwner}";
+            $sql = "ALTER SCHEMA {$row["schema_name"]} OWNER TO $newOwner";
             $this->db->query($sql);
         }
         foreach ($rows1 as $row) {
-            $sql = "GRANT USAGE ON SCHEMA {$row["schema_name"]} TO {$newOwner}";
+            $sql = "GRANT USAGE ON SCHEMA {$row["schema_name"]} TO $newOwner";
             $this->db->query($sql);
         }
         foreach ($rows2 as $row) {
-            $sql = "ALTER TABLE {$row["table"]} OWNER TO {$newOwner}";
+            $sql = "ALTER TABLE {$row["table"]} OWNER TO $newOwner";
             $this->db->query($sql);
         }
         foreach ($rows3 as $row) {
-            $sql = "ALTER TABLE {$row["table"]} OWNER TO {$newOwner}";
+            $sql = "ALTER TABLE {$row["table"]} OWNER TO $newOwner";
             $this->db->query($sql);
         }
         foreach ($rows4 as $row) {
             $this->db->query($sql);
-            $sql = "ALTER TABLE {$row["table"]} OWNER TO {$newOwner}";
+            $sql = "ALTER TABLE {$row["table"]} OWNER TO $newOwner";
         }
 
         $this->commit();
@@ -282,43 +260,19 @@ class Database extends Model
         $newName = self::toAscii($name, array(), "_");
         $this->connect();
         $this->begin();
-        $whereClauseG = "f_table_schema=''{$schema}''";
-        $whereClauseR = "r_table_schema=''{$schema}''";
-        $query = "SELECT * FROM settings.getColumns('{$whereClauseG}','{$whereClauseR}') ORDER BY sort_id";
+        $whereClauseG = "f_table_schema=''$schema''";
+        $whereClauseR = "r_table_schema=''$schema''";
+        $query = "SELECT * FROM settings.getColumns('$whereClauseG','$whereClauseR') ORDER BY sort_id";
         $res = $this->prepare($query);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
-        }
+        $res->execute();
         while ($row = $this->fetchRow($res)) {
-            $query = "UPDATE settings.geometry_columns_join SET _key_ = '{$newName}.{$row['f_table_name']}.{$row['f_geometry_column']}' WHERE _key_ ='{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}'";
+            $query = "UPDATE settings.geometry_columns_join SET _key_ = '$newName.{$row['f_table_name']}.{$row['f_geometry_column']}' WHERE _key_ ='{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}'";
             $resUpdate = $this->prepare($query);
-            try {
-                $resUpdate->execute();
-            } catch (PDOException $e) {
-                $this->rollback();
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 400;
-                return $response;
-            }
+            $resUpdate->execute();
         }
-        $query = "ALTER SCHEMA {$schema} RENAME TO {$newName}";
+        $query = "ALTER SCHEMA $schema RENAME TO $newName";
         $res = $this->prepare($query);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
-        }
+        $res->execute();
         $setObj = new Setting();
         $settings = $setObj->getArray();
         $extents = $settings->extents->$schema;
@@ -330,24 +284,16 @@ class Database extends Model
             $settings->zoom->$newName = $zoom;
             if (App::$param["encryptSettings"]) {
                 $pubKey = file_get_contents(App::$param["path"] . "app/conf/public.key");
-                $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($settings) . "', dearmor('{$pubKey}'))";
+                $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($settings) . "', dearmor('$pubKey'))";
             } else {
                 $sql = "UPDATE settings.viewer SET viewer='" . json_encode($settings) . "'";
             }
             $res = $this->prepare($sql);
-            try {
-                $res->execute();
-            } catch (PDOException $e) {
-                $this->rollback();
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 401;
-                return $response;
-            }
+            $res->execute();
         }
         $this->commit();
         $response['success'] = true;
-        $response['message'] = "{$schema} renamed to {$newName}";
+        $response['message'] = "$schema renamed to $newName";
         $response['data']['name'] = $newName;
         return $response;
     }
@@ -366,31 +312,36 @@ class Database extends Model
         }
         $this->connect();
         $this->begin();
-        $query = "DROP SCHEMA {$schema} CASCADE";
+        $query = "DROP SCHEMA $schema CASCADE";
         $res = $this->prepare($query);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
-        }
-        $query = "DELETE FROM settings.geometry_columns_join WHERE _key_ LIKE '{$schema}.%'";
+        $res->execute();
+        $query = "DELETE FROM settings.geometry_columns_join WHERE _key_ LIKE '$schema.%'";
         $res = $this->prepare($query);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
-        }
+        $res->execute();
         $this->commit();
         $response['success'] = true;
-        $response['message'] = "{$schema} dropped";
+        $response['message'] = "$schema dropped";
         return $response;
+    }
+
+    public function doesSchemaExist(string $name): bool
+    {
+        $sql = "SELECT schema_name FROM information_schema.schemata where schema_name=:name";
+        $res = $this->prepare($sql);
+        $res->execute(["name" => $name]);
+        $row = $this->fetchRow($res);
+        return (bool)$row;
+    }
+
+    public function doesRelationExist(string $name): bool
+    {
+        $sql = "SELECT 1 FROM " . $this->doubleQuoteQualifiedName($name) . " LIMIT 1";
+        try {
+            $res = $this->prepare($sql);
+            $res->execute();
+            return true;
+        } catch (PDOException) {
+            return false;
+        }
     }
 }

@@ -16,7 +16,6 @@ use app\conf\App;
 use app\inc\Util;
 use app\inc\Geometrycolums;
 use app\inc\Cache;
-use Error;
 use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use stdClass;
@@ -24,71 +23,19 @@ use function mb_substr;
 
 class Table extends Model
 {
-    // TODO Set access on all vars
-    /**
-     * @var string
-     */
-    public $table;
-
-    /**
-     * @var string
-     */
-    public $schema;
-
-    /**
-     * @var array<string>|string|null
-     */
-    public $geometryColumns;
-
-    /**
-     * @var string|null
-     */
-    public $tableWithOutSchema;
-
-    /**
-     * @var array|array[]
-     */
-    public $metaData;
-
-    /**
-     * @var mixed|string|null
-     */
-    public $geomField;
-
-    /**
-     * @var mixed|string|null
-     */
-    public $geomType;
-
-    /**
-     * @var bool|mixed
-     */
-    public mixed $exists;
-
-    /**
-     * @var bool|int|string
-     */
-    public $versioning;
-
-    /**
-     * @var bool|int|string
-     */
-    public $workflow;
-
-    /**
-     * @var string[]
-     */
-    public $sysCols;
-
-    /**
-     * @var string[]|null
-     */
-    public $primaryKey;
-
-    /**
-     * @var string
-     */
-    public $specialChars;
+    public ?string $table;
+    public ?string $schema;
+    public mixed $geometryColumns;
+    public ?string $tableWithOutSchema;
+    public array $metaData;
+    public ?string $geomField;
+    public ?string $geomType;
+    public bool $exists;
+    public bool $versioning;
+    public bool $workflow;
+    public array $sysCols;
+    public ?array $primaryKey;
+    public string $specialChars;
 
     /**
      * Table constructor.
@@ -102,11 +49,7 @@ class Table extends Model
 
         // Make sure db connection is init
         if (!$this->db) {
-            try {
-                $this->connect();
-            } catch (PDOException $e) {
-                throw new PDOException($e->getMessage());
-            }
+            $this->connect();
         }
 
         $_schema = $this->explodeTableName($table)["schema"];
@@ -135,20 +78,12 @@ class Table extends Model
                 $sql = "SELECT 1 FROM " . $this->doubleQuoteQualifiedName($table) . " LIMIT 1";
                 try {
                     $this->execQuery($sql);
-                } catch (PDOException $e) {
-
-                }
-                if ($this->PDOerror) {
-                    $this->exists = false;
-                } else {
                     $this->exists = true;
+                } catch (PDOException) {
+                    $this->exists = false;
                 }
-                try {
-                    $CachedString->set($this->exists)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-                    $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
-                } catch (Error $exception) {
-                    die($exception->getMessage());
-                }
+                $CachedString->set($this->exists)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
+                $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
                 Cache::save($CachedString);
             }
 
@@ -195,71 +130,72 @@ class Table extends Model
         Cache::clear();
     }
 
+
     /**
      * @param array<string> $field
      * @return array<string>
      */
     private function getType(array $field): array
     {
-        $field['isArray'] = preg_match("/\[]/", $field['type']) ? true : false;
+        $field['is_array'] = (bool)preg_match("/\[]/", $field['type']);
 
-        if (preg_match("/smallint/", $field['type']) ||
-            preg_match("/integer/", $field['type']) ||
-            preg_match("/bigint/", $field['type']) ||
-            preg_match("/int2/", $field['type']) ||
-            preg_match("/int4/", $field['type']) ||
-            preg_match("/int8/", $field['type'])
+        if (str_contains($field['type'], "smallint") ||
+            str_contains($field['type'], "integer") ||
+            str_contains($field['type'], "bigint") ||
+            str_contains($field['type'], "int2") ||
+            str_contains($field['type'], "int4") ||
+            str_contains($field['type'], "int8")
         ) {
             $field['typeObj'] = array("type" => "int");
             $field['type'] = "int";
         } elseif (
-            preg_match("/numeric/", $field['type']) ||
-            preg_match("/real/", $field['type']) ||
-            preg_match("/float/", $field['type']) ||
-            preg_match("/decimal/", $field['type'])
+            str_contains($field['type'], "numeric") ||
+            str_contains($field['type'], "real") ||
+            str_contains($field['type'], "float") ||
+            str_contains($field['type'], "decimal")
         ) {
             $field['typeObj'] = array("type" => "decimal", "precision" => 3, "scale" => 10);
             $field['type'] = "decimal"; // SKAL ændres
-        } elseif (preg_match("/double/", $field['type'])) {
+        } elseif (str_contains($field['type'], "double")) {
             $field['typeObj'] = array("type" => "double");
             $field['type'] = "double"; // SKAL ændres
-        } elseif (preg_match("/bool/", $field['type'])) {
+        } elseif (str_contains($field['type'], "bool")) {
             $field['typeObj'] = array("type" => "boolean");
             $field['type'] = "boolean";
-        } elseif (preg_match("/geometry/", $field['type'])) {
+        } elseif (str_contains($field['type'], "geometry")) {
             $field['typeObj'] = array("type" => "geometry");
             $field['type'] = "geometry";
-        } elseif (preg_match("/raster/", $field['type'])) {
+        } elseif (str_contains($field['type'], "raster")) {
             $field['typeObj'] = array("type" => "raster");
             $field['type'] = "raster";
-        } elseif (preg_match("/text/", $field['type'])) {
+        } elseif (str_contains($field['type'], "text")) {
             $field['typeObj'] = array("type" => "text");
             $field['type'] = "text";
-        } elseif (preg_match("/timestamp with time zone/", $field['type'])) {
+        } elseif (str_contains($field['type'], "timestamp with time zone")) {
             $field['typeObj'] = array("type" => "timestamptz");
             $field['type'] = "timestamptz";
-        } elseif (preg_match("/timestamp/", $field['type'])) {
+        } elseif (str_contains($field['type'], "timestamp")) {
             $field['typeObj'] = array("type" => "timestamp");
             $field['type'] = "timestamp";
-        } elseif (preg_match("/time with time zone/", $field['type'])) {
+        } elseif (str_contains($field['type'], "time with time zone")) {
             $field['typeObj'] = array("type" => "timetz");
             $field['type'] = "timetz";
-        } elseif (preg_match("/time/", $field['type'])) {
+        } elseif (str_contains($field['type'], "time")) {
             $field['typeObj'] = array("type" => "time");
             $field['type'] = "time";
-        } elseif (preg_match("/date/", $field['type'])) {
+        } elseif (str_contains($field['type'], "date")) {
             $field['typeObj'] = array("type" => "date");
             $field['type'] = "timestamp"; // So Extjs renderer becomes string
-        } elseif (preg_match("/uuid/", $field['type'])) {
+        } elseif (str_contains($field['type'], "uuid")) {
             $field['typeObj'] = array("type" => "uuid");
             $field['type'] = "uuid";
-        } elseif (preg_match("/hstore/", $field['type'])) {
+        } elseif (str_contains($field['type'], "hstore")) {
             $field['typeObj'] = array("type" => "hstore");
             $field['type'] = "hstore";
-        } elseif (preg_match("/json/", $field['type'])) {
+        } elseif (str_contains($field['type'], "json")) {
             $field['typeObj'] = array("type" => "json");
             $field['type'] = "json";
-        } elseif (preg_match("/bytea/", $field['type'])) {
+        } elseif (str_contains($field['type'], "bytea")) {
             $field['typeObj'] = array("type" => "bytea");
             $field['type'] = "bytea";
         } else {
@@ -271,12 +207,12 @@ class Table extends Model
 
     /**
      * Helper method
-     * @param array<mixed> $array
+     * @param array $array
      * @param string $key
      * @param mixed $value
-     * @return array<mixed>
+     * @return array
      */
-    private function array_push_assoc(array $array, string $key, $value): array
+    private function array_push_assoc(array $array, string $key, mixed $value): array
     {
         $array[$key] = $value;
         return $array;
@@ -286,7 +222,8 @@ class Table extends Model
 
     /**
      * @param bool $createKeyFrom
-     * @return array<mixed>
+     * @param string|null $schema
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function getRecords(bool $createKeyFrom = false, string $schema = null): array
@@ -306,7 +243,7 @@ class Table extends Model
         }
 
         if ($whereClause) {
-            $sql = "SELECT * FROM settings.getColumns('f_table_schema=''{$whereClause}''','raster_columns.r_table_schema=''{$whereClause}''') ORDER BY sort_id";
+            $sql = "SELECT * FROM settings.getColumns('f_table_schema=''$whereClause''','raster_columns.r_table_schema=''$whereClause''') ORDER BY sort_id";
         } else {
             $sql = "SELECT * FROM settings.getColumns('1=1','1=1') ORDER BY sort_id";
 
@@ -317,14 +254,7 @@ class Table extends Model
         // Check if VIEW
         $sql = "SELECT schemaname,viewname,definition FROM pg_views WHERE schemaname = :sSchema";
         $resView = $this->prepare($sql);
-        try {
-            $resView->execute(array("sSchema" => $whereClause));
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
-        }
+        $resView->execute(array("sSchema" => $whereClause));
         while ($row = $this->fetchRow($resView)) {
             $views[$row["viewname"]] = true;
             $viewDefinitions[$row["viewname"]] = $row["definition"];
@@ -333,14 +263,7 @@ class Table extends Model
         // Check if FOREIGN TABLE
         $sql = "SELECT foreign_table_schema,foreign_table_name,foreign_server_name FROM information_schema.foreign_tables WHERE foreign_table_schema = :sSchema";
         $resView = $this->prepare($sql);
-        try {
-            $resView->execute(array("sSchema" => $whereClause));
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
-        }
+        $resView->execute(array("sSchema" => $whereClause));
         while ($row = $this->fetchRow($resView)) {
             $foreignTables[$row["foreign_table_name"]] = true;
         }
@@ -348,14 +271,7 @@ class Table extends Model
         // Check if materialized view
         $sql = "SELECT schemaname,matviewname,definition FROM pg_matviews WHERE schemaname = :sSchema";
         $resView = $this->prepare($sql);
-        try {
-            $resView->execute(array("sSchema" => $whereClause));
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
-        }
+        $resView->execute(array("sSchema" => $whereClause));
         while ($row = $this->fetchRow($resView)) {
             $matViews[$row["matviewname"]] = true;
             $matViewDefinitions[$row["matviewname"]] = $row["definition"];
@@ -388,8 +304,8 @@ class Table extends Model
             $privileges = !empty($row["privileges"]) ? json_decode($row["privileges"]) : null;
             $arr = [];
             $prop = !empty($_SESSION['usergroup']) ? $_SESSION['usergroup'] : $_SESSION['screen_name'];
-            if (empty($_SESSION["subuser"]) || (!empty($_SESSION["subuser"]) && $prop == Connection::$param['postgisschema'])
-                || (!empty($_SESSION["subuser"]) && !empty($privileges->$prop) && $privileges->$prop != "none")) {
+            if (empty($_SESSION["subuser"]) || ($prop == Connection::$param['postgisschema'])
+                || (!empty($privileges->$prop) && $privileges->$prop != "none")) {
                 $relType = "t"; // Default
                 foreach ($row as $key => $value) {
                     if ($key == "type" && $value == "GEOMETRY") {
@@ -443,7 +359,7 @@ class Table extends Model
                     if (mb_substr($type, 0, 1, 'utf-8') == "_") {
                         $type = "a" . $type;
                     }
-                    $url = $esUrl . "/{$this->postgisdb}_{$row['f_table_schema']}_{$type}/_mapping/";
+                    $url = $esUrl . "/{$this->postgisdb}_{$row['f_table_schema']}_$type/_mapping/";
                     $ch = curl_init($url);
                     curl_setopt($ch, CURLOPT_HEADER, true);    // we want headers
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -470,46 +386,16 @@ class Table extends Model
     /**
      * SQL Group
      * @param string $field
-     * @return array<mixed>
+     * @return array
+     * @throws PDOException
      */
     function getGroupBy(string $field): array
     {
         $arr = [];
-        $sql = "SELECT {$field} AS {$field} FROM {$this->table} WHERE {$field} IS NOT NULL GROUP BY {$field}";
+        $sql = "SELECT $field AS $field FROM $this->table WHERE $field IS NOT NULL GROUP BY $field";
         $result = $this->execQuery($sql);
-        if (!$this->PDOerror) {
-            while ($row = $this->fetchRow($result)) {
-                $arr[] = array("group" => $row[$field]);
-            }
-            $response['success'] = true;
-            $response['data'] = $arr;
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror;
-        }
-        return $response;
-    }
-
-    /**
-     * What is the difference to the above?
-     * @param string $field
-     * @return array<mixed>
-     */
-    public function getGroupByAsArray(string $field): array
-    {
-        $arr = [];
-        $sql = "SELECT DISTINCT({$field}) as distinct FROM {$this->table} ORDER BY {$field}";
-        $res = $this->prepare($sql);
-        try {
-            $res->execute();
-            while ($row = $this->fetchRow($res)) {
-                $arr[] = $row["distinct"];
-            }
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
+        while ($row = $this->fetchRow($result)) {
+            $arr[] = array("group" => $row[$field]);
         }
         $response['success'] = true;
         $response['data'] = $arr;
@@ -517,8 +403,26 @@ class Table extends Model
     }
 
     /**
-     * Is it used?
-     * @return array<mixed>
+     * What is the difference to the above?
+     * @param string $field
+     * @return array
+     */
+    public function getGroupByAsArray(string $field): array
+    {
+        $arr = [];
+        $sql = "SELECT DISTINCT($field) as \"distinct\" FROM $this->table ORDER BY $field";
+        $res = $this->prepare($sql);
+        $res->execute();
+        while ($row = $this->fetchRow($res)) {
+            $arr[] = $row["distinct"];
+        }
+        $response['success'] = true;
+        $response['data'] = $arr;
+        return $response;
+    }
+
+    /**
+     * @return array
      */
     public function destroy(): array
     {
@@ -528,8 +432,7 @@ class Table extends Model
         $res = $this->prepare($sql);
         try {
             $res->execute();
-        } catch (PDOException $e) {
-//            $this->rollback();
+        } catch (PDOException) {
             $sql = "DROP VIEW $this->table CASCADE;";
             $res = $this->prepare($sql);
             $res->execute();
@@ -541,20 +444,13 @@ class Table extends Model
     /**
      * Get the UUID of layer. Belongs in Layer class
      * @param string $key
-     * @return array<mixed>
+     * @return array
      */
     public function getUuid(string $key): array
     {
         $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_=:key";
         $res = $this->prepare($sql);
-        try {
-            $res->execute(array("key" => $key));
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
+        $res->execute(array("key" => $key));
         $row = $this->fetchRow($res);
         $response['success'] = true;
         $response['uuid'] = $row["uuid"];
@@ -568,7 +464,7 @@ class Table extends Model
      * @param bool $append
      * @return array<bool|string|int>
      */
-    public function updateRecord($data, string $keyName, bool $raw = false, bool $append = false): array
+    public function updateRecord(mixed $data, string $keyName, bool $raw = false, bool $append = false): array
     {
         $data = $this->makeArray($data);
         $this->clearCacheOnSchemaChanges();
@@ -588,7 +484,7 @@ class Table extends Model
                             Layer::deleteCkan($uuid["uuid"]);
                         }
                     } else {
-                        $gc2host = isset(App::$param["ckan"]["gc2host"]) ? App::$param["ckan"]["gc2host"] : App::$param["host"];
+                        $gc2host = App::$param["ckan"]["gc2host"] ?? App::$param["host"];
                         $url = "http://127.0.0.1/api/v1/ckan/" . Database::getDb() . "?id=" . $row->_key_ . "&host=" . $gc2host;
                         Util::asyncRequest($url);
                     }
@@ -636,25 +532,17 @@ class Table extends Model
                             }
                         }
                     }
-                    $pairArr[] = "\"{$key}\"=:{$key}";
+                    $pairArr[] = "\"$key\"=:$key";
                     $valueArr[$key] = $value;
-                    $keyArr[] = "\"{$key}\"";
-                    $keyArr2[] = ":{$key}";
+                    $keyArr[] = "\"$key\"";
+                    $keyArr2[] = ":$key";
                 }
                 $sql = "INSERT INTO " . $this->doubleQuoteQualifiedName($this->table) . " (" . implode(",", $keyArr) . ") VALUES(" . implode(",", $keyArr2) . ")" .
-                    " ON CONFLICT ({$keyName}) DO UPDATE SET " . implode(",", $pairArr);
-                try {
-                    $result = $this->prepare($sql);
-                    $result->execute($valueArr);
-                    $response['success'] = true;
-                    $response['message'] = "Row updated";
-
-                } catch (PDOException $e) {
-                    $response['success'] = false;
-                    $response['message'] = $e->getMessage();
-                    $response['code'] = 401;
-                    return $response;
-                }
+                    " ON CONFLICT ($keyName) DO UPDATE SET " . implode(",", $pairArr);
+                $result = $this->prepare($sql);
+                $result->execute($valueArr);
+                $response['success'] = true;
+                $response['message'] = "Row updated";
                 $keyArr = [];
                 $keyArr2 = [];
                 $valueArr = [];
@@ -667,7 +555,7 @@ class Table extends Model
     /**
      * @param bool $createKeyFrom
      * @param bool $includePriKey
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function getColumnsForExtGridAndStore(bool $createKeyFrom = false, bool $includePriKey = false): array
@@ -692,7 +580,7 @@ class Table extends Model
         } elseif ($this->geomType == "LINESTRING" || $this->geomType == "MULTILINESTRING" || $this->geomType == "LINE") {
             $type = "Path";
         }
-        if (!empty($this->geomType) && substr($this->geomType, 0, 5) == "MULTI") {
+        if (!empty($this->geomType) && str_starts_with($this->geomType, "MULTI")) {
             $multi = true;
         } else {
             $multi = false;
@@ -733,8 +621,8 @@ class Table extends Model
                         "dataIndex" => $key,
                         "type" => $value['type'],
                         "typeObj" => $value['typeObj'],
-                        "properties" => isset($fieldconfArr[$key]->properties) ? $fieldconfArr[$key]->properties : null,
-                        "editable" => ($value['type'] == "bytea" || $key == $this->primaryKey['attname']) ? false : true);
+                        "properties" => $fieldconfArr[$key]->properties ?? null,
+                        "editable" => !(($value['type'] == "bytea" || $key == $this->primaryKey['attname'])));
                 }
             }
         }
@@ -764,7 +652,7 @@ class Table extends Model
             $response['data'] = array();
         }
         foreach ($this->metaData as $key => $value) {
-            if ($key != $this->primaryKey['attname'] || $includePriKey == true) {
+            if ($key != $this->primaryKey['attname'] || $includePriKey) {
                 $arr = $this->array_push_assoc($arr, "id", $key);
                 $arr = $this->array_push_assoc($arr, "column", $key);
                 $arr = $this->array_push_assoc($arr, "sort_id", !empty($fieldconfArr[$key]->sort_id) ? (int)$fieldconfArr[$key]->sort_id : 0);
@@ -783,7 +671,7 @@ class Table extends Model
                 $arr = $this->array_push_assoc($arr, "template", !empty($fieldconfArr[$key]->template) ? $fieldconfArr[$key]->template : null);
                 $arr = $this->array_push_assoc($arr, "properties", !empty($fieldconfArr[$key]->properties) ? $fieldconfArr[$key]->properties : null);
                 $arr = $this->array_push_assoc($arr, "ignore", !empty($fieldconfArr[$key]->ignore) && $fieldconfArr[$key]->ignore);
-                $arr = $this->array_push_assoc($arr, "is_nullable", !empty($value['is_nullable']) && $value['is_nullable']);
+                $arr = $this->array_push_assoc($arr, "is_nullable", !empty($value['is_nullable']));
                 $arr = $this->array_push_assoc($arr, "desc", !empty($fieldconfArr[$key]->desc) ? $fieldconfArr[$key]->desc : "");
                 if ($value['typeObj']['type'] == "decimal") {
                     $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
@@ -803,7 +691,7 @@ class Table extends Model
     /**
      * Set metaData again in case of a column was dropped
      * @param string $_key_
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function purgeFieldConf(string $_key_): array
@@ -826,10 +714,12 @@ class Table extends Model
     /**
      * @param mixed $data
      * @param string $key
+     * @param bool $onlyRename
      * @return array
+     * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function updateColumn(object $data, string $key): array // Only geometry tables
+    public function updateColumn(object $data, string $key, bool $onlyRename = false): array // Only geometry tables
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
@@ -839,17 +729,10 @@ class Table extends Model
         $fieldconfArr = $this->geometryColumns["fieldconf"] == null ? [] : (array)json_decode($this->geometryColumns["fieldconf"]);
         foreach ($data as $value) {
             $safeColumn = $value->column;
-            if ($this->metaData[$value->id]["is_nullable"] != $value->is_nullable) {
-                $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ALTER \"{$value->column}\" " . ($value->is_nullable ? "DROP" : "SET") . " NOT NULL";
+            if ($this->metaData[$value->id]["is_nullable"] != $value->is_nullable && !$onlyRename) {
+                $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ALTER \"$value->column\" " . ($value->is_nullable ? "DROP" : "SET") . " NOT NULL";
                 $res = $this->prepare($sql);
-                try {
-                    $res->execute();
-                } catch (PDOException $e) {
-                    $response['success'] = false;
-                    $response['message'] = $e->getMessage();
-                    $response['code'] = 400;
-                    return $response;
-                }
+                $res->execute();
                 $response['success'] = true;
                 return $response;
             }
@@ -862,18 +745,17 @@ class Table extends Model
                     $safeColumn = "_" . $safeColumn;
                 }
                 if (in_array($value->id, $this->sysCols)) {
-                    $response['success'] = false;
-                    $response['message'] = "You can't rename a system column";
-                    $response['code'] = 400;
-                    return $response;
+                    throw new GC2Exception("You can't rename a system column", 409, null, "SYSTEM_COLUMN");
                 }
-                $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " RENAME \"{$value->id}\" TO \"{$safeColumn}\";";
+                $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " RENAME \"$value->id\" TO \"$safeColumn\";";
                 $value->column = $safeColumn;
                 unset($fieldconfArr[$value->id]);
                 $response['message'] = "Renamed";
+                $response['name'] = $safeColumn;
 
             } else {
                 $response['message'] = "Updated";
+                $response['name'] = $value->id;
             }
 
             $fieldconfArr[$safeColumn] = $value;
@@ -885,21 +767,10 @@ class Table extends Model
 
         $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf, JSON_UNESCAPED_UNICODE)), "_key_");
         if (!$res["success"]) {
-            $response['success'] = false;
-            $response['message'] = $res["message"];
-            $response['code'] = "406";
-            return $response;
+            throw new GC2Exception($res["message"], 409, null, "SYSTEM_COLUMN");
         }
         if (!empty($sql)) {
             $this->execQuery($sql, "PDO", "transaction");
-        }
-        if ((!$this->PDOerror) || (!$sql)) {
-            $response['success'] = true;
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror[0];
-            $response['code'] = "406";
-
         }
         return $response;
     }
@@ -907,10 +778,10 @@ class Table extends Model
     /**
      * @param mixed $data
      * @param string $_key_
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function deleteColumn($data, string $_key_): array // Only geometry tables
+    public function deleteColumn(mixed $data, string $_key_): array // Only geometry tables
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
@@ -924,22 +795,16 @@ class Table extends Model
                 $response['code'] = 400;
                 return $response;
             }
-            $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " DROP COLUMN \"{$value}\"";
+            $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " DROP COLUMN \"$value\"";
             unset($fieldconfArr[$value]);
         }
         $this->execQuery($sql, "PDO", "transaction");
-        if ((!$this->PDOerror) || (!$sql)) {
             $conf['fieldconf'] = json_encode($fieldconfArr, JSON_UNESCAPED_UNICODE);
             $conf['f_table_name'] = $this->table;
             $geometryColumnsObj = new Table("settings.geometry_columns_join");
             $geometryColumnsObj->updateRecord(json_decode(json_encode($conf, JSON_UNESCAPED_UNICODE)), "f_table_name");
             $response['success'] = true;
             $response['message'] = "Column deleted";
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror[0];
-            $response['code'] = "406";
-        }
         $this->purgeFieldConf($_key_);
         return $response;
     }
@@ -947,7 +812,8 @@ class Table extends Model
     /**
      * Add a column. Works on all tables
      * @param array<string> $data
-     * @return array<mixed>
+     * @return array
+     * @throws GC2Exception
      */
     public function addColumn(array $data): array
     {
@@ -962,138 +828,55 @@ class Table extends Model
             $safeColumn = "_state";
         }
         if (in_array($safeColumn, $this->sysCols)) {
-            $response['success'] = false;
-            $response['message'] = "The name is reserved. Choose another.";
-            $response['code'] = 400;
-            return $response;
+            throw new GC2Exception("The name is reserved. Choose another.", 400);
         }
         // We set the data type
-        switch ($data['type']) {
-            case "String":
-                $type = "varchar(255)";
-                break;
-            case "Integer":
-                $type = "integer";
-                break;
-            case "Double":
-                $type = "double precision";
-                break;
-            case "Decimal":
-                $type = "decimal";
-                break;
-            case "Text":
-                $type = "text";
-                break;
-            case "Date":
-                $type = "date";
-                break;
-            case "Timestamp":
-                $type = "Timestamp";
-                break;
-            case "Timestamptz":
-                $type = "Timestamptz";
-                break;
-            case "Time":
-                $type = "Time";
-                break;
-            case "Timetz":
-                $type = "Timetz";
-                break;
-            case "Boolean":
-                $type = "bool";
-                break;
-            case "Bytea":
-                $type = "bytea";
-                break;
-            case "Hstore":
-                $type = "hstore";
-                break;
-            case "Json":
-                $type = "jsonb";
-                break;
-            case "Geometry":
-                $type = "geometry(Geometry,4326)";
-                break;
-            default:
-                $type = $data["type"];
-                break;
-        }
-        $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ADD COLUMN \"{$safeColumn}\" {$type};";
+        $type = match ($data['type']) {
+            "String" => "varchar(255)",
+            "Integer" => "integer",
+            "Double" => "double precision",
+            "Decimal" => "decimal",
+            "Text" => "text",
+            "Date" => "date",
+            "Timestamp" => "Timestamp",
+            "Timestamptz" => "Timestamptz",
+            "Time" => "Time",
+            "Timetz" => "Timetz",
+            "Boolean" => "bool",
+            "Bytea" => "bytea",
+            "Hstore" => "hstore",
+            "Json" => "jsonb",
+            "Geometry" => "geometry(Geometry,4326)",
+            default => $data["type"],
+        };
+        $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ADD COLUMN \"$safeColumn\" $type;";
         $this->execQuery($sql, "PDO", "transaction");
-        if ((!$this->PDOerror) || (!$sql)) {
-            $response['success'] = true;
-            $response['message'] = "Column added";
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror[0];
-            $response['code'] = "400";
-        }
         return $response;
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      */
     public function addVersioning(): array
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
         $this->begin();
-        $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_version_gid SERIAL NOT NULL";
+        $sql = "ALTER TABLE $this->table ADD COLUMN gc2_version_gid SERIAL NOT NULL";
         $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
-        $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_version_start_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()";
+        $res->execute();
+        $sql = "ALTER TABLE $this->table ADD COLUMN gc2_version_start_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()";
         $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
-        $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_version_end_date TIMESTAMP WITH TIME ZONE DEFAULT NULL";
+        $res->execute();
+        $sql = "ALTER TABLE $this->table ADD COLUMN gc2_version_end_date TIMESTAMP WITH TIME ZONE DEFAULT NULL";
         $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
-        $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_version_uuid UUID NOT NULL DEFAULT uuid_generate_v4()";
+        $res->execute();
+        $sql = "ALTER TABLE $this->table ADD COLUMN gc2_version_uuid UUID NOT NULL DEFAULT uuid_generate_v4()";
         $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
-        $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_version_user VARCHAR(255)";
+        $res->execute();
+        $sql = "ALTER TABLE $this->table ADD COLUMN gc2_version_user VARCHAR(255)";
         $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
+        $res->execute();
         $this->commit();
         $response['success'] = true;
         $response['message'] = "Table is now versioned";
@@ -1101,68 +884,28 @@ class Table extends Model
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      */
     public function removeVersioning(): array
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
         $this->begin();
-        $sql = "ALTER TABLE {$this->table} DROP COLUMN gc2_version_gid";
+        $sql = "ALTER TABLE $this->table DROP COLUMN gc2_version_gid";
         $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
-        $sql = "ALTER TABLE {$this->table} DROP COLUMN gc2_version_start_date";
+        $res->execute();
+        $sql = "ALTER TABLE $this->table DROP COLUMN gc2_version_start_date";
         $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
-        $sql = "ALTER TABLE {$this->table} DROP COLUMN gc2_version_end_date";
+        $res->execute();
+        $sql = "ALTER TABLE $this->table DROP COLUMN gc2_version_end_date";
         $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
-        $sql = "ALTER TABLE {$this->table} DROP COLUMN gc2_version_uuid";
+        $res->execute();
+        $sql = "ALTER TABLE $this->table DROP COLUMN gc2_version_uuid";
         $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
-        $sql = "ALTER TABLE {$this->table} DROP COLUMN gc2_version_user";
+        $res->execute();
+        $sql = "ALTER TABLE $this->table DROP COLUMN gc2_version_user";
         $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
+        $res->execute();
         $this->commit();
         $response['success'] = true;
         $response['message'] = "Versioning is removed";
@@ -1170,47 +913,22 @@ class Table extends Model
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      */
     public function addWorkflow(): array
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
         $this->begin();
-        $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_status integer";
+        $sql = "ALTER TABLE $this->table ADD COLUMN gc2_status integer";
         $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
-        $sql = "ALTER TABLE {$this->table} ADD COLUMN gc2_workflow hstore";
+        $res->execute();
+        $sql = "ALTER TABLE $this->table ADD COLUMN gc2_workflow hstore";
         $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
-        $sql = "UPDATE {$this->table} SET gc2_status = 3";
+        $res->execute();
+        $sql = "UPDATE $this->table SET gc2_status = 3";
         $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $this->rollback();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
-
+        $res->execute();
         $this->commit();
         $response['success'] = true;
         $response['message'] = "Table has now workflow";
@@ -1222,32 +940,28 @@ class Table extends Model
      * @param string $table
      * @param string|null $type
      * @param int|null $srid
-     * @param bool|null $minium
-     * @return array<mixed>
+     * @param bool|null $minimum
+     * @return array
      */
     public function create(string $table, ?string $type = null, ?int $srid = 4326, ?bool $minimum = false): array
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
-        $this->PDOerror = null;
         $table = self::toAscii($table, array(), "_");
         if (is_numeric(mb_substr($table, 0, 1, 'utf-8'))) {
             $table = "_" . $table;
         }
         $sql = "BEGIN;";
         if ($minimum) {
-            $sql .= "CREATE TABLE {$this->postgisschema}.{$table} ();";
+            $sql .= "CREATE TABLE $this->postgisschema.$table ();";
         } else {
-            $sql .= "CREATE TABLE {$this->postgisschema}.{$table} (gid SERIAL PRIMARY KEY,id INT);";
+            $sql .= "CREATE TABLE $this->postgisschema.$table (gid SERIAL PRIMARY KEY,id INT);";
         }
         if ($type && $srid) {
-            $sql .= "SELECT AddGeometryColumn('" . $this->postgisschema . "','{$table}','the_geom',{$srid},'{$type}',2);"; // Must use schema prefix cos search path include public
+            $sql .= "SELECT AddGeometryColumn('" . $this->postgisschema . "','$table','the_geom',$srid,'$type',2);"; // Must use schema prefix cos search path include public
         }
         $sql .= "COMMIT;";
         $this->execQuery($sql, "PDO", "transaction");
-        if (isset($this->PDOerror[0])) {
-            throw new GC2Exception($this->PDOerror[0]);
-        }
         $response['success'] = true;
         $response['tableName'] = $table;
         $response['message'] = "Layer created";
@@ -1256,41 +970,35 @@ class Table extends Model
 
     /**
      * @param int $srid
-     * @return array<mixed>
+     * @return array
      */
     public function createAsRasterTable(int $srid = 4326): array
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
-        $this->PDOerror = NULL;
         $table = $this->tableWithOutSchema;
         //$table = self::toAscii($table, array(), "_");
         if (is_numeric(mb_substr($table, 0, 1, 'utf-8'))) {
             $table = "_" . $table;
         }
-        $sql = "CREATE TABLE \"{$this->postgisschema}\".\"{$table}\"(rast raster);";
+        $sql = "CREATE TABLE \"$this->postgisschema\".\"$table\"(rast raster);";
         $this->execQuery($sql, "PDO", "transaction");
-        $sql = "INSERT INTO \"{$this->postgisschema}\".\"{$table}\"(rast)
-                SELECT ST_AddBand(ST_MakeEmptyRaster(1000, 1000, 0.3, -0.3, 2, 2, 0, 0,{$srid}), 1, '8BSI'::TEXT, -129, NULL);";
+        $sql = "INSERT INTO \"$this->postgisschema\".\"$table\"(rast)
+                SELECT ST_AddBand(ST_MakeEmptyRaster(1000, 1000, 0.3, -0.3, 2, 2, 0, 0,$srid), 1, '8BSI'::TEXT, -129, NULL);";
         $this->execQuery($sql, "PDO", "transaction");
-        $sql = "SELECT AddRasterConstraints('{$this->postgisschema}'::name,'{$table}'::name, 'rast'::name);";
+        $sql = "SELECT AddRasterConstraints('$this->postgisschema'::name,'$table'::name, 'rast'::name);";
         $this->execQuery($sql, "PDO", "transaction");
-        if (!isset($this->PDOerror[0])) {
-            $response['success'] = true;
-            $response['tableName'] = $table;
-            $response['message'] = "Layer created";
-        } else {
-            $response['success'] = false;
-            $response['message'] = $this->PDOerror[0];
-        }
+        $response['success'] = true;
+        $response['tableName'] = $table;
+        $response['message'] = "Layer created";
         return $response;
     }
 
     /**
      * @param mixed $notArray
-     * @return array<mixed>
+     * @return array
      */
-    public function makeArray($notArray): array
+    public function makeArray(mixed $notArray): array
     {
         if (!is_array($notArray)) {
             $nowArray = array(0 => $notArray);
@@ -1310,26 +1018,19 @@ class Table extends Model
 
     /**
      * @param string $field
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function checkcolumn(string $field): array
     {
-        $response = [];
-        $res = $this->doesColumnExist($this->table, $field);
-        if (isset($this->PDOerror)) {
-            $response['success'] = true;
-            $response['message'] = $res;
-            return $response;
-        }
-        return $res;
+        return $this->doesColumnExist($this->table, $field);
     }
 
     /**
      * @param string $table
      * @param string $offset
      * @param string $limit
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function getData(string $table, string $offset, string $limit): array
@@ -1338,9 +1039,9 @@ class Table extends Model
         $arrayWithFields = $this->getMetaData($table);
         foreach ($arrayWithFields as $key => $arr) {
             if ($arr['type'] == "bytea") {
-                $fieldsArr[] = "'binary' AS \"{$key}\"";
+                $fieldsArr[] = "'binary' AS \"$key\"";
             } else {
-                $fieldsArr[] = "\"{$key}\"";
+                $fieldsArr[] = "\"$key\"";
             }
         }
         if (isset($fieldsArr)) {
@@ -1348,16 +1049,9 @@ class Table extends Model
         } else {
             $sql = "*";
         }
-        $sql = "SELECT {$sql} FROM " . $this->doubleQuoteQualifiedName($table) . " LIMIT {$limit} OFFSET {$offset}";
+        $sql = "SELECT $sql FROM " . $this->doubleQuoteQualifiedName($table) . " LIMIT $limit OFFSET $offset";
         $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
-        }
+        $res->execute();
         while ($row = $this->fetchRow($res)) {
             $arr = array();
             foreach ($row as $key => $value) {
@@ -1374,16 +1068,8 @@ class Table extends Model
         // Get the total count
         $sql = "SELECT count(*) AS count FROM " . $this->doubleQuoteQualifiedName($table);
         $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
-        }
+        $res->execute();
         $row = $this->fetchRow($res);
-
         $response['success'] = true;
         $response['message'] = "Data fetched";
         $response['total'] = $row["count"];
@@ -1391,21 +1077,14 @@ class Table extends Model
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      */
     public function insertRecord(): array
     {
         $response = [];
         $sql = "INSERT INTO " . $this->doubleQuoteQualifiedName($this->table) . " DEFAULT VALUES";
         $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
-        }
+        $res->execute();
         $response['success'] = true;
         $response['message'] = "Record inserted";
         return $response;
@@ -1414,29 +1093,19 @@ class Table extends Model
     /**
      * @param mixed $data
      * @param string $keyName
-     * @return array<mixed>
+     * @return array
+     * @throws GC2Exception
      */
-    public function deleteRecord($data, string $keyName): array // All tables
+    public function deleteRecord(mixed $data, string $keyName): array // All tables
     {
         $response = [];
         if (!$this->hasPrimeryKey($this->table)) {
-            $response['success'] = false;
-            $response['message'] = "You can't edit a relation without a primary key";
-            $response['code'] = 401;
-            return $response;
+            throw new GC2Exception("You can't edit a relation without a primary key", 401);
         }
         $data = $this->makeArray($data);
-
-        $sql = "DELETE FROM " . $this->doubleQuoteQualifiedName($this->table) . " WHERE \"{$keyName}\" =:key";
+        $sql = "DELETE FROM " . $this->doubleQuoteQualifiedName($this->table) . " WHERE \"$keyName\" =:key";
         $res = $this->prepare($sql);
-        try {
-            $res->execute(array("key" => $data["data"]));
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
-        }
+        $res->execute(array("key" => $data["data"]));
         $response['success'] = true;
         $response['message'] = "Record deleted";
         return $response;
@@ -1445,7 +1114,7 @@ class Table extends Model
     /**
      * Works on all tables
      * @param string $pkey
-     * @return array<mixed>
+     * @return array
      */
     public function getRecordByPri(string $pkey): array
     {
@@ -1456,24 +1125,17 @@ class Table extends Model
         }
         // We add "" around field names in sql, so sql keywords don't mess things up
         foreach ($fieldsArr as $key => $value) {
-            $fieldsArr[$key] = "\"{$value}\"";
+            $fieldsArr[$key] = "\"$value\"";
         }
         $sql = "SELECT " . implode(",", $fieldsArr);
         foreach ($this->metaData as $key => $arr) {
             if ($arr['type'] == "bytea") {
-                $sql = str_replace("\"{$key}\"", "encode(\"" . $key . "\",'escape') as " . $key, $sql);
+                $sql = str_replace("\"$key\"", "encode(\"" . $key . "\",'escape') as " . $key, $sql);
             }
         }
         $sql .= " FROM " . $this->table . " WHERE " . $this->primaryKey['attname'] . "=:pkey";
         $res = $this->prepare($sql);
-        try {
-            $res->execute(array("pkey" => $pkey));
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
-        }
+        $res->execute(array("pkey" => $pkey));
         $row = $this->fetchRow($res);
         $response['success'] = true;
         $response['data'] = $row;
@@ -1482,7 +1144,7 @@ class Table extends Model
 
     /**
      * Works on all tables
-     * @return array<mixed>
+     * @return array
      */
     public function getFirstRecord(): array
     {
@@ -1493,24 +1155,17 @@ class Table extends Model
         }
         // We add "" around field names in sql, so sql keywords don't mess things up
         foreach ($fieldsArr as $key => $value) {
-            $fieldsArr[$key] = "\"{$value}\"";
+            $fieldsArr[$key] = "\"$value\"";
         }
         $sql = "SELECT " . implode(",", $fieldsArr);
         foreach ($this->metaData as $key => $arr) {
             if ($arr['type'] == "bytea") {
-                $sql = str_replace("\"{$key}\"", "encode(\"" . $key . "\",'escape') as " . $key, $sql);
+                $sql = str_replace("\"$key\"", "encode(\"" . $key . "\",'escape') as " . $key, $sql);
             }
         }
         $sql .= " FROM " . $this->table . " LIMIT 1";
         $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
-        }
+        $res->execute();
         $row = $this->fetchRow($res);
         $response['success'] = true;
         $response['data'] = $row;
@@ -1518,22 +1173,18 @@ class Table extends Model
     }
 
     /**
-     * @return array<mixed>
+     * @return array
+     * @throws GC2Exception
      */
     public function getDependTree(): array
     {
         $response = [];
         $response["data"] = [];
         if (!$this->exists) {
-            $response['success'] = false;
-            $response['message'] = "Relation doesn't exists";
-            $response['code'] = 401;
-            return $response;
+            throw new GC2Exception("Relation doesn't exists", 401);
         }
-
         $sql = "
             WITH RECURSIVE dep_recursive AS (
-
                 -- Recursion: Initial Query
                 SELECT
                     0 AS \"level\",
@@ -1542,9 +1193,7 @@ class Table extends Model
                     '' AS \"dep_type\",
                     '' AS \"ref_name\",
                     '' AS \"ref_type\"
-            
                 UNION ALL
-            
                 -- Recursive Query
                 SELECT
                     level + 1 AS \"level\",
@@ -1554,7 +1203,6 @@ class Table extends Model
                     depedencies.ref_name,
                     depedencies.ref_type
                 FROM (
-            
                     -- This function defines the type of any pg_class object
                     WITH classType AS (
                         SELECT
@@ -1570,7 +1218,6 @@ class Table extends Model
                             END AS \"type\"
                         FROM pg_class
                     )
-            
                     -- Note: In pg_depend, the triple (classid,objid,objsubid) describes some object that depends
                     -- on the object described by the tuple (refclassid,refobjid).
                     -- So to drop the depending object, the referenced object (refclassid,refobjid) must be dropped first
@@ -1634,9 +1281,7 @@ class Table extends Model
                 -- Recursion: Join with results of last query, search for dependencies recursively
                 JOIN dep_recursive ON (dep_recursive.dep_name = depedencies.ref_name)
                 WHERE depedencies.ref_name NOT IN(depedencies.dep_name, depedencies.dep_table) -- no self-references
-            
             )
-            
             -- Select and filter the results of the recursive query
             SELECT
                 MAX(level) AS \"level\",          -- drop highest level first, so no other objects depend on it
@@ -1656,18 +1301,9 @@ class Table extends Model
         ";
 
         $res = $this->prepare($sql);
-
         // If rel is in public, when don't use schema qualified name
         $relName = explode(".", $this->table)[0] == "public" ? explode(".", $this->table)[1] : $this->table;
-
-        try {
-            $res->execute(["relName" => $relName]);
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
-        }
+        $res->execute(["relName" => $relName]);
         while ($row = $this->fetchRow($res)) {
             $response["data"][] = $row;
         }
@@ -1679,14 +1315,13 @@ class Table extends Model
     /**
      * @param string $column
      * @param string $type
-     * @param $unique
+     * @param bool $unique
      * @return array
-     * @throws PDOException
      */
     public function createIndex(string $column, string $type = "btree", bool $unique = false): array
     {
         $u = $unique ? "UNIQUE" : "";
-        $sql = "CREATE $u INDEX \"{$this->tableWithOutSchema}_{$column}_{$type}\" ON {$this->doubleQuoteQualifiedName($this->table)} USING {$type} ({$column})";
+        $sql = "CREATE $u INDEX \"{$this->tableWithOutSchema}_{$column}_$type\" ON {$this->doubleQuoteQualifiedName($this->table)} USING $type ($column)";
         $res = $this->prepare($sql);
         $res->execute();
         $response["success"] = true;
@@ -1702,11 +1337,11 @@ class Table extends Model
      */
     public function dropIndex(string $column, string $type = "btree"): array
     {
-        $sql = "DROP INDEX \"{$this->schema}\".\"{$this->tableWithOutSchema}_{$column}_{$type}\"";
+        $sql = "DROP INDEX \"$this->schema\".\"{$this->tableWithOutSchema}_{$column}_$type\"";
         $res = $this->prepare($sql);
         $res->execute();
         $response["success"] = true;
-        $response["message"] = "Index created";
+        $response["message"] = "Index deleted";
         return $response;
     }
 
@@ -1719,9 +1354,9 @@ class Table extends Model
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
-        $sql = "ALTER TABLE {$this->table} ADD PRIMARY KEY (";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD PRIMARY KEY (";
         foreach ($columns as $column) {
-            $sql .= "\"{$column}\",";
+            $sql .= "\"$column\",";
         }
         $sql = rtrim($sql, ",");
         $sql .= ")";
@@ -1740,7 +1375,7 @@ class Table extends Model
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
-        $sql = "ALTER TABLE {$this->table} DROP CONSTRAINT \"{$this->tableWithOutSchema}_pkey\"";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP CONSTRAINT \"{$this->tableWithOutSchema}_pkey\"";
         $res = $this->prepare($sql);
         $res->execute();
         $response["success"] = true;
@@ -1748,11 +1383,17 @@ class Table extends Model
         return $response;
     }
 
-    public function addUniqueConstraint(string $column): array
+    /**
+     * @param string $column
+     * @param string|null $name
+     * @return array
+     */
+    public function addUniqueConstraint(string $column, string $name = null): array
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
-        $sql = "ALTER TABLE {$this->table} ADD CONSTRAINT \"{$this->tableWithOutSchema}_{$column}_unique\" UNIQUE (\"$column\")";
+        $nameWithPrefix = "{$this->tableWithOutSchema}_{$column}_unique" . ($name ? "_$name" : "");
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD CONSTRAINT \"$nameWithPrefix\" UNIQUE (\"$column\")";
         $res = $this->prepare($sql);
         $res->execute();
         $response["success"] = true;
@@ -1760,15 +1401,40 @@ class Table extends Model
         return $response;
     }
 
-    public function dropUniqueConstraint(string $column): array
+    public function dropUniqueConstraint(string $column, string $name = null): array
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
-        $sql = "ALTER TABLE {$this->table} DROP CONSTRAINT \"{$this->tableWithOutSchema}_{$column}_unique\"";
+        $nameWithPrefix = "{$this->tableWithOutSchema}_{$column}_unique" . ($name ? "_$name" : "");
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP CONSTRAINT \"$nameWithPrefix\"";
         $res = $this->prepare($sql);
         $res->execute();
         $response["success"] = true;
         $response["message"] = "Unique constrain dropped";
+        return $response;
+    }
+
+    public function addNotNullConstraint(string $column): array
+    {
+        $this->clearCacheOnSchemaChanges();
+        $response = [];
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ALTER \"$column\" SET NOT NULL";
+        $res = $this->prepare($sql);
+        $res->execute();
+        $response["success"] = true;
+        $response["message"] = "Not-Null constrain added";
+        return $response;
+    }
+
+    public function dropNotNullConstraint(string $column): array
+    {
+        $this->clearCacheOnSchemaChanges();
+        $response = [];
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ALTER \"$column\" DROP NOT NULL";
+        $res = $this->prepare($sql);
+        $res->execute();
+        $response["success"] = true;
+        $response["message"] = "Not-Null constrain dropped";
         return $response;
     }
 
@@ -1783,7 +1449,7 @@ class Table extends Model
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
-        $sql = "ALTER TABLE {$this->table} ADD CONSTRAINT \"{$this->tableWithOutSchema}_{$column}_foreign\" FOREIGN KEY (\"$column\") REFERENCES $referencedTable (\"$referencedColumn\")";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD CONSTRAINT \"{$this->tableWithOutSchema}_{$column}_foreign\" FOREIGN KEY (\"$column\") REFERENCES $referencedTable (\"$referencedColumn\")";
         $res = $this->prepare($sql);
         $res->execute();
         $response["success"] = true;
@@ -1800,11 +1466,35 @@ class Table extends Model
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
-        $sql = "ALTER TABLE {$this->table} DROP CONSTRAINT \"{$this->tableWithOutSchema}_{$column}_foreign\"";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP CONSTRAINT \"{$this->tableWithOutSchema}_{$column}_foreign\"";
         $res = $this->prepare($sql);
         $res->execute();
         $response["success"] = true;
         $response["message"] = "Foreign constrain dropped";
+        return $response;
+    }
+
+    public function addCheckConstraint(string $column, string $check): array
+    {
+        $this->clearCacheOnSchemaChanges();
+        $response = [];
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD CONSTRAINT \"{$this->tableWithOutSchema}_{$column}_check\" CHECK ($check)";
+        $res = $this->prepare($sql);
+        $res->execute();
+        $response["success"] = true;
+        $response["message"] = "Check constrain added";
+        return $response;
+    }
+
+    public function dropCheckConstraint(string $column): array
+    {
+        $this->clearCacheOnSchemaChanges();
+        $response = [];
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP CONSTRAINT \"{$this->tableWithOutSchema}_{$column}_check\"";
+        $res = $this->prepare($sql);
+        $res->execute();
+        $response["success"] = true;
+        $response["message"] = "Check constrain dropped";
         return $response;
     }
 }

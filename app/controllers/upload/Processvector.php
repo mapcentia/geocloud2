@@ -40,7 +40,7 @@ class Processvector extends Controller
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException|GC2Exception
      */
     public function get_index(): array
@@ -55,7 +55,7 @@ class Processvector extends Controller
         $overwrite = Input::get("overwrite") == "true";
         $srid = Input::get("srid") ?: "4326";
         $encoding = Input::get("encoding") ?: "LATIN1";
-        $type =Input::get("type");
+        $type = Input::get("type");
 
         // Set path so libjvm.so can be loaded in ogr2ogr for MS Access support
         putenv("LD_LIBRARY_PATH=/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server");
@@ -80,17 +80,15 @@ class Processvector extends Controller
 
             // ZIP start
             // =========
-            if (strtolower($zipCheck2[0]) == "zip") {
-                $zip = new ZipArchive;
-                $res = $zip->open($dir . "/" . $fileName);
-                if ($res !== true) {
-                    $response['success'] = false;
-                    $response['message'] = "Could not unzip file";
-                    return Response::json($response);
-                }
-                $zip->extractTo($dir . "/" . $folder);
-                $zip->close();
+            $zip = new ZipArchive;
+            $res = $zip->open($dir . "/" . $fileName);
+            if ($res !== true) {
+                $response['success'] = false;
+                $response['message'] = "Could not unzip file";
+                return Response::json($response);
             }
+            $zip->extractTo($dir . "/" . $folder);
+            $zip->close();
 
             if ($handle = opendir($dir . "/" . $folder)) {
                 while (false !== ($entry = readdir($handle))) {
@@ -113,63 +111,35 @@ class Processvector extends Controller
 
         $fileType = strtolower($zipCheck2[0]);
 
-        switch ($type) {
-            case "point":
-                $type = "point";
-                break;
-            case "linestring":
-                $type = "linestring";
-                break;
-            case "polygon":
-                $type = "polygon";
-                break;
-            case "multipoint":
-                $type = "multipoint";
-                break;
-            case "multilinestring":
-                $type = "multilinestring";
-                break;
-            case "multipolygon":
-                $type = "multipolygon";
-                break;
-            case "geometrycollection":
-                $type = "geometrycollection";
-                break;
-            case "geometry":
-                $type = "geometry";
-                break;
-            default:
-                $type = "PROMOTE_TO_MULTI";
-                break;
-        }
-        //$type = "linestring";
+        $type = match ($type) {
+            "point" => "point",
+            "linestring" => "linestring",
+            "polygon" => "polygon",
+            "multipoint" => "multipoint",
+            "multilinestring" => "multilinestring",
+            "multipolygon" => "multipolygon",
+            "geometrycollection" => "geometrycollection",
+            "geometry" => "geometry",
+            default => "PROMOTE_TO_MULTI",
+        };
+
         $model = new Model();
         $tableExist = $model->isTableOrView(Connection::$param["postgisschema"] . "." . $safeName);
         $tableExist = $tableExist["success"];
 
-        if ($tableExist == true && $overwrite == false && $delete == false && $append == false) {
-            $response['success'] = false;
-            $response['message'] = "'{$safeName}' exists already, use 'Overwrite'";
-            $response['code'] = 406;
-            return $response;
+        if ($tableExist && !$overwrite && !$delete && !$append) {
+            throw new GC2Exception("'$safeName' exists already, use 'Overwrite'", 406);
         }
 
         if ($delete) {
             $sql = "DELETE FROM " . Connection::$param["postgisschema"] . "." . $safeName;
             $res = $model->prepare($sql);
-            try {
-                $res->execute();
-            } catch (PDOException $e) {
-                $response['success'] = false;
-                $response['message'] = "Could not delete from {$safeName}";
-                $response['code'] = 406;
-                return $response;
-            }
+            $res->execute();
         }
-        $cmd = "PGCLIENTENCODING={$encoding} ogr2ogr " .
+        $cmd = "PGCLIENTENCODING=$encoding ogr2ogr " .
             ($skipFailures ? "-skipfailures " : " ") .
             (($delete || $append) ? "-append " : " ") .
-            (($overwrite == true && $delete == false) ? "-overwrite " : " ") .
+            (($overwrite && !$delete) ? "-overwrite " : " ") .
             // TODO Set dim i GUI
             "-dim XY " .
             /*"--config DXF_ENCODING WIN1252 " .*/
@@ -177,17 +147,17 @@ class Processvector extends Controller
             (($delete || $append) ? "" : "-lco 'GEOMETRY_NAME=the_geom' ") .
             (($delete || $append) ? "" : "-lco 'FID=gid' ") .
             (($delete || $append) ? "" : "-lco 'PRECISION=NO' ") .
-            "-a_srs 'EPSG:{$srid}' " .
+            "-a_srs 'EPSG:$srid' " .
 
             // If csv, then set Open Options
             // =============================
-            (($format == "csv") ? "-oo X_POSSIBLE_NAMES=lon*,Lon*,x,X -oo Y_POSSIBLE_NAMES=lat*,Lat*,y,Y -oo AUTODETECT_TYPE=YES " : "") .
+            (($format == "csv") ? "-oo X_POSSIBLE_NAMES=lon*,Lon*,x,X -oo Y_POSSIBLE_NAMES=lat*,Lat*,y,Y -oo AUTODETECT_TYPE=YES -oo GEOM_POSSIBLE_NAMES=geometri " : "") .
 
             "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
             "'" . $dir . "/" . $fileName . "' " .
-            (($fileType == "mdb" || $fileType == "accdb") ? "" : "-nln " . Connection::$param["postgisschema"] . ".{$safeName} -nlt {$type}");
+            (($fileType == "mdb" || $fileType == "accdb") ? "" : "-nln " . Connection::$param["postgisschema"] . ".$safeName -nlt $type");
 
-        exec($cmd . ' 2>&1', $out, $err);
+        exec($cmd . ' 2>&1', $out);
 
         // Add single class with random color
         // ==================================
@@ -231,7 +201,7 @@ class Processvector extends Controller
         // ====================
         if ($out[0] == "") {
             $response['success'] = true;
-            $response['message'] = "Layer <b>{$safeName}</b> is created";
+            $response['message'] = "Layer <b>$safeName</b> is created";
             $response['type'] = $geoType;
 
             // Bust cache, in case of layer already exist
@@ -247,12 +217,12 @@ class Processvector extends Controller
             // Make sure the table is dropped if not
             // skipping failures and it didn't exists before
             // =================================================
-            if ($skipFailures == false && $tableExist == false) {
+            if (!$skipFailures && !$tableExist) {
                 $sql = "DROP TABLE " . Connection::$param["postgisschema"] . "." . $safeName;
                 $res = $model->prepare($sql);
                 try {
                     $res->execute();
-                } catch (PDOException $e) {
+                } catch (PDOException) {
 
                 }
             }

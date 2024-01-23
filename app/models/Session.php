@@ -12,7 +12,6 @@ use app\conf\App;
 use app\inc\Jwt;
 use app\inc\Model;
 use app\inc\Util;
-use Exception;
 use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
@@ -34,7 +33,7 @@ class Session extends Model
     public function check(): array
     {
         $response = [];
-        if (isset($_SESSION['auth']) && $_SESSION['auth'] == true) {
+        if (isset($_SESSION['auth']) && $_SESSION['auth']) {
             $response['data']['message'] = "Session is active";
             $response['data']['session'] = true;
             $response['data']['db'] = $_SESSION['parentdb'];
@@ -59,10 +58,11 @@ class Session extends Model
      * @param string|null $schema
      * @param string|null $parentdb
      * @param bool $tokenOnly
+     * @param string $responseType
      * @return array<string, array<string, mixed>|bool|string|int>
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function start(string $sUserID, string $pw, string|null $schema = "public", string|null $parentdb = null, bool $tokenOnly = false): array
+    public function start(string $sUserID, string $pw, string|null $schema = "public", string|null $parentdb = null, bool $tokenOnly = false, string $responseType = "access"): array
     {
         $response = [];
         $pw = Util::format($pw, true);
@@ -156,11 +156,11 @@ class Session extends Model
                 $settings_viewer = new Setting();
                 $response['data']['api_key'] = $settings_viewer->get()['data']->api_key;
             } else {
-                // Get super user key, which are used for JWT secret
+                // Get superuser key, which are used for JWT secret
                 Database::setDb($response['data']['parentdb']);
                 $settings_viewer = new Setting();
                 $superUserApiKey = $settings_viewer->getApiKeyForSuperUser();
-                $token = Jwt::createJWT($superUserApiKey, $response['data']['parentdb'], $response['data']['screen_name'], !$response['data']['subuser'], $response['data']['usergroup']);
+                $token = Jwt::createJWT($superUserApiKey, $response['data']['parentdb'], $response['data']['screen_name'], !$response['data']['subuser'], $response['data']['usergroup'], $responseType);
                 return [
                     "access_token" => $token['token'],
                     "token_type" => "bearer",
@@ -177,7 +177,7 @@ class Session extends Model
                     ":sUserID" => $sUserID,
                     ":parentDb" => $parentdb
                 ]);
-            } catch (PDOException $e) {
+            } catch (PDOException) {
                 // We do not stop login in case of error
             }
         } else {
