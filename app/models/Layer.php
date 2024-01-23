@@ -14,7 +14,6 @@ use app\exceptions\GC2Exception;
 use app\inc\Cache;
 use app\inc\Globals;
 use app\inc\Session;
-use Error;
 use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Phpfastcache\Exceptions\PhpfastcacheLogicException;
@@ -342,8 +341,9 @@ class Layer extends Table
                 // Filter out ignored fields
                 $fields = array_filter($fields, function ($item, $key) use (&$fieldConf) {
                     if (empty($fieldConf[$key]['ignore'])) {
-                        return $item;
+                        return true;
                     }
+                    return false;
                 }, ARRAY_FILTER_USE_BOTH);
                 $arr = $this->array_push_assoc($arr, "fields", $fields);
 
