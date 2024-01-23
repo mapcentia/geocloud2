@@ -12,7 +12,6 @@ use app\conf\App;
 use app\conf\Connection;
 use app\inc\Model;
 use PDO;
-use PDOException;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
 use PhpOffice\PhpSpreadsheet\Reader\Exception;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -56,7 +55,9 @@ class Sql extends Model
      * @param string|null $nlt
      * @param string|null $nln
      * @return array
-     * @throws Exception|\PhpOffice\PhpSpreadsheet\Writer\Exception|PhpfastcacheInvalidArgumentException|PDOException
+     * @throws Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
     public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, ?string $nlt = null, ?string $nln = null): array
     {
@@ -95,24 +96,30 @@ class Sql extends Model
                     }
                 }
             }
-            $zip = new ZipArchive();
-            $zipPath = $path . ".zip";
-            if (!$zip->open($zipPath, ZIPARCHIVE::CREATE)) {
-                error_log("Could not open ZIP archive");
-            }
-            if (is_dir($path)) {
-                $zip->addGlob($path . "/*", 0, ["remove_all_path" => true]);
+            if ($format == "ogr/GPX") {
+                header("Content-type: application/gpx, application/octet-stream");
+                header("Content-Disposition: attachment; filename=\"{$fileOrFolder}\"");
+                readfile($path);
             } else {
-                $zip->addFile($path, $fileOrFolder);
+                $zip = new ZipArchive();
+                $zipPath = $path . ".zip";
+                if (!$zip->open($zipPath, ZIPARCHIVE::CREATE)) {
+                    error_log("Could not open ZIP archive");
+                }
+                if (is_dir($path)) {
+                    $zip->addGlob($path . "/*", 0, ["remove_all_path" => true]);
+                } else {
+                    $zip->addFile($path, $fileOrFolder);
+                }
+                if ($zip->status != ZIPARCHIVE::ER_OK) {
+                    error_log("Failed to write files to zip archive");
+                }
+                $zip->close();
+                header("Content-type: application/zip, application/octet-stream");
+                header("Content-Disposition: attachment; filename=\"{$fileOrFolder}.zip\"");
+                readfile($zipPath);
+                exit(0);
             }
-            if ($zip->status != ZIPARCHIVE::ER_OK) {
-                error_log("Failed to write files to zip archive");
-            }
-            $zip->close();
-            header("Content-type: application/zip, application/octet-stream");
-            header("Content-Disposition: attachment; filename=\"$fileOrFolder.zip\"");
-            readfile($zipPath);
-            exit(0);
         }
         $sqlView = "CREATE TEMPORARY VIEW $view as $q";
         $res = $this->prepare($sqlView);
