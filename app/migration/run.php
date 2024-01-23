@@ -34,13 +34,12 @@ foreach ($arr['data'] as $db) {
             }
 
             foreach ($sqls as $sql) {
-                $result = $conn->execQuery($sql, "PDO", "transaction");
-                if (isset($conn->PDOerror[0])) {
-                    echo "-";
-                } else {
+                try {
+                    $result = $conn->execQuery($sql, "PDO", "transaction");
                     echo "+";
+                } catch (Exception) {
+                    echo "-";
                 }
-                $conn->PDOerror = NULL;
             }
             echo " {$db}\n";
             $conn->db = NULL;
