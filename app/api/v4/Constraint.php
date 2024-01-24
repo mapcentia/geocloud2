@@ -119,7 +119,15 @@ class Constraint extends AbstractApi
         $schema = Route2::getParam("schema");
         $column = Route2::getParam("column");
         $constraint = Route2::getParam("constraint");
+        // Put and delete on collection is not allowed
+        if (empty($constraint) && in_array(Input::getMethod(), ['put', 'delete'])) {
+            throw new GC2Exception("", 406);
+        }
+        // Throw exception if tried with table resource
+        if (Input::getMethod() == 'post' && $constraint) {
+            $this->postWithResource();
+        }
         $this->jwt = Jwt::validate()["data"];
-        $this->check($schema, $table, null, $column, null, $constraint, $this->jwt["uid"], $this->jwt["superUser"]);
+        $this->initiate($schema, $table, null, $column, null, $constraint, $this->jwt["uid"], $this->jwt["superUser"]);
     }
 }

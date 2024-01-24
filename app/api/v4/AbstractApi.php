@@ -30,9 +30,13 @@ abstract class AbstractApi
     public array $jwt;
 
     abstract public function validate(): void;
+
     abstract public function get_index(): array;
+
     abstract public function post_index(): array;
+
     abstract public function put_index(): array;
+
     abstract public function delete_index(): array;
 
 
@@ -49,7 +53,7 @@ abstract class AbstractApi
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function check(?string $schema, ?string $relation, ?string $key, ?string $column, ?string $index, ?string $constraint, string $userName, bool $superUser): void
+    public function initiate(?string $schema, ?string $relation, ?string $key, ?string $column, ?string $index, ?string $constraint, string $userName, bool $superUser): void
     {
         $this->unQualifiedName = $relation;
         $this->schema = $schema;
@@ -144,16 +148,30 @@ abstract class AbstractApi
             throw new GC2Exception("Key not found", 404, null, "KEY_NOT_FOUND");
         }
     }
-    private function doesConstraintExist()
-    {
-    }
 
     /**
+     * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
      */
-    public function methodNotAllowed(): void
+    private function doesConstraintExist(): void
     {
-        throw new GC2Exception("Method is not acceptable", 406, null, "NOT_ACCEPTABLE");
+        $type = match ($this->constraint) {
+            "unique" => "u",
+            "check" => "c",
+            default => ''
+        };
+        $name = "{$this->unQualifiedName}_{$this->column}_$this->constraint";
+        $constraints = $this->table->getConstrains($this->schema, $this->unQualifiedName, $type)['data'];
+        $exists = false;
+        foreach ($constraints as $constraint) {
+            if ($constraint['conname'] == $name) {
+                $exists = true;
+                break;
+            }
+        }
+        if (!$exists) {
+            throw new GC2Exception("Constraint not found", 404, null, "CONSTRAINT_NOT_FOUND");
+        }
     }
 
     /**
@@ -178,5 +196,4 @@ abstract class AbstractApi
             }
         }
     }
-
 }

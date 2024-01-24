@@ -64,13 +64,25 @@ class Index extends AbstractApi
         return ["code" => "204"];
     }
 
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     public function validate(): void
     {
         $table = Route2::getParam("table");
         $schema = Route2::getParam("schema");
         $column = Route2::getParam("column");
         $index = Route2::getParam("index");
+        // Put and delete on collection is not allowed
+        if (empty($index) && in_array(Input::getMethod(), ['put', 'delete'])) {
+            throw new GC2Exception("", 406);
+        }
+        // Throw exception if tried with table resource
+        if (Input::getMethod() == 'post' && $index) {
+            $this->postWithResource();
+        }
         $this->jwt = Jwt::validate()["data"];
-        $this->check($schema, $table, null, $column, $index, null, $this->jwt["uid"], $this->jwt["superUser"]);
+        $this->initiate($schema, $table, null, $column, $index, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }
 }

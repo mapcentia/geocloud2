@@ -12,7 +12,6 @@ use app\exceptions\GC2Exception;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Route2;
-use app\models\Table as TableModel;
 use Exception;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
@@ -103,6 +102,6 @@ class Key extends AbstractApi {
         $schema = Route2::getParam("schema");
         $key = Input::getMethod() != 'post';
         $this->jwt = Jwt::validate()["data"];
-        $this->check($schema, $table, $key, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
+        $this->initiate($schema, $table, $key, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }
 }

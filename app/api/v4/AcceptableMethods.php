@@ -8,10 +8,8 @@
 
 namespace app\api\v4;
 
-use app\inc\Response;
-use app\inc\Util;
+use app\exceptions\GC2Exception;
 use Attribute;
-use ReflectionClass;
 
 #[Attribute]
 class AcceptableMethods
@@ -28,14 +26,12 @@ class AcceptableMethods
         return $this->methodsAllowed;
     }
 
+    /**
+     * @throws GC2Exception
+     */
     public function throwException(): never
     {
-        $response["success"] = false;
-        $response["message"] = "Method not accepted";
-        $response["code"] = 406;
-        $response["errorCode"] = "METHOD_NOT_ACCEPTED";
-        echo Response::toJson($response);
-        exit();
+        throw new GC2Exception("Method not acceptable", 406, null, "NOT_ACCEPTABLE");
     }
 
     public function options(): never

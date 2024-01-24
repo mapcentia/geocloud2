@@ -32,6 +32,7 @@ class Route2
      * @param string $uri
      * @param AbstractApi $controller
      * @param Closure|null $func
+     * @throws GC2Exception
      */
     static public function add(string $uri, AbstractApi $controller, Closure $func = null): void
     {
@@ -87,7 +88,6 @@ class Route2
             }
             $e[count($e) - 1] = ucfirst($e[count($e) - 1]);
 
-            $controller->validate();
             $reflectionClass = new ReflectionClass($controller);
             if (!method_exists($controller, $action)) {
                 $method = Input::getMethod();
@@ -106,8 +106,8 @@ class Route2
                         }
                     }
                 }
-
             }
+            $controller->validate();
             $response = $controller->$action($r);
             $code = "200";
             if (isset($response["code"])) {

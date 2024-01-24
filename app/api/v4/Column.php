@@ -263,7 +263,15 @@ class Column extends AbstractApi
         $table = Route2::getParam("table");
         $schema = Route2::getParam("schema");
         $column = Route2::getParam("column");
+        // Put and delete on collection is not allowed
+        if (empty($column) && in_array(Input::getMethod(), ['put', 'delete'])) {
+            throw new GC2Exception("", 406);
+        }
+        // Throw exception if tried with table resource
+        if (Input::getMethod() == 'post' && $column) {
+            $this->postWithResource();
+        }
         $this->jwt = Jwt::validate()["data"];
-        $this->check($schema, $table, null, $column, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
+        $this->initiate($schema, $table, null, $column, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }
 }

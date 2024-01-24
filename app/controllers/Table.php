@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -9,8 +9,10 @@
 namespace app\controllers;
 
 use app\conf\Connection;
+use app\exceptions\GC2Exception;
 use app\inc\Controller;
 use app\inc\Input;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 class Table extends Controller
 {
@@ -23,6 +25,9 @@ class Table extends Controller
         $this->table = new \app\models\Table(Input::getPath()->part(4));
     }
 
+    /**
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     public function post_records()
     {
         $table = new \app\models\Table(null);
@@ -40,28 +45,46 @@ class Table extends Controller
         return (!$response['success']) ? $response : $this->table->destroy();
     }
 
+    /**
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     public function get_columns()
     {
         return $this->table->getColumnsForExtGridAndStore(false, Input::get("i") ? true : false);
     }
 
+    /**
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     public function get_columnswithkey()
     {
         return $this->table->getColumnsForExtGridAndStore(true);
     }
 
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     public function put_columns()
     {
         $response = $this->auth(Input::getPath()->part(5));
         return (!$response['success']) ? $response : $this->table->updateColumn(json_decode(Input::get(null, true))->data, Input::getPath()->part(5));
     }
 
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     public function post_columns()
     {
         $response = $this->auth(Input::getPath()->part(5));
         return (!$response['success']) ? $response : $this->table->addColumn(Input::get()); // Is POSTED by a form
     }
 
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     public function delete_columns()
     {
         $response = $this->auth(Input::getPath()->part(5));
@@ -91,17 +114,26 @@ class Table extends Controller
         return $this->table->getGroupByAsArray(Input::getPath()->part(5));
     }
 
+    /**
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     public function put_workflow()
     {
         $response = $this->auth(Input::getPath()->part(5));
         return (!$response['success']) ? $response : $this->table->addWorkflow(Input::getPath()->part(4));
     }
 
+    /**
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     public function get_checkcolumn()
     {
         return $this->table->checkcolumn(Input::getPath()->part(5));
     }
 
+    /**
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     public function get_data()
     {
         $response = $this->auth(Input::getPath()->part(5), array("read" => true, "write" => true, "all" => true));
@@ -127,6 +159,10 @@ class Table extends Controller
         return (!$response['success']) ? $response : $this->table->insertRecord();
     }
 
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     public function delete_data()
     {
         $data = (array)json_decode(urldecode(Input::get(null, true)));
@@ -136,6 +172,10 @@ class Table extends Controller
         return (!$response['success']) ? $response : $this->table->deleteRecord($data, $key);
     }
 
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     public function get_depend()
     {
         $this->table = new \app\models\table(Input::getPath()->part(4));

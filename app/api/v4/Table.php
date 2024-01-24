@@ -129,17 +129,12 @@ class Table extends AbstractApi
      */
     public function post_index(): array
     {
-        // Throw exception if tried with table resource
-        if (!empty(Route2::getParam("table"))) {
-            $this->postWithResource();
-        }
         $body = Input::getBody();
         $data = json_decode($body);
         $this->table = new TableModel(null);
         $this->table->postgisschema = $this->schema;
         $r = $this->table->create($data->table, null, null, true);
-        $this->check($this->schema, $r["tableName"], $this->jwt["uid"], $this->jwt["superUser"]);
-        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName");
+        header("Location: /api/v4/schemas/$this->schema/tables/{$r['tableName']}");
         $res["code"] = "201";
         return $res;
     }
@@ -238,10 +233,14 @@ class Table extends AbstractApi
         $table = Route2::getParam("table");
         $schema = Route2::getParam("schema");
         $this->jwt = Jwt::validate()["data"];
-        // Put and delete on table collection is not allowed
+        // Put and delete on collection is not allowed
         if (empty($table) && in_array(Input::getMethod(), ['put', 'delete'])) {
             throw new GC2Exception("", 406);
         }
-        $this->check($schema, $table, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
+        // Throw exception if tried with table resource
+        if (Input::getMethod() == 'post' && $table) {
+            $this->postWithResource();
+        }
+        $this->initiate($schema, $table, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }
 }

@@ -568,11 +568,17 @@ try {
     $response["code"] = $exception->getCode();
     $response["errorCode"] = $exception->getErrorCode();
     echo Response::toJson($response);
-    exit();
-} catch (Exception $exception) {
+} catch (PDOException $exception) {
+    $response["success"] = false;
+    $response["message"] = $exception->getMessage();
+    $response["code"] = 400;
+    $response["errorCode"] = "SQL_ERROR";
+    echo Response::toJson($response);
+} catch (Throwable $exception) {
     $response["success"] = false;
     $response["message"] = $exception->getMessage();
     $response["code"] = 500;
     echo Response::toJson($response);
+} finally {
     exit();
 }

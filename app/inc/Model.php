@@ -824,13 +824,13 @@ class Model
     {
         $cacheType = "checkConstrain";
         $cacheRel = md5($schema . "." . $table);
-        $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
+        $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel . "_" . $type);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
         } else {
             $response = [];
-            $sql = "SELECT relname, nspname as scchema, attname as column_name, con
+            $sql = "SELECT relname, nspname as schema, attname as column_name, conname, con
                 FROM (SELECT unnest(con1.conkey) AS key,
                              con1.confrelid,
                              con1.conrelid,

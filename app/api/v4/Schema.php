@@ -244,7 +244,7 @@ class Schema extends AbstractApi
         if (empty($schema) && in_array(Input::getMethod(), ['put', 'delete'])) {
             throw new GC2Exception("", 406);
         }
-        $this->check($schema, null, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
+        $this->initiate($schema, null, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
         $this->schemaObj = new Database();
     }
 }
