@@ -267,7 +267,7 @@ class Column extends AbstractApi
         if (empty($column) && in_array(Input::getMethod(), ['put', 'delete'])) {
             throw new GC2Exception("", 406);
         }
-        // Throw exception if tried with table resource
+        // Throw exception if tried with resource id
         if (Input::getMethod() == 'post' && $column) {
             $this->postWithResource();
         }
