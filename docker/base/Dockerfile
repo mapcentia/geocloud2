@@ -18,7 +18,7 @@ RUN apt-get -y update
 
 # Install packages
 RUN apt-get -y install cron vim wget g++ build-essential git unzip rng-tools apache2-utils postgresql-client supervisor \
-    apache2  apache2-dev php8.2-fpm php8.2-pgsql php8.2-redis php8.2-memcached php8.2-curl php8.2-sqlite3 php8.2-mbstring php8.2-gd php8.2-cli php8.2-mbstring php8.2-dev php8.2-zip \
+    apache2  apache2-dev php8.3-fpm php8.3-pgsql php8.3-redis php8.3-memcached php8.3-curl php8.3-sqlite3 php8.3-mbstring php8.3-gd php8.3-cli php8.3-mbstring php8.3-dev php8.3-zip \
     cmake libgdal-dev librsvg2-dev libpng++-dev libjpeg-dev libfreetype6-dev libproj-dev libfribidi-dev libharfbuzz-dev libcairo2-dev \
     libgeos++-dev curl libapache2-mod-fcgid libfcgi-dev xvfb osm2pgsql postgis sudo \
     apt-transport-https ca-certificates software-properties-common \
@@ -33,8 +33,8 @@ RUN git clone https://github.com/swig/swig.git &&\
     cmake .. &&\
     make && make install
 
-# Make php8.2-fpm run in the foreground
-RUN sed 's/;daemonize = yes/daemonize = no/' -i /etc/php/8.2/fpm/php-fpm.conf
+# Make php8.3-fpm run in the foreground
+RUN sed 's/;daemonize = yes/daemonize = no/' -i /etc/php/8.3/fpm/php-fpm.conf
 
 # Hide server version and os from header and internal error pages
 RUN sed -i '/ServerTokens OS/c\ServerTokens Prod' /etc/apache2/conf-enabled/security.conf
@@ -58,4 +58,4 @@ RUN a2enconf serve-cgi-bin
 RUN a2dismod deflate -f
 
 # Start fpm, so dirs are created
-RUN service php8.2-fpm start
+RUN service php8.3-fpm start

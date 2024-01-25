@@ -7,10 +7,10 @@ networks:
 services:
   base:
     build: ./base
-    image: mapcentia/gc2core:base8
+    image: mapcentia/gc2core:base12
   ecw:
     build: ./ecw
-    image: mapcentia/gc2core:ecw8
+    image: mapcentia/gc2core:ecw12
     depends_on:
       - base
 #  ecw5:
@@ -20,7 +20,7 @@ services:
 #      - base
   gdal:
     build: ./gdal
-    image: mapcentia/gc2core:gdal8
+    image: mapcentia/gc2core:gdal12
     depends_on:
       - ecw
 #  gdal_ecw5:
@@ -30,7 +30,7 @@ services:
 #      - ecw5
   mapserver:
     build: ./mapserver
-    image: mapcentia/gc2core:mapserver8
+    image: mapcentia/gc2core:mapserver12
     depends_on:
       - gdal
 #  mapserver_ecw5:
@@ -40,7 +40,7 @@ services:
 #      - gdal_ecw5
   gc2core:
     build: ./stable
-    image: mapcentia/gc2core8
+    image: mapcentia/gc2core12
     depends_on:
       - mapserver
     privileged: true
@@ -85,7 +85,7 @@ services:
       - "11211:11211"
   postgis:
     build: ./postgis
-    image: mapcentia/postgis15
+    image: mapcentia/postgis
     volumes:
       - postgis_var_lib_postgresql:/var/lib/postgresql
     networks:
@@ -101,38 +101,6 @@ services:
       - POSTGIS_PW=1234
       - GC2_USER=gc2
       - GC2_PASSWORD=1234
-
-#  limesurvey:
-#    image: acspri/limesurvey
-#    ports:
-#      - 8082:80
-#    networks:
-#      - default
-#      - internal
-#    environment:
-#      LIMESURVEY_DB_PASSWORD: 1234
-#      LIMESURVEY_DB_USER: gc2
-#      LIMESURVEY_DB_HOST: postgis
-#      LIMESURVEY_DB_NAME: mydb
-#      LIMESURVEY_ADMIN_USER: admin
-#      LIMESURVEY_ADMIN_PASSWORD: password
-#      LIMESURVEY_ADMIN_NAME: Lime Administrator
-#      LIMESURVEY_ADMIN_EMAIL: lime@lime.lime
-#    volumes:
-#      - ./plugins:/var/www/html/plugins
-#      - ./upload:/var/www/html/upload
-#      - ./config:/var/www/html/application/config
-
-#  elasticsearch:
-#    image: elasticsearch:7.17.6
-#    networks:
-#      - default
-#      - internal
-#    ports:
-#      - "9200:9200"
-#    environment:
-#      - "discovery.type=single-node"
-
 volumes:
   postgis_var_lib_postgresql:
 

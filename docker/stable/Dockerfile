@@ -1,4 +1,4 @@
-FROM mapcentia/gc2core:mapserver8
+FROM mapcentia/gc2core:mapserver12
 MAINTAINER Martin Høgh<mh@mapcentia.com>
 
 RUN export DEBIAN_FRONTEND=noninteractive
@@ -17,9 +17,9 @@ RUN cd ~ &&\
     cmake .. && make && make install
 
 # Install npm packages run Grunt
-RUN	cd /var/www/geocloud2 &&\
-	npm install &&\
-	grunt production
+#RUN	cd /var/www/geocloud2 &&\
+#	npm install &&\
+#	grunt production
 
 # Install dashboard
 RUN	mkdir -p /var/www/geocloud2/public/dashboard && mkdir /dashboardtmp && cd /dashboardtmp &&\
@@ -32,9 +32,9 @@ RUN	mkdir -p /var/www/geocloud2/public/dashboard && mkdir /dashboardtmp && cd /d
 COPY conf/gc2/App.php /var/www/geocloud2/app/conf/
 COPY conf/gc2/Connection.php /var/www/geocloud2/app/conf/
 
-RUN apt-get -y install php-xdebug
-COPY conf/fpm/xdebug.ini  /etc/php/8.2/mods-available/
-COPY conf/fpm/opcache.ini  /etc/php/8.2/mods-available/
+RUN apt-get -y install php8.3-xdebug
+COPY conf/fpm/xdebug.ini  /etc/php/8.3/mods-available/
+COPY conf/fpm/opcache.ini  /etc/php/8.3/mods-available/
 RUN phpenmod xdebug
 
 # Add Supervisor config and run the deamon
