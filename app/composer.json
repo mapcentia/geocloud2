@@ -6,7 +6,6 @@
     "require": {
         "wildbit/postmark-php": "^4.0",
         "odesk/phystrix": "^2.0",
-        "phpoffice/phpexcel": "^1.8",
         "phayes/geophp": "^1.2",
         "phpfastcache/phpfastcache": "^9.1",
         "zircote/swagger-php": "3.3.7",

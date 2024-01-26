@@ -5,10 +5,10 @@ RUN export DEBIAN_FRONTEND=noninteractive
 ENV DEBIAN_FRONTEND noninteractive
 
 # Set php session timeout to one day
-RUN sed -i "s/session.gc_maxlifetime = 1440/session.gc_maxlifetime = 86400/g" /etc/php/8.2/fpm/php.ini
+RUN sed -i "s/session.gc_maxlifetime = 1440/session.gc_maxlifetime = 86400/g" /etc/php/8.3/fpm/php.ini
 # Set max upload file size
-RUN sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 1000M/g" /etc/php/8.2/fpm/php.ini
-RUN sed -i "s/post_max_size = 8M/post_max_size = 1000M/g" /etc/php/8.2/fpm/php.ini
+RUN sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 1000M/g" /etc/php/8.3/fpm/php.ini
+RUN sed -i "s/post_max_size = 8M/post_max_size = 1000M/g" /etc/php/8.3/fpm/php.ini
 
 # Install MapServer 8.0 from source
 RUN git clone https://github.com/mapserver/mapserver.git --branch branch-8-0 &&\
@@ -32,7 +32,7 @@ RUN git clone https://github.com/mapserver/mapserver.git --branch branch-8-0 &&\
     make && make install &&\
     cp /mapserver/build/mapserv /usr/lib/cgi-bin/mapserv.fcgi
 
-RUN echo "extension=php_mapscriptng.so" >> /etc/php/8.2/fpm/php.ini
+RUN echo "extension=php_mapscriptng.so" >> /etc/php/8.3/fpm/php.ini
 
 # Instal MapCache from source
 RUN apt-get -y install libapr-memcache-dev
@@ -64,9 +64,9 @@ RUN chmod +x /watch_mapcache_changes.sh
 # Add the reload.js
 COPY reload.js /reload.js
 
-RUN curl -sL https://deb.nodesource.com/setup_14.x -o nodesource_setup.sh &&\
-    bash nodesource_setup.sh &&\
-    apt-get install -y nodejs
+#RUN curl -sL https://deb.nodesource.com/setup_14.x -o nodesource_setup.sh &&\
+#    bash nodesource_setup.sh &&\
+#    apt-get install -y nodejs
 
 RUN mkdir /mapcache
 RUN cp /root/mapcache/mapcache.xml /mapcache/
@@ -79,7 +79,7 @@ ADD conf/apache/mapcache.conf /etc/apache2/sites-enabled/
 ADD conf/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Add php-fpm config file from Docker repo
-ADD conf/fpm/www.conf /etc/php/8.2/fpm/pool.d/www.conf
+ADD conf/fpm/www.conf /etc/php/8.3/fpm/pool.d/www.conf
 
 # Add the check-if-fpm-is-alive script
 COPY check-fpm.sh /check-fpm.sh

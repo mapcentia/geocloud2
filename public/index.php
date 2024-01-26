@@ -119,7 +119,9 @@ header("Access-Control-Allow-Methods: GET, PUT, POST, DELETE, HEAD, OPTIONS");
 try {
     if (Input::getPath()->part(1) == "api") {
 
-        Database::setDb(Input::getPath()->part(4)); // Default
+        if ($db = Input::getPath()->part(4)) {
+            Database::setDb($db); // Default
+        }
 
         //======================
         // V1
