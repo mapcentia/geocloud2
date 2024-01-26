@@ -8,7 +8,7 @@ do
 	if [[ $oldfilelist != $newfilelist ]]
 	then
 		oldfilelist=$newfilelist
-		/usr/bin/node /reload.js
+		node /reload.js
 	fi
 	sleep 0.1
 	newfilelist=$( $listcommand )
