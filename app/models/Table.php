@@ -770,6 +770,7 @@ class Table extends Model
         if (!empty($sql)) {
             $this->execQuery($sql, "PDO", "transaction");
         }
+        $response['success'] = true;
         return $response;
     }
 
