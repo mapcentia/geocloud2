@@ -21,6 +21,7 @@ use app\api\v4\Meta;
 use app\api\v4\Schema;
 use app\api\v4\Sql;
 use app\api\v4\Table;
+use app\api\v4\User;
 use app\controllers\Wms;
 use app\exceptions\GC2Exception;
 use app\inc\Input;
@@ -86,7 +87,7 @@ register_shutdown_function(function () {
             "memory_peak_usage" => round(memory_get_peak_usage() / 1024) . " KB",
             "success" => false,
         ];
-        header("HTTP/1.0 {$code} " . Util::httpCodeText($code));
+        header("HTTP/1.0 $code " . Util::httpCodeText($code));
         echo $response->toJson($body);
     }
     return false;
@@ -403,7 +404,7 @@ try {
             }
         });
 
-        Route2::add("api/user/v4/id/[userId]", \app\api\v4\User::class, function () {
+        Route2::add("api/v4/users/[id]",  new User(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);

@@ -10,6 +10,7 @@ namespace app\inc;
 
 use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableMethods;
+use app\api\v4\ApiInterface;
 use app\api\v4\Schema;
 use app\exceptions\GC2Exception;
 use Closure;
@@ -34,7 +35,7 @@ class Route2
      * @param Closure|null $func
      * @throws GC2Exception
      */
-    static public function add(string $uri, AbstractApi $controller, Closure $func = null): void
+    static public function add(string $uri, ApiInterface $controller, Closure $func = null): void
     {
         $signatureMatch = true;
         $e = [];

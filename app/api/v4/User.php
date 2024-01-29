@@ -1,16 +1,18 @@
 <?php
 /**
  * @author     Martin Høgh <shumsan1011@gmail.com>
- * @copyright  2013-2023 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\api\v4;
 
+use app\exceptions\GC2Exception;
 use app\inc\Jwt;
 use app\inc\Route;
 use app\inc\Input;
+use app\inc\Route2;
 use app\models\User as UserModel;
 use Exception;
 
@@ -117,11 +119,10 @@ class User extends AbstractApi
      */
     function get_index(): array
     {
-
-        if (!$this->jwt["superUser"] && $this->jwt["uid"] != Route::getParam("userId")) {
+        if (!$this->jwt["superUser"] && $this->jwt["uid"] != Route2::getParam("id")) {
             throw new Exception("Sub-users are not allowed to get information about other sub users");
         }
-        $requestedUser = Route::getParam("userId");
+        $requestedUser = Route2::getParam("id");
         $userModelLocal = new UserModel($requestedUser, $this->jwt["database"]);
         return [
             "success" => true,
@@ -255,6 +256,9 @@ class User extends AbstractApi
         return $this->user->getSubusers($currentUserId);
     }
 
+    /**
+     * @throws GC2Exception
+     */
     public function validate(): void
     {
         $this->jwt = Jwt::validate()["data"];

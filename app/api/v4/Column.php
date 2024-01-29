@@ -245,6 +245,7 @@ class Column extends AbstractApi
      *   )
      * )
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws GC2Exception
      */
     public function delete_index(): array
     {
