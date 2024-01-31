@@ -4,10 +4,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [2024.1.0] - 2024-31-1
-### Fixed
-- Adjusts the EPSG code case from lowercase to uppercase in various sections of the Mapfile. This change ensures consistency and follows the standard EPSG code format.
-
 ## [2023.10.1] - 2023-12-10
 ### Fixed
 - Bugs regarding Feature API and the shift from WFS 1.0.0 to 1.1.0
