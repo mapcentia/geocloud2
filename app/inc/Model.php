@@ -18,7 +18,6 @@ use Exception;
 use PDO;
 use PDOException;
 use PDOStatement;
-use phpDocumentor\Reflection\Types\Resource;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use TypeError;
 
@@ -35,7 +34,7 @@ class Model
     public string $postgisdb;
     public string $postgispw;
     public ?string $postgisschema;
-    public null|PDO|Resource $db;
+    public null|PDO|\PgSql\Connection $db;
     public bool $connectionFailed;
     public ?string $theGeometry;
 

@@ -315,8 +315,8 @@ class Elasticsearch extends Controller
         // Auth
         // ====
 
-        if ($response = $this->checkAuth(Input::getPath()->part(5), Input::get('key') ?: "")) {
-            return $response;
+        if ($res = $this->checkAuth(Input::getPath()->part(5), Input::get('key') ?: "")) {
+            return $res;
         }
 
         // Set vars
@@ -430,7 +430,7 @@ class Elasticsearch extends Controller
         $map = $es->createMapFromTable($fullTable);
         $res = $es->map($fullIndex, json_encode($map));
         $obj = json_decode($res["json"], true);
-        if (isset($obj["error"]) && $obj["error"] != false) {
+        if (isset($obj["error"]) && $obj["error"]) {
             $response['success'] = false;
             $response['message'] = $obj["error"];
             $response['code'] = $obj["status"];

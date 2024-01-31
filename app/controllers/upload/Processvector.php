@@ -132,7 +132,7 @@ class Processvector extends Controller
         }
 
         if ($delete) {
-            $sql = "DELETE FROM " . Connection::$param["postgisschema"] . "." . $safeName;
+            $sql = "TRUNCATE " . Connection::$param["postgisschema"] . "." . $safeName . " ONLY";
             $res = $model->prepare($sql);
             $res->execute();
         }
@@ -151,11 +151,11 @@ class Processvector extends Controller
 
             // If csv, then set Open Options
             // =============================
-            (($format == "csv") ? "-oo X_POSSIBLE_NAMES=lon*,Lon*,x,X -oo Y_POSSIBLE_NAMES=lat*,Lat*,y,Y -oo AUTODETECT_TYPE=YES -oo GEOM_POSSIBLE_NAMES=geometri " : "") .
+            ($format == "csv" ? "-oo X_POSSIBLE_NAMES=lon*,Lon*,x,X -oo Y_POSSIBLE_NAMES=lat*,Lat*,y,Y -oo AUTODETECT_TYPE=YES -oo GEOM_POSSIBLE_NAMES=geometri " : "") .
 
             "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
             "'" . $dir . "/" . $fileName . "' " .
-            (($fileType == "mdb" || $fileType == "accdb") ? "" : "-nln " . Connection::$param["postgisschema"] . ".$safeName -nlt $type");
+            "-nln " . Connection::$param["postgisschema"] . ".$safeName -nlt $type";
 
         exec($cmd . ' 2>&1', $out);
 
