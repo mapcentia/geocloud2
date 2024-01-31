@@ -133,7 +133,7 @@ class Mapfile extends Controller
         #
 
         PROJECTION
-        "init=epsg:4326"
+        "init=EPSG:4326"
         END
 
         #
@@ -557,7 +557,7 @@ class Mapfile extends Controller
                 END
 
                 PROJECTION
-                "init=epsg:<?php echo $row['srid']; ?>"
+                "init=EPSG:<?php echo $row['srid']; ?>"
                 END
                 TEMPLATE "test"
                 <?php
@@ -1352,7 +1352,7 @@ class Mapfile extends Controller
         #
 
         PROJECTION
-        "init=epsg:4326"
+        "init=EPSG:4326"
         END
 
 
@@ -1508,7 +1508,7 @@ class Mapfile extends Controller
                 ?>"
 
                 PROJECTION
-                "init=epsg:<?php echo $row['srid']; ?>"
+                "init=EPSG:<?php echo $row['srid']; ?>"
                 END
 
                 TEMPLATE "test"
