@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -16,6 +16,7 @@ use PhpOffice\PhpSpreadsheet\Reader\Csv;
 use PhpOffice\PhpSpreadsheet\Reader\Exception;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use sad_spirit\pg_wrapper\exceptions\InvalidArgumentException;
 use ZipArchive;
 use sad_spirit\pg_wrapper\converters\DefaultTypeConverterFactory;
 
@@ -54,12 +55,13 @@ class Sql extends Model
      * @param string|null $aliasesFrom
      * @param string|null $nlt
      * @param string|null $nln
+     * @param bool|null $convertTypes
      * @return array
      * @throws Exception
      * @throws PhpfastcacheInvalidArgumentException
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
-    public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, ?string $nlt = null, ?string $nln = null): array
+    public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, ?string $nlt = null, ?string $nln = null, ?bool $convertTypes = false): array
     {
         if ($format == "excel") {
             $limit = !empty(App::$param["limits"]["sqlExcel"]) ? App::$param["limits"]["sqlExcel"] : 10000;
@@ -98,7 +100,7 @@ class Sql extends Model
             }
             if ($format == "ogr/GPX") {
                 header("Content-type: application/gpx, application/octet-stream");
-                header("Content-Disposition: attachment; filename=\"{$fileOrFolder}\"");
+                header("Content-Disposition: attachment; filename=\"$fileOrFolder\"");
                 readfile($path);
             } else {
                 $zip = new ZipArchive();
@@ -116,7 +118,7 @@ class Sql extends Model
                 }
                 $zip->close();
                 header("Content-type: application/zip, application/octet-stream");
-                header("Content-Disposition: attachment; filename=\"{$fileOrFolder}.zip\"");
+                header("Content-Disposition: attachment; filename=\"$fileOrFolder.zip\"");
                 readfile($zipPath);
                 exit(0);
             }
@@ -185,13 +187,16 @@ class Sql extends Model
                     if ($arrayWithFields[$key]['type'] == "geometry" && $value !== null) {
                         $geometries[] = json_decode($value);
                     } else {
-                        try {
-                            $convertedValue = $typeConverterFactory->getConverterForTypeSpecification($arrayWithFields[$key]['type'])->input($value);
-                            $arr = $this->array_push_assoc($arr, $key, $convertedValue);
-                        } catch (\Exception $e) {
+                        if ($convertTypes) {
+                            try {
+                                $convertedValue = $typeConverterFactory->getConverterForTypeSpecification($arrayWithFields[$key]['type'])->input($value);
+                                $arr = $this->array_push_assoc($arr, $key, $convertedValue);
+                            } catch (InvalidArgumentException) {
+                                $arr = $this->array_push_assoc($arr, $key, $value);
+                            }
+                        } else {
                             $arr = $this->array_push_assoc($arr, $key, $value);
                         }
-
                     }
                 }
                 if ($geometries == null) {

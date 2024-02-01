@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2022 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -9,11 +9,11 @@
 namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
-use app\inc\Controller;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\api\v2\Sql as V2Sql;
 use app\models\Setting;
+use Override;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 
@@ -21,7 +21,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
  * Class Sql
  * @package app\api\v4
  */
-class Sql extends Controller
+class Sql extends AbstractApi
 {
     /**
      * @var V2Sql
@@ -30,7 +30,6 @@ class Sql extends Controller
 
     public function __construct()
     {
-        parent::__construct();
         $this->v2 = new V2Sql();
     }
 
@@ -70,26 +69,48 @@ class Sql extends Controller
      *   )
      * )
      */
+    #[Override]
     public function post_index(): array
     {
-        $jwt = Jwt::validate()["data"];
-        $uid = $jwt["uid"];
-        $user["user"] = $jwt["superUser"] ? $jwt["uid"] : $jwt["uid"] . "@" . $jwt["database"];
-
-        $settings_viewer = new Setting();
-        $response = $settings_viewer->get();
-        if (!$jwt["superUser"]) {
-            $apiKey = $response['data']->api_key_subuser->$uid;
-        } else {
-            $apiKey = $response['data']->api_key;
-        }
+        $jwtData = Jwt::validate()["data"];
+        $isSuperUser = $jwtData["superUser"];
+        $uid = $jwtData["uid"];
+        $user = [
+            "user" => $isSuperUser ? $uid : "$uid@{$jwtData["database"]}"
+        ];
+        $settingsData = (new Setting())->get()["data"];
+        $apiKey = $isSuperUser ? $settingsData->api_key : $settingsData->api_key_subuser->$uid;
         Input::setParams(
             [
                 "key" => $apiKey,
-                "srs" => "4326"
+                "srs" => "4326",
+                "convert_types" => true,
             ]
         );
         return $this->v2->get_index($user);
     }
 
+    #[Override]
+    public function validate(): void
+    {
+        // TODO: Implement validate() method.
+    }
+
+    #[Override]
+    public function get_index(): array
+    {
+        // TODO: Implement get_index() method.
+    }
+
+    #[Override]
+    public function put_index(): array
+    {
+        // TODO: Implement put_index() method.
+    }
+
+    #[Override]
+    public function delete_index(): array
+    {
+        // TODO: Implement delete_index() method.
+    }
 }

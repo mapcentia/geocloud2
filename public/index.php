@@ -338,7 +338,7 @@ try {
         //==========================
         // V4 with OAuth and Route2
         //==========================
-        Route2::add("api/oauth/v4", new Oauth(), function () {
+        Route2::add("api/v4/oauth", new Oauth(), function () {
             Database::setDb("mapcentia");
         });
 
@@ -414,7 +414,7 @@ try {
             }
         });
 
-        Route2::add("api/geofence/v4/[id]", Geofence::class, function () {
+        Route2::add("api/v4/geofence/[id]", new Geofence(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 if (!$jwt["data"]["superUser"]) {
@@ -428,7 +428,7 @@ try {
             }
         });
 
-        Route2::add("api/sql/v4", Sql::class, function () {
+        Route2::add("api/v4/sql", new Sql(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);

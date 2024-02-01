@@ -14,6 +14,7 @@ use app\inc\Jwt;
 use app\inc\Route2;
 use app\models\Table as TableModel;
 use Exception;
+use Override;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use stdClass;
 
@@ -77,7 +78,7 @@ class Column extends AbstractApi
      *   )
      * )
      */
-    public function get_index(): array
+    #[Override] public function get_index(): array
     {
         $res = $this->table->getMetaData($this->qualifiedName);
         if ($this->column) {

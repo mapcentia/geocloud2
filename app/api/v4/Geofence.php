@@ -12,19 +12,19 @@ use app\inc\Controller;
 use app\inc\Route;
 use app\inc\Input;
 use app\models\Geofence as GeofenceModel;
+use Override;
 
 
 /**
  * Class Geofence
  * @package app\api\v4
  */
-class Geofence extends Controller
+class Geofence extends AbstractApi
 {
     public GeofenceModel $geofence;
 
     public function __construct()
     {
-        parent::__construct();
         $this->geofence = new GeofenceModel(null);
     }
 
@@ -202,6 +202,11 @@ class Geofence extends Controller
             return $response;
         }
         return $this->geofence->delete((int)$id);
+    }
+
+    #[Override] public function validate(): void
+    {
+        // TODO: Implement validate() method.
     }
 }
 

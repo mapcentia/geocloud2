@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2023 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -92,6 +92,8 @@ $uri = str_replace("//", "/", $uri);
 $thePath = $host . $uri;
 $server = $host;
 $BBox = null;
+$fullSql = "";
+$arr = [];
 
 $currentTable = null;
 $currentTag = null;
@@ -229,7 +231,7 @@ if (!empty($HTTP_FORM_VARS["FILTER"])) {
 }
 
 if ($version != "1.0.0" && $version != "1.1.0") {
-    makeExceptionReport("Version {$version} is not supported");
+    makeExceptionReport("Version $version is not supported");
 }
 if (!$service || strcasecmp($service, "wfs") != 0) {
     makeExceptionReport("No service", ["exceptionCode" => "MissingParameterValue", "locator" => "service"]);
@@ -316,33 +318,37 @@ if ($postgisObject->getGeometryColumns($postgisschema . "." . $HTTP_FORM_VARS["T
     $isEnabled = true;
 }
 
-switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
-    case "GETCAPABILITIES":
-        getCapabilities($postgisObject);
-        break;
-    case "GETFEATURE":
-        if (!$isEnabled) {
-            makeExceptionReport("Layer is not enabled", ["exceptionCode" => "InvalidParameterValue", "locator" => "typename"]);
-        }
-        print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-        doQuery("Select");
-        print "</wfs:FeatureCollection>";
-        print "\n<!--\n";
-        print_r($fullSql);
-        print "\n-->";
-        break;
-    case "DESCRIBEFEATURETYPE":
-        if (!$isEnabled) {
-            makeExceptionReport("Layer is not enabled", ["exceptionCode" => "InvalidParameterValue", "locator" => "typename"]);
-        }
-        getXSD($postgisObject);
-        break;
-    case "TRANSACTION":
-        doParse($arr);
-        break;
-    default:
-        makeExceptionReport("No such operation WFS {$HTTP_FORM_VARS["REQUEST"]}", ["exceptionCode" => "OperationNotSupported", "locator" => $HTTP_FORM_VARS["REQUEST"]]);
-        break;
+try {
+    switch (strtoupper($HTTP_FORM_VARS["REQUEST"])) {
+        case "GETCAPABILITIES":
+            getCapabilities($postgisObject);
+            break;
+        case "GETFEATURE":
+            if (!$isEnabled) {
+                makeExceptionReport("Layer is not enabled", ["exceptionCode" => "InvalidParameterValue", "locator" => "typename"]);
+            }
+            print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+            doQuery("Select");
+            print "</wfs:FeatureCollection>";
+            print "\n<!--\n";
+            print_r($fullSql);
+            print "\n-->";
+            break;
+        case "DESCRIBEFEATURETYPE":
+            if (!$isEnabled) {
+                makeExceptionReport("Layer is not enabled", ["exceptionCode" => "InvalidParameterValue", "locator" => "typename"]);
+            }
+            getXSD($postgisObject);
+            break;
+        case "TRANSACTION":
+            doParse($arr);
+            break;
+        default:
+            makeExceptionReport("No such operation WFS {$HTTP_FORM_VARS["REQUEST"]}", ["exceptionCode" => "OperationNotSupported", "locator" => $HTTP_FORM_VARS["REQUEST"]]);
+            break;
+    }
+} catch (Exception $e) {
+    makeExceptionReport($e->getMessage());
 }
 
 /**
@@ -643,8 +649,8 @@ function getCapabilities(\app\inc\Model $postgisObject)
                 //$sql2.= "SELECT ST_Xmin(ST_Extent(geom)) AS TXMin,ST_Xmax(ST_Extent(geom)) AS TXMax, ST_Ymin(ST_Extent(geom)) AS TYMin,ST_Ymax(ST_Extent(geom)) AS TYMax  FROM bb";
 
                 // Estimated extent
-                $sql2 = "WITH bb AS (SELECT ST_astext(ST_Transform(ST_setsrid(ST_EstimatedExtent('" . $postgisschema . "', '" . $TableName . "', '" . $row['f_geometry_column'] . "')," . $row['srid'] . ")," . $latLongBoundingBoxSrs . ")) as geom) ";
-                $sql2 .= "SELECT ST_Xmin(ST_Extent(geom)) AS TXMin,ST_Xmax(ST_Extent(geom)) AS TXMax, ST_Ymin(ST_Extent(geom)) AS TYMin,ST_Ymax(ST_Extent(geom)) AS TYMax  FROM bb";
+                $sql2 = "WITH bb AS (SELECT ST_astext(ST_Transform(ST_setsrid(ST_EstimatedExtent('" . $postgisschema . "', '" . $TableName . "', '" . $row['f_geometry_column'] . "')," . $row['srid'] . ")," . $latLongBoundingBoxSrs . ")) as geom) 
+                            SELECT ST_Xmin(ST_Extent(geom)) AS TXMin,ST_Xmax(ST_Extent(geom)) AS TXMax, ST_Ymin(ST_Extent(geom)) AS TYMin,ST_Ymax(ST_Extent(geom)) AS TYMax  FROM bb";
 
                 $result2 = $postgisObject->prepare($sql2);
                 try {
@@ -1049,8 +1055,6 @@ function getXSD(\app\inc\Model $postgisObject)
         $atts = null;
     }
     $postgisObject->close();
-    foreach ($tables as $table) {
-    }
     $depth--;
     writeTag("close", "xsd", "schema", Null, True, True);
 }
@@ -1208,10 +1212,10 @@ function doQuery(string $queryType)
 /**
  *
  *
- * @param unknown $XMin
- * @param unknown $YMin
- * @param unknown $XMax
- * @param unknown $YMax
+ * @param $XMin
+ * @param $YMin
+ * @param $XMax
+ * @param $YMax
  */
 function genBBox($XMin, $YMin, $XMax, $YMax)
 {
@@ -1339,8 +1343,6 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
                 if (!(empty($myrow["txmin"]))) {
                     //added NR
                     genBBox($myrow["txmin"], $myrow["tymin"], $myrow["txmax"], $myrow["tymax"]);
-                } else {
-                    //return;
                 }
             }
         } else
@@ -1398,9 +1400,7 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
 
                 // Important to use $FieldValue !== or else will int 0 evaluate to false
                 if ($fieldValue !== false && ($fieldName != "fid" && $fieldName != "FID")) {
-                    if (isset($fieldProperties["type"]) && $fieldProperties["type"] == "image") {
-                        //$imageAttr = array("width" => $fieldProperties["width"], "height" => $fieldProperties["height"]);
-                    } else {
+                    if (!isset($fieldProperties["type"]) || $fieldProperties["type"] != "image") {
                         $imageAttr = null;
                         if (!empty($fieldValue) && (in_array($tableObj->metaData[$fieldName]["type"], ["string", "text", "json", "jsonb"]))) {
                             $fieldValue = "<![CDATA[" . $fieldValue . "]]>";
@@ -1509,11 +1509,9 @@ function changeFieldName(string $field): string
 }
 
 /**
- *
- *
- * @param unknown $field
- * @param unknown $value
- * @return unknown
+ * @param string $field
+ * @param string $value
+ * @return string|bool
  */
 function altFieldValue(string $field, string $value): string|bool
 {
@@ -1538,11 +1536,9 @@ function altFieldValue(string $field, string $value): string|bool
 }
 
 /**
- *
- *
- * @param unknown $field
- * @param unknown $value
- * @return unknown
+ * @param $value
+ * @param $name
+ * @return array|float|int|string|string[]
  */
 function altUseCdataOnStrings($value, $name)
 {

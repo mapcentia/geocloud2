@@ -96,6 +96,7 @@ class Sql extends Controller
                     "alias" => !empty($json["alias"]) ? $json["alias"] : null,
                     "lifetime" => !empty($json["lifetime"]) ? $json["lifetime"] : null,
                     "base64" => !empty($json["base64"]) ? $json["base64"] : null,
+                    "convert_types" => !empty($json["convert_types"]) ? $json["convert_types"] : Input::$params["convert_types"],
                 ]
             );
         }
@@ -301,7 +302,8 @@ class Sql extends Controller
                 $geoformat = Input::get('geoformat') ?: null;
                 $csvAllToStr = Input::get('allstr') ?: null;
                 $alias = Input::get('alias') ?: null;
-                $this->response = $this->api->sql($this->q, $clientEncoding, $format, $geoformat, $csvAllToStr, $alias);
+                $convertTypes = Input::get('convert_types') ?: null;
+                $this->response = $this->api->sql($this->q, $clientEncoding, $format, $geoformat, $csvAllToStr, $alias, null, null, $convertTypes);
                 $response["statement"] = $this->q;
                 $this->addAttr($response);
                 echo serialize($this->response);
