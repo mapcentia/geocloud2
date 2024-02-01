@@ -404,7 +404,7 @@ try {
             }
         });
 
-        Route2::add("api/v4/users/[id]",  new User(), function () {
+        Route2::add("api/v4/users/[id]", new User(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);
@@ -414,7 +414,7 @@ try {
             }
         });
 
-        Route2::add("api/v4/geofence/[id]", new Geofence(), function () {
+        Route2::add("api/v4/rules/[rule]", new Geofence(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 if (!$jwt["data"]["superUser"]) {
@@ -438,7 +438,7 @@ try {
             }
         });
 
-        Route2::add("api/meta/v4/[query]", Meta::class, function () {
+        Route2::add("api/v4/meta/[query]", new Meta(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);
@@ -448,17 +448,7 @@ try {
             }
         });
 
-        Route2::add("api/schema/v4", Schema::class, function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route2::add("api/import/v4/[file]", new Import(), function () {
+        Route2::add("api/v4/import", new Import(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);

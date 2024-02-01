@@ -13,6 +13,7 @@ use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Route2;
 use Exception;
+use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 
@@ -29,12 +30,12 @@ class Key extends AbstractApi {
 
     public function get_index(): array
     {
-        // TODO: Implement get_index() method.
+        return [];
     }
 
     /**
      * @return array
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws PDOException
      * @OA\Get(
      *   path="/api/v4/key/{table})",
      *   tags={"Key"},
@@ -80,11 +81,11 @@ class Key extends AbstractApi {
 
     public function put_index(): array
     {
-        // TODO: Implement put_index() method.
+        return [];
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws PDOException
      */
     public function delete_index(): array
     {
@@ -100,7 +101,7 @@ class Key extends AbstractApi {
     {
         $table = Route2::getParam("table");
         $schema = Route2::getParam("schema");
-        $key = Input::getMethod() != 'post';
+        $key = Input::getMethod() != 'post' ? Route2::getParam("key"): null;
         $this->jwt = Jwt::validate()["data"];
         $this->initiate($schema, $table, $key, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }

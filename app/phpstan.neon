@@ -1,10 +1,7 @@
 parameters:
     level: 6
     paths:
-        - wfs
-        - conf
         - libs
-        - scripts
         - models
         - inc
         - controllers

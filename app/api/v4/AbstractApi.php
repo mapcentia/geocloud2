@@ -24,7 +24,7 @@ abstract class AbstractApi implements ApiInterface
     public ?string $unQualifiedName;
     public ?string $schema;
     public ?string $column;
-    public ?bool $key;
+    public ?string $key;
     public ?string $index;
     public ?string $constraint;
     public array $jwt;

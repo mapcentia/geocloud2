@@ -15,7 +15,7 @@ RUN apt-get -y update
 # Install packages
 RUN apt-get -y install cron vim wget g++ build-essential git unzip rng-tools apache2-utils postgresql-client supervisor \
     apache2  apache2-dev php8.3-fpm php8.3-pgsql php8.3-redis php8.3-memcached php8.3-curl php8.3-sqlite3 \
-    php8.3-mbstring php8.3-gd php8.3-cli php8.3-mbstring php8.3-dev php8.3-zip php8.3-simplexml \
+    php8.3-mbstring php8.3-gd php8.3-cli php8.3-mbstring php8.3-dev php8.3-zip php8.3-simplexml php8.3-dba \
     cmake libgdal-dev librsvg2-dev libpng++-dev libjpeg-dev libfreetype6-dev libproj-dev libfribidi-dev libharfbuzz-dev libcairo2-dev \
     libgeos++-dev curl libapache2-mod-fcgid libfcgi-dev xvfb osm2pgsql postgis  sudo \
     apt-transport-https ca-certificates software-properties-common \

@@ -73,12 +73,6 @@ class Oauth extends AbstractApi
         if (!empty($data["username"]) && !empty($data["password"])) {
             try {
                 return $this->session->start($data["username"], $data["password"], "public", $data["database"], true);
-            } catch (TypeError $exception) {
-                return [
-                    "error" => "invalid_request",
-                    "error_description" => $exception->getMessage(),
-                    "code" => 500
-                ];
             } catch (Exception $exception) {
                 return [
                     "error" => "invalid_request",
