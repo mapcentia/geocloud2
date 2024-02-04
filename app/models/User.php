@@ -94,7 +94,7 @@ class User extends Model
      */
     public function getData(): array
     {
-        $query = "SELECT email, parentdb, usergroup, screenname as userid, zone FROM users WHERE (screenname = :sUserID OR email = :sUserID) AND (parentdb = :parentDb OR parentDB IS NULL)";
+        $query = "SELECT email, parentdb, usergroup, screenname as userid, properties, zone FROM users WHERE (screenname = :sUserID OR email = :sUserID) AND (parentdb = :parentDb OR parentDB IS NULL)";
         $res = $this->prepare($query);
         $res->execute(array(":sUserID" => $this->userId, ":parentDb" => $this->parentdb));
         $row = $this->fetchRow($res);
@@ -346,6 +346,9 @@ class User extends Model
         $sQuery = "DELETE FROM users WHERE screenname=:sUserID AND parentdb=:parentDb";
         $res = $this->prepare($sQuery);
         $res->execute([":sUserID" => $user, ":parentDb" => $this->userId]);
+        if ($res->rowCount() == 0) {
+            throw new GC2Exception("User doesn't exists", 404, null, "USER_DOES_NOT_EXISTS");
+        }
         $subusers = Session::getByKey("subusers");
         $subuserEmails = Session::getByKey("subuserEmails");
         if (!empty($subusers) && !empty($subuserEmails)) {

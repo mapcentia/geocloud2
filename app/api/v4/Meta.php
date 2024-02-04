@@ -8,36 +8,37 @@
 
 namespace app\api\v4;
 
-use app\inc\Controller;
+use app\exceptions\GC2Exception;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Route;
+use app\inc\Route2;
 use app\models\Layer;
+use Override;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 /**
  * Class Meta
  * @package app\api\v4
  */
-class Meta extends Controller
+class Meta extends AbstractApi
 {
     /**
      * @var Layer
      */
-    private $layers;
+    private Layer $layers;
 
     /**
      * Meta constructor.
      */
     function __construct()
     {
-        parent::__construct();
-        $this->layers = new Layer();
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws GC2Exception
      * @OA\Get(
      *   path="/api/v4/meta/{query}",
      *   tags={"Meta"},
@@ -64,35 +65,74 @@ class Meta extends Controller
      *   )
      * )
      */
+    #[Override]
     public function get_index(): array
     {
+        $this->layers = new Layer();
         $jwt = Jwt::validate()["data"];
-        $out = [];
-        $res = $this->layers->getAll($jwt["database"], true, Route::getParam("query"), Input::get("iex"), true, false);
+        $res = $this->layers->getAll($jwt["database"], true, Route2::getParam("query"), false, true);
         $rows = $res["data"];
-        foreach ($rows as $row) {
-            $out[$row["_key_"]] = [
-                "uuid" => $row["uuid"],
-                "f_table_schema" => $row["f_table_schema"],
-                "f_table_name" => $row["f_table_name"],
-                "f_geometry_column" => $row["f_geometry_column"],
-                "f_table_abstract" => $row["f_table_abstract"],
-                "f_table_title" => $row["f_table_title"],
-                "pkey" => $row["pkey"],
-                "coord_dimension" => $row["coord_dimension"],
-                "type" => $row["type"],
-                "srid" => $row["srid"],
-                "authentication" => $row["authentication"],
-                "layergroup" => $row["layergroup"],
-                "sort_id" => $row["sort_id"],
-                "wmssource" => $row["wmssource"],
-                "tags" => $row["tags"],
-                "privileges" => $row["privileges"],
-                "fields" => $row["fields"],
-                "children" => $row["children"],
-            ];
-
-        }
+        $out = $this->processRows($rows);
         return !$res["success"] ? $res : ["success" => true, "data" => $out];
+    }
+
+    private function processRows(array $rows): array
+    {
+        $out = [];
+        foreach ($rows as $row) {
+            $out[$row["_key_"]] = $this->processRow($row);
+        }
+        return $out;
+    }
+
+    private function processRow(array $row): array
+    {
+        return [
+            "uuid" => $row["uuid"],
+            "f_table_schema" => $row["f_table_schema"],
+            "f_table_name" => $row["f_table_name"],
+            "f_geometry_column" => $row["f_geometry_column"],
+            "f_table_abstract" => $row["f_table_abstract"],
+            "f_table_title" => $row["f_table_title"],
+            "pkey" => $row["pkey"],
+            "coord_dimension" => $row["coord_dimension"],
+            "type" => $row["type"],
+            "srid" => $row["srid"],
+            "authentication" => $row["authentication"],
+            "layergroup" => $row["layergroup"],
+            "sort_id" => $row["sort_id"],
+            "wmssource" => $row["wmssource"],
+            "tags" => $row["tags"],
+            "privileges" => $row["privileges"],
+            "fields" => $row["fields"],
+            "children" => $row["children"]
+        ];
+    }
+
+    #[Override]
+    public function validate(): void
+    {
+        // TODO: Implement validate() method.
+    }
+
+    #[Override]
+    public function post_index(): array
+    {
+        // TODO: Implement post_index() method.
+        return [];
+    }
+
+    #[Override]
+    public function put_index(): array
+    {
+        // TODO: Implement put_index() method.
+        return [];
+    }
+
+    #[Override]
+    public function delete_index(): array
+    {
+        // TODO: Implement delete_index() method.
+        return [];
     }
 }

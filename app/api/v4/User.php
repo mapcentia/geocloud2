@@ -40,9 +40,8 @@ class User extends AbstractApi
     private static function convertUserObject(array $user): array
     {
         return [
-            "userid" => $user["userid"] ?? $user["screenname"],
-            "parentdb" => $user["parentdb"],
-            "usergroup" => $user["usergroup"],
+            "name" => $user['screenName'] ??$user['screenname']?? $user['userid'],
+            "user_group" => $user["usergroup"],
             "email" => $user["email"],
             "properties" => $user["properties"],
         ];
@@ -79,18 +78,16 @@ class User extends AbstractApi
      * )
      * @throws Exception
      */
-    function post_index(): array
+    public function post_index(): array
     {
         if (!$this->jwt["superUser"]) {
             throw new Exception("Sub-users are not allowed to create other sub users");
         }
         $data = json_decode(Input::getBody(), true) ?: [];
-        $res = $this->user->createUser($data);
-        return [
-            "success" => true,
-            "message" => "User created",
-            "data" => self::convertUserObject($res["data"]),
-        ];
+        $data['parentdb'] = $this->jwt['database'];
+        $res =  self::convertUserObject((new UserModel())->createUser($data)['data']);
+        $res["code"] = "201";
+        return $res;
     }
 
     /**
@@ -117,17 +114,17 @@ class User extends AbstractApi
      * )
      * @throws Exception
      */
-    function get_index(): array
+    public function get_index(): array
     {
-        if (!$this->jwt["superUser"] && $this->jwt["uid"] != Route2::getParam("id")) {
+        $requestedUser = Route2::getParam("user");
+        if (!$requestedUser) {
+            return $this->getAll();
+        }
+        if (!$this->jwt["superUser"] && $this->jwt["uid"] != $requestedUser) {
             throw new Exception("Sub-users are not allowed to get information about other sub users");
         }
-        $requestedUser = Route2::getParam("id");
         $userModelLocal = new UserModel($requestedUser, $this->jwt["database"]);
-        return [
-            "success" => true,
-            "data" => self::convertUserObject($userModelLocal->getData()["data"]),
-            ];
+        return self::convertUserObject($userModelLocal->getData()["data"]);
     }
 
     /**
@@ -168,30 +165,34 @@ class User extends AbstractApi
      * )
      * @throws Exception
      */
-    function put_index(): array
+    public function put_index(): array
     {
-        if (!$this->jwt["superUser"] && $this->jwt["uid"] != Route::getParam("userId")) {
+        $requestedUserId = Route2::getParam("user");
+        if (!$this->jwt["superUser"] && $this->jwt["uid"] != $requestedUserId) {
             throw new Exception("Sub-users are not allowed to update other sub users");
         }
         $data = json_decode(Input::getBody(), true) ?: [];
-        $requestedUserId = Route::getParam("userId");
         $currentUserId = $this->jwt["uid"];
         $dataBase = $this->jwt["database"];
         $data["user"] = $requestedUserId;
+        $data["usergroup"] = $data["user_group"];
         if ($currentUserId == $requestedUserId) {
-            $res = $this->user->updateUser($data);
+            if (!$this->jwt['superUser']) {
+                $data['parentdb'] = $this->jwt['database'];
+            }
+            (new UserModel())->updateUser($data);
         } else {
             $userModelLocal = new UserModel($requestedUserId, $dataBase);
             $user = $userModelLocal->getData();
             if ($user["data"]["parentdb"] == $currentUserId) {
                 $data["parentdb"] = $user["data"]["parentdb"];
-                $res = $userModelLocal->updateUser($data);
+                $userModelLocal->updateUser($data);
             } else {
                 throw new Exception("Requested user is not the subuser of the currently authenticated user");
             }
         }
-        $res["data"] = self::convertUserObject($res["data"]);
-        return $res;
+        header("Location: /api/v4/users/$requestedUserId");
+        return ["code" => "303"];
     }
 
     /**
@@ -218,43 +219,30 @@ class User extends AbstractApi
      * )
      * @throws Exception
      */
-    function delete_index(): array
+    public function delete_index(): array
     {
-        if (!$this->jwt["superUser"] && $this->jwt["uid"] != Route::getParam("userId")) {
-            throw new Exception("Sub-users are not allowed to delete other sub users");
+        if (!$this->jwt["superUser"]) {
+            throw new Exception("Sub-users are not allowed to delete sub users");
         }
-        $requestedUser = Route::getParam("userId");
-        $res = $this->user->deleteUser($requestedUser);
-        if ($res["data"] == 0) {
-            throw New Exception("User not found");
-        } else {
-            return $res;
-        }
+        $requestedUser = Route2::getParam("user");
+        (new UserModel($this->jwt['uid']))->deleteUser($requestedUser);
+        return ["code" => "204"];
     }
 
     /**
      * @return array
-     *
-     * @OA\Get(
-     *   path="/api/v4/user/all",
-     *   tags={"User"},
-     *   summary="Returns subusers",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Response(
-     *     response="200",
-     *     description="Operation status"
-     *   )
-     * )
      * @throws Exception
      */
-    function get_all(): array
+    public function getAll(): array
     {
         if (!$this->jwt["superUser"]) {
             throw new Exception("Sub-users are not allowed to list all sub users");
         }
         $currentUserId = $this->jwt["uid"];
-        return $this->user->getSubusers($currentUserId);
+        $usersData = (new UserModel())->getSubusers($currentUserId)['data'];
+        return ['users' => array_map([$this, 'convertUserObject'], $usersData)];
     }
+
 
     /**
      * @throws GC2Exception
@@ -262,6 +250,14 @@ class User extends AbstractApi
     public function validate(): void
     {
         $this->jwt = Jwt::validate()["data"];
-        $this->user = new UserModel($this->jwt["uid"], $this->jwt["database"]);
+        $user = Route2::getParam("user");
+        // Put and delete on collection is not allowed
+        if (empty($user) && in_array(Input::getMethod(), ['put', 'delete'])) {
+            throw new GC2Exception("", 406);
+        }
+        // Throw exception if tried POST with resource
+        if (Input::getMethod() == 'post' && $user) {
+            $this->postWithResource();
+        }
     }
 }

@@ -404,7 +404,7 @@ try {
             }
         });
 
-        Route2::add("api/v4/users/[id]", new User(), function () {
+        Route2::add("api/v4/users/[user]", new User(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);
@@ -440,12 +440,7 @@ try {
 
         Route2::add("api/v4/meta/[query]", new Meta(), function () {
             $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
+            Database::setDb($jwt["data"]["database"]);
         });
 
         Route2::add("api/v4/import", new Import(), function () {
