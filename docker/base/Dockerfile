@@ -8,7 +8,7 @@ RUN apt-get -y update
 RUN apt-get -y install wget gnupg2
 
 # Add PHP8 repo
-RUN echo "deb https://packages.sury.org/php/ $(lsb_release -c -s) main" |  tee /etc/apt/sources.list.d/sury-php.list
+RUN echo "deb https://packages.sury.org/php/ bookworm main" |  tee /etc/apt/sources.list.d/sury-php.list
 RUN wget -qO - https://packages.sury.org/php/apt.gpg | apt-key add -
 RUN apt-get -y update
 
