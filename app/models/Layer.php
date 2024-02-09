@@ -671,18 +671,25 @@ class Layer extends Table
     }
 
     /**
-     * @param $_key_
+     * @param string $key
      * @return array
      */
-    public function updateLastmodified($_key_): array
+    public function updateLastmodified(string $key): array
     {
-        $this->clearCacheOnSchemaChanges();
         $response = [];
-        $object = (object)['lastmodified' => date('Y-m-d H:i:s'), '_key_' => $_key_];
-        $table = new Table("settings.geometry_columns_join");
-        $table->updateRecord(["data" => $object], "_key_");
-        $response['success'] = true;
-        $response['message'] = "Lastmodified updated.";
+        $date =date('Y-m-d H:i:s');
+        $sql = "UPDATE settings.geometry_columns_join set lastmodified=:date WHERE _key_=:key";
+        try {
+            $result = $this->prepare($sql);
+            $result->execute(["date" => $date, "key" => $key]);
+            $response['success'] = true;
+            $response['message'] = "Last modified value updated";
+        } catch (PDOException $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
+        }
         return $response;
     }
 
