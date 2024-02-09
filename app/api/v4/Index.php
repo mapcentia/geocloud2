@@ -13,6 +13,7 @@ use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Route2;
 use app\models\Table as TableModel;
+use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 
@@ -56,7 +57,7 @@ class Index extends AbstractApi
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws PDOException
      */
     public function delete_index(): array
     {

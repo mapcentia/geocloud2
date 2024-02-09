@@ -18,6 +18,7 @@ use app\api\v4\Index;
 use app\api\v4\Key;
 use app\api\v4\Column;
 use app\api\v4\Meta;
+use app\api\v4\Privilege;
 use app\api\v4\Schema;
 use app\api\v4\Sql;
 use app\api\v4\Table;
@@ -405,6 +406,16 @@ try {
         });
 
         Route2::add("api/v4/users/[user]", new User(), function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
+        Route2::add("api/v4/schemas/{schema}/tables/{table}/privileges/[privilege]", new Privilege(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);

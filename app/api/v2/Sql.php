@@ -213,7 +213,7 @@ class Sql extends Controller
      * @throws PhpfastcacheInvalidArgumentException
      * @throws Exception
      */
-    private function transaction(string|null $clientEncoding = null): string
+    private function transaction(?string $clientEncoding = null): string
     {
         $response = [];
         $rule = new Rule();
