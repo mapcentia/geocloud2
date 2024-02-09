@@ -750,21 +750,23 @@ class Layer extends Table
 
     /**
      * @param string $_key_
-     * @return array<mixed>
+     * @return array
      */
-    public function updateLastmodified(string $_key_): array
+    public function updateLastmodified(string $key): array
     {
         $response = [];
-        $object = (object)['lastmodified' => date('Y-m-d H:i:s'), '_key_' => $_key_];
-        $table = new Table("settings.geometry_columns_join");
-        $res = $table->updateRecord(["data" => $object], "_key_");
-        if ($res['success']) {
+        $date =date('Y-m-d H:i:s');
+        $sql = "UPDATE settings.geometry_columns_join set lastmodified=:date WHERE _key_=:key";
+        try {
+            $result = $this->prepare($sql);
+            $result->execute(["date" => $date, "key" => $key]);
             $response['success'] = true;
-            $response['message'] = "Lastmodified updated.";
-        } else {
+            $response['message'] = "Last modified value updated";
+        } catch (PDOException $e) {
             $response['success'] = false;
-            $response['message'] = $res['message'];
-            $response['code'] = 403;
+            $response['message'] = $e->getMessage();
+            $response['code'] = 401;
+            return $response;
         }
         return $response;
     }

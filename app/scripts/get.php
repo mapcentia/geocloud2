@@ -1170,13 +1170,12 @@ function cleanUp(int $success = 0): void
     }
     print "\nInfo: Temp table dropped.";
 
-// This will bust app cache so we don't
-//    if ($success) {
-//        Database::setDb($db);
-//        $layer = new Layer();
-//        $res = $layer->updateLastmodified($schema . "." . $safeName . ".the_geom");
-//        print "\nInfo: " . $res["message"];
-//    }
+    if ($success) {
+        Database::setDb($db);
+        $layer = new Layer();
+        $res = $layer->updateLastmodified($schema . "." . $safeName . ".the_geom");
+        print "\nInfo: " . $res["message"];
+    }
 }
 
 cleanUp(1);
