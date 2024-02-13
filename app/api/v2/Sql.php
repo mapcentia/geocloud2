@@ -97,6 +97,8 @@ class Sql extends Controller
                     "lifetime" => !empty($json["lifetime"]) ? $json["lifetime"] : null,
                     "base64" => !empty($json["base64"]) ? $json["base64"] : null,
                     "convert_types" => !empty($json["convert_types"]) ? $json["convert_types"] : Input::$params["convert_types"],
+                    "params" => !empty($json["params"]) ? $json["params"] : Input::$params["params"],
+                    "type_hints" => !empty($json["type_hints"]) ? $json["type_hints"] : Input::$params["type_hints"],
                 ]
             );
         }
@@ -271,7 +273,7 @@ class Sql extends Controller
                     return serialize($response);
                 }
             }
-            $this->response = $this->api->transaction($finaleStatement);
+            $this->response = $this->api->transaction($finaleStatement, Input::get('params') ?: null, Input::get('type_hints') ?: null);
             $response["filters"] = $auth["filters"];
             $response["statement"] = $finaleStatement;
             $this->addAttr($response);
@@ -298,12 +300,7 @@ class Sql extends Controller
                 $this->cacheInfo["signature"] = md5(serialize($this->data));
             } else {
                 ob_start();
-                $format = Input::get('format') ?: "geojson";
-                $geoformat = Input::get('geoformat') ?: null;
-                $csvAllToStr = Input::get('allstr') ?: null;
-                $alias = Input::get('alias') ?: null;
-                $convertTypes = Input::get('convert_types') ?: null;
-                $this->response = $this->api->sql($this->q, $clientEncoding, $format, $geoformat, $csvAllToStr, $alias, null, null, $convertTypes);
+                $this->response = $this->api->sql($this->q, $clientEncoding, Input::get('format') ?: "geojson", Input::get('geoformat') ?: null, Input::get('allstr') ?: null, Input::get('alias') ?: null, null, null, Input::get('convert_types') ?: null, Input::get('params') ?: null);
                 $response["statement"] = $this->q;
                 $this->addAttr($response);
                 echo serialize($this->response);

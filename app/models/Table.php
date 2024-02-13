@@ -775,13 +775,13 @@ class Table extends Model
     }
 
     /**
-     * @param array $data
+     * @param string|array $data
      * @param string $_key_
      * @return array
-     * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
      */
-    public function deleteColumn(array $data, string $_key_): array
+    public function deleteColumn(string|array $data, string $_key_): array
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
@@ -851,6 +851,7 @@ class Table extends Model
         };
         $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ADD COLUMN \"$safeColumn\" $type;";
         $this->execQuery($sql, "PDO", "transaction");
+        $response["success"] = true;
         return $response;
     }
 
