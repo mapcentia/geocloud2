@@ -240,6 +240,12 @@ class Feature extends Controller
                     if (is_string($value)) {
                         $value = "<![CDATA[{$value}]]>";
                     }
+                    if ($value === false) {
+                        $value = 'f';
+                    }
+                    if ($value === true) {
+                        $value = 't';
+                    }
                     $xml .= "<feature:{$elem}>{$value}</feature:{$elem}>\n";
                 }
             }
@@ -303,6 +309,12 @@ class Feature extends Controller
             foreach ($props as $elem => $value) {
                 if (is_string($value)) {
                     $value = "<![CDATA[{$value}]]>";
+                }
+                if ($value === false) {
+                    $value = 'f';
+                }
+                if ($value === true) {
+                    $value = 't';
                 }
                 $xml .= "<wfs:Property>\n";
                 $xml .= "<wfs:Name>{$elem}</wfs:Name>\n";
