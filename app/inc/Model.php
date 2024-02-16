@@ -324,6 +324,7 @@ class Model
                   atttypid :: REGTYPE              AS udt_name,
                   attnotnull                       AS is_nullable,
                   format_type(atttypid, atttypmod) AS full_type,
+                  pg_get_expr(d.adbin, d.adrelid) AS default_value,
                   CASE  
                       when atttypid in (1043) then
                   atttypmod-4         
@@ -354,11 +355,12 @@ class Model
        ,
         case 
           when attlen <> -1 then attlen
-          when atttypid in (1043, 25) then information_schema._pg_char_octet_length(information_schema._pg_truetypid(pg_attribute.*, t.*), information_schema._pg_truetypmod(pg_attribute.*, t.*))
+          when atttypid in (1043, 25) then information_schema._pg_char_octet_length(information_schema._pg_truetypid(a.*, t.*), information_schema._pg_truetypmod(a.*, t.*))
        end as max_bytes
                   
-                FROM pg_attribute
+                FROM pg_attribute a
                   join pg_type t on atttypid = t.oid
+                  left join pg_catalog.pg_attrdef d ON (a.attrelid, a.attnum) = (d.adrelid, d.adnum)
 
                 WHERE attrelid = :table :: REGCLASS
                         AND attnum > 0
@@ -376,7 +378,7 @@ class Model
                 $references = [];
                 if ($restriction && !$restrictions) {
                     foreach ($foreignConstrains as $value) {
-                        if ($row["column_name"] == $value["child_column"] && $value["parent_column"] != $primaryKey) {
+                        if ($row["column_name"] == $value["child_column"] /*&& $value["parent_column"] != $primaryKey*/) {
                             $references[] = $value["parent_schema"] . "." . $value["parent_table"] . "." . $value["parent_column"];
                             $sql = "SELECT {$value["parent_column"]} FROM {$value["parent_schema"]}.{$value["parent_table"]}";
                             $resC = $this->prepare($sql);
@@ -420,13 +422,16 @@ class Model
                     }
                 }
                 foreach ($checkConstrains as $check) {
-                    $checkValues[] = $check["con"];
+                    if ($check['column_name'] == $row["column_name"]) {
+                        $checkValues[] = $check["con"];
+                    }
                 }
                 $arr[$row["column_name"]] = array(
                     "num" => $row["ordinal_position"],
                     "type" => $row["udt_name"],
                     "full_type" => $row['full_type'],
                     "is_nullable" => !$row['is_nullable'],
+                    "default_value" => $row['default_value'],
                     "character_maximum_length" => $row["character_maximum_length"],
                     "numeric_precision" => $row["numeric_precision"],
                     "numeric_scale" => $row["numeric_scale"],
@@ -799,15 +804,8 @@ class Model
                         JOIN  pg_namespace ns on cl.relnamespace = ns.oid";
 
             $res = $this->prepare($sql);
-            try {
-                $res->execute(["table" => $table, "schema" => $schema]);
-                $rows = $this->fetchAll($res);
-            } catch (Exception $e) {
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 401;
-                return $response;
-            }
+            $res->execute(["table" => $table, "schema" => $schema]);
+            $rows = $this->fetchAll($res);
             $response['success'] = true;
             $response['data'] = $rows;
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
@@ -819,12 +817,18 @@ class Model
     /**
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function getConstrains(string|null $schema, string $table, string $type): array
+    public function getConstrains(string|null $schema, string $table, ?string $type = null): array
     {
         $cacheType = "checkConstrain";
         $cacheRel = md5($schema . "." . $table);
         $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel . "_" . $type);
         $CachedString = Cache::getItem($cacheId);
+        $where = '';
+        $params = ["table" => $table, "schema" => $schema];
+        if ($type) {
+            $where = "AND con1.contype = :type";
+            $params = ["table" => $table, "schema" => $schema, "type" => $type];
+        }
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
         } else {
@@ -842,12 +846,12 @@ class Model
                                JOIN pg_constraint con1 ON con1.conrelid = cl.oid
                       WHERE cl.relname = :table
                         AND ns.nspname = :schema 
-                        AND con1.contype = :type) con
+                        $where) con
                          JOIN pg_attribute att ON
                     att.attrelid = con.conrelid AND att.attnum = con.key";
 
             $res = $this->prepare($sql);
-            $res->execute(["table" => $table, "schema" => $schema, "type" => $type]);
+            $res->execute($params);
             $rows = $this->fetchAll($res);
 
             $response['success'] = true;
@@ -886,14 +890,7 @@ class Model
                     WHERE lower(tc.constraint_type) IN ('foreign key') AND constraint_type='FOREIGN KEY'";
 
             $res = $this->prepare($sql);
-            try {
-                $res->execute(["table" => $table, "schema" => $schema]);
-            } catch (PDOException $e) {
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 401;
-                return $response;
-            }
+            $res->execute(["table" => $table, "schema" => $schema]);
 
             while ($row = $this->fetchRow($res)) {
                 $arr = [];
@@ -1021,7 +1018,22 @@ class Model
             $response["index_method"][$row["column_name"]][] = $row["index_method"];
             $response["is_primary"][$row["column_name"]] = $row["is_primary"];
             $response["is_unique"][$row["column_name"]] = $row["is_unique"];
+            $response["indices"][] = $row;
+
         }
         return $response;
     }
+
+    public function getTablesInSchema(string $schema): array
+    {
+        $response = [];
+        $sql = "SELECT tablename FROM pg_tables WHERE schemaname = :schema";
+        $res = $this->prepare($sql);
+        $res->execute(["schema" => $schema]);
+        while ($row = $this->fetchRow($res)) {
+            $response[] = $row["tablename"];
+        }
+        return $response;
+    }
+
 }

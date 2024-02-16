@@ -629,14 +629,23 @@ class Layer extends Table
     public function getPrivileges(string $_key_): array
     {
         $privileges = json_decode($this->getValueFromKey($_key_, "privileges") ?: "{}");
-        foreach (Session::getByKey('subusers') as $subuser) {
+        if (!empty(Session::get())) {
+            $arr = Session::getByKey('subusers');
+        } else {
+            $arr =[];
+            foreach ((array)$privileges as $key=>$value){
+                $arr[] = $key;
+            }
+        }
+        foreach ($arr as $subuser) {
             $privileges->$subuser = $privileges->$subuser ?? "none";
             if ($subuser != Connection::$param['postgisschema']) {
                 $response['data'][] = array("subuser" => $subuser, "privileges" => $privileges->$subuser, "group" => Session::getByKey("usergroups")[$subuser]);
             }
         }
+
         if (!isset($response['data'])) {
-            $response['data'] = array();
+            $response['data'] = [];
         }
         $response['success'] = true;
         $response['message'] = "Privileges fetched";
@@ -646,27 +655,20 @@ class Layer extends Table
     /**
      * @param object $data
      * @return array
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws PhpfastcacheInvalidArgumentException|PDOException
      */
     public function updatePrivileges(object $data): array
     {
         $this->clearCacheOfColumns();
         $this->clearCacheOnSchemaChanges();
-
         $table = new Table("settings.geometry_columns_join");
         $privilege = json_decode($this->getValueFromKey($data->_key_, "privileges") ?: "{}");
         $privilege->{$data->subuser} = $data->privileges;
         $privileges['privileges'] = json_encode($privilege);
         $privileges['_key_'] = $data->_key_;
-        $res = $table->updateRecord(json_decode(json_encode($privileges)), "_key_");
-        if ($res['success']) {
-            $response['success'] = true;
-            $response['message'] = "Privileges updates";
-        } else {
-            $response['success'] = false;
-            $response['message'] = $res['message'];
-            $response['code'] = 403;
-        }
+        $table->updateRecord(json_decode(json_encode($privileges)), "_key_");
+        $response['success'] = true;
+        $response['message'] = "Privileges updates";
         return $response;
     }
 
@@ -677,7 +679,7 @@ class Layer extends Table
     public function updateLastmodified(string $key): array
     {
         $response = [];
-        $date =date('Y-m-d H:i:s');
+        $date = date('Y-m-d H:i:s');
         $sql = "UPDATE settings.geometry_columns_join set lastmodified=:date WHERE _key_=:key";
         try {
             $result = $this->prepare($sql);

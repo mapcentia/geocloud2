@@ -80,12 +80,32 @@ class Column extends AbstractApi
      */
     #[Override] public function get_index(): array
     {
-        $res = $this->table->getMetaData($this->qualifiedName);
+        $res = self::getColumns($this->table, $this->qualifiedName);
         if ($this->column) {
-            return $res[$this->column];
+            foreach ($res as $i) {
+                if ($i['column'] == $this->column) {
+                    return $i;
+                }
+            }
         } else {
-            return $res;
+            return ["columns" =>$res];
         }
+        return [];
+    }
+
+    /**
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public static function getColumns(TableModel $table, string $name) : array
+    {
+        $response = [];
+        $res = $table->getMetaData($name);
+        foreach ($res as $key=>$column) {
+            $column['column'] = $key;
+            $response[] = $column;
+        }
+        return $response;
+
     }
 
 
@@ -137,7 +157,15 @@ class Column extends AbstractApi
         $r = $this->table->addColumn([
             "column" => $data->column,
             "type" => $data->type,
+            "default" => $data->default_value,
         ]);
+        if (isset($data->is_nullable)) {
+            if (!$data->is_nullable) {
+                $this->table->addNotNullConstraint($data->column);
+            } else {
+                $this->table->dropNotNullConstraint($data->column);
+            }
+        }
         header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/columns/{$r["data"][0]}");
         $res = $this->table->getMetaData($this->qualifiedName)[$r["data"][0]];
         $res["code"] = "201";
@@ -201,10 +229,18 @@ class Column extends AbstractApi
         $data = json_decode($body);
         $obj = new stdClass();
         $obj->id = $this->column;
-        $obj->column = $data->column;
+        $obj->column = $data->column ?? $this->column;
         $obj->type = $data->type;
         $r = $this->table->updateColumn($obj, $this->column, true);
-        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/columns/{$r["name"]}");
+        $newName =$r["name"];
+        if (isset($data->is_nullable)) {
+            if (!$data->is_nullable) {
+                $this->table->addNotNullConstraint($newName);
+            } else {
+                $this->table->dropNotNullConstraint($newName);
+            }
+        }
+        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/columns/$newName");
         return ["code" => "303"];
     }
 

@@ -363,16 +363,6 @@ try {
             }
         });
 
-        Route2::add("api/v4/schemas/{schema}/tables/{table}/key", new Key(), function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
         Route2::add("api/v4/schemas/{schema}/tables/{table}/columns/[column]", new Column(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
@@ -384,7 +374,7 @@ try {
         });
 
 
-        Route2::add("api/v4/schemas/{schema}/tables/{table}/columns/{column}/indices/[index]", new Index(), function () {
+        Route2::add("api/v4/schemas/{schema}/tables/{table}/indices/[index]", new Index(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);
@@ -395,7 +385,7 @@ try {
         });
 
 
-        Route2::add("api/v4/schemas/{schema}/tables/{table}/columns/{column}/constraints/[constraint]", new Constraint(), function () {
+        Route2::add("api/v4/schemas/{schema}/tables/{table}/constraints/[constraint]", new Constraint(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);
@@ -415,7 +405,7 @@ try {
             }
         });
 
-        Route2::add("api/v4/schemas/{schema}/tables/{table}/privileges/[privilege]", new Privilege(), function () {
+        Route2::add("api/v4/schemas/{schema}/tables/{table}/privilege", new Privilege(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);

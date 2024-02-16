@@ -11,7 +11,6 @@ namespace app\api\v4;
 use app\exceptions\GC2Exception;
 use app\inc\Input;
 use app\inc\Jwt;
-use app\inc\Route;
 use app\inc\Route2;
 use app\models\Table as TableModel;
 use Exception;
@@ -29,27 +28,6 @@ class Constraint extends AbstractApi
 
     }
 
-
-    /**
-     * @throws PhpfastcacheInvalidArgumentException
-     */
-    public function post_unique(): array
-    {
-        $this->table = new TableModel($this->qualifiedName);
-        $column = Route::getParam("column");
-        return $this->table->addUniqueConstraint($column);
-    }
-
-    /**
-     * @throws PhpfastcacheInvalidArgumentException
-     */
-    public function delete_unique(): array
-    {
-        $this->table = new TableModel($this->qualifiedName);
-        $column = Route::getParam("column");
-        return $this->table->dropUniqueConstraint($column);
-    }
-
     /**
      * @throws PhpfastcacheInvalidArgumentException
      */
@@ -57,19 +35,23 @@ class Constraint extends AbstractApi
     {
         $body = Input::getBody();
         $data = json_decode($body);
-        $constraintType = $data->type;
+        $trimmedColumns = null;
+        if (!empty($data->columns)) {
+            $trimmedColumns = array_map('trim', $data->columns);
+        }
+        $constraintType = $data->constraint;
         switch ($constraintType) {
+            case "primary":
+                $this->table->addPrimaryKeyConstraint($trimmedColumns);
+                break;
             case "foreign":
-                $this->table->addForeignConstraint($this->column, $data->referenced_table, $data->referenced_column);
+                $this->table->addForeignConstraint($trimmedColumns, $data->referenced_table, $data->referenced_columns);
                 break;
             case "unique":
-                $this->table->addUniqueConstraint($this->column);
-                break;
-            case "notnull":
-                $this->table->addNotNullConstraint($this->column);
+                $this->table->addUniqueConstraint($trimmedColumns);
                 break;
             case "check":
-                $this->table->addCheckConstraint($this->column, $data->check);
+                $this->table->addCheckConstraint($data->check);
                 break;
 
         }
@@ -81,27 +63,60 @@ class Constraint extends AbstractApi
     public function delete_index(): array
     {
         switch ($this->constraint) {
+            case "primary":
+                $this->table->dropPrimaryKeyConstraint();
+                break;
             case "foreign":
-                $this->table->dropForeignConstraint($this->column);
+                $this->table->dropForeignConstraint($this->constraint);
                 break;
             case "unique":
-                $this->table->dropUniqueConstraint($this->column);
-                break;
-            case "notnull":
-                $this->table->dropNotNullConstraint($this->column);
+                $this->table->dropUniqueConstraint($this->constraint);
                 break;
             case "check":
-                $this->table->dropCheckConstraint($this->column);
+                $this->table->dropCheckConstraint($this->constraint);
                 break;
-
         }
         $res["code"] = "204";
         return $res;
     }
 
+    /**
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     public function get_index(): array
     {
-        // TODO: Implement get_index() method.
+        $constraints = self::getConstraints($this->table, $this->qualifiedName);
+        if (!empty($this->constraint)) {
+            foreach ($constraints as $constraint) {
+                if ($constraint['name'] == $this->constraint) {
+                    return $constraint;
+                }
+            }
+        }
+        return ["constraints" => $constraints];
+    }
+
+    /**
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public static function getConstraints(TableModel $table, $name): array
+    {
+        $res = [];
+        $res2 = [];
+        $split = explode('.', $name);
+        $constraints = $table->getConstrains($split[0], $split[1])['data'];
+        foreach ($constraints as $constraint) {
+            $res[$constraint['conname']]['constraint'] = $constraint['con'];
+            $res[$constraint['conname']]['columns'][] = $constraint['column_name'];
+        }
+        foreach ($res as $key => $value) {
+            $res2[] = [
+                "name" => $key,
+                "columns" => $value['columns'],
+                "constraint" => $value['constraint']
+            ];
+        }
+        return  $res2;
     }
 
     public function put_index(): array
@@ -117,7 +132,6 @@ class Constraint extends AbstractApi
     {
         $table = Route2::getParam("table");
         $schema = Route2::getParam("schema");
-        $column = Route2::getParam("column");
         $constraint = Route2::getParam("constraint");
         // Put and delete on collection is not allowed
         if (empty($constraint) && in_array(Input::getMethod(), ['put', 'delete'])) {
@@ -128,6 +142,6 @@ class Constraint extends AbstractApi
             $this->postWithResource();
         }
         $this->jwt = Jwt::validate()["data"];
-        $this->initiate($schema, $table, null, $column, null, $constraint, $this->jwt["uid"], $this->jwt["superUser"]);
+        $this->initiate($schema, $table, null, null, null, $constraint, $this->jwt["uid"], $this->jwt["superUser"]);
     }
 }
