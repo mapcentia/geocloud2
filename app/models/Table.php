@@ -128,7 +128,6 @@ class Table extends Model
         Cache::clear();
     }
 
-
     /**
      * @param array<string> $field
      * @return array<string>
@@ -855,11 +854,9 @@ class Table extends Model
             default => $data["type"],
         };
         $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ADD COLUMN \"$safeColumn\" $type";
-        if (!empty($data['default'])) {
-            $sql .= " DEFAULT " . $data['default'];
-        }
         $this->execQuery($sql, "PDO", "transaction");
         $response["success"] = true;
+        $response["column"] = $safeColumn;
         return $response;
     }
 
@@ -960,17 +957,19 @@ class Table extends Model
         if (is_numeric(mb_substr($table, 0, 1, 'utf-8'))) {
             $table = "_" . $table;
         }
-        $sql = "BEGIN;";
         if ($minimum) {
-            $sql .= "CREATE TABLE $this->postgisschema.$table ();";
+            $sql = "CREATE TABLE $this->postgisschema.$table ();";
         } else {
-            $sql .= "CREATE TABLE $this->postgisschema.$table (gid SERIAL PRIMARY KEY,id INT);";
+            $sql = "CREATE TABLE $this->postgisschema.$table (gid SERIAL PRIMARY KEY,id INT);";
         }
+        $res = $this->prepare($sql);
+        $res->execute();
         if ($type && $srid) {
-            $sql .= "SELECT AddGeometryColumn('" . $this->postgisschema . "','$table','the_geom',$srid,'$type',2);"; // Must use schema prefix cos search path include public
+            $sql = "SELECT AddGeometryColumn('" . $this->postgisschema . "','$table','the_geom',$srid,'$type',2);"; // Must use schema prefix cos search path include public
+            $res = $this->prepare($sql);
+            $res->execute();
         }
-        $sql .= "COMMIT;";
-        $this->execQuery($sql, "PDO", "transaction");
+        $this->table = $this->postgisschema . '.' . $table;
         $response['success'] = true;
         $response['tableName'] = $table;
         $response['message'] = "Layer created";
@@ -1327,9 +1326,9 @@ class Table extends Model
      * @param string|null $name
      * @return void
      */
-    public function createIndex(array $columns, string $type = "btree", ?string $name = null): void
+    public function addIndex(array $columns, string $type = "btree", ?string $name = null): string
     {
-        $name = $name ?: $this->tableWithOutSchema . '_'  . $type;
+        $name = $name ?: $this->tableWithOutSchema . '_' . $type;
         $sql = "CREATE INDEX \"$name\" ON {$this->doubleQuoteQualifiedName($this->table)} USING $type (";
         foreach ($columns as $column) {
             $sql .= "\"$column\",";
@@ -1338,6 +1337,7 @@ class Table extends Model
         $sql .= ")";
         $res = $this->prepare($sql);
         $res->execute();
+        return $name;
     }
 
     /**
@@ -1348,7 +1348,7 @@ class Table extends Model
      */
     public function dropIndex(string $index): void
     {
-        $name = "\"". $this->schema . '"."' . $index ."\"";
+        $name = "\"" . $this->schema . '"."' . $index . "\"";
         $sql = "DROP INDEX $name";
         $res = $this->prepare($sql);
         $res->execute();
@@ -1512,4 +1512,23 @@ class Table extends Model
         $res = $this->prepare($sql);
         $res->execute();
     }
+
+    public function addDefaultValue(string $column, mixed $value): void
+    {
+        $this->clearCacheOnSchemaChanges();
+        $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ALTER COLUMN \"$column\" SET DEFAULT $value";
+        $res = $this->prepare($sql);
+        $res->execute();
+    }
+
+    public function dropDefaultValue(?string $column)
+    {
+        $this->clearCacheOnSchemaChanges();
+        $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ALTER COLUMN \"$column\" DROP DEFAULT";
+        $res = $this->prepare($sql);
+        $res->execute();
+
+    }
+
+
 }

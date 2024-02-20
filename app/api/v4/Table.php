@@ -152,6 +152,7 @@ class Table extends AbstractApi
      *     )
      *   )
      * )
+     * @throws GC2Exception
      */
     public function post_index(): array
     {
@@ -159,7 +160,22 @@ class Table extends AbstractApi
         $data = json_decode($body);
         $this->table = new TableModel(null);
         $this->table->postgisschema = $this->schema;
+        $this->table->begin();
         $r = $this->table->create($data->table, null, null, true);
+        // Add columns
+        if (!empty($data->columns)) {
+            foreach ($data->columns as $column) {
+                Column::addColumn($this->table, $column->column, $column->type, true, $column->default_value, $column->is_nullable);
+            }
+        }
+        // Add indices
+        if (!empty($data->indices)) {
+            foreach ($data->indices as $index) {
+                Index::addIndices($this->table, $index->columns, $index->method, $index->name);
+            }
+        }
+        $this->table->commit();
+
         header("Location: /api/v4/schemas/$this->schema/tables/{$r['tableName']}");
         $res["code"] = "201";
         return $res;

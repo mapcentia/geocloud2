@@ -40,24 +40,31 @@ class Constraint extends AbstractApi
             $trimmedColumns = array_map('trim', $data->columns);
         }
         $constraintType = $data->constraint;
-        switch ($constraintType) {
+
+        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/columns/$this->column/constraints/$name");
+        $res["code"] = "201";
+        return $res;
+    }
+
+    public static function addConstraint(TableModel $table, string $type, ?array $columns = null, ?string $check = null, ?string $name = null, ?string $referencedTable = null, ?array $referencedColumns = null): string
+    {
+        $newName = "";
+        switch ($type) {
             case "primary":
-                $this->table->addPrimaryKeyConstraint($trimmedColumns);
+                $newName = $table->addPrimaryKeyConstraint($columns, $name);
                 break;
             case "foreign":
-                $this->table->addForeignConstraint($trimmedColumns, $data->referenced_table, $data->referenced_columns);
+                $newName = $table->addForeignConstraint($columns, $name, $referencedTable, $referencedColumns);
                 break;
             case "unique":
-                $this->table->addUniqueConstraint($trimmedColumns);
+                $newName = $table->addUniqueConstraint($columns, $name);
                 break;
             case "check":
-                $this->table->addCheckConstraint($data->check);
+                $newName =$table->addCheckConstraint($check, $name);
                 break;
 
         }
-        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/columns/$this->column/constraints/$constraintType");
-        $res["code"] = "201";
-        return $res;
+        return $newName;
     }
 
     public function delete_index(): array
@@ -116,7 +123,7 @@ class Constraint extends AbstractApi
                 "constraint" => $value['constraint']
             ];
         }
-        return  $res2;
+        return $res2;
     }
 
     public function put_index(): array

@@ -78,7 +78,7 @@ class Geofence extends Model
      * @return bool
      * @throws Exception
      */
-    public function postProcessQuery(Statement $statement, array $rules): bool
+    public function postProcessQuery(Statement $statement, array $rules, array $params = null): bool
     {
         $auth = $this->authorize($rules);
         $filters = $auth["filters"];
@@ -90,20 +90,28 @@ class Geofence extends Model
         $model->begin();
         $factory = new StatementFactory(PDOCompatible: true);
         $statement->returning[0] = "*";
-        $str = $factory->createFromAST($statement, true)->getSql();
-        $str = "create temporary table foo on commit drop as with updated_rows as (" . $str . ") select * from updated_rows";
-        $result = $model->prepare($str);
-        $result->execute();
-        $select = "select count(*) from foo where {$filters["filter"]}";
-        $res = $model->prepare($select);
-        $res->execute();
-        $row = $res->fetch();
-        if ($result->rowCount() == 0) {
-            throw new Exception('COUNT 0 ERROR');
+        $str1 = $factory->createFromAST($statement, true)->getSql();
+
+        foreach ($params as $param) {
+            $str = "create temporary table foo on commit drop as with updated_rows as (" . $str1 . ") select * from updated_rows";
+            $result = $model->prepare($str);
+            $result->execute($param);
+            $select = "select count(*) from foo where {$filters["filter"]}";
+            $res = $model->prepare($select);
+            $res->execute();
+            $row = $res->fetch();
+
+            if ($result->rowCount() == 0) {
+                throw new Exception('COUNT 0 ERROR');
+            }
+            if ($result->rowCount() > $row["count"]) {
+                throw new Exception('LIMIT ERROR');
+            }
+            $str = "drop table foo";
+            $result = $model->prepare($str);
+            $result->execute();
         }
-        if ($result->rowCount() > $row["count"]) {
-            throw new Exception('LIMIT ERROR');
-        }
+
         $model->rollback();
         return true;
     }

@@ -52,13 +52,13 @@ class Index extends AbstractApi
         $indices = $table->getIndexes($split[0], $split[1])['indices'];
         foreach ($indices as $index) {
             $res[$index['index']]['columns'][] = $index['column_name'];
-            $res[$index['index']]['index'] = $index['index_method'];
+            $res[$index['index']]['method'] = $index['index_method'];
             $res[$index['index']]['unique'] = $index['is_unique'];
         }
         foreach ($res as $key => $value) {
             $res2[] = [
                 "name" => $key,
-                "index" => $value['index'],
+                "method" => $value['method'],
                 "unique" => $value['unique'],
                 "columns" => $value['columns'],
             ];
@@ -74,12 +74,18 @@ class Index extends AbstractApi
         $body = Input::getBody();
         $data = json_decode($body);
         $name = $data->name ?? null;
-        $indexMethod = $data->index ?? "btree";
+        $method = $data->method ?? "btree";
         $columns = $data->columns;
-        $this->table->createIndex($columns, $indexMethod, $name);
+        $name = self::addIndices($this->table, $columns, $method, $name);
         header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/indices/$name");
         $res["code"] = "201";
         return $res;
+    }
+
+    public static function addIndices(TableModel $table, array $columns, string $method, ?string $name = null): string
+    {
+
+        return $table->addIndex($columns, $method, $name);
     }
 
     public function put_index(): array
