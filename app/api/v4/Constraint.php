@@ -16,12 +16,12 @@ use app\models\Table as TableModel;
 use Exception;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
+#[AcceptableMethods(['GET', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Constraint extends AbstractApi
 {
-    private string|null $constraintType;
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException|Exception
+     * @throws Exception
      */
     public function __construct()
     {
@@ -29,19 +29,19 @@ class Constraint extends AbstractApi
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
      */
     public function post_index(): array
     {
         $body = Input::getBody();
         $data = json_decode($body);
-        $trimmedColumns = null;
-        if (!empty($data->columns)) {
-            $trimmedColumns = array_map('trim', $data->columns);
-        }
-        $constraintType = $data->constraint;
-
-        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/columns/$this->column/constraints/$name");
+        $name = $data->name;
+        $type = $data->constraint;
+        $columns = $data->columns;
+        $check = $data->check;
+        $referencedTable = $data->referenced_table;
+        $referencedColumns = $data->referenced_columns;
+        $name = self::addConstraint($this->table, $type, $columns, $check, $name, $referencedTable, $referencedColumns);
+        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/constraints/$name");
         $res["code"] = "201";
         return $res;
     }
@@ -54,13 +54,13 @@ class Constraint extends AbstractApi
                 $newName = $table->addPrimaryKeyConstraint($columns, $name);
                 break;
             case "foreign":
-                $newName = $table->addForeignConstraint($columns, $name, $referencedTable, $referencedColumns);
+                $newName = $table->addForeignConstraint($columns, $referencedTable, $referencedColumns, $name);
                 break;
             case "unique":
                 $newName = $table->addUniqueConstraint($columns, $name);
                 break;
             case "check":
-                $newName =$table->addCheckConstraint($check, $name);
+                $newName = $table->addCheckConstraint($check, $name);
                 break;
 
         }
@@ -69,20 +69,7 @@ class Constraint extends AbstractApi
 
     public function delete_index(): array
     {
-        switch ($this->constraint) {
-            case "primary":
-                $this->table->dropPrimaryKeyConstraint();
-                break;
-            case "foreign":
-                $this->table->dropForeignConstraint($this->constraint);
-                break;
-            case "unique":
-                $this->table->dropUniqueConstraint($this->constraint);
-                break;
-            case "check":
-                $this->table->dropCheckConstraint($this->constraint);
-                break;
-        }
+        $this->table->dropConstraint($this->constraint);
         $res["code"] = "204";
         return $res;
     }
@@ -129,6 +116,7 @@ class Constraint extends AbstractApi
     public function put_index(): array
     {
         // TODO: Implement put_index() method.
+        return [];
     }
 
     /**
