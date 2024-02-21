@@ -86,10 +86,10 @@ class Table extends AbstractApi
     public function get_index(): array
     {
         if (!empty($this->qualifiedName)) {
-                return self::getTable($this->table, $this->qualifiedName);
+            return self::getTable($this->table, $this->qualifiedName);
 
         } else {
-            return ["tables"=>self::getTables($this->schema)];
+            return ["tables" => self::getTables($this->schema)];
         }
     }
 
@@ -99,7 +99,7 @@ class Table extends AbstractApi
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public static function getTable(TableModel $table, string $name) : array
+    public static function getTable(TableModel $table, string $name): array
     {
         $columns = Column::getColumns($table, $name);
         $constraints = Constraint::getConstraints($table, $name);
@@ -117,7 +117,7 @@ class Table extends AbstractApi
      * @return array[]
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public static function getTables(string $schema) : array
+    public static function getTables(string $schema): array
     {
         $tables = [];
         foreach ((new Model())->getTablesInSchema($schema) as $name) {
@@ -174,6 +174,13 @@ class Table extends AbstractApi
                 Index::addIndices($this->table, $index->columns, $index->method, $index->name);
             }
         }
+        // Add constraints
+        if (!empty($data->constraints)) {
+            foreach ($data->constraints as $constraint) {
+                Constraint::addConstraint($this->table, $constraint->constraint, $constraint->columns, $constraint->check, $constraint->name, $constraint->referenced_table, $constraint->referenced_columns);
+            }
+        }
+
         $this->table->commit();
 
         header("Location: /api/v4/schemas/$this->schema/tables/{$r['tableName']}");

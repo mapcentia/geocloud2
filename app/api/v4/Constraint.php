@@ -104,15 +104,56 @@ class Constraint extends AbstractApi
             $res[$constraint['conname']]['columns'][] = $constraint['column_name'];
         }
         foreach ($res as $key => $value) {
-            $res2[] = [
+            $con = self::getConstraintType($value["constraint"]);
+
+            $def = [
                 "name" => $key,
-                "columns" => $value['columns'],
-                "constraint" => $value['constraint']
+                "constraint" => $con,
             ];
+
+            switch ($con) {
+                case 'unique':
+                case 'primary':
+                    $def['columns'] = $value['columns'];
+                    break;
+                case 'check':
+                    $def['check'] = self::getCheckText($value['constraint']);
+                    break;
+                case 'foreign':
+                    $def['columns'] = $value['columns'];
+                    $def['referenced_table'] = self::getReferencedTable($value['constraint']);
+                    $def['referenced_columns'] = self::getReferencedColumns($value['constraint']);
+                    $def['_'] =$value["constraint"];
+                    break;
+            }
+
+            $res2[] = $def;
         }
         return $res2;
     }
 
+    private static function getConstraintType(string $con): string
+    {
+        return strtolower(strtok($con, ' '));
+    }
+
+    private static function getCheckText(string $con): string
+    {
+        preg_match('#\((.*?)\)#', $con, $match);
+        return $match[1];
+    }
+
+    private static function getReferencedTable(string $con): string
+    {
+        $needle ='REFERENCES';
+        return trim(strtok(substr($con, strpos($con, $needle) + strlen($needle)), '('));
+    }
+
+    private static function getReferencedColumns(string $con): array
+    {
+        preg_match_all('#\((.*?)\)#', $con, $match);
+        return array_map('trim',explode(',', $match[1][1]));
+    }
     public function put_index(): array
     {
         // TODO: Implement put_index() method.
