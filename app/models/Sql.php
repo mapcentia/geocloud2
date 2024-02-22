@@ -378,8 +378,8 @@ class Sql extends Model
             foreach ($convertedParameters as $parameter) {
                 $result->execute($parameter);
                 $row = $this->fetchRow($result);
+                $tmp = null;
                 foreach ($row as $field => $value) {
-                    $tmp = null;
                     try {
                         $convertedValue = $factory->getConverterForTypeSpecification($columnTypes[$field])->input($value);
                         $tmp[] = [$field => $convertedValue];
