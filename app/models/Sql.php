@@ -370,6 +370,7 @@ class Sql extends Model
         $this->rollback(); // Roll back test
 
         $returning = null;
+        $tmp = null;
         $affectedRows = 0;
         $result = $this->prepare($q);
         if (sizeof($convertedParameters) > 0) {
@@ -378,17 +379,21 @@ class Sql extends Model
                 $result->execute($parameter);
                 $row = $this->fetchRow($result);
                 foreach ($row as $field => $value) {
+                    $tmp = null;
                     try {
                         $convertedValue = $factory->getConverterForTypeSpecification($columnTypes[$field])->input($value);
-                        $returning[] = [$field => $convertedValue];
+                        $tmp[] = [$field => $convertedValue];
                     } catch (\Exception) {
                         if ($columnTypes[$field] == 'geometry') {
                             $resultGeom = $this->prepare("select ST_AsGeoJSON(:v) as json");
                             $resultGeom->execute(["v" => $value]);
                             $value = json_decode($this->fetchRow($resultGeom)['json']);
                         }
-                        $returning[] = [$field => $value];
+                        $tmp[] = [$field => $value];
                     }
+                }
+                if ($tmp && sizeof($tmp) > 0) {
+                    $returning[] = $tmp;
                 }
                 $affectedRows += $result->rowCount();
             }
@@ -397,6 +402,10 @@ class Sql extends Model
             $result->execute();
             $affectedRows += $result->rowCount();
             $returning = $result->fetchAll(PDO::FETCH_NAMED);
+            if(empty($returning[1]))
+            {
+                $returning = null;
+            }
         }
         $response['success'] = true;
         $response['affected_rows'] = $affectedRows;

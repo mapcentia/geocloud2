@@ -85,31 +85,42 @@ class Geofence extends Model
         if (empty($filters["filter"])) {
             return true;
         }
+        $firstParam = true;
+        $rowCount = 0;
         $model = new Model();
         $model->connect();
         $model->begin();
         $factory = new StatementFactory(PDOCompatible: true);
         $statement->returning[0] = "*";
         $str1 = $factory->createFromAST($statement, true)->getSql();
-
-        foreach ($params as $param) {
-            $str = "create temporary table foo on commit drop as with updated_rows as (" . $str1 . ") select * from updated_rows";
-            $result = $model->prepare($str);
-            $result->execute($param);
-            $select = "select count(*) from foo where {$filters["filter"]}";
-            $res = $model->prepare($select);
-            $res->execute();
-            $row = $res->fetch();
-
-            if ($result->rowCount() == 0) {
-                throw new Exception('COUNT 0 ERROR');
+        $str = "create temporary table foo on commit drop as with updated_rows as (" . $str1 . ") select * from updated_rows";
+        if ($params) {
+            foreach ($params as $param) {
+                // After first creation of tmp table we insert instead
+                if (!$firstParam) {
+                    $str = "with updated_rows as (" . $str1 . ") insert into foo select * from updated_rows";
+                }
+                $result = $model->prepare($str);
+                $result->execute($param);
+                $firstParam = false;
+                $rowCount += $result->rowCount();
             }
-            if ($result->rowCount() > $row["count"]) {
-                throw new Exception('LIMIT ERROR');
-            }
-            $str = "drop table foo";
+        } else {
             $result = $model->prepare($str);
             $result->execute();
+            $rowCount += $result->rowCount();
+        }
+
+        $select = "select count(*) from foo where {$filters["filter"]}";
+        $res = $model->prepare($select);
+        $res->execute();
+        $row = $res->fetch();
+
+        if ($rowCount == 0) {
+            throw new Exception('COUNT 0 ERROR');
+        }
+        if ($rowCount > $row["count"]) {
+            throw new Exception('LIMIT ERROR');
         }
 
         $model->rollback();
