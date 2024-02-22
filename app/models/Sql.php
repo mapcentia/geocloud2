@@ -402,7 +402,7 @@ class Sql extends Model
             $result->execute();
             $affectedRows += $result->rowCount();
             $returning = $result->fetchAll(PDO::FETCH_NAMED);
-            if(empty($returning[1]))
+            if(empty($returning[0]))
             {
                 $returning = null;
             }
