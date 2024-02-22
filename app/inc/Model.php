@@ -1027,13 +1027,24 @@ class Model
     public function getTablesInSchema(string $schema): array
     {
         $response = [];
-        $sql = "SELECT tablename FROM pg_tables WHERE schemaname = :schema";
+        $sql = "SELECT tablename as name FROM pg_tables WHERE schemaname = :schema";
         $res = $this->prepare($sql);
         $res->execute(["schema" => $schema]);
         while ($row = $this->fetchRow($res)) {
-            $response[] = $row["tablename"];
+            $response[] = $row["name"];
         }
         return $response;
     }
 
+    public function getViewsInSchema(string $schema): array
+    {
+        $response = [];
+        $sql = "SELECT viewname as name FROM pg_views WHERE schemaname = :schema";
+        $res = $this->prepare($sql);
+        $res->execute(["schema" => $schema]);
+        while ($row = $this->fetchRow($res)) {
+            $response[] = $row["name"];
+        }
+        return $response;
+    }
 }
