@@ -120,7 +120,7 @@ class Table extends AbstractApi
     public static function getTables(string $schema): array
     {
         $tables = [];
-        foreach ((new Model())->getTablesInSchema($schema) as $name) {
+        foreach ((new Model())->getTablesFromSchema($schema) as $name) {
             $tables[] = self::getTable(new TableModel($name), $schema . "." . $name);
         }
         return $tables;

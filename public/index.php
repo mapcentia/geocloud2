@@ -336,6 +336,21 @@ try {
                 exit();
             }
         });
+
+        Route::add("api/v3/view/[schema]", function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                if (!$jwt["data"]["superUser"]) {
+                    echo Response::toJson(Response::SUPER_USER_ONLY);
+                    exit();
+                }
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
         //==========================
         // V4 with OAuth and Route2
         //==========================

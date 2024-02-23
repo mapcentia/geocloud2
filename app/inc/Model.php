@@ -1024,7 +1024,7 @@ class Model
         return $response;
     }
 
-    public function getTablesInSchema(string $schema): array
+    public function getTablesFromSchema(string $schema): array
     {
         $response = [];
         $sql = "SELECT tablename as name FROM pg_tables WHERE schemaname = :schema";
@@ -1036,15 +1036,55 @@ class Model
         return $response;
     }
 
-    public function getViewsInSchema(string $schema): array
+    public function getViewsFromSchema(string $schema): array
     {
         $response = [];
-        $sql = "SELECT viewname as name FROM pg_views WHERE schemaname = :schema";
+        $sql = "SELECT viewname as name, schemaname, viewowner as owner,definition, 'f' as ismat FROM pg_views WHERE schemaname = :schema union ";
+        $sql .= "SELECT matviewname as name, schemaname, matviewowner as owner, definition, 't' as ismat FROM pg_matviews WHERE schemaname = :schema";
         $res = $this->prepare($sql);
-        $res->execute(["schema" => $schema]);
+        $res->execute(['schema' => $schema]);
         while ($row = $this->fetchRow($res)) {
-            $response[] = $row["name"];
+            $tmp = [];
+            $tmp['name'] = $row['name'];
+            $tmp['owner'] = $row['owner'];
+            $tmp['ismat'] = $row['ismat'];
+            $tmp['definition'] = $row['definition'];
+            $response[] = $tmp;
         }
         return $response;
+    }
+
+    public function storeViewsFromSchema(string $schema): void
+    {
+        $views = $this->getViewsFromSchema($schema);
+
+        $this->begin();
+        foreach ($views as $view) {
+            $sql = "INSERT INTO settings.views (name,schemaname,owner,definition,ismat,timestamp) VALUES(:name,:schemaname,:owner,:definition,:ismat,:timestamp)" .
+                " ON CONFLICT (name,schemaname) DO UPDATE SET name=:name,schemaname=:schemaname,owner=:owner,definition=:definition,ismat=:ismat,timestamp=:timestamp";
+            $result = $this->prepare($sql);
+            $result->execute(['name' => $view['name'], 'schemaname' => $schema, 'owner' => $view['owner'], 'definition' => $view['definition'], 'ismat' => $view['ismat'], 'timestamp' => date('Y-m-d H:i:s')]);
+        }
+        $this->commit();
+    }
+
+    public function getStarViewsFromStore(string $schema): array
+    {
+        $response = [];
+        $sql = "select * from settings.views where schemaname=:schemaname"; $result = $this->prepare($sql);
+        $result->execute(['schemaname' => $schema]);
+        $rows = $this->fetchAll($result, 'assoc');
+        foreach ($rows as $row) {
+            $tmp = [];
+            $def = $row['definition'];
+            preg_match('#(?<=SELECT)(.|\n)*(?= FROM)#', $def, $match);
+            $tmp['definition'] = str_replace($match[0], ' *', $def);
+            $tmp['name'] = $row['name'];
+            $tmp['schemaname'] = $row['schemaname'];
+            $tmp['ismat'] = $row['ismat'];
+            $response[] = $tmp;
+
+        }
+        return ['views' => $response];
     }
 }
