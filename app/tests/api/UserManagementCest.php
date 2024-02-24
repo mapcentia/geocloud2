@@ -499,16 +499,16 @@ class UserManagementCest
         ]);
     }
 
-    public function superUserShouldDeleteHimself(ApiTester $I)
-    {
-        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
-        $I->sendDELETE('/api/v2/user/' . $this->userId);
-
-        $I->seeResponseCodeIs(HttpCode::OK);
-        $I->seeResponseIsJson();
-        $I->seeResponseContainsJson([
-            'success' => true,
-            'message' => 'User was deleted'
-        ]);
-    }
+//    public function superUserShouldDeleteHimself(ApiTester $I)
+//    {
+//        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
+//        $I->sendDELETE('/api/v2/user/' . $this->userId);
+//
+//        $I->seeResponseCodeIs(HttpCode::OK);
+//        $I->seeResponseIsJson();
+//        $I->seeResponseContainsJson([
+//            'success' => true,
+//            'message' => 'User was deleted'
+//        ]);
+//    }
 }

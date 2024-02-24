@@ -9,6 +9,7 @@
 namespace app\api\v2;
 
 use app\conf\App;
+use app\exceptions\GC2Exception;
 use app\inc\Route;
 use app\inc\Input;
 use app\inc\Controller;
@@ -299,6 +300,7 @@ class User extends Controller
      *     description="Operation status"
      *   )
      * )
+     * @throws GC2Exception
      */
     function delete_index(): array
     {
