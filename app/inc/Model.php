@@ -1057,7 +1057,6 @@ class Model
     public function storeViewsFromSchema(string $schema): void
     {
         $views = $this->getViewsFromSchema($schema);
-
         $this->begin();
         foreach ($views as $view) {
             $sql = "INSERT INTO settings.views (name,schemaname,owner,definition,ismat,timestamp) VALUES(:name,:schemaname,:owner,:definition,:ismat,:timestamp)" .
@@ -1083,8 +1082,20 @@ class Model
             $tmp['schemaname'] = $row['schemaname'];
             $tmp['ismat'] = $row['ismat'];
             $response[] = $tmp;
-
         }
-        return ['views' => $response];
+        return $response;
+    }
+
+    public function createStarViewsFromStore(string $schema, string $targetSchema): void
+    {
+        $views = $this->getStarViewsFromStore($schema);
+        $this->begin();
+        foreach ($views as $view) {
+            $mat = $view['ismat'] ? 'materialized' : '';
+            $sql = "create $mat view \"$targetSchema\".\"{$view['name']}\" as {$view['definition']}";
+            $result = $this->prepare($sql);
+            $result->execute();
+        }
+        $this->commit();
     }
 }

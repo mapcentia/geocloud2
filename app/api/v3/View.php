@@ -61,7 +61,6 @@ class View extends Controller
      */
     public function post_index(): array
     {
-        $response = [];
         $model = new Model();
         $body = Input::getBody();
         $arr = json_decode($body, true);
@@ -75,12 +74,17 @@ class View extends Controller
 
     public function get_index(): array
     {
-        $response = [];
         $model = new Model();
-
         $schema = Route::$params['schema'];
-        return $model->getStarViewsFromStore($schema);
+        return ['views' => $model->getStarViewsFromStore($schema)];
+    }
 
-
+    public function put_index(): array
+    {
+        $model = new Model();
+        $schema = Route::$params['schema'];
+        $target = Route::$params['target'];
+        $model->createStarViewsFromStore($schema, $target);
+        return ["code" => "204"];
     }
 }
