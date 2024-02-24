@@ -9,6 +9,7 @@
 namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
+use app\inc\Model;
 use app\models\Layer;
 use app\models\Table as TableModel;
 use app\inc\Input;
@@ -85,17 +86,44 @@ class Table extends AbstractApi
     public function get_index(): array
     {
         if (!empty($this->qualifiedName)) {
-            $columns = $this->table->metaData;
-            $response = [];
-            foreach ($columns as $key => $column) {
-                $response["columns"][$key] = $column;
-            }
-            return $response;
+            return self::getTable($this->table, $this->qualifiedName);
 
         } else {
-            return ["test" => "hej"];
+            return ["tables" => self::getTables($this->schema)];
         }
+    }
 
+    /**
+     * @param TableModel $table
+     * @param string $name
+     * @return array
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public static function getTable(TableModel $table, string $name): array
+    {
+        $columns = Column::getColumns($table, $name);
+        $constraints = Constraint::getConstraints($table, $name);
+        $indices = Index::getIndices($table, $name);
+        $response["table"] = $name;
+        $response["columns"] = $columns;
+        $response["indices"] = $indices;
+        $response["constraints"] = $constraints;
+        return $response;
+
+    }
+
+    /**
+     * @param string $schema
+     * @return array[]
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public static function getTables(string $schema): array
+    {
+        $tables = [];
+        foreach ((new Model())->getTablesFromSchema($schema) as $name) {
+            $tables[] = self::getTable(new TableModel($name), $schema . "." . $name);
+        }
+        return $tables;
     }
 
     /**
@@ -125,7 +153,6 @@ class Table extends AbstractApi
      *   )
      * )
      * @throws GC2Exception
-     * @throws PhpfastcacheInvalidArgumentException
      */
     public function post_index(): array
     {
@@ -133,7 +160,29 @@ class Table extends AbstractApi
         $data = json_decode($body);
         $this->table = new TableModel(null);
         $this->table->postgisschema = $this->schema;
+        $this->table->begin();
         $r = $this->table->create($data->table, null, null, true);
+        // Add columns
+        if (!empty($data->columns)) {
+            foreach ($data->columns as $column) {
+                Column::addColumn($this->table, $column->column, $column->type, true, $column->default_value, $column->is_nullable);
+            }
+        }
+        // Add indices
+        if (!empty($data->indices)) {
+            foreach ($data->indices as $index) {
+                Index::addIndices($this->table, $index->columns, $index->method, $index->name);
+            }
+        }
+        // Add constraints
+        if (!empty($data->constraints)) {
+            foreach ($data->constraints as $constraint) {
+                Constraint::addConstraint($this->table, $constraint->constraint, $constraint->columns, $constraint->check, $constraint->name, $constraint->referenced_table, $constraint->referenced_columns);
+            }
+        }
+
+        $this->table->commit();
+
         header("Location: /api/v4/schemas/$this->schema/tables/{$r['tableName']}");
         $res["code"] = "201";
         return $res;
@@ -175,7 +224,7 @@ class Table extends AbstractApi
      *     )
      *   )
      * )
-     * @throws GC2Exception|PhpfastcacheInvalidArgumentException
+     * @throws GC2Exception
      */
     public function put_index(): array
     {
@@ -216,7 +265,6 @@ class Table extends AbstractApi
      *     )
      *   )
      * )
-     * @throws PhpfastcacheInvalidArgumentException
      */
     public function delete_index(): array
     {

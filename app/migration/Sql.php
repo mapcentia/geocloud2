@@ -251,9 +251,8 @@ class Sql
                         geometry_columns_join.enableows
                       FROM geometry_columns
                         LEFT JOIN
-                        settings.geometry_columns_join ON
-                                                         geometry_columns.f_table_schema || '.' || geometry_columns.f_table_name || '.' || geometry_columns.f_geometry_column =
-                                                         geometry_columns_join._key_
+                        settings.geometry_columns_join ON geometry_columns_join._key_ =
+                                                         geometry_columns.f_table_schema || '.' || geometry_columns.f_table_name
                       UNION ALL
                       SELECT
                         raster_columns.r_table_schema as f_table_schema,
@@ -361,8 +360,8 @@ class Sql
                       FROM non_postgis_tables
                         LEFT JOIN
                         settings.geometry_columns_join ON
-                                                         non_postgis_tables.f_table_schema || '.' || non_postgis_tables.f_table_name || '.' || non_postgis_tables.f_geometry_column =
-                                                         geometry_columns_join._key_
+                                                         geometry_columns_join._key_ = 
+                                                         non_postgis_tables.f_table_schema || '.' || non_postgis_tables.f_table_name
                       UNION ALL
                       select
                         non_postgis_matviews.f_table_schema,
@@ -474,7 +473,7 @@ class Sql
                               FROM geometry_columns
                                 LEFT JOIN
                                 settings.geometry_columns_join ON
-                                                                 geometry_columns.f_table_schema || ''.'' || geometry_columns.f_table_name || ''.'' || geometry_columns.f_geometry_column =
+                                                                 geometry_columns.f_table_schema || ''.'' || geometry_columns.f_table_name =
                                                                  geometry_columns_join._key_
                               WHERE ' || $1 || '
 
@@ -588,7 +587,7 @@ class Sql
 
                               LEFT JOIN
                                 settings.geometry_columns_join ON
-                                                                 non_postgis_tables.f_table_schema || ''.'' || non_postgis_tables.f_table_name || ''.'' || non_postgis_tables.f_geometry_column =
+                                                                 non_postgis_tables.f_table_schema || ''.'' || non_postgis_tables.f_table_name =
                                                                  geometry_columns_join._key_
                               WHERE ' || $1 || '
 

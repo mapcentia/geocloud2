@@ -38,7 +38,7 @@ class Session
      * @param string $key
      * @param mixed $value
      */
-    public static function set(string $key, $value): void
+    public static function set(string $key, mixed $value): void
     {
         $_SESSION[$key] = $value;
     }
@@ -47,7 +47,7 @@ class Session
      * @param string $key
      * @return mixed|null
      */
-    public static function getByKey(string $key)
+    public static function getByKey(string $key): mixed
     {
         return $_SESSION[$key] ?? null;
     }
@@ -154,7 +154,7 @@ class Session
         $num = 15;
         $plainTxt = "";
         $_SESSION["log"] .= "<br /<br />";
-        $_SESSION["log"] .= "<i > Failed upload of {$file} @ " . date('l jS \of F Y h:i:s A') . " </i ><br />";
+        $_SESSION["log"] .= "<i > Failed upload of $file @ " . date('l jS \of F Y h:i:s A') . " </i ><br />";
         //$plainTxt .= "Failed upload of {$file} @ " . date('l jS \of F Y h:i:s A') . " \n";
         $sizeOfLines = sizeof($lines);
         for ($i = 0; $i < $sizeOfLines; $i++) {
@@ -170,7 +170,7 @@ class Session
     }
 
     /**
-     * @param array<mixed> $obj
+     * @param array $obj
      */
     public static function createLogEs(array $obj): void
     {

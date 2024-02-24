@@ -21,7 +21,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
  * Class Sql
  * @package app\api\v4
  */
-#[AcceptableMethods(['POST', 'DELETE', 'HEAD', 'OPTIONS'])]
+#[AcceptableMethods(['GET', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Index extends AbstractApi
 {
     /**
@@ -33,7 +33,37 @@ class Index extends AbstractApi
 
     public function get_index(): array
     {
-        // TODO: Implement get_index() method.
+        $indices = self::getIndices($this->table, $this->qualifiedName);
+        if (!empty($this->index)) {
+            foreach ($indices as $index) {
+                if ($index['name'] == $this->index) {
+                    return $index;
+                }
+            }
+        }
+        return ["indices" => $indices];
+    }
+
+    public static function getIndices(TableModel $table, string $name): array {
+
+        $res = [];
+        $res2 = [];
+        $split = explode('.', $name);
+        $indices = $table->getIndexes($split[0], $split[1])['indices'];
+        foreach ($indices as $index) {
+            $res[$index['index']]['columns'][] = $index['column_name'];
+            $res[$index['index']]['method'] = $index['index_method'];
+            $res[$index['index']]['unique'] = $index['is_unique'];
+        }
+        foreach ($res as $key => $value) {
+            $res2[] = [
+                "name" => $key,
+                "method" => $value['method'],
+                "unique" => $value['unique'],
+                "columns" => $value['columns'],
+            ];
+        }
+        return  $res2;
     }
 
     /**
@@ -43,12 +73,19 @@ class Index extends AbstractApi
     {
         $body = Input::getBody();
         $data = json_decode($body);
-        $unique = $data->unique;
-        $indexType = $data->type ?? "btree";
-        $this->table->createIndex($this->column, $indexType, $unique);
-        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/columns/$this->column/indices/$indexType");
+        $name = $data->name ?? null;
+        $method = $data->method ?? "btree";
+        $columns = $data->columns;
+        $name = self::addIndices($this->table, $columns, $method, $name);
+        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/indices/$name");
         $res["code"] = "201";
         return $res;
+    }
+
+    public static function addIndices(TableModel $table, array $columns, string $method, ?string $name = null): string
+    {
+
+        return $table->addIndex($columns, $method, $name);
     }
 
     public function put_index(): array
@@ -61,7 +98,7 @@ class Index extends AbstractApi
      */
     public function delete_index(): array
     {
-        $this->table->dropIndex($this->column, $this->index);
+        $this->table->dropIndex($this->index);
         return ["code" => "204"];
     }
 
@@ -73,7 +110,6 @@ class Index extends AbstractApi
     {
         $table = Route2::getParam("table");
         $schema = Route2::getParam("schema");
-        $column = Route2::getParam("column");
         $index = Route2::getParam("index");
         // Put and delete on collection is not allowed
         if (empty($index) && in_array(Input::getMethod(), ['put', 'delete'])) {
@@ -84,6 +120,6 @@ class Index extends AbstractApi
             $this->postWithResource();
         }
         $this->jwt = Jwt::validate()["data"];
-        $this->initiate($schema, $table, null, $column, $index, null, $this->jwt["uid"], $this->jwt["superUser"]);
+        $this->initiate($schema, $table, null, null, $index, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }
 }

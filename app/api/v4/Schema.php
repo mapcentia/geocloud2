@@ -81,6 +81,7 @@ class Schema extends AbstractApi
      *     )
      *   )
      * )
+     * @throws PhpfastcacheInvalidArgumentException
      */
     public function get_index(): array
     {
@@ -88,10 +89,16 @@ class Schema extends AbstractApi
         $response = [];
         if ($this->jwt['superUser'] && empty($this->schema)) {
             foreach ($schemas as $schema) {
-                $response["schemas"][] = ["schema" => $schema["schema"]];
+                $response["schemas"][] = [
+                    "schema" => $schema["schema"],
+                    "tables" => Table::getTables($schema["schema"]),
+                ];
             }
         } else {
-            $response = ["schema" => $this->schema];
+            $response = [
+                "schema" => $this->schema,
+                "tables" => Table::getTables($this->schema),
+            ];
         }
         return $response;
     }
@@ -177,7 +184,7 @@ class Schema extends AbstractApi
      *     )
      *   )
      * )
-     * @throws GC2Exception|PhpfastcacheInvalidArgumentException
+     * @throws GC2Exception
      */
     public function put_index(): array
     {
@@ -225,8 +232,6 @@ class Schema extends AbstractApi
         if (!$this->jwt['superUser']) {
             throw new GC2Exception("", 403);
         }
-        $body = Input::getBody();
-        $data = json_decode($body);
         $r = $this->schemaObj->deleteSchema($this->schema);
         header("Location: /api/v4/schemas/{$r['data']['name']}");
         $res["code"] = "204";
@@ -234,7 +239,7 @@ class Schema extends AbstractApi
     }
 
     /**
-     * @throws GC2Exception
+     * @throws GC2Exception|PhpfastcacheInvalidArgumentException
      */
     public function validate(): void
     {

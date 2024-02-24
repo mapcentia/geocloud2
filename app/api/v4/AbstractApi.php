@@ -116,7 +116,12 @@ abstract class AbstractApi implements ApiInterface
      */
     public function doesIndexExist(): void
     {
-        $indices = $this->table->getIndexes($this->schema, $this->unQualifiedName)["index_method"][$this->column];
+        $indices = $this->table->getIndexes($this->schema, $this->unQualifiedName)["indices"];
+        foreach ($indices as $index) {
+            if ($index['index'] == $this->index) {
+                return;
+            }
+        }
         if (!$indices || !in_array($this->index, $indices)) {
             throw new GC2Exception("Index not found", 404, null, "INDEX_NOT_FOUND");
         }
@@ -147,17 +152,18 @@ abstract class AbstractApi implements ApiInterface
     private function doesConstraintExist(): void
     {
         $type = match ($this->constraint) {
+            "primary" => "p",
+            "foreign" => "f",
             "unique" => "u",
             "check" => "c",
             "notnull" => "n",
             default => ''
         };
         if ($type != "n") {
-            $name = "{$this->unQualifiedName}_{$this->column}_$this->constraint";
             $constraints = $this->table->getConstrains($this->schema, $this->unQualifiedName, $type)['data'];
             $exists = false;
             foreach ($constraints as $constraint) {
-                if ($constraint['conname'] == $name) {
+                if ($constraint['conname'] == $this->constraint) {
                     $exists = true;
                     break;
                 }

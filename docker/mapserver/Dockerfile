@@ -11,7 +11,7 @@ RUN sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 1000M/g" /etc/php/8
 RUN sed -i "s/post_max_size = 8M/post_max_size = 1000M/g" /etc/php/8.3/fpm/php.ini
 
 # Install MapServer 8.0 from source
-RUN git clone https://github.com/mapserver/mapserver.git --branch branch-8-0 &&\
+RUN git clone https://github.com/mapcentia/mapserver.git --branch main &&\
     cd mapserver &&\
     mkdir build &&\
     cd build &&\

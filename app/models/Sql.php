@@ -10,13 +10,13 @@ namespace app\models;
 
 use app\conf\App;
 use app\conf\Connection;
+use app\exceptions\GC2Exception;
 use app\inc\Model;
 use PDO;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
 use PhpOffice\PhpSpreadsheet\Reader\Exception;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
-use sad_spirit\pg_wrapper\exceptions\InvalidArgumentException;
 use ZipArchive;
 use sad_spirit\pg_wrapper\converters\DefaultTypeConverterFactory;
 
@@ -56,13 +56,20 @@ class Sql extends Model
      * @param string|null $nlt
      * @param string|null $nln
      * @param bool|null $convertTypes
+     * @param array|null $parameters
      * @return array
      * @throws Exception
      * @throws PhpfastcacheInvalidArgumentException
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @throws GC2Exception
      */
-    public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, ?string $nlt = null, ?string $nln = null, ?bool $convertTypes = false): array
+    public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, ?string $nlt = null, ?string $nln = null, ?bool $convertTypes = false, array $parameters = null): array
     {
+        // Check params
+        if ($parameters && is_array($parameters[0])) {
+            throw new GC2Exception("Only JSON objects are accepted in SELECT statements/foo. Not arrays", 406);
+        }
+
         if ($format == "excel") {
             $limit = !empty(App::$param["limits"]["sqlExcel"]) ? App::$param["limits"]["sqlExcel"] : 10000;
         } else {
@@ -123,11 +130,7 @@ class Sql extends Model
                 exit(0);
             }
         }
-        $sqlView = "CREATE TEMPORARY VIEW $view as $q";
-        $res = $this->prepare($sqlView);
-        $res->execute();
 
-        $arrayWithFields = $this->getMetaData($view, true, false, null, $q); // Temp VIEW
         $postgisVersion = $this->postgisVersion();
         $bits = explode(".", $postgisVersion["version"]);
         if ((int)$bits[0] < 3 && (int)$bits[1] === 0) {
@@ -135,25 +138,33 @@ class Sql extends Model
         } else {
             $ST_Force2D = "ST_Force2D";
         }
+
+        // Get column types
+        $select = $this->prepare("select * from ($q) as foo LIMIT 1");
+
+        $select->execute($parameters);
+        foreach (range(0, $select->columnCount() - 1) as $column_index) {
+            $meta = $select->getColumnMeta($column_index);
+            $columnTypes[$meta['name']] = $meta['native_type'];
+        }
+
         $fieldsArr = [];
-        foreach ($arrayWithFields as $key => $arr) {
-            if ($arr['type'] == "geometry") {
+        foreach ($columnTypes as $key => $type) {
+            if ($type == "geometry") {
                 if ($format == "geojson" || (($format == "csv" || $format == "excel") && $geoformat == "geojson")) {
                     $fieldsArr[] = "ST_asGeoJson(ST_Transform($ST_Force2D(\"$key\"),$this->srs)) as \"$key\"";
                 } elseif ($format == "csv" || $format == "excel") {
                     $fieldsArr[] = "ST_asText(ST_Transform($ST_Force2D(\"$key\"),$this->srs)) as \"$key\"";
                 }
-            } elseif ($arr['type'] == "bytea") {
+            } elseif ($type == "bytea") {
                 $fieldsArr[] = "encode(\"$key\",'escape') as \"$key\"";
             } else {
                 $fieldsArr[] = "\"$key\"";
             }
         }
-        $sql = implode(",", $fieldsArr);
-        $sql = "SELECT $sql FROM $view LIMIT $limit";
-
+        $fieldsStr = implode(",", $fieldsArr);
+        $sql = "SELECT $fieldsStr FROM ($q) AS foo LIMIT $limit";
         $this->begin();
-
         // Settings from App.php
         if (!empty(App::$param["SqlApiSettings"]["work_mem"])) {
             $this->execQuery("SET work_mem TO '" . App::$param["SqlApiSettings"]["work_mem"] . "'");
@@ -163,35 +174,31 @@ class Sql extends Model
         } else {
             $this->execQuery("SET LOCAL statement_timeout = 60000");
         }
-
         if ($clientEncoding) {
             $this->execQuery("set client_encoding='$clientEncoding'");
         }
 
-        $this->prepare("DECLARE curs CURSOR FOR $sql")->execute();
+        $this->prepare("DECLARE curs CURSOR FOR $sql")->execute($parameters);
         $innerStatement = $this->prepare("FETCH 1 FROM curs");
 
         $geometries = null;
         $fieldsForStore = [];
         $columnsForGrid = [];
         $features = [];
-        $typeConverterFactory = new DefaultTypeConverterFactory();
-
         // GeoJSON output
         // ==============
-
         if ($format == "geojson") {
             while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
                 $arr = array();
                 foreach ($row as $key => $value) {
-                    if ($arrayWithFields[$key]['type'] == "geometry" && $value !== null) {
+                    if ($columnTypes[$key] == "geometry" && $value !== null) {
                         $geometries[] = json_decode($value);
                     } else {
                         if ($convertTypes) {
                             try {
-                                $convertedValue = $typeConverterFactory->getConverterForTypeSpecification($arrayWithFields[$key]['type'])->input($value);
+                                $convertedValue = (new DefaultTypeConverterFactory())->getConverterForTypeSpecification($columnTypes[$key])->input($value);
                                 $arr = $this->array_push_assoc($arr, $key, $convertedValue);
-                            } catch (InvalidArgumentException) {
+                            } catch (\Exception) {
                                 $arr = $this->array_push_assoc($arr, $key, $value);
                             }
                         } else {
@@ -211,11 +218,10 @@ class Sql extends Model
             $this->execQuery("CLOSE curs");
             $this->commit();
 
-            foreach ($arrayWithFields as $key => $value) {
-                $fieldsForStore[] = array("name" => $key, "type" => $value['type']);
-                $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $value['type'], "typeObj" => !empty($value['typeObj']) ? $value['typeObj'] : null);
+            foreach ($columnTypes as $key => $type) {
+                $fieldsForStore[] = array("name" => $key, "type" => $type);
+                $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $type, "typeObj" => !empty($value['typeObj']) ? $value['typeObj'] : null);
             }
-//            $this->free($result);
             $response['success'] = true;
             $response['forStore'] = $fieldsForStore;
             $response['forGrid'] = $columnsForGrid;
@@ -244,9 +250,8 @@ class Sql extends Model
             while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
                 $arr = array();
                 $fields = array();
-
                 foreach ($row as $key => $value) {
-                    if ($arrayWithFields[$key]['type'] == "geometry") {
+                    if ($columnTypes[$key] == "geometry") {
                         if ($withGeom) {
                             $arr = $this->array_push_assoc($arr, $key, $value);
                         }
@@ -323,15 +328,88 @@ class Sql extends Model
 
     /**
      * @param string $q
+     * @param array|null $parameters
      * @return array
+     * @throws GC2Exception
      */
-    public function transaction(string $q): array
+    public function transaction(string $q, array $parameters = null, array $typeHints = null): array
     {
+        $factory = new DefaultTypeConverterFactory();
+        $columnTypes = [];
+        $convertedParameters = [];
+        // Convert JSON to native types
+        foreach ($parameters as $parameter) {
+            $paramTmp = [];
+            foreach ($parameter as $field => $value) {
+                $type = gettype($value);
+                if ($type == 'array' || $type == 'object') {
+                    $nativeType = $typeHints[$field] ?? 'json';
+                    try {
+                        $nativeValue = $factory->getConverterForTypeSpecification($nativeType)->output($value);
+                    } catch (\Exception) {
+                        throw new GC2Exception("The value couldn't be parsed as $nativeType", 406, null, "VALUE_PARSE_ERROR");
+                    }
+                    $paramTmp[$field] = $nativeValue;
+                } else {
+                    $paramTmp[$field] = $value;
+                }
+            }
+            $convertedParameters[] = $paramTmp;
+        }
+        // Get types from returning if any
+        $this->begin();
         $result = $this->prepare($q);
-        $result->execute();
+        $result->execute($convertedParameters[0]);
+        foreach (range(0, $result->columnCount() - 1) as $column_index) {
+            $meta = $result->getColumnMeta($column_index);
+            if (!$meta) {
+                break;
+            }
+            $columnTypes[$meta['name']] = $meta['native_type'];
+        }
+        $this->rollback(); // Roll back test
+
+        $returning = null;
+        $tmp = null;
+        $affectedRows = 0;
+        $result = $this->prepare($q);
+        if (sizeof($convertedParameters) > 0) {
+            $this->begin();
+            foreach ($convertedParameters as $parameter) {
+                $result->execute($parameter);
+                $row = $this->fetchRow($result);
+                $tmp = null;
+                foreach ($row as $field => $value) {
+                    try {
+                        $convertedValue = $factory->getConverterForTypeSpecification($columnTypes[$field])->input($value);
+                        $tmp[] = [$field => $convertedValue];
+                    } catch (\Exception) {
+                        if ($columnTypes[$field] == 'geometry') {
+                            $resultGeom = $this->prepare("select ST_AsGeoJSON(:v) as json");
+                            $resultGeom->execute(["v" => $value]);
+                            $value = json_decode($this->fetchRow($resultGeom)['json']);
+                        }
+                        $tmp[] = [$field => $value];
+                    }
+                }
+                if ($tmp && sizeof($tmp) > 0) {
+                    $returning[] = $tmp;
+                }
+                $affectedRows += $result->rowCount();
+            }
+            $this->commit();
+        } else {
+            $result->execute();
+            $affectedRows += $result->rowCount();
+            $returning = $result->fetchAll(PDO::FETCH_NAMED);
+            if(empty($returning[0]))
+            {
+                $returning = null;
+            }
+        }
         $response['success'] = true;
-        $response['affected_rows'] = $result->rowCount();
-        $response['returning'] = $result->fetchAll(PDO::FETCH_NAMED);
+        $response['affected_rows'] = $affectedRows;
+        $response['returning'] = $returning;
         return $response;
     }
 

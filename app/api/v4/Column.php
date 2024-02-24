@@ -80,12 +80,32 @@ class Column extends AbstractApi
      */
     #[Override] public function get_index(): array
     {
-        $res = $this->table->getMetaData($this->qualifiedName);
+        $res = self::getColumns($this->table, $this->qualifiedName);
         if ($this->column) {
-            return $res[$this->column];
+            foreach ($res as $i) {
+                if ($i['column'] == $this->column) {
+                    return $i;
+                }
+            }
         } else {
-            return $res;
+            return ["columns" => $res];
         }
+        return [];
+    }
+
+    /**
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public static function getColumns(TableModel $table, string $name): array
+    {
+        $response = [];
+        $res = $table->getMetaData($name);
+        foreach ($res as $key => $column) {
+            $column['column'] = $key;
+            $response[] = $column;
+        }
+        return $response;
+
     }
 
 
@@ -134,14 +154,34 @@ class Column extends AbstractApi
     {
         $body = Input::getBody();
         $data = json_decode($body);
-        $r = $this->table->addColumn([
-            "column" => $data->column,
-            "type" => $data->type,
+        $setDefaultValue = false;
+        if (!empty($data->default_value)) {
+            $setDefaultValue = true;
+        }
+        $newColumnName = self::addColumn($this->table, $data->column, $data->type, $setDefaultValue, $data->default_value, $data->is_nullable ?? true);
+        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/columns/$newColumnName");
+        return ["code" => "201"];
+    }
+
+    /**
+     * @throws GC2Exception
+     */
+    public static function addColumn(TableModel $table, string $column, string $type, bool $setDefaultValue, mixed $defaultValue = null, bool $isNullable = true): string
+    {
+        $r = $table->addColumn([
+            "column" => $column,
+            "type" => $type,
         ]);
-        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/columns/{$r["data"][0]}");
-        $res = $this->table->getMetaData($this->qualifiedName)[$r["data"][0]];
-        $res["code"] = "201";
-        return $res;
+        if (!$isNullable) {
+            $table->addNotNullConstraint($column);
+        } else {
+            $table->dropNotNullConstraint($column);
+        }
+        if ($setDefaultValue && isset($defaultValue)) {
+            $table->addDefaultValue($column, $defaultValue);
+        }
+
+        return $r["column"];
     }
 
     /**
@@ -201,10 +241,25 @@ class Column extends AbstractApi
         $data = json_decode($body);
         $obj = new stdClass();
         $obj->id = $this->column;
-        $obj->column = $data->column;
+        $obj->column = $data->column ?? $this->column;
         $obj->type = $data->type;
         $r = $this->table->updateColumn($obj, $this->column, true);
-        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/columns/{$r["name"]}");
+        $newName = $r["name"];
+        if (isset($data->is_nullable)) {
+            if (!$data->is_nullable) {
+                $this->table->addNotNullConstraint($newName);
+            } else {
+                $this->table->dropNotNullConstraint($newName);
+            }
+        }
+        if (property_exists($data, "default_value")) {
+            if ($data->default_value === null) {
+                $this->table->dropDefaultValue($this->column);
+            } else  {
+                $this->table->addDefaultValue($this->column, $data->default_value);
+            }
+        }
+        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/columns/$newName");
         return ["code" => "303"];
     }
 

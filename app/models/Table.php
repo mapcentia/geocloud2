@@ -128,7 +128,6 @@ class Table extends Model
         Cache::clear();
     }
 
-
     /**
      * @param array<string> $field
      * @return array<string>
@@ -461,6 +460,7 @@ class Table extends Model
      * @param bool $raw
      * @param bool $append
      * @return array<bool|string|int>
+     * @throws PDOException
      */
     public function updateRecord(mixed $data, string $keyName, bool $raw = false, bool $append = false): array
     {
@@ -501,6 +501,11 @@ class Table extends Model
                     if ($this->table == "settings.geometry_columns_join") {
                         if (in_array($key, ["editable", "skipconflict", "enableows"])) {
                             $value = $value ?: "0";
+                        }
+                        // TODO this chang of _key_ must be configurable
+                        if ($key == "_key_") {
+                    //        $split = explode('.', $value);
+                    //        $value = $split[0] . '.' . $split[1];
                         }
                         if ($key == "tags") {
                             $value = $value ?: [];
@@ -775,13 +780,13 @@ class Table extends Model
     }
 
     /**
-     * @param array $data
+     * @param string|array $data
      * @param string $_key_
      * @return array
-     * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
      */
-    public function deleteColumn(array $data, string $_key_): array
+    public function deleteColumn(string|array $data, string $_key_): array
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
@@ -849,8 +854,10 @@ class Table extends Model
             "Geometry" => "geometry(Geometry,4326)",
             default => $data["type"],
         };
-        $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ADD COLUMN \"$safeColumn\" $type;";
+        $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ADD COLUMN \"$safeColumn\" $type";
         $this->execQuery($sql, "PDO", "transaction");
+        $response["success"] = true;
+        $response["column"] = $safeColumn;
         return $response;
     }
 
@@ -951,17 +958,19 @@ class Table extends Model
         if (is_numeric(mb_substr($table, 0, 1, 'utf-8'))) {
             $table = "_" . $table;
         }
-        $sql = "BEGIN;";
         if ($minimum) {
-            $sql .= "CREATE TABLE $this->postgisschema.$table ();";
+            $sql = "CREATE TABLE $this->postgisschema.$table ();";
         } else {
-            $sql .= "CREATE TABLE $this->postgisschema.$table (gid SERIAL PRIMARY KEY,id INT);";
+            $sql = "CREATE TABLE $this->postgisschema.$table (gid SERIAL PRIMARY KEY,id INT);";
         }
+        $res = $this->prepare($sql);
+        $res->execute();
         if ($type && $srid) {
-            $sql .= "SELECT AddGeometryColumn('" . $this->postgisschema . "','$table','the_geom',$srid,'$type',2);"; // Must use schema prefix cos search path include public
+            $sql = "SELECT AddGeometryColumn('" . $this->postgisschema . "','$table','the_geom',$srid,'$type',2);"; // Must use schema prefix cos search path include public
+            $res = $this->prepare($sql);
+            $res->execute();
         }
-        $sql .= "COMMIT;";
-        $this->execQuery($sql, "PDO", "transaction");
+        $this->table = $this->postgisschema . '.' . $table;
         $response['success'] = true;
         $response['tableName'] = $table;
         $response['message'] = "Layer created";
@@ -1313,42 +1322,15 @@ class Table extends Model
     }
 
     /**
-     * @param string $column
-     * @param string $type
-     * @param bool $unique
-     * @return void
-     * @throws PDOException
-     */
-    public function createIndex(string $column, string $type = "btree", bool $unique = false): void
-    {
-        $u = $unique ? "UNIQUE" : "";
-        $sql = "CREATE $u INDEX \"{$this->tableWithOutSchema}_{$column}_$type\" ON {$this->doubleQuoteQualifiedName($this->table)} USING $type ($column)";
-        $res = $this->prepare($sql);
-        $res->execute();
-    }
-
-    /**
-     * @param string $column
-     * @param string $type
-     * @return void
-     * @throws PDOException
-     */
-    public function dropIndex(string $column, string $type = "btree"): void
-    {
-        $sql = "DROP INDEX \"$this->schema\".\"{$this->tableWithOutSchema}_{$column}_$type\"";
-        $res = $this->prepare($sql);
-        $res->execute();
-    }
-
-    /**
      * @param array $columns
+     * @param string $type
+     * @param string|null $name
      * @return void
-     * @throws PDOException
      */
-    public function addPrimaryKey(array $columns): void
+    public function addIndex(array $columns, string $type = "btree", ?string $name = null): string
     {
-        $this->clearCacheOnSchemaChanges();
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD PRIMARY KEY (";
+        $name = $name ?: $this->tableWithOutSchema . '_' . $type;
+        $sql = "CREATE INDEX \"$name\" ON {$this->doubleQuoteQualifiedName($this->table)} USING $type (";
         foreach ($columns as $column) {
             $sql .= "\"$column\",";
         }
@@ -1356,48 +1338,141 @@ class Table extends Model
         $sql .= ")";
         $res = $this->prepare($sql);
         $res->execute();
+        return $name;
     }
 
     /**
+     * @param string $column
+     * @param string $type
      * @return void
      * @throws PDOException
      */
-    public function dropPrimaryKey(): void
+    public function dropIndex(string $index): void
+    {
+        $name = "\"" . $this->schema . '"."' . $index . "\"";
+        $sql = "DROP INDEX $name";
+        $res = $this->prepare($sql);
+        $res->execute();
+    }
+
+    /**
+     * @param array $columns
+     * @param string|null $name
+     * @return string
+     */
+    public function addPrimaryKeyConstraint(array $columns, ?string $name = null): string
     {
         $this->clearCacheOnSchemaChanges();
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP CONSTRAINT \"{$this->tableWithOutSchema}_pkey\"";
+        $name = $name ? self::toAscii($name) : $this->tableWithOutSchema . "_primary";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD CONSTRAINT \"$name\" PRIMARY KEY (";
+        foreach ($columns as $column) {
+            $sql .= "\"$column\",";
+        }
+        $sql = rtrim($sql, ",");
+        $sql .= ")";
+        $res = $this->prepare($sql);
+        $res->execute();
+        return $name;
+    }
+
+    /**
+     * @param array $columns
+     * @param string|null $name
+     * @return void
+     */
+    public function addUniqueConstraint(array $columns, ?string $name = null): string
+    {
+        $this->clearCacheOnSchemaChanges();
+        $name = $name ? self::toAscii($name) : $this->tableWithOutSchema . "_unique";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD CONSTRAINT \"$name\" UNIQUE (";
+        foreach ($columns as $column) {
+            $sql .= "\"$column\",";
+        }
+        $sql = rtrim($sql, ",");
+        $sql .= ")";
+        $res = $this->prepare($sql);
+        $res->execute();
+        return $name;
+    }
+
+    /**
+     * @param array $columns
+     * @param string $referencedTable
+     * @param array|null $referencedColumns
+     * @param string|null $name
+     * @return void
+     */
+    public function addForeignConstraint(array $columns, string $referencedTable, ?array $referencedColumns = null, ?string $name = null): string
+    {
+        $this->clearCacheOnSchemaChanges();
+        $name = $name ? self::toAscii($name) : $this->tableWithOutSchema . "_foreign";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD CONSTRAINT \"$name\" FOREIGN KEY (";
+        foreach ($columns as $column) {
+            $sql .= "\"$column\",";
+        }
+        $sql = rtrim($sql, ",");
+        $sql .= ")";
+        $sql .= " REFERENCES $referencedTable";
+        if (!empty($referencedColumns)) {
+            $sql .= " (";
+            foreach ($referencedColumns as $column) {
+                $sql .= "\"$column\",";
+            }
+            $sql = rtrim($sql, ",");
+            $sql .= ")";
+        }
+        $res = $this->prepare($sql);
+        $res->execute();
+        return $name;
+    }
+
+    /**
+     * @param string $check
+     * @param string|null $name
+     * @return void
+     */
+    public function addCheckConstraint(string $check, ?string $name = null): string
+    {
+        $this->clearCacheOnSchemaChanges();
+        $name = $name ? self::toAscii($name) : $this->tableWithOutSchema . "_check";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD CONSTRAINT \"$name\" CHECK ($check)";
+        $res = $this->prepare($sql);
+        $res->execute();
+        return $name;
+    }
+
+    /**
+     * @param string $name
+     * @return void
+     */
+    public function dropConstraint(string $name): void
+    {
+        $this->clearCacheOnSchemaChanges();
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP CONSTRAINT \"$name\"";
         $res = $this->prepare($sql);
         $res->execute();
     }
 
     /**
      * @param string $column
-     * @param string|null $name
+     * @param mixed $value
      * @return void
-     * @throws PDOException
      */
-    public function addUniqueConstraint(string $column, string $name = null): void
+    public function addDefaultValue(string $column, mixed $value): void
     {
         $this->clearCacheOnSchemaChanges();
-        $nameWithPrefix = "{$this->tableWithOutSchema}_{$column}_unique" . ($name ? "_$name" : "");
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD CONSTRAINT \"$nameWithPrefix\" UNIQUE (\"$column\")";
+        $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ALTER COLUMN \"$column\" SET DEFAULT $value";
         $res = $this->prepare($sql);
         $res->execute();
     }
 
-    /**
-     * @param string $column
-     * @param string|null $name
-     * @return void
-     * @throws PDOException
-     */
-    public function dropUniqueConstraint(string $column, string $name = null): void
+    public function dropDefaultValue(?string $column): void
     {
         $this->clearCacheOnSchemaChanges();
-        $nameWithPrefix = "{$this->tableWithOutSchema}_{$column}_unique" . ($name ? "_$name" : "");
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP CONSTRAINT \"$nameWithPrefix\"";
+        $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ALTER COLUMN \"$column\" DROP DEFAULT";
         $res = $this->prepare($sql);
         $res->execute();
+
     }
 
     /**
@@ -1426,58 +1501,5 @@ class Table extends Model
         $res->execute();
     }
 
-    /**
-     * @param string $column
-     * @param string $referencedTable
-     * @param string $referencedColumn
-     * @return void
-     * @throws PDOException
-     */
-    public function addForeignConstraint(string $column, string $referencedTable, string $referencedColumn): void
-    {
-        $this->clearCacheOnSchemaChanges();
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD CONSTRAINT \"{$this->tableWithOutSchema}_{$column}_foreign\" FOREIGN KEY (\"$column\") REFERENCES $referencedTable (\"$referencedColumn\")";
-        $res = $this->prepare($sql);
-        $res->execute();
-    }
 
-    /**
-     * @param string $column
-     * @return void
-     * @throws PDOException
-     */
-    public function dropForeignConstraint(string $column): void
-    {
-        $this->clearCacheOnSchemaChanges();
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP CONSTRAINT \"{$this->tableWithOutSchema}_{$column}_foreign\"";
-        $res = $this->prepare($sql);
-        $res->execute();
-    }
-
-    /**
-     * @param string $column
-     * @param string $check
-     * @return void
-     * @throws PDOException
-     */
-    public function addCheckConstraint(string $column, string $check): void
-    {
-        $this->clearCacheOnSchemaChanges();
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD CONSTRAINT \"{$this->tableWithOutSchema}_{$column}_check\" CHECK ($check)";
-        $res = $this->prepare($sql);
-        $res->execute();
-    }
-
-    /**
-     * @param string $column
-     * @return void
-     * @throws PDOException
-     */
-    public function dropCheckConstraint(string $column): void
-    {
-        $this->clearCacheOnSchemaChanges();
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP CONSTRAINT \"{$this->tableWithOutSchema}_{$column}_check\"";
-        $res = $this->prepare($sql);
-        $res->execute();
-    }
 }

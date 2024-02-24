@@ -26,9 +26,9 @@ class Geofence extends Model
      * @var UserFilter
      */
     private UserFilter $userFilter;
-    public const ALLOW_ACCESS = "allow";
-    public const DENY_ACCESS = "deny";
-    public const LIMIT_ACCESS = "limit";
+    public const string ALLOW_ACCESS = "allow";
+    public const string DENY_ACCESS = "deny";
+    public const string LIMIT_ACCESS = "limit";
 
     /**
      * Geofencing constructor.
@@ -78,32 +78,51 @@ class Geofence extends Model
      * @return bool
      * @throws Exception
      */
-    public function postProcessQuery(Statement $statement, array $rules): bool
+    public function postProcessQuery(Statement $statement, array $rules, array $params = null): bool
     {
         $auth = $this->authorize($rules);
         $filters = $auth["filters"];
         if (empty($filters["filter"])) {
             return true;
         }
+        $firstParam = true;
+        $rowCount = 0;
         $model = new Model();
         $model->connect();
         $model->begin();
         $factory = new StatementFactory(PDOCompatible: true);
         $statement->returning[0] = "*";
-        $str = $factory->createFromAST($statement, true)->getSql();
-        $str = "create temporary table foo on commit drop as with updated_rows as (" . $str . ") select * from updated_rows";
-        $result = $model->prepare($str);
-        $result->execute();
+        $str1 = $factory->createFromAST($statement, true)->getSql();
+        $str = "create temporary table foo on commit drop as with updated_rows as (" . $str1 . ") select * from updated_rows";
+        if ($params) {
+            foreach ($params as $param) {
+                // After first creation of tmp table we insert instead
+                if (!$firstParam) {
+                    $str = "with updated_rows as (" . $str1 . ") insert into foo select * from updated_rows";
+                }
+                $result = $model->prepare($str);
+                $result->execute($param);
+                $firstParam = false;
+                $rowCount += $result->rowCount();
+            }
+        } else {
+            $result = $model->prepare($str);
+            $result->execute();
+            $rowCount += $result->rowCount();
+        }
+
         $select = "select count(*) from foo where {$filters["filter"]}";
         $res = $model->prepare($select);
         $res->execute();
         $row = $res->fetch();
-        if ($result->rowCount() == 0) {
+
+        if ($rowCount == 0) {
             throw new Exception('COUNT 0 ERROR');
         }
-        if ($result->rowCount() > $row["count"]) {
+        if ($rowCount > $row["count"]) {
             throw new Exception('LIMIT ERROR');
         }
+
         $model->rollback();
         return true;
     }
