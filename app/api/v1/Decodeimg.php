@@ -1,23 +1,18 @@
 <?php
 /**
- * Long description for file
- *
- * Long description for file (if any)...
- *  
- * @category   API
- * @package    app\api\v1
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- * @since      File available since Release 2013.1
- *  
+ *
  */
+
 
 namespace app\api\v1;
 
 use app\inc\Controller;
 use app\inc\Input;
 use app\models\Table;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 /**
  * Class Decodeimg
@@ -29,10 +24,11 @@ class Decodeimg extends Controller
     /**
      * @var Table
      */
-    private $table;
+    private Table $table;
 
     /**
      * Decodeimg constructor.
+     * @throws PhpfastcacheInvalidArgumentException
      */
     function __construct()
     {
@@ -43,7 +39,7 @@ class Decodeimg extends Controller
     /**
      *
      */
-    public function get_index()
+    public function get_index(): never
     {
         header("Content-type: image/jpeg");
         $data = $this->table->getRecordByPri(Input::getPath()->part(7));
