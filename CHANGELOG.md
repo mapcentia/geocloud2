@@ -4,6 +4,83 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2023.10.1] - 2023-12-10
+### Fixed
+- Bugs regarding Feature API and the shift from WFS 1.0.0 to 1.1.0
+
+## [2023.10.0] - 2023-10-10
+### Fixed
+- Upgrade to phpoffice/phpspreadsheet instead of the unmaintained phpoffice/phpexcel.
+
+## [2023.9.2] - 2023-22-9
+### Fixed
+- api/v1/sql now points to v2, so it works.
+
+## [2023.9.1] - 2023-21-9
+### Fixed
+- Table::getDependTree now works with PostgreSQL version > 12
+
+## [2023.9.0] - 2023-12-9
+### Added
+- A new GC2 Meta option `line_highlight_style` is added. If set with a Leaflet style object an extra line is drawn below the ordinary vector line, which gives a border or highlight effect.
+
+## [2023.8.1] - 2023-31-8
+### Changed
+- Removed EPSG:900913 and replaced with EPSG:3857
+
+## [2023.8.0] - 2023-8-8
+### Changed
+- Multiple WMS filters now use AND instead of OR.
+- JSON/JSONB fields are now embed in CDATA block in WFS-t, because values are treated as strings.
+
+## [2023.7.0] - 2023-13-7
+### Fixed
+- Security bug in OWS.
+
+## [2023.6.0] - 2023-2-6
+### Fixed
+- It's now possible to use single quotes in field properties JSON. The single quotes will be replaced with double quotes in the code but only after trying to parse the original JSON.
+
+## [2023.5.0] - 2023-11-5
+### Fixed
+- Old bug in GeometryFactory::createGeometry method for MultiPoint. The MultiPoint::toGML method only returned the first geometri part.
+
+## [2023.4.0] - 2023-24-4
+### Fixed
+- It's noew possible to select "double" type in combo-boxes for numberic selection.
+
+## [2023.3.1] - 2023-22-3
+### Added
+- ESRI XML Workspace export added to v3 API. Check swagger docs.
+
+## [2023.3.0] - 2023-20-3
+### Changed
+- New field `properties` in `setting.symbols`, which Vidi Symbols extension sets. Remember to run migrations in databases.
+
+## [2023.2.0] - 2023-28-2
+### Fixed
+- WFS-t didn't parse EPSG format http://www.opengis.net/gml/srs/epsg.xml#xxxx the right way, which resulted in a SQL error.
+
+## [2023.1.2] - 2023-31-1
+### Added
+- Added `returning` property in return object from the SQL API, when doing transactions. So now a RETURNING statement will return key/values from the statement.
+
+### Fixed
+- Re-creating Mapfiles with the v3 Admin API resulted in default extents being set in OWS. Now the schema extent is set in each MapFile.
+
+## [2023.1.1] - 2023-10-1
+### Changed
+- Do not `updateLastmodified` in when running scheduler jobs because it will bust app cache.
+
+## [2023.1.0] - 2023-10-1
+### Changed
+- Don't zip GPX files in the SQL API, because they are often opened by a handheld device witout the means to unzip.
+- Force GPX tracks instead of route, so two or more segments in multi lines don't render an error.
+
+## [2022.12.0] - 2022-7-12
+### Added
+- The `Baselayerjs` API will now return two new properties for use in Dashbaord: disableDatabaseCreation and loginLogo
+
 ## [2022.11.0] - 2022-17-11
 ### Added
 - Added the following to documentation: description on how to enable extensions and a description on the traccar_api extension.
@@ -15,7 +92,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - WMS filters don't work with multiple layers, where one or more is QGIS backed and a WMS exception is now thrown in this case.
 
 ### Fixed
-- Qoute of fields when new version of record is inserted (Track changes). 
+- Quote of fields when new version of record is inserted (Track changes).
 
 ## [2022.10.0] - 2022-5-10
 ### Changed
@@ -27,7 +104,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ```
 
 ### Fixed
-- Restriction values from JSON was always cast to string, which meant the editor tried to submit strings to numeric fields. 
+- Restriction values from JSON was always cast to string, which meant the editor tried to submit strings to numeric fields.
 
 ## [2022.9.0] - 2022-30-9
 ### Added
@@ -37,7 +114,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Hide server version and OS from header and internal error pages. For this change to take effect you have to create a new base image.
 - Updated the QGIS gpg.key to 2022 version.
 - Deny all access to the .git folder in the apache server configuration.
-- Layers are not longer groupped in WMS capabilities because it's not possible to request a group. This would result in an error when GC2 tries to authorize access to the group instead of a single layer. 
+- Layers are not longer groupped in WMS capabilities because it's not possible to request a group. This would result in an error when GC2 tries to authorize access to the group instead of a single layer.
 
 ## [2022.8.1] - 2022-11-8
 ### Changed
@@ -56,7 +133,7 @@ This is a label for feature <b>{{gid}}</b>
 
 ## [2022.6.1] - 2022-27-6
 ### Added
-- New `Template` property in Structure tab. Input is a mustache template, which will in Vidi replace the actual value. All values of the feature can be used in template. Ideal for e.g. custom links/images with alt text. Will overrule `Content` and `Link` properties. 
+- New `Template` property in Structure tab. Input is a mustache template, which will in Vidi replace the actual value. All values of the feature can be used in template. Ideal for e.g. custom links/images with alt text. Will overrule `Content` and `Link` properties.
 
 ### Fixed
 - Doubled download in scheduler is fixed.
@@ -71,7 +148,7 @@ This is a label for feature <b>{{gid}}</b>
 - Memcached can now be used for MapCache backend. For now the host and port is hardcoded to `memcached` and `11211`, so only a local dockerized Memcached server can be used. `docker/docker-compose.yml` is updated with Memcached.
 
 ### Fixed
-- In WFS-t 1.0.0 it's now possible to provide primary key as an ordinary element, because 1.0.0 doesn't support `idgen`.  
+- In WFS-t 1.0.0 it's now possible to provide primary key as an ordinary element, because 1.0.0 doesn't support `idgen`.
 - In MapFiles files default geometry type is set to point, because both line and polygon can be drawn as points. The default will be used when a layer has GEOMETRY as type.
 
 ## [2022.5.0] - 2022-12-5
@@ -161,7 +238,7 @@ This is a label for feature <b>{{gid}}</b>
 
 ## [2021.11.0] - 2021-3-11
 ### Fixed
-- Improvments in filtering for WFT-t. `Not` operator now works. 
+- Improvments in filtering for WFT-t. `Not` operator now works.
 
 ## [2021.10.2] - 2021-28-10
 ### Fixed
@@ -200,7 +277,7 @@ This is a label for feature <b>{{gid}}</b>
 
 ## [2021.7.0] - 2021-9-7
 ### Added
-- The SQL API now support ogr format with `&format=ogr/[format]`. E.g. `&format=ogr/ESRI Shapefile` or `&format=ogr/GPKG`. The response is a zip file with the file(s) or folder. Any vector format, which ogr2ogr is able to write can be used. 
+- The SQL API now support ogr format with `&format=ogr/[format]`. E.g. `&format=ogr/ESRI Shapefile` or `&format=ogr/GPKG`. The response is a zip file with the file(s) or folder. Any vector format, which ogr2ogr is able to write can be used.
 
 ## [2021.6.0] - 2021-2-7
 ### Added
@@ -217,7 +294,7 @@ This is a label for feature <b>{{gid}}</b>
 
 ## [2021.5.2]
 ### Changed
-- outputFormat in WFS-t is set to GML2, if a not recognized format is requested instead if throwing an exception. 
+- outputFormat in WFS-t is set to GML2, if a not recognized format is requested instead if throwing an exception.
 - `peppeocchi/php-cron-scheduler` lock files are now created in `/var/www/geocloud2/app/tmp/scheduler_locks`, so they get purged with other lock files after an hour.
 - Keyvalue API now can be requested with headers: `Content-Type: text/plain` and `Accept: text/plain`. In this case the body on POST and PUT must be a base64url encoded string. And for GET the response will be a base64url encoded string. This makes it easier to get user generated JSON unaltered through the network. E.g. a JSON value like `ILIKE '%12'` will not mess things up.
 
@@ -226,10 +303,10 @@ This is a label for feature <b>{{gid}}</b>
 - WFS-T filter parser will now drop namespaces in property names. If not this is done, the resulting SQL will be invalid.
 - Bug regarding no-strip of gml namespace on Envelope BBOX filter is fixed.
 - Fixed bug in Feature API regarding namespace changes in WFS-t.
-- Trim double qoutes from ogc:PropertyName in WFS-t. Openlayers adds them in WFS requets. 
+- Trim double qoutes from ogc:PropertyName in WFS-t. Openlayers adds them in WFS requets.
 - Always set ns uri to http:// in WFS-t or else editing won't work in Admin.
-- Bugs related to the new `peppeocchi/php-cron-scheduler` system. 
-- The manual Run function in scheduler GUI will not time out after 30 secs. 
+- Bugs related to the new `peppeocchi/php-cron-scheduler` system.
+- The manual Run function in scheduler GUI will not time out after 30 secs.
 - A POST WFS DescribeFeatureType to OWS request would always end in an exception. Not many clients do this, but MapInfo 15.0 does.
 
 ## [2021.5.1]
@@ -254,10 +331,10 @@ This is a label for feature <b>{{gid}}</b>
 - Bump Node.js to v14.
 
 ### Fixed
-- The correct online resources are now set in OWS GetCapabilities when using sub-users. This will fix authication issues in QGIS, which always uses online resource URLs from GetCapabilities in WFS. 
+- The correct online resources are now set in OWS GetCapabilities when using sub-users. This will fix authication issues in QGIS, which always uses online resource URLs from GetCapabilities in WFS.
 - XML reversed chars in QGS files filters are now converted to HTML entities. So a filters with < > / & ' " will not render the QGS file invalid.
 - Newly created sub-users will be added to the session, so they can be granted privileges rigth away without siging out and in again.
-- Bug regarding not being able to remove inheritance from sub-user is fixed.   
+- Bug regarding not being able to remove inheritance from sub-user is fixed.
 - cacheId strings are now md5 hashed, because not all characters are allowed.
 - `settings.geometry_columns_join.meta` is set to an empty JSON object, because it can cause problems in Vidi.
 - Added QGIS_AUTH_DB_DIR_PATH to Apache2 conf, so HTTPS requests in QGIS Server doesn't fail.
@@ -275,7 +352,7 @@ This is a label for feature <b>{{gid}}</b>
   - POSTGIS_PORT=5432
   - POSTGIS_PW=1234
   - POSTGIS_PGBOUNCER=false
-    
+
 ### Changed
 - Intercom.io widget is removed.
 - Some unused files are removed.
@@ -361,10 +438,10 @@ This is a label for feature <b>{{gid}}</b>
     ]
 ];
 ```
-- JWT support. 
-    - A JWT bearer token is now return when using `/api/v2/session/start` 
-    - A token can be set in the header like: `Authorization: Bearer eyJ0eXAiOi....`
-    - A token can be validated in the front controller `index.php` and the database can be set from it like this:
+- JWT support.
+  - A JWT bearer token is now return when using `/api/v2/session/start`
+  - A token can be set in the header like: `Authorization: Bearer eyJ0eXAiOi....`
+  - A token can be validated in the front controller `index.php` and the database can be set from it like this:
 ```php
 Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
     $jwt = Jwt::validate();
@@ -419,8 +496,8 @@ Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
 - Allowed minimum size of scaled symbols setting added to GUI.
 - More fine grained caching in Layer, Setting and Model, so look-ups of primary keys, table schemata and more are cached. This is called AppCache
 - Redis added as backend for Phpfastcache and session control:
-    - Just set `redisHost` in `\app\conf\App.php` to enable Redis for sessions.
-    - And add this `"appCache" => ["type" => "redis", "ttl" => "3600"]` to enable Redis for Phpfastcache.
+  - Just set `redisHost` in `\app\conf\App.php` to enable Redis for sessions.
+  - And add this `"appCache" => ["type" => "redis", "ttl" => "3600"]` to enable Redis for Phpfastcache.
 - `"wfs_geomtype" "[type]"25d` is added in MapFiles for layers with three dimensions, so WFS returns 3D data. MapServer needs to be build with `DWITH_POINT_Z_M=ON`, which is done in [3134fc9](https://github.com/mapcentia/dockerfiles/commit/610382d42bfdb6a5ee74244cc3f30b8c9b73419a)
 - Dimensions of a layer are now displayed in the Database tab footer in Admin.
 
@@ -455,9 +532,9 @@ Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
 
 ### Changed
 - Change how cached/not-cached layers works in the Map tab:
-    - Default is now to display layers as not-cached.
-    - Button in layer tree to switch between cached and not-cached display.
-    - Both cached and not-cached layers are displayed as "single tiled". Cached version is using MapCache ability to assemble tiles server side. 
+  - Default is now to display layers as not-cached.
+  - Button in layer tree to switch between cached and not-cached display.
+  - Both cached and not-cached layers are displayed as "single tiled". Cached version is using MapCache ability to assemble tiles server side.
 - Can now set port on Elasticsearch end-point. If non specified, it will default to 9200.
 - Optimized non-geometry meta VIEWs in database.
 - Support of Elasticsearch 7.x
@@ -473,8 +550,8 @@ Route::add("api/v3/tileseeder/{action}/[uuid]", function () {
 
 ## [2018.2.0.rc1] - 2018-19-12
 - Reload API in MapCache container is removed and legacy container linking will not longer work. MapCache now detects changes in configs and reloads by it self. This makes it more suitable for scaling in a server cluster (like Docker Swarm).  
-This means, that the gc2core and mapcache containers must be able to discover each other on an user-defined network.   
-So both containers must connect to the same user-defined network. Notice that Docker service discovery does not work with default bridge network.
+  This means, that the gc2core and mapcache containers must be able to discover each other on an user-defined network.   
+  So both containers must connect to the same user-defined network. Notice that Docker service discovery does not work with default bridge network.
 - V2 of session API with both POST and GET methods for starting sessions. POST uses a JSON body and GET form data.
 - Subuser class added to controllers with methods for creating, updating and deleting sub-users.
 - Increase max number of colors in Class Wizard -> Intervals to 100.
@@ -498,7 +575,7 @@ So both containers must connect to the same user-defined network. Notice that Do
 
 ## [2018.1] - 2018-07-05
 ### Added
-- New version 2 of the Elasticsearch API, which acts like the native Elasticsearch search API. Including GET with body and the query string "mini-language".  
+- New version 2 of the Elasticsearch API, which acts like the native Elasticsearch search API. Including GET with body and the query string "mini-language".
 - New version 2 of the SQL API, which enables POST and GET of a JSON wrapped query. Supports GET with body.
 - New REST "Feature Edit" API, which wraps the WFS-T API in a simple GeoJSON based REST service. Made for JavaScript clients.
 - New modern dark theme for Admin.
@@ -517,7 +594,7 @@ So both containers must connect to the same user-defined network. Notice that Do
 - This change log.
 
 ### Changed
-- Back-end rewritten for PHP7. 
+- Back-end rewritten for PHP7.
 - MapScript is no longer used.
 - Updated routing framework. Routes are now added with full URI paths.
 - Better Meta API. Can now be filtered using tags, multiple relation names, schemas and combos. Orders now by sort_id,f_table_name.
