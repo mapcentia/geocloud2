@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND noninteractive
 
 # Clone GC2 from GitHub
 RUN cd /var/www/ &&\
-	git clone https://github.com/mapcentia/geocloud2.git --branch=bullseye
+	git clone https://github.com/mapcentia/geocloud2.git
 
 # Install ogr2postgis
 RUN cd ~ &&\
