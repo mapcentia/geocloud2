@@ -37,17 +37,86 @@ class Table extends AbstractApi
 
     /**
      * @return array
+     * @OA\Post(
+     *   path="/api/v4/schemas/{schema}/tables",
+     *   tags={"Table"},
+     *   summary="Create a new table",
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="schema",
+     *     example="my_schema",
+     *     in="path",
+     *     required=true,
+     *     description="Name of schema",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=201,
+     *     description="Created",
+     *   )
+     * )
+     * @throws GC2Exception
+     */
+    public function post_index(): array
+    {
+        $body = Input::getBody();
+        $data = json_decode($body);
+        $this->table = new TableModel(null);
+        $this->table->postgisschema = $this->schema;
+        $this->table->begin();
+        $r = $this->table->create($data->table, null, null, true);
+        // Add columns
+        if (!empty($data->columns)) {
+            foreach ($data->columns as $column) {
+                Column::addColumn($this->table, $column->column, $column->type, true, $column->default_value, $column->is_nullable);
+            }
+        }
+        // Add indices
+        if (!empty($data->indices)) {
+            foreach ($data->indices as $index) {
+                Index::addIndices($this->table, $index->columns, $index->method, $index->name);
+            }
+        }
+        // Add constraints
+        if (!empty($data->constraints)) {
+            foreach ($data->constraints as $constraint) {
+                Constraint::addConstraint($this->table, $constraint->constraint, $constraint->columns, $constraint->check, $constraint->name, $constraint->referenced_table, $constraint->referenced_columns);
+            }
+        }
+
+        $this->table->commit();
+
+        header("Location: /api/v4/schemas/$this->schema/tables/{$r['tableName']}");
+        $res["code"] = "201";
+        return $res;
+    }
+
+
+    /**
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      * @OA\Get(
-     *   path="/api/table/v4/table/{table}",
+     *   path="/api/v4/schemas/{schema}/tables/{table}",
      *   tags={"Table"},
-     *   summary="Get description of table",
+     *   summary="Get description of table(s)",
      *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="schema",
+     *     example="my_schema",
+     *     in="path",
+     *     required=true,
+     *     description="Name of schema",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
      *   @OA\Parameter(
      *     name="table",
      *     in="path",
-     *     required=true,
-     *     description="Name of relation (table, view, etc.) Can be schema qualified",
+     *     required=false,
+     *     description="Name of table",
      *     @OA\Schema(
      *       type="string"
      *     )
@@ -128,92 +197,40 @@ class Table extends AbstractApi
 
     /**
      * @return array
-     * @OA\Post(
-     *   path="/api/table/v4",
-     *   tags={"Table"},
-     *   summary="Create a new table",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="table",
-     *     in="path",
-     *     required=true,
-     *     description="Name of relation (table, view, etc.) Can be schema qualified",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=200,
-     *     description="Successful operation",
-     *     @OA\JsonContent(
-     *       type="object",
-     *       @OA\Property(property="message", type="string", description="Success message"),
-     *       @OA\Property(property="success", type="boolean", example=true),
-     *     )
-     *   )
-     * )
-     * @throws GC2Exception
-     */
-    public function post_index(): array
-    {
-        $body = Input::getBody();
-        $data = json_decode($body);
-        $this->table = new TableModel(null);
-        $this->table->postgisschema = $this->schema;
-        $this->table->begin();
-        $r = $this->table->create($data->table, null, null, true);
-        // Add columns
-        if (!empty($data->columns)) {
-            foreach ($data->columns as $column) {
-                Column::addColumn($this->table, $column->column, $column->type, true, $column->default_value, $column->is_nullable);
-            }
-        }
-        // Add indices
-        if (!empty($data->indices)) {
-            foreach ($data->indices as $index) {
-                Index::addIndices($this->table, $index->columns, $index->method, $index->name);
-            }
-        }
-        // Add constraints
-        if (!empty($data->constraints)) {
-            foreach ($data->constraints as $constraint) {
-                Constraint::addConstraint($this->table, $constraint->constraint, $constraint->columns, $constraint->check, $constraint->name, $constraint->referenced_table, $constraint->referenced_columns);
-            }
-        }
-
-        $this->table->commit();
-
-        header("Location: /api/v4/schemas/$this->schema/tables/{$r['tableName']}");
-        $res["code"] = "201";
-        return $res;
-    }
-
-    /**
-     * @return array
      * @OA\Put(
-     *   path="/api/table/v4/table/{table}",
+     *   path="/api/v4/schemas/{schema}/tables/{table}",
      *   tags={"Table"},
      *   summary="Rename a table",
      *   security={{"bearerAuth":{}}},
      *   @OA\Parameter(
+     *     name="schema",
+     *     example="my_schema",
+     *     in="path",
+     *     required=true,
+     *     description="Name of schema",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Parameter(
      *     name="table",
      *     in="path",
      *     required=true,
-     *     description="New name of relation (table, view, etc.) Can be schema qualified",
+     *     description="Name of table",
      *     @OA\Schema(
      *       type="string"
      *     )
      *   ),
      *   @OA\RequestBody(
-     *      description="New name of relation",
-     *      @OA\MediaType(
-     *        mediaType="application/json",
-     *        @OA\Schema(
-     *          type="object",
-     *          @OA\Property(property="name",type="string", example="new_name")
-     *        )
-     *      )
-     *    ),
+     *     description="New name of relation",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         type="object",
+     *         @OA\Property(property="name",type="string", example="new_name")
+     *       )
+     *     )
+     *   ),
      *   @OA\Response(
      *     response=200,
      *     description="Successful operation",
@@ -242,27 +259,32 @@ class Table extends AbstractApi
     /**
      * @return array
      * @OA\Delete(
-     *   path="/api/table/v4/table/{table}",
+     *   path="/api/v4/schemas/{schema}/tables/{table}",
      *   tags={"Table"},
      *   summary="Delete a table",
      *   security={{"bearerAuth":{}}},
      *   @OA\Parameter(
+     *     name="schema",
+     *     example="my_schema",
+     *     in="path",
+     *     required=true,
+     *     description="Name of schema",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),     
+     *   @OA\Parameter(
      *     name="table",
      *     in="path",
      *     required=true,
-     *     description="Name of relation (table, view, etc.), which should be deleted. Can be schema qualified",
+     *     description="Name of table",
      *     @OA\Schema(
      *       type="string"
      *     )
      *   ),
      *   @OA\Response(
-     *     response=200,
-     *     description="Successful operation",
-     *     @OA\JsonContent(
-     *       type="object",
-     *       @OA\Property(property="message", type="string", description="Success message"),
-     *       @OA\Property(property="success", type="boolean", example=true),
-     *     )
+     *     response=204,
+     *     description="No content",
      *   )
      * )
      */

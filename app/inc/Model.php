@@ -12,6 +12,8 @@ namespace app\inc;
 
 use app\conf\App;
 use app\conf\Connection;
+use app\exceptions\GC2Exception;
+use app\models\Database;
 use app\models\Table;
 use Error;
 use Exception;
@@ -972,7 +974,7 @@ class Model
      * @param string $table
      * @return array
      */
-    public function getIndexes(string|null $schema, string $table): array
+    public function getIndexes(?string $schema, string $table): array
     {
         $response = [];
         $sql = "SELECT
@@ -1054,23 +1056,43 @@ class Model
         return $response;
     }
 
-    public function storeViewsFromSchema(string $schema): void
+    /**
+     * @param array $schemas
+     * @return int
+     * @throws GC2Exception
+     */
+    public function storeViewsFromSchema(array $schemas): int
     {
-        $views = $this->getViewsFromSchema($schema);
+        $db = new Database();
+        $this->connect();
         $this->begin();
-        foreach ($views as $view) {
-            $sql = "INSERT INTO settings.views (name,schemaname,owner,definition,ismat,timestamp) VALUES(:name,:schemaname,:owner,:definition,:ismat,:timestamp)" .
-                " ON CONFLICT (name,schemaname) DO UPDATE SET name=:name,schemaname=:schemaname,owner=:owner,definition=:definition,ismat=:ismat,timestamp=:timestamp";
-            $result = $this->prepare($sql);
-            $result->execute(['name' => $view['name'], 'schemaname' => $schema, 'owner' => $view['owner'], 'definition' => $view['definition'], 'ismat' => $view['ismat'], 'timestamp' => date('Y-m-d H:i:s')]);
+        $count = 0;
+        foreach ($schemas as $schema) {
+            if (!$db->doesSchemaExist($schema)) {
+                throw new GC2Exception("Schema not found", 404, null, "SCHEMA_NOT_FOUND");
+            }
+            $views = $this->getViewsFromSchema($schema);
+            foreach ($views as $view) {
+                $sql = "INSERT INTO settings.views (name,schemaname,owner,definition,ismat,timestamp) VALUES(:name,:schemaname,:owner,:definition,:ismat,:timestamp)" .
+                    " ON CONFLICT (name,schemaname) DO UPDATE SET name=:name,schemaname=:schemaname,owner=:owner,definition=:definition,ismat=:ismat,timestamp=:timestamp";
+                $result = $this->prepare($sql);
+                $result->execute(['name' => $view['name'], 'schemaname' => $schema, 'owner' => $view['owner'], 'definition' => $view['definition'], 'ismat' => $view['ismat'], 'timestamp' => date('Y-m-d H:i:s')]);
+            }
+            $count += sizeof($views);
         }
         $this->commit();
+        return $count;
     }
 
+    /**
+     * @param string $schema
+     * @return array
+     */
     public function getStarViewsFromStore(string $schema): array
     {
         $response = [];
-        $sql = "select * from settings.views where schemaname=:schemaname"; $result = $this->prepare($sql);
+        $sql = "select * from settings.views where schemaname=:schemaname";
+        $result = $this->prepare($sql);
         $result->execute(['schemaname' => $schema]);
         $rows = $this->fetchAll($result, 'assoc');
         foreach ($rows as $row) {
@@ -1086,16 +1108,39 @@ class Model
         return $response;
     }
 
-    public function createStarViewsFromStore(string $schema, string $targetSchema): void
+    /**
+     * @param string $schema
+     * @param string $targetSchema
+     * @param string|null $relation
+     * @return int
+     * @throws GC2Exception
+     */
+    public function createStarViewsFromStore(string $schema, string $targetSchema, ?string $relation = null): int
     {
+        $db = new Database();
+        if (!$db->doesSchemaExist($schema)) {
+            throw new GC2Exception("Schema $schema not found", 404, null, "SCHEMA_NOT_FOUND");
+        }
+        if (!$db->doesSchemaExist($targetSchema)) {
+            throw new GC2Exception("Schema $targetSchema not found", 404, null, "SCHEMA_NOT_FOUND");
+        }
         $views = $this->getStarViewsFromStore($schema);
         $this->begin();
+        $count = 0;
         foreach ($views as $view) {
+            if ($relation && $view['name'] != $relation) {
+                continue;
+            }
             $mat = $view['ismat'] ? 'materialized' : '';
+            $sql = "drop $mat view if exists \"$targetSchema\".\"{$view['name']}\"";
+            $result = $this->prepare($sql);
+            $result->execute();
             $sql = "create $mat view \"$targetSchema\".\"{$view['name']}\" as {$view['definition']}";
             $result = $this->prepare($sql);
             $result->execute();
+            $count++;
         }
         $this->commit();
+        return $count;
     }
 }

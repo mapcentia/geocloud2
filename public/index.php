@@ -337,7 +337,7 @@ try {
             }
         });
 
-        Route::add("api/v3/view/[schema]/[target]", function () {
+        Route::add("api/v3/view/[schema]", function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 if (!$jwt["data"]["superUser"]) {

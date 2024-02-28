@@ -39,7 +39,7 @@ class Schema extends AbstractApi
      * @return array
      * @OA\Get(
      *   path="/api/table/v4/table/{table}",
-     *   tags={"Table"},
+     *   tags={"Schema"},
      *   summary="Get description of table",
      *   security={{"bearerAuth":{}}},
      *   @OA\Parameter(
@@ -107,7 +107,7 @@ class Schema extends AbstractApi
      * @return array
      * @OA\Post(
      *   path="/api/table/v4",
-     *   tags={"Table"},
+     *   tags={"Schema"},
      *   summary="Create a new table",
      *   security={{"bearerAuth":{}}},
      *   @OA\Parameter(
@@ -152,7 +152,7 @@ class Schema extends AbstractApi
      * @return array
      * @OA\Put(
      *   path="/api/table/v4/table/{table}",
-     *   tags={"Table"},
+     *   tags={"Schema"},
      *   summary="Rename a table",
      *   security={{"bearerAuth":{}}},
      *   @OA\Parameter(
@@ -203,7 +203,7 @@ class Schema extends AbstractApi
      * @return array
      * @OA\Delete(
      *   path="/api/table/v4/table/{table}",
-     *   tags={"Table"},
+     *   tags={"Schema"},
      *   summary="Delete a table",
      *   security={{"bearerAuth":{}}},
      *   @OA\Parameter(

@@ -22,8 +22,8 @@ use Firebase\JWT\Key;
  */
 class Jwt
 {
-    const TOKEN_TTL = 36000000;
-    const CODE_TTL = 60000;
+    const int TOKEN_TTL = 36000000;
+    const int CODE_TTL = 60000;
 
     /**
      * @return array

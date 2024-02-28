@@ -36,15 +36,72 @@ class Column extends AbstractApi
 
     /**
      * @return array
-     * @throws PhpfastcacheInvalidArgumentException
-     * @OA\Get(
-     *   path="/api/v4/table/{table}/{column})",
+     * @OA\Post(
+     *   path="/api/v4/schemas/{schema}/tables/{table}/columns",
      *   tags={"Column"},
-     *   summary="Get description of column",
+     *   summary="Add a column to a table",
      *   security={{"bearerAuth":{}}},
      *   @OA\Parameter(
+     *     name="schema",
+     *     in="path",
+     *     required=true,
+     *     description="Name of schema",
+     *     @OA\Schema(
+     *       type="string",
+     *       example="my_schema"
+     *     )
+     *   ),
+     *   @OA\Parameter(
      *     name="table",
-     *     example="public.my_table",
+     *     in="path",
+     *     required=true,
+     *     description="Name of table",
+     *     @OA\Schema(
+     *       type="string",
+     *       example="my_table"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=201,
+     *     description="Created",
+     *   )
+     * )
+     * @throws GC2Exception
+     */
+    public function post_index(): array
+    {
+        $body = Input::getBody();
+        $data = json_decode($body);
+        $setDefaultValue = false;
+        if (!empty($data->default_value)) {
+            $setDefaultValue = true;
+        }
+        $newColumnName = self::addColumn($this->table, $data->column, $data->type, $setDefaultValue, $data->default_value, $data->is_nullable ?? true);
+        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/columns/$newColumnName");
+        return ["code" => "201"];
+    }
+
+    /**
+     * @return array
+     * @throws PhpfastcacheInvalidArgumentException
+     * @OA\Get(
+     *   path="/api/v4/schemas/{schema}/tables/{table}/columns/{column})",
+     *   tags={"Column"},
+     *   summary="Get description of column(s)",
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *      name="schema",
+     *      example="my_schema",
+     *      in="path",
+     *      required=true,
+     *      description="Name of schema",
+     *      @OA\Schema(
+     *        type="string"
+     *      )
+     *    ),
+     *   @OA\Parameter(
+     *     name="table",
+     *     example="my_table",
      *     in="path",
      *     required=true,
      *     description="Name of table",
@@ -56,7 +113,7 @@ class Column extends AbstractApi
      *     name="column",
      *     example="my_column",
      *     in="path",
-     *     required=true,
+     *     required=false,
      *     description="Name of column",
      *     @OA\Schema(
      *       type="string"
@@ -110,60 +167,6 @@ class Column extends AbstractApi
 
 
     /**
-     * @return array
-     * @OA\Post(
-     *   path="/api/v4/column/{table}",
-     *   tags={"Column"},
-     *   summary="Add a column to a table",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="table",
-     *     in="path",
-     *     required=true,
-     *     description="Name of table",
-     *     @OA\Schema(
-     *       type="string",
-     *       example="public.my_table"
-     *     )
-     *   ),
-     *  @OA\RequestBody(
-     *      description="Type of column",
-     *      @OA\MediaType(
-     *        mediaType="application/json",
-     *        @OA\Schema(
-     *          type="object",
-     *          @OA\Property(property="type",type="string", example="varchar(255)"),
-     *          @OA\Property(property="name",type="string", example="my_column"),
-     *        )
-     *      )
-     *    ),
-     *   @OA\Response(
-     *     response=200,
-     *     description="Successful operation",
-     *     @OA\JsonContent(
-     *       type="object",
-     *       @OA\Property(property="message", type="string", description="Success message"),
-     *       @OA\Property(property="success", type="boolean", example=true),
-     *     )
-     *   )
-     * )
-     * @throws PhpfastcacheInvalidArgumentException
-     * @throws GC2Exception
-     */
-    public function post_index(): array
-    {
-        $body = Input::getBody();
-        $data = json_decode($body);
-        $setDefaultValue = false;
-        if (!empty($data->default_value)) {
-            $setDefaultValue = true;
-        }
-        $newColumnName = self::addColumn($this->table, $data->column, $data->type, $setDefaultValue, $data->default_value, $data->is_nullable ?? true);
-        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/columns/$newColumnName");
-        return ["code" => "201"];
-    }
-
-    /**
      * @throws GC2Exception
      */
     public static function addColumn(TableModel $table, string $column, string $type, bool $setDefaultValue, mixed $defaultValue = null, bool $isNullable = true): string
@@ -187,13 +190,23 @@ class Column extends AbstractApi
     /**
      * @return array
      * @OA\Put(
-     *   path="/api/v4/column/{table}/{column}",
+     *   path="/api/v4/schemas/{schema}/tables/{table}/columns/{column}",
      *   tags={"Column"},
-     *   summary="Alter column",
+     *   summary="Rename column and set nullable ",
      *   security={{"bearerAuth":{}}},
      *   @OA\Parameter(
+     *     name="schema",
+     *     example="my_schema",
+     *     in="path",
+     *     required=true,
+     *     description="Name of schema",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Parameter(
      *     name="table",
-     *     example="public.my_table",
+     *     example="my_table",
      *     in="path",
      *     required=true,
      *     description="Name of table",
@@ -201,35 +214,30 @@ class Column extends AbstractApi
      *       type="string"
      *     )
      *   ),
-     *  @OA\Parameter(
-     *     name="column",
-     *     example="my_column",
-     *     in="path",
-     *     required=true,
-     *     description="Name of column",
-     *     @OA\Schema(
-     *       type="string"
+     *   @OA\Parameter(
+     *       name="column",
+     *       in="path",
+     *       required=true,
+     *       description="Name of column",
+     *       @OA\Schema(
+     *         type="string",
+     *         example="my_column"
+     *       )
+     *     ),
+     *   @OA\RequestBody(
+     *     description="Type of column",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         type="object",
+     *         @OA\Property(property="type",type="string", example="varchar(255)"),
+     *         @OA\Property(property="name",type="string", example="my_column")
+     *       )
      *     )
      *   ),
-     *  @OA\RequestBody(
-     *      description="Type of column",
-     *      @OA\MediaType(
-     *        mediaType="application/json",
-     *        @OA\Schema(
-     *          type="object",
-     *          @OA\Property(property="type",type="string", example="varchar(255)"),
-     *          @OA\Property(property="name",type="string", example="my_column")
-     *        )
-     *      )
-     *    ),
      *   @OA\Response(
-     *     response=200,
-     *     description="Successful operation",
-     *     @OA\JsonContent(
-     *       type="object",
-     *       @OA\Property(property="message", type="string", description="Success message"),
-     *       @OA\Property(property="success", type="boolean", example=true),
-     *     )
+     *     response=303,
+     *     description="See other",
      *   )
      * )
      * @throws PhpfastcacheInvalidArgumentException
@@ -266,13 +274,23 @@ class Column extends AbstractApi
     /**
      * @return array
      * @OA\Delete (
-     *   path="/api/v4/column/{table}/{column}",
+     *   path="/api/v4/schemas/{schema}/tables/{table}/columns/{column}",
      *   tags={"Column"},
      *   summary="Drop a column",
      *   security={{"bearerAuth":{}}},
      *   @OA\Parameter(
+     *     name="schema",
+     *     example="my_schema",
+     *     in="path",
+     *     required=true,
+     *     description="Name of schema",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Parameter(
      *     name="table",
-     *     example="public.my_table",
+     *     example="my_table",
      *     in="path",
      *     required=true,
      *     description="Name of table",
@@ -280,7 +298,7 @@ class Column extends AbstractApi
      *       type="string"
      *     )
      *   ),
-     *  @OA\Parameter(
+     *   @OA\Parameter(
      *     name="column",
      *     example="my_column",
      *     in="path",
@@ -291,13 +309,8 @@ class Column extends AbstractApi
      *     )
      *   ),
      *   @OA\Response(
-     *     response=200,
-     *     description="Successful operation",
-     *     @OA\JsonContent(
-     *       type="object",
-     *       @OA\Property(property="message", type="string", description="Success message"),
-     *       @OA\Property(property="success", type="boolean", example=true),
-     *     )
+     *     response=204,
+     *     description="No content",
      *   )
      * )
      * @throws PhpfastcacheInvalidArgumentException

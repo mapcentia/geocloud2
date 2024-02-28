@@ -29,6 +29,37 @@ class Constraint extends AbstractApi
     }
 
     /**
+     * @return array
+     * @OA\Post(
+     *   path="/api/v4/schemas/{schema}/tables/{table}/constraints",
+     *   tags={"Constraint"},
+     *   summary="Create a new constraint",
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="schema",
+     *     example="my_schema",
+     *     in="path",
+     *     required=true,
+     *     description="Name of schema",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Parameter(
+     *     name="table",
+     *     in="path",
+     *     required=true,
+     *     description="Name of table",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=201,
+     *     description="Created",
+     *   )
+     * )
+     * @throws GC2Exception
      */
     public function post_index(): array
     {
@@ -67,6 +98,48 @@ class Constraint extends AbstractApi
         return $newName;
     }
 
+    /**
+     * @return array
+     * @OA\Delete(
+     *   path="/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}",
+     *   tags={"Constraint"},
+     *   summary="Drop a constraint",
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="schema",
+     *     example="my_schema",
+     *     in="path",
+     *     required=true,
+     *     description="Name of schema",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Parameter(
+     *     name="table",
+     *     in="path",
+     *     required=true,
+     *     description="Name of table",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Parameter(
+     *     name="constraint",
+     *     in="path",
+     *     required=true,
+     *     description="Name of constraint",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=204,
+     *     description="No content",
+     *   )
+     * )
+     * @throws GC2Exception
+     */
     public function delete_index(): array
     {
         $this->table->dropConstraint($this->constraint);
@@ -75,7 +148,46 @@ class Constraint extends AbstractApi
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @OA\Get(
+     *   path="/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}",
+     *   tags={"Constraint"},
+     *   summary="Get constraint(s)",
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="schema",
+     *     example="my_schema",
+     *     in="path",
+     *     required=true,
+     *     description="Name of schema",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Parameter(
+     *     name="table",
+     *     in="path",
+     *     required=true,
+     *     description="Name of table",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Parameter(
+     *     name="constraint",
+     *     in="path",
+     *     required=false,
+     *     description="Name of constraint",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=200,
+     *     description="Success",
+     *   )
+     * )
+     * @throws GC2Exception
      */
     public function get_index(): array
     {
@@ -123,7 +235,7 @@ class Constraint extends AbstractApi
                     $def['columns'] = $value['columns'];
                     $def['referenced_table'] = self::getReferencedTable($value['constraint']);
                     $def['referenced_columns'] = self::getReferencedColumns($value['constraint']);
-                    $def['_'] =$value["constraint"];
+                    $def['_'] = $value["constraint"];
                     break;
             }
 
@@ -145,15 +257,16 @@ class Constraint extends AbstractApi
 
     private static function getReferencedTable(string $con): string
     {
-        $needle ='REFERENCES';
+        $needle = 'REFERENCES';
         return trim(strtok(substr($con, strpos($con, $needle) + strlen($needle)), '('));
     }
 
     private static function getReferencedColumns(string $con): array
     {
         preg_match_all('#\((.*?)\)#', $con, $match);
-        return array_map('trim',explode(',', $match[1][1]));
+        return array_map('trim', explode(',', $match[1][1]));
     }
+
     public function put_index(): array
     {
         // TODO: Implement put_index() method.

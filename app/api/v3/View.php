@@ -8,6 +8,7 @@
 
 namespace app\api\v3;
 
+use app\exceptions\GC2Exception;
 use app\inc\Controller;
 use app\inc\Input;
 use app\inc\Model;
@@ -58,6 +59,7 @@ class View extends Controller
      *     )
      *   )
      * )
+     * @throws GC2Exception
      */
     public function post_index(): array
     {
@@ -65,10 +67,10 @@ class View extends Controller
         $body = Input::getBody();
         $arr = json_decode($body, true);
 
-        $schema = $arr['schema'];
-        $model->storeViewsFromSchema($schema);
+        $schemas = $arr['schemas'];
+        $count = $model->storeViewsFromSchema($schemas);
 
-        return ["code" => "204"];
+        return ["code" => "201", "count" => $count];
 
     }
 
@@ -79,12 +81,19 @@ class View extends Controller
         return ['views' => $model->getStarViewsFromStore($schema)];
     }
 
+    /**
+     * @throws GC2Exception
+     */
     public function put_index(): array
     {
         $model = new Model();
+        $body = Input::getBody();
+        $arr = json_decode($body, true);
+
         $schema = Route::$params['schema'];
-        $target = Route::$params['target'];
-        $model->createStarViewsFromStore($schema, $target);
-        return ["code" => "204"];
+        $target = $arr['to'];
+        $relation = $arr['relation'];
+        $count = $model->createStarViewsFromStore($schema, $target, $relation);
+        return ["code" => "200", "count" => $count];
     }
 }

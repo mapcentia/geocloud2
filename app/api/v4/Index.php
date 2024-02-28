@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2023 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -31,6 +31,96 @@ class Index extends AbstractApi
     {
     }
 
+    /**
+     * @return array
+     * @OA\Post (
+     *   path="/api/v4/schemas/{schema}/tables/{table}/indices",
+     *   tags={"Indices"},
+     *   summary="Get index/indices",
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="schema",
+     *     example="my_schema",
+     *     in="path",
+     *     required=true,
+     *     description="Name of schema",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Parameter(
+     *     name="table",
+     *     in="path",
+     *     required=true,
+     *     description="Name of table",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=201,
+     *     description="Created",
+     *   )
+     * )
+     * @throws GC2Exception
+     */
+    public function post_index(): array
+    {
+        $body = Input::getBody();
+        $data = json_decode($body);
+        $name = $data->name ?? null;
+        $method = $data->method ?? "btree";
+        $columns = $data->columns;
+        $name = self::addIndices($this->table, $columns, $method, $name);
+        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/indices/$name");
+        $res["code"] = "201";
+        return $res;
+    }
+
+    /**
+     * @return array
+     * @OA\Get(
+     *   path="/api/v4/schemas/{schema}/tables/{table}/indices/{index}",
+     *   tags={"Indices"},
+     *   summary="Get index/indices",
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="schema",
+     *     example="my_schema",
+     *     in="path",
+     *     required=true,
+     *     description="Name of schema",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Parameter(
+     *     name="table",
+     *     example="my_table",
+     *     in="path",
+     *     required=true,
+     *     description="Name of table",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Parameter(
+     *     name="index",
+     *     example="my_index",
+     *     in="path",
+     *     required=false,
+     *     description="Name of constraint",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=200,
+     *     description="Success",
+     *   )
+     * )
+     * @throws GC2Exception
+     */
     public function get_index(): array
     {
         $indices = self::getIndices($this->table, $this->qualifiedName);
@@ -66,25 +156,8 @@ class Index extends AbstractApi
         return  $res2;
     }
 
-    /**
-     * @throws PhpfastcacheInvalidArgumentException
-     */
-    public function post_index(): array
-    {
-        $body = Input::getBody();
-        $data = json_decode($body);
-        $name = $data->name ?? null;
-        $method = $data->method ?? "btree";
-        $columns = $data->columns;
-        $name = self::addIndices($this->table, $columns, $method, $name);
-        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/indices/$name");
-        $res["code"] = "201";
-        return $res;
-    }
-
     public static function addIndices(TableModel $table, array $columns, string $method, ?string $name = null): string
     {
-
         return $table->addIndex($columns, $method, $name);
     }
 
@@ -94,7 +167,48 @@ class Index extends AbstractApi
     }
 
     /**
-     * @throws PDOException
+     * @return array
+     * @OA\Delete (
+     *   path="/api/v4/schemas/{schema}/tables/{table}/indices/{index}",
+     *   tags={"Indices"},
+     *   summary="Get index/indices",
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="schema",
+     *     example="my_schema",
+     *     in="path",
+     *     required=true,
+     *     description="Name of schema",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Parameter(
+     *     name="table",
+     *     example="my_table",
+     *     in="path",
+     *     required=true,
+     *     description="Name of table",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Parameter(
+     *     name="index",
+     *     example="my_index",
+     *     in="path",
+     *     required=true,
+     *     description="Name of constraint",
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=204,
+     *     description="No content",
+     *   )
+     * )
+     * @throws GC2Exception
      */
     public function delete_index(): array
     {
