@@ -67,11 +67,10 @@ class Admin extends Controller
         $response = [];
         $database = new Database();
         $schemas = $database->listAllSchemas();
-        $mapfile = new Mapfile();
         if (!empty($schemas["data"])) {
             foreach ($schemas["data"] as $schema) {
                 Connection::$param['postgisschema'] = $schema["schema"];
-                $res = $mapfile->get_index();
+                $res = (new  Mapfile())->get_index();
                 $response["data"][] = [$res[0]["ch"], $res[1]["ch"]];
             }
         }
