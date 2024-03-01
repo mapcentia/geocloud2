@@ -13,57 +13,25 @@ use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Route2;
 use app\models\Table as TableModel;
-use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use OpenApi\Attributes as OA;
 
-
-/**
- * Class Sql
- * @package app\api\v4
- */
+#[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
+#[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['GET', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Index extends AbstractApi
 {
-    /**
-     * @throws GC2Exception|PhpfastcacheInvalidArgumentException
-     */
-    public function __construct()
-    {
-    }
 
     /**
      * @return array
-     * @OA\Post (
-     *   path="/api/v4/schemas/{schema}/tables/{table}/indices",
-     *   tags={"Indices"},
-     *   summary="Get index/indices",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="schema",
-     *     example="my_schema",
-     *     in="path",
-     *     required=true,
-     *     description="Name of schema",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Parameter(
-     *     name="table",
-     *     in="path",
-     *     required=true,
-     *     description="Name of table",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=201,
-     *     description="Created",
-     *   )
-     * )
-     * @throws GC2Exception
      */
+    #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/indices', operationId: 'postIndex', tags: ['Indices'])]
+    #[OA\Parameter(name: 'schema', description: 'Name of schema', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Name of table', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
+    #[OA\Response(response: 201, description: 'Created',
+        content: new OA\JsonContent(properties: [new OA\Property(property: 'index', description: 'Name of new index', type: 'string', example: 'my_index')], type: 'object'),
+        links: [new OA\Link('', null,null,'getIndex')])
+    ]
     public function post_index(): array
     {
         $body = Input::getBody();
@@ -81,6 +49,7 @@ class Index extends AbstractApi
      * @return array
      * @OA\Get(
      *   path="/api/v4/schemas/{schema}/tables/{table}/indices/{index}",
+     *   operationId="getIndex",
      *   tags={"Indices"},
      *   summary="Get index/indices",
      *   security={{"bearerAuth":{}}},
@@ -134,7 +103,8 @@ class Index extends AbstractApi
         return ["indices" => $indices];
     }
 
-    public static function getIndices(TableModel $table, string $name): array {
+    public static function getIndices(TableModel $table, string $name): array
+    {
 
         $res = [];
         $res2 = [];
@@ -153,7 +123,7 @@ class Index extends AbstractApi
                 "columns" => $value['columns'],
             ];
         }
-        return  $res2;
+        return $res2;
     }
 
     public static function addIndices(TableModel $table, array $columns, string $method, ?string $name = null): string

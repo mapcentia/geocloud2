@@ -1018,8 +1018,8 @@ class Model
         $res->execute(["schema" => $schema, "table" => $table]);
         while ($row = $this->fetchRow($res)) {
             $response["index_method"][$row["column_name"]][] = $row["index_method"];
-            $response["is_primary"][$row["column_name"]] = $row["is_primary"];
-            $response["is_unique"][$row["column_name"]] = $row["is_unique"];
+            $response["is_primary"][$row["column_name"]] = $response["is_primary"][$row["column_name"]] ?: $row["is_primary"] ;
+            $response["is_unique"][$row["column_name"]] = $response["is_unique"][$row["column_name"]] ?: $row["is_unique"];
             $response["indices"][] = $row;
 
         }
@@ -1099,7 +1099,7 @@ class Model
             $tmp = [];
             $def = $row['definition'];
             preg_match('#(?<=SELECT)(.|\n)*(?= FROM)#', $def, $match);
-            $tmp['definition'] = str_replace($match[0], ' *', $def);
+            $tmp['definition'] = $match[0] ? str_replace($match[0], ' *', $def) : $def;
             $tmp['name'] = $row['name'];
             $tmp['schemaname'] = $row['schemaname'];
             $tmp['ismat'] = $row['ismat'];
@@ -1115,30 +1115,40 @@ class Model
      * @return int
      * @throws GC2Exception
      */
-    public function createStarViewsFromStore(string $schema, string $targetSchema, ?string $relation = null): int
+    public function createStarViewsFromStore(array $schemas, ?array $targetSchemas = null, ?array $relations = null): int
     {
-        $db = new Database();
-        if (!$db->doesSchemaExist($schema)) {
-            throw new GC2Exception("Schema $schema not found", 404, null, "SCHEMA_NOT_FOUND");
+        if ($targetSchemas && sizeof($schemas) != sizeof($targetSchemas)) {
+            throw new GC2Exception("Schemas and targets must have the same number of entries", 500, null, null);
+        } elseif (!$targetSchemas) {
+            $targetSchemas = $schemas;
         }
-        if (!$db->doesSchemaExist($targetSchema)) {
-            throw new GC2Exception("Schema $targetSchema not found", 404, null, "SCHEMA_NOT_FOUND");
-        }
-        $views = $this->getStarViewsFromStore($schema);
-        $this->begin();
         $count = 0;
-        foreach ($views as $view) {
-            if ($relation && $view['name'] != $relation) {
-                continue;
+        $db = new Database();
+        $this->connect();
+        $this->begin();
+        for ($i = 0; $i < sizeof($schemas); $i++) {
+            $schema = $schemas[$i];
+            $targetSchema = $targetSchemas[$i];
+            if (!$db->doesSchemaExist($schema)) {
+                throw new GC2Exception("Schema $schema not found", 404, null, "SCHEMA_NOT_FOUND");
             }
-            $mat = $view['ismat'] ? 'materialized' : '';
-            $sql = "drop $mat view if exists \"$targetSchema\".\"{$view['name']}\"";
-            $result = $this->prepare($sql);
-            $result->execute();
-            $sql = "create $mat view \"$targetSchema\".\"{$view['name']}\" as {$view['definition']}";
-            $result = $this->prepare($sql);
-            $result->execute();
-            $count++;
+            if (!$db->doesSchemaExist($targetSchema)) {
+                throw new GC2Exception("Schema $targetSchema not found", 404, null, "SCHEMA_NOT_FOUND");
+            }
+            $views = $this->getStarViewsFromStore($schema);
+            foreach ($views as $view) {
+                if ($relations && in_array($view['name'], $relations)) {
+                    continue;
+                }
+                $mat = $view['ismat'] ? 'materialized' : '';
+                $sql = "drop $mat view if exists \"$targetSchema\".\"{$view['name']}\"";
+                $result = $this->prepare($sql);
+                $result->execute();
+                $sql = "create $mat view \"$targetSchema\".\"{$view['name']}\" as {$view['definition']}";
+                $result = $this->prepare($sql);
+                $result->execute();
+                $count++;
+            }
         }
         $this->commit();
         return $count;

@@ -90,10 +90,10 @@ class View extends Controller
         $body = Input::getBody();
         $arr = json_decode($body, true);
 
-        $schema = Route::$params['schema'];
-        $target = $arr['to'];
-        $relation = $arr['relation'];
-        $count = $model->createStarViewsFromStore($schema, $target, $relation);
+        $schemas = $arr['from'];
+        $targets = $arr['to'];
+        $relations = $arr['relation'];
+        $count = $model->createStarViewsFromStore($schemas, $targets, $relations);
         return ["code" => "200", "count" => $count];
     }
 }
