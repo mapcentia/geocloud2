@@ -93,7 +93,7 @@ class Qgis extends Model
                 $response['code'] = 401;
                 return $response;
             } else {
-                touch($path . $row["id"], $row["unixtimestamp"]);
+                touch($path . $row["id"], (int)$row["unixtimestamp"]);
             }
             fclose($fh);
             $files[] = $row["id"];
