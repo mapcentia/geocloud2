@@ -39,7 +39,7 @@ class User extends AbstractApi
     private static function convertUserObject(array $user): array
     {
         return [
-            "name" => $user['screenName'] ??$user['screenname']?? $user['userid'],
+            "name" => $user['screenName'] ?? $user['screenname'] ?? $user['userid'],
             "user_group" => $user["usergroup"],
             "email" => $user["email"],
             "properties" => $user["properties"],
@@ -84,9 +84,9 @@ class User extends AbstractApi
         }
         $data = json_decode(Input::getBody(), true) ?: [];
         $data['parentdb'] = $this->jwt['database'];
-        $res =  self::convertUserObject((new UserModel())->createUser($data)['data']);
-        $res["code"] = "201";
-        return $res;
+        $res = self::convertUserObject((new UserModel())->createUser($data)['data']);
+        header("Location: /api/v4/users/{$res['name']}");
+        return ["code" => 201];
     }
 
     /**
