@@ -1,69 +1,85 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
+
 namespace app\api\v3;
 
+use app\exceptions\GC2Exception;
 use app\inc\Controller;
 use app\inc\Route;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\models\Job;
+use OpenApi\Attributes as OA;
 
-
-/**
- * Class Scheduler
- * @package app\api\v3
- */
+#[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
+#[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 class Scheduler extends Controller
 {
-    /**
-     * @var \app\models\Tileseeder
-     */
-    public $tileSeeder;
+    private Job $job;
+    private string $db;
 
     /**
-     * Tileseeder constructor.
+     * @throws GC2Exception
      */
     public function __construct()
     {
         parent::__construct();
-        $this->tileSeeder = new \app\models\Tileseeder();
+        $this->job = new Job();
+        $this->db = Jwt::extractPayload(Input::getJwtToken())["data"]["database"];
     }
 
     /**
-     * @return void
-     *
-     * @OA\Get(
-     *   path="/api/v3/scheduler/{jobId}",
-     *   tags={"Scheduler"},
-     *   summary="Start scheduled job by id.",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="jobId",
-     *     in="path",
-     *     required=true,
-     *     description="Job identifier",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="200",
-     *     description="Operation status"
-     *   )
-     * )
+     * @return never
      */
-    public function get_index()
+    #[OA\Post(path: '/api/v3/scheduler/{jobid}', operationId: 'startSchedulerJob', tags: ['Scheduler'])]
+    #[OA\Parameter(name: 'jobid', description: 'Job id', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '876')]
+    #[OA\Response(response: 202, description: 'Accepted')]
+    public function post_index(): array
     {
-        $id = (int)Route::getParam("id");
-        $job = new Job();
-        $db = Jwt::extractPayload(Input::getJwtToken())["data"]["database"];
-        $job->runJob($id, $db, true);
-        exit();
+        $id = Route::getParam("id");
+        $name = Route::getParam("name");
+        if (is_numeric($id)) {
+            $this->job->runJob((int)$id, $this->db, $name);
+        } else {
+            $jobs = $this->job->getAll($this->db)['data'];
+            foreach ($jobs as $job) {
+                if ($job['schema'] == $id) {
+                    $this->job->runJob($job['id'], $this->db, $name);
+                }
+            }
+        }
+        header("Location: /api/v4/scheduler");
+        return ['code' => 202];
+    }
+
+    /**
+     * @return array[]
+     */
+    #[OA\Get(path: '/api/v3/scheduler', operationId: 'getRunningSchedulerJobs', tags: ['Scheduler'])]
+    #[OA\Response(response: 200, description: 'OK',
+        content: new OA\JsonContent(properties: [
+            new OA\Property(property: 'uuid', description: 'Job uuid', type: 'string', example: 'my_index'),
+            new OA\Property(property: 'id', description: 'Job id', type: 'string', example: 'my_index'),
+            new OA\Property(property: 'pid', description: 'Job pid', type: 'string', example: 'my_index'),
+        ], type: 'object'))]
+    public function get_index(): array
+    {
+        $fromDb = $this->job->getAllStartedJobs($this->db);
+        $cmd = "pgrep timeout";
+        exec($cmd, $out);
+        $res = [];
+        // Find active pids
+        foreach ($fromDb as $value) {
+            if (in_array($value["pid"], $out)) {
+                $res[] = ["uuid" => $value["uuid"], "pid" => $value["pid"], "id" => $value["id"]];
+            }
+        }
+        return ["jobs" => $res];
     }
 }

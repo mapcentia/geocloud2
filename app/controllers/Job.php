@@ -92,6 +92,7 @@ class Job extends Controller
                 "message" => "Id missing",
             ];
         }
-        return (!$response['success']) ? $response : $this->job->runJob($id, $_SESSION['screen_name']);
+        $this->job->runJob($id, $_SESSION['screen_name']);
+        return ["success" => true ];
     }
 }

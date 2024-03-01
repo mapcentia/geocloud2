@@ -12,6 +12,7 @@ ini_set('max_execution_time', "0");
 
 use app\inc\Model;
 use app\inc\Util;
+use Exception;
 use PDOException;
 
 
@@ -36,14 +37,7 @@ class Job extends Model
             $args = array();
         }
         $res = $this->prepare($sql);
-        try {
-            $res->execute($args);
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
+        $res->execute($args);
         while ($row = $this->fetchRow($res)) {
             $arr[] = $row;
         }
@@ -62,14 +56,7 @@ class Job extends Model
     {
         $sql = "INSERT INTO jobs (db, name, schema, url, cron, epsg, type, min, hour, dayofmonth, month, dayofweek, encoding, extra, delete_append, download_schema, presql, postsql, active) VALUES(:db, :name, :schema, :url, :cron, :epsg, :type, :min, :hour, :dayofmonth, :month, :dayofweek, :encoding, :extra, :delete_append, :download_schema, :presql, :postsql, :active)";
         $res = $this->prepare($sql);
-        try {
-            $res->execute(array(":db" => $db, ":name" => Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":extra" => $data->extra, ":delete_append" => $data->delete_append, ":download_schema" => $data->download_schema, ":presql" => $data->presql, ":postsql" => $data->postsql, ":active" => $data->active));
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
+        $res->execute(array(":db" => $db, ":name" => Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":extra" => $data->extra, ":delete_append" => $data->delete_append, ":download_schema" => $data->download_schema, ":presql" => $data->presql, ":postsql" => $data->postsql, ":active" => $data->active));
         $response['success'] = true;
         $response['message'] = "Jobs created";
         return $response;
@@ -81,17 +68,9 @@ class Job extends Model
      */
     public function updateJob(object $data): array
     {
-
         $sql = "UPDATE jobs SET name=:name, schema=:schema, url=:url, cron=:cron, epsg=:epsg, type=:type, min=:min, hour=:hour, dayofmonth=:dayofmonth, month=:month, dayofweek=:dayofweek, encoding=:encoding, extra=:extra, delete_append=:delete_append, download_schema=:download_schema, presql=:presql, postsql=:postsql, active=:active WHERE id=:id";
         $res = $this->prepare($sql);
-        try {
-            $res->execute(array(":name" => Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":id" => $data->id, ":extra" => $data->extra, "delete_append" => $data->delete_append, "download_schema" => $data->download_schema, "presql" => $data->presql, "postsql" => $data->postsql, "active" => $data->active));
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
+        $res->execute(array(":name" => Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":id" => $data->id, ":extra" => $data->extra, "delete_append" => $data->delete_append, "download_schema" => $data->download_schema, "presql" => $data->presql, "postsql" => $data->postsql, "active" => $data->active));
         $response['success'] = true;
         $response['message'] = "Jobs updated";
         return $response;
@@ -105,14 +84,7 @@ class Job extends Model
     {
         $sql = "DELETE FROM jobs WHERE id=:id";
         $res = $this->prepare($sql);
-        try {
-            $res->execute(array(":id" => $data->id));
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
+        $res->execute(array(":id" => $data->id));
         $response['success'] = true;
         $response['message'] = "Job deleted";
         return $response;
@@ -121,10 +93,10 @@ class Job extends Model
     /**
      * @param int $id
      * @param string $db
-     * @param bool $flush
-     * @return array<mixed>|null
+     * @param string|null $name
+     * @return true
      */
-    public function runJob(int $id, string $db, bool $flush = false): ?array
+    public function runJob(int $id, string $db, ?string $name = null): true
     {
         $cmd = null;
         $jobs = $this->getAll($db);
@@ -132,35 +104,55 @@ class Job extends Model
             if ($id == $job["id"]) {
                 if (!$job["delete_append"]) $job["delete_append"] = "0";
                 if (!$job["download_schema"]) $job["download_schema"] = "0";
-                $cmd = "/usr/bin/timeout -s SIGINT 10h php " . __DIR__ . "/../scripts/get.php --db {$job["db"]} --schema {$job["schema"]} --safeName {$job["name"]} --url \"{$job["url"]}\" --srid {$job["epsg"]} --type {$job["type"]} --encoding {$job["encoding"]} --jobId {$job["id"]} --deleteAppend {$job["delete_append"]} --extra " . (base64_encode($job["extra"]) ?: "null") . " --preSql " . (base64_encode($job["presql"]) ?: "null") . " --postSql " . (base64_encode($job["postsql"]) ?: "null") . " --downloadSchema {$job["download_schema"]}";
+                $cmd = "/usr/bin/nohup /usr/bin/timeout -s SIGINT 10h php " . __DIR__ . "/../scripts/get.php --db {$job["db"]} --schema {$job["schema"]} --safeName {$job["name"]} --url \"{$job["url"]}\" --srid {$job["epsg"]} --type {$job["type"]} --encoding {$job["encoding"]} --jobId {$job["id"]} --deleteAppend {$job["delete_append"]} --extra " . (base64_encode($job["extra"]) ?: "null") . " --preSql " . (base64_encode($job["presql"]) ?: "null") . " --postSql " . (base64_encode($job["postsql"]) ?: "null") . " --downloadSchema {$job["download_schema"]}";
                 break;
             }
         }
-
-        if (!$flush && isset($job)) {
-            exec($cmd . " > " . __DIR__ . "/../../public/logs/{$job["id"]}_scheduler.log  2>&1", $out, $err);
-            $response['cmd'] = $cmd;
-            $response['success'] = true;
-            $response['message'] = "Job completed";
-            return $response;
-        }
-
-        Util::disableOb();
-        header('Content-type: text/plain; charset=utf-8');
-
-        $descriptorspec = array(
-            0 => array("pipe", "r"),   // stdin is a pipe that the child will read from
-            1 => array("pipe", "w"),   // stdout is a pipe that the child will write to
-            2 => array("pipe", "w")    // stderr is a pipe that the child will write to
-        );
-
-        $process = proc_open($cmd, $descriptorspec, $pipes, realpath('./'), array());
-        if (is_resource($process)) {
-            while ($s = fgets($pipes[1])) {
-                print str_pad($s, 4096);
-                flush();
+        if (isset($job)) {
+            $pid = (int)exec($cmd . " > " . __DIR__ . "/../../public/logs/{$job["id"]}_scheduler.log  & echo $!", $out, $err);
+            try {
+                $this->insert($job['id'], $pid, $job['db'], $name);
+            } catch (Exception) {
+                $this->kill($pid); // If we can't insert the pid we kill the process if its running
             }
         }
-        return null;
+        return true;
+    }
+
+    /**
+     * @param int $id
+     * @param int $pid
+     * @param string $db
+     * @return void
+     */
+    public function insert(int $id, int $pid, string $db, ?string $name): void
+    {
+        $sql = "INSERT INTO started_jobs (id, pid, db, name) VALUES (:id, :pid, :db, :name) RETURNING *";
+        $res = $this->prepare($sql);
+        $arr = ['id' => $id, 'pid' => $pid, 'db' => $db, 'name' => $name];
+        $res->execute($arr);
+    }
+
+    /**
+     * Kills the process with the given ID.
+     *
+     * @param int $pid The process ID to kill.
+     * @return void
+     */
+    private function kill(int $pid): void
+    {
+        exec("/bin/kill -9 {$pid}");
+    }
+
+    /**
+     * @param string $db
+     * @return array
+     */
+    public function getAllStartedJobs(string $db): array
+    {
+        $sql = "SELECT * FROM started_jobs where db=:db";
+        $res = $this->prepare($sql);
+        $res->execute(['db' => $db]);
+        return $this->fetchAll($res);
     }
 }

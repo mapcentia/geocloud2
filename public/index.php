@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2023 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -15,7 +15,6 @@ use app\api\v4\Constraint;
 use app\api\v4\Geofence;
 use app\api\v4\Import;
 use app\api\v4\Index;
-use app\api\v4\Key;
 use app\api\v4\Column;
 use app\api\v4\Meta;
 use app\api\v4\Privilege;
@@ -289,7 +288,7 @@ try {
                 exit();
             }
         });
-        Route::add("api/v3/scheduler/{id}", function () {
+        Route::add("api/v3/scheduler/[id]/[name]", function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 if (!$jwt["data"]["superUser"]) {
