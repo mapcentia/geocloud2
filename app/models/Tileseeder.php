@@ -2,7 +2,7 @@
 
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -25,25 +25,14 @@ class Tileseeder extends Model
 
     /**
      * @param array $data
-     * @return array
+     * @return void
      */
-    public function insert(array $data): array
+    public function insert(array $data): void
     {
-        $response = [];
         $sql = "INSERT INTO settings.seed_jobs (uuid, name, pid, host) VALUES (:uuid, :name, :pid, :host) RETURNING *";
         $res = $this->prepare($sql);
         $arr = ["uuid" => $data["uuid"], "name" => $data["name"], "pid" => $data["pid"], "host" => $_SERVER["SERVER_ADDR"]];
-        try {
-            $res->execute($arr);
-        } catch (PDOException $e) {
-            $response["success"] = false;
-            $response["message"] = $e->getMessage();
-            return $response;
-        }
-
-        $response["success"] = true;
-        $response["data"] = $this->fetchRow($res);
-        return $response;
+        $res->execute($arr);
     }
 
     /**
@@ -55,13 +44,7 @@ class Tileseeder extends Model
         $response = [];
         $sql = "SELECT * FROM settings.seed_jobs";
         $res = $this->prepare($sql);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $response["success"] = false;
-            $response["message"] = $e->getMessage();
-            return $response;
-        }
+        $res->execute();
         $response["success"] = true;
         $response["data"] = $this->fetchAll($res);
         return $response;
@@ -76,13 +59,7 @@ class Tileseeder extends Model
         $response = [];
         $sql = "SELECT * FROM settings.seed_jobs WHERE pid=:pid";
         $res = $this->prepare($sql);
-        try {
-            $res->execute(["pid" => $pid]);
-        } catch (PDOException $e) {
-            $response["success"] = false;
-            $response["message"] = $e->getMessage();
-            return $response;
-        }
+        $res->execute(["pid" => $pid]);
         $response["success"] = true;
         $response["data"] = $this->fetchRow($res);
         return $response;
@@ -90,20 +67,14 @@ class Tileseeder extends Model
 
     /**
      * @param string|null $uuid
-     * @return array<mixed>
+     * @return array
      */
     public function getByUuid(string $uuid = null): array
     {
         $response = [];
         $sql = "SELECT * FROM settings.seed_jobs WHERE uuid=:uuid";
         $res = $this->prepare($sql);
-        try {
-            $res->execute(["uuid" => $uuid]);
-        } catch (PDOException $e) {
-            $response["success"] = false;
-            $response["message"] = $e->getMessage();
-            return $response;
-        }
+        $res->execute(["uuid" => $uuid]);
         $response["success"] = true;
         $response["data"] = $this->fetchRow($res);
         return $response;

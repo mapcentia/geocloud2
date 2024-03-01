@@ -8,6 +8,7 @@
 
 namespace app\api\v3;
 
+use app\exceptions\GC2Exception;
 use app\inc\Controller;
 use app\inc\Route;
 use app\inc\Input;
@@ -72,6 +73,7 @@ class Tileseeder extends Controller
      *     )
      *   )
      * )
+     * @throws GC2Exception
      */
     public function post_index(): array
     {
@@ -99,10 +101,11 @@ class Tileseeder extends Controller
         $cmd = "/usr/bin/nohup /usr/local/bin/mapcache_seed -c /var/www/geocloud2/app/wms/mapcache/{$db}.xml -v -t {$layer} -g {$grid} -z {$startZoom},{$endZoom} -d PG:'host={$pgHost} port={$pgPort} user={$pgUser} dbname={$db} password={$pgPassword}' -l '{$extentLayer}' -n {$nthreads}";
         $pid = (int)exec("{$cmd} > /var/www/geocloud2/public/logs/seeder_{$uuid}.log & echo $!");
 
-        $res = $this->tileSeeder->insert(["uuid" => $uuid, "name" => $name, "pid" => $pid, "host" => "test"]);
-        if (!$res["success"]) {
+        try {
+            $this->tileSeeder->insert(["uuid" => $uuid, "name" => $name, "pid" => $pid, "host" => "test"]);
+        } catch (Exception $e) {
             $this->kill($pid); // If we can't insert the pid we kill the process if its running
-            return ["success" => false, "message" => $res["message"]];
+            throw new GC2Exception($e->getMessage(), 500, null, 'SQL_ERROR');
         }
         return [
             "uuid" => $uuid,
