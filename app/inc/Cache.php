@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -63,61 +63,19 @@ abstract class Cache
 
         Globals::$cacheTtl = !empty(App::$param["appCache"]["ttl"]) ? App::$param["appCache"]["ttl"] : Globals::$cacheTtl;
 
-        switch ($cacheType) {
-            case "redis":
-                try {
-                    self::$instanceCache = CacheManager::getInstance('redis',
-                        new RedisConfig($redisConfig)
-                    );
-                } catch
-                (Exception $exception) {
-                    throw new Exception($exception->getMessage());
-                }
-                break;
-
-            case "memcached":
-                try {
-                    self::$instanceCache = CacheManager::getInstance('memcached',
-                        new MemcachedConfig($memcachedConfig)
-                    );
-                } catch
-                (Exception $exception) {
-                    throw new Exception($exception->getMessage());
-                }
-                break;
-
-            default:
-                try {
-                    self::$instanceCache = CacheManager::getInstance('files',
-                        new FilesConfig($fileConfig)
-                    );
-                } catch (Exception $exception) {
-                    throw new Exception($exception->getMessage());
-                }
-                break;
-        }
+        self::$instanceCache = match ($cacheType) {
+            "redis" => CacheManager::getInstance('redis', new RedisConfig($redisConfig)),
+            "memcached" => CacheManager::getInstance('memcached', new MemcachedConfig($memcachedConfig)),
+            default => CacheManager::getInstance('files', new FilesConfig($fileConfig)),
+        };
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      */
     static public function clear(): array
     {
-        try {
-            $res = self::$instanceCache->clear();
-        } catch (Error $exception) {
-            return [
-                "code" => 400,
-                "success" => false,
-                "message" => $exception->getMessage()
-            ];
-        } catch (Exception $exception) {
-            return [
-                "code" => 400,
-                "success" => false,
-                "message" => $exception->getMessage()
-            ];
-        }
+        $res = self::$instanceCache->clear();
         return [
             "success" => true,
             "message" => $res
@@ -133,14 +91,6 @@ abstract class Cache
     }
 
     /**
-     * @param array<string> $tags
-     */
-    static public function deleteItemsByTags(array $tags): void
-    {
-        self::$instanceCache->deleteItemsByTags($tags, TaggableCacheItemPoolInterface::TAG_STRATEGY_ONE);
-    }
-
-    /**
      * @param string $key
      * @return ExtendedCacheItemInterface|null
      */
@@ -148,7 +98,7 @@ abstract class Cache
     {
         try {
             $CachedString = self::$instanceCache->getItem($key);
-        } catch (PhpfastcacheInvalidArgumentException | Error $exception) {
+        } catch (PhpfastcacheInvalidArgumentException|Error) {
             $CachedString = null;
         }
         return $CachedString;
@@ -167,7 +117,7 @@ abstract class Cache
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      */
     static public function getStats(): array
     {
@@ -175,7 +125,7 @@ abstract class Cache
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      */
     static public function getItemsByTagsAsJsonString(): array
     {

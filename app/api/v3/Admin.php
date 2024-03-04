@@ -18,7 +18,7 @@ use app\inc\Model;
 use app\models\Database;
 use app\conf\App;
 use app\conf\Connection;
-use app\migration\Sql;
+use app\migration\Sql2 as Sql;
 use app\models\Qgis;
 use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
@@ -171,17 +171,11 @@ class Admin extends Controller
             Database::setDb($db);
             $conn = new Model();
 
-            switch ($db) {
-                case "mapcentia":
-                    $sqls = Sql::mapcentia();
-                    break;
-                case "gc2scheduler":
-                    $sqls = Sql::gc2scheduler();
-                    break;
-                default:
-                    $sqls = Sql::get();
-                    break;
-            }
+            $sqls = match ($db) {
+                "mapcentia" => Sql::mapcentia(),
+                "gc2scheduler" => Sql::gc2scheduler(),
+                default => Sql::get(),
+            };
 
             foreach ($sqls as $sql) {
                 try {

@@ -65,7 +65,7 @@ class Session extends Model
     public function start(string $sUserID, string $pw, string|null $schema = "public", string|null $parentdb = null, bool $tokenOnly = false, string $responseType = "access"): array
     {
         $response = [];
-        $pw = Util::format($pw, true);
+        $pw = Util::format($pw);
 
         $isAuthenticated = false;
         $setting = new Setting();

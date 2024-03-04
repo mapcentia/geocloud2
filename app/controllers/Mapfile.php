@@ -472,17 +472,20 @@ class Mapfile extends Controller
                         }
                         $fieldConf = !empty($row['fieldconf']) ? json_decode($row['fieldconf'], true) : [];
                         $includeItemsStr = "all";
-                        uksort($meta, function($a, $b) use ($fieldConf) {
-                            $sortIdA = $fieldConf[$a]['sort_id'];
-                            $sortIdB = $fieldConf[$b]['sort_id'];
-                            return $sortIdA - $sortIdB;
+                        uksort($meta, function ($a, $b) use ($fieldConf) {
+                            if (isset($fieldConf[$a]) && isset($fieldConf[$b])) {
+                                $sortIdA = $fieldConf[$a]['sort_id'];
+                                $sortIdB = $fieldConf[$b]['sort_id'];
+                                return $sortIdA - $sortIdB;
+                            }
+                            return 0;
                         });
                         // We always want to select all fields
                         if (sizeof($meta) > 0) {
                             $selectStr = implode("\\\",\\\"", array_keys($meta));
                         }
                         // Filter out ignored fields
-                        $meta = array_filter($meta, function($item, $key) use (&$fieldConf) {
+                        $meta = array_filter($meta, function ($item, $key) use (&$fieldConf) {
                             if (empty($fieldConf[$key]['ignore'])) {
                                 return $item;
                             }
@@ -1473,17 +1476,20 @@ class Mapfile extends Controller
                 }
                 $fieldConf = !empty($row['fieldconf']) ? json_decode($row['fieldconf'], true) : [];
                 $includeItemsStr = "all";
-                uksort($meta, function($a, $b) use ($fieldConf) {
-                    $sortIdA = $fieldConf[$a]['sort_id'];
-                    $sortIdB = $fieldConf[$b]['sort_id'];
-                    return $sortIdA - $sortIdB;
+                uksort($meta, function ($a, $b) use ($fieldConf) {
+                    if (isset($fieldConf[$a]) && isset($fieldConf[$b])) {
+                        $sortIdA = $fieldConf[$a]['sort_id'];
+                        $sortIdB = $fieldConf[$b]['sort_id'];
+                        return $sortIdA - $sortIdB;
+                    }
+                    return 0;
                 });
                 // We always want to select all fields
                 if (sizeof($meta) > 0) {
                     $selectStr = implode("\\\",\\\"", array_keys($meta));
                 }
                 // Filter out ignored fields
-                $meta = array_filter($meta, function($item, $key) use (&$fieldConf) {
+                $meta = array_filter($meta, function ($item, $key) use (&$fieldConf) {
                     if (empty($fieldConf[$key]['ignore'])) {
                         return $item;
                     }
@@ -1498,10 +1504,10 @@ class Mapfile extends Controller
                 <?php ?>
                 TYPE <?php echo $type . "\n"; ?>
                 METADATA
-                "wfs_title"    "<?php if ($row['f_table_title']) echo (!empty($row['f_table_title']) ? addslashes($row['f_table_title']) : ""); else echo $row['f_table_name'] ?>"
+                "wfs_title"    "<?php if ($row['f_table_title']) echo(!empty($row['f_table_title']) ? addslashes($row['f_table_title']) : ""); else echo $row['f_table_name'] ?>"
                 "wfs_srs"    "EPSG:<?php echo "{$row['srid']} {$row['wmsclientepsgs']}" ?>"
                 "wfs_name"    "<?php echo $layerName; ?>"
-                "wfs_abstract"    "<?php echo (!empty($row['f_table_abstract']) ? addslashes($row['f_table_abstract']) : ""); ?>"
+                "wfs_abstract"    "<?php echo(!empty($row['f_table_abstract']) ? addslashes($row['f_table_abstract']) : ""); ?>"
                 "wfs_extent" "<?php echo implode(" ", $extent) ?>"
                 "gml_include_items" "<?php echo $includeItemsStr ?>"
                 "wfs_featureid" "<?php echo $primeryKey['attname'] ?>"

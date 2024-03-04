@@ -34,11 +34,16 @@ class Table extends Controller
         $name = $table->create($_REQUEST['name'], $_REQUEST['type'], $_REQUEST['srid']);
         // Set layer editable
         $join = new \app\models\Table("settings.geometry_columns_join");
-        $data = (array)json_decode(urldecode('{"data":{"editable":true,"_key_":"' . Connection::$param["postgisschema"] . '.' . $name['tableName'] . '.the_geom"}}'));
+        $key = Connection::$param["postgisschema"] . '.' . $name['tableName'] . '.the_geom';
         $response = $this->auth();
+        $data['_key_'] = $key;
+        $data['editable'] = true;
         return (!$response['success']) ? $response : $join->updateRecord($data, "_key_");
     }
 
+    /**
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     public function delete_records()
     {
         $response = $this->auth(null, array());
@@ -145,11 +150,11 @@ class Table extends Controller
 
     public function put_data()
     {
-        $data = (array)json_decode(urldecode(Input::get(null, true)));
+        $data = json_decode(urldecode(Input::get(null, true)), true);
         $this->table = new \app\models\table(Input::getPath()->part(4));
         $key = Input::getPath()->part(5);
         $response = $this->auth(Input::getPath()->part(6), array("write" => true, "all" => true));
-        return (!$response['success']) ? $response : $this->table->updateRecord($data, $key);
+        return (!$response['success']) ? $response : $this->table->updateRecord($data['data'], $key);
     }
 
     public function post_data()

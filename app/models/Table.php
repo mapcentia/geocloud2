@@ -122,10 +122,21 @@ class Table extends Model
         $this->metaData = array_map(array($this, "getType"), $this->metaData);
     }
 
-    private function clearCacheOnSchemaChanges(): void
+    /**
+     * @param string|null $relName
+     * @return void
+     */
+    private function clearCacheOnSchemaChanges(?string $relName = null): void
     {
         // We clear all cache, because it can take long time to clear by tag
-        Cache::clear();
+        //Cache::clear();
+
+        $relName = $relName ?: $this->table;
+        $tags = ["relExist", "columns", "metadata", "prikey", "columnExist", "childTables"];
+        foreach ($tags as $tag) {
+            Cache::deleteItemsByTagsAll([$tag, md5($relName), $this->postgisdb]);
+        }
+        Cache::deleteItemsByTagsAll(['meta', $this->postgisdb]);
     }
 
     /**
@@ -277,7 +288,7 @@ class Table extends Model
         // Check if Es is online
         // =====================
         $esOnline = false;
-        $split = explode(":", App::$param['esHost'] ?: "http://127.0.0.1");
+        $split = explode(":", App::$param['esHost'] ?? '' ?: "http://127.0.0.1");
         if (!empty($split[2])) {
             $port = $split[2];
         } else {
@@ -305,9 +316,9 @@ class Table extends Model
                 || (!empty($privileges->$prop) && $privileges->$prop != "none")) {
                 $relType = "t"; // Default
                 foreach ($row as $key => $value) {
-                    if ($key == "type" && $value == "GEOMETRY") {
+                    if (!empty($row['def']) && $key == "type" && $value == "GEOMETRY") {
                         $def = json_decode($row['def']);
-                        if (($def->geotype) && $def->geotype != "Default") {
+                        if (isset($def->geotype) && $def->geotype != "Default") {
                             $value = "MULTI" . $def->geotype;
                         }
                     }
@@ -462,95 +473,89 @@ class Table extends Model
      * @return array<bool|string|int>
      * @throws PDOException
      */
-    public function updateRecord(mixed $data, string $keyName, bool $raw = false, bool $append = false): array
+    public function updateRecord(array $data, string $keyName, bool $raw = false, bool $append = false): array
     {
-        $data = $this->makeArray($data);
-        $this->clearCacheOnSchemaChanges();
+        if (!is_array($data[array_key_first($data)])) {
+            $data = [0 => $data];
+        }
+
+        // If $this->table is set to settings.geometry_columns_join,
+        // we have to extract key from data
+        // and use that for busting cache.
+        if ($this->table == 'settings.geometry_columns_join') {
+            $keySplit = explode(".", $data[0]['_key_']);
+            $this->clearCacheOnSchemaChanges($keySplit[0] . "." . $keySplit[1]);
+        }
+
         $response = [];
         $pairArr = [];
         $keyArr = [];
         $keyArr2 = [];
         $valueArr = [];
-        foreach ($data as $set) {
-            $set = $this->makeArray($set);
-            foreach ($set as $row) {
-                if (isset(App::$param["ckan"])) {
-                    // Delete package from CKAN if "Update" is being set to false
-                    if (isset($row->meta->ckan_update) and $row->meta->ckan_update === false) {
-                        if (isset($row->_key_)) {
-                            $uuid = $this->getUuid($row->_key_);
-                            Layer::deleteCkan($uuid["uuid"]);
-                        }
-                    } else {
-                        $gc2host = App::$param["ckan"]["gc2host"] ?? App::$param["host"];
-                        $url = "http://127.0.0.1/api/v1/ckan/" . Database::getDb() . "?id=" . $row->_key_ . "&host=" . $gc2host;
-                        Util::asyncRequest($url);
-                    }
+        foreach ($data as $row) {
+            // Get key value
+            $pKeyValue = null;
+            foreach ($row as $key => $value) {
+                if ($key == $keyName) {
+                    $pKeyValue = $value;
                 }
-                // Get key value
-                $pKeyValue = null;
-                foreach ($row as $key => $value) {
-                    if ($key == $keyName) {
-                        $pKeyValue = $value;
-                    }
+            }
+            foreach ($row as $key => $value) {
+                if ($value === false) {
+                    $value = null;
                 }
-                foreach ($row as $key => $value) {
-                    if ($value === false) {
-                        $value = null;
+                if ($this->table == "settings.geometry_columns_join") {
+                    if (in_array($key, ["editable", "skipconflict", "enableows"])) {
+                        $value = $value ?: "0";
                     }
-                    if ($this->table == "settings.geometry_columns_join") {
-                        if (in_array($key, ["editable", "skipconflict", "enableows"])) {
-                            $value = $value ?: "0";
-                        }
-                        // TODO this chang of _key_ must be configurable
-                        if ($key == "_key_") {
-                    //        $split = explode('.', $value);
-                    //        $value = $split[0] . '.' . $split[1];
-                        }
-                        if ($key == "tags") {
-                            $value = $value ?: [];
-                            if (!$raw) {
-                                if ($pKeyValue) {
-                                    $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["tags"], true) ?: [];
-                                    if ($append) {
-                                        $value = array_merge($rec, $value);
-                                    }
-                                    $value = json_encode($value, JSON_UNESCAPED_UNICODE);
+                    // TODO this chang of _key_ must be configurable
+                    if ($key == "_key_") {
+                        //        $split = explode('.', $value);
+                        //        $value = $split[0] . '.' . $split[1];
+                    }
+                    if ($key == "tags") {
+                        $value = $value ?: [];
+                        if (!$raw) {
+                            if ($pKeyValue) {
+                                $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["tags"], true) ?: [];
+                                if ($append) {
+                                    $value = array_merge($rec, $value);
                                 }
-                            }
-                        }
-                        // If Meta when update the existing object, so not changed values persist
-                        if ($key == "meta") {
-                            $value = $value ?: "null";
-                            if (!$raw) {
-                                $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["meta"], true);
-                                foreach ($value as $fKey => $fValue) {
-                                    $rec[$fKey] = $fValue;
-                                }
-                                $value = json_encode($rec, JSON_UNESCAPED_UNICODE);
-                            }
-                        } else {
-                            if (is_object($value) || is_array($value)) {
                                 $value = json_encode($value, JSON_UNESCAPED_UNICODE);
                             }
                         }
                     }
-                    $pairArr[] = "\"$key\"=:$key";
-                    $valueArr[$key] = $value;
-                    $keyArr[] = "\"$key\"";
-                    $keyArr2[] = ":$key";
+                    // If Meta when update the existing object, so not changed values persist
+                    if ($key == "meta") {
+                        $value = $value ?: "null";
+                        if (!$raw) {
+                            $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["meta"], true);
+                            foreach ($value as $fKey => $fValue) {
+                                $rec[$fKey] = $fValue;
+                            }
+                            $value = json_encode($rec, JSON_UNESCAPED_UNICODE);
+                        }
+                    } else {
+                        if (is_object($value) || is_array($value)) {
+                            $value = json_encode($value, JSON_UNESCAPED_UNICODE);
+                        }
+                    }
                 }
-                $sql = "INSERT INTO " . $this->doubleQuoteQualifiedName($this->table) . " (" . implode(",", $keyArr) . ") VALUES(" . implode(",", $keyArr2) . ")" .
-                    " ON CONFLICT ($keyName) DO UPDATE SET " . implode(",", $pairArr);
-                $result = $this->prepare($sql);
-                $result->execute($valueArr);
-                $response['success'] = true;
-                $response['message'] = "Row updated";
-                $keyArr = [];
-                $keyArr2 = [];
-                $valueArr = [];
-                $pairArr = [];
+                $pairArr[] = "\"$key\"=:$key";
+                $valueArr[$key] = $value;
+                $keyArr[] = "\"$key\"";
+                $keyArr2[] = ":$key";
             }
+            $sql = "INSERT INTO " . $this->doubleQuoteQualifiedName($this->table) . " (" . implode(",", $keyArr) . ") VALUES(" . implode(",", $keyArr2) . ")" .
+                " ON CONFLICT ($keyName) DO UPDATE SET " . implode(",", $pairArr);
+            $result = $this->prepare($sql);
+            $result->execute($valueArr);
+            $response['success'] = true;
+            $response['message'] = "Row updated";
+            $keyArr = [];
+            $keyArr2 = [];
+            $valueArr = [];
+            $pairArr = [];
         }
         return $response;
     }
@@ -711,7 +716,7 @@ class Table extends Model
         $conf['fieldconf'] = json_encode($fieldconfArr, JSON_UNESCAPED_UNICODE);
         $conf['_key_'] = $_key_;
         $geometryColumnsObj = new Table("settings.geometry_columns_join");
-        return $geometryColumnsObj->updateRecord(json_decode(json_encode($conf, JSON_UNESCAPED_UNICODE)), "_key_");
+        return $geometryColumnsObj->updateRecord($conf, "_key_");
     }
 
     /**
@@ -768,7 +773,7 @@ class Table extends Model
 
         $geometryColumnsObj = new Table("settings.geometry_columns_join");
 
-        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf, JSON_UNESCAPED_UNICODE)), "_key_");
+        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf, JSON_UNESCAPED_UNICODE), true), "_key_");
         if (!$res["success"]) {
             throw new GC2Exception($res["message"], 409, null, "SYSTEM_COLUMN");
         }
@@ -980,6 +985,7 @@ class Table extends Model
     /**
      * @param int $srid
      * @return array
+     * @throws PDOException
      */
     public function createAsRasterTable(int $srid = 4326): array
     {

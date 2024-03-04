@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -39,7 +39,6 @@ class Util
                     if (filetype($dir . "/" . $object) == "dir") self::rrmdir($dir . "/" . $object); else unlink($dir . "/" . $object);
                 }
             }
-            reset($objects);
             rmdir($dir);
         }
     }
@@ -110,7 +109,7 @@ class Util
      * @param string $start
      * @param string $end
      * @param int $steps
-     * @return array<mixed>
+     * @return array
      */
     public static function makeGradient(string $start, string $end, int $steps): array
     {
@@ -127,12 +126,10 @@ class Util
 
         $grad = array();
         for ($i = 0; $i <= $steps; $i++) {
-            $theR = self::interpolate($theR0, $theR1, $i, $steps);
-            $theG = self::interpolate($theG0, $theG1, $i, $steps);
-            $theB = self::interpolate($theB0, $theB1, $i, $steps);
-
+            $theR = (int)self::interpolate($theR0, $theR1, $i, $steps);
+            $theG = (int)self::interpolate($theG0, $theG1, $i, $steps);
+            $theB = (int)self::interpolate($theB0, $theB1, $i, $steps);
             $theVal = ((($theR << 8) | $theG) << 8) | $theB;
-
             $grad[] = sprintf("#%06X", $theVal);
         }
         return $grad;
@@ -144,9 +141,9 @@ class Util
      * @param int $pEnd
      * @param int $pStep
      * @param int $pMax
-     * @return int
+     * @return float
      */
-    private static function interpolate(int $pBegin, int $pEnd, int $pStep, int $pMax): int
+    private static function interpolate(int $pBegin, int $pEnd, int $pStep, int $pMax): float
     {
         if ($pBegin < $pEnd) {
             return (($pEnd - $pBegin) * ($pStep / $pMax)) + $pBegin;
@@ -188,10 +185,10 @@ class Util
      */
     public static function ipInRange(string $ip, string $ipWithCidr): bool
     {
-        if (strpos($ipWithCidr, '/') !== false) {
+        if (str_contains($ipWithCidr, '/')) {
             // $range is in IP/NETMASK format
             list($range, $netmask) = explode('/', $ipWithCidr, 2);
-            if (strpos($netmask, '.') !== false) {
+            if (str_contains($netmask, '.')) {
                 // $netmask is a 255.255.0.0 format
                 $netmask = str_replace('*', '0', $netmask);
                 $netmask_dec = ip2long($netmask);
@@ -217,14 +214,14 @@ class Util
             }
         } else {
             // range might be 255.255.*.* or 1.2.3.0-1.2.3.255
-            if (strpos($ipWithCidr, '*') !== false) { // a.b.*.* format
+            if (str_contains($ipWithCidr, '*')) { // a.b.*.* format
                 // Just convert to A-B format by setting * to 0 for A and 255 for B
                 $lower = str_replace('*', '0', $ipWithCidr);
                 $upper = str_replace('*', '255', $ipWithCidr);
                 $ipWithCidr = "$lower-$upper";
             }
 
-            if (strpos($ipWithCidr, '-') !== false) { // A-B format
+            if (str_contains($ipWithCidr, '-')) { // A-B format
                 list($lower, $upper) = explode('-', $ipWithCidr, 2);
                 $lower_dec = (float)sprintf("%u", ip2long($lower));
                 $upper_dec = (float)sprintf("%u", ip2long($upper));
@@ -325,7 +322,7 @@ class Util
         ini_set('zlib.output_compression', 'false');
         // Implicitly flush the buffer(s)
         ini_set('implicit_flush', 'true');
-        ob_implicit_flush(true);
+        ob_implicit_flush();
         // Clear, and turn off output buffering
         while (ob_get_level() > 0) {
             // Get the curent level
@@ -358,16 +355,11 @@ class Util
 
     /**
      * @param string $sValue
-     * @param bool $bQuotes
      * @return string
      */
-    public static function format(string $sValue, bool $bQuotes = false): string
+    public static function format(string $sValue): string
     {
-        $sValue = trim($sValue);
-//        if ($bQuotes xor get_magic_quotes_gpc()) {
-//            $sValue = $bQuotes ? addslashes($sValue) : stripslashes($sValue);
-//        }
-        return $sValue;
+        return trim($sValue);
     }
 
 }

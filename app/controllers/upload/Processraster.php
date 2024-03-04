@@ -88,13 +88,6 @@ class Processraster extends Controller
                 $class->insert();
                 $class->update("0", Classification::createClass("POLYGON"));
             }
-           /* if ($_REQUEST['displayfile']) {
-                $join = new Table("settings.geometry_columns_join");
-                $json = '{"data":{"bitmapsource":"' . $_REQUEST['file'] . '","_key_":"' . $key . '"}}';
-                $data = (array)json_decode(urldecode($json));
-                $join->updateRecord($data, "_key_");
-            }*/
-
         } else {
             $response['success'] = false;
             $response['message'] = "Some thing went wrong. Check the log.";

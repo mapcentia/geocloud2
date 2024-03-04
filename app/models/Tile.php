@@ -10,6 +10,7 @@ namespace app\models;
 
 use app\inc\Model;
 use app\inc\Cache;
+use PDOException;
 
 
 /**
@@ -32,13 +33,14 @@ class Tile extends Model
 
     /**
      * @return array
+     * @throws PDOException
      */
     public function get(): array
     {
         $sql = "SELECT def FROM settings.geometry_columns_join WHERE _key_='$this->table'";
         $row = $this->fetchRow($this->execQuery($sql));
         $response['success'] = true;
-        $arr = (array)json_decode($row['def']); // Cast stdclass to array
+        $arr = !empty($row['def']) ? json_decode($row['def'], true): []; // Cast stdclass to array
         foreach ($arr as $key => $value) {
             if ($value === null) { // Never send null to client
                 $arr[$key] = "";
@@ -51,6 +53,7 @@ class Tile extends Model
     /**
      * @param object $data
      * @return array
+     * @throws PDOException
      */
     public function update(object $data): array
     {

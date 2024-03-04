@@ -41,16 +41,22 @@ class Layer extends Table
     private function clearCacheOnSchemaChanges(): void
     {
         // We clear all cache, because it can take long time to clear by tag
-        Cache::clear();
+        //Cache::clear();
+
+        $arr = ["meta", $this->postgisdb];
+        Cache::deleteItemsByTagsAll($arr);
     }
 
     /**
      *
      */
-    private function clearCacheOfColumns(): void
+    private function clearCacheOfColumns($relName): void
     {
         // We clear all cache, because it can take long time to clear by tag
-        Cache::clear();
+        //Cache::clear();
+
+        $arr = ["columns", md5($relName), $this->postgisdb];
+        Cache::deleteItemsByTagsAll($arr);
     }
 
     /**
@@ -170,7 +176,7 @@ class Layer extends Table
             // Check if Es is online
             // =====================
             $esOnline = false;
-            $split = explode(":", App::$param['esHost'] ?: "http://127.0.0.1");
+            $split = explode(":", App::$param['esHost'] ?? '' ?: "http://127.0.0.1");
             if (!empty($split[2])) {
                 $port = $split[2];
             } else {
@@ -333,10 +339,12 @@ class Layer extends Table
 
                 // Sort fields
                 uksort($fields, function ($a, $b) use ($fieldConf) {
-                    $sortIdA = $fieldConf[$a]['sort_id'];
-                    $sortIdB = $fieldConf[$b]['sort_id'];
-
-                    return $sortIdA - $sortIdB;
+                    if (isset($fieldConf[$a]) && isset($fieldConf[$b])) {
+                        $sortIdA = $fieldConf[$a]['sort_id'];
+                        $sortIdB = $fieldConf[$b]['sort_id'];
+                        return $sortIdA - $sortIdB;
+                    }
+                    return 0;
                 });
                 // Filter out ignored fields
                 $fields = array_filter($fields, function ($item, $key) use (&$fieldConf) {
@@ -489,7 +497,7 @@ class Layer extends Table
         }
         $conf['elasticsearch'] = json_encode($elasticsearchArr);
         $conf['_key_'] = $_key_;
-        $table->updateRecord(json_decode(json_encode($conf)), "_key_");
+        $table->updateRecord($conf, "_key_");
         $response['success'] = true;
         $response['message'] = "Map updated";
         return $response;
@@ -659,14 +667,14 @@ class Layer extends Table
      */
     public function updatePrivileges(object $data): array
     {
-        $this->clearCacheOfColumns();
+        $this->clearCacheOfColumns(explode(".", $data->_key_)[0] . "." . explode(".", $data->_key_)[1]);
         $this->clearCacheOnSchemaChanges();
         $table = new Table("settings.geometry_columns_join");
         $privilege = json_decode($this->getValueFromKey($data->_key_, "privileges") ?: "{}");
         $privilege->{$data->subuser} = $data->privileges;
         $privileges['privileges'] = json_encode($privilege);
         $privileges['_key_'] = $data->_key_;
-        $table->updateRecord(json_decode(json_encode($privileges)), "_key_");
+        $table->updateRecord(json_decode(json_encode($privileges), true), "_key_");
         $response['success'] = true;
         $response['message'] = "Privileges updates";
         return $response;

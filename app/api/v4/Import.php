@@ -10,12 +10,11 @@ namespace app\api\v4;
 
 use app\conf\App;
 use app\conf\Connection;
-use app\inc\Controller;
+use app\exceptions\GC2Exception;
 use app\inc\Jwt;
-use app\inc\Route;
+use app\inc\Route2;
 use app\inc\Session;
 use Exception;
-use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use ZipArchive;
 
 
@@ -23,12 +22,8 @@ use ZipArchive;
  * Class Sql
  * @package app\api\v4
  */
-class Import extends Controller
+class Import extends AbstractApi
 {
-    public function __construct()
-    {
-        parent::__construct();
-    }
 
     /**
      * @return array<mixed>
@@ -54,10 +49,10 @@ class Import extends Controller
      *     )
      *   )
      * )
+     * @throws GC2Exception
      */
     public function post_index(): array
     {
-        error_log(print_r($_FILES, true));
         $jwt = Jwt::validate()["data"];
         @set_time_limit(5 * 60);
         $mainDir = App::$param['path'] . "/app/tmp/" . $jwt["database"];
@@ -88,16 +83,16 @@ class Import extends Controller
             ];
         }
         while (($file = readdir($dir)) !== false) {
-            $tmpfilePath = $targetDir . DIRECTORY_SEPARATOR . $file;
+            $tmpFilePath = $targetDir . DIRECTORY_SEPARATOR . $file;
 
             // If temp file is current file proceed to the next
-            if ($tmpfilePath == "{$filePath}.part") {
+            if ($tmpFilePath == "{$filePath}.part") {
                 continue;
             }
 
             // Remove temp file if it is older than the max age and is not the current file
-            if (preg_match('/\.part$/', $file) && (filemtime($tmpfilePath) < time() - $maxFileAge)) {
-                @unlink($tmpfilePath);
+            if (preg_match('/\.part$/', $file) && (filemtime($tmpFilePath) < time() - $maxFileAge)) {
+                @unlink($tmpFilePath);
             }
         }
         closedir($dir);
@@ -149,7 +144,7 @@ class Import extends Controller
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      * @throws Exception
      *
      * @OA\Get(
@@ -182,7 +177,7 @@ class Import extends Controller
      */
     public function get_index(): array
     {
-        $fileName= Route::getParam("file");
+        $fileName= Route2::getParam("file");
         $response = [];
         $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__vectors";
         $safeName = Session::getUser() . "_" . md5(microtime() . rand());
@@ -224,5 +219,20 @@ class Import extends Controller
         } else {
             throw new Exception("CAN_NOT_IMPORT");
         }
+    }
+
+    #[\Override] public function put_index(): array
+    {
+        // TODO: Implement put_index() method.
+    }
+
+    #[\Override] public function delete_index(): array
+    {
+        // TODO: Implement delete_index() method.
+    }
+
+    #[\Override] public function validate(): void
+    {
+        // TODO: Implement validate() method.
     }
 }

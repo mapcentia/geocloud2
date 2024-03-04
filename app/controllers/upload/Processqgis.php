@@ -226,12 +226,10 @@ class Processqgis extends Controller
             $layers[] = $layerKey . " (" . $provider . ")";
             $url = App::$param["mapCache"]["wmsHost"] . "/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . $wmsLayerName . "&transparent=true&";
             $urls[] = $url;
-            $data = new stdClass;
-            $data->_key_ = $layerKey;
-            $data->wmssource = $url;
-            $data->wmsclientepsgs = $this->sridStr;
-            $data = array("data" => $data);
-            $res = $this->table->updateRecord($data, "_key_");
+            $data['_key_'] = $layerKey;
+            $data['wmssource'] = $url;
+            $data['wmsclientepsgs'] = $this->sridStr;
+            $this->table->updateRecord($data, "_key_");
             Tilecache::bust($tableName);
         }
 
@@ -243,12 +241,10 @@ class Processqgis extends Controller
             $table = new Table($tableName);
             $table->createAsRasterTable((int)$wmsSrids[$i]);
             $url = App::$param["mapCache"]["wmsHost"] . "/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . $tableName . "&transparent=true&";
-            $data = new stdClass();
-            $data->_key_ = $layerKey;
-            $data->wmssource = $url;
-            $data->wmsclientepsgs = $this->sridStr;
-            $data = array("data" => $data);
-            $res = $this->table->updateRecord($data, "_key_");
+            $data['_key_'] = $layerKey;
+            $data['wmssource'] = $url;
+            $data['wmsclientepsgs'] = $this->sridStr;
+            $this->table->updateRecord($data, "_key_");
             Tilecache::bust($tableName);
         }
 
@@ -260,15 +256,11 @@ class Processqgis extends Controller
             $table = new Table($tableName);
             $table->createAsRasterTable();
             $url = App::$param["mapCache"]["wmsHost"] . "/cgi-bin/qgis_mapserv.fcgi?map=" . $path . $name . "&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/png&LAYER=" . implode(",", array_reverse($treeOrder)) . "&transparent=true&";
-            $data = new stdClass();
-            $data->_key_ = $layerKey;
-            $data->wmssource = $url;
-            $data->wmsclientepsgs = "EPSG:4326 EPSG:3857 EPSG:25832";
-
-            $data = array("data" => $data);
-            $res = $this->table->updateRecord($data, "_key_");
+            $data['_key_'] = $layerKey;
+            $data['wmssource'] = $url;
+            $data['wmsclientepsgs'] = "EPSG:4326 EPSG:3857 EPSG:25832";
+            $this->table->updateRecord($data, "_key_");
             Tilecache::bust(Connection::$param["postgisschema"] . "." . $wmsNames[$i]);
-
         }
 
         // Write the new qgs-file

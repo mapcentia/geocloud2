@@ -386,10 +386,12 @@ class Wms extends Controller
             $userFilter = new UserFilter($this->isAuth() ? $this->subUser ?: $this->user : "*", "ows", "select", "*", $split[0], $split[1]);
             $geofence = new Geofence($userFilter);
             $auth = $geofence->authorize($rules);
-            if ($auth["access"] == "deny") {
-                self::report("DENY");
-            } elseif ($auth["access"] == "limit" && !empty($auth["filters"]["filter"])) {
-                $filters[$layer][] = "({$auth["filters"]["filter"]})";
+            if (isset($auth["access"])) {
+                if ($auth["access"] == "deny") {
+                    self::report("DENY");
+                } elseif ($auth["access"] == "limit" && !empty($auth["filters"]["filter"])) {
+                    $filters[$layer][] = "({$auth["filters"]["filter"]})";
+                }
             }
         }
         return $filters;

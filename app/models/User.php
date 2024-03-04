@@ -123,12 +123,12 @@ class User extends Model
             }
         }
 
-        $name = Util::format($data['name'], true);
-        $email = Util::format($data['email'], true);
-        $password = Util::format($data['password'], true);
-        $group = (empty($data['usergroup']) ? null : Util::format($data['usergroup'], true));
-        $zone = (empty($data['zone']) ? null : Util::format($data['zone'], true));
-        $parentDb = (empty($data['parentdb']) ? null : Util::format($data['parentdb'], true));
+        $name = Util::format($data['name']);
+        $email = Util::format($data['email']);
+        $password = Util::format($data['password']);
+        $group = (empty($data['usergroup']) ? null : Util::format($data['usergroup']));
+        $zone = (empty($data['zone']) ? null : Util::format($data['zone']));
+        $parentDb = (empty($data['parentdb']) ? null : Util::format($data['parentdb']));
         $properties = (empty($data['properties']) ? null : $data['properties']);
         if ($parentDb) {
             $sql = "SELECT 1 from pg_database WHERE datname=:sDatabase";
@@ -289,12 +289,12 @@ class User extends Model
         // Check if the password is strong enough
         $password = null;
         if (isset($data["password"])) {
-            $passwordCheckResults = Setting::checkPasswordStrength(Util::format($data["password"], true));
+            $passwordCheckResults = Setting::checkPasswordStrength(Util::format($data["password"]));
             if (sizeof($passwordCheckResults) > 0) {
                 throw new Exception("Password does not meet following requirements: " . implode(", ", $passwordCheckResults));
 
             }
-            $password = Setting::encryptPwSecure(Util::format($data["password"], true));
+            $password = Setting::encryptPwSecure(Util::format($data["password"]));
         }
 
         $userGroup = $data["usergroup"] ?? null;
@@ -399,7 +399,7 @@ class User extends Model
         $res = $this->prepare($sQuery);
         $res->execute([":sUserID" => $userId]);
         $row = $this->fetchRow($res);
-        $pwd = Util::format($checkedPassword, true);
+        $pwd = Util::format($checkedPassword);
         $hasPassword = false;
         if (md5($pwd) === $row['pw']) {
             $hasPassword = true;

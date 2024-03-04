@@ -976,7 +976,10 @@ class Model
      */
     public function getIndexes(?string $schema, string $table): array
     {
-        $response = [];
+        $response['is_primary'] = [];
+        $response['is_unique'] = [];
+        $response['indices'] = [];
+        $response['index_method'] = [];
         $sql = "SELECT
                     n.nspname AS schema,
                     t.relname AS table,
@@ -1018,8 +1021,8 @@ class Model
         $res->execute(["schema" => $schema, "table" => $table]);
         while ($row = $this->fetchRow($res)) {
             $response["index_method"][$row["column_name"]][] = $row["index_method"];
-            $response["is_primary"][$row["column_name"]] = $response["is_primary"][$row["column_name"]] ?: $row["is_primary"] ;
-            $response["is_unique"][$row["column_name"]] = $response["is_unique"][$row["column_name"]] ?: $row["is_unique"];
+            $response["is_primary"][$row["column_name"]] = !empty($response["is_primary"][$row["column_name"]]) ? $response["is_primary"][$row["column_name"]] : $row["is_primary"];
+            $response["is_unique"][$row["column_name"]] = !empty($response["is_unique"][$row["column_name"]]) ? $response["is_unique"][$row["column_name"]] : $row["is_unique"];
             $response["indices"][] = $row;
 
         }

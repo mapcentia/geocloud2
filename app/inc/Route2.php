@@ -71,7 +71,7 @@ class Route2
                     }
                 } else if (isset($requestSignature[$i]) && $requestSignature[$i] == $routeSignature[$i]) {
                     $e[] = $requestSignature[$i];
-                } else if (isset($routeSignature[$i + 1]) && $requestSignature[$i + 1][0] != "[") {
+                } else if (isset($routeSignature[$i + 1]) && isset($requestSignature[$i + 1][0]) && $requestSignature[$i + 1][0] != "[") {
                     $signatureMatch = $requestSignature[$i] == $routeSignature[$i];
                 } else {
                     $signatureMatch = false;

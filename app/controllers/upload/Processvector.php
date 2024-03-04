@@ -23,6 +23,7 @@ use app\models\Table;
 use app\models\Tile;
 use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use stdClass;
 use ZipArchive;
 
 /**
@@ -143,15 +144,15 @@ class Processvector extends Controller
             // TODO Set dim i GUI
             "-dim XY " .
             /*"--config DXF_ENCODING WIN1252 " .*/
-            (($fileType == "csv") ? "-oo AUTODETECT_TYPE=YES " : "") .
-            (($delete || $append) ? "" : "-lco 'GEOMETRY_NAME=the_geom' ") .
-            (($delete || $append) ? "" : "-lco 'FID=gid' ") .
-            (($delete || $append) ? "" : "-lco 'PRECISION=NO' ") .
+            (($fileType == "csv") ? "-oo AUTODETECT_TYPE=YES " : '') .
+            (($delete || $append) ? '' : "-lco 'GEOMETRY_NAME=the_geom' ") .
+            (($delete || $append) ? '' : "-lco 'FID=gid' ") .
+            (($delete || $append) ? '' : "-lco 'PRECISION=NO' ") .
             "-a_srs 'EPSG:$srid' " .
 
             // If csv, then set Open Options
             // =============================
-            ($format == "csv" ? "-oo X_POSSIBLE_NAMES=lon*,Lon*,x,X -oo Y_POSSIBLE_NAMES=lat*,Lat*,y,Y -oo AUTODETECT_TYPE=YES -oo GEOM_POSSIBLE_NAMES=geometri " : "") .
+            ($format == "csv" ? "-oo X_POSSIBLE_NAMES=lon*,Lon*,x,X -oo Y_POSSIBLE_NAMES=lat*,Lat*,y,Y -oo AUTODETECT_TYPE=YES -oo GEOM_POSSIBLE_NAMES=geometri " : '') .
 
             "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
             "'" . $dir . "/" . $fileName . "' " .
@@ -173,8 +174,8 @@ class Processvector extends Controller
         // Set layer editable
         // ==================
         $join = new Table("settings.geometry_columns_join");
-        $json = '{"data":{"editable":true,"_key_":"' . $key . '"}}';
-        $data = (array)json_decode(urldecode($json));
+        $data['_key_'] = $key;
+        $data['editable'] = true;
         $join->updateRecord($data, "_key_");
 
         // Insert default layer def
@@ -182,24 +183,23 @@ class Processvector extends Controller
         $def = new Tile($key);
         $arr = $def->get();
         if (empty($arr['data'][0])) {
-            // TODO create a standard object instead of decoding JSON string
-            $json = '{
-            "theme_column":"",
-            "label_column":"",
-            "query_buffer":"",
-            "opacity":"",
-            "label_max_scale":"",
-            "label_min_scale":"",
-            "meta_tiles":false,
-            "meta_size":"3",
-            "meta_buffer":"10",
-            "ttl":""}';
-            $def->update(json_decode($json));
+            $data = new stdClass();
+            $data->theme_column = '';
+            $data->label_column = '';
+            $data->query_buffer = '';
+            $data->opacity = '';
+            $data->label_max_scale = '';
+            $data->label_min_scale = '';
+            $data->meta_tiles = false;
+            $data->meta_size = 3;
+            $data->meta_buffer = 10;
+            $data->ttl = '';
+            $def->update($data);
         }
 
         // Check ogr2ogr output
         // ====================
-        if ($out[0] == "") {
+        if ($out[0] == '') {
             $response['success'] = true;
             $response['message'] = "Layer <b>$safeName</b> is created";
             $response['type'] = $geoType;

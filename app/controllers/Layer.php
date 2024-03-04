@@ -74,7 +74,7 @@ class Layer extends Controller
                 return $response;
             }
         }
-        return $this->geometryJoinTable->updateRecord($data, "_key_", false, !empty(Input::getPath()->part(5)));
+        return $this->geometryJoinTable->updateRecord($data['data'], "_key_", false, !empty(Input::getPath()->part(5)));
     }
 
     /**
