@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -14,7 +14,7 @@ use app\inc\Model;
 use app\inc\Util;
 use PDO;
 use PDOException;
-use stdClass;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 
 /**
@@ -23,17 +23,18 @@ use stdClass;
  */
 class Classification extends Model
 {
-    private $layer;
-    private $table;
-    private $def;
-    private $geometryType;
-    private $tile;
+    private string $layer;
+    private Table $table;
+    private array $def;
+    private ?string $geometryType;
+    private Tile $tile;
 
     /**
      * Classification constructor.
      * @param string $table
+     * @throws PhpfastcacheInvalidArgumentException
      */
-    function __construct($table)
+    function __construct(string $table)
     {
         parent::__construct();
         $this->layer = $table;
@@ -45,39 +46,33 @@ class Classification extends Model
         $this->def = $def->get();
         if (($this->def['data'][0]['geotype']) && $this->def['data'][0]['geotype'] != "Default") {
             $this->geometryType = $this->def['data'][0]['geotype'];
+        } else {
+            $this->geometryType = null;
         }
-    }
-
-    private function array_push_assoc($array, $key, $value)
-    {
-        $array[$key] = $value;
-        return $array;
     }
 
     /**
      * @return array
      */
-    public function getAll()
+    public function getAll(): array
     {
-        $sql = "SELECT class FROM settings.geometry_columns_join WHERE _key_='{$this->layer}'";
+        $sql = "SELECT class FROM settings.geometry_columns_join WHERE _key_='$this->layer'";
         $result = $this->execQuery($sql);
         $arrNew = array();
-        $sortedArr = array();
         $response['success'] = true;
-        $row = $this->fetchRow($result, "assoc");
-        $arr = $arr2 = (array)json_decode($row['class']);
+        $row = $this->fetchRow($result);
+        $arr = $arr2 = !empty($row['class']) ? json_decode($row['class'], true) : [];
         for ($i = 0; $i < sizeof($arr); $i++) {
             $last = 10000;
             foreach ($arr2 as $key => $value) {
-                if ($value->sortid < $last) {
-                    $temp = $value;
+                if (isset($value->sortid) &&$value->sortid < $last) {
                     $del = $key;
                     $last = $value->sortid;
                 }
             }
-            array_push($sortedArr, $temp);
-            unset($arr2[$del]);
-            $temp = null;
+            if (isset($del) &&isset($arr2[$del])) {
+                unset($arr2[$del]);
+            }
         }
         for ($i = 0; $i < sizeof($arr); $i++) {
             $arrNew[$i] = (array)Util::casttoclass('stdClass', $arr[$i]);
@@ -87,7 +82,7 @@ class Classification extends Model
         return $response;
     }
 
-    public function get($id)
+    public function get($id): array
     {
         $classes = $this->getAll();
         $response['success'] = true;
@@ -108,7 +103,7 @@ class Classification extends Model
             "outlinecolor" => "#FF0000",
             "size" => "2",
             "width" => "1");
-        foreach ($arr as $value) {
+        foreach ($arr as $ignored) {
             foreach ($props as $key2 => $value2) {
                 if (!isset($arr[$key2])) {
                     $arr[$key2] = $value2;
@@ -119,148 +114,129 @@ class Classification extends Model
         return $response;
     }
 
-    private function store($data)
+    /**
+     * @param $class
+     * @return void
+     * @throws PDOException
+     */
+    private function store($class): void
     {
         $tableObj = new Table("settings.geometry_columns_join");
-        $obj = new stdClass;
-        $obj->class = $data;
-        $obj->_key_ = $this->layer;
-        $tableObj->updateRecord($obj, "_key_");
-        return true;
+        $data['_key_'] = $this->layer;
+        $data['class'] = $class;
+        $tableObj->updateRecord($data, '_key_');
     }
 
-    private function storeWizard($data)
+    /**
+     * @param $classWizard
+     * @return void
+     * @throws PDOException
+     */
+    private function storeWizard($classWizard): void
     {
         $tableObj = new Table("settings.geometry_columns_join");
-        $obj = new stdClass;
-        $obj->classwizard = $data;
-        $obj->_key_ = $this->layer;
-        $tableObj->updateRecord($obj, "_key_");
-        return true;
+        $data['_key_'] = $this->layer;
+        $data['classwizard'] = $classWizard;
+        $tableObj->updateRecord($data, "_key_");
     }
 
-    public function insert()
+    /**
+     * @return array
+     * @throws PDOException
+     */
+    public function insert(): array
     {
         $classes = $this->getAll();
         $classes['data'][] = array("name" => "Unnamed class");
-        if ($this->store(json_encode($classes['data'], JSON_UNESCAPED_UNICODE))) {
-            $response['success'] = true;
-            $response['message'] = "Inserted one class";
-        } else {
-            $response['success'] = false;
-            $response['message'] = "Error";
-            $response['code'] = 400;
-        }
+        $this->store(json_encode($classes['data'], JSON_UNESCAPED_UNICODE));
+        $response['success'] = true;
+        $response['message'] = "Inserted one class";
         return $response;
     }
 
-    public function update($id, $data)
+    /**
+     * @param $id
+     * @param $data
+     * @return array
+     * @throws PDOException
+     */
+    public function update($id, $data): array
     {
-        if ($data->expression) {
-            urldecode($data->expression);
-        }
         $classes = $this->getAll();
         foreach ((array)$data as $k => $v) {
             $classes['data'][$id][$k] = $v;
-
         }
-        if ($this->store(json_encode($classes['data'], JSON_UNESCAPED_UNICODE))) {
-            $response['success'] = true;
-            $response['message'] = "Updated one class";
-        } else {
-            $response['success'] = false;
-            $response['message'] = "Error";
-            $response['code'] = 400;
-        }
+        $this->store(json_encode($classes['data'], JSON_UNESCAPED_UNICODE));
+        $response['success'] = true;
+        $response['message'] = "Updated one class";
         return $response;
     }
 
-    public function destroy($id) // Geometry columns
+    /**
+     * @param $id
+     * @return array
+     * @throws PDOException
+     */
+    public function destroy($id): array // Geometry columns
     {
+        $arr = [];
         $classes = $this->getAll();
         unset($classes['data'][$id]);
-        foreach ($classes['data'] as $key => $value) { // Reindex array
+        foreach ($classes['data'] as $value) { // Reindex array
             unset($value['id']);
             $arr[] = $value;
         }
         $classes['data'] = $arr;
-        if ($this->store(json_encode($classes['data'], JSON_UNESCAPED_UNICODE))) {
-            $response['success'] = true;
-            $response['message'] = "Deleted one class";
-        } else {
-            $response['success'] = false;
-            $response['message'] = "Error";
-            $response['code'] = 400;
-        }
+        $this->store(json_encode($classes['data'], JSON_UNESCAPED_UNICODE));
+        $response['success'] = true;
+        $response['message'] = "Deleted one class";
         return $response;
     }
 
-    private function reset()
+    private function reset(): void
     {
         $this->store(json_encode(array()));
     }
 
-    private function setLayerDef()
+    /**
+     * @return void
+     * @throws PDOException
+     */
+    private function setLayerDef(): void
     {
         $def = $this->tile->get();
-        if (!$def['success']) {
-            $response['success'] = false;
-            $response['message'] = $def['message'];
-            $response['code'] = 400;
-            return $response;
-        }
         $def["data"][0]["cluster"] = null;
         $defJson = (object)$def["data"][0];
-        $res = $this->tile->update($defJson);
-        if (!$res['success']) {
-            $response['success'] = false;
-            $response['message'] = $res['message'];
-            $response['code'] = 400;
-            return $response;
-        }
-        $response['success'] = true;
-        return $response;
+        $this->tile->update($defJson);
 
     }
 
-    public function createSingle($data, $color)
+    /**
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public function createSingle($data, $color): array
     {
-        $res = $this->setLayerDef();
-        if (!$res['success']) {
-            $response['success'] = false;
-            $response['message'] = $res['message'];
-            $response['code'] = 400;
-            return $response;
-        }
+        $this->setLayerDef();
         $this->reset();
         $layer = new Layer();
-        $geometryType = ($this->geometryType) ?: $layer->getValueFromKey($this->layer, "type");
-        $res = $this->update("0", self::createClass($geometryType, $layer->getValueFromKey($this->layer, "f_table_title") ?: $layer->getValueFromKey($this->layer, "f_table_name"), null, 10, "#" . $color, $data));
-        if ($res['success']) {
+        $geometryType = $this->geometryType ?: $layer->getValueFromKey($this->layer, "type");
+        $this->update("0", self::createClass($geometryType, $layer->getValueFromKey($this->layer, "f_table_title") ?: $layer->getValueFromKey($this->layer, "f_table_name"), null, 10, "#" . $color, $data));
             $response['success'] = true;
             $response['message'] = "Updated one class";
-        } else {
-            $response['success'] = false;
-            $response['message'] = $res['message'];
-            $response['code'] = 400;
-        }
         $this->storeWizard(json_encode($data, JSON_UNESCAPED_UNICODE));
         return $response;
     }
 
-    public function createUnique($field, $data)
+    /**
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public function createUnique($field, $data): array
     {
-        $res = $this->setLayerDef();
-        if (!$res['success']) {
-            $response['success'] = false;
-            $response['message'] = $res['message'];
-            $response['code'] = 400;
-            return $response;
-        }
+        $this->setLayerDef();
         $layer = new Layer();
         $geometryType = ($this->geometryType) ?: $layer->getValueFromKey($this->layer, "type");
         $fieldObj = $this->table->metaData[$field];
-        $query = "SELECT distinct({$field}) as value FROM " . $this->table->table . " ORDER BY {$field}";
+        $query = "SELECT distinct($field) as value FROM " . $this->table->table . " ORDER BY $field";
         $res = $this->prepare($query);
         try {
             $res->execute();
@@ -279,16 +255,18 @@ class Classification extends Model
             $response['code'] = 405;
             return $response;
         }
+        $colorBrewer = [];
         if ($data->custom->colorramp !== false && $data->custom->colorramp != "-1") {
             $colorBrewer = ColorBrewer::getQualitative($data->custom->colorramp);
         }
         $cArr = array();
+        $expression = '';
         foreach ($rows as $key => $row) {
             if ($type == "number" || $type == "int") {
-                $expression = "[{$field}]={$row['value']}";
+                $expression = "[$field]={$row['value']}";
             }
             if ($type == "text" || $type == "string") {
-                $expression = "'[{$field}]'='{$row['value']}'";
+                $expression = "'[$field]'='{$row['value']}'";
             }
             $name = $row['value'];
             if ($data->custom->colorramp !== false && $data->custom->colorramp != "-1") {
@@ -299,55 +277,38 @@ class Classification extends Model
             }
             $cArr[$key] = self::createClass($geometryType, $name, $expression, ($key * 10) + 10, $c, $data);
         }
-        if ($this->store(json_encode($cArr, JSON_UNESCAPED_UNICODE))) {
-            $response['success'] = true;
-            $response['success'] = true;
-            $response['message'] = "Updated " . sizeof($rows) . " classes";
-            $this->storeWizard(json_encode($data, JSON_UNESCAPED_UNICODE));
-        } else {
-            $response['success'] = false;
-            $response['message'] = "Error";
-            $response['code'] = 400;
-        }
+        $this->store(json_encode($cArr, JSON_UNESCAPED_UNICODE));
+        $response['success'] = true;
+        $response['message'] = "Updated " . sizeof($rows) . " classes";
+        $this->storeWizard(json_encode($data, JSON_UNESCAPED_UNICODE));
         return $response;
     }
 
-    public function createEqualIntervals($field, $num, $startColor, $endColor, $data)
+    /**
+     * @param $field
+     * @param $num
+     * @param $startColor
+     * @param $endColor
+     * @param $data
+     * @return array
+     * @throws PhpfastcacheInvalidArgumentException|PDOException
+     */
+    public function createEqualIntervals($field, $num, $startColor, $endColor, $data): array
     {
-        $res = $this->setLayerDef();
-        if (!$res['success']) {
-            $response['success'] = false;
-            $response['message'] = $res['message'];
-            $response['code'] = 400;
-            return $response;
-        }
+        $this->setLayerDef();
         $layer = new Layer();
         $geometryType = ($this->geometryType) ?: $layer->getValueFromKey($this->layer, "type");
         if ($geometryType == "RASTER") {
             $parts = explode(".", $this->layer);
-            $setSchema = "set search_path to public,{$parts[0]}";
+            $setSchema = "set search_path to public,$parts[0]";
             $res = $this->prepare($setSchema);
-            try {
-                $res->execute();
-            } catch (PDOException $e) {
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 400;
-                return $response;
-            }
-            $query = "SELECT band, (stats).min, (stats).max FROM (SELECT band, public.ST_SummaryStats('{$parts[1]}','rast', band) As stats FROM generate_series(1,1) As band) As foo;";
+            $res->execute();
+            $query = "SELECT band, (stats).min, (stats).max FROM (SELECT band, public.ST_SummaryStats('$parts[1]','rast', band) As stats FROM generate_series(1,1) As band) As foo;";
         } else {
-            $query = "SELECT max({$field}) as max, min({$field}) FROM {$this->table->table}";
+            $query = "SELECT max($field) as max, min($field) FROM {$this->table->table}";
         }
         $res = $this->prepare($query);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
+        $res->execute();
         $row = $this->fetchRow($res);
         $diff = $row["max"] - $row["min"];
         $interval = $diff / $num;
@@ -358,19 +319,13 @@ class Classification extends Model
             $top = $row['min'] + ($interval * $i);
             $bottom = $top - $interval;
             if ($i == $num) {
-                $expression = "[{$field}]>=" . $bottom . " AND [{$field}]<=" . $top;
+                $expression = "[$field]>=" . $bottom . " AND [$field]<=" . $top;
             } else {
-                $expression = "[{$field}]>=" . $bottom . " AND [{$field}]<" . $top;
+                $expression = "[$field]>=" . $bottom . " AND [$field]<" . $top;
             }
             $name = " < " . round(($top), 2);
             $class = self::createClass($geometryType, $name, $expression, ((($i - 1) * 10) + 10), $grad[$i - 1], $data);
-            $res = $this->update(($i - 1), $class);
-            if (!$res['success']) {
-                $response['success'] = false;
-                $response['message'] = $res['message'];
-                $response['code'] = 400;
-                return $response;
-            }
+            $this->update(($i - 1), $class);
         }
         $response['success'] = true;
         $response['message'] = "Updated " . $num . " classes";
@@ -378,71 +333,49 @@ class Classification extends Model
         return $response;
     }
 
-    public function createQuantile($field, $num, $startColor, $endColor, $data, $update = true)
+    /**
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public function createQuantile($field, $num, $startColor, $endColor, $data, $update = true): array
     {
-        $res = $this->setLayerDef();
-        if (!$res['success']) {
-            $response['success'] = false;
-            $response['message'] = $res['message'];
-            $response['code'] = 400;
-            return $response;
-        }
+        $this->setLayerDef();
         $layer = new Layer();
         $geometryType = $layer->getValueFromKey($this->layer, "type");
         $query = "SELECT count(*) AS count FROM " . $this->table->table;
         $res = $this->prepare($query);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
+        $res->execute();
         $row = $this->fetchRow($res);
         $count = $row["count"];
         $numPerClass = $temp = ($count / $num);
-        $query = "SELECT * FROM " . $this->table->table . " ORDER BY {$field}";
+        $query = "SELECT * FROM " . $this->table->table . " ORDER BY $field";
         $res = $this->prepare($query);
-        try {
-            $res->execute();
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
+        $res->execute();
         $this->reset();
         $grad = Util::makeGradient($startColor, $endColor, $num);
-        $bottom = null;
-        $top = null;
+        $bottom = 0;
+        $top = 0;
+        $tops = [];
         $u = 0;
         for ($i = 1; $i <= $count; $i++) {
             $row = $res->fetch(PDO::FETCH_ASSOC);
             if ($i == 1) {
-                $bottom = $row[$field];
+                $bottom = $row[$field] ?? 0;
             }
             if ($i >= $temp || $i == $count) {
                 if ($top) {
                     $bottom = $top;
                 }
-                $top = $row[$field];
+                $top = $row[$field] ?? 0;
                 if ($i == $count) {
-                    $expression = "[{$field}]>=" . $bottom . " AND [{$field}]<=" . $top;
+                    $expression = "[$field]>=" . $bottom . " AND [$field]<=" . $top;
                 } else {
-                    $expression = "[{$field}]>=" . $bottom . " AND [{$field}]<" . $top;
+                    $expression = "[$field]>=" . $bottom . " AND [$field]<" . $top;
                 }
                 $name = " < " . round(($top), 2);
                 $tops[] = array($top, $grad[$u]);
                 if ($update) {
                     $class = self::createClass($geometryType, $name, $expression, (($u + 1) * 10), $grad[$u], $data);
-                    $r = $this->update($u, $class);
-                    if (!$r['success']) {
-                        $response['success'] = false;
-                        $response['message'] = $r['message'];
-                        $response['code'] = 400;
-                        return $response;
-                    }
+                    $this->update($u, $class);
                 }
                 $u++;
                 $temp = $temp + $numPerClass;
@@ -455,7 +388,10 @@ class Classification extends Model
         return $response;
     }
 
-    public function createCluster($distance, $data)
+    /**
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public function createCluster($distance, $data): array
     {
         $layer = new Layer();
         $geometryType = ($this->geometryType) ?: $layer->getValueFromKey($this->layer, "type");
@@ -469,43 +405,24 @@ class Classification extends Model
 
         // Set layer def
         $def = $this->tile->get();
-        if (!$def['success']) {
-            $response['success'] = false;
-            $response['message'] = $def['message'];
-            $response['code'] = 400;
-            return $response;
-        }
         $def["data"][0]["cluster"] = $distance;
         $def["data"][0]["meta_tiles"] = true;
         $def["data"][0]["meta_size"] = 4;
         $defJson = (object)$def["data"][0];
-        $res = $this->tile->update($defJson);
-        if (!$res['success']) {
-            $response['success'] = false;
-            $response['message'] = $res['message'];
-            $response['code'] = 400;
-            return $response;
-        }
+        $this->tile->update($defJson);
         //Set single class
         if (App::$param["mapserver_ver_7"]) {
             $ClusterFeatureCount = "Cluster_FeatureCount";
         } else {
             $ClusterFeatureCount = "Cluster:FeatureCount";
         }
-        $expression = "[{$ClusterFeatureCount}]=1";
+        $expression = "[$ClusterFeatureCount]=1";
         $name = "Single";
-        $res = $this->update(0, self::createClass($geometryType, $name, $expression, 10, "#0000FF", $data));
-        if (!$res['success']) {
-            $response['success'] = false;
-            $response['message'] = $res['message'];
-            $response['code'] = 400;
-            return $response;
-        }
-
+        $this->update(0, self::createClass($geometryType, $name, $expression, 10, "#0000FF", $data));
         //Set cluster class
-        $expression = "[{$ClusterFeatureCount}]>1";
+        $expression = "[$ClusterFeatureCount]>1";
         $name = "Cluster";
-        $data->labelText = "[{$ClusterFeatureCount}]";
+        $data->labelText = "[$ClusterFeatureCount]";
         $data->labelSize = "9";
         $data->labelPosition = "cc";
         $data->symbolSize = "50";
@@ -517,49 +434,27 @@ class Classification extends Model
         $data->overlayOpacity = "70";
         $data->force = true;
 
-        $res = $this->update(1, self::createClass($geometryType, $name, $expression, 20, "#00FF00", $data));
-        if (!$res['success']) {
-            $response['success'] = false;
-            $response['message'] = $res['message'];
-            $response['code'] = 400;
-            return $response;
-        }
+        $this->update(1, self::createClass($geometryType, $name, $expression, 20, "#00FF00", $data));
         $response['success'] = true;
         $response['message'] = "Updated 2 classes";
         $this->storeWizard(json_encode($data, JSON_UNESCAPED_UNICODE));
         return $response;
     }
 
-    public function copyClasses($to, $from)
+    public function copyClasses($to, $from): array
     {
         $query = "SELECT class FROM settings.geometry_columns_join WHERE _key_ =:from";
         $res = $this->prepare($query);
-        try {
-            $res->execute(array("from" => $from));
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
+        $res->execute(array("from" => $from));
         $row = $this->fetchRow($res);
-        $conf['class'] = $row["class"];
-        $conf['_key_'] = $to;
-
-
+        $data['class'] = $row["class"];
+        $data['_key_'] = $to;
         $geometryColumnsObj = new table("settings.geometry_columns_join");
-        $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf, JSON_UNESCAPED_UNICODE)), "_key_");
-        if (!$res["success"]) {
-            $response['success'] = false;
-            $response['message'] = $res["message"];
-            $response['code'] = "406";
-            return $response;
-        }
-        return $res;
+        return $geometryColumnsObj->updateRecord($data, "_key_");
     }
 
 
-    static function createClass($type, $name = "Unnamed class", $expression = null, $sortid = 1, $color = null, $data = null)
+    static function createClass($type, $name = "Unnamed class", $expression = null, $sortid = 1, $color = null, $data = null): object
     {
         $symbol = ($data->symbol) ?: "";
         $size = ($data->symbolSize) ?: "";
@@ -573,7 +468,7 @@ class Classification extends Model
             "sortid" => $sortid,
             "name" => $name,
             "expression" => $expression,
-            "label" => !empty($data->labelText) ? true : false,
+            "label" => !empty($data->labelText),
             "label_size" => !empty($data->labelSize) ? $data->labelSize : "",
             "label_color" => !empty($data->labelColor) ? $data->labelColor : "",
             "color" => $color,
