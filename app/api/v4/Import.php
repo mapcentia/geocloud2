@@ -15,6 +15,7 @@ use app\inc\Jwt;
 use app\inc\Route2;
 use app\inc\Session;
 use Exception;
+use Override;
 use ZipArchive;
 
 
@@ -26,7 +27,7 @@ class Import extends AbstractApi
 {
 
     /**
-     * @return array<mixed>
+     * @return array
      * @OA\Post(
      *   path="/api/v4/import",
      *   tags={"Import"},
@@ -86,7 +87,7 @@ class Import extends AbstractApi
             $tmpFilePath = $targetDir . DIRECTORY_SEPARATOR . $file;
 
             // If temp file is current file proceed to the next
-            if ($tmpFilePath == "{$filePath}.part") {
+            if ($tmpFilePath == "$filePath.part") {
                 continue;
             }
 
@@ -97,7 +98,7 @@ class Import extends AbstractApi
         }
         closedir($dir);
         // Open temp file
-        if (!$out = @fopen("{$filePath}.part", $chunks ? "ab" : "wb")) {
+        if (!$out = @fopen("$filePath.part", $chunks ? "ab" : "wb")) {
             return [
                 "success" => false,
                 "code" => "400",
@@ -138,7 +139,7 @@ class Import extends AbstractApi
         // Check if file has been uploaded
         if (!$chunks || $chunk == $chunks - 1) {
             // Strip the temp .part suffix off
-            rename("{$filePath}.part", $filePath);
+            rename("$filePath.part", $filePath);
         }
         return ["success" => true, "chunk" => $chunk];
     }
@@ -202,14 +203,14 @@ class Import extends AbstractApi
         }
         $connectionStr = "\"PG:host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "\"";
         $cmd = "ogr2postgis" .
-            " -c {$connectionStr}" .
+            " -c $connectionStr" .
             " -t EPSG:25832" .
             " -o public" .
             " -i" .
             " -p" .
             " '" . $fileFullPath . "'";
 
-        exec($cmd . ' > /dev/null', $out, $err);
+        exec($cmd . ' > /dev/null', $out);
         $response['cmd'] = $cmd;
         $response["success"] = true;
         // Check ogr2ogr output
@@ -221,17 +222,17 @@ class Import extends AbstractApi
         }
     }
 
-    #[\Override] public function put_index(): array
+    #[Override] public function put_index(): array
     {
         // TODO: Implement put_index() method.
     }
 
-    #[\Override] public function delete_index(): array
+    #[Override] public function delete_index(): array
     {
         // TODO: Implement delete_index() method.
     }
 
-    #[\Override] public function validate(): void
+    #[Override] public function validate(): void
     {
         // TODO: Implement validate() method.
     }
