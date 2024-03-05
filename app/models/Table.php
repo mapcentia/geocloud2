@@ -469,7 +469,7 @@ class Table extends Model
      * @param bool $raw
      * @param bool $append
      * @return array<bool|string|int>
-     * @throws PDOException
+     * @throws PDOException|InvalidArgumentException
      */
     public function updateRecord(array $data, string $keyName, bool $raw = false, bool $append = false): array
     {

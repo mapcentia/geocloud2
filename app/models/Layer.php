@@ -658,11 +658,12 @@ class Layer extends Table
         $this->clearCacheOfColumns(explode(".", $data->_key_)[0] . "." . explode(".", $data->_key_)[1]);
         $this->clearCacheOnSchemaChanges();
         $table = new Table("settings.geometry_columns_join");
-        $privilege = json_decode($this->getValueFromKey($data->_key_, "privileges") ?: "{}");
-        $privilege->{$data->subuser} = $data->privileges;
+        $jsonStr =$this->getValueFromKey($data->_key_, "privileges");
+        $privilege = !empty($jsonStr) ?json_decode($jsonStr, true) : [];
+        $privilege[$data->subuser] = $data->privileges;
         $privileges['privileges'] = json_encode($privilege);
         $privileges['_key_'] = $data->_key_;
-        $table->updateRecord(json_decode(json_encode($privileges), true), "_key_");
+        $table->updateRecord($privileges, "_key_");
         $response['success'] = true;
         $response['message'] = "Privileges updates";
         return $response;
