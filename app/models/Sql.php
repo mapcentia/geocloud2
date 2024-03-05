@@ -329,6 +329,7 @@ class Sql extends Model
     /**
      * @param string $q
      * @param array|null $parameters
+     * @param array|null $typeHints
      * @return array
      * @throws GC2Exception
      */
@@ -349,6 +350,9 @@ class Sql extends Model
                     } catch (\Exception) {
                         throw new GC2Exception("The value couldn't be parsed as $nativeType", 406, null, "VALUE_PARSE_ERROR");
                     }
+                    $paramTmp[$field] = $nativeValue;
+                } elseif ($type == 'boolean') {
+                    $nativeValue = $factory->getConverterForTypeSpecification($type)->output($value);
                     $paramTmp[$field] = $nativeValue;
                 } else {
                     $paramTmp[$field] = $value;

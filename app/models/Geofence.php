@@ -8,12 +8,14 @@
 
 namespace app\models;
 
+use app\exceptions\GC2Exception;
 use app\inc\Model;
 use app\inc\UserFilter;
 use Exception;
 use PDOException;
 use sad_spirit\pg_builder\Statement;
 use sad_spirit\pg_builder\StatementFactory;
+use sad_spirit\pg_wrapper\converters\DefaultTypeConverterFactory;
 
 
 /**
@@ -75,10 +77,12 @@ class Geofence extends Model
     /**
      * @param Statement $statement
      * @param array $rules
+     * @param array|null $params
+     * @param array|null $typeHints
      * @return bool
-     * @throws Exception
+     * @throws GC2Exception
      */
-    public function postProcessQuery(Statement $statement, array $rules, array $params = null): bool
+    public function postProcessQuery(Statement $statement, array $rules, array $params = null, ?array $typeHints): bool
     {
         $auth = $this->authorize($rules);
         $filters = $auth["filters"];
@@ -95,7 +99,30 @@ class Geofence extends Model
         $str1 = $factory->createFromAST($statement, true)->getSql();
         $str = "create temporary table foo on commit drop as with updated_rows as (" . $str1 . ") select * from updated_rows";
         if ($params) {
+            $typeFactory = new DefaultTypeConverterFactory();
+            $convertedParameters = [];
             foreach ($params as $param) {
+                $paramTmp = [];
+                foreach ($param as $field => $value) {
+                    $type = gettype($value);
+                    if ($type == 'array' || $type == 'object') {
+                        $nativeType = $typeHints[$field] ?? 'json';
+                        try {
+                            $nativeValue = $typeFactory->getConverterForTypeSpecification($nativeType)->output($value);
+                        } catch (\Exception) {
+                            throw new GC2Exception("The value couldn't be parsed as $nativeType", 406, null, "VALUE_PARSE_ERROR");
+                        }
+                        $paramTmp[$field] = $nativeValue;
+                    } elseif ($type == 'boolean') {
+                        $nativeValue = $typeFactory->getConverterForTypeSpecification($type)->output($value);
+                        $paramTmp[$field] = $nativeValue;
+                    } else {
+                        $paramTmp[$field] = $value;
+                    }
+                }
+                $convertedParameters[] = $paramTmp;
+            }
+            foreach ($convertedParameters as $param) {
                 // After first creation of tmp table we insert instead
                 if (!$firstParam) {
                     $str = "with updated_rows as (" . $str1 . ") insert into foo select * from updated_rows";

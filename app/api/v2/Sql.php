@@ -131,7 +131,7 @@ class Sql extends Controller
         $this->api->connect();
         $this->apiKey = $res['data']->api_key;
 
-        $serializedResponse = $this->transaction(Input::get('client_encoding'));
+        $serializedResponse = $this->transaction(Input::get('client_encoding'), Input::get('type_hints'));
 
         // Check if $this->data is set in SELECT section
         if (!isset($this->data)) {
@@ -215,7 +215,7 @@ class Sql extends Controller
      * @throws PhpfastcacheInvalidArgumentException
      * @throws Exception
      */
-    private function transaction(?string $clientEncoding = null): string
+    private function transaction(?string $clientEncoding = null, ?array $typeHints = null): string
     {
         $response = [];
         $rule = new Rule();
@@ -262,7 +262,7 @@ class Sql extends Controller
             $finaleStatement = $factory->createFromAST($select, true)->getSql();
             if ($auth["access"] == Geofence::LIMIT_ACCESS) {
                 try {
-                    $geofence->postProcessQuery($select, $rules, Input::get('params'));
+                    $geofence->postProcessQuery($select, $rules, Input::get('params'), $typeHints);
                 } catch (Exception $e) {
                     $response = [];
                     $response["code"] = 401;
@@ -307,7 +307,7 @@ class Sql extends Controller
                 $this->data = ob_get_contents();
                 if ($lifetime > 0 && !empty($CachedString)) {
                     $CachedString->set($this->data)->expiresAfter($lifetime ?: 1);// Because 0 secs means cache will life for ever, we set cache to one sec
-                   // $CachedString->addTags(["sql", Connection::$param["postgisdb"]]);
+                    // $CachedString->addTags(["sql", Connection::$param["postgisdb"]]);
                     Cache::save($CachedString);
                     $this->cacheInfo["hit"] = false;
                 }
