@@ -140,7 +140,7 @@ abstract class Cache
     {
         try {
             $items = self::$instanceCache->getAllItems($pattern);
-        } catch (PhpfastcacheUnsupportedMethodException|Error) {
+        } catch (Exception|Error) {
             $items = null;
         }
 
