@@ -9,9 +9,7 @@
 namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
-use app\inc\Input;
 use app\inc\Jwt;
-use app\inc\Route;
 use app\inc\Route2;
 use app\models\Layer;
 use Override;
@@ -70,7 +68,7 @@ class Meta extends AbstractApi
     {
         $this->layers = new Layer();
         $jwt = Jwt::validate()["data"];
-        $res = $this->layers->getAll($jwt["database"], true, Route2::getParam("query"), false, true);
+        $res = $this->layers->getAll($jwt["database"], false, Route2::getParam("query"), false, true);
         $rows = $res["data"];
         $out = $this->processRows($rows);
         return !$res["success"] ? $res : ["success" => true, "data" => $out];
