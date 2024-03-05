@@ -19,6 +19,8 @@ use Phpfastcache\Drivers\Files\Config as FilesConfig;
 use Phpfastcache\Drivers\Redis\Config as RedisConfig;
 use Phpfastcache\Drivers\Memcached\Config as MemcachedConfig;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Phpfastcache\Exceptions\PhpfastcacheUnsupportedMethodException;
+use Psr\Cache\InvalidArgumentException;
 
 
 abstract class Cache
@@ -38,25 +40,25 @@ abstract class Cache
         $memcachedConfig = null;
         if (!empty(App::$param['appCache']["host"])) {
             $split = explode(":", App::$param['appCache']["host"] ?: "127.0.0.1:6379");
-
             $redisConfig = [
                 'host' => $split[0],
                 'port' => !empty($split[1]) ? (int)$split[1] : 6379,
                 'database' => !empty(App::$param["appCache"]["db"]) ? App::$param["appCache"]["db"] : 0,
-                'itemDetailedDate' => true
+                'itemDetailedDate' => true,
+                'useStaticItemCaching' => false,
             ];
-
             $memcachedConfig = [
                 'host' => $split[0],
                 'port' => !empty($split[1]) ? (int)$split[1] : 11211,
-                'itemDetailedDate' => true
+                'itemDetailedDate' => true,
+                'useStaticItemCaching' => false,
             ];
         }
-
         $fileConfig = [
             'securityKey' => "phpfastcache",
             'path' => '/var/www/geocloud2/app',
-            'itemDetailedDate' => true
+            'itemDetailedDate' => true,
+            'useStaticItemCaching' => false,
         ];
 
         $cacheType = !empty(App::$param["appCache"]["type"]) ? App::$param["appCache"]["type"] : "files";
@@ -82,12 +84,42 @@ abstract class Cache
         ];
     }
 
-    /**
-     * @param array<string> $tags
-     */
     static public function deleteItemsByTagsAll(array $tags): void
     {
         self::$instanceCache->deleteItemsByTags($tags, TaggableCacheItemPoolInterface::TAG_STRATEGY_ALL); // V8
+    }
+
+    /**
+     * @param array $key
+     * @throws InvalidArgumentException
+     */
+    static public function deleteItem(string $key): void
+    {
+        self::$instanceCache->deleteItem($key);
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    static public function deleteItems(array $keys): void
+    {
+        self::$instanceCache->deleteItems($keys);
+    }
+
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    static public function deleteByPatterns(array $patterns) : void
+    {
+        foreach ($patterns as $pattern) {
+            $items = self::getAllItems($pattern);
+            $keys = [];
+            foreach ($items as $key => $item) {
+                $keys[] = $key;
+            }
+            self::deleteItems($keys);
+        }
     }
 
     /**
@@ -102,6 +134,17 @@ abstract class Cache
             $CachedString = null;
         }
         return $CachedString;
+    }
+
+    static public function getAllItems(string $pattern): iterable
+    {
+        try {
+            $items = self::$instanceCache->getAllItems($pattern);
+        } catch (PhpfastcacheUnsupportedMethodException|Error) {
+            $items = null;
+        }
+
+        return $items;
     }
 
     /**

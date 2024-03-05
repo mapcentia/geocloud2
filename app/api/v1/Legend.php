@@ -35,7 +35,7 @@ class Legend extends Controller
         $path = App::$param['path'] . "/app/wms/mapfiles/";
         if (Input::get("l")) {
             $cacheType = "legend";
-            $cacheId = md5(Input::getPath()->part(5) . "_" . $cacheType . "_" . Input::get("l"));
+            $cacheId = (Input::getPath()->part(5) . "_" . $cacheType . "_" . Input::get("l"));
             $CachedString = Cache::getItem($cacheId);
             if ($CachedString != null && $CachedString->isHit()) {
                 $this->legendArr = $CachedString->get();
@@ -96,7 +96,7 @@ class Legend extends Controller
                     }
                 }
                 $CachedString->set($this->legendArr)->expiresAfter(Globals::$cacheTtl);
-                $CachedString->addTags([$cacheType, Input::getPath()->part(5)]);
+               // $CachedString->addTags([$cacheType, Input::getPath()->part(5)]);
                 Cache::save($CachedString);
             }
         }

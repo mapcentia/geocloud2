@@ -307,7 +307,7 @@ class Sql extends Controller
                 $this->data = ob_get_contents();
                 if ($lifetime > 0 && !empty($CachedString)) {
                     $CachedString->set($this->data)->expiresAfter($lifetime ?: 1);// Because 0 secs means cache will life for ever, we set cache to one sec
-                    $CachedString->addTags(["sql", Connection::$param["postgisdb"]]);
+                   // $CachedString->addTags(["sql", Connection::$param["postgisdb"]]);
                     Cache::save($CachedString);
                     $this->cacheInfo["hit"] = false;
                 }

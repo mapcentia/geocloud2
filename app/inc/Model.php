@@ -130,8 +130,8 @@ class Model
     public function getPrimeryKey(string $table): ?array
     {
         $cacheType = "prikey";
-        $cacheRel = md5($table);
-        $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
+        $cacheRel = ($table);
+        $cacheId = ($this->postgisdb . "_" . $cacheRel . "_" . $cacheType);
         if (!empty(App::$param["defaultPrimaryKey"])) {
             return ["attname" => App::$param["defaultPrimaryKey"]];
         }
@@ -151,7 +151,7 @@ class Model
                 return null;
             }
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);
-            $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
+           // $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $response;
         }
@@ -295,8 +295,8 @@ class Model
     public function getMetaData(string $table, bool $temp = false, bool $restriction = true, array $restrictions = null, string $cacheKey = null): array
     {
         $cacheType = "metadata";
-        $cacheRel = md5($cacheKey ?: $table);
-        $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . md5($cacheRel . (int)$temp . (int)$restriction . serialize($restrictions)));
+        $cacheRel = ($cacheKey ?: $table);
+        $cacheId = ($this->postgisdb . "_" . $cacheRel . "_" . $cacheType . "_" . md5((int)$temp . (int)$restriction . serialize($restrictions)));
         $CachedString = Cache::getItem($cacheId);
         $primaryKey = null;
         if ($CachedString != null && $CachedString->isHit()) {
@@ -454,7 +454,7 @@ class Model
                 }
             }
             $CachedString->set($arr)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-            $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
+            //$CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $arr;
         }
@@ -742,8 +742,8 @@ class Model
     public function doesColumnExist(string $table, string $column): array
     {
         $cacheType = "columnExist";
-        $cacheRel = md5($table);
-        $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel . "_" . $column);
+        $cacheRel = ($table);
+        $cacheId = ($this->postgisdb . "_" . $cacheRel . "_" . $column . "_" . $cacheType);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
@@ -757,7 +757,7 @@ class Model
             $response['success'] = true;
             $response['exists'] = isset($row["exists"]);
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-            $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
+            //$CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $response;
         }
@@ -772,8 +772,8 @@ class Model
     public function getForeignConstrains(string|null $schema, string $table): array
     {
         $cacheType = "foreignConstrain";
-        $cacheRel = md5($schema . "." . $table);
-        $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
+        $cacheRel = ($schema . "." . $table);
+        $cacheId = ($this->postgisdb . "_" . $cacheRel . "_" . $cacheType);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
@@ -811,7 +811,7 @@ class Model
             $response['success'] = true;
             $response['data'] = $rows;
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-            $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
+            //$CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             return $response;
         }
     }
@@ -822,8 +822,8 @@ class Model
     public function getConstrains(string|null $schema, string $table, ?string $type = null): array
     {
         $cacheType = "checkConstrain";
-        $cacheRel = md5($schema . "." . $table);
-        $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel . "_" . $type);
+        $cacheRel = ($schema . "." . $table);
+        $cacheId = ($this->postgisdb . "_" . $cacheRel . "_" . $type . "_" . $cacheType);
         $CachedString = Cache::getItem($cacheId);
         $where = '';
         $params = ["table" => $table, "schema" => $schema];
@@ -860,7 +860,7 @@ class Model
             $response['data'] = $rows;
 
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-            $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
+            //$CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $response;
         }
@@ -875,8 +875,8 @@ class Model
     public function getChildTables(string $schema, string $table): array
     {
         $cacheType = "childTables";
-        $cacheRel = md5($schema . "." . $table);
-        $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
+        $cacheRel = ($schema . "." . $table);
+        $cacheId = ($this->postgisdb . "_" . $cacheRel . "_" . $cacheType);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
@@ -911,7 +911,7 @@ class Model
             }
             $response['success'] = true;
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-            $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
+          //  $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $response;
         }
@@ -926,8 +926,8 @@ class Model
     public function getColumns(string $schema, string $table): array
     {
         $cacheType = "columns";
-        $cacheRel = md5($schema . "." . $table);
-        $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
+        $cacheRel = ($schema . "." . $table);
+        $cacheId = ($this->postgisdb . "_" . $cacheRel . "_" . $cacheType);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
@@ -937,7 +937,7 @@ class Model
             $res->execute();
             $rows = $this->fetchAll($res);
             $CachedString->set($rows)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-            $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
+         //   $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $rows;
         }

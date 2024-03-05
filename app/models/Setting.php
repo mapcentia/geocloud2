@@ -237,7 +237,7 @@ class Setting extends Model
     public function get(bool $unsetPw = false): array
     {
         $cacheType = "settings";
-        $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . ($_SESSION["screen_name"] ?? ""));
+        $cacheId = ($this->postgisdb . "_" . ($_SESSION["screen_name"] ?? "" . "_" .$cacheType));
 
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
@@ -291,7 +291,7 @@ class Setting extends Model
             $response["data"]->userGroups = (object)$userGroups;
             Database::setDb($this->postgisdb);
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-            $CachedString->addTags([$cacheType, $this->postgisdb]);
+          //  $CachedString->addTags([$cacheType, $this->postgisdb]);
             Cache::save($CachedString);
             $response["cache"]["hit"] = false;
         }

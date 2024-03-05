@@ -17,6 +17,7 @@ use app\inc\Session;
 use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Phpfastcache\Exceptions\PhpfastcacheLogicException;
+use Psr\Cache\InvalidArgumentException;
 
 
 /**
@@ -37,26 +38,26 @@ class Layer extends Table
 
     /**
      *
+     * @throws InvalidArgumentException
      */
     private function clearCacheOnSchemaChanges(): void
     {
-        // We clear all cache, because it can take long time to clear by tag
-        //Cache::clear();
-
-        $arr = ["meta", $this->postgisdb];
-        Cache::deleteItemsByTagsAll($arr);
+        $patterns = [
+            $this->postgisdb . '*_meta_*',
+        ];
+        Cache::deleteByPatterns($patterns);
     }
 
     /**
      *
+     * @throws InvalidArgumentException
      */
     private function clearCacheOfColumns($relName): void
     {
-        // We clear all cache, because it can take long time to clear by tag
-        //Cache::clear();
-
-        $arr = ["columns", md5($relName), $this->postgisdb];
-        Cache::deleteItemsByTagsAll($arr);
+        $patterns = [
+            $this->postgisdb . '_' . $relName . '_columns',
+        ];
+        Cache::deleteByPatterns($patterns);
     }
 
     /**
@@ -102,7 +103,7 @@ class Layer extends Table
         }
 
         $cacheType = "meta";
-        $cacheId = md5($this->postgisdb . "_" . Session::getUser() . "_" . $cacheType . "_" . md5($query . "_" . "(int)$auth" . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es));
+        $cacheId = ($this->postgisdb . "_" . Session::getUser() . "_" . $cacheType . "_" . md5($query . "_" . "(int)$auth" . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es));
 
         $CachedString = Cache::getItem($cacheId);
 
@@ -412,7 +413,7 @@ class Layer extends Table
             $response['success'] = true;
             $response['message'] = "geometry_columns_view fetched";
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-            $CachedString->addTags([$cacheType, $this->postgisdb]);
+         //   $CachedString->addTags([$cacheType, $this->postgisdb]);
             Cache::save($CachedString);
             $response["cache"]["hit"] = false;
         }
@@ -664,6 +665,7 @@ class Layer extends Table
      * @param object $data
      * @return array
      * @throws PhpfastcacheInvalidArgumentException|PDOException
+     * @throws InvalidArgumentException
      */
     public function updatePrivileges(object $data): array
     {

@@ -13,11 +13,11 @@ use app\inc\Globals;
 use app\inc\Model;
 use app\conf\Connection;
 use app\conf\App;
-use app\inc\Util;
 use app\inc\Geometrycolums;
 use app\inc\Cache;
 use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Psr\Cache\InvalidArgumentException;
 use stdClass;
 use function mb_substr;
 
@@ -67,8 +67,8 @@ class Table extends Model
 
         if ($this->schema != "settings") {
             $cacheType = "relExist";
-            $cacheRel = md5($this->table);
-            $cacheId = md5($this->postgisdb . "_" . $cacheType . "_" . $cacheRel);
+            $cacheRel = ($this->table);
+            $cacheId = ($this->postgisdb . "_" . $cacheRel . "_" . $cacheType);
             $CachedString = Cache::getItem($cacheId);
             if ($CachedString != null && $CachedString->isHit()) {
                 $this->exists = $CachedString->get();
@@ -81,7 +81,7 @@ class Table extends Model
                     $this->exists = false;
                 }
                 $CachedString->set($this->exists)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-                $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
+            //    $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
                 Cache::save($CachedString);
             }
 
@@ -125,18 +125,16 @@ class Table extends Model
     /**
      * @param string|null $relName
      * @return void
+     * @throws InvalidArgumentException
      */
     private function clearCacheOnSchemaChanges(?string $relName = null): void
     {
-        // We clear all cache, because it can take long time to clear by tag
-        //Cache::clear();
-
-        $relName = $relName ?: $this->table;
-        $tags = ["relExist", "columns", "metadata", "prikey", "columnExist", "childTables"];
-        foreach ($tags as $tag) {
-            Cache::deleteItemsByTagsAll([$tag, md5($relName), $this->postgisdb]);
-        }
-        Cache::deleteItemsByTagsAll(['meta', $this->postgisdb]);
+        $patterns = [
+            $this->postgisdb . '_' . $relName . '*',
+            $this->postgisdb . '*_meta_*',
+            $this->postgisdb . '*_legend_*',
+        ];
+        Cache::deleteByPatterns($patterns);
     }
 
     /**
@@ -726,6 +724,7 @@ class Table extends Model
      * @return array
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function updateColumn(object $data, string $key, bool $onlyRename = false): array // Only geometry tables
     {
