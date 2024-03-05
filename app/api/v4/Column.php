@@ -16,6 +16,7 @@ use app\models\Table as TableModel;
 use Exception;
 use Override;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Psr\Cache\InvalidArgumentException;
 use stdClass;
 
 
@@ -242,6 +243,7 @@ class Column extends AbstractApi
      * )
      * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public function put_index(): array
     {

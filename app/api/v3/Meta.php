@@ -6,8 +6,9 @@
  *
  */
 
-namespace app\api\v4;
+namespace app\api\v3;
 
+use app\api\v4\AbstractApi;
 use app\exceptions\GC2Exception;
 use app\inc\Jwt;
 use app\inc\Route2;
@@ -21,10 +22,6 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
  */
 class Meta extends AbstractApi
 {
-    /**
-     * @var Layer
-     */
-    private Layer $layers;
 
     /**
      * Meta constructor.
@@ -38,7 +35,7 @@ class Meta extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
      * @OA\Get(
-     *   path="/api/v4/meta/{query}",
+     *   path="/api/v3/meta/{query}",
      *   tags={"Meta"},
      *   summary="Get layer meta data",
      *   security={{"bearerAuth":{}}},
@@ -66,9 +63,10 @@ class Meta extends AbstractApi
     #[Override]
     public function get_index(): array
     {
-        $this->layers = new Layer();
+        $layers = new Layer();
         $jwt = Jwt::validate()["data"];
-        $res = $this->layers->getAll($jwt["database"], false, Route2::getParam("query"), false, true);
+        $auth = $jwt['superUser'];
+        $res = $layers->getAll($jwt["database"], $auth, Route2::getParam("query"), false, true);
         $rows = $res["data"];
         $out = $this->processRows($rows);
         return !$res["success"] ? $res : ["success" => true, "data" => $out];

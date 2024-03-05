@@ -387,7 +387,8 @@ class Sql extends Model
                         if ($columnTypes[$field] == 'geometry') {
                             $resultGeom = $this->prepare("select ST_AsGeoJSON(:v) as json");
                             $resultGeom->execute(["v" => $value]);
-                            $value = json_decode($this->fetchRow($resultGeom)['json']);
+                            $json =$this->fetchRow($resultGeom)['json'];
+                            $value = !empty($json) ? json_decode($json) : null;
                         }
                         $tmp[] = [$field => $value];
                     }

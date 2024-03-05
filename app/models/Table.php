@@ -788,7 +788,7 @@ class Table extends Model
      * @param string $_key_
      * @return array
      * @throws GC2Exception
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws PhpfastcacheInvalidArgumentException|InvalidArgumentException
      */
     public function deleteColumn(string|array $data, string $_key_): array
     {

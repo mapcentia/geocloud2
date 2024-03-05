@@ -207,9 +207,9 @@ class Layer extends Table
                     // Set empty strings to NULL
                     $value = $value == "" ? null : $value;
                     if ($key == "type" && $value == "GEOMETRY") {
-                        $def = json_decode($row['def']);
-                        if (isset($def->geotype) && $def->geotype != "Default") {
-                            $value = "MULTI" . $def->geotype;
+                        $def = isset($row['def']) ? json_decode($row['def'] , true) : [];
+                        if (isset($def['geotype']) && $def['geotype'] != "Default") {
+                            $value = "MULTI" . $def['geotype'];
                         }
                     }
                     if ($key == "fieldconf" && ($value)) {

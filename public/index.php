@@ -10,31 +10,31 @@ ini_set("display_errors", "no");
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
 ob_start("ob_gzhandler");
 
-use app\api\v4\Oauth;
+use app\api\v3\Meta;
+use app\api\v4\Column;
 use app\api\v4\Constraint;
 use app\api\v4\Geofence;
 use app\api\v4\Import;
 use app\api\v4\Index;
-use app\api\v4\Column;
-use app\api\v4\Meta;
+use app\api\v4\Oauth;
 use app\api\v4\Privilege;
 use app\api\v4\Schema;
 use app\api\v4\Sql;
 use app\api\v4\Table;
 use app\api\v4\User;
+use app\conf\App;
+use app\conf\Connection;
 use app\controllers\Wms;
 use app\exceptions\GC2Exception;
-use app\inc\Input;
-use app\inc\Route2;
-use app\inc\Session;
-use app\inc\Route;
-use app\inc\Util;
-use app\inc\Response;
 use app\inc\Cache;
+use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Redirect;
-use app\conf\Connection;
-use app\conf\App;
+use app\inc\Response;
+use app\inc\Route;
+use app\inc\Route2;
+use app\inc\Session;
+use app\inc\Util;
 use app\models\Database;
 
 include_once('../app/vendor/autoload.php');
@@ -453,7 +453,7 @@ try {
             }
         });
 
-        Route2::add("api/v4/meta/[query]", new Meta(), function () {
+        Route2::add("api/v3/meta/[query]", new Meta(), function () {
             $jwt = Jwt::validate();
             Database::setDb($jwt["data"]["database"]);
         });
