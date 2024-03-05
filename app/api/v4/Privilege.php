@@ -15,6 +15,7 @@ use app\inc\Route2;
 use app\models\Layer;
 use Override;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Psr\Cache\InvalidArgumentException;
 use StdClass;
 
 
@@ -64,6 +65,7 @@ class Privilege extends AbstractApi
 
     /**
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     #[Override] public function put_index(): array
     {
