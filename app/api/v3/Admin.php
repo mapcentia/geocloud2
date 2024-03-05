@@ -18,7 +18,7 @@ use app\inc\Model;
 use app\models\Database;
 use app\conf\App;
 use app\conf\Connection;
-use app\migration\Sql2 as Sql;
+use app\migration\Sql;
 use app\models\Qgis;
 use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;

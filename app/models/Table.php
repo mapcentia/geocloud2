@@ -81,7 +81,7 @@ class Table extends Model
                     $this->exists = false;
                 }
                 $CachedString->set($this->exists)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-            //    $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
+                //    $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
                 Cache::save($CachedString);
             }
 
@@ -507,9 +507,9 @@ class Table extends Model
                         $value = $value ?: "0";
                     }
                     // TODO this chang of _key_ must be configurable
-                    if ($key == "_key_") {
-                        //        $split = explode('.', $value);
-                        //        $value = $split[0] . '.' . $split[1];
+                    if ($key == "_key_" && !empty(App::$param['dontUseGeometryColumnInJoin'])) {
+                        $split = explode('.', $value);
+                        $value = $split[0] . '.' . $split[1];
                     }
                     if ($key == "tags") {
                         $value = $value ?: [];
