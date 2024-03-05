@@ -26,11 +26,6 @@ use Psr\Cache\InvalidArgumentException;
  */
 class Layer extends Table
 {
-    /**
-     * @var array
-     */
-    private static array $recordStore = [];
-
     function __construct()
     {
         parent::__construct("settings.geometry_columns_view");
@@ -64,24 +59,14 @@ class Layer extends Table
      * @param string $_key_
      * @param string $column
      * @return string|null
-     * @throws PhpfastcacheInvalidArgumentException
      */
     public function getValueFromKey(string $_key_, string $column): ?string
     {
-        if (isset(self::$recordStore[$_key_][$column])) {
-            return self::$recordStore[$_key_][$column];
-        }
-        $rows = $this->getRecords();
-        $rows = $rows['data'];
-        foreach ($rows as $row) {
-            foreach ($row as $field => $value) {
-                if ($field == "_key_" && $value == $_key_) {
-                    self::$recordStore[$_key_][$column] = $row[$column];
-                    return (self::$recordStore[$_key_][$column]);
-                }
-            }
-        }
-        return null;
+        $sql = "select $column from $this->table where _key_=:key";
+        $res =$this->prepare($sql);
+        $res->execute(['key' => $_key_]);
+        $row = $this->fetchRow($res);
+        return $row[$column];
     }
 
     /**
@@ -480,7 +465,7 @@ class Layer extends Table
      * @param $data
      * @param $_key_
      * @return array
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws PhpfastcacheInvalidArgumentException|InvalidArgumentException
      */
     public function updateElasticsearchMapping($data, $_key_): array
     {
@@ -521,7 +506,7 @@ class Layer extends Table
      * @param $tableName
      * @param $data
      * @return array
-     * @throws GC2Exception
+     * @throws GC2Exception|InvalidArgumentException
      */
     public function rename($tableName, $data): array
     {
@@ -571,6 +556,7 @@ class Layer extends Table
      * @param $tables
      * @param $schema
      * @return array
+     * @throws InvalidArgumentException
      */
     public function setSchema($tables, $schema): array
     {
@@ -605,6 +591,7 @@ class Layer extends Table
     /**
      * @param array $tables
      * @return array
+     * @throws InvalidArgumentException
      */
     public function delete(array $tables): array
     {
@@ -633,7 +620,6 @@ class Layer extends Table
     /**
      * @param string $_key_
      * @return array
-     * @throws PhpfastcacheInvalidArgumentException
      */
     public function getPrivileges(string $_key_): array
     {
@@ -708,7 +694,6 @@ class Layer extends Table
     /**
      * @param string $_key_
      * @return array<array|bool|string>
-     * @throws PhpfastcacheInvalidArgumentException
      */
     public function getRoles(string $_key_): array
     {
@@ -730,7 +715,7 @@ class Layer extends Table
     /**
      * @param object $data
      * @return array<bool|string|int>
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws PhpfastcacheInvalidArgumentException|InvalidArgumentException
      */
     public function updateRoles(object $data): array
     {
@@ -823,6 +808,7 @@ class Layer extends Table
      * @param string $to
      * @param string $from
      * @return array
+     * @throws InvalidArgumentException
      */
     public function copyMeta(string $to, string $from): array
     {
