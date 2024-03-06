@@ -374,7 +374,6 @@ class Sql extends Model
         $this->rollback(); // Roll back test
 
         $returning = null;
-        $tmp = null;
         $affectedRows = 0;
         $result = $this->prepare($q);
         if (sizeof($convertedParameters) > 0) {

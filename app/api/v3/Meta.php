@@ -97,9 +97,9 @@ class Meta extends AbstractApi
             "authentication" => $row["authentication"],
             "layergroup" => $row["layergroup"],
             "sort_id" => $row["sort_id"],
-            "wmssource" => $row["wmssource"],
+//            "wmssource" => $row["wmssource"],
             "tags" => $row["tags"],
-            "privileges" => $row["privileges"],
+//            "privileges" => $row["privileges"],
             "fields" => $row["fields"],
             "children" => $row["children"]
         ];

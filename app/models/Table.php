@@ -1462,6 +1462,7 @@ class Table extends Model
      * @param string $column
      * @param mixed $value
      * @return void
+     * @throws InvalidArgumentException
      */
     public function addDefaultValue(string $column, mixed $value): void
     {
@@ -1471,6 +1472,9 @@ class Table extends Model
         $res->execute();
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function dropDefaultValue(?string $column): void
     {
         $this->clearCacheOnSchemaChanges();
