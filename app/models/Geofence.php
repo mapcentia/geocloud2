@@ -79,10 +79,11 @@ class Geofence extends Model
      * @param array $rules
      * @param array|null $params
      * @param array|null $typeHints
-     * @return bool
+     * @return true
      * @throws GC2Exception
+     * @throws Exception
      */
-    public function postProcessQuery(Statement $statement, array $rules, array $params = null, ?array $typeHints): bool
+    public function postProcessQuery(Statement $statement, array $rules, array $params = null, array $typeHints = null): true
     {
         $auth = $this->authorize($rules);
         $filters = $auth["filters"];
@@ -122,12 +123,13 @@ class Geofence extends Model
                 }
                 $convertedParameters[] = $paramTmp;
             }
+            $result = $model->prepare($str);
             foreach ($convertedParameters as $param) {
                 // After first creation of tmp table we insert instead
                 if (!$firstParam) {
                     $str = "with updated_rows as (" . $str1 . ") insert into foo select * from updated_rows";
+                    $result = $model->prepare($str);
                 }
-                $result = $model->prepare($str);
                 $result->execute($param);
                 $firstParam = false;
                 $rowCount += $result->rowCount();
@@ -149,7 +151,6 @@ class Geofence extends Model
         if ($rowCount > $row["count"]) {
             throw new Exception('LIMIT ERROR');
         }
-
         $model->rollback();
         return true;
     }
