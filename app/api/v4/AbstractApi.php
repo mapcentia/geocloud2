@@ -62,7 +62,7 @@ abstract class AbstractApi implements ApiInterface
         }
         if ($this->qualifiedName) {
             $this->doesTableExist();
-            $this->table = new TableModel($this->qualifiedName);
+            $this->table = new TableModel($this->qualifiedName, false, false);
         }
         if ($this->key) {
             $this->doesKeyExist();

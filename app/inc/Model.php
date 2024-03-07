@@ -292,7 +292,7 @@ class Model
      * @throws PhpfastcacheInvalidArgumentException
      * @throws PDOException
      */
-    public function getMetaData(string $table, bool $temp = false, bool $restriction = true, array $restrictions = null, string $cacheKey = null): array
+    public function getMetaData(string $table, bool $temp = false, bool $restriction = true, array $restrictions = null, string $cacheKey = null, bool $getEnums = true): array
     {
         $cacheType = "metadata";
         $cacheRel = ($cacheKey ?: $table);
@@ -382,11 +382,13 @@ class Model
                     foreach ($foreignConstrains as $value) {
                         if ($row["column_name"] == $value["child_column"] /*&& $value["parent_column"] != $primaryKey*/) {
                             $references[] = $value["parent_schema"] . "." . $value["parent_table"] . "." . $value["parent_column"];
-                            $sql = "SELECT {$value["parent_column"]} FROM {$value["parent_schema"]}.{$value["parent_table"]}";
-                            $resC = $this->prepare($sql);
-                            $resC->execute();
-                            while ($rowC = $this->fetchRow($resC)) {
-                                $foreignValues[] = ["value" => $rowC[$value["parent_column"]], "alias" => (string)$rowC[$value["parent_column"]]];
+                            if ($getEnums) {
+                                $sql = "SELECT {$value["parent_column"]} FROM {$value["parent_schema"]}.{$value["parent_table"]}";
+                                $resC = $this->prepare($sql);
+                                $resC->execute();
+                                while ($rowC = $this->fetchRow($resC)) {
+                                    $foreignValues[] = ["value" => $rowC[$value["parent_column"]], "alias" => (string)$rowC[$value["parent_column"]]];
+                                }
                             }
                         }
                     }
@@ -397,17 +399,19 @@ class Model
                     }
                 } elseif (isset($restrictions[$row["column_name"]]->_rel) && $restriction && $restrictions) {
                     $references = $restrictions[$row["column_name"]]->_rel . "." . $restrictions[$row["column_name"]]->_value;
-                    $rel = $restrictions[$row["column_name"]];
-                    $sql = "SELECT $rel->_value AS value, $rel->_text AS text FROM $rel->_rel";
-                    if (!empty($rel->_where)) {
-                        $sql .= " WHERE $rel->_where";
+                    if ($getEnums) {
+                        $rel = $restrictions[$row["column_name"]];
+                        $sql = "SELECT $rel->_value AS value, $rel->_text AS text FROM $rel->_rel";
+                        if (!empty($rel->_where)) {
+                            $sql .= " WHERE $rel->_where";
+                        }
+                        $resC = $this->prepare($sql);
+                        $resC->execute();
+                        while ($rowC = $this->fetchRow($resC)) {
+                            $foreignValues[] = ["value" => $rowC["value"], "alias" => (string)$rowC["text"]];
+                        }
                     }
-                    $resC = $this->prepare($sql);
-                    $resC->execute();
-                    while ($rowC = $this->fetchRow($resC)) {
-                        $foreignValues[] = ["value" => $rowC["value"], "alias" => (string)$rowC["text"]];
-                    }
-                } elseif ($restriction && $restrictions && isset($restrictions[$row["column_name"]]) && $restrictions[$row["column_name"]] != "*") {
+                } elseif ($restriction && $restrictions && isset($restrictions[$row["column_name"]]) && $restrictions[$row["column_name"]] != "*" && $getEnums) {
                     if (is_array($restrictions[$row["column_name"]])) {
                         foreach ($restrictions[$row["column_name"]] as $restriction) {
                             $foreignValues[] = ["value" => $restriction, "alias" => (string)$restriction];
@@ -417,7 +421,7 @@ class Model
                             $foreignValues[] = ["value" => $value, "alias" => (string)$alias];
                         }
                     }
-                } elseif (isset($restrictions[$row["column_name"]]) && $restrictions[$row["column_name"]] == "*") {
+                } elseif (isset($restrictions[$row["column_name"]]) && $restrictions[$row["column_name"]] == "*" && $getEnums) {
                     $t = new Table($table);
                     foreach ($t->getGroupByAsArray($row["column_name"])["data"] as $value) {
                         $foreignValues[] = ["value" => $value, "alias" => (string)$value];
@@ -854,7 +858,7 @@ class Model
 
             $res = $this->prepare($sql);
             $res->execute($params);
-            $rows = $this->fetchAll($res);
+            $rows = $this->fetchAll($res, 'assoc');
 
             $response['success'] = true;
             $response['data'] = $rows;
@@ -911,7 +915,7 @@ class Model
             }
             $response['success'] = true;
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-          //  $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
+            //  $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $response;
         }
@@ -937,7 +941,7 @@ class Model
             $res->execute();
             $rows = $this->fetchAll($res);
             $CachedString->set($rows)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-         //   $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
+            //   $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $rows;
         }

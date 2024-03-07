@@ -43,7 +43,7 @@ class Table extends Model
      * @param bool $temp
      * @throws PhpfastcacheInvalidArgumentException
      */
-    function __construct(?string $table, bool $temp = false)
+    function __construct(?string $table, bool $temp = false, bool $getEnums = true)
     {
         parent::__construct();
         // Make sure db connection is init
@@ -87,7 +87,7 @@ class Table extends Model
 
             if ($this->exists) {
                 $this->geometryColumns = $this->getGeometryColumns($this->table, "*");
-                $this->metaData = $this->getMetaData($this->table, $temp);
+                $this->metaData = $this->getMetaData($this->table, $temp, true, null, null, $getEnums);
                 $this->geomField = $this->geometryColumns["f_geometry_column"];
                 $this->geomType = $this->geometryColumns["type"];
                 $this->primaryKey = $this->getPrimeryKey($this->table);
