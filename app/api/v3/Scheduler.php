@@ -82,7 +82,7 @@ class Scheduler extends Controller
         // Find active pids
         foreach ($fromDb as $value) {
             if (in_array($value["pid"], $out)) {
-                $res[] = ["uuid" => $value["uuid"], "pid" => $value["pid"], "id" => $value["id"]];
+                $res[] = ["uuid" => $value["uuid"], "pid" => $value["pid"], "id" => $value["id"], "name" => $value["name"]];
             }
         }
         return ["jobs" => $res];

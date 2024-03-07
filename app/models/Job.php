@@ -153,6 +153,6 @@ class Job extends Model
         $sql = "SELECT * FROM started_jobs where db=:db";
         $res = $this->prepare($sql);
         $res->execute(['db' => $db]);
-        return $this->fetchAll($res);
+        return $this->fetchAll($res, 'assoc');
     }
 }
