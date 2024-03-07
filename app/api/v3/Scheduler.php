@@ -43,7 +43,12 @@ class Scheduler extends Controller
     public function post_index(): array
     {
         $id = Route::getParam("id");
-        $name = Route::getParam("name");
+        $body = Input::getBody();
+        $data = json_decode($body);
+        $name = null;
+        if (!empty($data->name)) {
+            $name = $data->name;
+        }
         if (is_numeric($id)) {
             $this->job->runJob((int)$id, $this->db, $name);
         } else {

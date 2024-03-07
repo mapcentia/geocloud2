@@ -288,9 +288,9 @@ class Model
      * @param bool $restriction
      * @param array<array>|null $restrictions
      * @param string|null $cacheKey
+     * @param bool $getEnums
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
-     * @throws PDOException
      */
     public function getMetaData(string $table, bool $temp = false, bool $restriction = true, array $restrictions = null, string $cacheKey = null, bool $getEnums = true): array
     {
