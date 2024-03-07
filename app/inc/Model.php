@@ -151,7 +151,7 @@ class Model
                 return null;
             }
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);
-           // $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
+            // $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $response;
         }
@@ -1105,7 +1105,7 @@ class Model
         foreach ($rows as $row) {
             $tmp = [];
             $def = $row['definition'];
-            preg_match('#(?<=SELECT)(.|\n)*(?= FROM)#', $def, $match);
+            preg_match('#(?<=SELECT)(.|\n)*?(?= FROM)#', $def, $match);
             $tmp['definition'] = $match[0] ? str_replace($match[0], ' *', $def) : $def;
             $tmp['name'] = $row['name'];
             $tmp['schemaname'] = $row['schemaname'];
@@ -1116,9 +1116,9 @@ class Model
     }
 
     /**
-     * @param string $schema
-     * @param string $targetSchema
-     * @param string|null $relation
+     * @param array $schemas
+     * @param array|null $targetSchemas
+     * @param array|null $relations
      * @return int
      * @throws GC2Exception
      */
