@@ -92,8 +92,8 @@ class View extends Controller
 
         $schemas = $arr['from'];
         $targets = $arr['to'];
-        $relations = $arr['relation'];
-        $count = $model->createStarViewsFromStore($schemas, $targets, $relations);
+        $include = $arr['include'];
+        $count = $model->createStarViewsFromStore($schemas, $targets, $include);
         return ["code" => "200", "count" => $count];
     }
 }

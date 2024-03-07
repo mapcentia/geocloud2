@@ -1140,7 +1140,7 @@ class Model
             }
             $views = $this->getStarViewsFromStore($schema);
             foreach ($views as $view) {
-                if ($relations && in_array($view['name'], $relations)) {
+                if ($relations && !in_array($view['name'], $relations)) {
                     continue;
                 }
                 $mat = $view['ismat'] ? 'materialized' : '';
