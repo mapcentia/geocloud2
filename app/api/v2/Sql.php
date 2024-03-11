@@ -195,7 +195,7 @@ class Sql extends Controller
             foreach ($sqls as $q) {
                 $this->q = $q;
                 if ($this->q != "") {
-                    $res = unserialize($this->transaction());
+                    $res = unserialize($this->transaction(null, null, false));
                     if (!$res["success"]) {
                         $this->api->rollback();
                         return $res;
@@ -215,7 +215,7 @@ class Sql extends Controller
      * @throws PhpfastcacheInvalidArgumentException
      * @throws Exception
      */
-    private function transaction(?string $clientEncoding = null, ?array $typeHints = null): string
+    private function transaction(?string $clientEncoding = null, ?array $typeHints = null, bool $convertReturning = true): string
     {
         $response = [];
         $rule = new Rule();
@@ -273,7 +273,7 @@ class Sql extends Controller
                     return serialize($response);
                 }
             }
-            $this->response = $this->api->transaction($finaleStatement, Input::get('params') ?: null, Input::get('type_hints') ?: null);
+            $this->response = $this->api->transaction($finaleStatement, Input::get('params') ?: null, Input::get('type_hints') ?: null, $convertReturning);
             $response["filters"] = $auth["filters"];
             $response["statement"] = $finaleStatement;
             $this->addAttr($response);

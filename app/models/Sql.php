@@ -333,45 +333,49 @@ class Sql extends Model
      * @return array
      * @throws GC2Exception
      */
-    public function transaction(string $q, array $parameters = null, array $typeHints = null): array
+    public function transaction(string $q, array $parameters = null, array $typeHints = null, bool $convertReturning = true): array
     {
         $factory = new DefaultTypeConverterFactory();
         $columnTypes = [];
         $convertedParameters = [];
         // Convert JSON to native types
-        foreach ($parameters as $parameter) {
-            $paramTmp = [];
-            foreach ($parameter as $field => $value) {
-                $type = gettype($value);
-                if ($type == 'array' || $type == 'object') {
-                    $nativeType = $typeHints[$field] ?? 'json';
-                    try {
-                        $nativeValue = $factory->getConverterForTypeSpecification($nativeType)->output($value);
-                    } catch (\Exception) {
-                        throw new GC2Exception("The value couldn't be parsed as $nativeType", 406, null, "VALUE_PARSE_ERROR");
+        if ($parameters) {
+            foreach ($parameters as $parameter) {
+                $paramTmp = [];
+                foreach ($parameter as $field => $value) {
+                    $type = gettype($value);
+                    if ($type == 'array' || $type == 'object') {
+                        $nativeType = $typeHints[$field] ?? 'json';
+                        try {
+                            $nativeValue = $factory->getConverterForTypeSpecification($nativeType)->output($value);
+                        } catch (\Exception) {
+                            throw new GC2Exception("The value couldn't be parsed as $nativeType", 406, null, "VALUE_PARSE_ERROR");
+                        }
+                        $paramTmp[$field] = $nativeValue;
+                    } elseif ($type == 'boolean') {
+                        $nativeValue = $factory->getConverterForTypeSpecification($type)->output($value);
+                        $paramTmp[$field] = $nativeValue;
+                    } else {
+                        $paramTmp[$field] = $value;
                     }
-                    $paramTmp[$field] = $nativeValue;
-                } elseif ($type == 'boolean') {
-                    $nativeValue = $factory->getConverterForTypeSpecification($type)->output($value);
-                    $paramTmp[$field] = $nativeValue;
-                } else {
-                    $paramTmp[$field] = $value;
                 }
+                $convertedParameters[] = $paramTmp;
             }
-            $convertedParameters[] = $paramTmp;
         }
         // Get types from returning if any
-        $this->begin();
-        $result = $this->prepare($q);
-        $result->execute($convertedParameters[0]);
-        foreach (range(0, $result->columnCount() - 1) as $column_index) {
-            $meta = $result->getColumnMeta($column_index);
-            if (!$meta) {
-                break;
+        if ($convertReturning) {
+            $this->begin();
+            $result = $this->prepare($q);
+            $result->execute($convertedParameters[0]);
+            foreach (range(0, $result->columnCount() - 1) as $column_index) {
+                $meta = $result->getColumnMeta($column_index);
+                if (!$meta) {
+                    break;
+                }
+                $columnTypes[$meta['name']] = $meta['native_type'];
             }
-            $columnTypes[$meta['name']] = $meta['native_type'];
+            $this->rollback(); // Roll back test
         }
-        $this->rollback(); // Roll back test
 
         $returning = null;
         $affectedRows = 0;
@@ -390,7 +394,7 @@ class Sql extends Model
                         if ($columnTypes[$field] == 'geometry') {
                             $resultGeom = $this->prepare("select ST_AsGeoJSON(:v) as json");
                             $resultGeom->execute(["v" => $value]);
-                            $json =$this->fetchRow($resultGeom)['json'];
+                            $json = $this->fetchRow($resultGeom)['json'];
                             $value = !empty($json) ? json_decode($json) : null;
                         }
                         $tmp[] = [$field => $value];
@@ -406,8 +410,7 @@ class Sql extends Model
             $result->execute();
             $affectedRows += $result->rowCount();
             $returning = $result->fetchAll(PDO::FETCH_NAMED);
-            if(empty($returning[0]))
-            {
+            if (empty($returning[0])) {
                 $returning = null;
             }
         }
