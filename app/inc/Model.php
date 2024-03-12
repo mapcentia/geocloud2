@@ -1160,4 +1160,11 @@ class Model
         $this->commit();
         return $count;
     }
+
+    public function importForeignSchema(string $from, string $to, string $server): void
+    {
+        $sql = "IMPORT FOREIGN SCHEMA $from FROM SERVER $server INTO $to";
+        $result = $this->prepare($sql);
+        $result->execute();
+    }
 }
