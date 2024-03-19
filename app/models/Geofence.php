@@ -232,14 +232,18 @@ class Geofence extends Model
     /**
      * @throws GC2Exception
      */
-    public function fillPlaceholders(string $str): string
+    private function fillPlaceholders(string $str): string
     {
         $user = new UserModel($this->userFilter->userName, $this->postgisdb);
-        $userData = (array)$user->getData()['data']['properties'];
-        $newArr = [];
-        foreach($userData as $key=>$value) {
-            $newArr["{{{$key}}}"] = $value;
+        try {
+            $userData = (array)$user->getData()['data']['properties'];
+            $newArr = [];
+            foreach($userData as $key=>$value) {
+                $newArr["{{{$key}}}"] = $value;
+            }
+            return strtr($str, $newArr);
+        } catch (Exception) {
+           return $str;
         }
-        return strtr($str, $newArr);
     }
 }

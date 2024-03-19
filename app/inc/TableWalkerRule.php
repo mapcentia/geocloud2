@@ -145,6 +145,10 @@ class TableWalkerRule extends BlankWalker
     {
         $this->request = "delete";
         foreach ($statement->using->getIterator() as $using) {
+            // A sub-select doesn't have name
+            if (!isset($using->name)) {
+                continue;
+            }
             $schema = $using->name->schema->value ?? self::DEFAULT_SCHEMA;
             $relation = $using->name->relation->value;
             $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $schema, $relation);
