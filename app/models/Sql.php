@@ -67,7 +67,7 @@ class Sql extends Model
     {
         // Check params
         if ($parameters && is_array($parameters[0])) {
-            throw new GC2Exception("Only JSON objects are accepted in SELECT statements/foo. Not arrays", 406);
+            throw new GC2Exception("Only JSON objects are accepted in SELECT statements. Not arrays", 406);
         }
 
         if ($format == "excel") {
@@ -330,6 +330,7 @@ class Sql extends Model
      * @param string $q
      * @param array|null $parameters
      * @param array|null $typeHints
+     * @param bool $convertReturning
      * @return array
      * @throws GC2Exception
      */
