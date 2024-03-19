@@ -27,12 +27,12 @@ class User extends Model
     /**
      * @var string|null
      */
-    public $userId;
+    public ?string $userId;
 
     /**
      * @var string|null
      */
-    public $parentdb;
+    public ?string $parentdb;
 
     function __construct(?string $userId = null, ?string $parentdb = null)
     {
