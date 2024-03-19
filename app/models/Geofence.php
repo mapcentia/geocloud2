@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2023 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -11,6 +11,7 @@ namespace app\models;
 use app\exceptions\GC2Exception;
 use app\inc\Model;
 use app\inc\UserFilter;
+use app\models\User as UserModel;
 use Exception;
 use PDOException;
 use sad_spirit\pg_builder\Statement;
@@ -24,9 +25,6 @@ use sad_spirit\pg_wrapper\converters\DefaultTypeConverterFactory;
  */
 class Geofence extends Model
 {
-    /**
-     * @var UserFilter
-     */
     private UserFilter $userFilter;
     public const string ALLOW_ACCESS = "allow";
     public const string DENY_ACCESS = "deny";
@@ -47,6 +45,7 @@ class Geofence extends Model
     /**
      * @param array $rules
      * @return array
+     * @throws GC2Exception
      */
     public function authorize(array $rules): array
     {
@@ -62,7 +61,7 @@ class Geofence extends Model
                 ($this->userFilter->request == $rule["request"] || $rule["request"] == "*")
             ) {
                 if ($rule["access"] == self::LIMIT_ACCESS) {
-                    $filters["filter"] = $rule["filter"];
+                    $filters["filter"] = $this->fillPlaceholders($rule["filter"]);
                 }
                 $response["access"] = $rule["access"];
                 $response["request"] = $rule["request"];
@@ -140,7 +139,7 @@ class Geofence extends Model
             $rowCount += $result->rowCount();
         }
 
-        $select = "select count(*) from foo where {$filters["filter"]}";
+        $select = "select count(*) from foo where {$filters['filter']}";
         $res = $model->prepare($select);
         $res->execute();
         $row = $res->fetch();
@@ -161,15 +160,8 @@ class Geofence extends Model
     public function get(): array
     {
         $sql = "select * from settings.geofence order by id";
-        try {
-            $res = $this->prepare($sql);
-            $res->execute();
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
+        $res = $this->prepare($sql);
+        $res->execute();
         $response['success'] = true;
         $response['data'] = $this->fetchAll($res, "assoc");
         return $response;
@@ -190,14 +182,7 @@ class Geofence extends Model
         }
         $sql = "insert into settings.geofence (id $fields) values (default $values) returning *";
         $res = $this->prepare($sql);
-        try {
-            $res->execute($data);
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
+        $res->execute($data);
         $response['success'] = true;
         $response['data'] = $this->fetchRow($res);
         return $response;
@@ -206,21 +191,16 @@ class Geofence extends Model
     /**
      * @param array $data
      * @return array
+     * @throws GC2Exception
      */
     public function update(array $data): array
     {
         $props = array_keys($data);
         if (!in_array("id", $props)) {
-            $response['success'] = false;
-            $response['message'] = "id is missing";
-            $response['code'] = 400;
-            return $response;
+            throw new GC2Exception('Id is missing', 400);
         }
         if (sizeof($props) < 2) {
-            $response['success'] = false;
-            $response['message'] = "Nothing to be set";
-            $response['code'] = 400;
-            return $response;
+            throw new GC2Exception('Nothing to be set', 400);
         }
         $sets = [];
         foreach ($props as $prop) {
@@ -229,18 +209,10 @@ class Geofence extends Model
         $setsStr = implode(",", $sets);
         $sql = "update settings.geofence set $setsStr where id=:id returning *";
         $res = $this->prepare($sql);
-        try {
-            $res->execute($data);
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
+        $res->execute($data);
         $response['success'] = true;
         $response['data'] = $this->fetchRow($res);
         return $response;
-
     }
 
     /**
@@ -250,17 +222,24 @@ class Geofence extends Model
     public function delete(int $id): array
     {
         $sql = "delete from settings.geofence where id=:id returning id";
-        try {
-            $res = $this->prepare($sql);
-            $res->execute(["id" => $id]);
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
+        $res = $this->prepare($sql);
+        $res->execute(["id" => $id]);
         $response['success'] = true;
         $response['data'] = $this->fetchRow($res);
         return $response;
+    }
+
+    /**
+     * @throws GC2Exception
+     */
+    public function fillPlaceholders(string $str): string
+    {
+        $user = new UserModel($this->userFilter->userName, $this->postgisdb);
+        $userData = (array)$user->getData()['data']['properties'];
+        $newArr = [];
+        foreach($userData as $key=>$value) {
+            $newArr["{{{$key}}}"] = $value;
+        }
+        return strtr($str, $newArr);
     }
 }
