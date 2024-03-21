@@ -1055,10 +1055,23 @@ class Model
         while ($row = $this->fetchRow($res)) {
             $tmp = [];
             $tmp['name'] = $row['name'];
+            $tmp['schema'] = $row['schemaname'];
             $tmp['owner'] = $row['owner'];
             $tmp['ismat'] = $row['ismat'];
             $tmp['definition'] = $row['definition'];
             $response[] = $tmp;
+        }
+        return $response;
+    }
+
+    public function getForeignTablesFromSchema(string $schema): array
+    {
+        $response = [];
+        $sql = "SELECT foreign_table_name as name FROM information_schema._pg_foreign_tables WHERE foreign_table_schema = :schema";
+        $res = $this->prepare($sql);
+        $res->execute(["schema" => $schema]);
+        while ($row = $this->fetchRow($res)) {
+            $response[] = $row["name"];
         }
         return $response;
     }
@@ -1118,11 +1131,11 @@ class Model
     /**
      * @param array $schemas
      * @param array|null $targetSchemas
-     * @param array|null $relations
+     * @param array|null $include
      * @return int
      * @throws GC2Exception
      */
-    public function createStarViewsFromStore(array $schemas, ?array $targetSchemas = null, ?array $relations = null): int
+    public function createStarViewsFromStore(array $schemas, ?array $targetSchemas = null, ?array $include = null): int
     {
         if ($targetSchemas && sizeof($schemas) != sizeof($targetSchemas)) {
             throw new GC2Exception("Schemas and targets must have the same number of entries", 500, null, null);
@@ -1144,14 +1157,15 @@ class Model
             }
             $views = $this->getStarViewsFromStore($schema);
             foreach ($views as $view) {
-                if ($relations && !in_array($view['name'], $relations)) {
+                if ($include && !in_array($view['name'], $include)) {
                     continue;
                 }
                 $mat = $view['ismat'] ? 'materialized' : '';
-                $sql = "drop $mat view if exists \"$targetSchema\".\"{$view['name']}\"";
+                $name = "\"$targetSchema\".\"{$view['name']}\"";
+                $sql = "drop $mat view if exists $name";
                 $result = $this->prepare($sql);
                 $result->execute();
-                $sql = "create $mat view \"$targetSchema\".\"{$view['name']}\" as {$view['definition']}";
+                $sql = "create $mat view $name as {$view['definition']}";
                 $result = $this->prepare($sql);
                 $result->execute();
                 $count++;
@@ -1161,10 +1175,123 @@ class Model
         return $count;
     }
 
-    public function importForeignSchema(string $from, string $to, string $server): void
+    /**
+     * @throws GC2Exception
+     */
+    public function importForeignSchema(array $schemas, array $targetSchemas, string $server): void
     {
-        $sql = "IMPORT FOREIGN SCHEMA $from FROM SERVER $server INTO $to";
-        $result = $this->prepare($sql);
-        $result->execute();
+        if ($targetSchemas && sizeof($schemas) != sizeof($targetSchemas)) {
+            throw new GC2Exception("Schemas and targets must have the same number of entries", 500, null, null);
+        } elseif (!$targetSchemas) {
+            $targetSchemas = $schemas;
+        }
+
+        $db = new Database();
+        $this->connect();
+        $this->begin();
+        for ($i = 0; $i < sizeof($schemas); $i++) {
+            $schema = $schemas[$i];
+            $targetSchema = $targetSchemas[$i];
+            if (!$db->doesSchemaExist($schema)) {
+                throw new GC2Exception("Schema $schema not found", 404, null, "SCHEMA_NOT_FOUND");
+            }
+            if (!$db->doesSchemaExist($targetSchema)) {
+                throw new GC2Exception("Schema $targetSchema not found", 404, null, "SCHEMA_NOT_FOUND");
+            }
+            $sql = "IMPORT FOREIGN SCHEMA $schema FROM SERVER $server INTO $targetSchema";
+            $result = $this->prepare($sql);
+            $result->execute();
+        }
+        $this->commit();
+    }
+
+    /**
+     * @throws GC2Exception
+     */
+    public function materializeForeignTables(array $schemas, ?array $targetSchemas, ?string $prefix, ?array $include = null): int
+    {
+        if ($targetSchemas && sizeof($schemas) != sizeof($targetSchemas)) {
+            throw new GC2Exception("Schemas and targets must have the same number of entries", 500, null, null);
+        } elseif (!$targetSchemas) {
+            $targetSchemas = $schemas;
+        }
+
+        $db = new Database();
+        $this->connect();
+        $this->begin();
+        $count = 0 ;
+        for ($i = 0; $i < sizeof($schemas); $i++) {
+            $schema = $schemas[$i];
+            $targetSchema = $targetSchemas[$i];
+            if (!$db->doesSchemaExist($schema)) {
+                throw new GC2Exception("Schema $schema not found", 404, null, "SCHEMA_NOT_FOUND");
+            }
+            if (!$db->doesSchemaExist($targetSchema)) {
+                throw new GC2Exception("Schema $targetSchema not found", 404, null, "SCHEMA_NOT_FOUND");
+            }
+            if (!$prefix) {
+                $prefix = 'mat_';
+            }
+            $foreignTables = $this->getForeignTablesFromSchema($schema);
+            $count = 0;
+            foreach($foreignTables as $foreignTable) {
+                $name = "\"$targetSchema\".\"$prefix$foreignTable\"";
+                if ($include && !in_array($foreignTable, $include)) {
+                    continue;
+                }
+                $sql = "drop materialized view if exists $name";
+                $result = $this->prepare($sql);
+                $result->execute();
+                $sql = "create materialized view $name as select * from \"$schema\".\"$foreignTable\" with no data";
+                $result = $this->prepare($sql);
+                $result->execute();
+                $count++;
+            }
+        }
+        $this->commit();
+        return $count;
+    }
+
+    public function refreshMatViews(array $schemas): int
+    {
+        $count = 0;
+        foreach($schemas as $schema) {
+            $views = $this->getViewsFromSchema($schema);
+            foreach($views as $view) {
+                if ($view['ismat'] == 't') {
+                    $sql = "refresh materialized view \"$schema\".\"{$view['name']}\"";
+                    $result = $this->prepare($sql);
+                    $result->execute();
+                    $count++;
+                }
+            }
+        }
+        return $count;
+    }
+
+    /**
+     * @throws GC2Exception
+     */
+    public function deleteForeignTables(array $schemas): int
+    {
+        $db = new Database();
+        $this->connect();
+        $this->begin();
+        $count = 0 ;
+        foreach($schemas as $schema) {
+            if (!$db->doesSchemaExist($schema)) {
+                throw new GC2Exception("Schema $schema not found", 404, null, "SCHEMA_NOT_FOUND");
+            }
+            $foreignTables = $this->getForeignTablesFromSchema($schema);
+            $count = 0;
+            foreach($foreignTables as $foreignTable) {
+                $sql = "drop foreign table \"$schema\".\"$foreignTable\" cascade";
+                $result = $this->prepare($sql);
+                $result->execute();
+                $count++;
+            }
+        }
+        $this->commit();
+        return $count;
     }
 }

@@ -593,6 +593,8 @@ try {
 } catch (Throwable $exception) {
     $response["success"] = false;
     $response["message"] = $exception->getMessage();
+//    $response["file"] = $exception->getFile();
+//    $response["line"] = $exception->getLine();
     $response["code"] = 500;
     echo Response::toJson($response);
 } finally {

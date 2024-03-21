@@ -45,12 +45,13 @@ class Scheduler extends Controller
         $id = Route::getParam("id");
         $body = Input::getBody();
         $data = json_decode($body);
+        $force = !empty($data->force);
         $name = null;
         if (!empty($data->name)) {
             $name = $data->name;
         }
         if (is_numeric($id)) {
-            $this->job->runJob((int)$id, $this->db, $name);
+            $this->job->runJob((int)$id, $this->db, $name, $force);
         } else {
             $jobs = $this->job->getAll($this->db)['data'];
             foreach ($jobs as $job) {

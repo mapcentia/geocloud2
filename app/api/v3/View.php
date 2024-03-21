@@ -13,6 +13,8 @@ use app\inc\Controller;
 use app\inc\Input;
 use app\inc\Model;
 use app\inc\Route;
+use Fiber;
+use Throwable;
 
 
 /**
@@ -89,11 +91,23 @@ class View extends Controller
         $model = new Model();
         $body = Input::getBody();
         $arr = json_decode($body, true);
-
         $schemas = $arr['from'];
         $targets = $arr['to'];
         $include = $arr['include'];
         $count = $model->createStarViewsFromStore($schemas, $targets, $include);
+        return ["code" => "200", "count" => $count];
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function put_refresh()
+    {
+        $model = new Model();
+        $body = Input::getBody();
+        $arr = json_decode($body, true);
+        $schemas = $arr['schemas'];
+        $count = $model->refreshMatViews($schemas);
         return ["code" => "200", "count" => $count];
     }
 }
