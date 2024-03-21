@@ -1192,9 +1192,6 @@ class Model
         for ($i = 0; $i < sizeof($schemas); $i++) {
             $schema = $schemas[$i];
             $targetSchema = $targetSchemas[$i];
-            if (!$db->doesSchemaExist($schema)) {
-                throw new GC2Exception("Schema $schema not found", 404, null, "SCHEMA_NOT_FOUND");
-            }
             if (!$db->doesSchemaExist($targetSchema)) {
                 throw new GC2Exception("Schema $targetSchema not found", 404, null, "SCHEMA_NOT_FOUND");
             }
@@ -1208,7 +1205,7 @@ class Model
     /**
      * @throws GC2Exception
      */
-    public function materializeForeignTables(array $schemas, ?array $targetSchemas, ?string $prefix, ?array $include = null): int
+    public function materializeForeignTables(array $schemas, ?array $targetSchemas, ?string $prefix, ?string $suffix = '', ?array $include = null): int
     {
         if ($targetSchemas && sizeof($schemas) != sizeof($targetSchemas)) {
             throw new GC2Exception("Schemas and targets must have the same number of entries", 500, null, null);
@@ -1219,7 +1216,7 @@ class Model
         $db = new Database();
         $this->connect();
         $this->begin();
-        $count = 0 ;
+        $count = 0;
         for ($i = 0; $i < sizeof($schemas); $i++) {
             $schema = $schemas[$i];
             $targetSchema = $targetSchemas[$i];
@@ -1229,13 +1226,16 @@ class Model
             if (!$db->doesSchemaExist($targetSchema)) {
                 throw new GC2Exception("Schema $targetSchema not found", 404, null, "SCHEMA_NOT_FOUND");
             }
-            if (!$prefix) {
+            if (!$prefix && $prefix !== '') {
                 $prefix = 'mat_';
+            }
+            if (!$suffix) {
+                $suffix = '';
             }
             $foreignTables = $this->getForeignTablesFromSchema($schema);
             $count = 0;
-            foreach($foreignTables as $foreignTable) {
-                $name = "\"$targetSchema\".\"$prefix$foreignTable\"";
+            foreach ($foreignTables as $foreignTable) {
+                $name = "\"$targetSchema\".\"$prefix$foreignTable$suffix\"";
                 if ($include && !in_array($foreignTable, $include)) {
                     continue;
                 }
@@ -1255,9 +1255,9 @@ class Model
     public function refreshMatViews(array $schemas): int
     {
         $count = 0;
-        foreach($schemas as $schema) {
+        foreach ($schemas as $schema) {
             $views = $this->getViewsFromSchema($schema);
-            foreach($views as $view) {
+            foreach ($views as $view) {
                 if ($view['ismat'] == 't') {
                     $sql = "refresh materialized view \"$schema\".\"{$view['name']}\"";
                     $result = $this->prepare($sql);
@@ -1277,14 +1277,14 @@ class Model
         $db = new Database();
         $this->connect();
         $this->begin();
-        $count = 0 ;
-        foreach($schemas as $schema) {
+        $count = 0;
+        foreach ($schemas as $schema) {
             if (!$db->doesSchemaExist($schema)) {
                 throw new GC2Exception("Schema $schema not found", 404, null, "SCHEMA_NOT_FOUND");
             }
             $foreignTables = $this->getForeignTablesFromSchema($schema);
             $count = 0;
-            foreach($foreignTables as $foreignTable) {
+            foreach ($foreignTables as $foreignTable) {
                 $sql = "drop foreign table \"$schema\".\"$foreignTable\" cascade";
                 $result = $this->prepare($sql);
                 $result->execute();

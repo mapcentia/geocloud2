@@ -52,8 +52,9 @@ class Foreign extends Controller
         $from = $arr['from'];
         $to = $arr['to'];
         $prefix = $arr['prefix'];
+        $suffix = $arr['suffix'];
         $include = $arr['include'];
-        $count = $model->materializeForeignTables($from, $to, $prefix, $include);
+        $count = $model->materializeForeignTables($from, $to, $prefix, $suffix, $include);
         return ["code" => "200", "count" => $count];
     }
 
