@@ -35,7 +35,7 @@ class Scheduler extends Controller
     }
 
     /**
-     * @return never
+     * @return array
      */
     #[OA\Post(path: '/api/v3/scheduler/{jobid}', operationId: 'startSchedulerJob', tags: ['Scheduler'])]
     #[OA\Parameter(name: 'jobid', description: 'Job id', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '876')]
