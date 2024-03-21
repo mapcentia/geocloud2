@@ -604,26 +604,42 @@ function getCmdFile(): void
         case "shp":
             $files[$randFileName . ".shp"] = $url;
             $files[$randFileName . ".SHP"] = $url;
+            $files[$randFileName . ".Shp"] = $url;
+
             // Try to get both upper and lower case extension
             $files[$randFileName . ".dbf"] = $base . ".dbf";
             $files[$randFileName . ".DBF"] = $base . ".DBF";
+            $files[$randFileName . ".Dbf"] = $base . ".Dbf";
+
             $files[$randFileName . ".shx"] = $base . ".shx";
             $files[$randFileName . ".SHX"] = $base . ".SHX";
+            $files[$randFileName . ".Shx"] = $base . ".Shx";
+
             $fileSetName = $randFileName . "." . $extension;
             break;
 
         case "tab":
             $files[$randFileName . ".tab"] = $url;
             $files[$randFileName . ".TAB"] = $url;
+            $files[$randFileName . ".Tab"] = $url;
+
             // Try to get both upper and lower case extension
             $files[$randFileName . ".map"] = $base . ".map";
             $files[$randFileName . ".MAP"] = $base . ".MAP";
+            $files[$randFileName . ".Map"] = $base . ".Map";
+
             $files[$randFileName . ".dat"] = $base . ".dat";
             $files[$randFileName . ".DAT"] = $base . ".DAT";
+            $files[$randFileName . ".Dat"] = $base . ".Dat";
+
             $files[$randFileName . ".id"] = $base . ".id";
             $files[$randFileName . ".ID"] = $base . ".ID";
+            $files[$randFileName . ".Id"] = $base . ".Id";
+
             $files[$randFileName . ".ind"] = $base . ".ind";
             $files[$randFileName . ".IND"] = $base . ".IND";
+            $files[$randFileName . ".Ind"] = $base . ".Ind";
+
             $fileSetName = $randFileName . "." . $extension;
             break;
 
