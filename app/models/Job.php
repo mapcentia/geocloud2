@@ -96,7 +96,7 @@ class Job extends Model
      * @param string|null $name
      * @return true
      */
-    public function runJob(int $id, string $db, ?string $name = null): true
+    public function runJob(int $id, string $db, ?string $name = null, bool $force = false): true
     {
         $cmd = null;
         $jobs = $this->getAll($db);
@@ -104,6 +104,9 @@ class Job extends Model
             if ($id == $job["id"]) {
                 if (!$job["delete_append"]) $job["delete_append"] = "0";
                 if (!$job["download_schema"]) $job["download_schema"] = "0";
+                if ($force) {
+                    $job["delete_append"] = true;
+                }
                 $cmd = "/usr/bin/nohup /usr/bin/timeout -s SIGINT 10h php " . __DIR__ . "/../scripts/get.php --db {$job["db"]} --schema {$job["schema"]} --safeName {$job["name"]} --url \"{$job["url"]}\" --srid {$job["epsg"]} --type {$job["type"]} --encoding {$job["encoding"]} --jobId {$job["id"]} --deleteAppend {$job["delete_append"]} --extra " . (base64_encode($job["extra"]) ?: "null") . " --preSql " . (base64_encode($job["presql"]) ?: "null") . " --postSql " . (base64_encode($job["postsql"]) ?: "null") . " --downloadSchema {$job["download_schema"]}";
                 break;
             }
