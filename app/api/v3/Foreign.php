@@ -1,10 +1,10 @@
 <?php
 /**
-* @author     Martin Høgh <mh@mapcentia.com>
-* @copyright  2013-2024 MapCentia ApS
-* @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
-*
-*/
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2024 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ *
+ */
 
 namespace app\api\v3;
 
@@ -15,9 +15,9 @@ use app\inc\Model;
 
 
 /**
-* Class Grid
-* @package app\api\v3
-*/
+ * Class Grid
+ * @package app\api\v3
+ */
 class Foreign extends Controller
 {
     public function __construct()
@@ -36,7 +36,8 @@ class Foreign extends Controller
         $from = $arr['from'];
         $to = $arr['to'];
         $server = $arr['server'];
-        $model->importForeignSchema($from, $to, $server);
+        $include = $arr['include'];
+        $model->importForeignSchema($from, $to, $server, $include);
         return ["code" => "201"];
     }
 
@@ -66,7 +67,8 @@ class Foreign extends Controller
         $body = Input::getBody();
         $arr = json_decode($body, true);
         $schemas = $arr['schemas'];
-        $model->deleteForeignTables($schemas);
-        return ["code" => "204"];
+        $include = $arr['include'];
+        $count = $model->deleteForeignTables($schemas, $include);
+        return ["code" => "200", "count" => $count];
     }
 }

@@ -107,7 +107,8 @@ class View extends Controller
         $body = Input::getBody();
         $arr = json_decode($body, true);
         $schemas = $arr['schemas'];
-        $count = $model->refreshMatViews($schemas);
+        $include = $arr['include'];
+        $count = $model->refreshMatViews($schemas, $include);
         return ["code" => "200", "count" => $count];
     }
 }

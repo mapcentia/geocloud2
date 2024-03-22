@@ -1178,7 +1178,7 @@ class Model
     /**
      * @throws GC2Exception
      */
-    public function importForeignSchema(array $schemas, array $targetSchemas, string $server): void
+    public function importForeignSchema(array $schemas, array $targetSchemas, string $server, ?array $include): void
     {
         if ($targetSchemas && sizeof($schemas) != sizeof($targetSchemas)) {
             throw new GC2Exception("Schemas and targets must have the same number of entries", 500, null, null);
@@ -1195,7 +1195,11 @@ class Model
             if (!$db->doesSchemaExist($targetSchema)) {
                 throw new GC2Exception("Schema $targetSchema not found", 404, null, "SCHEMA_NOT_FOUND");
             }
-            $sql = "IMPORT FOREIGN SCHEMA $schema FROM SERVER $server INTO $targetSchema";
+            $limitTo = '';
+            if ($include) {
+                $limitTo = "LIMIT TO (\"" . implode("\",\"", $include) . "\")";
+            }
+            $sql = "IMPORT FOREIGN SCHEMA $schema $limitTo FROM SERVER $server INTO $targetSchema";
             $result = $this->prepare($sql);
             $result->execute();
         }
@@ -1252,12 +1256,15 @@ class Model
         return $count;
     }
 
-    public function refreshMatViews(array $schemas): int
+    public function refreshMatViews(array $schemas, ?array $include = null): int
     {
         $count = 0;
         foreach ($schemas as $schema) {
             $views = $this->getViewsFromSchema($schema);
             foreach ($views as $view) {
+                if ($include && !in_array($view['name'], $include)) {
+                    continue;
+                }
                 if ($view['ismat'] == 't') {
                     $sql = "refresh materialized view \"$schema\".\"{$view['name']}\"";
                     $result = $this->prepare($sql);
@@ -1272,7 +1279,7 @@ class Model
     /**
      * @throws GC2Exception
      */
-    public function deleteForeignTables(array $schemas): int
+    public function deleteForeignTables(array $schemas, ?array $include = null): int
     {
         $db = new Database();
         $this->connect();
@@ -1285,6 +1292,9 @@ class Model
             $foreignTables = $this->getForeignTablesFromSchema($schema);
             $count = 0;
             foreach ($foreignTables as $foreignTable) {
+                if ($include && !in_array($foreignTable, $include)) {
+                    continue;
+                }
                 $sql = "drop foreign table \"$schema\".\"$foreignTable\" cascade";
                 $result = $this->prepare($sql);
                 $result->execute();
