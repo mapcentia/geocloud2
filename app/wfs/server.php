@@ -192,7 +192,9 @@ if ($HTTP_RAW_POST_DATA) {
     if (sizeof($_GET) > 0) {
         $HTTP_FORM_VARS = $_GET;
         $HTTP_FORM_VARS = array_change_key_case($HTTP_FORM_VARS, CASE_UPPER); // Make keys case insensative
-        $HTTP_FORM_VARS["TYPENAME"] = dropAllNameSpaces($HTTP_FORM_VARS["TYPENAME"]); // We remove name space, so $where will get key without it.
+        if (!empty($HTTP_FORM_VARS["TYPENAME"])) {
+            $HTTP_FORM_VARS["TYPENAME"] = dropAllNameSpaces($HTTP_FORM_VARS["TYPENAME"]); // We remove name space, so $where will get key without it.
+        }
 
         if (!empty($HTTP_FORM_VARS['FILTER'])) {
             $filter = dropNameSpace($HTTP_FORM_VARS['FILTER']);
@@ -1475,7 +1477,7 @@ function dropNameSpace(string $tag): string
     return $tag;
 }
 
-function dropAllNameSpaces($tag)
+function dropAllNameSpaces($tag): string
 {
     $tag = preg_replace("/[\w-]*:/", "", $tag); // remove any namespaces
     // Trim double qoutes. Openlayers adds them to ogc:PropertyName in WFS requets
