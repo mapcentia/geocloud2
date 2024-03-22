@@ -42,21 +42,22 @@ class Scheduler extends Controller
     #[OA\Response(response: 202, description: 'Accepted')]
     public function post_index(): array
     {
-        $id = Route::getParam("id");
         $body = Input::getBody();
         $data = json_decode($body);
+        $jobId = $data->job;
+        $include = $data->include;
         $force = !empty($data->force);
         $name = null;
         if (!empty($data->name)) {
             $name = $data->name;
         }
-        if (is_numeric($id)) {
-            $this->job->runJob((int)$id, $this->db, $name, $force);
+        if (is_numeric($jobId)) {
+            $this->job->runJob((int)$jobId, $this->db, $name, $force);
         } else {
             $jobs = $this->job->getAll($this->db)['data'];
             foreach ($jobs as $job) {
-                if ($job['schema'] == $id) {
-                    $this->job->runJob($job['id'], $this->db, $name);
+                if ($job['schema'] == $jobId) {
+                    $this->job->runJob($job['id'], $this->db, $name, $force, $include);
                 }
             }
         }

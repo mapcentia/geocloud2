@@ -288,7 +288,7 @@ try {
                 exit();
             }
         });
-        Route::add("api/v3/scheduler/[id]/[name]", function () {
+        Route::add("api/v3/scheduler", function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 if (!$jwt["data"]["superUser"]) {
@@ -594,7 +594,7 @@ try {
     $response["success"] = false;
     $response["message"] = $exception->getMessage();
 //    $response["file"] = $exception->getFile();
-//    $response["line"] = $exception->getLine();
+//    $response["line"] = $exception->getLine;
     $response["code"] = 500;
     echo Response::toJson($response);
 } finally {

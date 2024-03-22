@@ -96,12 +96,15 @@ class Job extends Model
      * @param string|null $name
      * @return true
      */
-    public function runJob(int $id, string $db, ?string $name = null, bool $force = false): true
+    public function runJob(int $id, string $db, ?string $name = null, bool $force = false, ?array $include = null): true
     {
         $cmd = null;
         $jobs = $this->getAll($db);
         foreach ($jobs["data"] as $job) {
             if ($id == $job["id"]) {
+                if ($include && !in_array($job['name'], $include)) {
+                    continue;
+                }
                 if (!$job["delete_append"]) $job["delete_append"] = "0";
                 if (!$job["download_schema"]) $job["download_schema"] = "0";
                 if ($force) {
