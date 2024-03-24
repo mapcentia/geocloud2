@@ -506,7 +506,6 @@ class Table extends Model
                     if (in_array($key, ["editable", "skipconflict", "enableows"])) {
                         $value = $value ?: "0";
                     }
-                    // TODO this chang of _key_ must be configurable
                     if ($key == "_key_" && !empty(App::$param['dontUseGeometryColumnInJoin'])) {
                         $split = explode('.', $value);
                         $value = $split[0] . '.' . $split[1];

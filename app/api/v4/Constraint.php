@@ -187,7 +187,7 @@ class Constraint extends AbstractApi
      *     description="Success",
      *   )
      * )
-     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
      */
     public function get_index(): array
     {
@@ -235,7 +235,7 @@ class Constraint extends AbstractApi
                     $def['columns'] = $value['columns'];
                     $def['referenced_table'] = self::getReferencedTable($value['constraint']);
                     $def['referenced_columns'] = self::getReferencedColumns($value['constraint']);
-                    $def['_'] = $value["constraint"];
+//                    $def['_'] = $value["constraint"];
                     break;
             }
 
