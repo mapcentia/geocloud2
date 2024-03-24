@@ -15,16 +15,13 @@ header('Content-Type: text/html; charset=utf-8');
     | |              | || |              | || |              | |
     | '--------------' || '--------------' || '--------------' |
      '----------------'  '----------------'  '----------------'
-    Ring the bells that still can ring
-    Forget your perfect offering
-    There is a crack, a crack in everything
-    That's how the light gets in
+    The world breaks everyone, and afterward, some are strong at the broken places.
 
 
   ~ @author     Martin Høgh <mh@mapcentia.com>
-  ~ @copyright  2013-2023 MapCentia ApS
+  ~ @copyright  2013-2024 MapCentia ApS
   ~ @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
-  ~ @version    bookworm
+  ~ @version    2024.3.1
 
   -->
 <html lang="en">
