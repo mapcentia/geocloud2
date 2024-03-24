@@ -376,7 +376,7 @@ class Mapfile extends Controller
                 $sortedArr = array();
 
                 // Sort classes
-                $arr = $arr2 = !empty($row['class']) ? json_decode($row['class'], true) : [];
+                $arr = $arr2 = !empty($row['class']) ? !empty(json_decode($row['class'], true)) ? json_decode($row['class'], true) : [] : [];
                 for ($i = 0; $i < sizeof($arr); $i++) {
                     $last = 100000;
                     foreach ($arr2 as $key => $value) {
@@ -1406,7 +1406,7 @@ class Mapfile extends Controller
                 $sortedArr = array();
 
                 // Sort classes
-                $arr = $arr2 = !empty($row['class']) ? json_decode($row['class'], true) : [];
+                $arr = $arr2 = !empty($row['class']) ? !empty(json_decode($row['class'], true)) ? json_decode($row['class'], true) : [] : [];
                 for ($i = 0; $i < sizeof($arr); $i++) {
                     $last = 100000;
                     foreach ($arr2 as $key => $value) {
@@ -1416,7 +1416,7 @@ class Mapfile extends Controller
                             $last = $value["sortid"];
                         }
                     }
-                    array_push($sortedArr, $temp);
+                    $sortedArr[] = $temp;
                     unset($arr2[$del]);
                     $temp = null;
                 }
