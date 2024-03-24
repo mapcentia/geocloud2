@@ -53,7 +53,7 @@ class Geofence extends Model
         $response = [];
         foreach ($rules as $rule) {
             if (
-                ($this->userFilter->userName == $rule["username"] || $rule["username"] == "*") &&
+                ($this->userFilter->userName == $rule["username"] || fnmatch($rule["username"], $this->userFilter->userName)) &&
                 ($this->userFilter->service == $rule["service"] || $rule["service"] == "*") &&
                 ($this->userFilter->ipAddress == $rule["iprange"] || $rule["iprange"] == "*") &&
                 ($this->userFilter->schema == $rule["schema"] || fnmatch($rule["schema"], $this->userFilter->schema)) &&
