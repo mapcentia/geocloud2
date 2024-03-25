@@ -317,7 +317,7 @@ class Model
 
             if ($restriction && !$restrictions) {
                 $foreignConstrains = $this->getForeignConstrains($_schema, $_table)["data"];
-                $primaryKey = $this->getPrimeryKey($table)['attname'];
+             //  $primaryKey = $this->getPrimeryKey($table)['attname'];
             }
             $checkConstrains = $this->getConstrains($_schema, $_table, 'c')["data"];
             $sql = "SELECT
