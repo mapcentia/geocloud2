@@ -1333,17 +1333,6 @@ class Mapfile extends Controller
         FORMATOPTION "maxfeaturestodraw=1000"
         END
 
-        OUTPUTFORMAT
-        NAME kmz
-        DRIVER "OGR/LIBKML"
-        MIMETYPE "application/vnd.google-earth.kmz"
-        IMAGEMODE FEATURE
-        EXTENSION "kmz"
-        FORMATOPTION "FORM=simple"
-        FORMATOPTION 'FILENAME=gmap75.kmz'
-        FORMATOPTION "maxfeaturestodraw=1000"
-        END
-
         #CONFIG "MS_ERRORFILE" "/var/www/geocloud2/app/wms/mapfiles/ms_error.txt"
         #DEBUG 5
 

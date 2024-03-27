@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -40,7 +40,8 @@ while ($row = $model->fetchRow($res)) {
             function ($model, $row) {
                 $model->runJob($row['id'], $row['db']);
             },
-            [$model, $row]
+            [$model, $row],
+            $row["id"]
         )->at("{$row["min"]} {$row["hour"]} {$row["dayofmonth"]} {$row["month"]} {$row["dayofweek"]}")->output([
             __DIR__ . "/../../public/logs/{$row["id"]}_scheduler.log"
         ])->onlyOne();
