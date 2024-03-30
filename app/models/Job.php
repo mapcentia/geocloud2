@@ -114,7 +114,7 @@ class Job extends Model
                 break;
             }
         }
-        if (isset($job)) {
+        if ($cmd) {
             $pid = (int)exec($cmd . " > " . __DIR__ . "/../../public/logs/{$job["id"]}_scheduler.log  & echo $!", $out, $err);
             try {
                 $this->insert($job['id'], $pid, $job['db'], $name);
