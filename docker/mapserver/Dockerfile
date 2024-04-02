@@ -11,7 +11,8 @@ RUN sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 1000M/g" /etc/php/8
 RUN sed -i "s/post_max_size = 8M/post_max_size = 1000M/g" /etc/php/8.3/fpm/php.ini
 
 # Install MapServer 8.0 from source
-RUN git clone https://github.com/mapserver/mapserver.git --branch main &&\
+#RUN git clone https://github.com/mapserver/mapserver.git --branch main &&\
+RUN git clone https://github.com/mapcentia/mapserver.git --branch rsvg_fix &&\
     cd mapserver &&\
     mkdir build &&\
     cd build &&\
@@ -102,8 +103,8 @@ RUN crontab -l 2>/dev/null| { cat; echo "";} | crontab
 
 # Install gc2-cli
 ARG version=2021.11.0
-RUN wget https://gc2-cli.s3.eu-west-1.amazonaws.com/apt/gc2_${version}-1_amd64.deb &&\
-    dpkg -i gc2_${version}-1_amd64.deb
+RUN wget https://gc2-cli.s3.eu-west-1.amazonaws.com/versions/2024.3.3/79bafc6/apt/gc2_2024.3.3.79bafc6-1_amd64.deb -O gc2-cli.deb &&\
+    dpkg -i gc2-cli.deb
 
 # Expose standard ports for HTTP and HTTPS
 EXPOSE 80
