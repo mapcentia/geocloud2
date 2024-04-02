@@ -11,7 +11,7 @@ include_once(__DIR__ . "/../vendor/autoload.php");
 
 use app\conf\App;
 use app\models\Database;
-use app\models\Job;
+use app\inc\Model;
 use GO\Scheduler;
 
 
@@ -21,7 +21,7 @@ $scheduler = new Scheduler([
     'tempDir' => '/var/www/geocloud2/app/tmp'
 ]);
 
-$model = new Job();
+$model = new Model();
 
 $sql = "SELECT * FROM jobs ORDER BY id";
 
@@ -35,12 +35,27 @@ try {
 
 while ($row = $model->fetchRow($res)) {
     if (!empty($row["active"]) && ((isset(App::$param["gc2scheduler"][$row["db"]]) && App::$param["gc2scheduler"][$row["db"]] === true) || (isset(App::$param["gc2scheduler"]["*"]) && App::$param["gc2scheduler"]["*"] === true))) {
+        $args = [
+            "--db" => $row["db"],
+            "--schema" => $row["schema"],
+            "--safeName" => $row["name"],
+            "--url" => urlencode($row["url"]),
+            "--srid" => $row["epsg"],
+            "--type" => $row["type"],
+            "--encoding" => $row["encoding"],
+            "--jobId" => $row["id"],
+            "--deleteAppend" => $row["delete_append"],
+            "--extra" => (base64_encode($row["extra"]) ?: "null"),
+            "--preSql" => (base64_encode($row["presql"]) ?: "null"),
+            "--postSql" => (base64_encode($row["postsql"]) ?: "null"),
+            "--downloadSchema" => $row["download_schema"]
+        ];
         $cmd = "/var/www/geocloud2/app/scripts/get.php";
-        $scheduler->call(
-            function ($model, $row) {
-                $model->runJob($row['id'], $row['db']);
-            },
-            [$model, $row]
+        $scheduler->php(
+            $cmd,
+            "/usr/bin/php",
+            $args,
+            $row["id"] . "_" . $row["name"]
         )->at("{$row["min"]} {$row["hour"]} {$row["dayofmonth"]} {$row["month"]} {$row["dayofweek"]}")->output([
             __DIR__ . "/../../public/logs/{$row["id"]}_scheduler.log"
         ])->onlyOne();
