@@ -63,7 +63,7 @@ class Layer extends Table
     public function getValueFromKey(string $_key_, string $column): ?string
     {
         $sql = "select $column from $this->table where _key_=:key";
-        $res =$this->prepare($sql);
+        $res = $this->prepare($sql);
         $res->execute(['key' => $_key_]);
         $row = $this->fetchRow($res);
         return $row[$column];
@@ -207,7 +207,7 @@ class Layer extends Table
                     // Set empty strings to NULL
                     $value = $value == "" ? null : $value;
                     if ($key == "type" && $value == "GEOMETRY") {
-                        $def = isset($row['def']) ? json_decode($row['def'] , true) : [];
+                        $def = isset($row['def']) ? json_decode($row['def'], true) : [];
                         if (isset($def['geotype']) && $def['geotype'] != "Default") {
                             $value = "MULTI" . $def['geotype'];
                         }
@@ -398,7 +398,7 @@ class Layer extends Table
             $response['success'] = true;
             $response['message'] = "geometry_columns_view fetched";
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-         //   $CachedString->addTags([$cacheType, $this->postgisdb]);
+            //   $CachedString->addTags([$cacheType, $this->postgisdb]);
             Cache::save($CachedString);
             $response["cache"]["hit"] = false;
         }
@@ -627,8 +627,8 @@ class Layer extends Table
         if (!empty(Session::get())) {
             $arr = Session::getByKey('subusers');
         } else {
-            $arr =[];
-            foreach ((array)$privileges as $key=>$value){
+            $arr = [];
+            foreach ((array)$privileges as $key => $value) {
                 $arr[] = $key;
             }
         }
@@ -658,8 +658,8 @@ class Layer extends Table
         $this->clearCacheOfColumns(explode(".", $data->_key_)[0] . "." . explode(".", $data->_key_)[1]);
         $this->clearCacheOnSchemaChanges();
         $table = new Table("settings.geometry_columns_join");
-        $jsonStr =$this->getValueFromKey($data->_key_, "privileges");
-        $privilege = !empty($jsonStr) ?json_decode($jsonStr, true) : [];
+        $jsonStr = $this->getValueFromKey($data->_key_, "privileges");
+        $privilege = !empty($jsonStr) ? json_decode($jsonStr, true) : [];
         $privilege[$data->subuser] = $data->privileges;
         $privileges['privileges'] = json_encode($privilege);
         $privileges['_key_'] = $data->_key_;
@@ -1130,7 +1130,7 @@ class Layer extends Table
      * @param string $field
      * @return array
      */
-    function getGroups(string $field): array
+    public function getGroups(string $field): array
     {
         $arr = [];
         $sql = "SELECT $field AS $field FROM settings.geometry_columns_join WHERE $field IS NOT NULL GROUP BY $field";
@@ -1143,6 +1143,20 @@ class Layer extends Table
         $response['success'] = true;
         $response['data'] = $arr;
 
+        return $response;
+    }
+
+    public function insertDefaultMeta(): array
+    {
+        $sql = "with t as (select f_table_schema || '.' || f_table_name || '.' || f_geometry_column as key
+                    from settings.geometry_columns_view
+                    where _key_ isnull)
+                insert into settings.geometry_columns_join(_key_) select * from t;";
+
+        $res = $this->prepare($sql);
+        $res->execute();
+        $response['success'] = true;
+        $response['count'] = $res->rowCount();
         return $response;
     }
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -19,15 +19,13 @@ use app\models\Database;
 use app\conf\App;
 use app\conf\Connection;
 use app\migration\Sql;
+use app\models\Layer;
 use app\models\Qgis;
 use PDOException;
+use OpenApi\Attributes as OA;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 
-/**
- * Class Admin
- * @package app\api\v3
- */
 class Admin extends Controller
 {
 
@@ -40,7 +38,7 @@ class Admin extends Controller
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      *
      * @OA\Get(
      *   path="/api/v3/admin/mapfiles",
@@ -79,7 +77,7 @@ class Admin extends Controller
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      *
      * @OA\Get(
      *   path="/api/v3/admin/mapcachefile",
@@ -112,7 +110,7 @@ class Admin extends Controller
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      *
      * @OA\Get(
      *   path="/api/v3/admin/qgisfiles",
@@ -140,7 +138,7 @@ class Admin extends Controller
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      *
      * @OA\Get(
      *   path="/api/v3/admin/migrations",
@@ -181,7 +179,7 @@ class Admin extends Controller
                 try {
                     $conn->execQuery($sql, "PDO", "transaction");
                     $data[$db] .= "+";
-                } catch (PDOException $e) {
+                } catch (PDOException) {
                     $data[$db] .= "-";
                 }
             }
@@ -194,7 +192,7 @@ class Admin extends Controller
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      *
      * @OA\Get(
      *   path="/api/v3/admin/schema",
@@ -223,7 +221,7 @@ class Admin extends Controller
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      *
      * @OA\Get(
      *   path="/api/v3/admin/diskcleanup",
@@ -280,7 +278,7 @@ class Admin extends Controller
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      *
      * @OA\Get(
      *   path="/api/v3/admin/cachestats",
@@ -305,7 +303,7 @@ class Admin extends Controller
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      *
      * @OA\Get(
      *   path="/api/v3/admin/cachecleanup",
@@ -329,5 +327,18 @@ class Admin extends Controller
     {
         $res = Cache::clear();
         return ["data" => $res, "success" => $res["success"], "message" => $res["message"]];
+    }
+
+    #[OA\Get(path: '/api/v3/admin/insertmeta', operationId: 'insertMeta', summary: 'Insert default meta for relations that don\'t have any', security: [['bearerAuth' => []]], tags: ['Admin'])]
+    #[OA\Response(response: 200, description: 'OK',
+        content: new OA\JsonContent(properties: [
+            new OA\Property(property: 'count', description: 'Count of inserts', type: 'integer', example: 28),
+            new OA\Property(property: 'success', description: 'Is successful', type: 'boolean', example: true),
+        ], type: 'object'))]
+    public function get_insertmeta(): array
+    {
+        $layer = new Layer();
+        $res = $layer->insertDefaultMeta();
+        return ["count" => $res['count'], "success" => $res["success"]];
     }
 }

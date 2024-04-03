@@ -526,7 +526,6 @@ class Model
      * @param string $table
      * @param string $field
      * @return mixed
-     * @throws PhpfastcacheInvalidArgumentException
      */
     function getGeometryColumns(string $table, string $field): mixed
     {
@@ -925,7 +924,6 @@ class Model
      * @param string $schema
      * @param string $table
      * @return array
-     * @throws PhpfastcacheInvalidArgumentException
      */
     public function getColumns(string $schema, string $table): array
     {
