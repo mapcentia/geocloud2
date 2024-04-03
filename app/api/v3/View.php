@@ -13,7 +13,8 @@ use app\inc\Controller;
 use app\inc\Input;
 use app\inc\Model;
 use app\inc\Route;
-use Fiber;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Psr\Cache\InvalidArgumentException;
 use Throwable;
 
 
@@ -85,6 +86,8 @@ class View extends Controller
 
     /**
      * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function put_index(): array
     {
