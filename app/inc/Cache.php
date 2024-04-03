@@ -19,7 +19,6 @@ use Phpfastcache\Drivers\Files\Config as FilesConfig;
 use Phpfastcache\Drivers\Redis\Config as RedisConfig;
 use Phpfastcache\Drivers\Memcached\Config as MemcachedConfig;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
-use Phpfastcache\Exceptions\PhpfastcacheUnsupportedMethodException;
 use Psr\Cache\InvalidArgumentException;
 
 
@@ -90,7 +89,7 @@ abstract class Cache
     }
 
     /**
-     * @param array $key
+     * @param string $key
      * @throws InvalidArgumentException
      */
     static public function deleteItem(string $key): void
@@ -136,7 +135,7 @@ abstract class Cache
         return $CachedString;
     }
 
-    static public function getAllItems(string $pattern): iterable
+    static private function getAllItems(string $pattern): iterable
     {
         try {
             $items = self::$instanceCache->getAllItems($pattern);
