@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -23,6 +23,7 @@ use app\models\Table;
 use app\models\Tile;
 use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Psr\Cache\InvalidArgumentException;
 use stdClass;
 use ZipArchive;
 
@@ -43,6 +44,7 @@ class Processvector extends Controller
     /**
      * @return array
      * @throws PhpfastcacheInvalidArgumentException|GC2Exception
+     * @throws InvalidArgumentException
      */
     public function get_index(): array
     {
@@ -57,9 +59,6 @@ class Processvector extends Controller
         $srid = Input::get("srid") ?: "4326";
         $encoding = Input::get("encoding") ?: "LATIN1";
         $type = Input::get("type");
-
-        // Set path so libjvm.so can be loaded in ogr2ogr for MS Access support
-        putenv("LD_LIBRARY_PATH=/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server");
 
         if (is_numeric($safeName[0])) {
             $safeName = "_" . $safeName;
