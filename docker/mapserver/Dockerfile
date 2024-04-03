@@ -78,10 +78,6 @@ ADD conf/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Add php-fpm config file from Docker repo
 ADD conf/fpm/www.conf /etc/php/8.3/fpm/pool.d/www.conf
 
-# Add the check-if-fpm-is-alive script
-COPY check-fpm.sh /check-fpm.sh
-RUN chmod +x /check-fpm.sh
-
 ADD conf/apache/run-apache.sh /
 RUN chmod +x /run-apache.sh
 
@@ -110,7 +106,8 @@ RUN wget https://gc2-cli.s3.eu-west-1.amazonaws.com/versions/2024.3.3/79bafc6/ap
 EXPOSE 80
 EXPOSE 443
 
-HEALTHCHECK CMD curl --fail http://localhost || exit 1
+HEALTHCHECK --interval=30s --timeout=20s --start-period=30s \
+    CMD curl --fail http://localhost || exit 1
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
