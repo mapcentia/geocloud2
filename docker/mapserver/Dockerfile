@@ -98,7 +98,6 @@ RUN crontab -l 2>/dev/null| { cat; echo "* * * * * sudo -u www-data php -f /var/
 RUN crontab -l 2>/dev/null| { cat; echo "";} | crontab
 
 # Install gc2-cli
-ARG version=2021.11.0
 RUN wget https://gc2-cli.s3.eu-west-1.amazonaws.com/versions/2024.3.3/79bafc6/apt/gc2_2024.3.3.79bafc6-1_amd64.deb -O gc2-cli.deb &&\
     dpkg -i gc2-cli.deb
 
