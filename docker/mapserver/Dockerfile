@@ -110,6 +110,8 @@ RUN wget https://gc2-cli.s3.eu-west-1.amazonaws.com/versions/2024.3.3/79bafc6/ap
 EXPOSE 80
 EXPOSE 443
 
+HEALTHCHECK CMD curl --fail http://localhost || exit 1
+
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
