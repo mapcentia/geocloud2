@@ -63,17 +63,18 @@
         $job = new \app\inc\Model();
 
         $db = $_GET['db'];
-        $sql = "SELECT * FROM jobs";
+        $sql = "SELECT * FROM jobs WHERE active='t' or active=:active";
         if ($db) {
-            $sql .= " WHERE db=:db";
+            $sql .= " AND db=:db";
         }
         $sql .= " ORDER BY db, id";
         $res = $job->prepare($sql);
+        $in = $_GET['in'] == '1' ? 'f': 't';
         try {
             if ($db) {
-                $res->execute(['db' => $db]);
+                $res->execute(['active'=> $in, 'db' => $db]);
             } else {
-                $res->execute();
+                $res->execute(['active'=> $in]);
             }
         } catch (\PDOException $e) {
             print "Error: ";
@@ -92,8 +93,9 @@
             $maxCellCount = is_int($report["maxCellCount"] / 1000) ? "<font color=\"orange\">{$report["maxCellCount"]}</font>" : $report["maxCellCount"];
             $dupsCount = isset($report["dupsCount"]) && $report["dupsCount"] == 0 ? "<font color=\"orange\">{$report["dupsCount"]}</font>" : $report["dupsCount"];
             $waited = $report["sleep"] ?? "0";
+            $inactiveClass = !$row['active'] ? 'class="table-danger"' : '';
 
-            print "<tr>
+            print "<tr $inactiveClass>
                     <td>{$row["id"]}</td>
                     <td>{$lastcheck}</td>
                     <td>{$row["db"]}</td>
