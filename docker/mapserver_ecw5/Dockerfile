@@ -78,10 +78,6 @@ ADD conf/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Add php-fpm config file from Docker repo
 ADD conf/fpm/www.conf /etc/php/8.3/fpm/pool.d/www.conf
 
-# Add the check-if-fpm-is-alive script
-COPY check-fpm.sh /check-fpm.sh
-RUN chmod +x /check-fpm.sh
-
 ADD conf/apache/run-apache.sh /
 RUN chmod +x /run-apache.sh
 
