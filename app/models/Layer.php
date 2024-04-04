@@ -1151,7 +1151,7 @@ class Layer extends Table
         $sql = "with t as (select f_table_schema || '.' || f_table_name || '.' || f_geometry_column as key
                     from settings.geometry_columns_view
                     where _key_ isnull)
-                insert into settings.geometry_columns_join(_key_) select * from t;";
+                insert into settings.geometry_columns_join(_key_) select * from t where left(key, 1) != '_'";
 
         $res = $this->prepare($sql);
         $res->execute();
