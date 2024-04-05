@@ -63,7 +63,7 @@
         $job = new \app\inc\Model();
 
         $db = $_GET['db'];
-        $sql = "SELECT * FROM jobs WHERE active='t' or active=:active";
+        $sql = "SELECT * FROM jobs WHERE (active='t' or active=:active)";
         if ($db) {
             $sql .= " AND db=:db";
         }
