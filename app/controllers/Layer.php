@@ -11,6 +11,7 @@ namespace app\controllers;
 use app\inc\Controller;
 use app\inc\Input;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Psr\Cache\InvalidArgumentException;
 
 /**
  * Class Layer
@@ -57,8 +58,8 @@ class Layer extends Controller
     }
 
     /**
-     * @return array<mixed>
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws PhpfastcacheInvalidArgumentException|InvalidArgumentException
      */
     public function put_records(): array
     {

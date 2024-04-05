@@ -169,6 +169,7 @@ class Column extends AbstractApi
 
     /**
      * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public static function addColumn(TableModel $table, string $column, string $type, bool $setDefaultValue, mixed $defaultValue = null, bool $isNullable = true): string
     {
