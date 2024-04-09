@@ -77,7 +77,6 @@ class Processraster extends Controller
         }
         if (!$err) {
             $response['success'] = true;
-            $response['cmd'] = $cmd;
             $response['message'] = "Raster layer <b>{$safeName}</b> is created";
 
             $key = Connection::$param["postgisschema"] . "." . $safeName . ".rast";
