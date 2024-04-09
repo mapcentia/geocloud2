@@ -63,7 +63,9 @@ function if_error
     fi
 }
 
-IFS=$'\r\n' GLOBIGNORE='*' :; ARRAY=($(cat ./whitelist.txt))
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+IFS=$'\r\n' GLOBIGNORE='*' :; ARRAY=($(cat $SCRIPT_DIR/whitelist.txt))
+if_error "Could not open whitelist.txt"
 
 export PGUSER=$sourceuser
 export PGHOST=$sourcehost
