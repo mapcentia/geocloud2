@@ -11,9 +11,7 @@ namespace app\models;
 ini_set('max_execution_time', "0");
 
 use app\inc\Model;
-use app\inc\Util;
 use Exception;
-use PDOException;
 
 
 /**
@@ -24,7 +22,7 @@ class Job extends Model
 {
     /**
      * @param string|null $db
-     * @return array<mixed>
+     * @return array
      */
     public function getAll(?string $db): array
     {
@@ -94,11 +92,14 @@ class Job extends Model
      * @param int $id
      * @param string $db
      * @param string|null $name
+     * @param bool $force
+     * @param array|null $include
      * @return true
      */
     public function runJob(int $id, string $db, ?string $name = null, bool $force = false, ?array $include = null): true
     {
         $cmd = null;
+        $job = null;
         $jobs = $this->getAll($db);
         foreach ($jobs["data"] as $job) {
             if ($id == $job["id"]) {
@@ -115,7 +116,7 @@ class Job extends Model
             }
         }
         if ($cmd) {
-            $pid = (int)exec($cmd . " > " . __DIR__ . "/../../public/logs/{$job["id"]}_scheduler.log  & echo $!", $out, $err);
+            $pid = (int)exec($cmd . " > " . __DIR__ . "/../../public/logs/{$job["id"]}_scheduler.log  & echo $!");
             try {
                 $this->insert($job['id'], $pid, $job['db'], $name);
             } catch (Exception) {
@@ -129,6 +130,7 @@ class Job extends Model
      * @param int $id
      * @param int $pid
      * @param string $db
+     * @param string|null $name
      * @return void
      */
     public function insert(int $id, int $pid, string $db, ?string $name): void
@@ -147,7 +149,7 @@ class Job extends Model
      */
     private function kill(int $pid): void
     {
-        exec("/bin/kill -9 {$pid}");
+        exec("/bin/kill -9 $pid");
     }
 
     /**
