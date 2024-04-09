@@ -1207,7 +1207,7 @@ class Model
     /**
      * @throws GC2Exception
      */
-    public function materializeForeignTables(array $schemas, ?array $targetSchemas, ?string $prefix, ?string $suffix = '', ?array $include = null): int
+    public function materializeForeignTables(array $schemas, ?array $targetSchemas, ?string $prefix = '', ?string $suffix = '', ?array $include = null): int
     {
         if ($targetSchemas && sizeof($schemas) != sizeof($targetSchemas)) {
             throw new GC2Exception("Schemas and targets must have the same number of entries", 500, null, null);
@@ -1228,8 +1228,8 @@ class Model
             if (!$db->doesSchemaExist($targetSchema)) {
                 throw new GC2Exception("Schema $targetSchema not found", 404, null, "SCHEMA_NOT_FOUND");
             }
-            if (!$prefix && $prefix !== '') {
-                $prefix = 'mat_';
+            if (!$prefix) {
+                $prefix = '';
             }
             if (!$suffix) {
                 $suffix = '';
