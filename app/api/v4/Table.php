@@ -17,6 +17,7 @@ use app\inc\Jwt;
 use app\inc\Route2;
 use Exception;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Psr\Cache\InvalidArgumentException;
 use stdClass;
 
 
@@ -58,6 +59,7 @@ class Table extends AbstractApi
      *   )
      * )
      * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public function post_index(): array
     {

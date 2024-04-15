@@ -20,6 +20,7 @@ use Exception;
  * Class User
  * @package app\api\v2
  */
+#[AcceptableMethods(['POST', 'PUT', 'DELETE', 'GET', 'HEAD', 'OPTIONS'])]
 class User extends AbstractApi
 {
     /**
