@@ -11,6 +11,7 @@ error_reporting(E_ERROR | E_WARNING | E_PARSE);
 ob_start("ob_gzhandler");
 
 use app\api\v3\Meta;
+use app\api\v4\Client;
 use app\api\v4\Column;
 use app\api\v4\Constraint;
 use app\api\v4\Geofence;
@@ -480,6 +481,20 @@ try {
                 exit();
             }
         });
+
+        Route2::add("api/v4/clients/[id]", new Client(), function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                if (!$jwt["data"]["superUser"]) {
+                    echo Response::toJson(Response::SUPER_USER_ONLY);
+                    exit();
+                }
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
         Route::miss();
 
     } elseif (Input::getPath()->part(1) == "admin") {
@@ -527,6 +542,9 @@ try {
         Route::add("controllers/workflow");
         Route::add("controllers/qgis/");
 
+    } elseif (Input::getPath()->part(1) == "auth") {
+        Session::start();
+        include_once ("../app/auth/index.php");
     } elseif (Input::getPath()->part(1) == "extensions") {
 
         foreach (glob(dirname(__FILE__) . "/../app/extensions/**/routes/*.php") as $filename) {

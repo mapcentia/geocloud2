@@ -8,6 +8,7 @@
 
 namespace app\api\v2;
 
+use app\exceptions\GC2Exception;
 use app\inc\Controller;
 use app\models\User as UserModel;
 use app\models\Database as DatabaseModel;
@@ -86,14 +87,16 @@ class Database extends Controller
         $queryParameters = array();
         parse_str($_SERVER['QUERY_STRING'], $queryParameters);
         if (empty($queryParameters['userIdentifier'])) {
-            return [
-                'message' => 'No search parameters were specified',
-                'success' => false,
-                'code' => 400
-            ];
+            throw new GC2Exception('No search parameters were specified', 400, null);
         } else {
             $model = new UserModel();
-            $res = $model->getDatabasesForUser($queryParameters['userIdentifier']);
+            try {
+                $res = $model->getDatabasesForUser($queryParameters['userIdentifier']);
+            } catch (Exception) {
+                $res["success"] = true;
+                $res["databases"] = [];
+                return $res;
+            }
             $res["success"] = true;
             return $res;
         }

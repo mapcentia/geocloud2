@@ -233,7 +233,6 @@ class Schema extends AbstractApi
             throw new GC2Exception("", 403);
         }
         $r = $this->schemaObj->deleteSchema($this->schema);
-        header("Location: /api/v4/schemas/{$r['data']['name']}");
         $res["code"] = "204";
         return $res;
     }

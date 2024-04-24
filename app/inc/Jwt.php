@@ -14,6 +14,7 @@ use app\models\Database;
 use app\models\Setting;
 use Exception;
 use Firebase\JWT\Key;
+use app\auth\ResponseType;
 
 
 /**
@@ -22,8 +23,9 @@ use Firebase\JWT\Key;
  */
 class Jwt
 {
-    const int TOKEN_TTL = 36000000;
-    const int CODE_TTL = 60000;
+    const int ACCESS_TOKEN_TTL = 360000000000;
+    const int REFRESH_TOKEN_TTL = (3600 * 24 * 30);
+    const int CODE_TTL = 30;
 
     /**
      * @return array
@@ -31,10 +33,18 @@ class Jwt
      */
     public static function validate(): array
     {
+        // If OPTIONS we don't check token og return an empty response
+        if (Input::getMethod() == 'options') {
+            return ["success" => true, "data" => []];
+        }
         // Check if there is a JWT token in header
         $jwtToken = Input::getJwtToken();
         if ($jwtToken) {
-            return self::parse($jwtToken);
+            $data = self::parse($jwtToken);
+            if ($data['data']['response_type'] != ResponseType::TOKEN->value) {
+                throw new GC2Exception("Not an access token", 400);
+            }
+            return $data;
         } else {
             throw new GC2Exception("No token in header", 400);
         }
@@ -57,7 +67,12 @@ class Jwt
         Database::setDb($arr["data"]["database"]);
         $settings_viewer = new Setting();
         $secret = $settings_viewer->getApiKeyForSuperUser();
-        $decoded = (array)\Firebase\JWT\JWT::decode($token, new Key($secret, 'HS256'));
+        try {
+            $decoded = (array)\Firebase\JWT\JWT::decode($token, new Key($secret, 'HS256'));
+        } catch (Exception $e) {
+            header("WWW-Authenticate: Bearer error=\"invalid_token\" error_description=\"{$e->getMessage()}\"");
+            throw new GC2Exception($e->getMessage(), 401, null, "INVALID_TOKEN");
+        }
         $response["success"] = true;
         $response["data"] = $decoded;
         return $response;
@@ -88,7 +103,8 @@ class Jwt
             $exception = true;
         }
         if ($exception) {
-            throw new GC2Exception("Could not extract payload from token", 400, null, "JWT_PAYLOAD_ERROR");
+            header("WWW-Authenticate: Bearer error=\"invalid_token\" error_description=\"Could not extract payload from token\"");
+            throw new GC2Exception("Could not extract payload from token", 400, null, "INVALID_TOKEN");
         }
         $response["success"] = true;
         $response["data"] = $arr;
@@ -99,26 +115,53 @@ class Jwt
      * @param string $secret
      * @param string $db
      * @param string $userId
-     * @param bool $isSubUser
+     * @param bool $isSuperUser
      * @param string|null $userGroup
-     * @param string $responseType
+     * @param bool $access
+     * @param bool $returnCode
      * @return array
      */
-    public static function createJWT(string $secret, string $db, string $userId, bool $isSubUser, string|null $userGroup, string $responseType): array
+    public static function createJWT(string $secret, string $db, string $userId, bool $isSuperUser, string|null $userGroup, bool $access = true, bool $returnCode = false): array
     {
         $token = [
             "iss" => App::$param["host"],
             "uid" => $userId,
-            "exp" => time() + ($responseType == "access" ? self::TOKEN_TTL : self::CODE_TTL),
+            "exp" => time() + ($access  ? self::ACCESS_TOKEN_TTL : self::REFRESH_TOKEN_TTL),
             "iat" => time(),
             "database" => $db,
-            "superUser" => $isSubUser,
+            "superUser" => $isSuperUser,
             "userGroup" => $userGroup,
-            "response_type" => $responseType,
+            "response_type" => $access ? ResponseType::TOKEN->value : ResponseType::REFRESH->value,
         ];
-        return [
-            "token" => \Firebase\JWT\JWT::encode($token, $secret, "HS256"),
-            "ttl" => $responseType == "access" ? self::TOKEN_TTL : self::CODE_TTL,
-        ];
+        $encoded =   \Firebase\JWT\JWT::encode($token, $secret, "HS256");
+        if (!$returnCode) {
+            return [
+                "token" => $encoded,
+                "ttl" => $access ? self::ACCESS_TOKEN_TTL : self::REFRESH_TOKEN_TTL,
+            ];
+        } else {
+            $code = uniqid();
+            $CachedString = Cache::getItem($code);
+            $CachedString->set($encoded)->expiresAfter(self::CODE_TTL);
+            Cache::save($CachedString);
+            return [
+              "code" => $code
+            ];
+        }
+    }
+
+    /**
+     * @param string $code
+     * @return string
+     * @throws GC2Exception
+     */
+    public static function changeCodeForAccessToken(string $code): string
+    {
+        $CachedString = Cache::getItem($code);
+        if ($CachedString != null && $CachedString->isHit()) {
+            return $CachedString->get();
+        } else {
+            throw new GC2Exception("No token matches the code", 400, null, 'INVALID_REQUEST');
+        }
     }
 }

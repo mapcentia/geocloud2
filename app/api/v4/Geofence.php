@@ -8,8 +8,7 @@
 
 namespace app\api\v4;
 
-use app\inc\Controller;
-use app\inc\Route;
+use app\inc\Route2;
 use app\inc\Input;
 use app\models\Geofence as GeofenceModel;
 use Override;
@@ -194,7 +193,7 @@ class Geofence extends AbstractApi
      */
     public function delete_index(): array
     {
-        $id = Route::getParam("id");
+        $id = Route2::getParam("id");
         if (!is_numeric($id)) {
             $response['success'] = false;
             $response['message'] = "id is not a integer";

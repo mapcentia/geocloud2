@@ -237,7 +237,7 @@ class Setting extends Model
     public function get(bool $unsetPw = false): array
     {
         $cacheType = "settings";
-        $cacheId = ($this->postgisdb . "_" . ($_SESSION["screen_name"] ?? "" . "_" .$cacheType));
+        $cacheId = ($this->postgisdb . "_" . ($_SESSION["screen_name"] ?? "") . "_" .$cacheType);
 
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {

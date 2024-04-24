@@ -8,11 +8,14 @@
 
 namespace app\api\v4;
 
+use app\auth\GrantType;
 use app\exceptions\GC2Exception;
 use app\inc\Input;
+use app\inc\Jwt;
+use app\inc\Model;
 use app\models\Session;
-use Exception;
-use TypeError;
+use app\models\Setting;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 /**
  * Class Oauth
@@ -65,46 +68,73 @@ class Oauth extends AbstractApi
      *     )
      *   )
      * )
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
      */
     public function post_index(): array
     {
         $this->session = new Session();
         $data = json_decode(Input::getBody(), true) ?: [];
-        if (!empty($data["username"]) && !empty($data["password"])) {
-            try {
+        if ($data['grant_type'] == GrantType::PASSWORD->value) {
+            if (!empty($data["username"]) && !empty($data["password"])) {
                 return $this->session->start($data["username"], $data["password"], "public", $data["database"], true);
-            } catch (Exception $exception) {
-                return [
-                    "error" => "invalid_request",
-                    "error_description" => $exception->getMessage(),
-                    "code" => 500
-                ];
+            } else {
+                throw new GC2Exception("Username or password parameter was not provided", 400, null, 'INVALID_REQUEST');
             }
-        } else {
+        }
+        // If refresh we parse the refresh token and turn it into an access token
+        if ($data['grant_type'] == GrantType::REFRESH_TOKEN->value) {
+            if (!empty($data["refresh_token"])) {
+                $parsedToken = Jwt::parse($data["refresh_token"])['data'];
+                if ($parsedToken['response_type'] != 'refresh') {
+                    throw new GC2Exception("Not an refresh token", 400);
+                }
+                (new \app\models\Client())->get($data['client_id']);
+                $superUserApiKey = (new Setting())->getApiKeyForSuperUser();
+                $accessToken = Jwt::createJWT($superUserApiKey, $parsedToken['database'], $parsedToken['uid'], $parsedToken['superUser'], $parsedToken['userGroup']);
+                return [
+                    "access_token" => $accessToken['token'],
+                    "token_type" => "bearer",
+                    "expires_in" => $accessToken["ttl"],
+                    "scope" => "",
+                ];
+            } else {
+                throw new GC2Exception("Refresh token was not provided", 400, null, 'INVALID_REQUEST');
+            }
+        }
+        if ($data['grant_type'] == GrantType::AUTHORIZATION_CODE->value) {
+            $token = Jwt::changeCodeForAccessToken($data['code']);
+            Jwt::parse($token);
+            (new \app\models\Client())->get($data['client_id']);
             return [
-                "error" => "invalid_request",
-                "error_description" => "Username or password parameter was not provided",
-                "code" => 400
+                "access_token" => $token,
+                "token_type" => "bearer",
+                "expires_in" => 666,
+                "scope" => "",
             ];
         }
+        throw new GC2Exception("grant_type must be either password or refresh_token", 400, null, 'INVALID_REQUEST');
     }
 
     /**
      */
     public function get_index(): array
     {
+        return [];
     }
 
     /**
      */
     public function put_index(): array
     {
+        return [];
     }
 
     /**
      */
     public function delete_index(): array
     {
+        return [];
     }
 
     public function validate(): void

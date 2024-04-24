@@ -8,7 +8,9 @@
 
 namespace app\models;
 
+use app\auth\GrantType;
 use app\conf\App;
+use app\exceptions\GC2Exception;
 use app\inc\Jwt;
 use app\inc\Model;
 use app\inc\Util;
@@ -58,11 +60,12 @@ class Session extends Model
      * @param string|null $schema
      * @param string|null $parentdb
      * @param bool $tokenOnly
-     * @param string $responseType
+     * @param GrantType $grantType
      * @return array<string, array<string, mixed>|bool|string|int>
+     * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function start(string $sUserID, string $pw, string|null $schema = "public", string|null $parentdb = null, bool $tokenOnly = false, string $responseType = "access"): array
+    public function start(string $sUserID, string $pw, string|null $schema = "public", string|null $parentdb = null, bool $tokenOnly = false, GrantType $grantType = GrantType::PASSWORD): array
     {
         $response = [];
         $pw = Util::format($pw);
@@ -153,21 +156,9 @@ class Session extends Model
                     $_SESSION['passwordExpired'] = true;
                 }
                 Database::setDb($response['data']['parentdb']);
-                $settings_viewer = new Setting();
-                $response['data']['api_key'] = $settings_viewer->get()['data']->api_key;
+                $response['data']['api_key'] = (new Setting())->get()['data']->api_key;
             } else {
-                // Get superuser key, which are used for JWT secret
-                Database::setDb($response['data']['parentdb']);
-                $settings_viewer = new Setting();
-                $superUserApiKey = $settings_viewer->getApiKeyForSuperUser();
-                $token = Jwt::createJWT($superUserApiKey, $response['data']['parentdb'], $response['data']['screen_name'], !$response['data']['subuser'], $response['data']['usergroup'], $responseType);
-                return [
-                    "access_token" => $token['token'],
-                    "token_type" => "bearer",
-                    "expires_in" => $token["ttl"],
-                    "refresh_token" => "",
-                    "scope" => "",
-                ];
+                return $this->createOAuthResponse($response['data']['parentdb'], $response['data']['screen_name'], !$response['data']['subuser'], $response['data']['usergroup'], $grantType == GrantType::AUTHORIZATION_CODE);
             }
             // Insert into logins
             $sql = "INSERT INTO logins (db, \"user\") VALUES(:parentDb, :sUserID)";
@@ -181,18 +172,7 @@ class Session extends Model
                 // We do not stop login in case of error
             }
         } else {
-            if (!$tokenOnly) { //NOT OAuth
-                session_unset();
-                $response['success'] = false;
-                $response['message'] = "Session not started";
-                $response['code'] = "401";
-            } else {
-                return [
-                    "error" => "invalid_grant",
-                    "error_description" => "Could not authenticate the user. Check username and password",
-                    "code" => 400,
-                ];
-            }
+            throw new GC2Exception("Could not authenticate the user. Check username and password", 401, null, 'INVALID_GRANT');
         }
         return $response; // In case it's NOT OAuth
     }
@@ -207,5 +187,25 @@ class Session extends Model
         $response['success'] = true;
         $response['message'] = "Session stopped";
         return $response;
+    }
+
+    public function createOAuthResponse(string $db, string $user, bool $isSuperUser, ?string $userGroup, bool $code): array
+    {
+        Database::setDb($db);
+        $superUserApiKey = (new Setting())->getApiKeyForSuperUser();
+        if (!$code) {
+            $accessToken = Jwt::createJWT($superUserApiKey, $db, $user, $isSuperUser, $userGroup);
+            $refreshToken = Jwt::createJWT($superUserApiKey, $db, $user, $isSuperUser, $userGroup, false);
+            return [
+                "access_token" => $accessToken['token'],
+                "token_type" => "bearer",
+                "expires_in" => $accessToken["ttl"],
+                "refresh_token" => $refreshToken['token'],
+                "scope" => "",
+            ];
+
+        } else {
+            return Jwt::createJWT($superUserApiKey, $db, $user, $isSuperUser, $userGroup, true, true);
+        }
     }
 }
