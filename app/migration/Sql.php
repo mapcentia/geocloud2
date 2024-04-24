@@ -154,8 +154,18 @@ class Sql
                         ismat                 boolean                                not null,
                         constraint views_pk
                             primary key (name, schemaname)
-                    );
-        ";
+                    )";
+        $sqls[] = "create table settings.clients
+                    (
+                        id                    varchar                                not null,
+                        name                  varchar                                not null,
+                        homepage              varchar                                        ,
+                        description           text                                           ,
+                        redirect_uri          varchar not null                               ,
+                        secret                varchar                                        ,
+                        constraint clients_pk
+                            primary key (id)
+                    )";
 
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
