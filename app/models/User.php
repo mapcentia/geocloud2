@@ -82,9 +82,6 @@ class User extends Model
         while ($row = $this->fetchRow($res)) {
             $data[] = $row;
         }
-        if (sizeof($data) == 0) {
-            throw new GC2Exception('User name not found', 404, null);
-        }
         return [
             'databases' => $data,
         ];

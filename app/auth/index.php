@@ -66,10 +66,10 @@ if ($_POST['database'] && $_POST['user'] && $_POST['password']) {
 } elseif ($user = $_POST['user']) {
     // Get database for user
     $res = [];
-    try {
-        $res = (new \app\models\User())->getDatabasesForUser($user);
+    $res = (new \app\models\User())->getDatabasesForUser($user);
+    if (sizeof($res['databases']) > 0) {
         echo "<div id='alert' hx-swap-oob='true'></div>";
-    } catch (Exception) {
+    } else {
         echo "<div id='alert' hx-swap-oob='true'>User doesn't exists</div>";
     }
     echo $twig->render('login.html.twig', [...$res, ...$_POST]);

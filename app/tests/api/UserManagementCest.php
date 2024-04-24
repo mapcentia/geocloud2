@@ -229,7 +229,7 @@ class UserManagementCest
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => false,
-            'message' => 'Session not started',
+            'errorCode' => 'INVALID_GRANT',
         ]);
     }
 
