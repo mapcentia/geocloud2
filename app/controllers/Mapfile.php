@@ -43,10 +43,9 @@ class Mapfile extends Controller
         parent::__construct();
         $this->postgisObject = new Model();
         $settings = new \app\models\Setting();
-        $extents = $settings->get()["data"]->extents;
-
+        $extents = $settings->get()["data"]->extents ?? null;
         $schema = Connection::$param['postgisschema'];
-        $this->bbox = property_exists($extents, $schema) ? $extents->$schema : [-20037508.34, -20037508.34, 20037508.34, 20037508.34]; // Is in EPSG:3857
+        $this->bbox = is_object($extents) && property_exists($extents, $schema) ? $extents->$schema : [-20037508.34, -20037508.34, 20037508.34, 20037508.34]; // Is in EPSG:3857
     }
 
     /**

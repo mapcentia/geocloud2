@@ -17,6 +17,7 @@ use Error;
 use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Phpfastcache\Exceptions\PhpfastcacheLogicException;
+use Psr\Cache\InvalidArgumentException;
 use stdClass;
 
 
@@ -33,14 +34,14 @@ class Setting extends Model
 
     /**
      *
+     * @throws InvalidArgumentException
      */
     private function clearCacheOnSchemaChanges(): void
     {
-        // We clear all cache, because it can take long time to clear by tag
-        //Cache::clear();
-
-        $arr = ["settings", $this->postgisdb];
-        Cache::deleteItemsByTagsAll($arr);
+        $patterns = [
+            $this->postgisdb . '_settings_*',
+        ];
+        Cache::deleteByPatterns($patterns);
     }
 
     /**
@@ -231,14 +232,12 @@ class Setting extends Model
 
     /**
      * @param bool $unsetPw
-     * @return array<mixed>
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
      */
     public function get(bool $unsetPw = false): array
     {
         $cacheType = "settings";
-        $cacheId = ($this->postgisdb . "_" . ($_SESSION["screen_name"] ?? "") . "_" .$cacheType);
-
+        $cacheId = $this->postgisdb . "_" .$cacheType. "_" . ($_SESSION["screen_name"] ?? ""); // Cache per user because personal API key is stored
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             $response = $CachedString->get();
