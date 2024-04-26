@@ -12,7 +12,6 @@ use app\auth\GrantType;
 use app\exceptions\GC2Exception;
 use app\inc\Input;
 use app\inc\Jwt;
-use app\inc\Model;
 use app\models\Session;
 use app\models\Setting;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
@@ -75,21 +74,43 @@ class Oauth extends AbstractApi
     {
         $this->session = new Session();
         $data = json_decode(Input::getBody(), true) ?: [];
+
+        // Password grant. We don't check clint_id or client_secret
         if ($data['grant_type'] == GrantType::PASSWORD->value) {
             if (!empty($data["username"]) && !empty($data["password"])) {
-                return $this->session->start($data["username"], $data["password"], "public", $data["database"], true);
+                try {
+                    return $this->session->start($data["username"], $data["password"], "public", $data["database"], true);
+                } catch (GC2Exception) {
+                    return self::error("invalid_grant", "Could not authenticate the user. Check username and password", 400);
+                }
             } else {
-                throw new GC2Exception("Username or password parameter was not provided", 400, null, 'INVALID_REQUEST');
+                return self::error("invalid_grant", "Username or password parameter was not provided", 400);
             }
         }
+
+        // Refresh grant
         // If refresh we parse the refresh token and turn it into an access token
         if ($data['grant_type'] == GrantType::REFRESH_TOKEN->value) {
             if (!empty($data["refresh_token"])) {
-                $parsedToken = Jwt::parse($data["refresh_token"])['data'];
-                if ($parsedToken['response_type'] != 'refresh') {
-                    throw new GC2Exception("Not an refresh token", 400);
+                try {
+                    $parsedToken = Jwt::parse($data["refresh_token"])['data'];
+                } catch (GC2Exception $e) {
+                    return self::error("invalid_request", "Token could not be parsed: {$e->getMessage()}", 400);
                 }
-                (new \app\models\Client())->get($data['client_id']);
+                if ($parsedToken['response_type'] != 'refresh') {
+                    return self::error("invalid_grant", "Not an refresh token", 400);
+                }
+                try {
+                    (new \app\models\Client())->get($data['client_id']);
+                } catch (GC2Exception) {
+                    return self::error("invalid_client", "Client with identifier '{$data['client_id']}' was not found in the directory", 401);
+                }
+                if (!empty($data['client_secret']))
+                    try {
+                        (new \app\models\Client())->verifySecret($data['client_id'], $data['client_secret']);
+                    } catch (GC2Exception) {
+                        return self::error("invalid_client", "Client secret is wrong", 401);
+                    }
                 $superUserApiKey = (new Setting())->getApiKeyForSuperUser();
                 $accessToken = Jwt::createJWT($superUserApiKey, $parsedToken['database'], $parsedToken['uid'], $parsedToken['superUser'], $parsedToken['userGroup']);
                 return [
@@ -99,21 +120,46 @@ class Oauth extends AbstractApi
                     "scope" => "",
                 ];
             } else {
-                throw new GC2Exception("Refresh token was not provided", 400, null, 'INVALID_REQUEST');
+                return self::error("invalid_request", "Refresh token was not provided", 400);
             }
         }
+
+        // Code grant
         if ($data['grant_type'] == GrantType::AUTHORIZATION_CODE->value) {
-            $token = Jwt::changeCodeForAccessToken($data['code']);
-            Jwt::parse($token);
-            (new \app\models\Client())->get($data['client_id']);
+            try {
+                $token = Jwt::changeCodeForAccessToken($data['code']);
+                Jwt::parse($token);
+            } catch (GC2Exception) {
+                return self::error("invalid_grant", "Code doesn't exists or is expired", 400);
+            }
+            try {
+                (new \app\models\Client())->get($data['client_id']);
+            } catch (GC2Exception) {
+                return self::error("invalid_grant", "Client with identifier '{$data['client_id']}' was not found in the directory", 401);
+            }
+            if (!empty($data['client_secret']))
+                try {
+                    (new \app\models\Client())->verifySecret($data['client_id'], $data['client_secret']);
+                } catch (GC2Exception) {
+                    return self::error("invalid_client", "Client secret is wrong", 401);
+                }
             return [
                 "access_token" => $token,
                 "token_type" => "bearer",
-                "expires_in" => 666,
+                "expires_in" => Jwt::ACCESS_TOKEN_TTL,
                 "scope" => "",
             ];
         }
-        throw new GC2Exception("grant_type must be either password or refresh_token", 400, null, 'INVALID_REQUEST');
+        return self::error("unsupported_grant_type", "grant_type must be either password, refresh_token or authorization_code", 401);
+    }
+
+    private static function error(string $err, string $message, int $code): array
+    {
+        return [
+            "error" => $err,
+            "error_description" => $message,
+            "code" => $code,
+        ];
     }
 
     /**

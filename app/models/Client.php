@@ -36,7 +36,7 @@ class Client extends Model
         if (sizeof($data) == 0) {
             throw new GC2Exception("No clients", 404, null, 'CLIENT_NOT_FOUND');
         }
-        return  $data;
+        return $data;
     }
 
     /**
@@ -98,6 +98,20 @@ class Client extends Model
         $res->execute(['id' => $id]);
         if ($res->rowCount() == 0) {
             throw new GC2Exception("No client with id", 404, null, 'CLIENT_NOT_FOUND');
+        }
+    }
+
+    /**
+     * @throws GC2Exception
+     */
+    public function verifySecret(string $id, string $secret): void
+    {
+        $sql = 'SELECT secret FROM settings.clients where id=:id';
+        $res = $this->prepare($sql);
+        $res->execute(['id' => $id]);
+        $hash = $this->fetchRow($res, 'assoc')['secret'];
+        if (!password_verify($secret, $hash)) {
+            throw new GC2Exception("Secret can not be verified", 404, null, 'SECRET_NOT_VERIFIED');
         }
     }
 }

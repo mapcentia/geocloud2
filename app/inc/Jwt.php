@@ -23,9 +23,10 @@ use app\auth\ResponseType;
  */
 class Jwt
 {
-    const int ACCESS_TOKEN_TTL = 360000000000;
-    const int REFRESH_TOKEN_TTL = (3600 * 24 * 30);
-    const int CODE_TTL = 30;
+    const int ACCESS_TOKEN_TTL = 3600;
+    const int REFRESH_TOKEN_TTL = (3600 * 24);
+    const int CODE_TTL = 120;
+
 
     /**
      * @return array
@@ -65,8 +66,7 @@ class Jwt
         }
         // Get superuser key, which are used for secret
         Database::setDb($arr["data"]["database"]);
-        $settings_viewer = new Setting();
-        $secret = $settings_viewer->getApiKeyForSuperUser();
+        $secret = (new Setting())->getApiKeyForSuperUser();
         try {
             $decoded = (array)\Firebase\JWT\JWT::decode($token, new Key($secret, 'HS256'));
         } catch (Exception $e) {

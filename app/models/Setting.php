@@ -237,7 +237,7 @@ class Setting extends Model
     public function get(bool $unsetPw = false): array
     {
         $cacheType = "settings";
-        $cacheId = $this->postgisdb . "_" .$cacheType. "_" . ($_SESSION["screen_name"] ?? ""); // Cache per user because personal API key is stored
+        $cacheId = $this->postgisdb . "_" . $cacheType . "_" . ($_SESSION["screen_name"] ?? ""); // Cache per user because personal API key is stored
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             $response = $CachedString->get();
@@ -290,7 +290,7 @@ class Setting extends Model
             $response["data"]->userGroups = (object)$userGroups;
             Database::setDb($this->postgisdb);
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-          //  $CachedString->addTags([$cacheType, $this->postgisdb]);
+            //  $CachedString->addTags([$cacheType, $this->postgisdb]);
             Cache::save($CachedString);
             $response["cache"]["hit"] = false;
         }
@@ -352,7 +352,7 @@ class Setting extends Model
      * @param string $password
      * @return false|string|null
      */
-    public static function encryptPwSecure(string $password)
+    public static function encryptPwSecure(string $password): false|string|null
     {
         return password_hash($password, PASSWORD_BCRYPT);
     }

@@ -7,6 +7,7 @@
  */
 
 use app\auth\GrantType;
+use app\inc\Util;
 use app\models\Client;
 use app\models\Database;
 use app\models\Session as SessionModel;
@@ -19,13 +20,43 @@ $twig = new Environment($loader);
 Database::setDb("mapcentia");
 
 if (Session::isAuth()) {
-    include 'validate.php';
+    Database::setDb($_SESSION['parentdb']);
+    $client = new Client();
+    $requiredParams = ['response_type', 'client_id'];
+    $gotError = false;
+    $error = "";
+    $errorDesc = "";
+    foreach ($requiredParams as $requiredParam) {
+        if (!array_key_exists($requiredParam, $_GET)) {
+            $gotError = true;
+            $error = "invalid_request";
+            $errorDesc = "The request must contain the following parameter '$requiredParam'";
+            break;
+        }
+        if ($requiredParam == 'response_type' && !($_GET[$requiredParam] == 'token' || $_GET[$requiredParam] == 'code') ) {
+            $gotError = true;
+            $error = "unsupported_response_type";
+            $errorDesc = "The application requested an unsupported response type '$_GET[$requiredParam]' when requesting a token";
+            break;
+        }
+    }
     // Check client id
     try {
-        Database::setDb($_SESSION['parentdb']);
-        (new Client())->get($_GET['client_id']);
+        $redirectUri = $client->get($_GET['client_id'])[0]['redirect_uri'];
     } catch (Exception) {
-        echo "<div id='alert' hx-swap-oob='true'>Client not found</div>";
+        echo "Client with identifier '{$_GET['client_id']}' was not found in the directory";
+        exit();
+    }
+    // Check client secret if is set
+    if (isset($_GET['client_secret']) && !($client->verifySecret($_GET['client_id'], $_GET['client_secret']))) {
+        $gotError = true;
+        $error = "invalid_client";
+        $errorDesc = "Client secret doesn't match what was expected";
+    }
+    if ($gotError) {
+        $paramsStr = http_build_query(['error' => $error, 'error_description' => $errorDesc]);
+        $header = "Location: $redirectUri?$paramsStr";
+        header($header);
         exit();
     }
     $code = $_GET['response_type'] == 'code';
@@ -42,8 +73,10 @@ if (Session::isAuth()) {
         $params['state'] = $_GET['state'];
     }
     $paramsStr = http_build_query($params);
-    echo $paramsStr;
-    header("Location: {$_GET['redirect_uri']}?$paramsStr");
+    $header = "Location: $redirectUri?$paramsStr";
+    echo $header;
+    //header($header);
+
     exit();
 }
 
@@ -75,7 +108,6 @@ if ($_POST['database'] && $_POST['user'] && $_POST['password']) {
     echo $twig->render('login.html.twig', [...$res, ...$_POST]);
 } else {
     // Start
-    include 'validate.php';
     ?>
     <script src="https://unpkg.com/htmx.org@1.9.11"></script>
     <form hx-post="/auth/">

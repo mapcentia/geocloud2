@@ -1,6 +1,6 @@
 <?php
 //$requiredParams = ['client_id', 'client_secret', 'scope', 'redirect_uri', 'response_type', 'state'];
-$requiredParams = ['redirect_uri', 'response_type', 'client_id'];
+$requiredParams = ['response_type', 'client_id'];
 
 foreach ($requiredParams as $requiredParam) {
     if (!array_key_exists($requiredParam, $_GET)) {
@@ -11,6 +11,4 @@ foreach ($requiredParams as $requiredParam) {
         echo "<div id='alert' hx-swap-oob='true'>$requiredParam must be either token or code</div>";
         exit();
     }
-
-
 }
