@@ -69,6 +69,7 @@ WARNING: No locale has been set for the GC2
     psql postgres -U postgres -c "CREATE USER $GC2_USER WITH SUPERUSER CREATEROLE CREATEDB PASSWORD '$GC2_PASSWORD'" &&
       createdb template_geocloud -T template0 --encoding UTF-8 --locale $locale &&
       psql template_geocloud -c "create extension postgis" &&
+      psql template_geocloud -c "create extension postgis_raster" &&
       psql template_geocloud -c "create extension pgcrypto" &&
       psql template_geocloud -c "create extension pgrouting" &&
       psql template_geocloud -f /var/www/geocloud2/public/install/geometry_columns_join.sql &&
@@ -106,7 +107,7 @@ WARNING: No locale has been set for the GC2
             );" &&
 
       # Pull from GitHub and run database migration
-      cd /var/www/geocloud2 && git pull &&
+      cd /var/www/geocloud2 && git config pull.rebase false && git pull &&
       php /var/www/geocloud2/app/migration/run.php &&
       service postgresql stop
 
