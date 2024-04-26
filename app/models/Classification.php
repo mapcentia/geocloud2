@@ -65,12 +65,12 @@ class Classification extends Model
         for ($i = 0; $i < sizeof($arr); $i++) {
             $last = 10000;
             foreach ($arr2 as $key => $value) {
-                if (isset($value->sortid) &&$value->sortid < $last) {
+                if (isset($value->sortid) && $value->sortid < $last) {
                     $del = $key;
                     $last = $value->sortid;
                 }
             }
-            if (isset($del) &&isset($arr2[$del])) {
+            if (isset($del) && isset($arr2[$del])) {
                 unset($arr2[$del]);
             }
         }
@@ -221,8 +221,8 @@ class Classification extends Model
         $layer = new Layer();
         $geometryType = $this->geometryType ?: $layer->getValueFromKey($this->layer, "type");
         $this->update("0", self::createClass($geometryType, $layer->getValueFromKey($this->layer, "f_table_title") ?: $layer->getValueFromKey($this->layer, "f_table_name"), null, 10, "#" . $color, $data));
-            $response['success'] = true;
-            $response['message'] = "Updated one class";
+        $response['success'] = true;
+        $response['message'] = "Updated one class";
         $this->storeWizard(json_encode($data, JSON_UNESCAPED_UNICODE));
         return $response;
     }
@@ -411,11 +411,7 @@ class Classification extends Model
         $defJson = (object)$def["data"][0];
         $this->tile->update($defJson);
         //Set single class
-        if (App::$param["mapserver_ver_7"]) {
-            $ClusterFeatureCount = "Cluster_FeatureCount";
-        } else {
-            $ClusterFeatureCount = "Cluster:FeatureCount";
-        }
+        $ClusterFeatureCount = "Cluster_FeatureCount";
         $expression = "[$ClusterFeatureCount]=1";
         $name = "Single";
         $this->update(0, self::createClass($geometryType, $name, $expression, 10, "#0000FF", $data));
