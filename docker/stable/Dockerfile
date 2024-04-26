@@ -32,7 +32,7 @@ RUN	mkdir -p /var/www/geocloud2/public/dashboard && mkdir /dashboardtmp && cd /d
 COPY conf/gc2/App.php /var/www/geocloud2/app/conf/
 COPY conf/gc2/Connection.php /var/www/geocloud2/app/conf/
 
-RUN apt-get -y install php8.3-xdebug
+RUN apt-get update && apt-get -y install php8.3-xdebug
 COPY conf/fpm/xdebug.ini  /etc/php/8.3/mods-available/
 COPY conf/fpm/opcache.ini  /etc/php/8.3/mods-available/
 RUN phpenmod xdebug
