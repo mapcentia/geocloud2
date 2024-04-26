@@ -20,19 +20,11 @@ foreach ($arr['data'] as $db) {
         if (1 === 1) {
             Database::setDb($db);
             $conn = new \app\inc\Model();
-
-            switch ($db) {
-                case "mapcentia":
-                    $sqls = Sql::mapcentia();
-                    break;
-                case "gc2scheduler":
-                    $sqls = Sql::gc2scheduler();
-                    break;
-                default:
-                    $sqls = Sql::get();
-                    break;
-            }
-
+            $sqls = match ($db) {
+                "mapcentia" => Sql::mapcentia(),
+                "gc2scheduler" => Sql::gc2scheduler(),
+                default => Sql::get(),
+            };
             foreach ($sqls as $sql) {
                 try {
                     $result = $conn->execQuery($sql, "PDO", "transaction");
