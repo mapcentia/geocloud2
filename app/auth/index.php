@@ -33,7 +33,7 @@ if (Session::isAuth()) {
             $errorDesc = "The request must contain the following parameter '$requiredParam'";
             break;
         }
-        if ($requiredParam == 'response_type' && !($_GET[$requiredParam] == 'token' || $_GET[$requiredParam] == 'code') ) {
+        if ($requiredParam == 'response_type' && !($_GET[$requiredParam] == 'token' || $_GET[$requiredParam] == 'code')) {
             $gotError = true;
             $error = "unsupported_response_type";
             $errorDesc = "The application requested an unsupported response type '$_GET[$requiredParam]' when requesting a token";
@@ -48,10 +48,14 @@ if (Session::isAuth()) {
         exit();
     }
     // Check client secret if is set
-    if (isset($_GET['client_secret']) && !($client->verifySecret($_GET['client_id'], $_GET['client_secret']))) {
-        $gotError = true;
-        $error = "invalid_client";
-        $errorDesc = "Client secret doesn't match what was expected";
+    if (isset($_GET['client_secret'])) {
+        try {
+            $client->verifySecret($_GET['client_id'], $_GET['client_secret']);
+        } catch (Exception $e) {
+            $gotError = true;
+            $error = "invalid_client";
+            $errorDesc = "Client secret doesn't match what was expected";
+        }
     }
     if ($gotError) {
         $paramsStr = http_build_query(['error' => $error, 'error_description' => $errorDesc]);
