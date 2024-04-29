@@ -7,20 +7,20 @@ networks:
 services:
   base:
     build: ./base
-    image: mapcentia/gc2core:base8
+    image: mapcentia/gc2core8:base
   ecw:
     build: ./ecw
-    image: mapcentia/gc2core:ecw8
+    image: mapcentia/gc2core8:ecw
     depends_on:
       - base
   gdal:
     build: ./gdal
-    image: mapcentia/gc2core:gdal8
+    image: mapcentia/gc2core8:gdal
     depends_on:
       - ecw
   mapserver:
     build: ./mapserver
-    image: mapcentia/gc2core:mapserver8
+    image: mapcentia/gc2core8:mapserver
     depends_on:
       - gdal
   gc2core:
