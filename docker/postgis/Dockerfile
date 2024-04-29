@@ -66,6 +66,9 @@ COPY conf/pgbouncer/userlist.txt /etc/pgbouncer/userlist.txt
 RUN chown postgres:postgres /etc/pgbouncer/pgbouncer.ini
 RUN chown postgres:postgres /etc/pgbouncer/userlist.txt
 
+HEALTHCHECK --interval=30s --timeout=20s --start-period=20s --retries=2 \
+    CMD pg_isready || exit 1
+
 # Add Supervisor config and run the deamon
 ADD conf/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
