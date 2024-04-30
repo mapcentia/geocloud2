@@ -137,9 +137,9 @@ class Wms extends Controller
      * @param string $db
      * @param string $postgisschema
      * @param array $layers
-     * @return string|bool
+     * @return string|false
      */
-    private function getQGSfilePath(string $db, string $postgisschema, array $layers): string|bool
+    private function getQGSfilePath(string $db, string $postgisschema, array $layers): string|false
     {
         $path = App::$param['path'] . "/app/wms/mapfiles/";
         $mapFile = $db . "_" . $postgisschema . "_wms.map";
