@@ -526,8 +526,10 @@ class Mapfile extends Controller
                 #LABELMINSCALEDENOM
                 <?php if (!empty($layerArr['data'][0]['label_min_scale'])) echo "LABELMINSCALEDENOM " . $layerArr['data'][0]['label_min_scale'] . "\n"; ?>
 
+                COMPOSITE
                 #OPACITY
                 <?php if (!empty($layerArr['data'][0]['opacity'])) echo "OPACITY  " . $layerArr['data'][0]['opacity'] . "\n"; ?>
+                END
 
                 #MAXSCALEDENOM
                 <?php if (!empty($layerArr['data'][0]['maxscaledenom'])) echo "MAXSCALEDENOM  " . $layerArr['data'][0]['maxscaledenom'] . "\n"; ?>
