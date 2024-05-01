@@ -20,6 +20,7 @@ $twig = new Environment($loader);
 Database::setDb("mapcentia");
 
 if (Session::isAuth()) {
+    include 'validate.php';
     Database::setDb($_SESSION['parentdb']);
     $client = new Client();
     $requiredParams = ['response_type', 'client_id'];
