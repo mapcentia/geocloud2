@@ -1,4 +1,4 @@
-FROM mapcentia/gc2core8:ecw
+FROM mapcentia/gc2core8:ecw5
 MAINTAINER Martin Høgh<mh@mapcentia.com>
 
 RUN export DEBIAN_FRONTEND=noninteractive
