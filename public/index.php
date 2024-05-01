@@ -95,11 +95,7 @@ register_shutdown_function(function () {
 });
 
 // Setup Cache
-try {
-    Cache::setInstance();
-} catch (Exception $e) {
-    throw new Error("Could not init caching system");
-}
+Cache::setInstance();
 
 // Setup host
 App::$param['protocol'] = App::$param['protocol'] ?? Util::protocol();
@@ -544,7 +540,7 @@ try {
 
     } elseif (Input::getPath()->part(1) == "auth") {
         Session::start();
-        include_once ("../app/auth/index.php");
+        include_once("../app/auth/index.php");
     } elseif (Input::getPath()->part(1) == "extensions") {
 
         foreach (glob(dirname(__FILE__) . "/../app/extensions/**/routes/*.php") as $filename) {

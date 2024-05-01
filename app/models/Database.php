@@ -73,25 +73,35 @@ class Database extends Model
      * @param string $screenName
      * @param string $template
      * @param string $encoding
-     * @return bool
-     * @throws Exception
+     * @return void
      */
-    public function createdb(string $screenName, string $template, string $encoding = "UTF8"): bool
+    public function createdb(string $screenName, string $template, string $encoding = "UTF8"): void
     {
-        $this->createUser($screenName);
-        $sql = "CREATE DATABASE {$screenName}
-			    WITH ENCODING='$encoding'
-       			TEMPLATE=$template
-       			CONNECTION LIMIT=-1;
-			";
-        $this->db->query($sql);
-        $sql = "GRANT ALL PRIVILEGES ON DATABASE $screenName to $screenName";
-        $this->db->query($sql);
-        $postgisUser = explode('@', $this->postgisuser)[0];
-        $sql = "GRANT $screenName to $postgisUser";
-        $this->db->query($sql);
+        try {
+            $this->createUser($screenName);
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
+        }
+
+        try {
+            $sql = "CREATE DATABASE {$screenName}
+                        WITH ENCODING='$encoding'
+                        TEMPLATE=$template
+                        CONNECTION LIMIT=-1
+                        OWNER='$screenName'";
+            $this->db->query($sql);
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
+        }
+
+        try {
+            $postgisUser = explode('@', $this->postgisuser)[0];
+            $sql = "GRANT $screenName to $postgisUser";
+            $this->db->query($sql);
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
+        }
         $this->changeOwner($screenName, $screenName);
-        return true;
     }
 
     /**
