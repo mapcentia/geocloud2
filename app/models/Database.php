@@ -58,6 +58,7 @@ class Database extends Model
     /**
      * @param string $name
      * @return array<bool|string>
+     * @throws PDOException
      */
     public function createSchema(string $name): array
     {

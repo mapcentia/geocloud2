@@ -16,6 +16,7 @@ use app\inc\Controller;
 use app\models\User as UserModel;
 use app\models\Database;
 use app\inc\Session;
+use PDOException;
 
 
 /**
@@ -115,7 +116,11 @@ class User extends Controller
             if (Session::isAuth()) {
                 Database::setDb(Session::getUser());
                 $database = new Database();
-                $database->createSchema($response['data']['screenname']);
+                try {
+                    $database->createSchema($response['data']['screenname']);
+                } catch (PDOException) {
+                    // Pass
+                }
             }
             return $response;
         } elseif (!empty($data['parentdb']) && filter_var($data['subuser'], FILTER_VALIDATE_BOOLEAN) === true && !Session::isAuth()) {
