@@ -9,6 +9,7 @@
 namespace app\inc;
 
 use app\conf\App;
+use app\exceptions\GC2Exception;
 use Error;
 use Exception;
 use Phpfastcache\CacheManager;
@@ -35,8 +36,6 @@ abstract class Cache
      */
     static public function setInstance(): void
     {
-        $redisConfig = null;
-        $memcachedConfig = null;
         if (!empty(App::$param['appCache']["host"])) {
             $split = explode(":", App::$param['appCache']["host"] ?: "127.0.0.1:6379");
             $redisConfig = [
@@ -46,29 +45,11 @@ abstract class Cache
                 'itemDetailedDate' => true,
                 'useStaticItemCaching' => false,
             ];
-            $memcachedConfig = [
-                'host' => $split[0],
-                'port' => !empty($split[1]) ? (int)$split[1] : 11211,
-                'itemDetailedDate' => true,
-                'useStaticItemCaching' => false,
-            ];
+        } else {
+            throw new GC2Exception('Could not determine redis host', 500, null, 'CACHE_ERROR');
         }
-        $fileConfig = [
-            'securityKey' => "phpfastcache",
-            'path' => '/var/www/geocloud2/app',
-            'itemDetailedDate' => true,
-            'useStaticItemCaching' => false,
-        ];
-
-        $cacheType = !empty(App::$param["appCache"]["type"]) ? App::$param["appCache"]["type"] : "files";
-
         Globals::$cacheTtl = !empty(App::$param["appCache"]["ttl"]) ? App::$param["appCache"]["ttl"] : Globals::$cacheTtl;
-
-        self::$instanceCache = match ($cacheType) {
-            "redis" => CacheManager::getInstance('redis', new RedisConfig($redisConfig)),
-            "memcached" => CacheManager::getInstance('memcached', new MemcachedConfig($memcachedConfig)),
-            default => CacheManager::getInstance('files', new FilesConfig($fileConfig)),
-        };
+        self::$instanceCache = CacheManager::getInstance('redis', new RedisConfig($redisConfig));
     }
 
     /**
