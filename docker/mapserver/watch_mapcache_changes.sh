@@ -1,8 +1,8 @@
 #!/bin/bash
 
-listcommand="ls /var/www/geocloud2/app/wms/mapcache/*.xml -l $* 2>/dev/null"
+listcommand="ls /var/www/geocloud2/app/wms/mapcache/*.xml -l $*"
 
-newfilelist=$( $listcommand )
+newfilelist=$( $listcommand 2>/dev/null)
 while true
 do
 	if [[ $oldfilelist != $newfilelist ]]
@@ -11,6 +11,6 @@ do
 		/usr/bin/node /reload.js
 	fi
 	sleep 0.1
-	newfilelist=$( $listcommand )
+	newfilelist=$( $listcommand 2>/dev/null)
 done
 
