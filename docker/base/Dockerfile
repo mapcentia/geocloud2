@@ -45,7 +45,7 @@ ENV NVM_DIR "$HOME/.nvm" && \
     [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
 RUN nvm install 14 && nvm use 14
-RUN npm install -g grunt-cli
+RUN ln -s /root/.nvm/versions/node/v14.21.3/bin/node /usr/bin/node
 
 RUN npm install -g grunt-cli
 

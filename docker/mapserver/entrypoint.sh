@@ -4,8 +4,7 @@ set -e
 # If container is run without commando, then check if pgsql pw for gc2 is passed.
 if [ $1 == "/usr/bin/supervisord" ]; then
     # Host
-    if [ -n "$GC2_HOST" ]; then
-      sed -i "s/POSTGISHOST_CONFIGURATION/$GC2_HOST/g" /var/www/geocloud2/app/conf/Connection.php
+    if [ -n "$POSTGIS_HOST" ]; then
       echo "
 *************************************************************
 Info:    PostgreSQL host set in
@@ -20,8 +19,7 @@ WARNING: No PostgreSQL host has been set for the GC2 user.
     fi
 
     # Database
-    if [ -n "$GC2_DATABASE" ]; then
-      sed -i "s/POSTGISDB_CONFIGURATION/$GC2_DATABASE/g" /var/www/geocloud2/app/conf/Connection.php
+    if [ -n "$POSTGIS_DB" ]; then
       echo "
 *************************************************************
 Info:    PostgreSQL database set in
@@ -36,8 +34,7 @@ WARNING: No PostgreSQL database has been set for the GC2 user.
     fi
 
     # User
-    if [ -n "$GC2_USER" ]; then
-      sed -i "s/POSTGISUSER_CONFIGURATION/$GC2_USER/g" /var/www/geocloud2/app/conf/Connection.php
+    if [ -n "$POSTGIS_USER" ]; then
       echo "
 *************************************************************
 Info:    PostgreSQL user set in
@@ -52,8 +49,7 @@ WARNING: No PostgreSQL user has been set for the GC2 user.
     fi
 
     # Port
-    if [ -n "$GC2_PORT" ]; then
-      sed -i "s/POSTGISPORT_CONFIGURATION/$GC2_PORT/g" /var/www/geocloud2/app/conf/Connection.php
+    if [ -n "$POSTGIS_PORT" ]; then
       echo "
 *************************************************************
 Info:    PostgreSQL port set in
@@ -68,8 +64,7 @@ WARNING: No PostgreSQL port has been set for the GC2 user.
     fi
 
     # Password
-    if [ -n "$GC2_PASSWORD" ]; then
-      sed -i "s/POSTGISPW_CONFIGURATION/$GC2_PASSWORD/g" /var/www/geocloud2/app/conf/Connection.php
+    if [ -n "$POSTGIS_PW" ]; then
       echo "
 *************************************************************
 Info:    PostgreSQL password set in
@@ -84,8 +79,7 @@ WARNING: No PostgreSQL password has been set for the GC2 user.
     fi
 
     # Password
-    if [ -n "$GC2_BOUNCER" ]; then
-      sed -i "s/PGBOUNCER_CONFIGURATION/$GC2_BOUNCER/g" /var/www/geocloud2/app/conf/Connection.php
+    if [ -n "$POSTGIS_PGBOUNCER" ]; then
       echo "
 *************************************************************
 Info:    PostgreSQL pgbouncer set in
@@ -106,9 +100,9 @@ chown www-data:www-data /var/www/geocloud2/app/wms/mapcache/ &&\
 chown www-data:www-data /var/www/geocloud2/app/wms/files/ &&\
 chown www-data:www-data /var/www/geocloud2/app/wms/qgsfiles/ &&\
 chown www-data:www-data /var/www/geocloud2/public/logs/ &&\
-chown www-data:www-data /var/www/geocloud2/app/phpfastcache/ &&\
 chmod 737 /var/lib/php/sessions
 chmod +t /var/lib/php/sessions # Sticky bit
+touch /var/www/geocloud2/app/wms/mapcache/mapcache.conf
 
 # Set time zone if passed
 if [ -n "$TIMEZONE" ]; then

@@ -2,8 +2,8 @@ var exec = require('child_process').exec;
 var fs = require("fs");
 var path = require('path');
 
-var file = "/etc/apache2/sites-enabled/mapcache.conf";
-var lock = "/etc/apache2/sites-enabled/lock";
+var file = "/var/www/geocloud2/app/wms/mapcache/mapcache.conf";
+var lock = "/var/www/geocloud2/app/wms/mapcache/lock";
 
 fs.exists(lock, function (exists) {
     if (exists) {

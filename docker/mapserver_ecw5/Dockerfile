@@ -70,7 +70,6 @@ RUN cp /root/mapcache/mapcache.xml /mapcache/
 
 # Add apache config file from Docker repo
 ADD conf/apache/000-default.conf /etc/apache2/sites-enabled/
-ADD conf/apache/mapcache.conf /etc/apache2/sites-enabled/
 
 # Add supervisord config file from Docker repo
 ADD conf/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
@@ -105,7 +104,7 @@ RUN wget https://gc2-cli.s3.eu-west-1.amazonaws.com/versions/2024.3.3/79bafc6/ap
 EXPOSE 80
 EXPOSE 443
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=2 \
     CMD curl --fail http://localhost || exit 1
 
 COPY entrypoint.sh /entrypoint.sh

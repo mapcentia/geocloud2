@@ -70,7 +70,6 @@ RUN cp /root/mapcache/mapcache.xml /mapcache/
 
 # Add apache config file from Docker repo
 ADD conf/apache/000-default.conf /etc/apache2/sites-enabled/
-ADD conf/apache/mapcache.conf /etc/apache2/sites-enabled/
 
 # Add supervisord config file from Docker repo
 ADD conf/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
