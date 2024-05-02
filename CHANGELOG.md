@@ -4,10 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## 2024.5.0 - 2024-2-5
+### Fixed
+- MapCache reload didn't work because `node` was not in the path.
+- Better handling of user creation and databases. Exceptions from the database should not longer bubble up to the UI.
+- Install script in `public/install` now works.
+- `app/migration/run.php` now works.
+
+### Changed
+- `mapcache.conf` is moved from `/etc/apache2/sites-enabled` to `/app/wms/mapcache`.
+
+### Added
+- Health checks to gc2 and postgis docker images (the php-fpm watch script is removed)
+
 ## 2024.4.0 - 2024-30-4
 ### Fixed
 - Opacity at layer level in MapFiles.
-- Moved mapserver.conf to /app/
+- `mapserver.conf` is moved from `/app/wms` to `/app/`.
 - Caching of Settings
 
 ## [2024.3.0] - 2024-24-3
