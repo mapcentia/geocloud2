@@ -52,6 +52,7 @@ class Mapcachefile extends Controller
     {
         $layerArr = [];
         $postgisObject = new Model();
+        $formats = App::$param['mapCache']['formats'] ?? null;
         ob_start(); ?>
 
         <mapcache>
@@ -152,8 +153,11 @@ class Mapcachefile extends Controller
                 echo $grid . "\n";
             }
             $arr = array();
-            $table = null;
-            $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ NOTNULL ORDER BY sort_id";
+            $includeSchemas = '';
+            if (!empty(App::$param['mapCache']['include'])) {
+                $includeSchemas = "AND f_table_schema in ('" . implode("','", App::$param['mapCache']['include']) . "')";
+            }
+            $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ NOTNULL $includeSchemas ORDER BY sort_id";
             $result = $postgisObject->execQuery($sql);
             while ($row = $postgisObject->fetchRow($result)) {
                 if ($row['f_table_schema'] != "sqlapi") {
@@ -291,7 +295,7 @@ class Mapcachefile extends Controller
                             </metadata>
                         </tileset>
 
-
+                        <?php if (empty($formats) || is_array($formats) && in_array('mvt', $formats)) { ?>
                         <source name="<?php echo $table ?>.mvt" type="wms">
                             <getmap>
                                 <params>
@@ -323,7 +327,9 @@ class Mapcachefile extends Controller
                                 <wgs84boundingbox><?php if (!empty(App::$param["wgs84boundingbox"])) echo implode(" ", App::$param["wgs84boundingbox"]); else echo "-180 -90 180 90"; ?></wgs84boundingbox>
                             </metadata>
                         </tileset>
+                        <?php   } ?>
 
+                        <?php if (empty($formats) || (is_array($formats) && in_array('json', $formats))) { ?>
                         <source name="<?php echo $table ?>.json" type="wms">
                         <getmap>
                             <params>
@@ -355,7 +361,8 @@ class Mapcachefile extends Controller
                                 <wgs84boundingbox><?php if (!empty(App::$param["wgs84boundingbox"])) echo implode(" ", App::$param["wgs84boundingbox"]); else echo "-180 -90 180 90"; ?></wgs84boundingbox>
                             </metadata>
                         </tileset>
-                        <?php
+
+                        <?php }
                     }
                 }
             }
@@ -410,10 +417,7 @@ class Mapcachefile extends Controller
                         </metadata>
                     </tileset>
 
-
-
-
-
+                    <?php if (empty($formats) || is_array($formats) && in_array('mvt', $formats)) { ?>
                     <source name="<?php echo $k ?>.mvt" type="wms">
                     <getmap>
                         <params>
@@ -444,72 +448,10 @@ class Mapcachefile extends Controller
                             <abstract></abstract>
                         </metadata>
                     </tileset>
+                    <?php } ?>
                     <?php
                 }
             }
-
-            /**
-             * Group start
-             */
-            if (!empty($groupArr)) foreach ($groupArr as $k => $v) {
-
-                //$cache = App::$param["mapCache"]["type"] ?: "sqlite";
-                $cache = "disk";
-
-                $unique = array_unique($groups[$k]);
-
-                foreach ($unique as $v2) {
-                    $layers = array();
-                    $tileSetName = "gc2_group." . $k . "." . ($v2 ? Model::toAscii($v2, array(), "_") : "ungrouped");
-                    foreach ($groupArr[$k] as $h => $j) {
-                        if ($j == $v2) {
-                            $layers[] = $h;
-                        }
-                    }
-                    $layersStr = implode(",", $layers);
-                    ?>
-                    <!-- <?php echo $tileSetName ?> -->
-                    <source name="<?php echo $tileSetName ?>" type="wms">
-                    <getmap>
-                        <params>
-                            <FORMAT>image/png</FORMAT>
-                            <LAYERS><?php echo $layersStr ?></LAYERS>
-                        </params>
-                    </getmap>
-                    <http>
-                        <url><?php
-
-                            if (empty(App::$param["useQgisForMergedLayers"][$tileSetName])) {
-                                echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/" . Connection::$param['postgisdb'] . "_" . $k . "_wms.map&";
-                            } else {
-                                echo App::$param["mapCache"]["wmsHost"] . "/cgi-bin/qgis_mapserv.fcgi?map=/var/www/geocloud2/app/wms/qgsfiles/parsed_" . App::$param["useQgisForMergedLayers"][$tileSetName] . "&transparent=true";
-                            }
-                            ?></url>
-                    </http>
-                    </source>
-                    <tileset name="<?php echo $tileSetName ?>">
-                        <source><?php echo $tileSetName ?></source>
-                        <cache><?php echo $cache ?></cache>
-                        <grid>g20</grid>
-                        <?php
-                        foreach ($grids as $k2 => $v2) {
-                            echo "<grid>{$k2}</grid>\n";
-                        }
-                        ?>
-                        <format>PNG</format>
-                        <metatile>7 7</metatile>
-                        <metabuffer>10</metabuffer>
-                        <expires>60</expires>
-                        <metadata>
-                            <title><?php echo $tileSetName; ?></title>
-                            <abstract></abstract>
-                        </metadata>
-                    </tileset>
-                    <?php
-
-                }
-            }
-
             ?>
             <default_format>PNG</default_format>
 
