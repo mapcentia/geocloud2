@@ -257,13 +257,13 @@ function getCmdPaging(): void
         }
 
         if (!$pass) {
-            if ($count > 10) {
+            if ($count > 30) {
                 print "\nError: Too many recursive tries to fetch cell #{$cellNumber}";
                 cleanUp();
                 exit(1);
             }
-            sleep(5);
             $count++;
+            sleep(5 * $count); // We increase the wait for each try
             fetch($row, $url, $randTableName, $encoding, $downloadSchema, $workingSchema, $type, $db, $id);
             foreach ($out as $line) {
                 print "\n" . $line;
