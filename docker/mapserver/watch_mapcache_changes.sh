@@ -1,6 +1,6 @@
 #!/bin/bash
 
-listcommand="ls /var/www/geocloud2/app/wms/mapcache/*.xml -l  $*"
+listcommand="ls /var/www/geocloud2/app/wms/mapcache/*.xml -l 2>/dev/null $*"
 
 newfilelist=$( $listcommand )
 while true
