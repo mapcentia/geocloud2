@@ -1108,6 +1108,7 @@ class Model
      */
     public function getStarViewsFromStore(string $schema): array
     {
+        ini_set('pcre.jit', 0); // So longer definitions doesn't raise a PHP PREG_JIT_STACKLIMIT_ERROR
         $response = [];
         $sql = "select * from settings.views where schemaname=:schemaname";
         $result = $this->prepare($sql);
@@ -1116,8 +1117,7 @@ class Model
         foreach ($rows as $row) {
             $tmp = [];
             $def = $row['definition'];
-            preg_match('#(?<=SELECT)(.|\n)*?(?= FROM)#', $def, $match);
-            $tmp['definition'] = $match[0] ? str_replace($match[0], ' *', $def) : $def;
+            $tmp['definition'] = preg_replace('#(?<=SELECT)(.|\n)*?(?= FROM)#',' *', $def, 1);
             $tmp['name'] = $row['name'];
             $tmp['schemaname'] = $row['schemaname'];
             $tmp['ismat'] = $row['ismat'];
