@@ -295,6 +295,11 @@ class Globals
                     "type" => "textarea",
                     "title" => "HTML template",
                 ],
+                [
+                    "name" => "filter_required",
+                    "type" => "checkbox",
+                    "title" => "Required",
+                ]
 
             ]
 
