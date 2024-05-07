@@ -727,7 +727,7 @@ class Table extends Model
      * @throws PhpfastcacheInvalidArgumentException
      * @throws InvalidArgumentException
      */
-    public function updateColumn(object $data, string $key, bool $onlyRename = false): array // Only geometry tables
+    public function updateColumn(object|array $data, string $key, bool $onlyRename = false): array // Only geometry tables
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
