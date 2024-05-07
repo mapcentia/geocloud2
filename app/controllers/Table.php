@@ -13,6 +13,7 @@ use app\exceptions\GC2Exception;
 use app\inc\Controller;
 use app\inc\Input;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Psr\Cache\InvalidArgumentException;
 
 class Table extends Controller
 {
@@ -69,6 +70,7 @@ class Table extends Controller
     /**
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function put_columns()
     {
