@@ -526,7 +526,7 @@ class Table extends Model
                     if ($key == "meta") {
                         $value = $value ?: "null";
                         if (!$raw) {
-                            $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["meta"], true);
+                            $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["meta"] ?? [], true);
                             foreach ($value as $fKey => $fValue) {
                                 $rec[$fKey] = $fValue;
                             }
