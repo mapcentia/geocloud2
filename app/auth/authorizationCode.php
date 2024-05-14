@@ -6,8 +6,6 @@
  *
  */
 
-use app\auth\GrantType;
-use app\inc\Util;
 use app\models\Client;
 use app\models\Database;
 use app\models\Session as SessionModel;
@@ -17,10 +15,8 @@ use Twig\Loader\FilesystemLoader;
 
 $loader = new FilesystemLoader(__DIR__ . '/templates');
 $twig = new Environment($loader);
-Database::setDb("mapcentia");
 
 if (Session::isAuth()) {
-    include 'validate.php';
     Database::setDb($_SESSION['parentdb']);
     $client = new Client();
     $requiredParams = ['response_type', 'client_id'];
@@ -43,7 +39,9 @@ if (Session::isAuth()) {
     }
     // Check client id
     try {
-        $redirectUri = $client->get($_GET['client_id'])[0]['redirect_uri'];
+        // TODO check url param redirect_uri is set and use that instead
+        //$redirectUri = $client->get($_GET['client_id'])[0]['redirect_uri'];
+        $redirectUri = $_GET['redirect_uri'];
     } catch (Exception) {
         echo "Client with identifier '{$_GET['client_id']}' was not found in the directory";
         exit();
@@ -58,14 +56,16 @@ if (Session::isAuth()) {
             $errorDesc = "Client secret doesn't match what was expected";
         }
     }
+    // If error we send user back with error parameters
     if ($gotError) {
         $paramsStr = http_build_query(['error' => $error, 'error_description' => $errorDesc]);
         $header = "Location: $redirectUri?$paramsStr";
+        //echo $header;
         header($header);
         exit();
     }
     $code = $_GET['response_type'] == 'code';
-    $data = (new SessionModel())->createOAuthResponse($_SESSION['parentdb'], $_SESSION['screen_name'], $_SESSION['subuser'], $_SESSION['usergroup'], $code);
+    $data = (new SessionModel())->createOAuthResponse($_SESSION['parentdb'], $_SESSION['screen_name'], !$_SESSION['subuser'], $_SESSION['usergroup'], $code);
     $params = [];
     if ($code) {
         $params['code'] = $data['code'];
@@ -79,47 +79,13 @@ if (Session::isAuth()) {
     }
     $paramsStr = http_build_query($params);
     $header = "Location: $redirectUri?$paramsStr";
-    echo $header;
-    //header($header);
-
+    //echo $header;
+    header($header);
     exit();
 }
 
-if ($_POST['database'] && $_POST['user'] && $_POST['password']) {
-    // Start session and refresh browser
-    try {
-        $grantType = match ($_POST['response_type']) {
-            'code' => GrantType::AUTHORIZATION_CODE,
-            'access' => GrantType::PASSWORD,
-            default => null,
-        };
-        $data = (new SessionModel())->start($_POST['user'], $_POST['password'], "public", $_POST['database']);
-        header('HX-Refresh:true');
-
-    } catch (Exception) {
-        $res = (new \app\models\User())->getDatabasesForUser($_POST['user']);
-        echo $twig->render('login.html.twig', [...$res, ...$_POST]);
-        echo "<div id='alert' hx-swap-oob='true'>Wrong password</div>";
-    }
-} elseif ($user = $_POST['user']) {
-    // Get database for user
-    $res = [];
-    $res = (new \app\models\User())->getDatabasesForUser($user);
-    if (sizeof($res['databases']) > 0) {
-        echo "<div id='alert' hx-swap-oob='true'></div>";
-    } else {
-        echo "<div id='alert' hx-swap-oob='true'>User doesn't exists</div>";
-    }
-    echo $twig->render('login.html.twig', [...$res, ...$_POST]);
-} else {
-    // Start
-    ?>
-    <script src="https://unpkg.com/htmx.org@1.9.11"></script>
-    <form hx-post="/auth/">
-        <?php
-        echo $twig->render('login.html.twig', $_GET);
-        ?>
-    </form>
-    <div id="alert"></div>
-    <?php
-}
+echo $twig->render('header.html.twig');
+echo "<form hx-post=\"/auth/backends/login.php\">";
+echo $twig->render('login.html.twig', $_GET);
+echo "</form>";
+echo $twig->render('footer.html.twig');

@@ -9,12 +9,16 @@
 namespace app\api\v4;
 
 use app\auth\GrantType;
+use app\conf\App;
 use app\exceptions\GC2Exception;
 use app\inc\Input;
 use app\inc\Jwt;
+use app\models\Database;
+use app\models\Elasticsearch;
 use app\models\Session;
 use app\models\Setting;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Psr\Cache\InvalidArgumentException;
 
 /**
  * Class Oauth
@@ -69,6 +73,7 @@ class Oauth extends AbstractApi
      * )
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function post_index(): array
     {
@@ -150,7 +155,45 @@ class Oauth extends AbstractApi
                 "scope" => "",
             ];
         }
+        // Device code grant
+        if ($data['grant_type'] == GrantType::DEVICE_CODE->value) {
+            try {
+                $user = Jwt::checkDeviceCode($data['device_code']);
+            } catch (GC2Exception $e) {
+                if ($e->getErrorCode() == 'AUTHORIZATION_PENDING')
+                    return self::error("authorization_pending", "Authorization is pending", 400);
+                else
+                    return self::error("invalid_request", $e->getMessage(), 400);
+            }
+            Database::setDb($user['parentdb']);
+            try {
+                (new \app\models\Client())->get($data['client_id']);
+            } catch (GC2Exception) {
+                return self::error("invalid_grant", "Client with identifier '{$data['client_id']}' was not found in the directory", 401);
+            }
+            $token = (new Session())->createOAuthResponse($user['parentdb'], $user['screen_name'], !$user['subuser'], $user['usergroup'], false);
+            Jwt::clearDeviceCode($data['device_code']);
+            return $token;
+        }
         return self::error("unsupported_grant_type", "grant_type must be either password, refresh_token or authorization_code", 401);
+    }
+
+    public function post_device(): array
+    {
+        $clientId = Input::get("client_id");
+        try {
+            (new \app\models\Client())->get($clientId);
+        } catch (GC2Exception) {
+            return self::error("invalid_grant", "Client with identifier '$clientId' was not found in the directory", 401);
+        }
+        $codes = Jwt::createDeviceAndUserCode();
+        return [
+            "device_code" => $codes['device_code'],
+            "user_code" => $codes['user_code'],
+            "verification_uri" => App::$param['host'] . '/device',
+            "interval" => 5,
+            "expires_in" => Jwt::DEVICE_CODE_TTL,
+        ];
     }
 
     private static function error(string $err, string $message, int $code): array

@@ -15,17 +15,19 @@ use app\models\Setting;
 use Exception;
 use Firebase\JWT\Key;
 use app\auth\ResponseType;
+use Psr\Cache\InvalidArgumentException;
 
 
 /**
  * Class Jwt
  * @package app\inc
  */
-class Jwt
+abstract class Jwt
 {
     const int ACCESS_TOKEN_TTL = 3600;
     const int REFRESH_TOKEN_TTL = (3600 * 24);
     const int CODE_TTL = 120;
+    const int DEVICE_CODE_TTL = 1800;
 
 
     /**
@@ -126,14 +128,14 @@ class Jwt
         $token = [
             "iss" => App::$param["host"],
             "uid" => $userId,
-            "exp" => time() + ($access  ? self::ACCESS_TOKEN_TTL : self::REFRESH_TOKEN_TTL),
+            "exp" => time() + ($access ? self::ACCESS_TOKEN_TTL : self::REFRESH_TOKEN_TTL),
             "iat" => time(),
             "database" => $db,
             "superUser" => $isSuperUser,
             "userGroup" => $userGroup,
             "response_type" => $access ? ResponseType::TOKEN->value : ResponseType::REFRESH->value,
         ];
-        $encoded =   \Firebase\JWT\JWT::encode($token, $secret, "HS256");
+        $encoded = \Firebase\JWT\JWT::encode($token, $secret, "HS256");
         if (!$returnCode) {
             return [
                 "token" => $encoded,
@@ -145,7 +147,7 @@ class Jwt
             $CachedString->set($encoded)->expiresAfter(self::CODE_TTL);
             Cache::save($CachedString);
             return [
-              "code" => $code
+                "code" => $code
             ];
         }
     }
@@ -163,5 +165,61 @@ class Jwt
         } else {
             throw new GC2Exception("No token matches the code", 400, null, 'INVALID_REQUEST');
         }
+    }
+
+    public static function createDeviceAndUserCode(): array
+    {
+        $userCode = self::generateUserCode();
+        $deviceCode = uniqid();
+        $CachedString = Cache::getItem($deviceCode);
+        $CachedString->set($userCode)->expiresAfter(self::DEVICE_CODE_TTL);
+        Cache::save($CachedString);
+        $CachedString = Cache::getItem($userCode);
+        $CachedString->set(1)->expiresAfter(self::DEVICE_CODE_TTL);
+        Cache::save($CachedString);
+        return [
+            "device_code" => $deviceCode,
+            "user_code" => $userCode,
+        ];
+    }
+
+    /**
+     * @throws GC2Exception
+     */
+    public static function checkDeviceCode(string $deviceCode): array
+    {
+        $CachedString = Cache::getItem($deviceCode);
+
+        if ($CachedString != null && $CachedString->isHit()) {
+            $userCode = $CachedString->get();
+            $CachedString = Cache::getItem($userCode);
+            if ($CachedString != null && $CachedString->isHit()) {
+                $val = $CachedString->get();
+                if (!empty($val) && $val == 1) {
+                    throw new GC2Exception("authorization_pending",400, null, 'AUTHORIZATION_PENDING');
+                }
+                if (!empty($val) && is_array($val)) {
+                    return $val;
+                }
+            }
+        }
+        throw new GC2Exception("No device matches the code", 400, null, 'INVALID_REQUEST');
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public static function clearDeviceCode(string $deviceCode): void
+    {
+        Cache::deleteItem($deviceCode);
+    }
+    private static function generateUserCode(): string
+    {
+        $characters = 'BCDFGHJKLMNPQRSTVWXZ';
+        $randomString = '';
+        for ($i = 0; $i < 8; $i++) {
+            $randomString .= $characters[rand(0, strlen($characters) - 1)];
+        }
+        return substr($randomString, 0, 4) . '-' . substr($randomString, 4, 4);
     }
 }

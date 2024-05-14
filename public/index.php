@@ -366,6 +366,9 @@ try {
         Route2::add("api/v4/oauth", new Oauth(), function () {
             Database::setDb("mapcentia");
         });
+        Route2::add("api/v4/oauth/(action)/{database}", new Oauth(), function () {
+            Database::setDb(Route2::getParam('database'));
+        });
 
         Route2::add("api/v4/schemas/[schema]", new Schema(), function () {
             $jwt = Jwt::validate();
@@ -538,9 +541,14 @@ try {
         Route::add("controllers/workflow");
         Route::add("controllers/qgis/");
 
-    } elseif (Input::getPath()->part(1) == "auth") {
+    } elseif (in_array($p = Input::getPath()->part(1), ['auth', 'device'])) {
+        $file = match ($p) {
+            'auth' => 'authorizationCode.php',
+            'device' => 'deviceCode.php',
+            default => ''
+        };
         Session::start();
-        include_once("../app/auth/index.php");
+        include_once("../app/auth/" . (Input::getPath()->part(3) ? 'backends/' . Input::getPath()->part(3) : $file));
     } elseif (Input::getPath()->part(1) == "extensions") {
 
         foreach (glob(dirname(__FILE__) . "/../app/extensions/**/routes/*.php") as $filename) {
