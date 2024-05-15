@@ -14,7 +14,6 @@ use app\exceptions\GC2Exception;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\models\Database;
-use app\models\Elasticsearch;
 use app\models\Session;
 use app\models\Setting;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
@@ -133,7 +132,10 @@ class Oauth extends AbstractApi
         if ($data['grant_type'] == GrantType::AUTHORIZATION_CODE->value) {
             try {
                 $token = Jwt::changeCodeForAccessToken($data['code']);
-                Jwt::parse($token);
+                $data = Jwt::parse($token)['data'];
+                // Create a refresh token from the access token
+                $superUserApiKey = (new Setting())->getApiKeyForSuperUser();
+                $refreshToken = Jwt::createJWT($superUserApiKey, $data['database'], $data['uid'], $data['superUser'], $data['userGroup'], false);
             } catch (GC2Exception) {
                 return self::error("invalid_grant", "Code doesn't exists or is expired", 400);
             }
@@ -150,6 +152,7 @@ class Oauth extends AbstractApi
                 }
             return [
                 "access_token" => $token,
+                "refresh_token" => $refreshToken,
                 "token_type" => "bearer",
                 "expires_in" => Jwt::ACCESS_TOKEN_TTL,
                 "scope" => "",
