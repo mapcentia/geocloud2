@@ -398,7 +398,7 @@ class Table extends Model
     function getGroupBy(string $field): array
     {
         $arr = [];
-        $sql = "SELECT $field AS $field FROM $this->table WHERE $field IS NOT NULL GROUP BY $field";
+        $sql = "SELECT \"$field\" AS \"$field\" FROM {$this->doubleQuoteQualifiedName($this->table)} WHERE \"$field\" IS NOT NULL GROUP BY \"$field\"";
         $result = $this->execQuery($sql);
         while ($row = $this->fetchRow($result)) {
             $arr[] = array("group" => $row[$field]);
@@ -412,11 +412,12 @@ class Table extends Model
      * What is the difference to the above?
      * @param string $field
      * @return array
+     * @throws PDOException
      */
     public function getGroupByAsArray(string $field): array
     {
         $arr = [];
-        $sql = "SELECT DISTINCT($field) as \"distinct\" FROM $this->table ORDER BY $field";
+        $sql = "SELECT DISTINCT(\"$field\") as \"distinct\" FROM {$this->doubleQuoteQualifiedName($this->table)} ORDER BY \"$field\"";
         $res = $this->prepare($sql);
         $res->execute();
         while ($row = $this->fetchRow($res)) {
@@ -434,12 +435,12 @@ class Table extends Model
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
-        $sql = "DROP TABLE $this->table CASCADE;";
+        $sql = "DROP TABLE {$this->doubleQuoteQualifiedName($this->table)} CASCADE;";
         $res = $this->prepare($sql);
         try {
             $res->execute();
         } catch (PDOException) {
-            $sql = "DROP VIEW $this->table CASCADE;";
+            $sql = "DROP VIEW {$this->doubleQuoteQualifiedName($this->table)} CASCADE;";
             $res = $this->prepare($sql);
             $res->execute();
         }
@@ -874,19 +875,19 @@ class Table extends Model
         $this->clearCacheOnSchemaChanges();
         $response = [];
         $this->begin();
-        $sql = "ALTER TABLE $this->table ADD COLUMN gc2_version_gid SERIAL NOT NULL";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_gid SERIAL NOT NULL";
         $res = $this->prepare($sql);
         $res->execute();
-        $sql = "ALTER TABLE $this->table ADD COLUMN gc2_version_start_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_start_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()";
         $res = $this->prepare($sql);
         $res->execute();
-        $sql = "ALTER TABLE $this->table ADD COLUMN gc2_version_end_date TIMESTAMP WITH TIME ZONE DEFAULT NULL";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_end_date TIMESTAMP WITH TIME ZONE DEFAULT NULL";
         $res = $this->prepare($sql);
         $res->execute();
-        $sql = "ALTER TABLE $this->table ADD COLUMN gc2_version_uuid UUID NOT NULL DEFAULT uuid_generate_v4()";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_uuid UUID NOT NULL DEFAULT uuid_generate_v4()";
         $res = $this->prepare($sql);
         $res->execute();
-        $sql = "ALTER TABLE $this->table ADD COLUMN gc2_version_user VARCHAR(255)";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_user VARCHAR(255)";
         $res = $this->prepare($sql);
         $res->execute();
         $this->commit();
@@ -903,19 +904,19 @@ class Table extends Model
         $this->clearCacheOnSchemaChanges();
         $response = [];
         $this->begin();
-        $sql = "ALTER TABLE $this->table DROP COLUMN gc2_version_gid";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)}DROP COLUMN gc2_version_gid";
         $res = $this->prepare($sql);
         $res->execute();
-        $sql = "ALTER TABLE $this->table DROP COLUMN gc2_version_start_date";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP COLUMN gc2_version_start_date";
         $res = $this->prepare($sql);
         $res->execute();
-        $sql = "ALTER TABLE $this->table DROP COLUMN gc2_version_end_date";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP COLUMN gc2_version_end_date";
         $res = $this->prepare($sql);
         $res->execute();
-        $sql = "ALTER TABLE $this->table DROP COLUMN gc2_version_uuid";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP COLUMN gc2_version_uuid";
         $res = $this->prepare($sql);
         $res->execute();
-        $sql = "ALTER TABLE $this->table DROP COLUMN gc2_version_user";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP COLUMN gc2_version_user";
         $res = $this->prepare($sql);
         $res->execute();
         $this->commit();
@@ -932,13 +933,13 @@ class Table extends Model
         $this->clearCacheOnSchemaChanges();
         $response = [];
         $this->begin();
-        $sql = "ALTER TABLE $this->table ADD COLUMN gc2_status integer";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_status integer";
         $res = $this->prepare($sql);
         $res->execute();
-        $sql = "ALTER TABLE $this->table ADD COLUMN gc2_workflow hstore";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_workflow hstore";
         $res = $this->prepare($sql);
         $res->execute();
-        $sql = "UPDATE $this->table SET gc2_status = 3";
+        $sql = "UPDATE {$this->doubleQuoteQualifiedName($this->table)} SET gc2_status = 3";
         $res = $this->prepare($sql);
         $res->execute();
         $this->commit();
@@ -1148,7 +1149,7 @@ class Table extends Model
                 $sql = str_replace("\"$key\"", "encode(\"" . $key . "\",'escape') as " . $key, $sql);
             }
         }
-        $sql .= " FROM " . $this->table . " WHERE " . $this->primaryKey['attname'] . "=:pkey";
+        $sql .= " FROM " . $this->doubleQuoteQualifiedName($this->table) . " WHERE " . $this->primaryKey['attname'] . "=:pkey";
         $res = $this->prepare($sql);
         $res->execute(array("pkey" => $pkey));
         $row = $this->fetchRow($res);
@@ -1178,7 +1179,7 @@ class Table extends Model
                 $sql = str_replace("\"$key\"", "encode(\"" . $key . "\",'escape') as " . $key, $sql);
             }
         }
-        $sql .= " FROM " . $this->table . " LIMIT 1";
+        $sql .= " FROM " . $this->doubleQuoteQualifiedName($this->table) . " LIMIT 1";
         $res = $this->prepare($sql);
         $res->execute();
         $row = $this->fetchRow($res);
