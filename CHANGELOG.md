@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## 2024.5.2 - 2024-17-5
+### Added
+- WMS controller will now obtain the WMS source from layer and request the source directly instead of using MapServer. This speeds things up and WMS requests becomes easier to debug. If a request has multiple layers, MapServer will still be used, so merging from different WMS sources still works.  
+
 ## 2024.5.1 - 2024-17-5
 ### Added
 - A new script called `clean_scheduler_tables.php` has been added which removes old temporary tables created by the scheduler, it's intended to run as a cron job and are included in the Docker file. 

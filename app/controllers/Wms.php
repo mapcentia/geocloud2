@@ -209,8 +209,7 @@ class Wms extends Controller
         if (sizeof($this->layers) > 0) {
             $layers = explode(",", $this->layers[0]);
         }
-        // $filters = isset($_GET["filters"]) ? json_decode(Util::base64urlDecode($_GET["filters"]), true) : [];
-        $filters = ['ds' => 'sd'];
+        $filters = isset($_GET["filters"]) ? json_decode(Util::base64urlDecode($_GET["filters"]), true) : [];
         $qgs = $this->getQGSFilePath($db, $postgisschema, $layers);
         // Filters and multiple layers are a no-go, because layers can be defined in different QGS files.
         if ($filters && $qgs && sizeof($layers) > 1) {
