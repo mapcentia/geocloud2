@@ -172,14 +172,14 @@ class Wms extends Controller
      * @param array $layers
      * @return string|false
      */
-    private function getWmsSource(string $db, string $postgisschema, array $layers): string|false
+    private function getWmsSource(string $db, string $postgisschema, array $layers): array|false
     {
         if (sizeof($layers) > 1) {
             return false;
         }
+        $source = null;
         $path = App::$param['path'] . "/app/wms/mapfiles/";
         $mapFile = $db . "_" . $postgisschema . "_wms.map";
-        $wmsSource = null;
         $layer = $layers[0];
         if (file_exists($path . $mapFile)) {
             $map = new mapObj($path . $mapFile, null);
@@ -189,10 +189,14 @@ class Wms extends Controller
             }
             // If connect starts with
             if (str_starts_with($layer->connection, 'http')) {
-                $wmsSource = $layer->connection;
+                $conn = $layer->connection;
+                $par = parse_url($conn);
+                parse_str($par["query"], $result);
+                $source = $par;
+                $source['query'] = array_change_key_case($result, CASE_UPPER);
             }
         }
-        return $wmsSource ?: false;
+        return $source ?: false;
 
     }
 
@@ -302,12 +306,17 @@ class Wms extends Controller
                     default => $db . "_" . $postgisschema . "_wms.map",
                 };
                 $useWmsSource = false;
-                if ($wmsSource = $this->getWmsSource($db, $postgisschema, $layers)) {
-                    parse_str(parse_url($_SERVER["QUERY_STRING"])['path'], $result);
-                    if ($result['BBOX'] && $result['WIDTH'] && $result['HEIGHT']) {
-                        $url = $wmsSource . "&BBOX=" . $result['BBOX'] . '&WIDTH=' . $result['WIDTH'] . '&HEIGHT=' . $result['HEIGHT'];
-                        $useWmsSource = true;
-                    }
+                if ($source = $this->getWmsSource($db, $postgisschema, $layers)) {
+                    parse_str(parse_url($_SERVER["QUERY_STRING"])['path'], $query);
+                    $query = array_change_key_case($query, CASE_UPPER);
+                    // Use parameters from WMS source if set and use those from query for not set parameters
+                    $mergedQuery = array_merge($query, $source['query']);
+                    // Always use these from the query
+                    $mergedQuery['BBOX'] = $query['BBOX'];
+                    $mergedQuery['WIDTH'] = $query['WIDTH'];
+                    $mergedQuery['HEIGHT'] = $query['HEIGHT'];
+                    $url = $source['scheme'] . "://" . $source['host'] . $source['path'] . '?' . http_build_query($mergedQuery);
+                    $useWmsSource = true;
                 }
                 if (!$useWmsSource) {
                     $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/$mapFile&{$_SERVER["QUERY_STRING"]}";
