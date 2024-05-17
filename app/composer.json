@@ -21,6 +21,7 @@
         "ext-xml": "*",
         "ext-zip": "*",
         "ext-zlib": "*",
+        "ext-mapscript": "*",
         "peppeocchi/php-cron-scheduler": "^4.0",
         "sad_spirit/pg_builder": "^2.3",
         "ext-gd": "*",

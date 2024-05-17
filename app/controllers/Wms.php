@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2023 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -9,6 +9,7 @@
 namespace app\controllers;
 
 use app\conf\App;
+use app\exceptions\GC2Exception;
 use app\inc\Controller;
 use app\inc\Model;
 use app\inc\UserFilter;
@@ -38,6 +39,7 @@ class Wms extends Controller
     /**
      * Wms constructor.
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws GC2Exception
      */
     function __construct()
     {
@@ -69,7 +71,6 @@ class Wms extends Controller
         }
 
         // Both WMS and WFS can use GET
-
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             foreach ($_GET as $k => $v) {
                 // Get the layer names from either WMS (layer) or WFS (typename)
@@ -139,14 +140,14 @@ class Wms extends Controller
      * @param array $layers
      * @return string|false
      */
-    private function getQGSfilePath(string $db, string $postgisschema, array $layers): string|false
+    private function getQGSFilePath(string $db, string $postgisschema, array $layers): string|false
     {
         $path = App::$param['path'] . "/app/wms/mapfiles/";
         $mapFile = $db . "_" . $postgisschema . "_wms.map";
         $qgsFile = null;
         foreach ($layers as $layer) {
             if (file_exists($path . $mapFile)) {
-                $map = new mapObj($path . $mapFile);
+                $map = new mapObj($path . $mapFile, null);
                 $layer = $map->getLayerByName($layer);
                 if (empty($layer->connection)) {
                     break;
@@ -166,9 +167,39 @@ class Wms extends Controller
     }
 
     /**
+     * @param string $db
+     * @param string $postgisschema
+     * @param array $layers
+     * @return string|false
+     */
+    private function getWmsSource(string $db, string $postgisschema, array $layers): string|false
+    {
+        if (sizeof($layers) > 1) {
+            return false;
+        }
+        $path = App::$param['path'] . "/app/wms/mapfiles/";
+        $mapFile = $db . "_" . $postgisschema . "_wms.map";
+        $wmsSource = null;
+        $layer = $layers[0];
+        if (file_exists($path . $mapFile)) {
+            $map = new mapObj($path . $mapFile, null);
+            $layer = $map->getLayerByName($layer);
+            if (empty($layer->connection)) {
+                return false;
+            }
+            // If connect starts with
+            if (str_starts_with($layer->connection, 'http')) {
+                $wmsSource = $layer->connection;
+            }
+        }
+        return $wmsSource ?: false;
+
+    }
+
+    /**
      * @param $db string
      * @param $postgisschema string
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws PhpfastcacheInvalidArgumentException|GC2Exception
      */
     private function get(string $db, string $postgisschema): never
     {
@@ -178,13 +209,14 @@ class Wms extends Controller
         if (sizeof($this->layers) > 0) {
             $layers = explode(",", $this->layers[0]);
         }
-        $filters = isset($_GET["filters"]) ? json_decode(Util::base64urlDecode($_GET["filters"]), true) : [];
-        $qgs = $this->getQGSfilePath($db, $postgisschema, $layers);
+        // $filters = isset($_GET["filters"]) ? json_decode(Util::base64urlDecode($_GET["filters"]), true) : [];
+        $filters = ['ds' => 'sd'];
+        $qgs = $this->getQGSFilePath($db, $postgisschema, $layers);
         // Filters and multiple layers are a no-go, because layers can be defined in different QGS files.
         if ($filters && $qgs && sizeof($layers) > 1) {
             self::report("One or more layers are served by QGIS Server. Filters don't work with multiple layers, where one or more is QGIS backed.");
         }
-        // If multiple layer, when always use MapFile.
+        // If multiple layers, then always use MapFile.
         if (sizeof($layers) > 1) {
             $qgs = false;
         }
@@ -270,7 +302,17 @@ class Wms extends Controller
                     "utfgrid", "wfs" => $db . "_" . $postgisschema . "_wfs.map",
                     default => $db . "_" . $postgisschema . "_wms.map",
                 };
-                $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/$mapFile&{$_SERVER["QUERY_STRING"]}";
+                $useWmsSource = false;
+                if ($wmsSource = $this->getWmsSource($db, $postgisschema, $layers)) {
+                    parse_str(parse_url($_SERVER["QUERY_STRING"])['path'], $result);
+                    if ($result['BBOX'] && $result['WIDTH'] && $result['HEIGHT']) {
+                        $url = $wmsSource . "&BBOX=" . $result['BBOX'] . '&WIDTH=' . $result['WIDTH'] . '&HEIGHT=' . $result['HEIGHT'];
+                        $useWmsSource = true;
+                    }
+                }
+                if (!$useWmsSource) {
+                    $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/$mapFile&{$_SERVER["QUERY_STRING"]}";
+                }
             }
         }
         if (!isset($url)) {
@@ -307,6 +349,7 @@ class Wms extends Controller
      * @param string $data
      * @param string $layer
      * @return never
+     * @throws GC2Exception
      */
     private function post(string $db, string $postgisschema, string $data, string $layer): never
     {
@@ -376,6 +419,7 @@ class Wms extends Controller
      * @param array $layers
      * @param array $filters
      * @return array
+     * @throws GC2Exception
      */
     private function setFilterFromRules(array $layers, array $filters): array
     {
