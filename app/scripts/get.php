@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -126,7 +126,7 @@ if (sizeof(explode("|http", $url)) > 1) {
 
 $dir = App::$param['path'] . "app/tmp/" . $db . "/__vectors";
 $tempFile = md5(microtime() . rand());
-$randTableName = "_" . md5(microtime() . rand());
+$randTableName = "_" . time(). "_table_" . md5(microtime() . rand());
 $err = null;
 $out = null;
 
@@ -221,7 +221,7 @@ function getCmdPaging(): void
         $wfsUrl = $url . "&BBOX=";
         $gmlName = $randTableName . "-" . $row["gid"] . ".gml";
 
-        $cellTemp = "cell_" . md5(microtime() . rand());
+        $cellTemp = "_" . time() . "_cell_" . md5(microtime() . rand());
 
         if (!file_put_contents($tmpDir . $gmlName, Util::wget($wfsUrl . $bbox))) {
             print "\nError: could not get GML for cell #{$row["gid"]}";
@@ -243,16 +243,15 @@ function getCmdPaging(): void
             "-nlt {$type}";
 
         exec($cmd . ' 2>&1', $out, $err);
-
         if ($err) {
             $pass = false;
         }
 
         // The GMLAS driver sometimes throws a 404 error, so we can't stop on this kind of error
         foreach ($out as $line) {
-            if (strpos($line, "FAILURE") !== false || (strpos($line, "ERROR") !== false && $line != "ERROR 1: HTTP error code : 404")) {
+            if (str_contains($line, "FAILURE") || (str_contains($line, "ERROR") && $line != "ERROR 1: HTTP error code : 404")) {
                 $pass = false;
-                break 1;
+                break;
             }
         }
 
