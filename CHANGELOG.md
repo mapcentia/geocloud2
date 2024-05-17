@@ -4,10 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## 2024.5.1 - 2024-17-5
+### Added
+- A new script called `clean_scheduler_tables.php` has been added which removes old temporary tables created by the scheduler, it's intended to run as a cron job and are included in the Docker file. 
+
 ## 2024.5.0 - 2024-2-5
 ### Fixed
 - MapCache reload didn't work because `node` was not in the path.
-- Better handling of user creation and databases. Exceptions from the database should not longer bubble up to the UI.
+- Better handling of user creation and databases. Exceptions from the database should no longer bubble up to the UI.
 - Install script in `public/install` now works.
 - `app/migration/run.php` now works.
 
