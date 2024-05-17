@@ -87,6 +87,8 @@ RUN a2disconf other-vhosts-access-log
 
 # Clean up job for app/tmp
 RUN crontab -l 2>/dev/null| { cat; echo "0 0 * * * php -f /var/www/geocloud2/app/scripts/clean_tmp_dir.php 1>> /dev/null 2>&1";} | crontab
+# Clean up job for tmp tables created by scheduler
+RUN crontab -l 2>/dev/null| { cat; echo "0 0 * * * php -f /var/www/geocloud2/app/scripts/clean_scheduler_tables.php 1>> /dev/null 2>&1";} | crontab
 # Purge locks from scheduler
 RUN crontab -l 2>/dev/null| { cat; echo "* * * * * php -f /var/www/geocloud2/app/scripts/purge_locks.php > /var/www/geocloud2/public/logs/purge_locks.log";} | crontab
 # Create scheduler report once a day
