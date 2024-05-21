@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## 2024.5.3 - 2024-21-5
+### Fixed
+- Boolean `False` is now written out as `0` in WFS-t. Before the value was set to NULL.
+- Scheduler can now import CSV data. It'll run own tests for CSV and hint ogr2ogr because ogr2ogr can't detect CSV.
+- Scheduler will now clear app cache for layer, so check for existence of extra fields works.
+
 ## 2024.5.2 - 2024-17-5
 ### Added
 - WMS controller will now obtain the WMS source from layer and request the source directly instead of using MapServer. This speeds things up and WMS requests becomes easier to debug. If a request has multiple layers, MapServer will still be used, so merging from different WMS sources still works.  
