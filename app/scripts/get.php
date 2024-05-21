@@ -178,6 +178,18 @@ function getCmd(): void
         cleanUp();
     }
 
+    // We test for CSV data, because ogr2ogr can't detect this format
+    $isCsv = false;
+    if (($handle = fopen($dir . "/" . $tempFile, "r")) !== FALSE) {
+        if (fgetcsv($handle, 1000, ",")) {
+            $isCsv = true;
+        }
+        if (fgetcsv($handle, 1000, ";")) {
+            $isCsv = true;
+        }
+        fclose($handle);
+    }
+
     print "\nInfo: Staring inserting in temp table using ogr2ogr...";
 
     $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
@@ -189,11 +201,10 @@ function getCmd(): void
         "-lco 'PRECISION=NO' " .
         "-a_srs 'EPSG:{$srid}' " .
         "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
-        "'" . $dir . "/" . $tempFile . "' " .
+        ($isCsv ? "'CSV:" : "'") .
+        $dir . "/" . $tempFile . "' " .
         "-nln " . $workingSchema . "." . $randTableName . " " .
-        ($type == "AUTO" ? "" : "-nlt {$type}") .
-        "";
-
+        ($type == "AUTO" ? "" : "-nlt {$type}");
     exec($cmd . ' 2>&1', $out, $err);
 }
 
