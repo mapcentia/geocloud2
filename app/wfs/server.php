@@ -1400,8 +1400,7 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
                 }
                 $fieldProperties = !empty($fieldConfArr[$fieldName]->properties) ? json_decode($fieldConfArr[$fieldName]->properties, true) : null;
 
-                // Important to use $FieldValue !== or else will int 0 evaluate to false
-                if ($fieldValue !== false && ($fieldName != "fid" && $fieldName != "FID")) {
+                if (isset($fieldValue) && ($fieldName != "fid" && $fieldName != "FID")) {
                     if (!isset($fieldProperties["type"]) || $fieldProperties["type"] != "image") {
                         $imageAttr = null;
                         if (!empty($fieldValue) && (in_array($tableObj->metaData[$fieldName]["type"], ["string", "text", "json", "jsonb"]))) {
@@ -1410,7 +1409,7 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
                         }
                     }
                     $str .= writeTag("open", $gmlNameSpace, $fieldName, $imageAttr, True, False, true);
-                    $str .= $fieldValue;
+                    $str .= $fieldValue === false ? '0' : $fieldValue;
                     $str .= writeTag("close", $gmlNameSpace, $fieldName, null, False, True, true);
                 }
             } elseif (!empty($tableObj->metaData[$fieldName]) && $tableObj->metaData[$fieldName]['type'] == "geometry") {
