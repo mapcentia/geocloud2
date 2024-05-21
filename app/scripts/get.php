@@ -1054,8 +1054,9 @@ if ($extra) {
 
         foreach ($fieldObj as $f) {
             $fieldName = $f->name;
-            $fieldType = isset($f->type) ? $f->type : "varchar";
-            $fieldValue = isset($f->value) ? $f->value : null;
+            $fieldType = $f->type ?? "varchar";
+            $fieldValue = $f->value ?? null;
+            Cache::deleteByPatterns([$table->postgisdb . '_' . $schema. '.' . $safeName . '*']);
             $check = $table->doesColumnExist($schema . "." . $safeName, $fieldName);
             if (!$check["exists"]) {
                 $sql = "ALTER TABLE \"{$schema}\".\"{$safeName}\" ADD COLUMN {$fieldName} {$fieldType}";
