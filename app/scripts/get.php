@@ -201,6 +201,7 @@ function getCmd(): void
         "-lco 'PRECISION=NO' " .
         "-a_srs 'EPSG:{$srid}' " .
         "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
+        ($isCsv ? "-oo X_POSSIBLE_NAMES=lon*,Lon*,x,X -oo Y_POSSIBLE_NAMES=lat*,Lat*,y,Y -oo AUTODETECT_TYPE=YES -oo GEOM_POSSIBLE_NAMES=geometri " : '') .
         ($isCsv ? "'CSV:" : "'") .
         $dir . "/" . $tempFile . "' " .
         "-nln " . $workingSchema . "." . $randTableName . " " .

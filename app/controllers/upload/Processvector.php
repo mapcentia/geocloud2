@@ -143,7 +143,6 @@ class Processvector extends Controller
             // TODO Set dim i GUI
             "-dim XY " .
             /*"--config DXF_ENCODING WIN1252 " .*/
-            (($fileType == "csv") ? "-oo AUTODETECT_TYPE=YES " : '') .
             (($delete || $append) ? '' : "-lco 'GEOMETRY_NAME=the_geom' ") .
             (($delete || $append) ? '' : "-lco 'FID=gid' ") .
             (($delete || $append) ? '' : "-lco 'PRECISION=NO' ") .
