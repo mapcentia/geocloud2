@@ -29,13 +29,13 @@ and this project adheres to [CalVer](https://calver.org/).
 - `mapcache.conf` is moved from `/etc/apache2/sites-enabled` to `/app/wms/mapcache`.
 
 ### Added
-- Health checks to gc2 and postgis docker images (the php-fpm watch script is removed)
+- Health checks to gc2core and postgis docker images (the php-fpm watch script is removed)
 
 ## 2024.4.0 - 2024-30-4
 ### Fixed
 - Opacity at layer level in MapFiles.
 - `mapserver.conf` is moved from `/app/wms` to `/app/`.
-- Caching of Settings
+- Caching of Settings.
 
 ## [2024.3.0] - 2024-24-3
 ### Changed
