@@ -141,7 +141,47 @@ if (!file_exists($dir)) {
 if (is_numeric($safeName[0])) {
     $safeName = "_" . $safeName;
 }
-
+function isCSV($filePath): bool
+{
+    if (!file_exists($filePath) || !is_readable($filePath)) {
+        return false;
+    }
+    $handle = fopen($filePath, 'r');
+    if ($handle === false) {
+        return false;
+    }
+    $rowCount = 0;
+    $delimiter = ',';
+    $expectedFields = null;
+    while (($line = fgets($handle)) !== false && $rowCount < 5) {
+        $line = trim($line);
+        if (empty($line)) {
+            continue;
+        }
+        if ($rowCount == 0) {
+            if (str_contains($line, ',')) {
+                $delimiter = ',';
+            } elseif (str_contains($line, ';')) {
+                $delimiter = ';';
+            } elseif (str_contains($line, "\t")) {
+                $delimiter = "\t";
+            } else {
+                fclose($handle);
+                return false;
+            }
+        }
+        $fields = str_getcsv($line, $delimiter);
+        if ($expectedFields === null) {
+            $expectedFields = count($fields);
+        } elseif (count($fields) !== $expectedFields) {
+            fclose($handle);
+            return false;
+        }
+        $rowCount++;
+    }
+    fclose($handle);
+    return $rowCount > 0;
+}
 
 /**
  * @return string
@@ -179,16 +219,7 @@ function getCmd(): void
     }
 
     // We test for CSV data, because ogr2ogr can't detect this format
-    $isCsv = false;
-    if (($handle = fopen($dir . "/" . $tempFile, "r")) !== FALSE) {
-        if (fgetcsv($handle, 1000, ",")) {
-            $isCsv = true;
-        }
-        if (fgetcsv($handle, 1000, ";")) {
-            $isCsv = true;
-        }
-        fclose($handle);
-    }
+    $isCsv = isCsv($dir . "/" . $tempFile);
 
     print "\nInfo: Staring inserting in temp table using ogr2ogr...";
 
