@@ -455,7 +455,7 @@ class Wms extends Controller
         $auth = false;
         $sess = $_SESSION;
         if (isset($_SESSION) && sizeof($_SESSION) > 0) {
-            if (!empty($sess["subuser"]) && ($user == $sess["screen_name"])) {
+            if ($user == $sess["screen_name"]) {
                 $auth = true;
             } elseif (!empty($sess["http_auth"]) && ($user == $sess["http_auth"])) {
                 $auth = true;
