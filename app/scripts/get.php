@@ -180,7 +180,7 @@ function isCSV($filePath): bool
         $rowCount++;
     }
     fclose($handle);
-    return $rowCount > 0;
+    return $rowCount > 1;
 }
 
 /**
