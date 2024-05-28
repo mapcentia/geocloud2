@@ -258,7 +258,7 @@ class Elasticsearch extends Controller
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      */
     public function delete_delete(): array
     {
@@ -271,7 +271,7 @@ class Elasticsearch extends Controller
         if ($response = $this->checkAuth($db, Input::get('key'))) {
             return $response;
         }
-
+        $response = [];
         $es = new \app\models\Elasticsearch();
         $res = $es->delete($index, $id);
         $obj = json_decode($res["json"], true);
