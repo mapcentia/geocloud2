@@ -315,6 +315,8 @@ class Wms extends Controller
                     $mergedQuery['BBOX'] = $query['BBOX'];
                     $mergedQuery['WIDTH'] = $query['WIDTH'];
                     $mergedQuery['HEIGHT'] = $query['HEIGHT'];
+                    // Set REQUEST TO GetMap
+                    $mergedQuery['REQUEST'] = 'GetMap';
                     $url = $source['scheme'] . "://" . $source['host'] . $source['path'] . '?' . http_build_query($mergedQuery);
                     $useWmsSource = true;
                 }
