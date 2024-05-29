@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## 2024.5.4 - 2024-29-5
+### Fixed
+- Minor bugs related to PHP 8.3. 
+
 ## 2024.5.3 - 2024-21-5
 ### Fixed
 - Boolean `False` is now written out as `0` in WFS-t. Before the value was set to NULL.
