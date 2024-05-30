@@ -142,12 +142,15 @@ try {
             Database::setDb("mapcentia");
         });
         Route::add("api/v1/sql", function () {
-            die(Response::toJson(
-                [
-                    "code" => 410,
-                    "message" => "v1 SQL API is gone. Use v2 or v3",
-                ]
-            ));
+            if (empty(Input::get("key"))) {
+                Session::start();
+            }
+            $db = Input::getPath()->part(4);
+            $dbSplit = explode("@", $db);
+            if (sizeof($dbSplit) == 2) {
+                $db = $dbSplit[1];
+            }
+            Database::setDb($db);
         });
         Route::add("api/v1/elasticsearch/{action}/{user}/[indices]/[type]", function () {
             $r = func_get_arg(0);
