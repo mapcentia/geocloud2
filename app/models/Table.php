@@ -130,6 +130,7 @@ class Table extends Model
      */
     private function clearCacheOnSchemaChanges(?string $relName = null): void
     {
+        $relName = $relName ?: $this->table;
         $patterns = [
             $this->postgisdb . '_' . $relName . '*',
             $this->postgisdb . '*_meta_*',
@@ -702,6 +703,7 @@ class Table extends Model
      * @param string $_key_
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function purgeFieldConf(string $_key_): array
     {
