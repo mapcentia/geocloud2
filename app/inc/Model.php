@@ -813,8 +813,8 @@ class Model
             $rows = $this->fetchAll($res);
             $response['success'] = true;
             $response['data'] = $rows;
-            $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-            //$CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
+            $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);
+            Cache::save($CachedString);
             return $response;
         }
     }
