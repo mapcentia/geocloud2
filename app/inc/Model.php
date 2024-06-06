@@ -295,8 +295,8 @@ class Model
     public function getMetaData(string $table, bool $temp = false, bool $restriction = true, array $restrictions = null, string $cacheKey = null, bool $getEnums = true): array
     {
         $cacheType = "metadata";
-        $cacheRel = ($cacheKey ?: $table);
-        $cacheId = ($this->postgisdb . "_" . $cacheRel . "_" . $cacheType . "_" . md5((int)$temp . (int)$restriction . serialize($restrictions)));
+        $cacheRel = $cacheKey ?: $table;
+        $cacheId = $this->postgisdb . "_" . $cacheRel . "_" . $cacheType . "_" . ($temp ? 'temp': 'notTemp') . "_" . ($restriction ? 'restriction': 'notRestriction' ) . "_" . ($getEnums ? 'enums' : 'notEnums') . "_" . ($restrictions ? 'restrictions_' . md5(serialize($restrictions)) : 'noRestrictions');
         $CachedString = Cache::getItem($cacheId);
         $primaryKey = null;
         if ($CachedString != null && $CachedString->isHit()) {
