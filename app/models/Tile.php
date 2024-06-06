@@ -11,6 +11,7 @@ namespace app\models;
 use app\inc\Model;
 use app\inc\Cache;
 use PDOException;
+use Psr\Cache\InvalidArgumentException;
 
 
 /**
@@ -29,6 +30,19 @@ class Tile extends Model
     {
         parent::__construct();
         $this->table = $table;
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    private function clearCacheOnSchemaChanges(): void
+    {
+        $split = explode('.', $this->table);
+        $relName = $split[0] . '.' . $split[1];
+        $patterns = [
+            $this->postgisdb . '_' . $relName  . '_metadata_*',
+        ];
+        Cache::deleteByPatterns($patterns);
     }
 
     /**
@@ -54,10 +68,11 @@ class Tile extends Model
      * @param object $data
      * @return array
      * @throws PDOException
+     * @throws InvalidArgumentException
      */
     public function update(object $data): array
     {
-        Cache::clear();
+        $this->clearCacheOnSchemaChanges();
         $schema = array(
             "theme_column",
             "label_column",
