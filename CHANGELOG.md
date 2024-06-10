@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## 2024.6.0 - 2024-10-6
+### Fixed
+- Some bugs in the caching system.
+
 ## 2024.5.4 - 2024-29-5
 ### Fixed
 - Minor bugs related to PHP 8.3. 
