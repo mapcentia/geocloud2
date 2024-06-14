@@ -9,6 +9,7 @@
 namespace app\models;
 
 use app\exceptions\GC2Exception;
+use app\inc\Util;
 use app\inc\Model;
 use app\inc\UserFilter;
 use app\models\User as UserModel;
@@ -39,6 +40,7 @@ class Geofence extends Model
         parent::__construct();
         if ($userFilter) {
             $this->userFilter = $userFilter;
+            $this->userFilter->ipAddress = Util::clientIp();
         }
     }
 
@@ -55,7 +57,7 @@ class Geofence extends Model
             if (
                 ($this->userFilter->userName == $rule["username"] || fnmatch($rule["username"], $this->userFilter->userName)) &&
                 ($this->userFilter->service == $rule["service"] || $rule["service"] == "*") &&
-                ($this->userFilter->ipAddress == $rule["iprange"] || $rule["iprange"] == "*") &&
+                (Util::ipInRange($this->userFilter->ipAddress, $rule["iprange"]) || $rule["iprange"] == "*") &&
                 ($this->userFilter->schema == $rule["schema"] || fnmatch($rule["schema"], $this->userFilter->schema)) &&
                 ($this->userFilter->layer == $rule["layer"] || fnmatch($rule["layer"], $this->userFilter->layer)) &&
                 ($this->userFilter->request == $rule["request"] || $rule["request"] == "*")
@@ -230,7 +232,6 @@ class Geofence extends Model
     }
 
     /**
-     * @throws GC2Exception
      */
     private function fillPlaceholders(string $str): string
     {

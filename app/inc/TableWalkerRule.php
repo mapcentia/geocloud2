@@ -26,7 +26,7 @@ class TableWalkerRule extends BlankWalker
     private string $request;
     private string $ipAddress;
 
-    private const DEFAULT_SCHEMA = "public";
+    private const string DEFAULT_SCHEMA = "public";
 
     public function __construct($userName, $service, $request, $ipAddress)
     {
