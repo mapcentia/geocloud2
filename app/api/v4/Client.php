@@ -10,6 +10,7 @@ namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
 use app\inc\Input;
+use app\inc\Jwt;
 use app\inc\Route2;
 use app\models\Client as ClientModel;
 use Random\RandomException;
@@ -47,6 +48,7 @@ class Client extends AbstractApi
 
     /**
      * @throws RandomException
+     * @throws GC2Exception
      */
     public function post_index(): array
     {
@@ -55,6 +57,7 @@ class Client extends AbstractApi
         $arr2 = [
             'name' => $arr['name'],
             'redirectUri' => $arr['redirect_uri'],
+            'username' => Jwt::validate()['data']['uid'],
             'homepage' => $arr['homepage'] ?? null,
             'description' => $arr['description'] ?? null,
         ];
