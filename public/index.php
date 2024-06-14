@@ -487,10 +487,6 @@ try {
         Route2::add("api/v4/clients/[id]", new Client(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
-                if (!$jwt["data"]["superUser"]) {
-                    echo Response::toJson(Response::SUPER_USER_ONLY);
-                    exit();
-                }
                 Database::setDb($jwt["data"]["database"]);
             } else {
                 echo Response::toJson($jwt);
