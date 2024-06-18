@@ -268,7 +268,7 @@ class Wms extends Controller
             } // MapServer is used
             else {
                 $mapFile = match ($this->service) {
-                    "wfs" => $db . "_" . $postgisschema . "_wfs.map",
+                    "utfgrid", "wfs" => $db . "_" . $postgisschema . "_wfs.map",
                     default => $db . "_" . $postgisschema . "_wms.map",
                 };
                 $path = "/var/www/geocloud2/app/wms/mapfiles/$mapFile";
