@@ -106,7 +106,7 @@ RUN wget https://gc2-cli.s3.eu-west-1.amazonaws.com/versions/2024.3.3/79bafc6/ap
 EXPOSE 80
 EXPOSE 443
 
-HEALTHCHECK --interval=3s --timeout=10s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=3 \
     CMD curl --fail http://127.0.0.1/fpm-ping || exit 1
 
 COPY entrypoint.sh /entrypoint.sh

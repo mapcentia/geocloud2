@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## 2024.6.1 - 2024-19-6
+### Added
+- IP range is now implemented in Geofence rules.
+
+### Fixed
+- WMS filtering now works for UTFgrids, meaning that layer filters in Vidi now works for underlying mouseover grid.
+
 ## 2024.6.0 - 2024-10-6
 ### Fixed
 - Some bugs in the caching system.
