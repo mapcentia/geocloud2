@@ -45,7 +45,7 @@ foreach ($rows as $db => $jobs) {
 $footer = "</table>\n";
 
 foreach ($databases as $db) {
-    if (App::$param["notification"]["to"][$db]) {
+    if (isset(App::$param["notification"]["to"][$db])) {
         $tr = [];
         foreach ($rows[$db] as $row) {
             $tr[] = "<tr><td>{$row["id"]}</td><td>{$row["db"]}</td><td>{$row["schema"]}</td><td>{$row["name"]}</td><td><a target=\"_blank\" href=\"" . App::$param["notification"]["logUrl"] . "/logs/" . $row["id"] . "_scheduler.log\">{$row["id"]}_scheduler.log</a></td></tr>\n";
