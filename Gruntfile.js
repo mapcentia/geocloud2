@@ -300,5 +300,5 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-less');
 
     grunt.registerTask('default', ['less', 'cssmin', 'jshint', 'hogan', 'preprocess:debug', 'cacheBust', 'shell:composer']);
-    grunt.registerTask('production', ['less', 'cssmin', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust', 'shell:chown', 'shell:composer']);
+    grunt.registerTask('production', ['less', 'cssmin', 'hogan', 'uglify', 'processhtml', 'preprocess:production', 'cacheBust', 'shell:chown', 'shell:composer', 'shell:hacks']);
 };
