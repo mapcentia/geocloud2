@@ -280,7 +280,11 @@ module.exports = function (grunt) {
             },
             buildDocs: {
                 command: 'sphinx-build ./docs/da ./docs/html'
+            },
+            hacks: {
+                command: 'cp ./docker/_hacks/pool/* ./app/vendor/phpfastcache/phpfastcache/lib/Phpfastcache/Core/Pool/ && cp ./docker/_hacks/proxy/* ./app/vendor/phpfastcache/phpfastcache/lib/Phpfastcache/Proxy/'
             }
+
         }
     });
     grunt.loadNpmTasks('grunt-contrib-cssmin');

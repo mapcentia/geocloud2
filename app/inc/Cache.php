@@ -90,13 +90,17 @@ abstract class Cache
     /**
      * @throws InvalidArgumentException
      */
-    static public function deleteByPatterns(array $patterns) : void
+    static public function deleteByPatterns(array $patterns): void
     {
         foreach ($patterns as $pattern) {
-            $items = self::getAllItems($pattern);
-            $keys = [];
-            foreach ($items as $key => $item) {
-                $keys[] = $key;
+            try {
+                $keys = self::getAllKeys($pattern);
+            } catch (Error $e) {
+                $items = self::getAllItems($pattern);
+                $keys = [];
+                foreach ($items as $key => $item) {
+                    $keys[] = $key;
+                }
             }
             self::deleteItems($keys);
         }
@@ -125,6 +129,15 @@ abstract class Cache
         }
 
         return $items;
+    }
+
+    /**
+     * @param string $pattern
+     * @return array
+     */
+    static private function getAllKeys(string $pattern): array
+    {
+        return self::$instanceCache->getAllKeys($pattern);
     }
 
     /**
