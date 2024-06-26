@@ -95,7 +95,7 @@ abstract class Cache
         $keys = [];
         foreach ($patterns as $pattern) {
             try {
-                $keys = array_merge($keys, self::getAldlKeys($pattern));
+                $keys = array_merge($keys, self::getAllKeys($pattern));
             } catch (Error) {
                 $items = self::getAllItems($pattern);
                 foreach ($items as $key => $item) {
