@@ -282,7 +282,7 @@ module.exports = function (grunt) {
                 command: 'sphinx-build ./docs/da ./docs/html'
             },
             hacks: {
-                command: 'cp ./docker/_hacks/pool/* ./app/vendor/phpfastcache/phpfastcache/lib/Phpfastcache/Core/Pool/ && cp ./docker/_hacks/proxy/* ./app/vendor/phpfastcache/phpfastcache/lib/Phpfastcache/Proxy/'
+                command: 'cp ./docker/_hacks/pool/* ./app/vendor/phpfastcache/phpfastcache/lib/Phpfastcache/Core/Pool/ && cp ./docker/_hacks/proxy/* ./app/vendor/phpfastcache/phpfastcache/lib/Phpfastcache/Proxy/ && cp ./docker/_hacks/drivers/redis/* ./app/vendor/phpfastcache/phpfastcache/lib/Phpfastcache/Drivers/Redis/Driver.php'
             }
 
         }
