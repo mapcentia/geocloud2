@@ -92,18 +92,19 @@ abstract class Cache
      */
     static public function deleteByPatterns(array $patterns): void
     {
+        $keys = [];
         foreach ($patterns as $pattern) {
             try {
-                $keys = self::getAllKeys($pattern);
-            } catch (Error $e) {
+                $keys = array_merge($keys, self::getAldlKeys($pattern));
+            } catch (Error) {
                 $items = self::getAllItems($pattern);
-                $keys = [];
                 foreach ($items as $key => $item) {
                     $keys[] = $key;
                 }
             }
-            self::deleteItems($keys);
         }
+        self::deleteItems($keys);
+
     }
 
     /**
