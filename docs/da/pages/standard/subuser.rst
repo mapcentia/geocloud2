@@ -37,7 +37,7 @@ Det er som udgangspunkt kun databasebrugeren der kan oprette subusers.
 Opret subuser
 -----------------------------------------------------------------
 
-For at oprette en subuser, navigeres der til :ref:`gettingstarted_dashboard`.
+For at oprette en subuser, navigeres der til :ref:`subuser`.
 
 .. figure:: ../../../_media/subuser-create.png
     :width: 400px
