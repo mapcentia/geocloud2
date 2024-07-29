@@ -369,7 +369,7 @@ try {
         Route2::add("api/v4/oauth", new Oauth(), function () {
             Database::setDb("mapcentia");
         });
-        Route2::add("api/v4/oauth/(action)/{database}", new Oauth(), function () {
+        Route2::add("api/v4/oauth/(action)/[database]", new Oauth(), function () {
             Database::setDb(Route2::getParam('database'));
         });
 

@@ -39,13 +39,19 @@ if (Session::isAuth()) {
     }
     // Check client id
     try {
-        // TODO check url param redirect_uri is set and use that instead
-        //$redirectUri = $client->get($_GET['client_id'])[0]['redirect_uri'];
-        $redirectUri = $_GET['redirect_uri'];
+        $clientData = $client->get($_GET['client_id']);
     } catch (Exception) {
         echo "Client with identifier '{$_GET['client_id']}' was not found in the directory";
         exit();
     }
+
+    $uris = json_decode($clientData[0]['redirect_uri']);
+     if ($_GET['redirect_uri'] && !in_array($_GET['redirect_uri'], $uris)) {
+         echo "Client with identifier '{$_GET['client_id']}' is not registered with redirect uri: {$_GET['redirect_uri']} ";
+         exit();
+     }
+    $redirectUri = $_GET['redirect_uri'] ?? $uris[0];
+
     // Check client secret if is set
     if (isset($_GET['client_secret'])) {
         try {

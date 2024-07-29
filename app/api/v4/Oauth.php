@@ -132,10 +132,10 @@ class Oauth extends AbstractApi
         if ($data['grant_type'] == GrantType::AUTHORIZATION_CODE->value) {
             try {
                 $token = Jwt::changeCodeForAccessToken($data['code']);
-                $data = Jwt::parse($token)['data'];
+                $tokenData = Jwt::parse($token)['data'];
                 // Create a refresh token from the access token
                 $superUserApiKey = (new Setting())->getApiKeyForSuperUser();
-                $refreshToken = Jwt::createJWT($superUserApiKey, $data['database'], $data['uid'], $data['superUser'], $data['userGroup'], false);
+                $refreshToken = Jwt::createJWT($superUserApiKey, $tokenData['database'], $tokenData['uid'], $tokenData['superUser'], $tokenData['userGroup'], false);
             } catch (GC2Exception) {
                 return self::error("invalid_grant", "Code doesn't exists or is expired", 400);
             }
@@ -144,15 +144,16 @@ class Oauth extends AbstractApi
             } catch (GC2Exception) {
                 return self::error("invalid_grant", "Client with identifier '{$data['client_id']}' was not found in the directory", 401);
             }
-            if (!empty($data['client_secret']))
+            if (!empty($data['client_secret'])) {
                 try {
                     (new \app\models\Client())->verifySecret($data['client_id'], $data['client_secret']);
                 } catch (GC2Exception) {
                     return self::error("invalid_client", "Client secret is wrong", 401);
                 }
+            }
             return [
                 "access_token" => $token,
-                "refresh_token" => $refreshToken,
+                "refresh_token" => $refreshToken['token'],
                 "token_type" => "bearer",
                 "expires_in" => Jwt::ACCESS_TOKEN_TTL,
                 "scope" => "",
@@ -183,7 +184,8 @@ class Oauth extends AbstractApi
 
     public function post_device(): array
     {
-        $clientId = Input::get("client_id");
+        $data = json_decode(Input::getBody(), true) ?: [];
+        $clientId = $data['client_id'];
         try {
             (new \app\models\Client())->get($clientId);
         } catch (GC2Exception) {
