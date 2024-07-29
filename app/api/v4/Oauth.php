@@ -184,13 +184,6 @@ class Oauth extends AbstractApi
 
     public function post_device(): array
     {
-        $data = json_decode(Input::getBody(), true) ?: [];
-        $clientId = $data['client_id'];
-        try {
-            (new \app\models\Client())->get($clientId);
-        } catch (GC2Exception) {
-            return self::error("invalid_grant", "Client with identifier '$clientId' was not found in the directory", 401);
-        }
         $codes = Jwt::createDeviceAndUserCode();
         return [
             "device_code" => $codes['device_code'],
