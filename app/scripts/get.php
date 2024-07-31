@@ -97,6 +97,8 @@ if (!file_exists($lockFile)) {
     @touch($lockFile);
 }
 
+$getFunction = null;
+
 // Check if Paging should be used
 if (sizeof(explode("|http", $url)) > 1) {
     $grid = explode("|", $url)[0];
@@ -110,17 +112,26 @@ if (sizeof(explode("|http", $url)) > 1) {
     $getFunction = "getCmdPaging"; // Paging by grid
 } else {
     $grid = null;
-
-    // Check if file extension
-    // =======================
-    $extCheck1 = explode(".", $url);
-    $extCheck2 = array_reverse($extCheck1);
-    if (strtolower($extCheck2[0]) == "shp" || strtolower($extCheck2[0]) == "tab" || strtolower($extCheck2[0]) == "geojson") {
-        $getFunction = "getCmdFile"; // Shape or TAB file set
-    } elseif (strtolower($extCheck2[0]) == "zip" || strtolower($extCheck2[0]) == "rar" || strtolower($extCheck2[0]) == "gz") {
-        $getFunction = "getCmdZip"; // Zip or rar file
-    } else {
-        $getFunction = "getCmd"; // Service or single file
+    // Check if Content type is zip
+    $headers = get_headers($url);
+    print "\n\nheaders\n";
+    foreach ($headers as $header) {
+        if ($header == "Content-Type: application/zip") {
+            $getFunction = "getCmdZip";
+        }
+        print " $header\n";
+    }
+    // Check file extension
+    if (!$getFunction) {
+        $extCheck1 = explode(".", $url);
+        $extCheck2 = array_reverse($extCheck1);
+        if (strtolower($extCheck2[0]) == "shp" || strtolower($extCheck2[0]) == "tab" || strtolower($extCheck2[0]) == "geojson") {
+            $getFunction = "getCmdFile"; // Shape or TAB file set
+        } elseif (strtolower($extCheck2[0]) == "zip" || strtolower($extCheck2[0]) == "rar" || strtolower($extCheck2[0]) == "gz") {
+            $getFunction = "getCmdZip"; // Zip or rar file
+        } else {
+            $getFunction = "getCmd"; // Service or single file
+        }
     }
 }
 
@@ -750,7 +761,7 @@ function getCmdZip(): void
 
     // ZIP start
     // =========
-    if (strtolower($extCheck2[0]) == "zip") {
+    if (!strtolower($extCheck2[0]) == "gz") {
         $zip = new ZipArchive;
         $res = $zip->open($dir . "/" . $tempFile . "." . $extCheck2[0]);
         if ($res === false) {
@@ -763,29 +774,9 @@ function getCmdZip(): void
         unlink($dir . "/" . $tempFile . "." . $extCheck2[0]);
     }
 
-    // RAR start
-    // =========
-    if (strtolower($extCheck2[0]) == "rar") {
-        $rarFile = rar_open($dir . "/" . $tempFile . "." . $extCheck2[0]);
-        if (!$rarFile) {
-            print "Error: Could not unrar file";
-            cleanUp();
-            exit(1);
-        }
-
-        $list = rar_list($rarFile);
-        foreach ($list as $file) {
-            $entry = rar_entry_get($rarFile, $file);
-            $file->extract($dir . "/" . $tempFile);
-        }
-        rar_close($rarFile);
-        unlink($dir . "/" . $tempFile . "." . $extCheck2[0]);
-
-    }
-
     // GZIP start
     // ==========
-    if (strtolower($extCheck2[0]) == "gz") {
+    else {
         $bufferSize = 4096; // read 4kb at a time
         mkdir($dir . "/" . $tempFile);
         $outFileName = str_replace('.gz', '', $dir . "/" . $tempFile . "/" . $tempFile . "." . $extCheck2[0]);
