@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## 2024.7.0 - 2024-31-7
+### Changed
+- Scheduler will now get HTTP Headers and detect if Content-type is application/zip and set the zip-file handler. This means that services returning zip-files and without .zip in the end of their URLs will be processed correct.
+
 ## 2024.6.2 - 2024-26-6
 ### Fixed
 - Added `getAllKeys` to replace `getAllItems` in Phpfastcache. The latter will also retrieve items, but in the delete process where is no need for items, only keys. Items can fill the memory. Fallback is implemented in `inc/Cache.php`. 
