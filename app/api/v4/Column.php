@@ -68,6 +68,7 @@ class Column extends AbstractApi
      *   )
      * )
      * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public function post_index(): array
     {
@@ -185,7 +186,6 @@ class Column extends AbstractApi
         if ($setDefaultValue && isset($defaultValue)) {
             $table->addDefaultValue($column, $defaultValue);
         }
-
         return $r["column"];
     }
 

@@ -57,16 +57,22 @@ class Database extends Model
 
     /**
      * @param string $name
+     * @param Model|null $model
      * @return array<bool|string>
-     * @throws PDOException
      */
-    public function createSchema(string $name): array
+    public function createSchema(string $name, Model $model = null): array
     {
-        $sql = "CREATE SCHEMA \"" . self::toAscii($name, null, "_") . "\"";
-        $res = $this->prepare($sql);
+        $saveName = self::toAscii($name, null, "_");
+        $sql = "CREATE SCHEMA \"" . $saveName . "\"";
+        if ($model) {
+            $res = $model->prepare($sql);
+        } else {
+            $res = $this->prepare($sql);
+        }
         $res->execute();
         $response['success'] = true;
         $response['message'] = "Schema created";
+        $response['schema'] = $saveName;
         return $response;
     }
 

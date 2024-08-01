@@ -13,8 +13,10 @@ use app\models\Database;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Route2;
+use app\models\Table as TableModel;
 use Exception;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Psr\Cache\InvalidArgumentException;
 
 
 /**
@@ -130,6 +132,7 @@ class Schema extends AbstractApi
      *   )
      * )
      * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public function post_index(): array
     {
@@ -142,8 +145,18 @@ class Schema extends AbstractApi
         }
         $body = Input::getBody();
         $data = json_decode($body);
-        $this->schemaObj->createSchema($data->schema);
-        header("Location: /api/v4/schemas/$this->schema");
+        $this->table = new TableModel(null);
+        $this->table->postgisschema = $data->schema;
+        $this->table->begin();
+        $r = $this->schemaObj->createSchema($data->schema, $this->table);
+        // Add tables
+        if (!empty($data->tables)) {
+            foreach ($data->tables as $table) {
+                Table::addTable($this->table, $table);
+            }
+        }
+        $this->table->commit();
+        header("Location: /api/v4/schemas/{$r["schema"]}");
         $res["code"] = "201";
         return $res;
     }

@@ -872,6 +872,7 @@ class Table extends Model
 
     /**
      * @return array
+     * @throws InvalidArgumentException
      */
     public function addVersioning(): array
     {

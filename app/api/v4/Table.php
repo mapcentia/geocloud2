@@ -58,8 +58,6 @@ class Table extends AbstractApi
      *     description="Created",
      *   )
      * )
-     * @throws GC2Exception
-     * @throws InvalidArgumentException
      */
     public function post_index(): array
     {
@@ -68,33 +66,40 @@ class Table extends AbstractApi
         $this->table = new TableModel(null);
         $this->table->postgisschema = $this->schema;
         $this->table->begin();
-        $r = $this->table->create($data->table, null, null, true);
-        // Add columns
-        if (!empty($data->columns)) {
-            foreach ($data->columns as $column) {
-                Column::addColumn($this->table, $column->column, $column->type, true, $column->default_value, $column->is_nullable);
-            }
-        }
-        // Add indices
-        if (!empty($data->indices)) {
-            foreach ($data->indices as $index) {
-                Index::addIndices($this->table, $index->columns, $index->method, $index->name);
-            }
-        }
-        // Add constraints
-        if (!empty($data->constraints)) {
-            foreach ($data->constraints as $constraint) {
-                Constraint::addConstraint($this->table, $constraint->constraint, $constraint->columns, $constraint->check, $constraint->name, $constraint->referenced_table, $constraint->referenced_columns);
-            }
-        }
-
+        $r = self::addTable($this->table, $data);
         $this->table->commit();
-
         header("Location: /api/v4/schemas/$this->schema/tables/{$r['tableName']}");
         $res["code"] = "201";
         return $res;
     }
 
+    /**
+     * @throws GC2Exception
+     * @throws InvalidArgumentException
+     */
+    public static function addTable(TableModel $table, stdClass $data): array
+    {
+        $r = $table->create($data->table, null, null, true);
+        // Add columns
+        if (!empty($data->columns)) {
+            foreach ($data->columns as $column) {
+                Column::addColumn($table, $column->column, $column->type, true, $column->default_value, $column->is_nullable);
+            }
+        }
+        // Add indices
+        if (!empty($data->indices)) {
+            foreach ($data->indices as $index) {
+                Index::addIndices($table, $index->columns, $index->method, $index->name);
+            }
+        }
+        // Add constraints
+        if (!empty($data->constraints)) {
+            foreach ($data->constraints as $constraint) {
+                Constraint::addConstraint($table, $constraint->constraint, $constraint->columns, $constraint->check, $constraint->name, $constraint->referenced_table, $constraint->referenced_columns);
+            }
+        }
+        return $r;
+    }
 
     /**
      * @return array
