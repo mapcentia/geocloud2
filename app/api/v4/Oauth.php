@@ -8,7 +8,7 @@
 
 namespace app\api\v4;
 
-use app\auth\GrantType;
+use app\auth\types\GrantType;
 use app\conf\App;
 use app\exceptions\GC2Exception;
 use app\inc\Input;

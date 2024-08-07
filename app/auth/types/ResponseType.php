@@ -1,6 +1,6 @@
 <?php
 
-namespace app\auth;
+namespace app\auth\types;
 enum ResponseType: string
 {
     case TOKEN = 'token';

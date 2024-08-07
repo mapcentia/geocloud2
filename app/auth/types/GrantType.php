@@ -1,6 +1,6 @@
 <?php
 
-namespace app\auth;
+namespace app\auth\types;
 enum GrantType: string
 {
     case PASSWORD = 'password';

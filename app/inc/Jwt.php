@@ -8,13 +8,13 @@
 
 namespace app\inc;
 
+use app\auth\types\ResponseType;
 use app\conf\App;
 use app\exceptions\GC2Exception;
 use app\models\Database;
 use app\models\Setting;
 use Exception;
 use Firebase\JWT\Key;
-use app\auth\ResponseType;
 use Psr\Cache\InvalidArgumentException;
 
 
