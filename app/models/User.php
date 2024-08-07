@@ -56,6 +56,16 @@ class User extends Model
         return $response;
     }
 
+    public function getByProperty(string $path): array
+    {
+        $query = "SELECT * FROM users WHERE properties->>$path";
+        $res = $this->execQuery($query);
+        $rows = $this->fetchAll($res);
+        $response['success'] = true;
+        $response['data'] = $rows;
+        return $response;
+    }
+
     /**
      * @param string $userIdentifier
      * @return array<string, array<int, array>>
