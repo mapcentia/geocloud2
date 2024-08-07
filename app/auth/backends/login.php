@@ -6,7 +6,7 @@
  *
  */
 
-use app\auth\GrantType;
+use app\auth\types\GrantType;
 use app\models\Database;
 use app\models\Session as SessionModel;
 use Twig\Environment;
