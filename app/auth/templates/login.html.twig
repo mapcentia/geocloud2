@@ -10,7 +10,7 @@
            value="{{ databases|first.parentdb is not null ?   databases|first.parentdb : databases|first.screenname }}">
 {% endif %}
 {% if databases|length > 0 %}
-    <input type="password" name="password"/>
+    <input type="password" name="password" autofocus/>
     <button type="submit">Sign in</button>
 {% endif %}
 <input type="hidden" name="response_type" value="{{ response_type }}" />
