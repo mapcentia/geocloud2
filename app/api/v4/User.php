@@ -8,6 +8,7 @@
 
 namespace app\api\v4;
 
+use app\models\Database;
 use app\exceptions\GC2Exception;
 use app\inc\Jwt;
 use app\inc\Input;
@@ -85,6 +86,9 @@ class User extends AbstractApi
         }
         $data = json_decode(Input::getBody(), true) ?: [];
         $data['parentdb'] = $this->jwt['database'];
+        try {
+            (new Database())->createSchema($data['name']);
+        } catch (Exception) {}
         $res = self::convertUserObject((new UserModel())->createUser($data)['data']);
         header("Location: /api/v4/users/{$res['name']}");
         return ["code" => 201];
