@@ -1336,10 +1336,12 @@ class Table extends Model
      * @param array $columns
      * @param string $type
      * @param string|null $name
-     * @return void
+     * @return string
+     * @throws InvalidArgumentException
      */
     public function addIndex(array $columns, string $type = "btree", ?string $name = null): string
     {
+        $this->clearCacheOnSchemaChanges();
         $name = $name ?: $this->tableWithOutSchema . '_' . $type;
         $sql = "CREATE INDEX \"$name\" ON {$this->doubleQuoteQualifiedName($this->table)} USING $type (";
         foreach ($columns as $column) {
@@ -1353,13 +1355,13 @@ class Table extends Model
     }
 
     /**
-     * @param string $column
-     * @param string $type
+     * @param string $index
      * @return void
-     * @throws PDOException
+     * @throws InvalidArgumentException
      */
     public function dropIndex(string $index): void
     {
+        $this->clearCacheOnSchemaChanges();
         $name = "\"" . $this->schema . '"."' . $index . "\"";
         $sql = "DROP INDEX $name";
         $res = $this->prepare($sql);
