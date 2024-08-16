@@ -33,6 +33,10 @@ class Client extends Model
         $res = $this->prepare($sql);
         $res->execute($params);
         $data = $this->fetchAll($res, 'assoc');
+        $data = array_map(function ($datum) {
+            $datum['redirect_uri'] = json_decode($datum['redirect_uri']);
+            return $datum;
+        }, $data);
         if (sizeof($data) == 0) {
             throw new GC2Exception("No clients", 404, null, 'CLIENT_NOT_FOUND');
         }

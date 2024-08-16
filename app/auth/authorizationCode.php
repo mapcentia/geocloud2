@@ -45,7 +45,7 @@ if (Session::isAuth()) {
         exit();
     }
 
-    $uris = json_decode($clientData[0]['redirect_uri']);
+    $uris = $clientData[0]['redirect_uri'];
      if ($_GET['redirect_uri'] && !in_array($_GET['redirect_uri'], $uris)) {
          echo "Client with identifier '{$_GET['client_id']}' is not registered with redirect uri: {$_GET['redirect_uri']} ";
          exit();
