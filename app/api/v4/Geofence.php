@@ -8,6 +8,7 @@
 
 namespace app\api\v4;
 
+use app\inc\Jwt;
 use app\inc\Route2;
 use app\inc\Input;
 use app\models\Geofence as GeofenceModel;
@@ -24,7 +25,9 @@ class Geofence extends AbstractApi
 
     public function __construct()
     {
-        $this->geofence = new GeofenceModel(null);
+
+
+
     }
 
     /**
@@ -51,7 +54,7 @@ class Geofence extends AbstractApi
      */
     public function get_index(): array
     {
-        return $this->geofence->get();
+        return (new GeofenceModel(null))->get();
     }
 
     /**
@@ -104,7 +107,7 @@ class Geofence extends AbstractApi
     {
         $body = Input::getBody();
         $arr = json_decode($body, true);
-        return $this->geofence->create($arr);
+        return (new GeofenceModel(null))->create($arr)['data'];
     }
 
     /**
@@ -158,7 +161,7 @@ class Geofence extends AbstractApi
     {
         $body = Input::getBody();
         $arr = json_decode($body, true);
-        return $this->geofence->update($arr);
+        return (new GeofenceModel(null))->update($arr);
     }
 
     /**
@@ -205,7 +208,6 @@ class Geofence extends AbstractApi
 
     #[Override] public function validate(): void
     {
-        // TODO: Implement validate() method.
     }
 }
 
