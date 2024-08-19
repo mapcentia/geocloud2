@@ -57,7 +57,6 @@ class Client extends AbstractApi
         $arr2 = [
             'name' => $arr['name'],
             'redirectUri' => json_encode($arr['redirect_uri']),
-            'username' => Jwt::validate()['data']['uid'],
             'homepage' => $arr['homepage'] ?? null,
             'description' => $arr['description'] ?? null,
         ];
