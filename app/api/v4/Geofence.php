@@ -8,7 +8,7 @@
 
 namespace app\api\v4;
 
-use app\inc\Jwt;
+use app\exceptions\GC2Exception;
 use app\inc\Route2;
 use app\inc\Input;
 use app\models\Geofence as GeofenceModel;
@@ -54,7 +54,14 @@ class Geofence extends AbstractApi
      */
     public function get_index(): array
     {
-        return (new GeofenceModel(null))->get();
+
+        $id = Route2::getParam("id");
+        $geofence = new GeofenceModel(null);
+        if (!empty($id)) {
+            return $geofence->get($id)[0];
+        } else {
+            return ['rules' => $geofence->get($id)];
+        }
     }
 
     /**
@@ -107,7 +114,10 @@ class Geofence extends AbstractApi
     {
         $body = Input::getBody();
         $arr = json_decode($body, true);
-        return (new GeofenceModel(null))->create($arr)['data'];
+        $r = (new GeofenceModel(null))->create($arr)['data'];
+        header("Location: /api/v4/rules/{$r['id']}");
+        $res["code"] = "201";
+        return $res;
     }
 
     /**
@@ -156,12 +166,20 @@ class Geofence extends AbstractApi
      *     )
      *   )
      * )
+     * @throws GC2Exception
      */
     public function put_index(): array
     {
         $body = Input::getBody();
+        $id = Route2::getParam("id");
+        if (empty($id)) {
+            throw new GC2Exception("No rule id", 404, null, 'MISSING_ID');
+        }
         $arr = json_decode($body, true);
-        return (new GeofenceModel(null))->update($arr);
+        $arr["id"] = $id;
+        (new GeofenceModel(null))->update($arr);
+        header("Location: /api/v4/rules/$id");
+        return ["code" => "303"];
     }
 
     /**
@@ -203,7 +221,9 @@ class Geofence extends AbstractApi
             $response['code'] = 400;
             return $response;
         }
-        return $this->geofence->delete((int)$id);
+        (new GeofenceModel(null))->delete((int)$id);
+        return ["code" => "204"];
+
     }
 
     #[Override] public function validate(): void

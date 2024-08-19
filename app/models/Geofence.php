@@ -159,14 +159,23 @@ class Geofence extends Model
     /**
      * @return array
      */
-    public function get(): array
+    public function get(?int $id): array
     {
-        $sql = "select * from settings.geofence order by id";
+        $sql = "select * from settings.geofence";
+        $params = [];
+        if ($id != null) {
+            $sql .= ' WHERE id = :id';
+            $params[':id'] = $id;
+        }
+        $sql .= ' order by priority';
         $res = $this->prepare($sql);
-        $res->execute();
-        $response['success'] = true;
-        $response['data'] = $this->fetchAll($res, "assoc");
-        return $response;
+
+        $res->execute($params);
+        $data = $this->fetchAll($res, "assoc");
+        if (sizeof($data) == 0) {
+            throw new GC2Exception("No rules", 404, null, 'RULE_NOT_FOUND');
+        }
+        return $data;
     }
 
     /**
@@ -178,7 +187,7 @@ class Geofence extends Model
         $props = array_keys($data);
         $fields = implode(",", $props);
         $values = implode(",:", $props);
-        if (sizeof($props) > 1) {
+        if (sizeof($props) > 0) {
             $fields = ", $fields";
             $values = ", :$values";
         }
@@ -195,7 +204,7 @@ class Geofence extends Model
      * @return array
      * @throws GC2Exception
      */
-    public function update(array $data): array
+    public function update(array $data): void
     {
         $props = array_keys($data);
         if (!in_array("id", $props)) {
@@ -212,23 +221,23 @@ class Geofence extends Model
         $sql = "update settings.geofence set $setsStr where id=:id returning *";
         $res = $this->prepare($sql);
         $res->execute($data);
-        $response['success'] = true;
-        $response['data'] = $this->fetchRow($res);
-        return $response;
+        if ($res->rowCount() == 0) {
+            throw new GC2Exception("No rule with id", 404, null, 'RULE_NOT_FOUND');
+        }
     }
 
     /**
      * @param int $id
      * @return array
      */
-    public function delete(int $id): array
+    public function delete(int $id): void
     {
         $sql = "delete from settings.geofence where id=:id returning id";
         $res = $this->prepare($sql);
         $res->execute(["id" => $id]);
-        $response['success'] = true;
-        $response['data'] = $this->fetchRow($res);
-        return $response;
+        if ($res->rowCount() == 0) {
+            throw new GC2Exception("No rule with id", 404, null, 'RULE_NOT_FOUND');
+        }
     }
 
     /**
