@@ -443,7 +443,7 @@ try {
             }
         });
 
-        Route2::add("api/v4/rules/[rule]", new Geofence(), function () {
+        Route2::add("api/v4/rules/[id]", new Geofence(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 if (!$jwt["data"]["superUser"]) {
