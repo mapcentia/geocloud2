@@ -47,9 +47,10 @@ class Privilege extends AbstractApi
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
      */
-    #[Override] public function get_index(): array
+    #[Override]
+    public function get_index(): array
     {
         $layer = new Layer();
         $key = $this->qualifiedName;
@@ -65,7 +66,7 @@ class Privilege extends AbstractApi
 
     /**
      * @throws PhpfastcacheInvalidArgumentException
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException|GC2Exception
      */
     #[Override] public function put_index(): array
     {

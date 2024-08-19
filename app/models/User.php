@@ -67,6 +67,21 @@ class User extends Model
     }
 
     /**
+     * @return true
+     * @throws GC2Exception
+     */
+    public function doesUserExist(): true
+    {
+        $query = "SELECT * FROM users WHERE screenname=:userId";
+        $res = $this->prepare($query);
+        $res->execute(array(":userId" => $this->userId));
+        if ($res->rowCount() == 0) {
+            throw new GC2Exception("User identifier {$this->userId} does not exists", 404, null, 'USER_DOES_NOT_EXISTS');
+        }
+        return true;
+    }
+
+    /**
      * @param string $userIdentifier
      * @return array<string, array<int, array>>
      * @throws Exception
