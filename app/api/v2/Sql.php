@@ -141,7 +141,7 @@ class Sql extends Controller
         if (!empty($this->cacheInfo)) {
             $response["cache"] = $this->cacheInfo;
         }
-        $response["peak_memory_usage"] = round(memory_get_peak_usage() / 1024) . " KB";
+        $response["_peak_memory_usage"] = round(memory_get_peak_usage() / 1024) . " KB";
         return $response;
     }
 
@@ -326,7 +326,7 @@ class Sql extends Controller
     {
         foreach ($arr as $key => $value) {
             if ($key != "code") {
-                $this->response["auth_check"][$key] = $value;
+                $this->response["_auth_check"][$key] = $value;
             }
         }
 
