@@ -1342,7 +1342,7 @@ class Table extends Model
     public function addIndex(array $columns, string $type = "btree", ?string $name = null): string
     {
         $this->clearCacheOnSchemaChanges();
-        $name = $name ?: $this->tableWithOutSchema . '_' . $type;
+        $name = $name ? self::toAscii($name) : $this->tableWithOutSchema . '_' . $type;
         $sql = "CREATE INDEX \"$name\" ON {$this->doubleQuoteQualifiedName($this->table)} USING $type (";
         foreach ($columns as $column) {
             $sql .= "\"$column\",";

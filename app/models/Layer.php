@@ -638,7 +638,6 @@ class Layer extends Table
                 $response['data'][] = array("subuser" => $subuser, "privileges" => $privileges->$subuser, "group" => Session::getByKey("usergroups")[$subuser]);
             }
         }
-
         if (!isset($response['data'])) {
             $response['data'] = [];
         }
@@ -652,9 +651,11 @@ class Layer extends Table
      * @return array
      * @throws PhpfastcacheInvalidArgumentException|PDOException
      * @throws InvalidArgumentException
+     * @throws GC2Exception
      */
     public function updatePrivileges(object $data): array
     {
+        (new User($data->subuser))->doesUserExist();
         $this->clearCacheOfColumns(explode(".", $data->_key_)[0] . "." . explode(".", $data->_key_)[1]);
         $this->clearCacheOnSchemaChanges();
         $table = new Table("settings.geometry_columns_join");
