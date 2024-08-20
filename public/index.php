@@ -555,22 +555,6 @@ try {
         };
         Session::start();
         include_once("../app/auth/" . (Input::getPath()->part(3) ? 'backends/' . Input::getPath()->part(3) : $file));
-    } elseif (in_array($p = Input::getPath()->part(1), ['centia', 'billing', 'webhook'])) {
-        $file = match ($p) {
-            'centia' => 'index.php',
-            'billing' => 'billing.php',
-            'webhook' => 'webhook.php',
-            default => ''
-        };
-        Session::start();
-        include_once("../app/centia/" . (Input::getPath()->part(3) ? 'backends/' . Input::getPath()->part(3) : $file));
-
-    } elseif (Input::getPath()->part(1) == "extensions") {
-        foreach (glob(dirname(__FILE__) . "/../app/extensions/**/routes/*.php") as $filename) {
-            include_once($filename);
-        }
-        Route::miss();
-
     } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
         if (!empty(Input::getCookies()["PHPSESSID"])) { // Do not start session if no cookie is set
             Session::start();
@@ -613,6 +597,9 @@ try {
             Redirect::to("/dashboard/");
         }
     } else {
+        foreach (glob(dirname(__FILE__) . "/../app/extensions/**/routes/*.php") as $filename) {
+            include_once($filename);
+        }
         Route::miss();
     }
 } catch (GC2Exception $exception) {
@@ -630,9 +617,9 @@ try {
 } catch (Throwable $exception) {
     $response["success"] = false;
     $response["message"] = $exception->getMessage();
-  $response["file"] = $exception->getFile();
-    $response["line"] = $exception->getLine();
-//     $response["line"] = $exception->getTraceAsString();
+//  $response["file"] = $exception->getFile();
+//  $response["line"] = $exception->getLine();
+//   $response["line"] = $exception->getTraceAsString();
     $response["code"] = 500;
     echo Response::toJson($response);
 } finally {
