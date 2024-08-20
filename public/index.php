@@ -374,6 +374,10 @@ try {
         Route2::add("api/v4/schemas/[schema]", new Schema(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
+                if (!$jwt["data"]["superUser"]) {
+                    echo Response::toJson(Response::SUPER_USER_ONLY);
+                    exit();
+                }
                 Database::setDb($jwt["data"]["database"]);
             } else {
                 echo Response::toJson($jwt);
@@ -472,7 +476,7 @@ try {
             Database::setDb($jwt["data"]["database"]);
         });
 
-        Route2::add("api/v4/import/[file]", new Import(), function () {
+        Route2::add("api/v4/schemas/{schema}/import", new Import(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);
@@ -485,6 +489,10 @@ try {
         Route2::add("api/v4/clients/[id]", new Client(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
+                if (!$jwt["data"]["superUser"]) {
+                    echo Response::toJson(Response::SUPER_USER_ONLY);
+                    exit();
+                }
                 Database::setDb($jwt["data"]["database"]);
             } else {
                 echo Response::toJson($jwt);
@@ -538,16 +546,26 @@ try {
         Route::add("controllers/workflow");
         Route::add("controllers/qgis/");
 
-    } elseif (in_array($p = Input::getPath()->part(1), ['auth', 'device'])) {
+    } elseif (in_array($p = Input::getPath()->part(1), ['auth', 'device', 'forgot'])) {
         $file = match ($p) {
             'auth' => 'authorizationCode.php',
             'device' => 'deviceCode.php',
+            'forgot' => 'forgotPassword.php',
             default => ''
         };
         Session::start();
         include_once("../app/auth/" . (Input::getPath()->part(3) ? 'backends/' . Input::getPath()->part(3) : $file));
-    } elseif (Input::getPath()->part(1) == "extensions") {
+    } elseif (in_array($p = Input::getPath()->part(1), ['centia', 'billing', 'webhook'])) {
+        $file = match ($p) {
+            'centia' => 'index.php',
+            'billing' => 'billing.php',
+            'webhook' => 'webhook.php',
+            default => ''
+        };
+        Session::start();
+        include_once("../app/centia/" . (Input::getPath()->part(3) ? 'backends/' . Input::getPath()->part(3) : $file));
 
+    } elseif (Input::getPath()->part(1) == "extensions") {
         foreach (glob(dirname(__FILE__) . "/../app/extensions/**/routes/*.php") as $filename) {
             include_once($filename);
         }
@@ -612,8 +630,8 @@ try {
 } catch (Throwable $exception) {
     $response["success"] = false;
     $response["message"] = $exception->getMessage();
-//    $response["file"] = $exception->getFile();
-//    $response["line"] = $exception->getLine();
+  $response["file"] = $exception->getFile();
+    $response["line"] = $exception->getLine();
 //     $response["line"] = $exception->getTraceAsString();
     $response["code"] = 500;
     echo Response::toJson($response);
