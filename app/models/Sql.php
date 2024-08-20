@@ -59,7 +59,6 @@ class Sql extends Model
      * @param array|null $parameters
      * @return array
      * @throws Exception
-     * @throws PhpfastcacheInvalidArgumentException
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      * @throws GC2Exception
      */
@@ -137,6 +136,15 @@ class Sql extends Model
             $ST_Force2D = "ST_Force_2D"; // In case of PostGIS 2.0.x
         } else {
             $ST_Force2D = "ST_Force2D";
+        }
+
+        // Get total cost
+        $cost = 0;
+        $ex = "EXPLAIN (format json) $q";
+        $res = $this->execQuery($ex);
+        $plan = $res->fetchAll();
+        if (isset($plan[0]['QUERY PLAN'])) {
+            $cost = json_decode($plan[0]['QUERY PLAN'], true)[0]['Plan']['Total Cost'];
         }
 
         // Get column types
@@ -227,6 +235,7 @@ class Sql extends Model
             $response['forGrid'] = $columnsForGrid;
             $response['type'] = "FeatureCollection";
             $response['features'] = $features;
+            $response['_cost'] = $cost;
             return $response;
         }
 
