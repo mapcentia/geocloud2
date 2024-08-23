@@ -362,4 +362,18 @@ class Util
         return trim($sValue);
     }
 
+    public static function json2cvs(string $inputFile, string $outputFile): bool
+    {
+        $cmd = "jq -cn --stream 'first(fromstream(1|truncate_stream(inputs)))' $inputFile | jq -r '(keys_unsorted) | @csv' > $outputFile";
+        exec($cmd, $output, $exit);
+        if ($exit != 0) {
+            return false;
+        }
+        $cmd = "jq -cn --stream 'fromstream(1|truncate_stream(inputs))' $inputFile | jq -r '([.[]]) | @csv' >> $outputFile";
+        exec($cmd, $output, $exit);
+        if ($exit != 0) {
+            return false;
+        }
+        return true;
+    }
 }
