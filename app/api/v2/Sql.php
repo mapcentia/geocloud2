@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2023 MapCentia ApS
+ * @copyright  2013-2024 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -47,8 +47,6 @@ class Sql extends Controller
     const USEDRELSKEY = "checked_relations";
 
     private array $cacheInfo;
-
-    private bool $streamFlag;
 
     function __construct()
     {
@@ -101,10 +99,6 @@ class Sql extends Controller
                     "type_hints" => !empty($json["type_hints"]) ? $json["type_hints"] : Input::$params["type_hints"],
                 ]
             );
-        }
-
-        if (Input::get('format') == "ndjson") {
-            $this->streamFlag = true;
         }
 
         if (Input::get('base64') === true || Input::get('base64') === "true") {
@@ -279,10 +273,6 @@ class Sql extends Controller
             $this->addAttr($response);
         } elseif ($operation == "Select" || $operation == "SetOpSelect") {
             $this->q = $factory->createFromAST($select, true)->getSql();
-            if (isset($this->streamFlag)) {
-                $stream = new Stream();
-                $stream->runSql($this->q);
-            }
             $lifetime = (Input::get('lifetime')) ?: 0;
             $key = md5(Connection::$param["postgisdb"] . "_" . $this->q . "_" . $lifetime);
             if ($lifetime > 0) {

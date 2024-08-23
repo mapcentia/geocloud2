@@ -16,7 +16,6 @@ use PDO;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
 use PhpOffice\PhpSpreadsheet\Reader\Exception;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use ZipArchive;
 use sad_spirit\pg_wrapper\converters\DefaultTypeConverterFactory;
 
@@ -193,9 +192,12 @@ class Sql extends Model
         $fieldsForStore = [];
         $columnsForGrid = [];
         $features = [];
-        // GeoJSON output
-        // ==============
+
         if ($format == "geojson") {
+
+            // GeoJSON output
+            // ==============
+
             while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
                 $arr = array();
                 foreach ($row as $key => $value) {
@@ -225,7 +227,6 @@ class Sql extends Model
             }
             $this->execQuery("CLOSE curs");
             $this->commit();
-
             foreach ($columnTypes as $key => $type) {
                 $fieldsForStore[] = array("name" => $key, "type" => $type);
                 $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $type, "typeObj" => !empty($value['typeObj']) ? $value['typeObj'] : null);
@@ -237,16 +238,132 @@ class Sql extends Model
             $response['features'] = $features;
             $response['_cost'] = $cost;
             return $response;
-        }
 
-        // CSV/Excel output
-        // ================
 
-        elseif ($format == "csv" || $format == "excel") {
+        } elseif ($format == "ndjson") {
+
+            // NDJSON output
+            // ==============
+
+            header('Content-type: text/plain; charset=utf-8');
+            $i = 0;
+            $json = "";
+            $bulkSize = 1000;
+            while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
+                $arr = [];
+                foreach ($row as $key => $value) {
+                    if ($columnTypes[$key] == "geometry") {
+                        $geometries[] = json_decode($value);
+                    } elseif ($columnTypes[$key] == "json" || $columnTypes[$key] == "jsonb") {
+                        $arr = $this->array_push_assoc($arr, $key, json_decode($value));
+                    } else {
+                        $arr = $this->array_push_assoc($arr, $key, $value);
+                    }
+                }
+                if ($geometries == null) {
+                    $features = array("type" => "Feature", "properties" => $arr);
+                } elseif (count($geometries) == 1) {
+                    $features = array("type" => "Feature", "properties" => $arr, "geometry" => $geometries[0]);
+                } else {
+                    $features = array("type" => "Feature", "properties" => $arr, "geometry" => array("type" => "GeometryCollection", "geometries" => $geometries));
+                }
+                $geometries = null;
+                $json .= json_encode($features);
+                $json .= "\n";
+                $i++;
+                if (is_int($i / $bulkSize)) {
+                    echo str_pad($json, 4096);
+                    $json = "";
+                }
+                flush();
+                ob_flush();
+            }
+            if ($json) {
+                echo str_pad($json, 4096);
+            }
+            $this->execQuery("CLOSE curs");
+            $this->commit();
+            exit();
+        } elseif ($format == "csv") {
+
+            // CSV output
+            // ================
+
+            header('Content-type: text/plain; charset=utf-8');
             $withGeom = $geoformat;
             $separator = ";";
             $first = true;
-            $lines = array();
+            $fieldConf = null;
+            $lines = "";
+            $i = 0;
+            $bulkSize = 1000;
+
+            if ($aliasesFrom) {
+                $c = $this->getGeometryColumns($aliasesFrom, "fieldconf");
+                if ($c) {
+                    $fieldConf = json_decode($this->getGeometryColumns($aliasesFrom, "fieldconf"));
+                }
+            }
+            while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
+                $arr = array();
+                $fields = array();
+                foreach ($row as $key => $value) {
+                    if ($columnTypes[$key] == "geometry") {
+                        if ($withGeom) {
+                            $arr = $this->array_push_assoc($arr, $key, $value);
+                        }
+                    } else {
+                        $arr = $this->array_push_assoc($arr, $key, $value);
+                    }
+                }
+                // Create first lines with field names
+                if ($first) {
+                    foreach ($arr as $key => $value) {
+                        $fields[] = ($fieldConf && isset($fieldConf->$key->alias) && $fieldConf->$key->alias != "") ? "\"{$fieldConf->$key->alias}\"" : $key;
+                    }
+                    echo implode($separator, $fields);
+                    $first = false;
+                    $fields = [];
+                    flush();
+                    ob_flush();
+                }
+
+                foreach ($arr as $value) {
+                    // Each embedded double-quote characters must be represented by a pair of double-quote characters.
+                    $value = $value !== null ? str_replace('"', '""', $value) : null;
+                    // Any text is quoted
+                    if ($csvAllToStr) {
+                        $fields[] = "\"$value\"";
+                    } else {
+                        $fields[] = !is_numeric($value) ? "\"$value\"" : $value;
+                    }
+                }
+                $lines .= implode($separator, $fields);
+                $lines .= "\n";
+                $i++;
+                if (is_int($i / $bulkSize)) {
+                    echo str_pad($lines, 4096);
+                    $lines = "";
+                }
+                flush();
+                ob_flush();
+            }
+            if ($lines) {
+                echo str_pad($lines, 4096);
+            }
+            $this->execQuery("CLOSE curs");
+            $this->commit();
+            exit();
+
+        } elseif ($format == "excel") {
+
+            // Excel output
+            // ================
+
+            $withGeom = $geoformat;
+            $separator = ";";
+            $first = true;
+            $lines = [];
             $fieldConf = null;
 
             if ($aliasesFrom) {
@@ -257,8 +374,8 @@ class Sql extends Model
             }
 
             while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
-                $arr = array();
-                $fields = array();
+                $arr = [];
+                $fields = [];
                 foreach ($row as $key => $value) {
                     if ($columnTypes[$key] == "geometry") {
                         if ($withGeom) {
@@ -300,33 +417,19 @@ class Sql extends Model
             // Convert to Excel
             // ================
 
-            if ($format == "excel") {
-                $file = tempnam(sys_get_temp_dir(), 'excel_');
-                $handle = fopen($file, "w");
-                fwrite($handle, $csv);
-
-                $objReader = new Csv();
-                $objReader->setDelimiter($separator);
-                $objReader->setTestAutoDetect(false);
-                $objPHPExcel = $objReader->load($file);
-
-                fclose($handle);
-                unlink($file);
-
-                $objWriter = new Xlsx($objPHPExcel);
-
-                header('Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-                header('Content-Disposition: attachment; filename="file.xlsx"');
-                $objWriter->save('php://output');
-                exit();
-            }
-
-            header("Content-Type: text/csv");
-            header('Content-Disposition: attachment; filename="file.csv"');
-            ob_clean();
-            flush();
-            echo $csv;
-            readfile("php://output");
+            $file = tempnam(sys_get_temp_dir(), 'excel_');
+            $handle = fopen($file, "w");
+            fwrite($handle, $csv);
+            $objReader = new Csv();
+            $objReader->setDelimiter($separator);
+            $objReader->setTestAutoDetect(false);
+            $objPHPExcel = $objReader->load($file);
+            fclose($handle);
+            unlink($file);
+            $objWriter = new Xlsx($objPHPExcel);
+            header('Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment; filename="file.xlsx"');
+            $objWriter->save('php://output');
             exit();
         }
         return [
