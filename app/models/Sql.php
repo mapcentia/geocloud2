@@ -321,7 +321,7 @@ class Sql extends Model
                     foreach ($arr as $key => $value) {
                         $fields[] = ($fieldConf && isset($fieldConf->$key->alias) && $fieldConf->$key->alias != "") ? "\"{$fieldConf->$key->alias}\"" : $key;
                     }
-                    echo implode($separator, $fields);
+                    echo implode($separator, $fields) . "\n";
                     $first = false;
                     $fields = [];
                     flush();
@@ -342,14 +342,14 @@ class Sql extends Model
                 $lines .= "\n";
                 $i++;
                 if (is_int($i / $bulkSize)) {
-                    echo str_pad($lines, 4096);
+                    echo $lines;
                     $lines = "";
                 }
                 flush();
                 ob_flush();
             }
             if ($lines) {
-                echo str_pad($lines, 4096);
+                echo $lines . "\n";
             }
             $this->execQuery("CLOSE curs");
             $this->commit();
