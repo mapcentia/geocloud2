@@ -46,10 +46,10 @@ if (Session::isAuth()) {
     }
 
     $uris = $clientData[0]['redirect_uri'];
-     if ($_GET['redirect_uri'] && !in_array($_GET['redirect_uri'], $uris)) {
-         echo "Client with identifier '{$_GET['client_id']}' is not registered with redirect uri: {$_GET['redirect_uri']} ";
-         exit();
-     }
+    if ($_GET['redirect_uri'] && !in_array($_GET['redirect_uri'], $uris)) {
+        echo "Client with identifier '{$_GET['client_id']}' is not registered with redirect uri: {$_GET['redirect_uri']} ";
+        exit();
+    }
     $redirectUri = $_GET['redirect_uri'] ?? $uris[0];
 
     // Check client secret if is set
@@ -84,14 +84,19 @@ if (Session::isAuth()) {
         $params['state'] = $_GET['state'];
     }
     $paramsStr = http_build_query($params);
-    $header = "Location: $redirectUri?$paramsStr";
-    //echo $header;
-    header($header);
+
+    $client = $clientData[0]['name'];
+    $location =  "$redirectUri?$paramsStr";
+
+    if ($client != 'gc2-cli') {
+        echo $twig->render('allow.html.twig', ['name' => $client, 'location' => $location]);
+    } else {
+        $header = "Location: $redirectUri?$paramsStr";
+        header($header);
+    }
     exit();
 }
 
 echo $twig->render('header.html.twig');
-echo "<form hx-post=\"/auth/backends/login.php\">";
 echo $twig->render('login.html.twig', $_GET);
-echo "</form>";
 echo $twig->render('footer.html.twig');
