@@ -21,7 +21,6 @@
         "ext-xml": "*",
         "ext-zip": "*",
         "ext-zlib": "*",
-        "ext-mapscript": "*",
         "peppeocchi/php-cron-scheduler": "^4.0",
         "sad_spirit/pg_builder": "^2.3",
         "ext-gd": "*",
@@ -36,7 +35,7 @@
     "require-dev": {
         "phpstan/phpstan": "^1.10",
         "phpmd/phpmd": "^2.13",
-        "codeception/codeception": "^5.0",
+        "codeception/codeception": "^5.1",
         "codeception/module-asserts": "^3.0",
         "codeception/module-rest": "^3.3",
         "codeception/module-phpbrowser": "^3.0"
