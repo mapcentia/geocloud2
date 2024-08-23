@@ -1,3 +1,9 @@
-    Code
-    <input type="text" name="user-code" value="" autofocus/>
-    <button type="submit">Submit</button>
+<form hx-post="/auth/backends/device.php">
+    <h1 class="h3 mb-3 fw-normal">Please input code</h1>
+
+    <div class="form-floating">
+        <input placeholder="XXXX-XXXX" class="form-control" type="text" name="user-code" id="user-code" value="" autofocus required/>
+        <label class="form-label" for="user-code">XXXX-XXXX</label>
+    </div>
+    <button class="btn btn-primary w-100 py-2" type="submit">Check</button>
+</form>

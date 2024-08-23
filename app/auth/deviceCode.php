@@ -15,9 +15,7 @@ $twig = new Environment($loader);
 
 echo $twig->render('header.html.twig');
 $backend = Session::isAuth() ? 'device' : 'login';
-echo "<form hx-post='/auth/backends/$backend.php'>";
 echo $twig->render("$backend.html.twig");
-echo "</form>";
 echo $twig->render('footer.html.twig');
 
 
