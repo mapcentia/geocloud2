@@ -89,7 +89,7 @@ class Sql extends AbstractApi
         );
         $res = $this->v2->get_index($user);
         unset($res['success']);
-        unset($res['forStore']);
+       // unset($res['forStore']);
         unset($res['forGrid']);
         return $res;
     }
