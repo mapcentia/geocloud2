@@ -315,20 +315,19 @@ class Sql extends Model
 
                 $objWriter = new Xlsx($objPHPExcel);
 
-                // We'll be outputting an Excel file
                 header('Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-
-                // It will be called file.xlsx
                 header('Content-Disposition: attachment; filename="file.xlsx"');
-
-                // Write file to the browser
                 $objWriter->save('php://output');
-                die();
+                exit();
             }
 
-            $response['success'] = true;
-            $response['csv'] = $csv;
-            return $response;
+            header("Content-Type: text/csv");
+            header('Content-Disposition: attachment; filename="file.csv"');
+            ob_clean();
+            flush();
+            echo $csv;
+            readfile("php://output");
+            exit();
         }
         return [
             "success" => false,
