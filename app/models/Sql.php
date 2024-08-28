@@ -13,6 +13,7 @@ use app\conf\Connection;
 use app\exceptions\GC2Exception;
 use app\inc\Model;
 use PDO;
+use PDOException;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
 use PhpOffice\PhpSpreadsheet\Reader\Exception;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -534,6 +535,12 @@ class Sql extends Model
         return $array;
     }
 
+    /**
+     * @param string $q
+     * @param string $username
+     * @return void
+     * @throws PDOException
+     */
     public function insertCost(string $q, string $username): void
     {
         // Get total cost and insert in cost

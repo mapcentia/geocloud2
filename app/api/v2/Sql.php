@@ -291,14 +291,16 @@ class Sql extends Controller
                 $this->cacheInfo["tags"] = $CachedString->getTags();
                 $this->cacheInfo["signature"] = md5(serialize($this->data));
             } else {
-                ob_start();
-                $this->response = $this->api->sql($this->q, $clientEncoding, Input::get('format') ?: "geojson", Input::get('geoformat') ?: null, Input::get('allstr') ?: null, Input::get('alias') ?: null, null, null, Input::get('convert_types') ?: null, Input::get('params') ?: null);
-
                 // Insert cost
                 if (!empty(App::$param['insertCost'])) {
-                    $this->api->insertCost($this->q, $this->subUser);
+                    try {
+                        $this->api->insertCost($this->q, $this->subUser ?? $this->api->postgisdb);
+                    } catch (Exception) {
+                        // Pass
+                    }
                 }
-
+                ob_start();
+                $this->response = $this->api->sql($this->q, $clientEncoding, Input::get('format') ?: "geojson", Input::get('geoformat') ?: null, Input::get('allstr') ?: null, Input::get('alias') ?: null, null, null, Input::get('convert_types') ?: null, Input::get('params') ?: null);
                 $response["statement"] = $this->q;
                 $this->addAttr($response);
                 echo serialize($this->response);
