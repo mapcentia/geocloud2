@@ -137,7 +137,7 @@ if (sizeof(explode("|http", $url)) > 1) {
 
 $dir = App::$param['path'] . "app/tmp/" . $db . "/__vectors";
 $tempFile = md5(microtime() . rand());
-$randTableName = "_" . time(). "_table_" . md5(microtime() . rand());
+$randTableName = "_" . time() . "_table_" . md5(microtime() . rand());
 $err = null;
 $out = null;
 
@@ -757,7 +757,7 @@ function getCmdZip(): void
         print "\n" . $error_msg;
         cleanUp();
     }
-    $ext = array("shp", "tab", "geojson", "gml", "kml", "mif", "gdb", "csv");
+    $ext = array("shp", "tab", "geojson", "gml", "kml", "mif", "gdb", "csv", "json");
 
     // ZIP start
     // =========
@@ -808,6 +808,13 @@ function getCmdZip(): void
         }
 
     }
+    $isCsv = false;
+    if (array_reverse(explode('.', $outFileName))[0] == "json") {
+        $csvFile = $outFileName . ".csv";
+        Util::json2cvs($outFileName, $csvFile);
+        $outFileName = $csvFile;
+        $isCsv = true;
+    }
 
     $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
         "-overwrite " .
@@ -818,10 +825,10 @@ function getCmdZip(): void
         "-lco 'PRECISION=NO' " .
         "-a_srs 'EPSG:{$srid}' " .
         "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
+        ($isCsv ? "-oo X_POSSIBLE_NAMES=lon*,Lon*,x,X -oo Y_POSSIBLE_NAMES=lat*,Lat*,y,Y -oo GEOM_POSSIBLE_NAMES=geometri " : '') .
         "'" . $outFileName . "' " .
         "-nln " . $workingSchema . "." . $randTableName . " " .
-        ($type == "AUTO" ? "" : "-nlt {$type}") .
-        "";
+        ($type == "AUTO" ? "" : "-nlt {$type}");
     exec($cmd . ' 2>&1', $out, $err);
 }
 
@@ -1078,7 +1085,7 @@ if ($extra) {
             $fieldName = $f->name;
             $fieldType = $f->type ?? "varchar";
             $fieldValue = $f->value ?? null;
-            Cache::deleteByPatterns([$table->postgisdb . '_' . $schema. '.' . $safeName . '*']);
+            Cache::deleteByPatterns([$table->postgisdb . '_' . $schema . '.' . $safeName . '*']);
             $check = $table->doesColumnExist($schema . "." . $safeName, $fieldName);
             if (!$check["exists"]) {
                 $sql = "ALTER TABLE \"{$schema}\".\"{$safeName}\" ADD COLUMN {$fieldName} {$fieldType}";
