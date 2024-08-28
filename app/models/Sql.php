@@ -137,15 +137,6 @@ class Sql extends Model
             $ST_Force2D = "ST_Force2D";
         }
 
-        // Get total cost
-        $cost = 0;
-        $ex = "EXPLAIN (format json) $q";
-        $res = $this->execQuery($ex);
-        $plan = $res->fetchAll();
-        if (isset($plan[0]['QUERY PLAN'])) {
-            $cost = json_decode($plan[0]['QUERY PLAN'], true)[0]['Plan']['Total Cost'];
-        }
-
         // Get column types
         $select = $this->prepare("select * from ($q) as foo LIMIT 1");
 
@@ -236,7 +227,6 @@ class Sql extends Model
             $response['forGrid'] = $columnsForGrid;
             $response['type'] = "FeatureCollection";
             $response['features'] = $features;
-            $response['_cost'] = $cost;
             return $response;
 
 
@@ -542,6 +532,23 @@ class Sql extends Model
     {
         $array[$key] = $value;
         return $array;
+    }
+
+    public function insertCost(string $q, string $username): void
+    {
+        // Get total cost and insert in cost
+        $cost = 0;
+        $ex = "EXPLAIN (format json) $q";
+        $res = $this->execQuery($ex);
+        $plan = $res->fetchAll();
+        if (isset($plan[0]['QUERY PLAN'])) {
+            $cost = json_decode($plan[0]['QUERY PLAN'], true)[0]['Plan']['Total Cost'];
+        }
+
+        $ex = "INSERT INTO settings.cost (username, statement, cost) VALUES 
+                   (:username, :statement, :cost)";
+        $res = $this->prepare($ex);
+        $res->execute(['username' => $username, 'statement' => $q, 'cost' => $cost]);
     }
 }
 

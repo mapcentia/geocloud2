@@ -166,6 +166,15 @@ class Sql
                             primary key (id)
                     )";
 
+        $sqls[] = "INSERT INTO settings.clients (id, name, description, redirect_uri) values ('gc2-cli', 'gc2-cli', 'Dp not delete','[\"http://127.0.0.1:5657/auth/callback\"]')";
+        $sqls[] = "create table settings.cost
+                    (
+                        id        serial,
+                        timestamp timestamp default now() not null,
+                        username  varchar(255)            not null,
+                        statement text                    not null,
+                        cost      integer                 not null
+                    )";
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
                     SELECT

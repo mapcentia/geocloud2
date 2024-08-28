@@ -8,6 +8,7 @@
 
 namespace app\api\v2;
 
+use app\conf\App;
 use app\conf\Connection;
 use app\exceptions\GC2Exception;
 use app\inc\Cache;
@@ -126,6 +127,7 @@ class Sql extends Controller
         $this->apiKey = $res['data']->api_key;
 
         $serializedResponse = $this->transaction(Input::get('client_encoding'), Input::get('type_hints'));
+
 
         // Check if $this->data is set in SELECT section
         if (!isset($this->data)) {
@@ -291,13 +293,18 @@ class Sql extends Controller
             } else {
                 ob_start();
                 $this->response = $this->api->sql($this->q, $clientEncoding, Input::get('format') ?: "geojson", Input::get('geoformat') ?: null, Input::get('allstr') ?: null, Input::get('alias') ?: null, null, null, Input::get('convert_types') ?: null, Input::get('params') ?: null);
+
+                // Insert cost
+                if (!empty(App::$param['insertCost'])) {
+                    $this->api->insertCost($this->q, $this->subUser);
+                }
+
                 $response["statement"] = $this->q;
                 $this->addAttr($response);
                 echo serialize($this->response);
                 $this->data = ob_get_contents();
                 if ($lifetime > 0 && !empty($CachedString)) {
                     $CachedString->set($this->data)->expiresAfter($lifetime ?: 1);// Because 0 secs means cache will life for ever, we set cache to one sec
-                    // $CachedString->addTags(["sql", Connection::$param["postgisdb"]]);
                     Cache::save($CachedString);
                     $this->cacheInfo["hit"] = false;
                 }
