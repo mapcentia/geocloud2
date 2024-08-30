@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## 2024.8.1 - 2024-30-0
+### Fixed
+- Bug in GPX export, which caused some JSON in the end of the GPX document.
+
+## 2024.8.0 - 2024-28-8
+### Changed
+- Add JSON support and improve CSV handling in Scheduler.
+
 ## 2024.7.0 - 2024-31-7
 ### Changed
 - Scheduler will now get HTTP Headers and detect if Content-type is application/zip and set the zip-file handler. This means that services returning zip-files and without .zip in the end of their URLs will be processed correct.
