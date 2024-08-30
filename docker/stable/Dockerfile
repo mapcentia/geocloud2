@@ -10,7 +10,7 @@ RUN cd /var/www/ &&\
 
 # Install ogr2postgis
 RUN cd ~ &&\
-    git clone https://github.com/mapcentia/ogr2postgis.git &&\
+    git clone https://github.com/mapcentia/ogr2postgis.git --branch gui &&\
     cd ogr2postgis &&\
     mkdir build &&\
     cd build &&\
