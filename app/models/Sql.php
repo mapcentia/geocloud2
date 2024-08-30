@@ -126,8 +126,8 @@ class Sql extends Model
                 header("Content-type: application/zip, application/octet-stream");
                 header("Content-Disposition: attachment; filename=\"$fileOrFolder.zip\"");
                 readfile($zipPath);
-                exit(0);
             }
+            exit(0);
         }
 
         $postgisVersion = $this->postgisVersion();
