@@ -178,7 +178,7 @@ class Import extends AbstractApi
      */
     public function get_index(): array
     {
-        $fileName= Route2::getParam("file");
+        $fileName = Route2::getParam("file");
         $response = [];
         $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__vectors";
         $safeName = Session::getUser() . "_" . md5(microtime() . rand());
@@ -208,18 +208,15 @@ class Import extends AbstractApi
             " -o public" .
             " -i" .
             " -p" .
+            " -j" .
             " '" . $fileFullPath . "'";
 
-        exec($cmd . ' > /dev/null', $out);
+        exec($cmd, $out);
+        $data = json_decode($out[0], null, 512, JSON_THROW_ON_ERROR);
         $response['cmd'] = $cmd;
+        $response['data'] = $data;
         $response["success"] = true;
-        // Check ogr2ogr output
-        // TODO ogr2postgis must have a JSON output format
         return $response;
-        if ($out[0] == "") {
-        } else {
-            throw new Exception("CAN_NOT_IMPORT");
-        }
     }
 
     #[Override] public function put_index(): array
