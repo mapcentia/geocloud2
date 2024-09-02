@@ -11,6 +11,7 @@ namespace app\api\v4;
 use app\conf\App;
 use app\conf\Connection;
 use app\exceptions\GC2Exception;
+use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Route2;
 use app\inc\Session;
@@ -178,6 +179,7 @@ class Import extends AbstractApi
      */
     public function get_index(): array
     {
+        $schema = Route2::getParam("schema");
         $fileName = Route2::getParam("file");
         $response = [];
         $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__vectors";
@@ -204,8 +206,8 @@ class Import extends AbstractApi
         $connectionStr = "\"PG:host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "\"";
         $cmd = "ogr2postgis" .
             " -c $connectionStr" .
-            " -t EPSG:25832" .
-            " -o public" .
+//            " -t EPSG:25832" .
+            " -o $schema" .
             " -i" .
             " -p" .
             " -j" .
@@ -231,6 +233,13 @@ class Import extends AbstractApi
 
     #[Override] public function validate(): void
     {
-        // TODO: Implement validate() method.
+        $file = Route2::getParam("file");
+        $schema = Route2::getParam("schema");
+        // Throw exception if tried with resource id
+        if (Input::getMethod() == 'post' && $file) {
+            $this->postWithResource();
+        }
+        $this->jwt = Jwt::validate()["data"];
+        $this->initiate($schema, null, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }
 }

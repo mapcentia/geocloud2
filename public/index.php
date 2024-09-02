@@ -476,7 +476,7 @@ try {
             Database::setDb($jwt["data"]["database"]);
         });
 
-        Route2::add("api/v4/schemas/{schema}/import", new Import(), function () {
+        Route2::add("api/v4/import/{schema}/[file]", new Import(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);
