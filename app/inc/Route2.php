@@ -102,7 +102,7 @@ class Route2
                         if (!in_array($method, $allowedMethods)) {
                             $listener->throwException();
                         }
-                        if ($method == "options") {
+                        if ($method == "options" || $method == "head") {
                             $listener->options();
                         }
                     }

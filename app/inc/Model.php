@@ -296,7 +296,7 @@ class Model
     {
         $cacheType = "metadata";
         $cacheRel = $cacheKey ?: $table;
-        $cacheId = $this->postgisdb . "_" . $cacheRel . "_" . $cacheType . "_" . ($temp ? 'temp': 'notTemp') . "_" . ($restriction ? 'restriction': 'notRestriction' ) . "_" . ($getEnums ? 'enums' : 'notEnums') . "_" . ($restrictions ? 'restrictions_' . md5(serialize($restrictions)) : 'noRestrictions');
+        $cacheId = $this->postgisdb . "_" . $cacheRel . "_" . $cacheType . "_" . ($temp ? 'temp' : 'notTemp') . "_" . ($restriction ? 'restriction' : 'notRestriction') . "_" . ($getEnums ? 'enums' : 'notEnums') . "_" . ($restrictions ? 'restrictions_' . md5(serialize($restrictions)) : 'noRestrictions');
         $CachedString = Cache::getItem($cacheId);
         $primaryKey = null;
         if ($CachedString != null && $CachedString->isHit()) {
@@ -317,7 +317,7 @@ class Model
 
             if ($restriction && !$restrictions) {
                 $foreignConstrains = $this->getForeignConstrains($_schema, $_table)["data"];
-             //  $primaryKey = $this->getPrimeryKey($table)['attname'];
+                //  $primaryKey = $this->getPrimeryKey($table)['attname'];
             }
             $checkConstrains = $this->getConstrains($_schema, $_table, 'c')["data"];
             $sql = "SELECT
@@ -1117,7 +1117,7 @@ class Model
         foreach ($rows as $row) {
             $tmp = [];
             $def = $row['definition'];
-            $tmp['definition'] = preg_replace('#(?<=SELECT)(.|\n)*?(?= FROM)#',' *', $def, 1);
+            $tmp['definition'] = preg_replace('#(?<=SELECT)(.|\n)*?(?= FROM)#', ' *', $def, 1);
             $tmp['name'] = $row['name'];
             $tmp['schemaname'] = $row['schemaname'];
             $tmp['ismat'] = $row['ismat'];
@@ -1301,5 +1301,37 @@ class Model
         }
         $this->commit();
         return $count;
+    }
+
+    public function getStats(): array
+    {
+        $sql = "SELECT distinct i.relname             as tableName,
+                    pg_size_pretty(pg_total_relation_size(relid)) as \"totalSize\",
+                    pg_total_relation_size(relid)                 as \"totalSizeBytes\",
+                    pg_size_pretty(pg_indexes_size(relid))        as \"totalSizeIndices\",
+                    pg_size_pretty(pg_relation_size(relid))       as \"tableSize\",
+                    reltuples::bigint                                \"rowCount\"
+                    FROM pg_stat_all_indexes i
+                        JOIN pg_class c ON i.relid = c.oid
+                    WHERE i.schemaname NOT IN ('information_schema', 'settings')
+                        AND i.schemaname NOT LIKE 'pg_%'";
+
+        $res = $this->prepare($sql);
+        $res->execute();
+        $totalSize = 0;
+        $tables = [];
+        foreach ($this->fetchAll($res, 'assoc') as $table) {
+            $tables[] = $table;
+            $totalSize+= $table['totalSizeBytes'];
+        }
+        $sql = "select pg_size_pretty($totalSize::bigint) as p";
+        $res = $this->prepare($sql);
+        $res->execute();
+        $row =$res->fetchAll();
+        return [
+            "tables" => $tables,
+            "totalSize" => $totalSize,
+            "totalSizePretty" => $row[0]['p'],
+        ];
     }
 }

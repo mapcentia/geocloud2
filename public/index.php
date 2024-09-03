@@ -21,6 +21,7 @@ use app\api\v4\Oauth;
 use app\api\v4\Privilege;
 use app\api\v4\Schema;
 use app\api\v4\Sql;
+use app\api\v4\Stat;
 use app\api\v4\Table;
 use app\api\v4\User;
 use app\conf\App;
@@ -499,6 +500,21 @@ try {
                 exit();
             }
         });
+
+        Route2::add("api/v4/stats", new Stat(), function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                if (!$jwt["data"]["superUser"]) {
+                    echo Response::toJson(Response::SUPER_USER_ONLY);
+                    exit();
+                }
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
         Route::miss();
 
     } elseif (Input::getPath()->part(1) == "admin") {
