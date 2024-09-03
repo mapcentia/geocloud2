@@ -8,16 +8,8 @@
 
 namespace app\api\v4;
 
-use app\exceptions\GC2Exception;
 use app\inc\Model;
-use app\models\Database;
-use app\inc\Input;
-use app\inc\Jwt;
-use app\inc\Route2;
-use app\models\Table as TableModel;
 use Exception;
-use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
-use Psr\Cache\InvalidArgumentException;
 
 
 /**
@@ -38,8 +30,6 @@ class Stat extends AbstractApi
 
     public function get_index(): array
     {
-
-
         return (new Model())->getStats();
     }
 

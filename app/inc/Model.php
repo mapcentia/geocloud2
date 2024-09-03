@@ -946,11 +946,12 @@ class Model
     }
 
     /**
-     * Count the rows in a relation
+     * Counts the number of rows in a given table.
      *
-     * @param string $schema
-     * @param string $table
-     * @return array
+     * @param string $schema The name of the schema.
+     * @param string $table The name of the table.
+     * @return array The number of rows in the table.
+     * @throws Exception If there is an error while executing the query.
      */
     public function countRows(string $schema, string $table): array
     {
@@ -972,9 +973,17 @@ class Model
     }
 
     /**
-     * @param string|null $schema
-     * @param string $table
-     * @return array
+     * Retrieves information about indexes for a given schema and table.
+     *
+     * @param string|null $schema The name of the schema. If null, retrieves indexes for all schemas.
+     * @param string $table The name of the table.
+     * @return array An array containing information about the indexes. The structure of the array is as follows:
+     *     - is_primary: An array that maps column names to boolean values indicating whether the column is part of a primary key.
+     *     - is_unique: An array that maps column names to boolean values indicating whether the column is part of a unique index.
+     *     - indices: An array containing the details of each index.
+     *     - index_method: An array that maps column names to an array of index methods associated with the column.
+     *
+     * @throws PDOException If there is an error executing the SQL query.
      */
     public function getIndexes(?string $schema, string $table): array
     {
@@ -984,7 +993,7 @@ class Model
         $response['index_method'] = [];
         $sql = "SELECT
                     n.nspname AS schema,
-                    t.relname AS table,
+                    t.relname AS \"table\",
                     c.relname AS index,
                     a.amname AS index_method,
                     opc.operator_classes,
@@ -1127,11 +1136,15 @@ class Model
     }
 
     /**
-     * @param array $schemas
-     * @param array|null $targetSchemas
-     * @param array|null $include
-     * @return int
-     * @throws GC2Exception
+     * Creates star views from the store.
+     *
+     * @param array $schemas The array of schemas to create star views from.
+     * @param array|null $targetSchemas Optional. The array of target schemas. If not provided, $schemas will be used as the target schemas.
+     * @param array|null $include Optional. The array of view names to include. Only views with these names will be created. If not provided, all views will be created.
+     *
+     * @return int The number of star views successfully created.
+     *
+     * @throws GC2Exception If the number of schemas and target schemas is different, or if a schema is not found in the database.
      */
     public function createStarViewsFromStore(array $schemas, ?array $targetSchemas = null, ?array $include = null): int
     {
@@ -1174,7 +1187,17 @@ class Model
     }
 
     /**
-     * @throws GC2Exception
+     * Imports foreign schemas into target schemas using a given database server.
+     *
+     * @param array<string> $schemas The list of schemas to be imported.
+     * @param array<string> $targetSchemas The list of target schemas where the foreign schemas will be imported.
+     * @param string $server The name of the database server.
+     * @param array<string>|null $include Optional. The list of schemas to include during import. If null, all schemas will be imported.
+     *
+     * @return void
+     * @throws GC2Exception If the target schema is not found.
+     *
+     * @throws GC2Exception If the number of schemas and target schemas does not match.
      */
     public function importForeignSchema(array $schemas, array $targetSchemas, string $server, ?array $include): void
     {
@@ -1205,7 +1228,15 @@ class Model
     }
 
     /**
-     * @throws GC2Exception
+     * Materializes foreign tables by creating materialized views in specified target schemas.
+     *
+     * @param array $schemas An array of schemas from where the foreign tables will be materialized.
+     * @param array|null $targetSchemas An array of target schemas where the materialized views will be created. If null, the target schemas will be the same as the source schemas.
+     * @param string|null $prefix Optional prefix to be added to the names of the materialized views.
+     * @param string|null $suffix Optional suffix to be added to the names of the materialized views.
+     * @param array|null $include An array of table names to be included. If provided, only the tables that are included in this array will be materialized.
+     * @return int The number of materialized views created.
+     * @throws GC2Exception If schemas and targetSchemas have different number of entries, or if a specified schema is not found.
      */
     public function materializeForeignTables(array $schemas, ?array $targetSchemas, ?string $prefix = '', ?string $suffix = '', ?array $include = null): int
     {
@@ -1275,7 +1306,14 @@ class Model
     }
 
     /**
-     * @throws GC2Exception
+     * Deletes foreign tables from the specified schemas.
+     *
+     * @param array $schemas The array of schemas from which to delete the foreign tables.
+     * @param array|null $include An optional array of foreign tables to include. If provided, only the specified foreign tables will be deleted.
+     *
+     * @return int The number of foreign tables deleted.
+     * @throws GC2Exception If a specified schema does not exist.
+     *
      */
     public function deleteForeignTables(array $schemas, ?array $include = null): int
     {
@@ -1303,18 +1341,37 @@ class Model
         return $count;
     }
 
+    /**
+     * Retrieves statistics about all tables in the PostgreSQL database,
+     * including table name, schema name, total size, total size in bytes, total size of indices,
+     * table size, and row count.
+     *
+     * @return array<string, mixed> An array containing the following information:
+     *     - "tables": An array of tables. Each table is represented by an array with the following keys:
+     *         - "tableName": The name of the table.
+     *         - "schemaName": The name of the schema.
+     *         - "totalSize": The total size of the table in human-readable format.
+     *         - "totalSizeBytes": The total size of the table in bytes.
+     *         - "totalSizeIndices": The total size of the table's indices in human-readable format.
+     *         - "tableSize": The size of the table in human-readable format.
+     *         - "rowCount": The number of rows in the table.
+     *     - "totalSize": The sum of the total sizes of all tables in bytes.
+     *     - "totalSizePretty": The sum of the total sizes of all tables in human-readable format.
+     *     - "numberOfTables": The number of tables in the database.
+     */
     public function getStats(): array
     {
-        $sql = "SELECT distinct i.relname             as tableName,
-                    pg_size_pretty(pg_total_relation_size(relid)) as \"totalSize\",
-                    pg_total_relation_size(relid)                 as \"totalSizeBytes\",
-                    pg_size_pretty(pg_indexes_size(relid))        as \"totalSizeIndices\",
-                    pg_size_pretty(pg_relation_size(relid))       as \"tableSize\",
-                    reltuples::bigint                                \"rowCount\"
-                    FROM pg_stat_all_indexes i
-                        JOIN pg_class c ON i.relid = c.oid
-                    WHERE i.schemaname NOT IN ('information_schema', 'settings')
-                        AND i.schemaname NOT LIKE 'pg_%'";
+        $sql = "SELECT distinct i.relname                                     as \"tableName\",
+                                i.schemaname                                  as \"schemaName\",
+                                pg_size_pretty(pg_total_relation_size(relid)) as \"totalSize\",
+                                pg_total_relation_size(relid)                 as \"totalSizeBytes\",
+                                pg_size_pretty(pg_indexes_size(relid))        as \"totalSizeIndices\",
+                                pg_size_pretty(pg_relation_size(relid))       as \"tableSize\",
+                                reltuples::bigint                                \"rowCount\"
+                FROM pg_stat_all_tables i
+                         join pg_class c ON i.relid = c.oid
+                WHERE i.schemaname NOT IN ('information_schema', 'settings')
+                  AND i.schemaname NOT LIKE 'pg_%' and i.relname != 'spatial_ref_sys'";
 
         $res = $this->prepare($sql);
         $res->execute();
@@ -1332,6 +1389,28 @@ class Model
             "tables" => $tables,
             "totalSize" => $totalSize,
             "totalSizePretty" => $row[0]['p'],
+            "numberOfTables" => count($tables),
         ];
+    }
+
+    /**
+     * Retrieves the total number of tables in the Postgres database.
+     *
+     * The method executes a SQL query to retrieve the count of tables from the "pg_tables" system catalog table.
+     * The query filters out tables from certain system schemas and excludes specific tables.
+     *
+     * @return int The total number of tables in the database.
+     */
+    public function getNumTables(): int
+    {
+        $sql = "select count(*) as c
+                from pg_tables
+                WHERE schemaname NOT IN ('information_schema', 'settings')
+                  AND schemaname NOT LIKE 'pg_%'
+                  and tablename != 'spatial_ref_sys'";
+
+        $res = $this->prepare($sql);
+        $res->execute();
+        return $res->fetchColumn();
     }
 }
