@@ -243,6 +243,9 @@ try {
         Route::add("api/v2/configuration/[userId]/[configurationId]", function () {
             Session::start();
         });
+        Route::add("api/v2/stat", function () {
+            Session::start();
+        });
 
         //======================
         // V3 with OAuth
