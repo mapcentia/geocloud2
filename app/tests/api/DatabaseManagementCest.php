@@ -566,7 +566,7 @@ class DatabaseManagementCest
         $I->seeResponseIsJson();
         $I->seeResponseContainsJson([
             'success' => true,
-            'auth_check' => [
+            '_auth_check' => [
                 'is_auth' => true,
             ]
         ]);
