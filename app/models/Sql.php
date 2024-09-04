@@ -142,7 +142,7 @@ class Sql extends Model
         $sqlView = "CREATE TEMPORARY VIEW $view as $q";
         $res = $this->prepare($sqlView);
         $res->execute();
-        $arrayWithFields = $this->getMetaData($view, true, false, null, $q); // Temp VIEW
+        $arrayWithFields = $this->getMetaData($view, true, false, null, md5($q)); // Temp VIEW
         $columnTypes = [];
         foreach ($arrayWithFields as $key => $value) {
             $columnTypes[$key] = $value['typname'];

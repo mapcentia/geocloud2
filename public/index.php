@@ -638,7 +638,7 @@ try {
     $response["message"] = $exception->getMessage();
 //  $response["file"] = $exception->getFile();
 //  $response["line"] = $exception->getLine();
-//   $response["line"] = $exception->getTraceAsString();
+//  $response["trace"] = $exception->getTraceAsString();
     $response["code"] = 500;
     echo Response::toJson($response);
 } finally {
