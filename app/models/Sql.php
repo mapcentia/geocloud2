@@ -139,12 +139,13 @@ class Sql extends Model
         }
 
         // Get column types
-        $select = $this->prepare("select * from ($q) as foo LIMIT 1");
-
-        $select->execute($parameters);
-        foreach (range(0, $select->columnCount() - 1) as $column_index) {
-            $meta = $select->getColumnMeta($column_index);
-            $columnTypes[$meta['name']] = $meta['native_type'];
+        $sqlView = "CREATE TEMPORARY VIEW $view as $q";
+        $res = $this->prepare($sqlView);
+        $res->execute();
+        $arrayWithFields = $this->getMetaData($view, true, false, null, $q); // Temp VIEW
+        $columnTypes = [];
+        foreach ($arrayWithFields as $key => $value) {
+            $columnTypes[$key] = $value['typname'];
         }
 
         $fieldsArr = [];

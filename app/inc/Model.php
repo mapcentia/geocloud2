@@ -324,6 +324,7 @@ class Model
                   attname                          AS column_name,
                   attnum                           AS ordinal_position,
                   atttypid :: REGTYPE              AS udt_name,
+                  typname,
                   attnotnull                       AS is_nullable,
                   format_type(atttypid, atttypmod) AS full_type,
                   pg_get_expr(d.adbin, d.adrelid) AS default_value,
@@ -435,6 +436,7 @@ class Model
                 $arr[$row["column_name"]] = array(
                     "num" => $row["ordinal_position"],
                     "type" => $row["udt_name"],
+                    "typname" => $row["typname"],
                     "full_type" => $row['full_type'],
                     "is_nullable" => !$row['is_nullable'],
                     "default_value" => $row['default_value'],
