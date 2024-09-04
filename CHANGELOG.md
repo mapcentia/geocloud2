@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## 2024.9.0 - 2024-4-9
+### Fixed
+- Reverted back to the old method of getting column metadata in the SQL API. The new one ran a SELECT statement twice, which could cause side effects.
+
 ## 2024.8.1 - 2024-30-0
 ### Fixed
 - Bug in GPX export, which caused some JSON in the end of the GPX document.
