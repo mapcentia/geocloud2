@@ -8,6 +8,7 @@
 
 namespace app\api\v3;
 
+use app\exceptions\GC2Exception;
 use app\inc\Controller;
 use app\inc\Jwt;
 use app\inc\Route;
@@ -37,7 +38,7 @@ class Xmlworkspace extends Controller
 
     /**
      * @return never
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws PhpfastcacheInvalidArgumentException|GC2Exception
      * @OA\Get(
      *   path="/api/v3/xmlworkspace/{layer}",
      *   tags={"ESRI"},
@@ -82,7 +83,8 @@ class Xmlworkspace extends Controller
     public function create(string $query, string $db, array $include = null): string
     {
         $intTypes = ["integer"];
-        $textTypes = ["text", "character varying"];
+        $doubleTypes = ["double precision", "numeric"];
+        $textTypes = ["text", "character varying", "json", "jsonb", "boolean"];
         $dateTypes = ["timestamp with time zone", "timestamp without time zone", "date"];
         $datasetName = explode(".", $query)[1];
         $arr = $this->layers->getAll($db, false, $query, false, false, false);
@@ -142,6 +144,8 @@ class Xmlworkspace extends Controller
             }
             if (in_array($field["type"], $intTypes)) {
                 $esriType = "esriFieldTypeInteger";
+            } elseif (in_array($field["type"], $doubleTypes)) {
+                $esriType = "esriFieldTypeDouble";
             } elseif (in_array($field["type"], $textTypes)) {
                 $esriType = "esriFieldTypeString";
             } elseif (in_array($field["type"], $dateTypes)) {
@@ -152,7 +156,14 @@ class Xmlworkspace extends Controller
             } else {
                 $esriType = "esriFieldTypeString";
             }
-            $length = $field["max_bytes"] ?? 0;
+
+            if ($field["type"] == 'uuid') {
+                $length = 32;
+            } elseif ($field["type"] == 'json' || $field["type"] == 'jsonb') {
+                $length = 1073741824;
+            } else {
+                $length = $field["max_bytes"] ?? 0;
+            }
             $precision = $field["numeric_precision"] ?? 0;
             $scale = $field["numeric_scale"] ?? 0;
 
