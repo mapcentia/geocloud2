@@ -14,6 +14,7 @@ use app\exceptions\GC2Exception;
 use app\inc\Cache;
 use app\inc\Globals;
 use app\inc\Session;
+use PDO;
 use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Phpfastcache\Exceptions\PhpfastcacheLogicException;
@@ -53,6 +54,40 @@ class Layer extends Table
             $this->postgisdb . '_' . $relName . '_columns',
         ];
         Cache::deleteByPatterns($patterns);
+    }
+
+    /**
+     * @param string $schema The schema in which the table resides.
+     * @param string $table The name of the table to retrieve geometry columns from.
+     * @return array The list of geometry columns from the specified table.
+     */
+    public function getGeometryColumnsFromTable(string $schema, string $table): array
+    {
+        $sql = "select f_geometry_column from settings.geometry_columns_view where f_table_name=:table and f_table_schema=:schema";
+        $res = $this->prepare($sql);
+        $res->execute(['table' => $table, 'schema' => $schema]);
+        return $res->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    /**
+     * @param string $schema
+     * @param string $table
+     * @return array
+     */
+    public function getPrivilegesAsArray(string $schema, string $table): array
+    {
+        $sql = "select distinct privileges from settings.geometry_columns_view where f_table_name=:table and f_table_schema=:schema";
+        $res = $this->prepare($sql);
+        $res->execute(['table' => $table, 'schema' => $schema]);
+        $privileges = $res->fetchAll(PDO::FETCH_COLUMN);
+        $response = [];
+        foreach ($privileges as $privilege) {
+            $p = json_decode($privilege, true);
+        }
+        foreach ($p as $k => $v) {
+            $response[] = ['subuser' => $k, 'privileges' => $v];
+        }
+        return $response;
     }
 
     /**
@@ -659,12 +694,20 @@ class Layer extends Table
         $this->clearCacheOfColumns(explode(".", $data->_key_)[0] . "." . explode(".", $data->_key_)[1]);
         $this->clearCacheOnSchemaChanges();
         $table = new Table("settings.geometry_columns_join");
-        $jsonStr = $this->getValueFromKey($data->_key_, "privileges");
-        $privilege = !empty($jsonStr) ? json_decode($jsonStr, true) : [];
-        $privilege[$data->subuser] = $data->privileges;
-        $privileges['privileges'] = json_encode($privilege);
-        $privileges['_key_'] = $data->_key_;
-        $table->updateRecord($privileges, "_key_");
+        $split = explode(".", $data->_key_);
+        $geomCols = $this->getGeometryColumnsFromTable($split[0], $split[1]);
+        if (sizeof($geomCols) == 0) {
+            throw new GC2Exception('columns not found');
+        }
+        foreach ($geomCols as $geomCol) {
+            $key = $split[0] . '.' . $split[1] . '.' . $geomCol;
+            $jsonStr = $this->getValueFromKey($key, "privileges");
+            $privilege = !empty($jsonStr) ? json_decode($jsonStr, true) : [];
+            $privilege[$data->subuser] = $data->privileges;
+            $privileges['privileges'] = json_encode($privilege);
+            $privileges['_key_'] = $key;
+            $table->updateRecord($privileges, "_key_");
+        }
         $response['success'] = true;
         $response['message'] = "Privileges updates";
         return $response;

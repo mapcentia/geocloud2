@@ -53,9 +53,10 @@ class Privilege extends AbstractApi
     public function get_index(): array
     {
         $layer = new Layer();
-        $key = $this->qualifiedName;
-        $res = $layer->getPrivileges($key);
-        return ["privileges" => $res['data']];
+        $table = $this->qualifiedName;
+        $split = explode('.', $table);
+        $res = $layer->getPrivilegesAsArray($split[0], $split[1]);
+        return ["privileges" => $res];
     }
 
     #[Override] public function post_index(): array
