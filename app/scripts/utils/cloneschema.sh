@@ -66,5 +66,5 @@ psql ${TMPDB} -c "\COPY (SELECT * FROM settings.geometry_columns_join WHERE spli
 psql ${db} -c "\COPY settings.geometry_columns_join FROM 'geometry_columns_join_tmp.sql'"
 
 #Clean up
-dropdb cloneschema_tmp -U postgres
+dropdb cloneschema_tmp
 rm *.sql
