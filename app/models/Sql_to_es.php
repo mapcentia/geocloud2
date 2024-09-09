@@ -84,7 +84,6 @@ class Sql_to_es extends Model
         $esUrl = $split[0] . ":" . $split[1] . ":" . $port . "/_bulk";
 
         $client = new Client([
-            'timeout' => 10.0,
             'headers' => [
                 'Content-Type' => 'application/json'
             ]
