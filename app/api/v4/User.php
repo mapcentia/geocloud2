@@ -86,6 +86,8 @@ class User extends AbstractApi
         }
         $data = json_decode(Input::getBody(), true) ?: [];
         $data['parentdb'] = $this->jwt['database'];
+        // Load pre extensions and run processAddUser
+        $data = $this->runExtension('processAddUser', $data);
         try {
             (new Database())->createSchema($data['name']);
         } catch (Exception) {}

@@ -62,11 +62,13 @@ class Table extends AbstractApi
     public function post_index(): array
     {
         $body = Input::getBody();
-        $data = json_decode($body);
+        $data = json_decode($body, true);
+        // Load pre extensions and run processAddTable
+        $data = $this->runExtension('processAddTable', $data);
         $this->table = new TableModel(null);
         $this->table->postgisschema = $this->schema;
         $this->table->begin();
-        $r = self::addTable($this->table, $data);
+        $r = self::addTable($this->table, (object)$data);
         $this->table->commit();
         header("Location: /api/v4/schemas/$this->schema/tables/{$r['tableName']}");
         $res["code"] = "201";
@@ -279,7 +281,7 @@ class Table extends AbstractApi
      *     @OA\Schema(
      *       type="string"
      *     )
-     *   ),     
+     *   ),
      *   @OA\Parameter(
      *     name="table",
      *     in="path",
