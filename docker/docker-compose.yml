@@ -78,7 +78,7 @@ services:
     environment:
       - GC2_USER=gc2
       - GC2_PASSWORD=1234
-      - POSTGIS_HOST=localhost
+      - POSTGIS_HOST=127.0.0.1
       - POSTGIS_USER=gc2
       - POSTGIS_PORT=5432
       - POSTGIS_PW=1234
