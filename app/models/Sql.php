@@ -552,10 +552,10 @@ class Sql extends Model
         if (isset($plan[0]['QUERY PLAN'])) {
             $cost = json_decode($plan[0]['QUERY PLAN'], true)[0]['Plan']['Total Cost'];
         }
-
         $ex = "INSERT INTO settings.cost (username, statement, cost) VALUES 
                    (:username, :statement, :cost)";
         $res = $this->prepare($ex);
+        $q = str_replace("\n", " ", $q);
         $res->execute(['username' => $username, 'statement' => $q, 'cost' => $cost]);
     }
 }
