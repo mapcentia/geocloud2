@@ -173,7 +173,7 @@ class Sql
                         timestamp timestamp default now() not null,
                         username  varchar(255)            not null,
                         statement text                    not null,
-                        cost      integer                 not null
+                        cost      float                   not null
                     )";
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
