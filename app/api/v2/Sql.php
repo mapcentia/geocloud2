@@ -20,7 +20,6 @@ use app\inc\UserFilter;
 use app\models\Geofence;
 use app\models\Rule;
 use app\models\Setting;
-use app\models\Stream;
 use sad_spirit\pg_builder\StatementFactory;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Exception;
