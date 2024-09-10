@@ -75,7 +75,7 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [2024.3.0] - 2024-24-3
 ### Changed
-- Upgraded base image to Bookworm og PHP to 8.3
+- Upgraded base image to Bookworm and PHP to 8.3
 - A lot of new stuff
 
 ## [2023.10.1] - 2023-12-10
