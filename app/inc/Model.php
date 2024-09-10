@@ -13,6 +13,7 @@ namespace app\inc;
 use app\conf\App;
 use app\conf\Connection;
 use app\exceptions\GC2Exception;
+use app\models\Cost;
 use app\models\Database;
 use app\models\Table;
 use Error;
@@ -1387,11 +1388,17 @@ class Model
         $res = $this->prepare($sql);
         $res->execute();
         $row =$res->fetchAll();
+        try {
+            $cost = (new Cost())->getCost();
+        } catch (PDOException) {
+            $cost = 0.0;
+        }
         return [
             "tables" => $tables,
             "totalSize" => $totalSize,
             "totalSizePretty" => $row[0]['p'],
             "numberOfTables" => count($tables),
+            "cost" => $cost,
         ];
     }
 
