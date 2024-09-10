@@ -188,7 +188,7 @@ class Controller
         $response = [];
         $response['is_auth'] = $isAuth;
         $auth = $postgisObject->getGeometryColumns($layer, "authentication");
-        if ($auth == "Read/write" || $auth == "Write") {
+        if ($auth == "Read/write" || $auth == "Write" || empty($auth)) {
             $rows = $postgisObject->getColumns($schema, $unQualifiedName);
             foreach ($rows as $row) {
                 // Check if we got the right layer from the database
