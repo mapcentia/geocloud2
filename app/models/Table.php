@@ -547,22 +547,10 @@ class Table extends Model
                 $keyArr2[] = ":$key";
             }
 
-            if (!empty(App::$param['updateTableInsteadOfLayer'])) {
-                $split = explode(".", $pKeyValue);
-                $geomCols = (new Layer())->getGeometryColumnsFromTable($split[0], $split[1]);
-                foreach ($geomCols as $geomCol) {
-                    $valueArr['_key_'] = $split[0] . '.' . $split[1] . '.' . $geomCol;
-                    $sql = "INSERT INTO " . $this->doubleQuoteQualifiedName($this->table) . " (" . implode(",", $keyArr) . ") VALUES(" . implode(",", $keyArr2) . ")" .
-                        " ON CONFLICT ($keyName) DO UPDATE SET " . implode(",", $pairArr);
-                    $result = $this->prepare($sql);
-                    $result->execute($valueArr);
-                }
-            } else {
-                $sql = "INSERT INTO " . $this->doubleQuoteQualifiedName($this->table) . " (" . implode(",", $keyArr) . ") VALUES(" . implode(",", $keyArr2) . ")" .
-                    " ON CONFLICT ($keyName) DO UPDATE SET " . implode(",", $pairArr);
-                $result = $this->prepare($sql);
-                $result->execute($valueArr);
-            }
+            $sql = "INSERT INTO " . $this->doubleQuoteQualifiedName($this->table) . " (" . implode(",", $keyArr) . ") VALUES(" . implode(",", $keyArr2) . ")" .
+                " ON CONFLICT ($keyName) DO UPDATE SET " . implode(",", $pairArr);
+            $result = $this->prepare($sql);
+            $result->execute($valueArr);
 
             $response['success'] = true;
             $response['message'] = "Row updated";
