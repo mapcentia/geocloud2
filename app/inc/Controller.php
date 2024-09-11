@@ -189,6 +189,9 @@ class Controller
 
         $auth = $postgisObject->getGeometryColumns($layer, "authentication");
 
+        // We check if relation is a real table/view or similar or an alias.
+        // If its real and authentication is not set we throw an exception.
+        // This would be the case if relation is not in geometry_columns_join
         $isRelation = $postgisObject->isTableOrView($layer)['success'];
         if (empty($auth) && $isRelation) {
             $response['success'] = false;
@@ -214,7 +217,7 @@ class Controller
                         switch ($transaction) {
                             case false:
                                 if ((empty($privileges[$userGroup ?: $subUser]) || (!empty($privileges[$userGroup ?: $subUser]) && $privileges[$userGroup ?: $subUser] == "none")) && ($subUser != $schema && $userGroup != $schema)) {
-                                    // Always let suusers read from layers open to all
+                                    // Always let subusers read from layers open to all
                                     if ($auth == "Write") {
                                         $response['success'] = true;
                                         $response['code'] = 200;
