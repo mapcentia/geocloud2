@@ -457,7 +457,7 @@ class Table extends Model
      */
     public function getUuid(string $key): array
     {
-        $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_=:key";
+        $sql = "SELECT uuid FROM settings.geometry_columns_join WHERE _key_ = :key";
         $res = $this->prepare($sql);
         $res->execute(array("key" => $key));
         $row = $this->fetchRow($res);
