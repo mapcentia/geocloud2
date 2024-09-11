@@ -12,6 +12,7 @@ use app\exceptions\GC2Exception;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Route2;
+use app\models\Layer;
 use app\models\Table as TableModel;
 use Exception;
 use Override;
@@ -250,11 +251,23 @@ class Column extends AbstractApi
     {
         $body = Input::getBody();
         $data = json_decode($body);
-        $obj = new stdClass();
-        $obj->id = $this->column;
-        $obj->column = $data->column ?? $this->column;
-        $obj->type = $data->type;
-        $r = $this->table->updateColumn($obj, $this->column, true);
+
+        $layer = new Layer();
+        $geomFields = $layer->getGeometryColumnsFromTable($this->schema, $this->unQualifiedName);
+
+        $this->table->begin();
+        $oldColumnName = $this->column;
+        $r = [];
+        foreach ($geomFields as $geomField) {
+            $key = $this->qualifiedName . '.' . $geomField;
+            $conf = json_decode($layer->getValueFromKey($key, 'fieldconf'));
+            $obj = $conf->{$oldColumnName} ?? new stdClass();
+            $obj->id = $this->column;
+            $obj->column = $data->column ?? $this->column;
+            $obj->type = $data->type;
+            $r = $this->table->updateColumn($obj, $key, true);
+            $this->column = $r['name'];
+        }
         $newName = $r["name"];
         if (isset($data->is_nullable)) {
             if (!$data->is_nullable) {
@@ -265,11 +278,13 @@ class Column extends AbstractApi
         }
         if (property_exists($data, "default_value")) {
             if ($data->default_value === null) {
-                $this->table->dropDefaultValue($this->column);
-            } else  {
-                $this->table->addDefaultValue($this->column, $data->default_value);
+                $this->table->dropDefaultValue($newName);
+            } else {
+                $this->table->addDefaultValue($newName, $data->default_value);
             }
         }
+        $this->table->commit();
+
         header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/columns/$newName");
         return ["code" => "303"];
     }
