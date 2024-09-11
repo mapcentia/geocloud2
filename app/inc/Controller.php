@@ -189,7 +189,7 @@ class Controller
 
         $auth = $postgisObject->getGeometryColumns($layer, "authentication");
 
-        $isRelation = (new Model())->isTableOrView($layer)['success'];
+        $isRelation = $postgisObject->isTableOrView($layer)['success'];
         if (empty($auth) && $isRelation) {
             $response['success'] = false;
             $response['message'] = $layer . " is a relation, but authentication is not set. It might be that the relation is not registered.";
