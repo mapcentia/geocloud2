@@ -11,6 +11,7 @@ namespace app\inc;
 use app\api\v2\Sql;
 use app\conf\App;
 use app\conf\Connection;
+use app\exceptions\GC2Exception;
 use app\models\Database;
 use app\models\Layer;
 use app\models\Setting;
@@ -61,7 +62,6 @@ class Controller
      * @param array<bool> $level
      * @param bool $neverAllowSubUser
      * @return array
-     * @throws PhpfastcacheInvalidArgumentException
      */
     public function auth(?string $key = null, array $level = ["all" => true], bool $neverAllowSubUser = false): array
     {
@@ -97,7 +97,6 @@ class Controller
      * @param string $user
      * @param string $key
      * @return bool
-     * @throws PhpfastcacheInvalidArgumentException
      */
     public function authApiKey(string $user, string $key): bool
     {
@@ -147,7 +146,7 @@ class Controller
      * @param string|null $subUser
      * @param string|null $inputApiKey
      * @return array|null
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws GC2Exception
      */
     public function ApiKeyAuthLayer(string $layer, bool $transaction, array $rels, ?string $subUser = null, ?string $inputApiKey = null): ?array
     {
@@ -187,8 +186,19 @@ class Controller
 
         $response = [];
         $response['is_auth'] = $isAuth;
+
         $auth = $postgisObject->getGeometryColumns($layer, "authentication");
-        if ($auth == "Read/write" || $auth == "Write" || empty($auth)) {
+
+        $isRelation = (new Model())->isTableOrView($layer)['success'];
+
+        if (empty($auth) && $isRelation) {
+            $response['success'] = false;
+            $response['message'] = $layer . " is a relation, but authentication is not set. It might be that the relation is not registered.";
+            $response['code'] = 403;
+            return $response;
+        }
+
+        if ($auth == "Read/write" || $auth == "Write") {
             $rows = $postgisObject->getColumns($schema, $unQualifiedName);
             foreach ($rows as $row) {
                 // Check if we got the right layer from the database
