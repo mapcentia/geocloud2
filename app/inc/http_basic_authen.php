@@ -61,7 +61,7 @@ if (sizeof($dbSplit) == 2 || !empty($_SESSION["subuser"])) { // is Sub-user
     $userGroup = !empty($settings["data"]->userGroups->$subUser) ? $settings["data"]->userGroups->$subUser : null;
 
     if ($dbSplit[0] != $schema) {
-        $sql = "SELECT privileges FROM settings.geometry_columns_join WHERE _key_ = :schema";
+        $sql = "SELECT privileges FROM settings.geometry_columns_join WHERE _key_ LIKE :schema";
         $res = $postgisObject->prepare($sql);
         try {
             //die($schema);
