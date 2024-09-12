@@ -551,7 +551,6 @@ class Layer extends Table
         if (is_numeric(mb_substr($newName, 0, 1, 'utf-8'))) {
             $newName = "_" . $newName;
         }
-        $this->begin();
         $whereClauseG = "f_table_schema=''$split[0]'' AND f_table_name=''$split[1]''";
         $whereClauseR = "r_table_schema=''$split[0]'' AND r_table_name=''$split[1]''";
         $query = "SELECT * FROM settings.getColumns('$whereClauseG','$whereClauseR') ORDER BY sort_id";
@@ -564,7 +563,6 @@ class Layer extends Table
                 try {
                     $resUpdate->execute();
                 } catch (PDOException $e) {
-                    $this->rollback();
                     throw new GC2Exception($e->getMessage(), 400, null);
                 }
             }
@@ -573,14 +571,11 @@ class Layer extends Table
             try {
                 $res->execute();
             } catch (PDOException $e) {
-                $this->rollback();
                 throw new GC2Exception($e->getMessage(), 400, null);
             }
         } catch (PDOException $e) {
-            $this->rollback();
             throw new GC2Exception($e->getMessage(), 400, null);
         }
-        $this->commit();
         $response['success'] = true;
         $response['message'] = "Layer renamed";
         $response['name'] = $newName;
@@ -596,7 +591,6 @@ class Layer extends Table
     public function setSchema($tables, $schema): array
     {
         $this->clearCacheOnSchemaChanges();
-        $this->begin();
         foreach ($tables as $table) {
             $bits = explode(".", $table);
             $whereClauseG = "f_table_schema=''$bits[0]'' AND f_table_name=''$bits[1]''";
@@ -617,7 +611,6 @@ class Layer extends Table
             $res = $this->prepare($query);
             $res->execute();
         }
-        $this->commit();
         $response['success'] = true;
         $response['message'] = sizeof($tables) . " tables moved to $schema";
         return $response;

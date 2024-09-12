@@ -145,18 +145,25 @@ class Layer extends Controller
     public function put_name(): array
     {
         $response = $this->auth(null, array());
-        return !$response['success'] ? $response : $this->table->rename(urldecode(Input::getPath()->part(4)), json_decode(Input::get())->data);
+        $this->table->begin();
+        $res = !$response['success'] ? $response : $this->table->rename(urldecode(Input::getPath()->part(4)), json_decode(Input::get())->data);
+        $this->table->commit();
+        return $res;
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function put_schema(): array
     {
         $input = json_decode(Input::get());
         $response = $this->auth(null, array(), true); // Never sub-user
-        return !$response['success'] ? $response : $this->table->setSchema($input->data->tables, $input->data->schema);
+        $this->table->begin();
+        $res = !$response['success'] ? $response : $this->table->setSchema($input->data->tables, $input->data->schema);
+        $this->table->commit();
+        return $res;
     }
 
     /**

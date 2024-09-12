@@ -251,17 +251,27 @@ class Table extends AbstractApi
      *   )
      * )
      * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public function put_index(): array
     {
-        //TODO set schema
         $layer = new Layer();
+        $layer->begin();
+
         $body = Input::getBody();
         $data = json_decode($body);
-        $arg = new stdClass();
-        $arg->name = $data->table;
-        $r = $layer->rename($this->qualifiedName, $arg);
-        header("Location: /api/v4/schemas/$this->schema/tables/{$r["name"]}");
+
+        if (isset($data->table) && $data->table != $this->table) {
+            $arg = new stdClass();
+            $arg->name = $data->table;
+            $r = $layer->rename($this->qualifiedName, $arg);
+        }
+        if (isset($data->schema) && $data->schema != $this->schema) {
+            $layer->setSchema([(isset($r['name']) ? ($this->schema . '.' . $r['name']) : $this->qualifiedName)], $data->schema);
+            $this->schema = $data->schema;
+        }
+        $layer->commit();
+        header("Location: /api/v4/schemas/$this->schema/tables/" . ($r['name'] ?? $this->unQualifiedName));
         return ["code" => "303"];
     }
 
