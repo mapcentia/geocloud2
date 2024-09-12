@@ -825,11 +825,34 @@ class Table extends Model
         return $response;
     }
 
+    private function matchType(string $type): string
+    {
+        return match ($type) {
+            "String" => "varchar(255)",
+            "Integer" => "integer",
+            "Double" => "double precision",
+            "Decimal" => "decimal",
+            "Text" => "text",
+            "Date" => "date",
+            "Timestamp" => "Timestamp",
+            "Timestamptz" => "Timestamptz",
+            "Time" => "Time",
+            "Timetz" => "Timetz",
+            "Boolean" => "bool",
+            "Bytea" => "bytea",
+            "Hstore" => "hstore",
+            "Json" => "jsonb",
+            "Geometry" => "geometry(Geometry,4326)",
+            default => $type,
+        };
+    }
+
     /**
      * Add a column. Works on all tables
      * @param array<string> $data
      * @return array
      * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public function addColumn(array $data): array
     {
@@ -847,24 +870,7 @@ class Table extends Model
             throw new GC2Exception("The name is reserved. Choose another.", 400);
         }
         // We set the data type
-        $type = match ($data['type']) {
-            "String" => "varchar(255)",
-            "Integer" => "integer",
-            "Double" => "double precision",
-            "Decimal" => "decimal",
-            "Text" => "text",
-            "Date" => "date",
-            "Timestamp" => "Timestamp",
-            "Timestamptz" => "Timestamptz",
-            "Time" => "Time",
-            "Timetz" => "Timetz",
-            "Boolean" => "bool",
-            "Bytea" => "bytea",
-            "Hstore" => "hstore",
-            "Json" => "jsonb",
-            "Geometry" => "geometry(Geometry,4326)",
-            default => $data["type"],
-        };
+        $type = $this->matchType($data['type']);
         $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ADD COLUMN \"$safeColumn\" $type";
         $this->execQuery($sql, "PDO", "transaction");
         $response["success"] = true;
@@ -1491,6 +1497,22 @@ class Table extends Model
         $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ALTER COLUMN \"$column\" DROP DEFAULT";
         $res = $this->prepare($sql);
         $res->execute();
+
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function changeType(string $column, string $type): void
+    {
+        $this->clearCacheOnSchemaChanges();
+        $type = $this->matchType($type);
+        $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ALTER COLUMN \"$column\" TYPE " . $type . " USING \"$column\"::" .$type;
+        $res = $this->prepare($sql);
+        $res->execute();
+
+        //alter table public.bygning
+        //    alter column gml_id type int using gml_id::int;
 
     }
 

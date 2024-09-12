@@ -269,7 +269,8 @@ class Column extends AbstractApi
             $this->column = $r['name'];
         }
         $newName = $r["name"];
-        if (isset($data->is_nullable)) {
+
+        if (property_exists($data, "is_nullable")) {
             if (!$data->is_nullable) {
                 $this->table->addNotNullConstraint($newName);
             } else {
@@ -282,6 +283,9 @@ class Column extends AbstractApi
             } else {
                 $this->table->addDefaultValue($newName, $data->default_value);
             }
+        }
+        if (property_exists($data, "type")) {
+            $this->table->changeType($newName, $data->type);
         }
         $this->table->commit();
 
