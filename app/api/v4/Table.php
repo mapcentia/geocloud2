@@ -261,7 +261,7 @@ class Table extends AbstractApi
         $body = Input::getBody();
         $data = json_decode($body);
 
-        if (isset($data->table) && $data->table != $this->table) {
+        if (isset($data->table) && $data->table != $this->unQualifiedName) {
             $arg = new stdClass();
             $arg->name = $data->table;
             $r = $layer->rename($this->qualifiedName, $arg);
