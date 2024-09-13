@@ -61,10 +61,10 @@ if (!empty(App::$param["sessionHandler"]["type"]) && App::$param["sessionHandler
         // If Redis then set the database
         if (App::$param["sessionHandler"]["type"] == "redis") {
             $db = empty(App::$param["sessionHandler"]["db"]) ? "" : "?database=" . App::$param["sessionHandler"]["db"];
-            ini_set("session.save_path", $host . $db);
-        } else {
-            ini_set("session.save_path", $host);
+            $host .= $db;
         }
+        ini_set("session.save_path", $host);
+
     } else {
         throw new GC2Exception("Session handler host not set", 500, null, "SESSION_HANDLER_ERROR");
     }
