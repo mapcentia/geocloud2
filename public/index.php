@@ -52,17 +52,21 @@ ini_set("max_execution_time", "30");
 // Set session back-end. PHP will use default port if not set explicit
 if (!empty(App::$param["sessionHandler"]["type"]) && App::$param["sessionHandler"]["type"] != "files") {
     if (!empty(App::$param['sessionHandler']["host"])) {
+        $u = parse_url(App::$param['sessionHandler']["host"]);
+        $scheme = $u['scheme'] ?? 'tcp';
+        $host = $u['host'] ?? $u['path'] ?? 'redis';
+        $port = $u['port'] ?? 6379;
+        $host = $scheme . '://' . $host . ':' . $port;
         ini_set("session.save_handler", App::$param['sessionHandler']["type"]);
         // If Redis then set the database
         if (App::$param["sessionHandler"]["type"] == "redis") {
-            ini_set("session.save_path", "tcp://" . App::$param['sessionHandler']["host"] . "?database=" .
-                (!empty(App::$param["sessionHandler"]["db"]) ? App::$param["sessionHandler"]["db"] : "0")
-            );
+            $db = App::$param["sessionHandler"]["db"] ?? "0";
+            ini_set("session.save_path", $host . "?database=" . $db);
         } else {
-            ini_set("session.save_path", App::$param["sessionHandler"]["host"]);
+            ini_set("session.save_path", $host);
         }
     } else {
-        die("Session handler host not set");
+        throw new GC2Exception("Session handler host not set", 500, null, "SESSION_HANDLER_ERROR");
     }
 }
 

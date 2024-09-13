@@ -16,11 +16,10 @@ use Phpfastcache\CacheManager;
 use Phpfastcache\Core\Item\ExtendedCacheItemInterface;
 use Phpfastcache\Core\Pool\ExtendedCacheItemPoolInterface;
 use Phpfastcache\Core\Pool\TaggableCacheItemPoolInterface;
-use Phpfastcache\Drivers\Files\Config as FilesConfig;
 use Phpfastcache\Drivers\Redis\Config as RedisConfig;
-use Phpfastcache\Drivers\Memcached\Config as MemcachedConfig;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
+use Redis;
 
 
 abstract class Cache
@@ -37,13 +36,22 @@ abstract class Cache
     static public function setInstance(): void
     {
         if (!empty(App::$param['appCache']["host"])) {
-            $split = explode(":", App::$param['appCache']["host"] ?: "127.0.0.1:6379");
+            $u = parse_url(App::$param['appCache']["host"]);
+            $scheme = $u['scheme'] ?? 'tcp';
+            $host = $u['host'] ?? $u['path'] ?? 'redis';
+            $port = $u['port'] ?? 6379;
+            $redis = new Redis([
+                'host' => $scheme . '://' . $host,
+                'port' => (int)$port,
+                'ssl' => ['verify_peer' => false],
+            ]);
+            $db = !empty(App::$param["appCache"]["db"]) ? App::$param["appCache"]["db"] : 0;
+            $redis->select($db);
             $redisConfig = [
-                'host' => $split[0],
-                'port' => !empty($split[1]) ? (int)$split[1] : 6379,
-                'database' => !empty(App::$param["appCache"]["db"]) ? App::$param["appCache"]["db"] : 0,
+                'database' => $db,
                 'itemDetailedDate' => true,
                 'useStaticItemCaching' => false,
+                'redisClient' => $redis,
             ];
         } else {
             throw new GC2Exception('Could not determine redis host', 500, null, 'CACHE_ERROR');
