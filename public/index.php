@@ -60,8 +60,8 @@ if (!empty(App::$param["sessionHandler"]["type"]) && App::$param["sessionHandler
         ini_set("session.save_handler", App::$param['sessionHandler']["type"]);
         // If Redis then set the database
         if (App::$param["sessionHandler"]["type"] == "redis") {
-            $db = App::$param["sessionHandler"]["db"] ?? "0";
-            ini_set("session.save_path", $host . "?database=" . $db);
+            $db = empty(App::$param["sessionHandler"]["db"]) ? "" : "?database=" . App::$param["sessionHandler"]["db"];
+            ini_set("session.save_path", $host . $db);
         } else {
             ini_set("session.save_path", $host);
         }

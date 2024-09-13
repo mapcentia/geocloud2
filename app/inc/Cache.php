@@ -45,14 +45,16 @@ abstract class Cache
                 'port' => (int)$port,
                 'ssl' => ['verify_peer' => false],
             ]);
-            $db = !empty(App::$param["appCache"]["db"]) ? App::$param["appCache"]["db"] : 0;
-            $redis->select($db);
+            $db = !empty(App::$param["appCache"]["db"]) ? App::$param["appCache"]["db"] : null;
             $redisConfig = [
-                'database' => $db,
                 'itemDetailedDate' => true,
                 'useStaticItemCaching' => false,
                 'redisClient' => $redis,
             ];
+            if ($db) {
+                $redis->select($db);
+                $redisConfig['database'] = $db;
+            }
         } else {
             throw new GC2Exception('Could not determine redis host', 500, null, 'CACHE_ERROR');
         }
