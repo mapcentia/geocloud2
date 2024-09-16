@@ -51,23 +51,34 @@ ini_set("max_execution_time", "30");
 
 // Set session back-end. PHP will use default port if not set explicit
 if (!empty(App::$param["sessionHandler"]["type"]) && App::$param["sessionHandler"]["type"] != "files") {
-    if (!empty(App::$param['sessionHandler']["host"])) {
-        $u = parse_url(App::$param['sessionHandler']["host"]);
+    if (App::$param["sessionHandler"]["type"] == "redis") {
+        if (!empty(App::$param['sessionHandler']["host"])) {
+            $u = parse_url(App::$param['sessionHandler']["host"]);
+        } else {
+            throw new GC2Exception("Session handler host not set", 500, null, "SESSION_HANDLER_ERROR");
+        }
         $scheme = $u['scheme'] ?? 'tcp';
         $host = $u['host'] ?? $u['path'] ?? 'redis';
         $port = $u['port'] ?? 6379;
         $fullUrl = $scheme . '://' . $host . ':' . $port;
+        $db = empty(App::$param["sessionHandler"]["db"]) ? "" : "?database=" . App::$param["sessionHandler"]["db"];
+        $fullUrl .= $db;
         ini_set("session.save_handler", 'redis');
-        // If Redis then set the database
-        if (App::$param["sessionHandler"]["type"] == "redis") {
-            $db = empty(App::$param["sessionHandler"]["db"]) ? "" : "?database=" . App::$param["sessionHandler"]["db"];
-            $fullUrl .= $db;
-        }
         ini_set("session.save_path", $fullUrl);
-
-    } else {
-        throw new GC2Exception("Session handler host not set", 500, null, "SESSION_HANDLER_ERROR");
     }
+    elseif (App::$param["sessionHandler"]["type"] == "redisCluster") {
+        if (!empty(App::$param['sessionHandler']["seeds"])) {
+            $seeds = App::$param['sessionHandler']["seeds"];
+            $stream = !empty(App::$param['sessionHandler']["tls"]) ? "stream[verify_peer]=0" : "";
+        } else {
+            throw new GC2Exception("Session handler seeds not set", 500, null, "SESSION_HANDLER_ERROR");
+        }
+        $seedsStr = implode("&seed[]=", $seeds);
+        ini_set("session.save_path", $seedsStr . "&timeout=2&read_timeout=2&failover=error&persistent=1&" . $stream);
+    } else {
+        throw new GC2Exception('Session type must be either file, redis or redisCluster', 500, null, 'CACHE_ERROR');
+    }
+
 }
 
 // Get start time of script

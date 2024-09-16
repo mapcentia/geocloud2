@@ -21,6 +21,7 @@ use Phpfastcache\Drivers\Rediscluster\Config as RedisClustersConfig;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
 use Redis;
+use RedisCluster;
 
 
 abstract class Cache
@@ -36,17 +37,15 @@ abstract class Cache
      */
     static public function setInstance(): void
     {
-        if (!empty(App::$param['appCache']["host"])) {
-            $u = parse_url(App::$param['appCache']["host"]);
-            $scheme = $u['scheme'] ?? 'tcp';
-            $host = $u['host'] ?? $u['path'] ?? 'redis';
-            $port = $u['port'] ?? 6379;
-            $fullUrl = $scheme . '://' . $host . ':' . $port;
-        } else {
-            throw new GC2Exception('Could not determine redis host', 500, null, 'CACHE_ERROR');
-        }
-
         if (App::$param['appCache']["type"] == "redis") {
+            if (!empty(App::$param['appCache']["host"])) {
+                $u = parse_url(App::$param['appCache']["host"]);
+                $scheme = $u['scheme'] ?? 'tcp';
+                $host = $u['host'] ?? $u['path'] ?? 'redis';
+                $port = $u['port'] ?? 6379;
+            } else {
+                throw new GC2Exception('Could not determine redis host', 500, null, 'CACHE_ERROR');
+            }
             $db = !empty(App::$param["appCache"]["db"]) ? App::$param["appCache"]["db"] : 0;
             $redis = new Redis([
                 'host' => $scheme . '://' . $host,
@@ -66,16 +65,29 @@ abstract class Cache
             self::$instanceCache = CacheManager::getInstance('redis', new RedisConfig($redisConfig));
 
         } elseif (App::$param['appCache']["type"] == "redisCluster") {
+            if (!empty(App::$param['appCache']["seeds"])) {
+                $seeds = App::$param['appCache']["seeds"];
+            } else {
+                throw new GC2Exception('Could not determine redis seeds', 500, null, 'CACHE_ERROR');
+            }
+            $redisCluster = new RedisCluster(
+                NULL,
+                $seeds,
+                1.5,
+                1.5,
+                true,
+                NULL,
+                (!empty(App::$param['appCache']["tls"]) ? ["verify_peer" => false] : null)
+            );
             $redisConfig = [
                 'itemDetailedDate' => true,
                 'useStaticItemCaching' => false,
-                'clusters' => $fullUrl,
+                'redisClusterClient' => $redisCluster,
             ];
             self::$instanceCache = CacheManager::getInstance('redisCluster', new RedisClustersConfig($redisConfig));
         } else {
             throw new GC2Exception('Cache type must be either redis or redisCluster', 500, null, 'CACHE_ERROR');
         }
-
         Globals::$cacheTtl = !empty(App::$param["appCache"]["ttl"]) ? App::$param["appCache"]["ttl"] : Globals::$cacheTtl;
     }
 
