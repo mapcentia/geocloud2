@@ -65,8 +65,7 @@ if (!empty(App::$param["sessionHandler"]["type"]) && App::$param["sessionHandler
         $fullUrl .= $db;
         ini_set("session.save_handler", 'redis');
         ini_set("session.save_path", $fullUrl);
-    }
-    elseif (App::$param["sessionHandler"]["type"] == "redisCluster") {
+    } elseif (App::$param["sessionHandler"]["type"] == "redisCluster") {
         if (!empty(App::$param['sessionHandler']["seeds"])) {
             $seeds = App::$param['sessionHandler']["seeds"];
             $stream = !empty(App::$param['sessionHandler']["tls"]) ? "stream[verify_peer]=0" : "";
@@ -74,6 +73,8 @@ if (!empty(App::$param["sessionHandler"]["type"]) && App::$param["sessionHandler
             throw new GC2Exception("Session handler seeds not set", 500, null, "SESSION_HANDLER_ERROR");
         }
         $seedsStr = implode("&seed[]=", $seeds);
+        $path = "seed[]=" . $seedsStr . "&timeout=2&read_timeout=2&failover=error&persistent=0&" . $stream;
+        ini_set("session.save_handler", 'rediscluster');
         ini_set("session.save_path", $seedsStr . "&timeout=2&read_timeout=2&failover=error&persistent=1&" . $stream);
     } else {
         throw new GC2Exception('Session type must be either file, redis or redisCluster', 500, null, 'CACHE_ERROR');
