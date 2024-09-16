@@ -244,9 +244,9 @@ class Sql extends Model
             while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
                 $arr = [];
                 foreach ($row as $key => $value) {
-                    if ($columnTypes[$key] == "geometry") {
+                    if ($columnTypes[$key] == "geometry" && $value !== null) {
                         $geometries[] = json_decode($value);
-                    } elseif ($columnTypes[$key] == "json" || $columnTypes[$key] == "jsonb") {
+                    } elseif ($columnTypes[$key] == "json" || $columnTypes[$key] == "jsonb" && $value !== null) {
                         $arr = $this->array_push_assoc($arr, $key, json_decode($value));
                     } else {
                         $arr = $this->array_push_assoc($arr, $key, $value);
