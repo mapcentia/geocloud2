@@ -5,10 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED]
+## [2024.9.1] - 2024-16-9
 
 ### Added
-- Redis Cluster as session and cache backend. This requires that you specify at least one seed node. Tls is supported:
+
+- Redis Cluster as session and cache backend. This requires that you specify at least one seed node. TLS is supported:
 ```php
 [
     "sessionHandler" => [
@@ -26,6 +27,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ```
 
 ### Changed
+
 - When using Redis (not cluster) as session and cache backend, you can now specify scheme in host, and `tls` is a valid scheme. You can also leave out the port number, and it will default to 6379: 
 ```php
 [
@@ -40,6 +42,17 @@ and this project adheres to [CalVer](https://calver.org/).
     ],
 ]
 ```
+
+### Fixed
+
+- ST_CollectionExtract is now used in WFS-t to filter out EMPTY geometry parts. ST_AsGml for GML version 3, will crash the query, if geometry has EMPTY parts.
+
+### Security
+
+- Privileges will now be set on all layer belonging to af table/view. This will increase security.
+- A Security weakness in Controller.php is fixed. If a table/view was not registered in settings.geometry_columns_view, it would be public open to queries. 
+  This could be the case, if a table/view was created outside GC2 and afterward not being set up inside GC2.
+  Now queries on all not-registered table/views will throws an exception.
 
 ## 2024.9.0 - 2024-4-9
 
