@@ -50,7 +50,7 @@ abstract class Cache
             $redis = new Redis([
                 'host' => $scheme . '://' . $host,
                 'port' => (int)$port,
-                'ssl' => ['verify_peer' => false],
+                'ssl' => $scheme == 'tls' ? ['verify_peer' => false] : null,
             ]);
             $redis->select($db);
             $redisConfig = [
