@@ -77,7 +77,7 @@ abstract class Cache
                 1.5,
                 true,
                 NULL,
-                (!empty(App::$param['appCache']["tls"]) ? ["verify_peer" => false] : null)
+                ["verify_peer" => false],
             );
             $redisConfig = [
                 'itemDetailedDate' => true,
