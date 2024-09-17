@@ -82,6 +82,7 @@ class Sql extends Model
             $fileOrFolder .= "." . self::toAscii($formatSplit[1], null, "_");
             $path = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__vectors/" . $fileOrFolder;
             $cmd = "ogr2ogr " .
+                "-mapFieldType Time=String " .
                 "-f \"" . explode("/", $format)[1] . "\" " . $path . " " .
                 "-t_srs \"EPSG:" . $this->srs . "\" " .
                 "-a_srs \"EPSG:" . $this->srs . "\" " .
