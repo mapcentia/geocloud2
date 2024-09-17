@@ -267,6 +267,9 @@ class Table extends AbstractApi
             $r = $layer->rename($this->qualifiedName, $arg);
         }
         if (isset($data->schema) && $data->schema != $this->schema) {
+           if (!$this->jwt->superUser) {
+               throw new GC2Exception('Only super user can move tables between schemas');
+           }
             $layer->setSchema([(isset($r['name']) ? ($this->schema . '.' . $r['name']) : $this->qualifiedName)], $data->schema);
             $this->schema = $data->schema;
         }
