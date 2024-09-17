@@ -241,10 +241,7 @@ class User extends AbstractApi
      */
     public function getAll(): array
     {
-        if (!$this->jwt["superUser"]) {
-            throw new Exception("Sub-users are not allowed to list all sub users");
-        }
-        $currentUserId = $this->jwt["uid"];
+        $currentUserId = $this->jwt["database"];
         $usersData = (new UserModel())->getSubusers($currentUserId)['data'];
         return ['users' => array_map([$this, 'convertUserObject'], $usersData)];
     }
