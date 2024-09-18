@@ -17,6 +17,7 @@ use app\inc\Route2;
 use app\inc\Session;
 use Exception;
 use Override;
+use stdClass;
 use ZipArchive;
 
 
@@ -24,6 +25,7 @@ use ZipArchive;
  * Class Sql
  * @package app\api\v4
  */
+#[AcceptableMethods(['PUT', 'POST', 'HEAD', 'OPTIONS'])]
 class Import extends AbstractApi
 {
 
@@ -177,11 +179,24 @@ class Import extends AbstractApi
      *   )
      * )
      */
-    public function get_index(): array
+    public function put_index(): array
     {
         $schema = Route2::getParam("schema");
         $fileName = Route2::getParam("file");
-        $response = [];
+        $body = Input::getBody();
+        $data = json_decode($body);
+        $res = $this->import($schema, $fileName, $data);
+        $response['cmd'] = $res['cmd'];
+        $response['data'] = $res['data'];
+        $response["success"] = true;
+        return $response;
+    }
+
+    /**
+     * @throws \JsonException
+     */
+    protected function import(string $schema, string $fileName, stdClass $data = null): array
+    {
         $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__vectors";
         $safeName = Session::getUser() . "_" . md5(microtime() . rand());
         if (is_numeric($safeName[0])) {
@@ -203,25 +218,27 @@ class Import extends AbstractApi
             $zip->close();
             $fileFullPath = $dir . "/" . $safeName;
         }
-        $connectionStr = "\"PG:host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "\"";
+        $connectionStr =
+            "\"PG:host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "\"";
         $cmd = "ogr2postgis" .
-            " -c $connectionStr" .
-//            " -t EPSG:25832" .
-            " -o $schema" .
-            " -i" .
-            " -p" .
-            " -j" .
+            " --json" .
+            ($data && property_exists($data, 's_srs') ? " --s_srs " . $data->s_srs : "") .
+            ($data && property_exists($data, 't_srs') ? " --t_srs " . $data->t_srs : "") .
+            ($data && property_exists($data, 'import') && $data->import === true ? " --schema $schema" : "") .
+            ($data && property_exists($data, 'import') && $data->import === true ? " --p_multi" : "") .
+            ($data && property_exists($data, 'import') && $data->import === true ? " --import" : "") .
+            ($data && property_exists($data, 'import') && $data->import === true ? " --connection $connectionStr" : "") .
             " '" . $fileFullPath . "'";
 
         exec($cmd, $out);
         $data = json_decode($out[0], null, 512, JSON_THROW_ON_ERROR);
-        $response['cmd'] = $cmd;
-        $response['data'] = $data;
-        $response["success"] = true;
-        return $response;
+        return [
+            'data' => $data,
+            'cmd' => $cmd,
+            ];
     }
 
-    #[Override] public function put_index(): array
+    #[Override] public function get_index(): array
     {
         // TODO: Implement put_index() method.
     }
