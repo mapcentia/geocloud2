@@ -102,13 +102,24 @@ class Feature extends Controller
      */
     private function decodeCode(string $code): string
     {
-        return preg_replace_callback(
-            "@\\\(x)?([0-9a-f]{2,3})@",
+        $replacements = [
+            "\\" => "\\\\",
+            "\n" => "\\n",
+            "\r" => "\\r",
+            "\t" => "\\t",
+        ];
+        return strtr(preg_replace_callback(
+            '@\\\\(x)?([0-9a-fA-F]{2,5})@',
             function ($m) {
-                return chr($m[1] ? hexdec($m[2]) : octdec($m[2]));
+                $num = $m[1] ? hexdec($m[2]) : octdec($m[2]);
+                if ($num > 255) {
+                    // For Unicode characters
+                    return mb_convert_encoding('&#' . $num . ';', 'UTF-8', 'HTML-ENTITIES');
+                }
+                return chr($num);
             },
             $code
-        );
+        ), $replacements);
     }
 
     public function get_index(): array
@@ -204,7 +215,7 @@ class Feature extends Controller
         // Decode GeoJSON
         if (!$features = json_decode($this->decodeCode(Input::getBody()), true)["features"]) {
             $response['success'] = false;
-            $response['message'] = "Could not decode GeoJSON";
+            $response['message'] = json_last_error_msg();
             $response['code'] = 500;
             return $response;
         }
@@ -267,7 +278,7 @@ class Feature extends Controller
         // Decode GeoJSON
         if (!$features = json_decode($this->decodeCode(Input::getBody()), true)["features"]) {
             $response['success'] = false;
-            $response['message'] = "Could not decode GeoJSON";
+            $response['message'] = json_last_error_msg();
             $response['code'] = 500;
             return $response;
         }
