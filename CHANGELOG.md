@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2024.9.2] - 2024-19-9
+
+### Fixed
+- Added `-mapFieldType Time=String` option to ogr2ogr command when exporting. ESRI Shape (maybe other formats?) doesn't have a time type, so Postgres time type is exported as string.
+- In v2/feature API backslash, tabs and new lines are handled in JSON decode/encode and will no longer cause an error.
+
 ## [2024.9.1] - 2024-16-9
 
 ### Added
