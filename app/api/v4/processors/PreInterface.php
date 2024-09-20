@@ -15,4 +15,5 @@ interface PreInterface
 {
     public function processAddTable(Model $model, array $body = []) : array;
     public function processAddUser(Model $model, array $body = []) : array;
+    public function processImport(Model $model, array $result) : array;
 }

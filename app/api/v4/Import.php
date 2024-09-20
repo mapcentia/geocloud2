@@ -13,6 +13,7 @@ use app\conf\Connection;
 use app\exceptions\GC2Exception;
 use app\inc\Input;
 use app\inc\Jwt;
+use app\inc\Model;
 use app\inc\Route2;
 use app\inc\Session;
 use Exception;
@@ -185,9 +186,17 @@ class Import extends AbstractApi
         $fileName = Route2::getParam("file");
         $body = Input::getBody();
         $data = json_decode($body);
-        $res = $this->import($schema, $fileName, $data);
-        $response['cmd'] = $res['cmd'];
-        $response['data'] = $res['data'];
+        // Make dry run to check how many tables would be created
+        if ($data->import) {
+            $data->import = false;
+            $result = $this->import($schema, $fileName, $data);
+            $result['schema'] = $schema;
+            $this->runExtension('processImport', (new Model()), $result);
+            $data->import = true;
+        }
+        $result = $this->import($schema, $fileName, $data);
+        $response['cmd'] = $result['cmd'];
+        $response['data'] = $result['data'];
         $response["success"] = true;
         return $response;
     }
@@ -195,7 +204,7 @@ class Import extends AbstractApi
     /**
      * @throws \JsonException
      */
-    protected function import(string $schema, string $fileName, stdClass $data = null): array
+    protected function import(string $schema, string $fileName, stdClass $args = null): array
     {
         $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__vectors";
         $safeName = Session::getUser() . "_" . md5(microtime() . rand());
@@ -222,20 +231,20 @@ class Import extends AbstractApi
             "\"PG:host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "\"";
         $cmd = "ogr2postgis" .
             " --json" .
-            ($data && property_exists($data, 's_srs') ? " --s_srs " . $data->s_srs : "") .
-            ($data && property_exists($data, 't_srs') ? " --t_srs " . $data->t_srs : "") .
-            ($data && property_exists($data, 'import') && $data->import === true ? " --schema $schema" : "") .
-            ($data && property_exists($data, 'import') && $data->import === true ? " --p_multi" : "") .
-            ($data && property_exists($data, 'import') && $data->import === true ? " --import" : "") .
-            ($data && property_exists($data, 'import') && $data->import === true ? " --connection $connectionStr" : "") .
+            ($args && property_exists($args, 's_srs') ? " --s_srs " . $args->s_srs : "") .
+            ($args && property_exists($args, 't_srs') ? " --t_srs " . $args->t_srs : "") .
+            ($args && property_exists($args, 'import') && $args->import === true ? " --schema $schema" : "") .
+            ($args && property_exists($args, 'import') && $args->import === true ? " --p_multi" : "") .
+            ($args && property_exists($args, 'import') && $args->import === true ? " --import" : "") .
+            ($args && property_exists($args, 'import') && $args->import === true ? " --connection $connectionStr" : "") .
             " '" . $fileFullPath . "'";
 
         exec($cmd, $out);
-        $data = json_decode($out[0], null, 512, JSON_THROW_ON_ERROR);
+        $args = json_decode($out[0], null, 512, JSON_THROW_ON_ERROR);
         return [
-            'data' => $data,
+            'data' => $args,
             'cmd' => $cmd,
-            ];
+        ];
     }
 
     #[Override] public function get_index(): array
