@@ -62,13 +62,23 @@ class Table extends AbstractApi
     public function post_index(): array
     {
         $body = Input::getBody();
-        $data = json_decode($body, true);
+        $data = json_decode($body);
         $this->table = new TableModel(null);
         $this->table->postgisschema = $this->schema;
         $this->table->begin();
-        $r = self::addTable($this->table, (object)$data, $this);
+        $list = [];
+
+        if (isset($data->tables)) {
+            foreach ($data->tables as $datum) {
+                $r = self::addTable($this->table, (object)$datum, $this);
+                $list[] = $r['tableName'];
+            }
+        } else {
+            $r = self::addTable($this->table, (object)$data, $this);
+            $list[] = $r['tableName'];
+        }
         $this->table->commit();
-        header("Location: /api/v4/schemas/$this->schema/tables/{$r['tableName']}");
+        header("Location: /api/v4/schemas/$this->schema/tables/" . implode(",", $list));
         $res["code"] = "201";
         return $res;
     }
@@ -164,11 +174,19 @@ class Table extends AbstractApi
      */
     public function get_index(): array
     {
+        $qualifiedNames = explode(',', $this->qualifiedName);
+        $r = [];
         if (!empty($this->qualifiedName)) {
-            return self::getTable($this->table, $this->qualifiedName);
-
+            foreach ($qualifiedNames as $name) {
+                $r[] = self::getTable($this->table, $name);
+            }
         } else {
-            return ["tables" => self::getTables($this->schema)];
+            $r = self::getTables($this->schema);
+        }
+        if (count($r) > 1) {
+            return ["tables" => $r];
+        } else {
+            return $r[0];
         }
     }
 
@@ -188,7 +206,6 @@ class Table extends AbstractApi
         $response["indices"] = $indices;
         $response["constraints"] = $constraints;
         return $response;
-
     }
 
     /**
@@ -258,24 +275,27 @@ class Table extends AbstractApi
     {
         $layer = new Layer();
         $layer->begin();
-
         $body = Input::getBody();
         $data = json_decode($body);
-
-        if (isset($data->table) && $data->table != $this->unQualifiedName) {
-            $arg = new stdClass();
-            $arg->name = $data->table;
-            $r = $layer->rename($this->qualifiedName, $arg);
+        $unQualifiedNames = explode(',', $this->unQualifiedName);
+        $qualifiedNames = explode(',', $this->qualifiedName);
+        $r = [];
+        for ($i = 0; sizeof($unQualifiedNames) > $i; $i++) {
+            if (isset($data->table) && $data->table != $unQualifiedNames[$i]) {
+                $arg = new stdClass();
+                $arg->name = $data->table;
+                $r[] = $layer->rename($qualifiedNames[$i], $arg)['name'];
+            }
+            if (isset($data->schema) && $data->schema != $this->schema) {
+                if (!$this->jwt['superUser']) {
+                    throw new GC2Exception('Only super user can move tables between schemas');
+                }
+                $layer->setSchema([(isset($r[$i]) ? ($this->schema . '.' . $r[$i]) : $qualifiedNames[$i])], $data->schema);
+            }
         }
-        if (isset($data->schema) && $data->schema != $this->schema) {
-           if (!$this->jwt->superUser) {
-               throw new GC2Exception('Only super user can move tables between schemas');
-           }
-            $layer->setSchema([(isset($r['name']) ? ($this->schema . '.' . $r['name']) : $this->qualifiedName)], $data->schema);
-            $this->schema = $data->schema;
-        }
+        $this->schema = $data->schema;
         $layer->commit();
-        header("Location: /api/v4/schemas/$this->schema/tables/" . ($r['name'] ?? $this->unQualifiedName));
+        header("Location: /api/v4/schemas/$this->schema/tables/" . (count($r) > 0 ? implode(',', $r) : $this->unQualifiedName));
         return ["code" => "303"];
     }
 
@@ -313,7 +333,12 @@ class Table extends AbstractApi
      */
     public function delete_index(): array
     {
-        $this->table->destroy();
+        $this->table->begin();
+        $qualifiedNames = explode(',', $this->qualifiedName);
+        foreach ($qualifiedNames as $name) {
+            $this->table->destroy($name);
+        }
+        $this->table->commit();
         return ["code" => "204"];
     }
 
@@ -328,7 +353,10 @@ class Table extends AbstractApi
         $this->jwt = Jwt::validate()["data"];
         // Put and delete on collection is not allowed
         if (empty($table) && in_array(Input::getMethod(), ['put', 'delete'])) {
-            throw new GC2Exception("", 406);
+            throw new GC2Exception("Put and delete on a table collection is not allowed", 406);
+        }
+        if (!empty($table) && count(explode(',', $table)) > 1 && in_array(Input::getMethod(), ['put', 'delete'])) {
+            // throw new GC2Exception("Put and delete on multiple tables is not allowed", 406);
         }
         // Throw exception if tried with table resource
         if (Input::getMethod() == 'post' && $table) {

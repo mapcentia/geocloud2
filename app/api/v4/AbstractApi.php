@@ -57,7 +57,7 @@ abstract class AbstractApi implements ApiInterface
         if (!$superUser && !($userName == $this->schema || $this->schema == "public")) {
             throw new GC2Exception("Not authorized", 403, null, "UNAUTHORIZED");
         }
-        $this->qualifiedName = $relation ? $schema . "." . $relation : null;
+        $this->qualifiedName = $relation ? implode(',', array_map(fn($r) => $schema . "." . $r, explode(',', $relation))) : null;
         if (!empty($this->schema)) {
             $this->doesSchemaExist();
         }
@@ -96,8 +96,11 @@ abstract class AbstractApi implements ApiInterface
     public function doesTableExist(): void
     {
         $db = new Database();
-        if (!$db->doesRelationExist($this->qualifiedName)) {
-            throw new GC2Exception("Table not found", 404, null, "TABLE_NOT_FOUND");
+        $qualifiedNames = explode(',', $this->qualifiedName);
+        foreach ($qualifiedNames as $name) {
+            if (!$db->doesRelationExist($name)) {
+                throw new GC2Exception("Table not found", 404, null, "TABLE_NOT_FOUND");
+            }
         }
     }
 

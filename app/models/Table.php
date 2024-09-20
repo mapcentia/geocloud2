@@ -426,16 +426,17 @@ class Table extends Model
     /**
      * @return array
      */
-    public function destroy(): array
+    public function destroy(string $name = null): array
     {
+        $table = $name ?? $this->table;
         $this->clearCacheOnSchemaChanges();
         $response = [];
-        $sql = "DROP TABLE {$this->doubleQuoteQualifiedName($this->table)} CASCADE;";
+        $sql = "DROP TABLE {$this->doubleQuoteQualifiedName($table)} CASCADE;";
         $res = $this->prepare($sql);
         try {
             $res->execute();
         } catch (PDOException) {
-            $sql = "DROP VIEW {$this->doubleQuoteQualifiedName($this->table)} CASCADE;";
+            $sql = "DROP VIEW {$this->doubleQuoteQualifiedName($table)} CASCADE;";
             $res = $this->prepare($sql);
             $res->execute();
         }
