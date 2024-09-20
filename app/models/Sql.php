@@ -152,7 +152,7 @@ class Sql extends Model
         $fieldsArr = [];
         foreach ($columnTypes as $key => $type) {
             if ($type == "geometry") {
-                if ($format == "geojson" || (($format == "csv" || $format == "excel") && $geoformat == "geojson")) {
+                if (($format == "geojson" || $format == "ndjson") || (($format == "csv" || $format == "excel") && $geoformat == "geojson")) {
                     $fieldsArr[] = "ST_asGeoJson(ST_Transform($ST_Force2D(\"$key\"),$this->srs)) as \"$key\"";
                 } elseif ($format == "csv" || $format == "excel") {
                     $fieldsArr[] = "ST_asText(ST_Transform($ST_Force2D(\"$key\"),$this->srs)) as \"$key\"";
