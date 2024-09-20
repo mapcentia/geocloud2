@@ -79,7 +79,14 @@ class Column extends AbstractApi
         if (!empty($data->default_value)) {
             $setDefaultValue = true;
         }
+
+        $this->table->begin();
+
         $newColumnName = self::addColumn($this->table, $data->column, $data->type, $setDefaultValue, $data->default_value, $data->is_nullable ?? true);
+
+        $this->table->commit();
+
+
         header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/columns/$newColumnName");
         return ["code" => "201"];
     }

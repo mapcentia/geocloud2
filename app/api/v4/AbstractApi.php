@@ -20,9 +20,10 @@ use ReflectionClass;
  */
 abstract class AbstractApi implements ApiInterface
 {
-    public TableModel $table;
-    public ?string $qualifiedName;
-    public ?string $unQualifiedName;
+    // TODO
+    public array $table;
+    public ?array $qualifiedName;
+    public ?array $unQualifiedName;
     public ?string $schema;
     public ?string $column;
     public ?string $key;
@@ -47,7 +48,7 @@ abstract class AbstractApi implements ApiInterface
      */
     public function initiate(?string $schema, ?string $relation, ?string $key, ?string $column, ?string $index, ?string $constraint, string $userName, bool $superUser): void
     {
-        $this->unQualifiedName = $relation;
+        $this->unQualifiedName = explode(',', $relation);
         $this->schema = $schema;
         $this->key = $key;
         $this->column = $column;
@@ -57,13 +58,13 @@ abstract class AbstractApi implements ApiInterface
         if (!$superUser && !($userName == $this->schema || $this->schema == "public")) {
             throw new GC2Exception("Not authorized", 403, null, "UNAUTHORIZED");
         }
-        $this->qualifiedName = $relation ? implode(',', array_map(fn($r) => $schema . "." . $r, explode(',', $relation))) : null;
+        $this->qualifiedName = $relation ? array_map(fn($r) => $schema . "." . $r, explode(',', $relation)) : null;
         if (!empty($this->schema)) {
             $this->doesSchemaExist();
         }
         if ($this->qualifiedName) {
             $this->doesTableExist();
-            $this->table = new TableModel($this->qualifiedName, false, false);
+            $this->table = array_map(fn($n) => new TableModel($n, false, false), $this->qualifiedName);
         }
         if ($this->key) {
             $this->doesKeyExist();
@@ -96,8 +97,7 @@ abstract class AbstractApi implements ApiInterface
     public function doesTableExist(): void
     {
         $db = new Database();
-        $qualifiedNames = explode(',', $this->qualifiedName);
-        foreach ($qualifiedNames as $name) {
+        foreach ($this->qualifiedName as $name) {
             if (!$db->doesRelationExist($name)) {
                 throw new GC2Exception("Table not found", 404, null, "TABLE_NOT_FOUND");
             }
