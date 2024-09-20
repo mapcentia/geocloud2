@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace app\inc;
 
+use app\api\v4\Constraint;
 use app\conf\App;
 use app\conf\Connection;
 use app\exceptions\GC2Exception;
@@ -450,7 +451,10 @@ class Model
                     "is_primary" => !empty($index["is_primary"][$row["column_name"]]),
                     "is_unique" => !empty($index["is_unique"][$row["column_name"]]),
                     "index_method" => !empty($index["index_method"][$row["column_name"]]) ? $index["index_method"][$row["column_name"]] : null,
-                    "checks" => sizeof($checkValues) > 0 ? $checkValues : null,
+                    "checks" => sizeof($checkValues) > 0 ? array_map(function ($con) {
+                        preg_match('#\((.*?)\)#', $con, $match);
+                        return $match[1];
+                    }, $checkValues) : null,
                 );
                 // Get type and srid of geometry
                 if ($row["udt_name"] == "geometry") {
@@ -1382,12 +1386,12 @@ class Model
         $tables = [];
         foreach ($this->fetchAll($res, 'assoc') as $table) {
             $tables[] = $table;
-            $totalSize+= $table['totalSizeBytes'];
+            $totalSize += $table['totalSizeBytes'];
         }
         $sql = "select pg_size_pretty($totalSize::bigint) as p";
         $res = $this->prepare($sql);
         $res->execute();
-        $row =$res->fetchAll();
+        $row = $res->fetchAll();
         try {
             $cost = (new Cost())->getCost();
         } catch (PDOException) {
