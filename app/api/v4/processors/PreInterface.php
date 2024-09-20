@@ -9,8 +9,10 @@
 namespace app\api\v4\processors;
 
 
+use app\inc\Model;
+
 interface PreInterface
 {
-    public function processAddTable(array $body) : array;
-    public function processAddUser(array $body) : array;
+    public function processAddTable(Model $model, array $body = []) : array;
+    public function processAddUser(Model $model, array $body = []) : array;
 }

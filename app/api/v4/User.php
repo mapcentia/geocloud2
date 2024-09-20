@@ -84,14 +84,15 @@ class User extends AbstractApi
         if (!$this->jwt["superUser"]) {
             throw new Exception("Sub-users are not allowed to create other sub users");
         }
+        $model = new UserModel();
         $data = json_decode(Input::getBody(), true) ?: [];
         $data['parentdb'] = $this->jwt['database'];
         // Load pre extensions and run processAddUser
-        $data = $this->runExtension('processAddUser', $data);
+        $this->runExtension('processAddUser', $model);
         try {
             (new Database())->createSchema($data['name']);
         } catch (Exception) {}
-        $res = self::convertUserObject((new UserModel())->createUser($data)['data']);
+        $res = self::convertUserObject($model->createUser($data)['data']);
         header("Location: /api/v4/users/{$res['name']}");
         return ["code" => 201];
     }

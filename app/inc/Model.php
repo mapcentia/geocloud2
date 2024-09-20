@@ -1426,4 +1426,19 @@ class Model
         $res->execute();
         return $res->fetchColumn();
     }
+
+    /**
+     * Checks if a relation (table, view, etc.) exists in the database.
+     * @param string $rel The name of the relation to check.
+     * @return bool True if the relation exists, false otherwise.
+     */
+    public function doesRelationExists($rel) : bool {
+        $sql = "SELECT FROM " . $this->doubleQuoteQualifiedName($rel) . " LIMIT 1";
+        try {
+            $this->execQuery($sql);
+            return true;
+        } catch (PDOException) {
+            return false;
+        }
+    }
 }

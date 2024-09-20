@@ -63,12 +63,10 @@ class Table extends AbstractApi
     {
         $body = Input::getBody();
         $data = json_decode($body, true);
-        // Load pre extensions and run processAddTable
-        $data = $this->runExtension('processAddTable', $data);
         $this->table = new TableModel(null);
         $this->table->postgisschema = $this->schema;
         $this->table->begin();
-        $r = self::addTable($this->table, (object)$data);
+        $r = self::addTable($this->table, (object)$data, $this);
         $this->table->commit();
         header("Location: /api/v4/schemas/$this->schema/tables/{$r['tableName']}");
         $res["code"] = "201";
@@ -79,8 +77,11 @@ class Table extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    public static function addTable(TableModel $table, stdClass $data): array
+    public static function addTable(TableModel $table, stdClass $data, $caller): array
     {
+        // Load pre extensions and run processAddTable
+        $caller->runExtension('processAddTable', $table);
+
         $r = $table->create($data->table, null, null, true);
         // Add columns
         if (!empty($data->columns)) {

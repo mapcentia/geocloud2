@@ -9,6 +9,7 @@
 namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
+use app\inc\Model;
 use app\models\Database;
 use app\models\Table as TableModel;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
@@ -203,16 +204,16 @@ abstract class AbstractApi implements ApiInterface
      * Executes the specified method on all pre-processor classes found in the processors directory.
      *
      * @param string $method The method to be executed on each pre-processor class.
-     * @param array $data The data to be passed to the method of each pre-processor.
+     * @param array|null $data The data to be passed to the method of each pre-processor.
      * @return array The modified data after being processed by all pre-processor classes.
      */
-    public function runExtension(string $method, array $data): array
+    public function runExtension(string $method, Model $model, ?array $data = []): array
     {
         foreach (glob(dirname(__FILE__) . "/processors/*/classes/pre/*.php") as $filename) {
             $class = "app\\api\\v4\\processors\\" . array_reverse(explode("/", $filename))[3] .
                 "\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
             $preProcessor = new $class($this->jwt);
-            $data = $preProcessor->{$method}($data);
+            $data = $preProcessor->{$method}($model, $data);
         }
         return $data;
     }

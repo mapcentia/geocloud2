@@ -74,15 +74,8 @@ class Table extends Model
             if ($CachedString != null && $CachedString->isHit()) {
                 $this->exists = $CachedString->get();
             } else {
-                $sql = "SELECT 1 FROM " . $this->doubleQuoteQualifiedName($table) . " LIMIT 1";
-                try {
-                    $this->execQuery($sql);
-                    $this->exists = true;
-                } catch (PDOException) {
-                    $this->exists = false;
-                }
+                $this->exists = $this->doesRelationExists($table);
                 $CachedString->set($this->exists)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-                //    $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
                 Cache::save($CachedString);
             }
 

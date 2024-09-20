@@ -152,7 +152,7 @@ class Schema extends AbstractApi
         // Add tables
         if (!empty($data->tables)) {
             foreach ($data->tables as $table) {
-                Table::addTable($this->table, $table);
+                Table::addTable($this->table, $table, $this);
             }
         }
         $this->table->commit();
