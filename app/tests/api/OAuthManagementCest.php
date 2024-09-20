@@ -24,9 +24,9 @@ class OAuthManagementCest
         $this->date = new DateTime();
         $this->userName = 'OAuth test super user name ' . $this->date->getTimestamp();
         $this->password = 'A1abcabcabc';
-        $this->userEmail = 'databasetest' . $this->date->getTimestamp() . '@example.com';
-        $this->subUserName = 'Database test sub user name ' . $this->date->getTimestamp();
-        $this->subUserEmail = 'databasesubtest' . $this->date->getTimestamp() . '@example.com';
+        $this->userEmail = 'oauthtest' . $this->date->getTimestamp() . '@example.com';
+        $this->subUserName = 'Oauth database test sub user name ' . $this->date->getTimestamp();
+        $this->subUserEmail = 'Oauth databasesubtest' . $this->date->getTimestamp() . '@example.com';
 
         $this->schemaName = 'Test schema ' . $this->date->getTimestamp();
     }
