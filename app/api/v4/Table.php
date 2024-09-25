@@ -174,11 +174,10 @@ class Table extends AbstractApi
      */
     public function get_index(): array
     {
-        $qualifiedNames = explode(',', $this->qualifiedName);
         $r = [];
         if (!empty($this->qualifiedName)) {
-            foreach ($qualifiedNames as $name) {
-                $r[] = self::getTable($this->table, $name);
+            for ($i = 0; sizeof($this->qualifiedName) > $i; $i++) {
+                $r[] = self::getTable($this->table[$i], $this->qualifiedName[$i]);
             }
         } else {
             $r = self::getTables($this->schema);
@@ -293,7 +292,7 @@ class Table extends AbstractApi
         }
         $this->schema = $data->schema;
         $layer->commit();
-        header("Location: /api/v4/schemas/$this->schema/tables/" . (count($r) > 0 ? implode(',', $r) : $this->unQualifiedName));
+        header("Location: /api/v4/schemas/$this->schema/tables/" . (count($r) > 0 ? implode(',', $r) : implode(',', $this->unQualifiedName)));
         return ["code" => "303"];
     }
 

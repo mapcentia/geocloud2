@@ -157,7 +157,9 @@ class Geofence extends Model
     }
 
     /**
+     * @param int|null $id
      * @return array
+     * @throws GC2Exception
      */
     public function get(?int $id): array
     {

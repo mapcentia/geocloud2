@@ -22,13 +22,12 @@ abstract class AbstractApi implements ApiInterface
 {
     // TODO
     public array $table;
+    public ?string $schema;
     public ?array $qualifiedName;
     public ?array $unQualifiedName;
-    public ?string $schema;
-    public ?string $column;
-    public ?string $key;
-    public ?string $index;
-    public ?string $constraint;
+    public ?array $column;
+    public ?array $index;
+    public ?array $constraint;
     public array $jwt;
 
     abstract public function validate(): void;
@@ -48,12 +47,11 @@ abstract class AbstractApi implements ApiInterface
      */
     public function initiate(?string $schema, ?string $relation, ?string $key, ?string $column, ?string $index, ?string $constraint, string $userName, bool $superUser): void
     {
-        $this->unQualifiedName = explode(',', $relation);
         $this->schema = $schema;
-        $this->key = $key;
-        $this->column = $column;
-        $this->index = $index;
-        $this->constraint = $constraint;
+        $this->unQualifiedName = $relation ? explode(',', $relation) : null;
+        $this->column = $column ? explode(',', $column) : null;
+        $this->index = $index ? explode(',', $index) : null;
+        $this->constraint = $constraint ? explode(',', $constraint) : null;
 
         if (!$superUser && !($userName == $this->schema || $this->schema == "public")) {
             throw new GC2Exception("Not authorized", 403, null, "UNAUTHORIZED");
@@ -65,9 +63,6 @@ abstract class AbstractApi implements ApiInterface
         if ($this->qualifiedName) {
             $this->doesTableExist();
             $this->table = array_map(fn($n) => new TableModel($n, false, false), $this->qualifiedName);
-        }
-        if ($this->key) {
-            $this->doesKeyExist();
         }
         if (!empty($this->column)) {
             $this->doesColumnExist();
@@ -109,8 +104,10 @@ abstract class AbstractApi implements ApiInterface
      */
     public function doesColumnExist(): void
     {
-        if (!isset($this->table->metaData[$this->column])) {
-            throw new GC2Exception("Column not found", 404, null, "COLUMN_NOT_FOUND");
+        foreach ($this->column as $column) {
+            if (!isset($this->table[0]->metaData[$column])) {
+                throw new GC2Exception("Column not found", 404, null, "COLUMN_NOT_FOUND");
+            }
         }
     }
 
@@ -120,32 +117,14 @@ abstract class AbstractApi implements ApiInterface
      */
     public function doesIndexExist(): void
     {
-        $indices = $this->table->getIndexes($this->schema, $this->unQualifiedName)["indices"];
-        foreach ($indices as $index) {
-            if ($index['index'] == $this->index) {
-                return;
+        $indices = $this->table[0]->getIndexes($this->schema, $this->unQualifiedName[0])["indices"];
+        foreach ($this->index as $index) {
+            foreach ($indices as $i) {
+                if ($index === $i["index"]) {
+                    continue 2;
+                }
             }
-        }
-        if (!$indices || !in_array($this->index, $indices)) {
             throw new GC2Exception("Index not found", 404, null, "INDEX_NOT_FOUND");
-        }
-    }
-
-    /**
-     * @throws GC2Exception
-     */
-    public function doesKeyExist(): void
-    {
-        $indices = $this->table->getIndexes($this->schema, $this->unQualifiedName)["is_primary"];
-        $flag = false;
-        foreach ($indices as $col) {
-            if ($col) {
-                $flag = true;
-                break;
-            }
-        }
-        if (!$flag) {
-            throw new GC2Exception("Key not found", 404, null, "KEY_NOT_FOUND");
         }
     }
 
@@ -155,28 +134,30 @@ abstract class AbstractApi implements ApiInterface
      */
     private function doesConstraintExist(): void
     {
-        $type = match ($this->constraint) {
-            "primary" => "p",
-            "foreign" => "f",
-            "unique" => "u",
-            "check" => "c",
-            "notnull" => "n",
-            default => ''
-        };
-        if ($type != "n") {
-            $constraints = $this->table->getConstrains($this->schema, $this->unQualifiedName, $type)['data'];
-            $exists = false;
-            foreach ($constraints as $constraint) {
-                if ($constraint['conname'] == $this->constraint) {
-                    $exists = true;
-                    break;
+        foreach ($this->constraint as $constraint) {
+            $type = match ($constraint) {
+                "primary" => "p",
+                "foreign" => "f",
+                "unique" => "u",
+                "check" => "c",
+                "notnull" => "n",
+                default => ''
+            };
+            if ($type != "n") {
+                $constraints = $this->table[0]->getConstrains($this->schema, $this->unQualifiedName[0], $type)['data'];
+                $exists = false;
+                foreach ($constraints as $c) {
+                    if ($c['conname'] == $constraint) {
+                        $exists = true;
+                        break;
+                    }
                 }
+            } else {
+                $exists = !$this->table[0]->metaData[$this->column]["is_nullable"];
             }
-        } else {
-           $exists = !$this->table->metaData[$this->column]["is_nullable"];
-        }
-        if (!$exists) {
-            throw new GC2Exception("Constraint not found", 404, null, "CONSTRAINT_NOT_FOUND");
+            if (!$exists) {
+                throw new GC2Exception("Constraint not found", 404, null, "CONSTRAINT_NOT_FOUND");
+            }
         }
     }
 

@@ -79,15 +79,17 @@ class Column extends AbstractApi
         if (!empty($data->default_value)) {
             $setDefaultValue = true;
         }
-
-        $this->table->begin();
-
-        $newColumnName = self::addColumn($this->table, $data->column, $data->type, $setDefaultValue, $data->default_value, $data->is_nullable ?? true);
-
-        $this->table->commit();
-
-
-        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/columns/$newColumnName");
+        $list = [];
+        $this->table[0]->begin();
+        if (isset($data->columns)) {
+            foreach ($data->columns as $datum) {
+                $list[] = self::addColumn($this->table[0], $datum->column, $datum->type, $setDefaultValue, $datum->default_value, $datum->is_nullable ?? true);
+            }
+        } else {
+            $list[] = self::addColumn($this->table[0], $data->column, $data->type, $setDefaultValue, $data->default_value, $data->is_nullable ?? true);
+        }
+        $this->table[0]->commit();
+        header("Location: /api/v4/schemas/$this->schema/tables/{$this->unQualifiedName[0]}/columns/" . implode(',', $list));
         return ["code" => "201"];
     }
 
@@ -147,17 +149,24 @@ class Column extends AbstractApi
      */
     #[Override] public function get_index(): array
     {
-        $res = self::getColumns($this->table, $this->qualifiedName);
+        $r = [];
+        $res = self::getColumns($this->table[0], $this->qualifiedName[0]);
         if ($this->column) {
-            foreach ($res as $i) {
-                if ($i['column'] == $this->column) {
-                    return $i;
+            foreach ($this->column as $col) {
+                foreach ($res as $datum) {
+                    if ($datum['column'] === $col) {
+                        $r[] = $datum;
+                    }
                 }
             }
         } else {
-            return ["columns" => $res];
+            $r = $res;
         }
-        return [];
+        if (count($r) > 1) {
+            return ["columns" => $r];
+        } else {
+            return $r[0];
+        }
     }
 
     /**
@@ -260,43 +269,45 @@ class Column extends AbstractApi
         $data = json_decode($body);
 
         $layer = new Layer();
-        $geomFields = $layer->getGeometryColumnsFromTable($this->schema, $this->unQualifiedName);
+        $geomFields = $layer->getGeometryColumnsFromTable($this->schema, $this->unQualifiedName[0]);
 
-        $this->table->begin();
-        $oldColumnName = $this->column;
+        $this->table[0]->begin();
         $r = [];
-        foreach ($geomFields as $geomField) {
-            $key = $this->qualifiedName . '.' . $geomField;
-            $conf = json_decode($layer->getValueFromKey($key, 'fieldconf'));
-            $obj = $conf->{$oldColumnName} ?? new stdClass();
-            $obj->id = $this->column;
-            $obj->column = $data->column ?? $this->column;
-            $obj->type = $data->type;
-            $r = $this->table->updateColumn($obj, $key, true);
-            $this->column = $r['name'];
-        }
-        $newName = $r["name"];
+        $list = [];
 
-        if (property_exists($data, "is_nullable")) {
-            if (!$data->is_nullable) {
-                $this->table->addNotNullConstraint($newName);
-            } else {
-                $this->table->dropNotNullConstraint($newName);
+        foreach ($this->column as $oldColumnName) {
+            foreach ($geomFields as $geomField) {
+                $key = $this->qualifiedName[0] . '.' . $geomField;
+                $conf = json_decode($layer->getValueFromKey($key, 'fieldconf'));
+                $obj = $conf->{$oldColumnName} ?? new stdClass();
+                $obj->id = $oldColumnName;
+                $obj->column = $data->column ?? $oldColumnName;
+                $obj->type = $data->type;
+                $r = $this->table[0]->updateColumn($obj, $key, true);
+                $list[] = $r['name'];
+            }
+            $newName = $r["name"];
+            if (property_exists($data, "is_nullable")) {
+                if (!$data->is_nullable) {
+                    $this->table[0]->addNotNullConstraint($newName);
+                } else {
+                    $this->table[0]->dropNotNullConstraint($newName);
+                }
+            }
+            if (property_exists($data, "default_value")) {
+                if ($data->default_value === null) {
+                    $this->table[0]->dropDefaultValue($newName);
+                } else {
+                    $this->table[0]->addDefaultValue($newName, $data->default_value);
+                }
+            }
+            if (property_exists($data, "type")) {
+                $this->table[0]->changeType($newName, $data->type);
             }
         }
-        if (property_exists($data, "default_value")) {
-            if ($data->default_value === null) {
-                $this->table->dropDefaultValue($newName);
-            } else {
-                $this->table->addDefaultValue($newName, $data->default_value);
-            }
-        }
-        if (property_exists($data, "type")) {
-            $this->table->changeType($newName, $data->type);
-        }
-        $this->table->commit();
+        $this->table[0]->commit();
 
-        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/columns/$newName");
+        header("Location: /api/v4/schemas/$this->schema/tables/{$this->unQualifiedName[0]}/columns/" . implode(',', $list));
         return ["code" => "303"];
     }
 
@@ -344,12 +355,16 @@ class Column extends AbstractApi
      * )
      * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public function delete_index(): array
     {
-        $this->table = new TableModel($this->qualifiedName);
-        $column = Route2::getParam("column");
-        $this->table->deleteColumn([$column], "");
+        $this->table[0] = new TableModel($this->qualifiedName[0]);
+        $this->table[0]->begin();
+        foreach ($this->column as $column) {
+            $this->table[0]->deleteColumn([$column], "");
+        }
+        $this->table[0]->commit();
         return ["code" => "204"];
     }
 

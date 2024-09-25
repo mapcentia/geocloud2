@@ -65,14 +65,32 @@ class Constraint extends AbstractApi
     {
         $body = Input::getBody();
         $data = json_decode($body);
-        $name = $data->name;
-        $type = $data->constraint;
-        $columns = $data->columns;
-        $check = $data->check;
-        $referencedTable = $data->referenced_table;
-        $referencedColumns = $data->referenced_columns;
-        $name = self::addConstraint($this->table, $type, $columns, $check, $name, $referencedTable, $referencedColumns);
-        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/constraints/$name");
+        $list = [];
+
+        $this->table[0]->begin();
+
+        if (isset($data->constraints)) {
+            foreach ($data->constraints as $datum) {
+                $name = $datum->name;
+                $type = $datum->constraint;
+                $columns = $datum->columns;
+                $check = $datum->check;
+                $referencedTable = $datum->referenced_table;
+                $referencedColumns = $datum->referenced_columns;
+                $list[] = self::addConstraint($this->table[0], $type, $columns, $check, $name, $referencedTable, $referencedColumns);
+            }
+        } else {
+            $name = $data->name;
+            $type = $data->constraint;
+            $columns = $data->columns;
+            $check = $data->check;
+            $referencedTable = $data->referenced_table;
+            $referencedColumns = $data->referenced_columns;
+            $list[] = self::addConstraint($this->table[0], $type, $columns, $check, $name, $referencedTable, $referencedColumns);
+
+        }
+        $this->table[0]->commit();
+        header("Location: /api/v4/schemas/$this->schema/tables/{$this->unQualifiedName[0]}/constraints/" . implode(',', $list));
         $res["code"] = "201";
         return $res;
     }
@@ -142,7 +160,11 @@ class Constraint extends AbstractApi
      */
     public function delete_index(): array
     {
-        $this->table->dropConstraint($this->constraint);
+        $this->table[0]->begin();
+        foreach ($this->constraint as $constraint) {
+            $this->table[0]->dropConstraint($constraint);
+        }
+        $this->table[0]->commit();
         $res["code"] = "204";
         return $res;
     }
@@ -191,15 +213,24 @@ class Constraint extends AbstractApi
      */
     public function get_index(): array
     {
-        $constraints = self::getConstraints($this->table, $this->qualifiedName);
+        $r = [];
+        $res = self::getConstraints($this->table[0], $this->qualifiedName[0]);
         if (!empty($this->constraint)) {
-            foreach ($constraints as $constraint) {
-                if ($constraint['name'] == $this->constraint) {
-                    return $constraint;
+            foreach ($this->constraint as $constraint) {
+                foreach ($res as $c) {
+                    if ($c['name'] == $constraint) {
+                        $r[] = $c;
+                    }
                 }
             }
+        } else {
+            $r = $res;
         }
-        return ["constraints" => $constraints];
+        if (count($r) > 1) {
+            return ["constraints" => $r];
+        } else {
+            return $r[0];
+        }
     }
 
     /**

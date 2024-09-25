@@ -37,12 +37,21 @@ class Client extends AbstractApi
      */
     public function get_index(): array
     {
-        $id = Route2::getParam("id");
+        $r = [];
         $client = new ClientModel();
-        if (!empty($id)) {
-            return $client->get($id)[0];
+
+        if (!empty(Route2::getParam("id"))) {
+            $ids = explode(',', Route2::getParam("id"));
+            foreach ($ids as $id) {
+                $r[] = $client->get($id)[0];
+            }
         } else {
-            return ['clients' => $client->get($id)];
+            $r = $client->get();
+        }
+        if (count($r) > 1) {
+            return ["clients" => $r];
+        } else {
+            return $r[0];
         }
     }
 
@@ -52,15 +61,32 @@ class Client extends AbstractApi
      */
     public function post_index(): array
     {
+        $list = [];
+        $model = new ClientModel();
         $body = Input::getBody();
-        $arr = json_decode($body, true);
-        $arr2 = [
-            'name' => $arr['name'],
-            'redirectUri' => json_encode($arr['redirect_uri']),
-            'homepage' => $arr['homepage'] ?? null,
-            'description' => $arr['description'] ?? null,
-        ];
-        return (new ClientModel())->insert(...$arr2);
+        $data = json_decode($body, true);
+        $model->connect();
+        $model->begin();
+
+        if (!isset($data['clients'])) {
+            $data['clients'] = [$data];
+        }
+        foreach ($data['clients'] as $datum) {
+            $arr = [
+                'name' => $datum['name'],
+                'redirectUri' => json_encode($datum['redirect_uri']),
+                'homepage' => $datum['homepage'] ?? null,
+                'description' => $datum['description'] ?? null,
+            ];
+            $list[] = $model->insert(...$arr);
+        }
+        $model->commit();
+
+        if (count($list) > 1) {
+            return ["clients" => $list];
+        } else {
+            return $list[0];
+        }
     }
 
     /**
@@ -72,17 +98,24 @@ class Client extends AbstractApi
         if (empty($id)) {
             throw new GC2Exception("No client id", 404, null, 'MISSING_ID');
         }
+        $ids = explode(',', Route2::getParam("id"));
         $body = Input::getBody();
-        $arr = json_decode($body, true);
-        $arr2 = [
-            'id' => $id,
-            'name' => $arr['name'] ?? null,
-            'redirectUri' => json_encode($arr['redirect_uri']) ?? null,
-            'homepage' => $arr['homepage'] ?? null,
-            'description' => $arr['description'] ?? null,
-        ];
-        (new ClientModel())->update(...$arr2);
-        header("Location: /api/v4/clients/$id");
+        $data = json_decode($body, true);
+        $model = new ClientModel();
+        $model->connect();
+        $model->begin();
+        foreach ($ids as $id) {
+            $arr = [
+                'id' => $id,
+                'name' => $data['name'] ?? null,
+                'redirectUri' => json_encode($data['redirect_uri']) ?? null,
+                'homepage' => $data['homepage'] ?? null,
+                'description' => $data['description'] ?? null,
+            ];
+            $model->update(...$arr);
+        }
+        $model->commit();
+        header("Location: /api/v4/clients/" . implode(",", $ids));
         return ["code" => "303"];
     }
 
@@ -91,11 +124,17 @@ class Client extends AbstractApi
      */
     public function delete_index(): array
     {
-        $id = Route2::getParam("id");
-        if (empty($id)) {
+        $ids = explode(',', Route2::getParam("id"));
+        if (empty($ids)) {
             throw new GC2Exception("No client id", 404, null, 'MISSING_ID');
         }
-        (new ClientModel())->delete($id);
+        $model = new ClientModel();
+        $model->connect();
+        $model->begin();
+        foreach ($ids as $id) {
+            $model->delete($id);
+        }
+        $model->commit();
         return ["code" => "204"];
     }
 }

@@ -30,17 +30,25 @@ class Index extends AbstractApi
     #[OA\Parameter(name: 'table', description: 'Name of table', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\Response(response: 201, description: 'Created',
         content: new OA\JsonContent(properties: [new OA\Property(property: 'index', description: 'Name of new index', type: 'string', example: 'my_index')], type: 'object'),
-        links: [new OA\Link('', null,null,'getIndex')])
+        links: [new OA\Link('', null, null, 'getIndex')])
     ]
     public function post_index(): array
     {
         $body = Input::getBody();
         $data = json_decode($body);
-        $name = $data->name ?? null;
-        $method = $data->method ?? "btree";
-        $columns = $data->columns;
-        $name = self::addIndices($this->table, $columns, $method, $name);
-        header("Location: /api/v4/schemas/$this->schema/tables/$this->unQualifiedName/indices/$name");
+        $list = [];
+        $this->table[0]->begin();
+        if (!isset($data->indices)) {
+            $data->indices = [$data];
+        }
+        foreach ($data->indices as $datum) {
+            $name = $datum->name ?? null;
+            $method = $datum->method ?? "btree";
+            $columns = $datum->columns;
+            $list[] = self::addIndices($this->table[0], $columns, $method, $name);
+        }
+        $this->table[0]->commit();
+        header("Location: /api/v4/schemas/$this->schema/tables/{$this->unQualifiedName[0]}/indices/" . implode(',', $list));
         $res["code"] = "201";
         return $res;
     }
@@ -92,15 +100,24 @@ class Index extends AbstractApi
      */
     public function get_index(): array
     {
-        $indices = self::getIndices($this->table, $this->qualifiedName);
+        $r = [];
+        $res = self::getIndices($this->table[0], $this->qualifiedName[0]);
         if (!empty($this->index)) {
-            foreach ($indices as $index) {
-                if ($index['name'] == $this->index) {
-                    return $index;
+            foreach ($this->index as $index) {
+                foreach ($res as $i) {
+                    if ($i['name'] == $index) {
+                        $r[] = $i;
+                    }
                 }
             }
+        } else {
+            $r = $res;
         }
-        return ["indices" => $indices];
+        if (count($r) > 1) {
+            return ["indices" => $r];
+        } else {
+            return $r[0];
+        }
     }
 
     public static function getIndices(TableModel $table, string $name): array
@@ -182,7 +199,11 @@ class Index extends AbstractApi
      */
     public function delete_index(): array
     {
-        $this->table->dropIndex($this->index);
+        $this->table[0]->begin();
+        foreach ($this->index as $index) {
+            $this->table[0]->dropIndex($index);
+        }
+        $this->table[0]->commit();
         return ["code" => "204"];
     }
 

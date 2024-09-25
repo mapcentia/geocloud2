@@ -145,17 +145,17 @@ class Schema extends AbstractApi
         }
         $body = Input::getBody();
         $data = json_decode($body);
-        $this->table = new TableModel(null);
-        $this->table->postgisschema = $data->schema;
-        $this->table->begin();
-        $r = $this->schemaObj->createSchema($data->schema, $this->table);
+        $this->table[0] = new TableModel(null);
+        $this->table[0]->postgisschema = $data->schema;
+        $this->table[0]->begin();
+        $r = $this->schemaObj->createSchema($data->schema, $this->table[0]);
         // Add tables
         if (!empty($data->tables)) {
             foreach ($data->tables as $table) {
-                Table::addTable($this->table, $table, $this);
+                Table::addTable($this->table[0], $table, $this);
             }
         }
-        $this->table->commit();
+        $this->table[0]->commit();
         header("Location: /api/v4/schemas/{$r["schema"]}");
         $res["code"] = "201";
         return $res;

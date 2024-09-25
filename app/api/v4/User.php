@@ -84,16 +84,26 @@ class User extends AbstractApi
         if (!$this->jwt["superUser"]) {
             throw new Exception("Sub-users are not allowed to create other sub users");
         }
+        $list = [];
         $model = new UserModel();
         $data = json_decode(Input::getBody(), true) ?: [];
-        $data['parentdb'] = $this->jwt['database'];
-        // Load pre extensions and run processAddUser
-        $this->runExtension('processAddUser', $model);
-        try {
-            (new Database())->createSchema($data['name']);
-        } catch (Exception) {}
-        $res = self::convertUserObject($model->createUser($data)['data']);
-        header("Location: /api/v4/users/{$res['name']}");
+        $model->connect();
+        $model->begin();
+        if (!isset($data['users'])) {
+            $data['users'] = [$data];
+        }
+        foreach ($data['users'] as $user) {
+            $user['parentdb'] = $this->jwt['database'];
+            // Load pre extensions and run processAddUser
+            $this->runExtension('processAddUser', $model);
+            try {
+                (new Database())->createSchema($user['name']);
+            } catch (Exception) {
+            }
+            $list[] = self::convertUserObject($model->createUser($user)['data'])['name'];
+        }
+        $model->commit();
+        header("Location: /api/v4/users/" . implode(",", $list));
         return ["code" => 201];
     }
 
@@ -123,15 +133,24 @@ class User extends AbstractApi
      */
     public function get_index(): array
     {
+        $r = [];
         $requestedUser = Route2::getParam("user");
         if (!$requestedUser) {
             return $this->getAll();
         }
-        if (!$this->jwt["superUser"] && $this->jwt["uid"] != $requestedUser) {
-            throw new Exception("Sub-users are not allowed to get information about other sub users");
+        $users = explode(',', $requestedUser);
+        foreach ($users as $user) {
+            if (!$this->jwt["superUser"] && $this->jwt["uid"] != $user) {
+                throw new Exception("Sub-users are not allowed to get information about other sub users");
+            }
+            $userModelLocal = new UserModel($user, $this->jwt["database"]);
+            $r[] = self::convertUserObject($userModelLocal->getData()["data"]);
         }
-        $userModelLocal = new UserModel($requestedUser, $this->jwt["database"]);
-        return self::convertUserObject($userModelLocal->getData()["data"]);
+        if (count($r) > 1) {
+            return ["users" => $r];
+        } else {
+            return $r[0];
+        }
     }
 
     /**
@@ -174,31 +193,43 @@ class User extends AbstractApi
      */
     public function put_index(): array
     {
-        $requestedUserId = Route2::getParam("user");
-        if (!$this->jwt["superUser"] && $this->jwt["uid"] != $requestedUserId) {
-            throw new Exception("Sub-users are not allowed to update other sub users");
-        }
+        $requestedUsers = explode(',', Route2::getParam("user"));
+
         $data = json_decode(Input::getBody(), true) ?: [];
         $currentUserId = $this->jwt["uid"];
         $dataBase = $this->jwt["database"];
-        $data["user"] = $requestedUserId;
-        $data["usergroup"] = $data["user_group"];
-        if ($currentUserId == $requestedUserId) {
-            if (!$this->jwt['superUser']) {
-                $data['parentdb'] = $this->jwt['database'];
+
+        foreach ($requestedUsers as $requestedUserId) {
+            if (!$this->jwt["superUser"] && $this->jwt["uid"] != $requestedUserId) {
+                throw new Exception("Sub-users are not allowed to update other sub users");
             }
-            (new UserModel())->updateUser($data);
-        } else {
-            $userModelLocal = new UserModel($requestedUserId, $dataBase);
-            $user = $userModelLocal->getData();
-            if ($user["data"]["parentdb"] == $currentUserId) {
-                $data["parentdb"] = $user["data"]["parentdb"];
-                $userModelLocal->updateUser($data);
+            $data["user"] = $requestedUserId;
+            $data["usergroup"] = $data["user_group"];
+            if ($currentUserId == $requestedUserId) {
+                if (!$this->jwt['superUser']) {
+                    $data['parentdb'] = $this->jwt['database'];
+                }
+                $model = new UserModel();
+                $model->connect();
+                $model->begin();
+                $model->updateUser($data);
+                $model->commit();
+
             } else {
-                throw new Exception("Requested user is not the subuser of the currently authenticated user");
+                $model = new UserModel($requestedUserId, $dataBase);
+                $model->connect();
+                $model->begin();
+                $user = $model->getData();
+                if ($user["data"]["parentdb"] == $currentUserId) {
+                    $data["parentdb"] = $user["data"]["parentdb"];
+                    $model->updateUser($data);
+                } else {
+                    throw new Exception("Requested user is not the subuser of the currently authenticated user");
+                }
+                $model->commit();
             }
         }
-        header("Location: /api/v4/users/$requestedUserId");
+        header("Location: /api/v4/users/" . implode(",", $requestedUsers));
         return ["code" => "303"];
     }
 
@@ -231,8 +262,16 @@ class User extends AbstractApi
         if (!$this->jwt["superUser"]) {
             throw new Exception("Sub-users are not allowed to delete sub users");
         }
-        $requestedUser = Route2::getParam("user");
-        (new UserModel($this->jwt['uid']))->deleteUser($requestedUser);
+        $requestedUsers = explode(',', Route2::getParam("user"));
+        $model = new UserModel($this->jwt['uid']);
+
+        $model->connect();
+        $model->begin();
+        foreach ($requestedUsers as $requestedUser) {
+            $model->deleteUser($requestedUser);
+
+        }
+        $model->commit();
         return ["code" => "204"];
     }
 
