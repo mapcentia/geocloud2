@@ -1718,7 +1718,7 @@ function doParse(array $arr)
                                         break;
                                 }
                             } else {
-                                $values[] = pg_escape_string($value);
+                                $values[] = $value;
                             }
 
                         }
@@ -2355,7 +2355,8 @@ function doParse(array $arr)
         // We fire the sqls
         try {
             foreach ($sqls as $sql) {
-                $postgisObject->execQuery($sql, "PDO", "transaction");
+                $res = $postgisObject->prepare($sql);
+                $res->execute();
             }
         } catch (PDOException $e) {
             makeExceptionReport($e->getMessage());
