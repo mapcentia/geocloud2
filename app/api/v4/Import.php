@@ -145,7 +145,7 @@ class Import extends AbstractApi
             // Strip the temp .part suffix off
             rename("$filePath.part", $filePath);
         }
-        return ["success" => true, "chunk" => $chunk];
+        return ["code" => 201, "success" => true, "chunk" => $chunk];
     }
 
     /**
@@ -198,6 +198,7 @@ class Import extends AbstractApi
         $response['cmd'] = $result['cmd'];
         $response['data'] = $result['data'];
         $response["success"] = true;
+        $response["code"] = 201;
         return $response;
     }
 
