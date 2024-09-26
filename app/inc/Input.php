@@ -50,6 +50,11 @@ class Input
         return strtolower($_SERVER['REQUEST_METHOD']);
     }
 
+    public static function getAccessControlRequestMethod(): ?string
+    {
+        return $_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD'] ?? null;
+    }
+
     /**
      * @return string
      */
@@ -61,7 +66,7 @@ class Input
     /**
      * @return string
      */
-    public static function getContentType(): string
+    public static function getContentType(): ?string
     {
         return $_SERVER["CONTENT_TYPE"];
     }

@@ -10,7 +10,6 @@ namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
 use app\inc\Input;
-use app\inc\Jwt;
 use app\inc\Route2;
 use app\models\Client as ClientModel;
 use Random\RandomException;
@@ -35,6 +34,7 @@ class Client extends AbstractApi
     /**
      * @throws GC2Exception
      */
+    #[AcceptableAccepts(['application/json', '*/*'])]
     public function get_index(): array
     {
         $r = [];
@@ -57,8 +57,9 @@ class Client extends AbstractApi
 
     /**
      * @throws RandomException
-     * @throws GC2Exception
      */
+    #[AcceptableContentTypes(['application/json'])]
+    #[AcceptableAccepts(['application/json'])]
     public function post_index(): array
     {
         $list = [];
@@ -67,7 +68,6 @@ class Client extends AbstractApi
         $data = json_decode($body, true);
         $model->connect();
         $model->begin();
-
         if (!isset($data['clients'])) {
             $data['clients'] = [$data];
         }
@@ -81,7 +81,6 @@ class Client extends AbstractApi
             $list[] = $model->insert(...$arr);
         }
         $model->commit();
-
         if (count($list) > 1) {
             return ["clients" => $list];
         } else {
@@ -92,6 +91,7 @@ class Client extends AbstractApi
     /**
      * @throws GC2Exception
      */
+    #[AcceptableContentTypes(['application/json'])]
     public function put_index(): array
     {
         $id = Route2::getParam("id");

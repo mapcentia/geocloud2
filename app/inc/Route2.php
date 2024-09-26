@@ -9,13 +9,14 @@
 namespace app\inc;
 
 use app\api\v4\AbstractApi;
+use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableMethods;
+use app\api\v4\AcceptableContentTypes;
 use app\api\v4\ApiInterface;
-use app\api\v4\Schema;
 use app\exceptions\GC2Exception;
 use Closure;
 use ReflectionClass;
-use ReflectionException;
+use ReflectionMethod;
 
 /**
  * Class Route2
@@ -90,8 +91,12 @@ class Route2
             $e[count($e) - 1] = ucfirst($e[count($e) - 1]);
 
             $reflectionClass = new ReflectionClass($controller);
+            $reflectionMethods = $reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC);
+
             if (!method_exists($controller, $action)) {
                 $method = Input::getMethod();
+                $contentType = Input::getContentType() ? trim(explode(';', Input::getContentType())[0]): null;
+                $accepts = Input::getAccept() ? array_map(fn($str) => trim(explode(';',$str)[0]) ,explode(',', Input::getAccept())) : null;
                 $action = $method . "_index";
                 $attributes = $reflectionClass->getAttributes(AcceptableMethods::class);
                 foreach ($attributes as $attribute) {
@@ -103,7 +108,37 @@ class Route2
                             $listener->throwException();
                         }
                         if ($method == "options" || $method == "head") {
+                            if ($method == "options") {
+                                $m = strtolower(Input::getAccessControlRequestMethod());
+                                if (!in_array($m, $allowedMethods)) {
+                                    $listener->throwException();
+                                }
+                            }
                             $listener->options();
+                        }
+                    }
+                }
+                foreach ($reflectionMethods as $reflectionMethod) {
+                    if ($reflectionMethod->getName() == $action) {
+                        $attributes = $reflectionMethod->getAttributes(AcceptableContentTypes::class);
+                        foreach ($attributes as $attribute) {
+                            $listener = $attribute->newInstance();
+                            if ($listener::class == AcceptableContentTypes::class) {
+                                $allowedContentTypes = array_map('strtolower', $listener->getAllowedContentTypes());
+                                if (!in_array($contentType, $allowedContentTypes)) {
+                                    $listener->throwException();
+                                }
+                            }
+                        }
+                        $attributes = $reflectionMethod->getAttributes(AcceptableAccepts::class);
+                        foreach ($attributes as $attribute) {
+                            $listener = $attribute->newInstance();
+                            if ($listener::class == AcceptableAccepts::class) {
+                                $allowedAccepts = array_map('strtolower', $listener->getAllowedAccepts());
+                                if (!in_array('*/*', $accepts) && count(array_intersect($accepts, $allowedAccepts)) == 0) {
+                                    $listener->throwException();
+                                }
+                            }
                         }
                     }
                 }
@@ -118,7 +153,9 @@ class Route2
             header("HTTP/1.0 $code " . Util::httpCodeText($code));
             $response["_execution_time"] = round((Util::microtime_float() - $time_start), 3);
             header('Content-type: application/json; charset=utf-8');
-            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            if (!in_array($code, ['204', '303'])) {
+                echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            }
             exit();
         }
     }

@@ -19,6 +19,7 @@ use Override;
  * Class Geofence
  * @package app\api\v4
  */
+#[AcceptableMethods(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Geofence extends AbstractApi
 {
     public GeofenceModel $geofence;
@@ -52,6 +53,7 @@ class Geofence extends AbstractApi
      * )
      * @throws GC2Exception
      */
+    #[AcceptableAccepts(['application/json'])]
     public function get_index(): array
     {
         $geofence = new GeofenceModel(null);
@@ -116,6 +118,8 @@ class Geofence extends AbstractApi
      *   )
      * )
      */
+    #[AcceptableContentTypes(['application/json'])]
+    #[AcceptableAccepts(['application/json'])]
     public function post_index(): array
     {
         $list = [];
@@ -184,6 +188,7 @@ class Geofence extends AbstractApi
      * )
      * @throws GC2Exception
      */
+    #[AcceptableContentTypes(['application/json'])]
     public function put_index(): array
     {
         $id = Route2::getParam("id");
