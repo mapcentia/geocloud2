@@ -98,6 +98,7 @@ if (!file_exists($lockFile)) {
 }
 
 $getFunction = null;
+$contentIsCsv = false;
 
 // Check if Paging should be used
 if (sizeof(explode("|http", $url)) > 1) {
@@ -119,9 +120,13 @@ if (sizeof(explode("|http", $url)) > 1) {
         if ($header == "Content-Type: application/zip") {
             $getFunction = "getCmdZip";
         }
+        if ($header == "Content-Type: text/csv") {
+            $contentIsCsv = true;
+            $getFunction = "getCmd";
+        }
         print " $header\n";
     }
-    // Check file extension
+    // Check file extension if getFunction still not is set
     if (!$getFunction) {
         $extCheck1 = explode(".", $url);
         $extCheck2 = array_reverse($extCheck1);
@@ -207,7 +212,7 @@ function which(): string
  */
 function getCmd(): void
 {
-    global $encoding, $srid, $dir, $tempFile, $type, $db, $workingSchema, $randTableName, $downloadSchema, $url, $report, $out, $err;
+    global $encoding, $srid, $dir, $tempFile, $type, $db, $workingSchema, $randTableName, $downloadSchema, $url, $report, $out, $err, $contentIsCsv;
 
     $report[DOWNLOADTYPE] = URL;
 
@@ -230,14 +235,14 @@ function getCmd(): void
     }
 
     // We test for CSV data, because ogr2ogr can't detect this format
-    $isCsv = isCsv($dir . "/" . $tempFile);
+    $isCsv = $contentIsCsv || isCsv($dir . "/" . $tempFile);
 
     print "\nInfo: Staring inserting in temp table using ogr2ogr...";
 
     $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
         "-overwrite " .
         "-dim 2 " .
-        "-oo 'DOWNLOAD_SCHEMA=" . ($downloadSchema ? "YES" : "NO") . "' " .
+        "-oo 'DOWNLOAD_SCHEMA=" . ($downloadSchema && !$contentIsCsv ? "YES" : "NO") . "' " .
         "-lco 'GEOMETRY_NAME=the_geom' " .
         "-lco 'FID=gid' " .
         "-lco 'PRECISION=NO' " .
