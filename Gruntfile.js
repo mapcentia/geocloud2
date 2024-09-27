@@ -278,11 +278,20 @@ module.exports = function (grunt) {
             composer: {
                 command: 'cd app && php composer.phar install'
             },
-            buildDocs: {
-                command: 'sphinx-build ./docs/da ./docs/html'
-            },
             hacks: {
                 command: 'cp ./docker/_hacks/pool/* ./app/vendor/phpfastcache/phpfastcache/lib/Phpfastcache/Core/Pool/ && cp ./docker/_hacks/proxy/* ./app/vendor/phpfastcache/phpfastcache/lib/Phpfastcache/Proxy/ && cp ./docker/_hacks/drivers/redis/* ./app/vendor/phpfastcache/phpfastcache/lib/Phpfastcache/Drivers/Redis/Driver.php && cp ./docker/_hacks/drivers/rediscluster/* ./app/vendor/phpfastcache/phpfastcache/lib/Phpfastcache/Drivers/Rediscluster/Driver.php'
+            },
+            buildDocs: {
+                command: '. ./venv/bin/activate && sphinx-build ./docs ./docs/_build/html/da'
+            },
+            gettext: {
+                command: '. ./venv/bin/activate && sphinx-build ./docs -b gettext ./docs/_build/gettext'
+            },
+            updateEn: {
+                command: '. ./venv/bin/activate && cd ./docs && sphinx-intl update -p _build/gettext -l en'
+            },
+            buildEn: {
+                command: '. ./venv/bin/activate && sphinx-build -b html -D language=en ./docs ./docs/_build/html/en'
             }
 
         }
