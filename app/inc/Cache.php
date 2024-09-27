@@ -150,7 +150,7 @@ abstract class Cache
      * @param string $key
      * @return ExtendedCacheItemInterface|null
      */
-    static public function getItem(string $key): ?ExtendedCacheItemInterface
+    static public function getItem(?string $key): ?ExtendedCacheItemInterface
     {
         try {
             $CachedString = self::$instanceCache->getItem($key);
