@@ -1,10 +1,4 @@
 <?php
-/**
- * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2024 MapCentia ApS
- * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- *
- */
 
 use app\auth\types\GrantType;
 use app\models\Database;
@@ -29,16 +23,18 @@ if ($_POST['database'] && $_POST['user'] && $_POST['password']) {
     } catch (Exception) {
         $res = (new \app\models\User())->getDatabasesForUser($_POST['user']);
         echo $twig->render('login.html.twig', [...$res, ...$_POST]);
-        echo "<div id='alert' hx-swap-oob='true'>Wrong password</div>";
+        echo "<div id='alert' hx-swap-oob='true'>" . $twig->render('error.html.twig', ['message' => 'Wrong password']) . "</div>";
     }
 } elseif ($user = $_POST['user']) {
     // Get database for user
     $res = [];
     $res = (new \app\models\User())->getDatabasesForUser($user);
     if (sizeof($res['databases']) > 0) {
-        echo "<div id='alert' hx-swap-oob='true'></div>";
+        echo "<div id='alert' hx-swap-oob='true'>ss</div>";
     } else {
-        echo "<div id='alert' hx-swap-oob='true'>User doesn't exists</div>";
+        echo "<div id='alert' hx-swap-oob='true'>" . $twig->render('error.html.twig', ['message' => 'User doesn\'t exists']) ."</div>";
     }
     echo $twig->render('login.html.twig', [...$res, ...$_POST]);
+} else {
+    echo $twig->render('login.html.twig');
 }

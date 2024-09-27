@@ -98,5 +98,9 @@ if (Session::isAuth()) {
 }
 
 echo $twig->render('header.html.twig');
-echo $twig->render('login.html.twig', $_GET);
+echo "<main class='form-signin w-100 m-auto'>";
+echo "<div hx-trigger='load' hx-target='this' hx-target='this' hx-post='/auth/backends/login.php'></div>";
+echo "<div id='alert'></div>";
+echo "</main>";
+
 echo $twig->render('footer.html.twig');

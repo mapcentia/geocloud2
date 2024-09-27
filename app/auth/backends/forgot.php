@@ -20,32 +20,33 @@ $twig = new Environment($loader);
 
 Database::setDb("mapcentia");
 
-if (isset($_POST['password']) && isset($_POST['user']) && isset($_POST['key'])) {
+if (isset($_POST['password']) && isset($_POST['userid']) && isset($_POST['key'])) {
 
-    $CachedString = Cache::getItem('__forgot_' . $_POST['user']);
+    $CachedString = Cache::getItem('__forgot_' . $_POST['userid']);
     if ($CachedString != null && $CachedString->isHit()) {
         $val = $CachedString->get();
         if ($val !== $_POST['key']) {
-            echo "<div id='alert' hx-swap-oob='true'>Wrong key</div>";
+            echo "<div id='alert' hx-swap-oob='true'>" . $twig->render('error.html.twig', ['message' => 'Wrong key']) . "</div>";
             exit();
         }
     } else {
-        echo "<div id='alert' hx-swap-oob='true'>Could not find the key. Maybe it has expired</div>";
+        echo "<div id='alert' hx-swap-oob='true'>" . $twig->render('error.html.twig', ['message' => 'Could not find the key. Maybe it has expired']) . "</div>";
         exit();
     }
-    $data["user"] = $_POST['user'];
+    $data["user"] = $_POST['userid'];
     $data["password"] = $_POST['password'];
     try {
         (new UserModel())->updateUser($data);
     } catch (Exception $e) {
-        echo $twig->render("reset.html.twig");
-        echo "<div id='alert' hx-swap-oob='true'>{$e->getMessage()}</div>";
+        echo $twig->render("reset.html.twig", [...$data, 'key' => $_POST['key']]);
+        echo "<div id='alert' hx-swap-oob='true'>" . $twig->render('error.html.twig', ['message' => $e->getMessage()]) . "</div>";
         exit();
     }
-    Cache::deleteItem('__forgot_' . $_POST['user']);
-    echo "<div id='alert' hx-swap-oob='true'>Password changed</div>";
-} elseif (isset($_POST['user'])) {
-    $user =  Model::toAscii($_POST['user'], null, '_');
+    Cache::deleteItem('__forgot_' . $_POST['userid']);
+    echo "<div id='alert' hx-swap-oob='true'>" . $twig->render('error.html.twig', ['message' => 'Password changed']) . "</div>";
+
+} elseif (isset($_POST['userid'])) {
+    $user =  Model::toAscii($_POST['userid'], null, '_');
     $res = (new UserModel())->getDatabasesForUser($user);
     if (sizeof($res['databases']) == 1 && empty($res['databases'][0]['parentdb'])) {
         echo "<div id='alert' hx-swap-oob='true'></div>";
@@ -77,12 +78,16 @@ if (isset($_POST['password']) && isset($_POST['user']) && isset($_POST['key'])) 
         } catch (Exception $generalException) {
             exit(1);
         }
-        echo "<div id='alert' hx-swap-oob='true'>E-mail with reset link is send</div>";
+        echo "<div id='alert' hx-swap-oob='true'>" . $twig->render('error.html.twig', ['message' => 'E-mail with reset link is send']) . "</div>";
+        echo "<div id='alert' hx-swap-oob='true'>" . $twig->render('error.html.twig', ['message' => $url]) . "</div>";
+
     } else if (sizeof($res['databases']) > 1 || !empty($res['databases'][0]['parentdb'])) {
         echo $twig->render("forgot.html.twig");
-        echo "<div id='alert' hx-swap-oob='true'>Only super users can reset password</div>";
+        echo "<div id='alert' hx-swap-oob='true'>" . $twig->render('error.html.twig', ['message' => 'Only super users can reset password']) . "</div>";
+
     } else {
         echo $twig->render("forgot.html.twig");
-        echo "<div id='alert' hx-swap-oob='true'>User doesn't exists</div>";
+        echo "<div id='alert' hx-swap-oob='true'>" . $twig->render('error.html.twig', ['message' => 'User doesn\'t exists']) . "</div>";
+
     }
 }

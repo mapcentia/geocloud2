@@ -432,4 +432,54 @@ class User extends Model
         }
         return $hasPassword;
     }
+
+    /**
+     * Validates and marks the provided code as used if it exists and hasn't been used.
+     *
+     * @param string $code The code to check and mark as used.
+     * @param string $email
+     * @return void
+     * @throws GC2Exception If the code does not exist or has already been used.
+     */
+    public function checkCode(string $code, string $email): void
+    {
+        $sql = "SELECT * FROM codes WHERE code=:code AND email=:email AND used is null";
+        $res = $this->prepare($sql);
+        $res->execute([":code" => $code, ":email" => $email]);
+        if ($res->rowCount() == 0) {
+            throw new GC2Exception("Invalid code", 404, null, "CODE_DOES_NOT_EXISTS");
+        }
+        $sql = "UPDATE codes set used=now() where code=:code";
+        $res = $this->prepare($sql);
+        $res->execute([":code" => $code]);
+    }
+
+    /**
+     * Sends an activation code to the specified email if the email is not already associated with a code.
+     *
+     * @param string $email The email address to which the activation code will be sent.
+     * @return void
+     * @throws GC2Exception If the email is already used or if there are no available activation codes.
+     */
+    public function sendCode(string $email): void
+    {
+        $sql = "SELECT * FROM codes WHERE email=:email";
+        $res = $this->prepare($sql);
+        $res->execute([":email" => $email]);
+        if ($res->rowCount() > 0) {
+            throw new GC2Exception("Email already used", 404, null, "CODE_DOES_NOT_EXISTS");
+        }
+
+        $sql = "SELECT code FROM codes WHERE email isnull and used isnull limit 1";
+        $res = $this->prepare($sql);
+        $res->execute();
+        if ($res->rowCount() == 0) {
+            throw new GC2Exception("No more available activation code. Try again later", 404, null, "CODE_DOES_NOT_EXISTS");
+        }
+        $code = $res->fetchColumn();
+        $sql = "UPDATE codes set email=:email where code=:code";
+        $res = $this->prepare($sql);
+        $res->execute([":code" => $code, ":email" => $email]);
+        // TODO send email
+    }
 }

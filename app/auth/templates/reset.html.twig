@@ -1,4 +1,8 @@
-<input type="password" name="password" placeholder="New password"/>
-<input type="hidden" name="user" value="{{ user }}"/>
+<div class="form-floating mb-3">
+    <input class="form-control" type="password" name="password" id="password" placeholder="New password"/>
+    <label class="form-label" for="password">New password</label>
+</div>
+
+<input type="hidden" name="userid" value="{{ user }}"/>
 <input type="hidden" name="key" value="{{ key }}"/>
-<button type="submit">Reset</button>
+<button class="btn btn-primary w-100 py-2" type="submit">Reset</button>
