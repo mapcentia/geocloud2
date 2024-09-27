@@ -467,14 +467,14 @@ class User extends Model
         $res = $this->prepare($sql);
         $res->execute([":email" => $email]);
         if ($res->rowCount() > 0) {
-            throw new GC2Exception("Email already used", 404, null, "CODE_DOES_NOT_EXISTS");
+            throw new GC2Exception("E-mail already used", 404, null, "CODE_DOES_NOT_EXISTS");
         }
 
         $sql = "SELECT code FROM codes WHERE email isnull and used isnull limit 1";
         $res = $this->prepare($sql);
         $res->execute();
         if ($res->rowCount() == 0) {
-            throw new GC2Exception("No more available activation code. Try again later", 404, null, "CODE_DOES_NOT_EXISTS");
+            throw new GC2Exception("No more available activation codes. We'll release more, so try again later", 404, null, "CODE_DOES_NOT_EXISTS");
         }
         $code = $res->fetchColumn();
         $sql = "UPDATE codes set email=:email where code=:code";
