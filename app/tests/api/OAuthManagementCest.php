@@ -17,7 +17,10 @@ class OAuthManagementCest
 
     private $schemaName;
     private $schemaUri;
-    private $tableName;
+    private $tableName1;
+    private $tableName2;
+    private $tableName3;
+    private $tableName4;
 
     public function __construct()
     {
@@ -28,8 +31,13 @@ class OAuthManagementCest
         $this->subUserName = 'Oauth database test sub user name ' . $this->date->getTimestamp();
         $this->subUserEmail = 'Oauth databasesubtest' . $this->date->getTimestamp() . '@example.com';
 
-        $this->schemaName = 'Test schema ' . $this->date->getTimestamp();
+        $this->schemaName = 'test_schema_' . $this->date->getTimestamp();
+        $this->tableName1 = 'test_table_1';
+        $this->tableName2 = 'test_table_2';
+        $this->tableName3 = 'test_table_3';
+        $this->tableName4 = 'test_table_4';
     }
+
     public function shouldPrepareForTestFirstUser(ApiTester $I)
     {
         // Create a super and subuser
@@ -50,7 +58,8 @@ class OAuthManagementCest
         ]));
     }
 
-    public function shouldGetAccessTokenFromPasswordFlow(ApiTester $I) {
+    public function shouldGetAccessTokenFromPasswordFlow(ApiTester $I)
+    {
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->sendPOST('/api/v4/oauth', json_encode([
             'grant_type' => 'password',
@@ -63,15 +72,56 @@ class OAuthManagementCest
         $this->userAccessToken = $response->access_token;
     }
 
-    public function shouldCreateSchema(ApiTester $I) {
+    public function shouldCreateSchema(ApiTester $I)
+    {
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
-        $I->sendPOST('/api/v4/schemas', json_encode([
+        $payload = json_encode([
             'schema' => $this->schemaName,
-        ]));
+            'tables' => [
+                ['table' => $this->tableName1],
+                ['table' => $this->tableName2],
+            ]
+        ]);
+        $I->sendPOST('/api/v4/schemas', $payload);
         $I->seeResponseCodeIs(HttpCode::CREATED);
         $location = $I->grabHttpHeader('Location');
-        codecept_debug($location);
+        $this->schemaUri = $location;
+    }
+
+    public function shouldGetSchema(ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Accept', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
+        $I->sendGET($this->schemaUri);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContains($this->schemaName);
+        $I->seeResponseContains($this->tableName1);
+        $I->seeResponseContains($this->tableName2);
+    }
+    public function shouldRenameSchema(ApiTester $I) {
+        $newName = 'new_schema_name';
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
+        $payload = json_encode([
+            'schema' => 'new_schema_name',
+        ]);
+        $I->sendPUT($this->schemaUri, $payload);
+        $I->seeResponseCodeIs(HttpCode::OK);
+
+        $I->seeResponseContains('new_schema_name');
+        $I->seeResponseContains($this->tableName1);
+        $I->seeResponseContains($this->tableName2);
+
+        $I->stopFollowingRedirects();
+        $payload = json_encode([
+            'schema' => $this->schemaName,
+        ]);
+        $I->sendPUT('/api/v4/schemas/' . $newName, $payload);
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $location = $I->grabHttpHeader('Location');
         $this->schemaUri = $location;
     }
 }
