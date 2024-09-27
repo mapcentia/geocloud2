@@ -28,6 +28,7 @@ class Stat extends AbstractApi
 
     }
 
+    #[AcceptableAccepts(['application/json'])]
     public function get_index(): array
     {
         return (new Model())->getStats();
