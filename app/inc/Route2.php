@@ -109,7 +109,8 @@ class Route2
                         }
                         if ($method == "options" || $method == "head") {
                             if ($method == "options") {
-                                $m = strtolower(Input::getAccessControlRequestMethod());
+                                $m = Input::getAccessControlRequestMethod();
+                                $m = $m ? strtolower($m) : null;
                                 if (!in_array($m, $allowedMethods)) {
                                     $listener->throwException();
                                 }
