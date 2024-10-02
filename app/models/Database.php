@@ -84,30 +84,16 @@ class Database extends Model
      */
     public function createdb(string $screenName, string $template, string $encoding = "UTF8"): void
     {
-        try {
-            $this->createUser($screenName);
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
-        }
-
-        try {
-            $sql = "CREATE DATABASE {$screenName}
+        $this->createUser($screenName);
+        $postgisUser = explode('@', $this->postgisuser)[0];
+        $sql = "GRANT $screenName to $postgisUser";
+        $this->db->query($sql);
+        $sql = "CREATE DATABASE {$screenName}
                         WITH ENCODING='$encoding'
                         TEMPLATE=$template
                         CONNECTION LIMIT=-1
                         OWNER='$screenName'";
-            $this->db->query($sql);
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
-        }
-
-        try {
-            $postgisUser = explode('@', $this->postgisuser)[0];
-            $sql = "GRANT $screenName to $postgisUser";
-            $this->db->query($sql);
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
-        }
+        $this->db->query($sql);
         $this->changeOwner($screenName, $screenName);
     }
 
