@@ -133,7 +133,7 @@ class Driver implements AggregatablePoolInterface
                     $i,
                     $master,
                     $pattern,
-                    10);
+                    50000);
                 if (\count($result) > ExtendedCacheItemPoolInterface::MAX_ALL_KEYS_COUNT) {
                     break;
                 }
