@@ -14,6 +14,8 @@ use app\models\Database;
 use app\models\Table as TableModel;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use ReflectionClass;
+use Symfony\Component\Validator\Constraints\Collection;
+use Symfony\Component\Validator\Validation;
 
 /**
  *
@@ -200,5 +202,20 @@ abstract class AbstractApi implements ApiInterface
             $data = $preProcessor->{$method}($model, $data);
         }
         return $data;
+    }
+
+    /**
+     * @throws GC2Exception
+     */
+    public function validateRequest(Collection $collection, array $data) : void {
+        $validator = Validation::createValidator();
+        $violations = $validator->validate($data, $collection);
+        if (count($violations) > 0) {
+            $v =[];
+            foreach ($violations as $violation) {
+                $v[] = $violation->getPropertyPath() . ': ' . $violation->getMessage();
+            }
+            throw new GC2Exception(implode(' ', $v), 400, null, "INPUT_VALIDATION_ERROR");
+        }
     }
 }
