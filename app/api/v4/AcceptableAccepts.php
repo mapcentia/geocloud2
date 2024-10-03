@@ -31,7 +31,7 @@ class AcceptableAccepts
      */
     public function throwException(): never
     {
-        throw new GC2Exception("Accept not acceptable", 406, null, "NOT_ACCEPTABLE");
+        throw new GC2Exception("Accept media type is not acceptable. Must be: " . implode(', ', $this->acceptsAllowed), 406, null, "NOT_ACCEPTABLE");
     }
 
     public function options(): never
