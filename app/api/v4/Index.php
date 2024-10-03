@@ -15,89 +15,56 @@ use app\inc\Route2;
 use app\models\Table as TableModel;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use OpenApi\Attributes as OA;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
+#[OA\Schema(
+    schema: "Index",
+    required: ["columns"],
+    properties: [
+        new OA\Property(
+            property: "name",
+            title: "Name of the index.",
+            type: "string",
+            example: "my-btree",
+        ),
+        new OA\Property(
+            property: "columns",
+            title: "Columns which should be indexed?.",
+            description: "An index can comprise more columns.",
+            type: "array",
+            items: new OA\Items(type: "string"),
+            example: ["field1"]
+        ),
+        new OA\Property(
+            property: "method",
+            title: "The index method.",
+            type: "string",
+            default: "btree",
+            example: "btree"
+        ),
+    ],
+    type: "object"
+)]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['GET', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Index extends AbstractApi
 {
-
-    /**
-     * @return array
-     */
-    #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/indices', operationId: 'postIndex', tags: ['Indices'])]
-    #[OA\Parameter(name: 'schema', description: 'Name of schema', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
-    #[OA\Parameter(name: 'table', description: 'Name of table', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
-    #[OA\Response(response: 201, description: 'Created',
-        content: new OA\JsonContent(properties: [new OA\Property(property: 'index', description: 'Name of new index', type: 'string', example: 'my_index')], type: 'object'),
-        links: [new OA\Link('', null, null, 'getIndex')])
-    ]
-    public function post_index(): array
-    {
-        $body = Input::getBody();
-        $data = json_decode($body);
-        $list = [];
-        $this->table[0]->begin();
-        if (!isset($data->indices)) {
-            $data->indices = [$data];
-        }
-        foreach ($data->indices as $datum) {
-            $name = $datum->name ?? null;
-            $method = $datum->method ?? "btree";
-            $columns = $datum->columns;
-            $list[] = self::addIndices($this->table[0], $columns, $method, $name);
-        }
-        $this->table[0]->commit();
-        header("Location: /api/v4/schemas/$this->schema/tables/{$this->unQualifiedName[0]}/indices/" . implode(',', $list));
-        $res["code"] = "201";
-        return $res;
-    }
-
-    /**
-     * @return array
-     * @OA\Get(
-     *   path="/api/v4/schemas/{schema}/tables/{table}/indices/{index}",
-     *   operationId="getIndex",
-     *   tags={"Indices"},
-     *   summary="Get index/indices",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="schema",
-     *     example="my_schema",
-     *     in="path",
-     *     required=true,
-     *     description="Name of schema",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Parameter(
-     *     name="table",
-     *     example="my_table",
-     *     in="path",
-     *     required=true,
-     *     description="Name of table",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Parameter(
-     *     name="index",
-     *     example="my_index",
-     *     in="path",
-     *     required=false,
-     *     description="Name of constraint",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=200,
-     *     description="Success",
-     *   )
-     * )
-     * @throws GC2Exception
-     */
+    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/indices/{index}', operationId: 'getIndex', description: "Get index", tags: ['Indices'])]
+    #[OA\Parameter(name: 'schema', description: 'Schema', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table', in: 'path', required: true, example: 'my_table')]
+    #[OA\Parameter(name: 'index', description: 'Index', in: 'path', required: false, example: 'my_index')]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(
+        allOf: [
+            new OA\Schema(
+                properties: [
+                    new OA\Property(property: "unique", description: "If the index has a unique constraint", type: "boolean", example: true)
+                ]
+            ),
+            new OA\Schema(ref: "#/components/schemas/Index")
+        ]
+    ))]    #[OA\Response(response: 404, description: 'Not found')]
+    #[AcceptableAccepts(['application/json', '*/*'])]
     public function get_index(): array
     {
         $r = [];
@@ -119,6 +86,37 @@ class Index extends AbstractApi
             return $r[0];
         }
     }
+    /**
+     * @return array
+     */
+    #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/indices', operationId: 'postIndex', tags: ['Indices'],)]
+    #[OA\Parameter(name: 'schema', description: 'Name of schema', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Name of table', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
+    #[OA\RequestBody(description: 'New index', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Index"))]
+    #[OA\Response(response: 201, description: 'Created', links: [new OA\Link('', null, null, 'getIndex')])]
+    #[OA\Response(response: 400, description: 'Bad request')]
+    #[AcceptableContentTypes(['application/json'])]
+    public function post_index(): array
+    {
+        $body = Input::getBody();
+        $data = json_decode($body);
+        $list = [];
+        $this->table[0]->begin();
+        if (!isset($data->indices)) {
+            $data->indices = [$data];
+        }
+        foreach ($data->indices as $datum) {
+            $name = $datum->name ?? null;
+            $method = $datum->method ?? "btree";
+            $columns = $datum->columns;
+            $list[] = self::addIndices($this->table[0], $columns, $method, $name);
+        }
+        $this->table[0]->commit();
+        header("Location: /api/v4/schemas/$this->schema/tables/{$this->unQualifiedName[0]}/indices/" . implode(',', $list));
+        $res["code"] = "201";
+        return $res;
+    }
+
 
     public static function getIndices(TableModel $table, string $name): array
     {
@@ -153,50 +151,11 @@ class Index extends AbstractApi
         // TODO: Implement put_index() method.
     }
 
-    /**
-     * @return array
-     * @OA\Delete (
-     *   path="/api/v4/schemas/{schema}/tables/{table}/indices/{index}",
-     *   tags={"Indices"},
-     *   summary="Get index/indices",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="schema",
-     *     example="my_schema",
-     *     in="path",
-     *     required=true,
-     *     description="Name of schema",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Parameter(
-     *     name="table",
-     *     example="my_table",
-     *     in="path",
-     *     required=true,
-     *     description="Name of table",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Parameter(
-     *     name="index",
-     *     example="my_index",
-     *     in="path",
-     *     required=true,
-     *     description="Name of constraint",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=204,
-     *     description="No content",
-     *   )
-     * )
-     * @throws GC2Exception
-     */
+    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/indices/{index}', operationId: 'deleteIndex', description: "Delete index", tags: ['Indices'])]
+    #[OA\Parameter(name: 'schema', description: 'Name of schema', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Name of table', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
+    #[OA\Response(response: 204, description: "Index deleted")]
+    #[OA\Response(response: 404, description: 'Not found')]
     public function delete_index(): array
     {
         $this->table[0]->begin();
@@ -215,16 +174,42 @@ class Index extends AbstractApi
     {
         $table = Route2::getParam("table");
         $schema = Route2::getParam("schema");
-        $index = Route2::getParam("index");
+        $id = Route2::getParam("index");
+        $body = Input::getBody();
+
         // Put and delete on collection is not allowed
-        if (empty($index) && in_array(Input::getMethod(), ['put', 'delete'])) {
-            throw new GC2Exception("", 406);
+        if (empty($id) && in_array(Input::getMethod(), ['put', 'delete'])) {
+            throw new GC2Exception("PUT and DELETE on a indices collection is not allowed.", 400);
+        }
+        if (empty($body) && in_array(Input::getMethod(), ['post', 'put'])) {
+            throw new GC2Exception("POST and PUT without request body is not allowed.", 400);
         }
         // Throw exception if tried with table resource
-        if (Input::getMethod() == 'post' && $index) {
+        if (Input::getMethod() == 'post' && !empty($id)) {
             $this->postWithResource();
         }
+
+        $collection = new Assert\Collection([
+            'name' => new Assert\Optional([
+                new Assert\NotBlank()
+            ]),
+            'columns' => new Assert\Required([
+                new Assert\Type('array'),
+                new Assert\Count(['min' => 1]),
+                new Assert\All([
+                    new Assert\NotBlank()
+                ]),
+            ]),
+            'method' => new Assert\Optional([
+                new Assert\NotBlank()
+            ]),
+        ]);
+        if (!empty($body)) {
+            $data = json_decode($body, true);
+            $this->validateRequest($collection, $data, 'indices');
+        }
+
         $this->jwt = Jwt::validate()["data"];
-        $this->initiate($schema, $table, null, null, $index, null, $this->jwt["uid"], $this->jwt["superUser"]);
+        $this->initiate($schema, $table, null, null, $id, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }
 }

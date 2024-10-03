@@ -15,6 +15,7 @@ use app\models\Table as TableModel;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use ReflectionClass;
 use Symfony\Component\Validator\Constraints\Collection;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validation;
 
 /**
@@ -207,12 +208,26 @@ abstract class AbstractApi implements ApiInterface
     /**
      * @throws GC2Exception
      */
-    public function validateRequest(Collection $collection, array $data) : void {
+    public function validateRequest(Collection $collection, array $data, string $resource): void
+    {
         $validator = Validation::createValidator();
-        $violations = $validator->validate($data, $collection);
-        if (count($violations) > 0) {
-            $v =[];
-            foreach ($violations as $violation) {
+
+        if (isset($data[$resource]) && is_array($data[$resource])) {
+            foreach ($data[$resource] as $datum) {
+                $violations = $validator->validate($datum, $collection);
+                $this->checkViolations($violations);
+            }
+        } else {
+            $violations = $validator->validate($data, $collection);
+            $this->checkViolations($violations);
+        }
+    }
+
+    private function checkViolations(ConstraintViolationListInterface $list): void
+    {
+        if (count($list) > 0) {
+            $v = [];
+            foreach ($list as $violation) {
                 $v[] = $violation->getPropertyPath() . ': ' . $violation->getMessage();
             }
             throw new GC2Exception(implode(' ', $v), 400, null, "INPUT_VALIDATION_ERROR");

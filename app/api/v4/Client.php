@@ -78,7 +78,6 @@ class Client extends AbstractApi
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(
         allOf: [
             new OA\Schema(
-                required: ["id"],
                 properties: [
                     new OA\Property(property: "id", description: "Client ID", type: "string", example: "66f5005bd44c6")
                 ]
@@ -211,7 +210,7 @@ class Client extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Delete(path: '/api/v4/clients/{id}', operationId: 'putClient', description: "Delete client", tags: ['Clients'])]
+    #[OA\Delete(path: '/api/v4/clients/{id}', operationId: 'deleteClient', description: "Delete client", tags: ['Clients'])]
     #[OA\Parameter(name: 'id', description: 'Id of client', in: 'path', required: true, example: '66f5005bd44c6')]
     #[OA\Response(response: 204, description: "Client deleted")]
     #[OA\Response(response: 404, description: 'Not found')]
@@ -247,6 +246,11 @@ class Client extends AbstractApi
         if (empty($body) && in_array(Input::getMethod(), ['post', 'put'])) {
             throw new GC2Exception("POST and PUT without request body is not allowed.", 400);
         }
+        // Throw exception if tried with table resource
+        if (Input::getMethod() == 'post' && !empty($id)) {
+            $this->postWithResource();
+        }
+
         $collection = new Assert\Collection([
             'name' => new Assert\Length(['min' => 3]),
             'homepage' => new Assert\Optional(
@@ -267,7 +271,7 @@ class Client extends AbstractApi
         ]);
         if (!empty($body)) {
             $data = json_decode($body, true);
-            $this->validateRequest($collection, $data);
+            $this->validateRequest($collection, $data, 'clients');
         }
     }
 }
