@@ -349,7 +349,7 @@ class Table extends AbstractApi
         $this->jwt = Jwt::validate()["data"];
         // Put and delete on collection is not allowed
         if (empty($table) && in_array(Input::getMethod(), ['put', 'delete'])) {
-            throw new GC2Exception("Put and delete on a table collection is not allowed", 406);
+            throw new GC2Exception("Put and delete on a table collection is not allowed", 400);
         }
         if (!empty($table) && count(explode(',', $table)) > 1 && in_array(Input::getMethod(), ['put', 'delete'])) {
             // throw new GC2Exception("Put and delete on multiple tables is not allowed", 406);
