@@ -95,8 +95,8 @@ class Route2
 
             if (!method_exists($controller, $action)) {
                 $method = Input::getMethod();
-                $contentType = Input::getContentType() ? trim(explode(';', Input::getContentType())[0]): null;
-                $accepts = Input::getAccept() ? array_map(fn($str) => trim(explode(';',$str)[0]) ,explode(',', Input::getAccept())) : null;
+                $contentType = Input::getContentType() ? trim(explode(';', Input::getContentType())[0]): "application/json";
+                $accepts = Input::getAccept() ? array_map(fn($str) => trim(explode(';',$str)[0]) ,explode(',', Input::getAccept())) : "*/*";
                 $action = $method . "_index";
                 $attributes = $reflectionClass->getAttributes(AcceptableMethods::class);
                 foreach ($attributes as $attribute) {
@@ -127,7 +127,7 @@ class Route2
                             if ($listener::class == AcceptableContentTypes::class) {
                                 $allowedContentTypes = array_map('strtolower', $listener->getAllowedContentTypes());
                                 if (!in_array($contentType, $allowedContentTypes)) {
-                                    $listener->throwException();
+                                    $listener->throwException($contentType);
                                 }
                             }
                         }
@@ -137,7 +137,7 @@ class Route2
                             if ($listener::class == AcceptableAccepts::class) {
                                 $allowedAccepts = array_map('strtolower', $listener->getAllowedAccepts());
                                 if (!in_array('*/*', $accepts) && count(array_intersect($accepts, $allowedAccepts)) == 0) {
-                                    $listener->throwException();
+                                    $listener->throwException($accepts);
                                 }
                             }
                         }

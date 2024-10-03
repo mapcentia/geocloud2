@@ -29,9 +29,9 @@ class AcceptableContentTypes
     /**
      * @throws GC2Exception
      */
-    public function throwException(): never
+    public function throwException(string $contentType): never
     {
-        throw new GC2Exception("Content media type is not acceptable. Must be: " . implode(', ', $this->contentTypesAllowed), 406, null, "NOT_ACCEPTABLE");
+        throw new GC2Exception("Content media type $contentType is not acceptable. Must be: " . implode(', ', $this->contentTypesAllowed), 406, null, "NOT_ACCEPTABLE");
     }
 
     public function options(): never
