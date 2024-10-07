@@ -5,9 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2024.10.0] - 2024-7-10
+
+## Changed
+
+- SQL API will now return a file, when using `format=csv` (like earlier). To stream chunked csv data, use `format=ccsv`
+- Increased the scan count from 10 to 50,000 for both Redis and RedisCluster drivers to improve performance.
+
+## Fixed
+
+- Missing geometry in SQL API `format=ndjson`.
+
 ## [2024.9.2] - 2024-19-9
 
 ### Fixed
+- 
 - Added `-mapFieldType Time=String` option to ogr2ogr command when exporting. ESRI Shape (maybe other formats?) doesn't have a time type, so Postgres time type is exported as string.
 - In v2/feature API backslash, tabs and new lines are handled in JSON decode/encode and will no longer cause an error.
 
@@ -55,10 +67,10 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ### Security
 
-- Privileges will now be set on all layer belonging to af table/view. This will increase security.
+- Privileges will now be set on all layers belonging to af table/view. This will increase security.
 - A Security weakness in Controller.php is fixed. If a table/view was not registered in settings.geometry_columns_view, it would be public open to queries. 
   This could be the case, if a table/view was created outside GC2 and afterward not being set up inside GC2.
-  Now queries on all not-registered table/views will throws an exception.
+  Now queries on all not-registered table/views will throw an exception.
 
 ## 2024.9.0 - 2024-4-9
 
