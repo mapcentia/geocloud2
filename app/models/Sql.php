@@ -71,8 +71,10 @@ class Sql extends Model
 
         if ($format == "excel") {
             $limit = !empty(App::$param["limits"]["sqlExcel"]) ? App::$param["limits"]["sqlExcel"] : 10000;
-        } else {
+        } elseif (in_array($format, ['csv', 'geojson', 'json'])) {
             $limit = !empty(App::$param["limits"]["sqlJson"]) ? App::$param["limits"]["sqlJson"] : 100000;
+        } else {
+            $limit = 1000000000000;
         }
         $name = "_" . md5(rand(1, 999999999) . microtime());
         $view = self::toAscii($name, null, "_");
@@ -277,7 +279,8 @@ class Sql extends Model
             $this->execQuery("CLOSE curs");
             $this->commit();
             exit();
-        } elseif ($format == "csv") {
+
+        } elseif ($format == "ccsv") {
 
             // CSV output
             // ================
@@ -348,7 +351,7 @@ class Sql extends Model
             $this->commit();
             exit();
 
-        } elseif ($format == "excel") {
+        } elseif ($format == "excel" || $format == "csv") {
 
             // Excel output
             // ================
@@ -407,6 +410,15 @@ class Sql extends Model
             $this->commit();
             $csv = implode("\n", $lines);
 
+            if ($format == "csv") {
+                header("Content-Type: text/csv");
+                header('Content-Disposition: attachment; filename="file.csv"');
+                ob_clean();
+                flush();
+                echo $csv;
+                exit();
+            }
+
             // Convert to Excel
             // ================
 
@@ -425,9 +437,7 @@ class Sql extends Model
             $objWriter->save('php://output');
             exit();
         }
-        return [
-            "success" => false,
-        ];
+        throw new GC2Exception("$format is not an acceptable format", 406, null, 'NOT_ACCEPTABLE');
     }
 
     /**
