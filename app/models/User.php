@@ -469,7 +469,6 @@ class User extends Model
         if ($res->rowCount() > 0) {
             throw new GC2Exception("E-mail already used", 404, null, "CODE_DOES_NOT_EXISTS");
         }
-
         $sql = "SELECT code FROM codes WHERE email isnull and used isnull limit 1";
         $res = $this->prepare($sql);
         $res->execute();
@@ -477,9 +476,21 @@ class User extends Model
             throw new GC2Exception("No more available activation codes. We'll release more, so try again later", 404, null, "CODE_DOES_NOT_EXISTS");
         }
         $code = $res->fetchColumn();
+        $client = new PostmarkClient(App::$param["notification"]["key"]);
+        $message = [
+            'To' => $email,
+            'From' => App::$param["notification"]["from"],
+            'TrackOpens' => false,
+            'Subject' => "Activation code",
+            'HtmlBody' => $code,
+        ];
+        try {
+            $client->sendEmailBatch([$message]);
+        } catch (Exception $generalException) {
+            throw new GC2Exception("Could not send email. Try again or report the problem", 500, $generalException);
+        }
         $sql = "UPDATE codes set email=:email where code=:code";
         $res = $this->prepare($sql);
         $res->execute([":code" => $code, ":email" => $email]);
-        // TODO send email
     }
 }
