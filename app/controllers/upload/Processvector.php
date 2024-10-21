@@ -132,7 +132,7 @@ class Processvector extends Controller
         }
 
         if ($delete) {
-            $sql = "TRUNCATE " . Connection::$param["postgisschema"] . "." . $safeName . " ONLY";
+            $sql = "TRUNCATE ONLY " . Connection::$param["postgisschema"] . "." . $safeName;
             $res = $model->prepare($sql);
             $res->execute();
         }
