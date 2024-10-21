@@ -53,8 +53,7 @@ class Privilege extends AbstractApi
     public function get_index(): array
     {
         $layer = new Layer();
-        $table = $this->qualifiedName;
-        $split = explode('.', $table);
+        $split = explode('.', $this->qualifiedName[0]);
         $res = $layer->getPrivilegesAsArray($split[0], $split[1]);
         return ["privileges" => $res];
     }
@@ -74,10 +73,8 @@ class Privilege extends AbstractApi
         $layer = new Layer();
         $body = Input::getBody();
         $data = json_decode($body);
-        $key = $this->qualifiedName;
-
         $obj = new StdClass();
-        $obj->_key_ = $key;
+        $obj->_key_ = $this->qualifiedName[0];
         $obj->privileges = $data->privileges;
         $obj->subuser = $data->subuser;
 
