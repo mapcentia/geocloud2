@@ -62,3 +62,19 @@ while ($row = $model->fetchRow($res)) {
         $scheduler->run();
     }
 }
+
+//while ($row = $model->fetchRow($res)) {
+//    if (!empty($row["active"]) && ((isset(App::$param["gc2scheduler"][$row["db"]]) && App::$param["gc2scheduler"][$row["db"]] === true) || (isset(App::$param["gc2scheduler"]["*"]) && App::$param["gc2scheduler"]["*"] === true))) {
+//        $cmd = "/var/www/geocloud2/app/scripts/get.php";
+//        $scheduler->call(
+//            function ($model, $row) {
+//                $model->runJob($row['id'], $row['db']);
+//            },
+//            [$model, $row],
+//            $row["id"]
+//        )->at("{$row["min"]} {$row["hour"]} {$row["dayofmonth"]} {$row["month"]} {$row["dayofweek"]}")->output([
+//            __DIR__ . "/../../public/logs/{$row["id"]}_scheduler.log"
+//        ])->onlyOne();
+//        $scheduler->run();
+//    }
+//}
