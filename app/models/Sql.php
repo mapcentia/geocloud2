@@ -477,20 +477,6 @@ class Sql extends Model
                 $convertedParameters[] = $paramTmp;
             }
         }
-        // Get types from returning if any
-        if ($convertReturning) {
-            $this->begin();
-            $result = $this->prepare($q);
-            $result->execute($convertedParameters[0]);
-            foreach (range(0, $result->columnCount() - 1) as $column_index) {
-                $meta = $result->getColumnMeta($column_index);
-                if (!$meta) {
-                    break;
-                }
-                $columnTypes[$meta['name']] = $meta['native_type'];
-            }
-            $this->rollback(); // Roll back test
-        }
 
         $returning = null;
         $affectedRows = 0;
@@ -499,12 +485,21 @@ class Sql extends Model
             $this->begin();
             foreach ($convertedParameters as $parameter) {
                 $result->execute($parameter);
+                if (count($columnTypes) == 0) {
+                    foreach (range(0, $result->columnCount() - 1) as $column_index) {
+                        $meta = $result->getColumnMeta($column_index);
+                        if (!$meta) {
+                            break;
+                        }
+                        $columnTypes[$meta['name']] = $meta['native_type'];
+                    }
+                }
                 $row = $this->fetchRow($result);
                 $tmp = null;
                 foreach ($row as $field => $value) {
                     try {
                         $convertedValue = $factory->getConverterForTypeSpecification($columnTypes[$field])->input($value);
-                        $tmp[] = [$field => $convertedValue];
+                        $tmp[$field] = $convertedValue;
                     } catch (\Exception) {
                         if ($columnTypes[$field] == 'geometry') {
                             $resultGeom = $this->prepare("select ST_AsGeoJSON(:v) as json");
@@ -512,7 +507,7 @@ class Sql extends Model
                             $json = $this->fetchRow($resultGeom)['json'];
                             $value = !empty($json) ? json_decode($json) : null;
                         }
-                        $tmp[] = [$field => $value];
+                        $tmp[$field] = $value;
                     }
                 }
                 if ($tmp && sizeof($tmp) > 0) {
@@ -523,10 +518,36 @@ class Sql extends Model
             $this->commit();
         } else {
             $result->execute();
+            foreach (range(0, $result->columnCount() - 1) as $column_index) {
+                $meta = $result->getColumnMeta($column_index);
+                if (!$meta) {
+                    break;
+                }
+                $columnTypes[$meta['name']] = $meta['native_type'];
+            }
             $affectedRows += $result->rowCount();
-            $returning = $result->fetchAll(PDO::FETCH_NAMED);
-            if (empty($returning[0])) {
-                $returning = null;
+            $returningRaw = $result->fetchAll(PDO::FETCH_NAMED);
+            if (!empty($returningRaw[0])) {
+                foreach ($returningRaw as $row) {
+                    $tmp = null;
+                    foreach ($row as $field => $value) {
+                        try {
+                            $convertedValue = $factory->getConverterForTypeSpecification($columnTypes[$field])->input($value);
+                            $tmp[$field] = $convertedValue;
+                        } catch (\Exception) {
+                            if ($columnTypes[$field] == 'geometry') {
+                                $resultGeom = $this->prepare("select ST_AsGeoJSON(:v) as json");
+                                $resultGeom->execute(["v" => $value]);
+                                $json = $this->fetchRow($resultGeom)['json'];
+                                $value = !empty($json) ? json_decode($json) : null;
+                            }
+                            $tmp[$field] = $value;
+                        }
+                    }
+                    if ($tmp && sizeof($tmp) > 0) {
+                        $returning[] = $tmp;
+                    }
+                }
             }
         }
         $response['success'] = true;
