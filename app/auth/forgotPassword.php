@@ -40,7 +40,7 @@ if (isset($_GET["key"]) && isset($_GET["user"])) {
 
 }
 echo "</form>";
-echo "<div id='alert'>asas</div>";
+echo "<div id='alert'></div>";
 echo "</main>";
 
 echo $twig->render('footer.html.twig');
