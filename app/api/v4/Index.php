@@ -63,7 +63,8 @@ class Index extends AbstractApi
             ),
             new OA\Schema(ref: "#/components/schemas/Index")
         ]
-    ))]    #[OA\Response(response: 404, description: 'Not found')]
+    ))]
+    #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     public function get_index(): array
     {

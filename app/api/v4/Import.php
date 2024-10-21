@@ -18,6 +18,7 @@ use app\inc\Route2;
 use app\inc\Session;
 use Exception;
 use Override;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use stdClass;
 use ZipArchive;
 
@@ -258,6 +259,10 @@ class Import extends AbstractApi
         // TODO: Implement delete_index() method.
     }
 
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     #[Override] public function validate(): void
     {
         $file = Route2::getParam("file");

@@ -21,11 +21,44 @@ use Psr\Cache\InvalidArgumentException;
 use stdClass;
 
 
-/**
- * Class Sql
- * @package app\api\v4
- */
-#[AcceptableMethods(['GET', 'PUT', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
+#[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
+#[OA\Schema(
+    schema: "Index",
+    required: ["column", "type"],
+    properties: [
+        new OA\Property(
+            property: "column",
+            title: "Name of the column",
+            type: "string",
+            example: "my-column",
+        ),
+        new OA\Property(
+            property: "type",
+            title: "Type of the column",
+            description: "The type of the column, like varchar, integer, boolean etc.",
+            type: "string",
+            example: "int",
+        ),
+        new OA\Property(
+            property: "is_nullable",
+            title: "Should the column be nullable?",
+            description: "If true the value can be set to null",
+            type: "boolean",
+            default: "true",
+            example: "false"
+        ),
+        new OA\Property(
+            property: "default_value",
+            title: "Default value of the column",
+            description: "The column i set to the default value if no value is given",
+            type: "string",
+            example: "my-value"
+        ),
+    ],
+    type: "object"
+)]
+#[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
+#[AcceptableMethods(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Column extends AbstractApi
 {
 
