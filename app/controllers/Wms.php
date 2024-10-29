@@ -307,7 +307,7 @@ class Wms extends Controller
                 };
                 $useWmsSource = false;
                 if ($source = $this->getWmsSource($db, $postgisschema, $layers)) {
-                    parse_str(parse_url($_SERVER["QUERY_STRING"])['path'], $query);
+                    parse_str($_SERVER["QUERY_STRING"], $query);
                     $query = array_change_key_case($query, CASE_UPPER);
                     // Use parameters from WMS source if set and use those from query for not set parameters
                     $mergedQuery = array_merge($query, $source['query']);
