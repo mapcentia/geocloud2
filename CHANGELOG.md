@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2024.10.1] - 2024-21-10
+
+## Fixed
+
+- `app/controllers/upload/Processvector` class had a syntax error in TRUNCATE statement.
+
 ## [2024.10.0] - 2024-7-10
 
 ## Changed
