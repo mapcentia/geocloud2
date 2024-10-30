@@ -46,9 +46,10 @@ if (isset($_POST['password']) && isset($_POST['userid']) && isset($_POST['key'])
     echo "<div id='alert' hx-swap-oob='true'>" . $twig->render('error.html.twig', ['message' => 'Password changed']) . "</div>";
 
 } elseif (isset($_POST['userid'])) {
-    $user =  Model::toAscii($_POST['userid'], null, '_');
-    $res = (new UserModel())->getDatabasesForUser($user);
+    $user = strrpos($_POST['userid'], '@') === false ? Model::toAscii($_POST['userid'], null, '_') : $_POST['userid'];
+    $res = (new UserModel())->getDatabasesForUser($_POST['userid']);
     if (sizeof($res['databases']) == 1 && empty($res['databases'][0]['parentdb'])) {
+        $user = $res['databases'][0]['screenname'];
         echo "<div id='alert' hx-swap-oob='true'></div>";
         // Create key and send mail
         $key = uniqid();
