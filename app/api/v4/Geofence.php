@@ -12,13 +12,95 @@ use app\exceptions\GC2Exception;
 use app\inc\Route2;
 use app\inc\Input;
 use app\models\Geofence as GeofenceModel;
+use OpenApi\Annotations\OpenApi;
+use OpenApi\Attributes as OA;
 use Override;
-
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class Geofence
  * @package app\api\v4
  */
+#[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
+#[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
+#[OA\Schema(
+    schema: "Rule",
+    required: [],
+    properties: [
+        new OA\Property(
+            property: "id",
+            title: "Unique identifier",
+            description: "Id of the rule. If omitted the rule will get an id automatically generated.",
+            type: "integer",
+            example: 1000,
+        ),
+        new OA\Property(
+            property: "priority",
+            title: "Priority",
+            description: "All rules are checked by priority in descending order. The first that matches will be applied.",
+            type: "integer",
+            example: 10,
+        ),
+        new OA\Property(
+            property: "username",
+            title: "Username",
+            description: "Rule match for user name (the user that makes the request)",
+            type: "string",
+            example: "john"
+        ),
+        new OA\Property(
+            property: "service",
+            title: "Service",
+            description: "Rule match for service. 'sql', 'ows' or 'wfst'",
+            type: "string",
+            example: "sql"
+        ),
+        new OA\Property(
+            property: "request",
+            title: "Request",
+            description: "Rule match for request. 'select', 'insert', 'update' or 'delete'",
+            type: "string",
+            example: "sql"
+        ),
+        new OA\Property(
+            property: "layer",
+            title: "Layer",
+            description: "Rule match for the requested layer(s)",
+            type: "string",
+            example: "my_table"
+        ),
+        new OA\Property(
+            property: "iprange",
+            title: "Iprange",
+            description: "Rule match for the iprange, which the request originates from.",
+            type: "string",
+            example: "127.0.0.1/32"
+        ),
+        new OA\Property(
+            property: "schema",
+            title: "Schema",
+            description: "Rule match for the requested schema(s)",
+            type: "string",
+            example: "my_schema"
+        ),
+        new OA\Property(
+            property: "access",
+            title: "Access",
+            description: "The access level the rule grants. Can be 'allow', 'limit' or 'deny'",
+            type: "string",
+            example: "limit"
+        ),
+        new OA\Property(
+            property: "filter",
+            title: "Filter",
+            description: "A filter for rules with 'limit' access. This is a valid WHERE clause",
+            type: "string",
+            example: "user='john'"
+        ),
+
+    ],
+    type: "object"
+)]
 #[AcceptableMethods(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Geofence extends AbstractApi
 {
@@ -32,28 +114,14 @@ class Geofence extends AbstractApi
 
     /**
      * @return array
-     *
-     * @OA\Get(
-     *   path="/api/v4/geofence",
-     *   tags={"Geofence"},
-     *   summary="Get all geofence rules",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Response(
-     *     response="200",
-     *     description="List of geofence rules",
-     *     @OA\MediaType(
-     *       mediaType="application/json",
-     *       @OA\Schema(
-     *         type="object",
-     *         @OA\Property(property="data", type="array", @OA\Items(type="object")),
-     *         @OA\Property(property="success",type="boolean", example=true)
-     *       )
-     *     )
-     *   )
-     * )
      * @throws GC2Exception
      */
-    #[AcceptableAccepts(['application/json'])]
+    #[OA\Get(path: '/api/v4/rules/{id}', operationId: 'getRule', description: "Get rules", tags: ['Rules'])]
+    #[OA\Parameter(name: 'id', description: 'Rule identifier', in: 'path', required: false, example: 2)]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Rule"))]
+    #[OA\Response(response: 404, description: 'Not found')]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    #[Override]
     public function get_index(): array
     {
         $geofence = new GeofenceModel(null);
@@ -75,51 +143,13 @@ class Geofence extends AbstractApi
     /**
      * @return array
      *
-     * @OA\Post(
-     *   path="/api/v4/geofence",
-     *   tags={"Geofence"},
-     *   summary="Create a new geofence rule",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\RequestBody(
-     *     description="Geofence JSON rule",
-     *     @OA\MediaType(
-     *       mediaType="application/json",
-     *       @OA\Schema(
-     *         type="object",
-     *         @OA\Property(property="priority",type="integer", example=1),
-     *         @OA\Property(property="username",type="string", example="joe"),
-     *         @OA\Property(property="service",type="string", example="sql"),
-     *         @OA\Property(property="request",type="string", example="*"),
-     *         @OA\Property(property="layer",type="string", example="*"),
-     *         @OA\Property(property="schema",type="string", example="*"),
-     *         @OA\Property(property="access",type="string", example="limit"),
-     *         @OA\Property(property="filter",type="string", example="userid='joe'")
-     *       )
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="200",
-     *     description="The newly created geofence rule",
-     *     @OA\MediaType(
-     *       mediaType="application/json",
-     *       @OA\Schema(
-     *         type="object",
-     *         @OA\Property(property="id",type="integer", example=1),
-     *         @OA\Property(property="priority",type="integer", example=1),
-     *         @OA\Property(property="username",type="string", example="joe"),
-     *         @OA\Property(property="service",type="string", example="sql"),
-     *         @OA\Property(property="request",type="string", example="*"),
-     *         @OA\Property(property="layer",type="string", example="*"),
-     *         @OA\Property(property="schema",type="string", example="*"),
-     *         @OA\Property(property="access",type="string", example="limit"),
-     *         @OA\Property(property="filter",type="string", example="userid='joe'")
-     *       )
-     *     )
-     *   )
-     * )
      */
+    #[OA\Post(path: '/api/v4/rules', operationId: 'postRule', description: "New rules", tags: ['Rules'])]
+    #[OA\RequestBody(description: 'New rule', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Rule"))]
+    #[OA\Response(response: 201, description: 'Created')]
     #[AcceptableContentTypes(['application/json'])]
-    #[AcceptableAccepts(['application/json'])]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    #[Override]
     public function post_index(): array
     {
         $list = [];
@@ -142,53 +172,17 @@ class Geofence extends AbstractApi
 
     /**
      * @return array
-     *
-     * @OA\Put(
-     *   path="/api/v4/geofence",
-     *   tags={"Geofence"},
-     *   summary="Updates a geofence rule",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\RequestBody(
-     *     description="Geofence JSON rule with id property",
-     *     @OA\MediaType(
-     *       mediaType="application/json",
-     *       @OA\Schema(
-     *         type="object",
-     *         @OA\Property(property="id",type="integer", example=1),
-     *         @OA\Property(property="priority",type="integer", example=1),
-     *         @OA\Property(property="username",type="string", example="joe"),
-     *         @OA\Property(property="service",type="string", example="sql"),
-     *         @OA\Property(property="request",type="string", example="*"),
-     *         @OA\Property(property="layer",type="string", example="*"),
-     *         @OA\Property(property="schema",type="string", example="*"),
-     *         @OA\Property(property="access",type="string", example="limit"),
-     *         @OA\Property(property="filter",type="string", example="userid='joe'")
-     *       )
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="200",
-     *     description="The changed created geofence rule",
-     *     @OA\MediaType(
-     *       mediaType="application/json",
-     *       @OA\Schema(
-     *         type="object",
-     *         @OA\Property(property="id",type="integer", example=1),
-     *         @OA\Property(property="priority",type="integer", example=1),
-     *         @OA\Property(property="username",type="string", example="joe"),
-     *         @OA\Property(property="service",type="string", example="sql"),
-     *         @OA\Property(property="request",type="string", example="*"),
-     *         @OA\Property(property="layer",type="string", example="*"),
-     *         @OA\Property(property="schema",type="string", example="*"),
-     *         @OA\Property(property="access",type="string", example="limit"),
-     *         @OA\Property(property="filter",type="string", example="userid='joe'")
-     *       )
-     *     )
-     *   )
-     * )
      * @throws GC2Exception
      */
+
+    #[OA\Put(path: '/api/v4/rules/{id}', operationId: 'putRule', description: "New rules", tags: ['Rules'])]
+    #[OA\Parameter(name: 'id', description: 'Rule identifier', in: 'path', required: true, example: 2)]
+    #[OA\RequestBody(description: 'Update rule', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Rule"))]
+    #[OA\Response(response: 204, description: "Rule updated")]
+    #[OA\Response(response: 400, description: 'Bad request')]
+    #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]
+    #[Override]
     public function put_index(): array
     {
         $id = Route2::getParam("id");
@@ -215,35 +209,12 @@ class Geofence extends AbstractApi
 
     /**
      * @return array
-     *
-     * @OA\Delete(
-     *   path="/api/v4/geofence/{id}",
-     *   tags={"Geofence"},
-     *   summary="Deletes a geofence rule",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="id",
-     *     in="path",
-     *     required=true,
-     *     description="Id of geofence rule",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="200",
-     *     description="Operation status",
-     *     @OA\MediaType(
-     *       mediaType="application/json",
-     *       @OA\Schema(
-     *         type="object",
-     *         @OA\Property(property="data", type="object",  @OA\Property(property="id", type="integer", example=1)),
-     *       )
-     *     )
-     *   )
-     * )
      * @throws GC2Exception
      */
+    #[OA\Delete(path: '/api/v4/rules/{id}', operationId: 'deleteRule', description: "Delete rule", tags: ['Rules'])]
+    #[OA\Parameter(name: 'id', description: 'Id of rule', in: 'path', required: true, example: '2')]
+    #[OA\Response(response: 204, description: "Rule deleted")]
+    #[OA\Response(response: 404, description: 'Not found')]
     public function delete_index(): array
     {
         $ids = explode(',', Route2::getParam("id"));
@@ -262,6 +233,65 @@ class Geofence extends AbstractApi
 
     #[Override] public function validate(): void
     {
+        $id = Route2::getParam("id");
+        $body = Input::getBody();
+
+        // Put and delete on collection is not allowed
+        if (empty($id) && in_array(Input::getMethod(), ['put', 'delete'])) {
+            throw new GC2Exception("PUT and DELETE on a rule collection is not allowed.", 400);
+        }
+        if (empty($body) && in_array(Input::getMethod(), ['post', 'put'])) {
+            throw new GC2Exception("POST and PUT without request body is not allowed.", 400);
+        }
+        // Throw exception if tried with table resource
+        if (Input::getMethod() == 'post' && !empty($id)) {
+            $this->postWithResource();
+        }
+
+        $collection = new Assert\Collection([
+            'id' => new Assert\Optional(
+                new Assert\Type('integer'),
+            ),
+            'priority' => new Assert\Optional(
+                new Assert\Type('integer'),
+            ),
+            'username' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+            ]),
+            'service' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\Choice(['sql', 'ows', 'wfst', '*']),
+            ]),
+            'request' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\Choice(['select', 'insert', 'update', 'delete', '*']),
+            ]),
+            'layer' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+            ]),
+            'iprange' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+                new Assert\Cidr(),
+            ]),
+            'schema' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+            ]),
+            'access' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\Choice(['allow', 'limit', 'deny']),
+            ]),
+            'filter' => new Assert\Optional([
+                new Assert\Type('string'),
+            ]),
+        ]);
+        if (!empty($body)) {
+            $data = json_decode($body, true);
+            $this->validateRequest($collection, $data, 'rules');
+        }
     }
 }
 

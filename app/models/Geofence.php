@@ -189,11 +189,20 @@ class Geofence extends Model
         $props = array_keys($data);
         $fields = implode(",", $props);
         $values = implode(",:", $props);
-        if (sizeof($props) > 0) {
-            $fields = ", $fields";
-            $values = ", :$values";
+
+        if (isset($data['id'])) {
+            if (sizeof($props) > 0) {
+                $values = ":$values";
+            }
+            $sql = "insert into settings.geofence ($fields) values ($values) returning *";
+        } else {
+
+            if (sizeof($props) > 0) {
+                $fields = ", $fields";
+                $values = ", :$values";
+            }
+            $sql = "insert into settings.geofence (id $fields) values (default $values) returning *";
         }
-        $sql = "insert into settings.geofence (id $fields) values (default $values) returning *";
         $res = $this->prepare($sql);
         $res->execute($data);
         $response['success'] = true;

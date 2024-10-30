@@ -79,7 +79,8 @@ class Privilege extends AbstractApi
         $obj->subuser = $data->subuser;
 
         $layer->updatePrivileges($obj);
-        return [];
+        header("Location: /api/v4/schemas/$this->schema/tables/{$this->unQualifiedName[0]}/privileges/");
+        return ["code" => "303"];
     }
 
     #[Override] public function delete_index(): array

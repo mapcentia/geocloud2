@@ -15,7 +15,56 @@ use app\inc\Route2;
 use app\models\Table as TableModel;
 use Exception;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use OpenApi\Attributes as OA;
+use Symfony\Component\Validator\Constraints as Assert;
 
+
+#[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
+#[OA\Schema(
+    schema: "Constraint",
+    required: ["constraint", "columns"],
+    properties: [
+        new OA\Property(
+            property: "name",
+            title: "Name of the constraint",
+            description: "Name of the constraint",
+            type: "string",
+            example: "my-constraint",
+        ),
+        new OA\Property(
+            property: "constraint",
+            title: "Type of the constraint",
+            description: "Type of the constraint",
+            type: "string",
+            example: "foreign",
+        ),
+        new OA\Property(
+            property: "columns",
+            title: "Columns",
+            description: "Columns in constraint",
+            type: "array",
+            items: new OA\Items(type: "string"),
+            example: ["c1", "c2", "c3"],
+        ),
+        new OA\Property(
+            property: "referenced_table",
+            title: "Referenced table",
+            description: "Referenced table in a foreign key constraint",
+            type: "string",
+            example: "my_schema.my.table",
+        ),
+        new OA\Property(
+            property: "referenced_columns",
+            title: "Referenced columns",
+            description: "Referenced columns in a foreign key constraint. This will default to the primary key if omitted.",
+            type: "array",
+            items: new OA\Items(type: "string"),
+            example: ["c1", "c2", "c3"],
+        ),
+    ],
+    type: "object"
+)]
+#[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['GET', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Constraint extends AbstractApi
 {
@@ -30,37 +79,49 @@ class Constraint extends AbstractApi
 
     /**
      * @return array
-     * @OA\Post(
-     *   path="/api/v4/schemas/{schema}/tables/{table}/constraints",
-     *   tags={"Constraint"},
-     *   summary="Create a new constraint",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="schema",
-     *     example="my_schema",
-     *     in="path",
-     *     required=true,
-     *     description="Name of schema",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Parameter(
-     *     name="table",
-     *     in="path",
-     *     required=true,
-     *     description="Name of table",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=201,
-     *     description="Created",
-     *   )
-     * )
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'getConstraint', description: "Get constraints", tags: ['Constraint'])]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
+    #[OA\Parameter(name: 'constraint', description: 'Constraint name(s)', in: 'path', required: false, example: 'my_constraint')]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Constraint"))]
+    #[OA\Response(response: 404, description: 'Not found')]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    #[Override]
+    public function get_index(): array
+    {
+        $r = [];
+        $res = self::getConstraints($this->table[0], $this->qualifiedName[0]);
+        if (!empty($this->constraint)) {
+            foreach ($this->constraint as $constraint) {
+                foreach ($res as $c) {
+                    if ($c['name'] == $constraint) {
+                        $r[] = $c;
+                    }
+                }
+            }
+        } else {
+            $r = $res;
+        }
+        if (count($r) > 1) {
+            return ["constraints" => $r];
+        } else {
+            return $r[0];
+        }
+    }
+
+    /**
+     * @return array
      * @throws GC2Exception
      */
+    #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'postConstraint', description: "Get constraints", tags: ['Constraint'])]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
+    #[OA\RequestBody(description: 'New constraint', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Constraint"))]
+    #[OA\Response(response: 201, description: 'Created')]
+    #[AcceptableContentTypes(['application/json'])]
+    #[AcceptableAccepts(['application/json', '*/*'])]
     public function post_index(): array
     {
         $body = Input::getBody();
@@ -118,46 +179,14 @@ class Constraint extends AbstractApi
 
     /**
      * @return array
-     * @OA\Delete(
-     *   path="/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}",
-     *   tags={"Constraint"},
-     *   summary="Drop a constraint",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="schema",
-     *     example="my_schema",
-     *     in="path",
-     *     required=true,
-     *     description="Name of schema",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Parameter(
-     *     name="table",
-     *     in="path",
-     *     required=true,
-     *     description="Name of table",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Parameter(
-     *     name="constraint",
-     *     in="path",
-     *     required=true,
-     *     description="Name of constraint",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=204,
-     *     description="No content",
-     *   )
-     * )
      * @throws GC2Exception
      */
+    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'deleteConstraint', description: "Get constraint", tags: ['Constraint'])]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
+    #[OA\Parameter(name: 'constraint', description: 'Constraint name(s)', in: 'path', required: true, example: 'my_constraint')]
+    #[OA\Response(response: 204, description: 'Column deleted')]
+    #[OA\Response(response: 404, description: 'Not found')]
     public function delete_index(): array
     {
         $this->table[0]->begin();
@@ -167,70 +196,6 @@ class Constraint extends AbstractApi
         $this->table[0]->commit();
         $res["code"] = "204";
         return $res;
-    }
-
-    /**
-     * @return array
-     * @OA\Get(
-     *   path="/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}",
-     *   tags={"Constraint"},
-     *   summary="Get constraint(s)",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="schema",
-     *     example="my_schema",
-     *     in="path",
-     *     required=true,
-     *     description="Name of schema",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Parameter(
-     *     name="table",
-     *     in="path",
-     *     required=true,
-     *     description="Name of table",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Parameter(
-     *     name="constraint",
-     *     in="path",
-     *     required=false,
-     *     description="Name of constraint",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=200,
-     *     description="Success",
-     *   )
-     * )
-     * @throws PhpfastcacheInvalidArgumentException
-     */
-    public function get_index(): array
-    {
-        $r = [];
-        $res = self::getConstraints($this->table[0], $this->qualifiedName[0]);
-        if (!empty($this->constraint)) {
-            foreach ($this->constraint as $constraint) {
-                foreach ($res as $c) {
-                    if ($c['name'] == $constraint) {
-                        $r[] = $c;
-                    }
-                }
-            }
-        } else {
-            $r = $res;
-        }
-        if (count($r) > 1) {
-            return ["constraints" => $r];
-        } else {
-            return $r[0];
-        }
     }
 
     /**

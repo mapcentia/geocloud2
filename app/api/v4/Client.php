@@ -57,7 +57,7 @@ use Symfony\Component\Validator\Constraints as Assert;
             description: "The URIs the auth server is allowed to redirect back to.",
             type: "array",
             items: new OA\Items(type: "string"),
-            example: ["http://local"]
+            example: ["id", "name"]
         ),
     ],
     type: "object"
@@ -87,6 +87,7 @@ class Client extends AbstractApi
     ))]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
+    #[Override]
     public function get_index(): array
     {
         $r = [];
@@ -204,7 +205,7 @@ class Client extends AbstractApi
         }
         $model->commit();
         header("Location: /api/v4/clients/" . implode(",", $ids));
-        return ["code" => "204"];
+        return ["code" => "303"];
     }
 
     /**
@@ -254,8 +255,7 @@ class Client extends AbstractApi
         $collection = new Assert\Collection([
             'name' => new Assert\Length(['min' => 3]),
             'homepage' => new Assert\Optional(
-                new Assert\NotBlank(),
-//                new Assert\Type(['type' => 'url']),
+                new Assert\Url(['requireTld' => true]),
             ),
             'description' => new Assert\Optional([
                 new Assert\Length(['min' => 3])
@@ -265,7 +265,7 @@ class Client extends AbstractApi
                 new Assert\Count(['min' => 1]),
                 new Assert\All([
                     new Assert\NotBlank(),
-//                    new Assert\Type(['type' => 'url']),
+                    new Assert\Url(['requireTld' => true]),
                 ]),
             ]),
         ]);

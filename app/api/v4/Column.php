@@ -19,16 +19,19 @@ use Override;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
 use stdClass;
+use OpenApi\Attributes as OA;
+use Symfony\Component\Validator\Constraints as Assert;
 
 
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
-    schema: "Index",
+    schema: "Column",
     required: ["column", "type"],
     properties: [
         new OA\Property(
             property: "column",
             title: "Name of the column",
+            description: "Name of the column",
             type: "string",
             example: "my-column",
         ),
@@ -42,7 +45,7 @@ use stdClass;
         new OA\Property(
             property: "is_nullable",
             title: "Should the column be nullable?",
-            description: "If true the value can be set to null",
+            description: "If true the column can be set to null",
             type: "boolean",
             default: "true",
             example: "false"
@@ -71,39 +74,52 @@ class Column extends AbstractApi
 
     /**
      * @return array
-     * @OA\Post(
-     *   path="/api/v4/schemas/{schema}/tables/{table}/columns",
-     *   tags={"Column"},
-     *   summary="Add a column to a table",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="schema",
-     *     in="path",
-     *     required=true,
-     *     description="Name of schema",
-     *     @OA\Schema(
-     *       type="string",
-     *       example="my_schema"
-     *     )
-     *   ),
-     *   @OA\Parameter(
-     *     name="table",
-     *     in="path",
-     *     required=true,
-     *     description="Name of table",
-     *     @OA\Schema(
-     *       type="string",
-     *       example="my_table"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=201,
-     *     description="Created",
-     *   )
-     * )
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}', operationId: 'getColumn', description: "Get column", tags: ['Column'])]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
+    #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: false, example: 'my_columns')]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Column"))]
+    #[OA\Response(response: 404, description: 'Not found')]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    #[Override]
+    public function get_index(): array
+    {
+        $r = [];
+        $res = self::getColumns($this->table[0], $this->qualifiedName[0]);
+        if ($this->column) {
+            foreach ($this->column as $col) {
+                foreach ($res as $datum) {
+                    if ($datum['column'] === $col) {
+                        $r[] = $datum;
+                    }
+                }
+            }
+        } else {
+            $r = $res;
+        }
+        if (count($r) > 1) {
+            return ["columns" => $r];
+        } else {
+            return $r[0];
+        }
+    }
+
+    /**
+     * @return array
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
+    #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/columns/', operationId: 'postColumn', description: "Get column", tags: ['Column'])]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
+    #[OA\RequestBody(description: 'New column', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Column"))]
+    #[OA\Response(response: 201, description: 'Created')]
+    #[OA\Response(response: 404, description: 'Not found')]
+    #[AcceptableContentTypes(['application/json'])]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    #[Override]
     public function post_index(): array
     {
         $body = Input::getBody();
@@ -126,81 +142,6 @@ class Column extends AbstractApi
         return ["code" => "201"];
     }
 
-    /**
-     * @return array
-     * @throws PhpfastcacheInvalidArgumentException
-     * @OA\Get(
-     *   path="/api/v4/schemas/{schema}/tables/{table}/columns/{column})",
-     *   tags={"Column"},
-     *   summary="Get description of column(s)",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *      name="schema",
-     *      example="my_schema",
-     *      in="path",
-     *      required=true,
-     *      description="Name of schema",
-     *      @OA\Schema(
-     *        type="string"
-     *      )
-     *    ),
-     *   @OA\Parameter(
-     *     name="table",
-     *     example="my_table",
-     *     in="path",
-     *     required=true,
-     *     description="Name of table",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *  @OA\Parameter(
-     *     name="column",
-     *     example="my_column",
-     *     in="path",
-     *     required=false,
-     *     description="Name of column",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=200,
-     *     description="Successful operation",
-     *     @OA\JsonContent(
-     *       type="object",
-     *       @OA\Property(property="message", type="string", description="Success message"),
-     *       @OA\Property(property="success", type="boolean", example=true),
-     *       @OA\Property(property="columns", type="object",
-     *         @OA\Property(property="num", type="integer", example=1),
-     *         @OA\Property(property="full_type", type="string", example="character varying(255)"),
-     *         )
-     *       )
-     *     )
-     *   )
-     * )
-     */
-    #[Override] public function get_index(): array
-    {
-        $r = [];
-        $res = self::getColumns($this->table[0], $this->qualifiedName[0]);
-        if ($this->column) {
-            foreach ($this->column as $col) {
-                foreach ($res as $datum) {
-                    if ($datum['column'] === $col) {
-                        $r[] = $datum;
-                    }
-                }
-            }
-        } else {
-            $r = $res;
-        }
-        if (count($r) > 1) {
-            return ["columns" => $r];
-        } else {
-            return $r[0];
-        }
-    }
 
     /**
      * @throws PhpfastcacheInvalidArgumentException
@@ -241,61 +182,19 @@ class Column extends AbstractApi
 
     /**
      * @return array
-     * @OA\Put(
-     *   path="/api/v4/schemas/{schema}/tables/{table}/columns/{column}",
-     *   tags={"Column"},
-     *   summary="Rename column and set nullable ",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="schema",
-     *     example="my_schema",
-     *     in="path",
-     *     required=true,
-     *     description="Name of schema",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Parameter(
-     *     name="table",
-     *     example="my_table",
-     *     in="path",
-     *     required=true,
-     *     description="Name of table",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Parameter(
-     *       name="column",
-     *       in="path",
-     *       required=true,
-     *       description="Name of column",
-     *       @OA\Schema(
-     *         type="string",
-     *         example="my_column"
-     *       )
-     *     ),
-     *   @OA\RequestBody(
-     *     description="Type of column",
-     *     @OA\MediaType(
-     *       mediaType="application/json",
-     *       @OA\Schema(
-     *         type="object",
-     *         @OA\Property(property="type",type="string", example="varchar(255)"),
-     *         @OA\Property(property="name",type="string", example="my_column")
-     *       )
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=303,
-     *     description="See other",
-     *   )
-     * )
      * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
+    #[OA\Put(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}/', operationId: 'putColumn', description: "Update column(s)", tags: ['Column'])]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
+    #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: true, example: 'my_columns')]
+    #[OA\RequestBody(description: 'Column', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Column"))]
+    #[OA\Response(response: 204, description: "Column updated")]
+    #[OA\Response(response: 404, description: 'Not found')]
+    #[AcceptableContentTypes(['application/json'])]
+    #[Override]
     public function put_index(): array
     {
         $body = Input::getBody();
@@ -346,50 +245,16 @@ class Column extends AbstractApi
 
     /**
      * @return array
-     * @OA\Delete (
-     *   path="/api/v4/schemas/{schema}/tables/{table}/columns/{column}",
-     *   tags={"Column"},
-     *   summary="Drop a column",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="schema",
-     *     example="my_schema",
-     *     in="path",
-     *     required=true,
-     *     description="Name of schema",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Parameter(
-     *     name="table",
-     *     example="my_table",
-     *     in="path",
-     *     required=true,
-     *     description="Name of table",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Parameter(
-     *     name="column",
-     *     example="my_column",
-     *     in="path",
-     *     required=true,
-     *     description="Name of column",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=204,
-     *     description="No content",
-     *   )
-     * )
      * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
+    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}', operationId: 'deleteColumn', description: "Get column", tags: ['Column'])]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
+    #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: true, example: 'my_columns')]
+    #[OA\Response(response: 204, description: 'Column deleted')]
+    #[OA\Response(response: 404, description: 'Not found')]
     public function delete_index(): array
     {
         $this->table[0] = new TableModel($this->qualifiedName[0]);
@@ -410,6 +275,8 @@ class Column extends AbstractApi
         $table = Route2::getParam("table");
         $schema = Route2::getParam("schema");
         $column = Route2::getParam("column");
+        $body = Input::getBody();
+
         // Put and delete on collection is not allowed
         if (empty($column) && in_array(Input::getMethod(), ['put', 'delete'])) {
             throw new GC2Exception("", 406);
@@ -418,6 +285,25 @@ class Column extends AbstractApi
         if (Input::getMethod() == 'post' && $column) {
             $this->postWithResource();
         }
+        $collection = new Assert\Collection([
+            'column' => new Assert\Required([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+            ]),
+            'type' => new Assert\Required([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+            ]),
+            'is_nullable' => new Assert\Optional([
+                new Assert\Type('boolean'),
+            ]),
+            'default_value' => new Assert\Optional([]),
+        ]);
+        if (!empty($body)) {
+            $data = json_decode($body, true);
+            $this->validateRequest($collection, $data, 'columns');
+        }
+
         $this->jwt = Jwt::validate()["data"];
         $this->initiate($schema, $table, null, $column, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }
