@@ -193,19 +193,26 @@ class Import extends AbstractApi
         $body = Input::getBody();
         $data = json_decode($body);
         // Make dry run to check how many tables would be created
-        if ($data->import) {
-            $data->import = false;
+        try {
+            if ($data->import) {
+                $data->import = false;
+
+                $result = $this->import($schema, $fileName, $data);
+
+                $result['schema'] = $schema;
+                $this->runExtension('processImport', (new Model()), $result);
+                $data->import = true;
+            }
             $result = $this->import($schema, $fileName, $data);
-            $result['schema'] = $schema;
-            $this->runExtension('processImport', (new Model()), $result);
-            $data->import = true;
+            $response['cmd'] = $result['cmd'];
+            $response['data'] = $result['data'];
+            $response["success"] = true;
+            $response["code"] = 201;
+            return $response;
+        } catch (\Throwable $e) {
+            throw new GC2Exception("Could not read data from file", 400, null, "FILE_IMPORT_ERROR");
+
         }
-        $result = $this->import($schema, $fileName, $data);
-        $response['cmd'] = $result['cmd'];
-        $response['data'] = $result['data'];
-        $response["success"] = true;
-        $response["code"] = 201;
-        return $response;
     }
 
     /**
