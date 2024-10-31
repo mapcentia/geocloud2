@@ -307,7 +307,7 @@ class Wms extends Controller
                 };
                 $useWmsSource = false;
                 if ($source = $this->getWmsSource($db, $postgisschema, $layers)) {
-                    parse_str($_SERVER["QUERY_STRING"], $query);
+                    parse_str(parse_url($_SERVER["QUERY_STRING"])['path'], $query);
                     $query = array_change_key_case($query, CASE_UPPER);
                     // Use parameters from WMS source if set and use those from query for not set parameters
                     $mergedQuery = array_merge($query, $source['query']);
@@ -315,6 +315,14 @@ class Wms extends Controller
                     $mergedQuery['BBOX'] = $query['BBOX'];
                     $mergedQuery['WIDTH'] = $query['WIDTH'];
                     $mergedQuery['HEIGHT'] = $query['HEIGHT'];
+                    $mergedQuery['VERSION'] = $query['VERSION'];
+                    // Set SRS or CRS (WMS version 1.1.0 and 1.3.0)
+                    $bits = explode('.', $query['VERSION']);
+                    if ((int)$bits[1] < 3) {
+                        $mergedQuery['SRS'] = $query['SRS'];
+                    } else {
+                        $mergedQuery['CRS'] = $query['CRS'];
+                    }
                     // Set REQUEST TO GetMap
                     $mergedQuery['REQUEST'] = 'GetMap';
                     $url = $source['scheme'] . "://" . $source['host'] . $source['path'] . '?' . http_build_query($mergedQuery);
