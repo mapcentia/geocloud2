@@ -17,46 +17,45 @@ use app\inc\Model;
 use app\inc\Route2;
 use app\inc\Session;
 use Exception;
-use Override;
+use OpenApi\Annotations\OpenApi;
+use OpenApi\Attributes as OA;
+use Symfony\Component\Validator\Constraints as Assert;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use stdClass;
 use ZipArchive;
+use Override;
 
 
 /**
  * Class Sql
  * @package app\api\v4
  */
+#[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
+#[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[AcceptableMethods(['PUT', 'POST', 'HEAD', 'OPTIONS'])]
 class Import extends AbstractApi
 {
 
     /**
      * @return array
-     * @OA\Post(
-     *   path="/api/v4/import",
-     *   tags={"Import"},
-     *   summary="Import files. Must be zipped and can contain multiple files in sub-dirs",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\RequestBody(
-     *     description="Parameters",
-     *     @OA\MediaType(
-     *       mediaType="multipart/form-data",
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="200",
-     *     description="",
-     *     @OA\MediaType(
-     *       mediaType="application/json",
-     *       @OA\Schema(
-     *         type="object"
-     *       )
-     *     )
-     *   )
-     * )
      * @throws GC2Exception
      */
+    #[OA\Post(path: '/api/v4/import/{schema}', operationId: 'postImport', description: 'Upload files', tags: ['Import'])]
+    #[OA\Parameter(name: 'schema', description: 'Schema', in: 'path', required: true, example: 'my_schema')]
+    #[OA\RequestBody(content: new OA\MediaType('multipart/form-data', new OA\Schema(
+        properties: [
+            new OA\Property(
+                property: "filename",
+                type: "string",
+                format: "binary",
+                example: 'file',
+            ),
+        ],
+        type: 'object',
+    )))]
+    #[OA\Response(response: 201, description: 'Created')]
+    #[AcceptableContentTypes(['multipart/form-data'])]
+    #[AcceptableAccepts(['application/json', '*/*'])]
     public function post_index(): array
     {
         $jwt = Jwt::validate()["data"];
@@ -71,13 +70,9 @@ class Import extends AbstractApi
         if (!file_exists($targetDir)) {
             @mkdir($targetDir, 0777, true);
         }
-        if (isset($_REQUEST["name"])) {
-            $fileName = $_REQUEST["name"];
-        } elseif (!empty($_FILES)) {
-            $fileName = $_FILES["file"]["name"];
-        } else {
-            $fileName = uniqid("file_");
-        }
+
+        $fileName = $_FILES["filename"]["name"];
+
         $filePath = $targetDir . DIRECTORY_SEPARATOR . $fileName;
         $chunk = isset($_REQUEST["chunk"]) ? intval($_REQUEST["chunk"]) : 0;
         $chunks = isset($_REQUEST["chunks"]) ? intval($_REQUEST["chunks"]) : 0;
@@ -111,7 +106,14 @@ class Import extends AbstractApi
             ];
         }
         if (!empty($_FILES)) {
-            if ($_FILES["file"]["error"] || !is_uploaded_file($_FILES["file"]["tmp_name"])) {
+            if (!isset($_FILES["filename"]["tmp_name"])) {
+                return [
+                    "success" => false,
+                    "code" => "400",
+                    "message" => "Failed to move uploaded file.",
+                ];
+            }
+            if ($_FILES["filename"]["error"] || !is_uploaded_file($_FILES["filename"]["tmp_name"])) {
                 return [
                     "success" => false,
                     "code" => "400",
@@ -120,7 +122,7 @@ class Import extends AbstractApi
             }
 
             // Read binary input stream and append it to temp file
-            if (!$in = @fopen($_FILES["file"]["tmp_name"], "rb")) {
+            if (!$in = @fopen($_FILES["filename"]["tmp_name"], "rb")) {
                 return [
                     "success" => false,
                     "code" => "400",
@@ -152,35 +154,38 @@ class Import extends AbstractApi
     /**
      * @return array
      * @throws Exception
-     *
-     * @OA\Get(
-     *   path="/api/v4/import/{file}",
-     *   tags={"Import"},
-     *   summary="Import uploades zip file",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="file",
-     *     in="path",
-     *     required=false,
-     *     description="Name of uploaded zip file",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="200",
-     *     description="",
-     *     @OA\MediaType(
-     *       mediaType="application/json",
-     *       @OA\Schema(
-     *         type="object",
-     *         @OA\Property(property="data", type="object", @OA\Schema(type="string")),
-     *         @OA\Property(property="success",type="boolean", example=true)
-     *       )
-     *     )
-     *   )
-     * )
      */
+    #[OA\Put(path: '/api/v4/import/{schema}/{file}', operationId: 'putImport', description: 'Import files', tags: ['Import'])]
+    #[OA\Parameter(name: 'schema', description: 'Schema', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'file', description: 'File to import', in: 'path', required: true, example: 'file.csv')]
+    #[OA\RequestBody(content: new OA\MediaType('application/json', new OA\Schema(
+        properties: [
+            new OA\Property(
+                property: "import",
+                description: "If false, a dry-run will be executed.",
+                type: "boolean",
+                example: true,
+            ),
+            new OA\Property(
+                property: "t_srs",
+                title: "Target srs",
+                description: "Fallback target SRS. Will be used if no authority name/code is available.",
+                type: "string",
+                default: "EPSG:4326",
+            ),
+            new OA\Property(
+                property: "s_srs",
+                title: "Source srs",
+                description: "Fallback source SRS. Will be used if file doesn't contain projection information.",
+                type: "string",
+                default: "EPSG:4326",
+            ),
+        ],
+        type: 'object',
+    )))]
+    #[OA\Response(response: 201, description: 'Created')]
+    #[OA\Response(response: 404, description: 'Not found')]
+    #[AcceptableAccepts(['application/json', '*/*'])]
     public function put_index(): array
     {
         $schema = Route2::getParam("schema");
@@ -267,10 +272,32 @@ class Import extends AbstractApi
     {
         $file = Route2::getParam("file");
         $schema = Route2::getParam("schema");
+        $body = Input::getBody();
+
         // Throw exception if tried with resource id
         if (Input::getMethod() == 'post' && $file) {
             $this->postWithResource();
         }
+
+        $collection = new Assert\Collection([
+            'import' => new Assert\Optional(
+                new Assert\Type('boolean'),
+            ),
+            't_srs' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+            ]),
+            's_srs' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+            ]),
+        ]);
+
+        if (!empty($body)) {
+            $data = json_decode($body, true);
+            $this->validateRequest($collection, $data, 'rules');
+        }
+
         $this->jwt = Jwt::validate()["data"];
         $this->initiate($schema, null, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }
