@@ -18,6 +18,7 @@ use app\inc\TableWalkerRelation;
 use app\inc\TableWalkerRule;
 use app\inc\UserFilter;
 use app\models\Geofence;
+use app\models\Preparedstatement as PreparedstatementModel;
 use app\models\Rule;
 use app\models\Setting;
 use sad_spirit\pg_builder\StatementFactory;
@@ -78,6 +79,24 @@ class Sql extends Controller
         // If JSON body when set GET input params
         // ======================================
         if ($json != null) {
+
+            if (!empty($json["id"])) {
+                $pres = new PreparedstatementModel();
+                // Upsert if both query and store
+                if (!empty($json["q"])) {
+                    $uuid = $pres->createPreparedStatement($json["id"], $json["q"]);
+                    return [
+                        'code' => 201,
+                        'uuid' => $uuid,
+                        'name' => $json["id"],
+                    ];
+                }
+                // Else fetch the query and use it
+                else {
+                    $json["q"] = $pres->getByName($json['id'])['data']['statement'];
+                }
+
+            }
 
             // Set input params from JSON
             // ==========================

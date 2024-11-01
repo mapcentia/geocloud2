@@ -481,7 +481,7 @@ try {
             }
         });
 
-        Route2::add("api/v4/sql", new Sql(), function () {
+        Route2::add("api/v4/sql/[id]", new Sql(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);
