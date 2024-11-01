@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8d1a83f7ed9577e59ab22163bdd5325b",
+    "content-hash": "b195f380dbe6125a883685f4a3fb764d",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -1992,16 +1992,16 @@
         },
         {
             "name": "sad_spirit/pg_builder",
-            "version": "v2.3.1",
+            "version": "v2.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sad-spirit/pg-builder.git",
-                "reference": "dc93990a8c24a3c1f4774e85741a2f7f676235dd"
+                "reference": "d9d15715fdf789e6ed2d38471c3f7338062df35f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sad-spirit/pg-builder/zipball/dc93990a8c24a3c1f4774e85741a2f7f676235dd",
-                "reference": "dc93990a8c24a3c1f4774e85741a2f7f676235dd",
+                "url": "https://api.github.com/repos/sad-spirit/pg-builder/zipball/d9d15715fdf789e6ed2d38471c3f7338062df35f",
+                "reference": "d9d15715fdf789e6ed2d38471c3f7338062df35f",
                 "shasum": ""
             },
             "require": {
@@ -2009,7 +2009,7 @@
                 "php": ">=7.2.0"
             },
             "conflict": {
-                "sad_spirit/pg_wrapper": "<2.2"
+                "sad_spirit/pg_wrapper": "<2.4"
             },
             "require-dev": {
                 "ext-pdo_pgsql": "*",
@@ -2017,7 +2017,7 @@
                 "phpstan/phpstan": "^1.10.15",
                 "phpunit/phpunit": "^8.0|^9.0",
                 "psr/cache": "^1.0",
-                "sad_spirit/pg_wrapper": "^2.2.0",
+                "sad_spirit/pg_wrapper": "^2.4.0",
                 "vimeo/psalm": "^4.30"
             },
             "suggest": {
@@ -2055,22 +2055,22 @@
             ],
             "support": {
                 "issues": "https://github.com/sad-spirit/pg-builder/issues",
-                "source": "https://github.com/sad-spirit/pg-builder/tree/v2.3.1"
+                "source": "https://github.com/sad-spirit/pg-builder/tree/v2.4.0"
             },
-            "time": "2023-11-15T19:31:22+00:00"
+            "time": "2024-05-27T10:41:05+00:00"
         },
         {
             "name": "sad_spirit/pg_wrapper",
-            "version": "v2.3.0",
+            "version": "v2.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sad-spirit/pg-wrapper.git",
-                "reference": "943bb656460db78af7fb1759f9e2ac5497e16d54"
+                "reference": "332965d37615196e4a46f7da62f862a4fcb2b0c2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sad-spirit/pg-wrapper/zipball/943bb656460db78af7fb1759f9e2ac5497e16d54",
-                "reference": "943bb656460db78af7fb1759f9e2ac5497e16d54",
+                "url": "https://api.github.com/repos/sad-spirit/pg-wrapper/zipball/332965d37615196e4a46f7da62f862a4fcb2b0c2",
+                "reference": "332965d37615196e4a46f7da62f862a4fcb2b0c2",
                 "shasum": ""
             },
             "require": {
@@ -2119,9 +2119,9 @@
             ],
             "support": {
                 "issues": "https://github.com/sad-spirit/pg-wrapper/issues",
-                "source": "https://github.com/sad-spirit/pg-wrapper/tree/v2.3.0"
+                "source": "https://github.com/sad-spirit/pg-wrapper/tree/v2.5.0"
             },
-            "time": "2023-09-15T06:38:46+00:00"
+            "time": "2024-09-12T10:15:18+00:00"
         },
         {
             "name": "softcreatr/jsonpath",
