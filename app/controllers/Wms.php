@@ -315,6 +315,14 @@ class Wms extends Controller
                     $mergedQuery['BBOX'] = $query['BBOX'];
                     $mergedQuery['WIDTH'] = $query['WIDTH'];
                     $mergedQuery['HEIGHT'] = $query['HEIGHT'];
+                    $mergedQuery['VERSION'] = $query['VERSION'];
+                    // Set SRS or CRS (WMS version 1.1.0 and 1.3.0)
+                    $bits = explode('.', $query['VERSION']);
+                    if ((int)$bits[1] < 3) {
+                        $mergedQuery['SRS'] = $query['SRS'];
+                    } else {
+                        $mergedQuery['CRS'] = $query['CRS'];
+                    }
                     // Set REQUEST TO GetMap
                     $mergedQuery['REQUEST'] = 'GetMap';
                     $url = $source['scheme'] . "://" . $source['host'] . $source['path'] . '?' . http_build_query($mergedQuery);
