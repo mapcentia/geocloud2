@@ -602,21 +602,11 @@ class Sql extends Model
      * @param string $value The value in the native type format.
      * @return array|string|ArrayRepresentable|JsonSerializable The converted value in PHP type.
      */
-    private function convertFromNative(string $nativeType, string $value): array|string|ArrayRepresentable|JsonSerializable
+    private function convertFromNative(string $nativeType, string $value): mixed
     {
         $newValue = (new DefaultTypeConverterFactory())->getConverterForTypeSpecification($nativeType)->input($value);
-
-        // TODO multidimensionel
         if (is_array($newValue)) {
-            /*
-             $tmp = [];
-             foreach ($newValue as $val) {
-                 $tmp[] = $this->convertPhpTypes($val);
-             }
-             $newValue = $tmp;
-            */
             $newValue = self::processArray($newValue, fn($i) => $this->convertPhpTypes($i));
-
         } else {
             $newValue = $this->convertPhpTypes($newValue);
         }
