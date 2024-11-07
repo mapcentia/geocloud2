@@ -96,7 +96,7 @@ class Table extends AbstractApi
         // Add columns
         if (!empty($data->columns)) {
             foreach ($data->columns as $column) {
-                Column::addColumn($table, $column->column, $column->type, true, $column->default_value, $column->is_nullable);
+                Column::addColumn($table, $column->column, $column->type, true, $column->default_value, $column->is_nullable ?? true);
             }
         }
         // Add indices
