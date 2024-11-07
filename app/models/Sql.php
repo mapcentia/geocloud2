@@ -12,11 +12,18 @@ use app\conf\App;
 use app\conf\Connection;
 use app\exceptions\GC2Exception;
 use app\inc\Model;
+use DateInterval;
+use DateMalformedStringException;
+use DateTimeImmutable;
+use JsonSerializable;
 use PDO;
 use PDOException;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
 use PhpOffice\PhpSpreadsheet\Reader\Exception;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use sad_spirit\pg_wrapper\types\ArrayRepresentable;
+use sad_spirit\pg_wrapper\types\DateTimeRange;
+use sad_spirit\pg_wrapper\types\Range;
 use ZipArchive;
 use sad_spirit\pg_wrapper\converters\DefaultTypeConverterFactory;
 
@@ -57,15 +64,16 @@ class Sql extends Model
      * @param string|null $nln
      * @param bool|null $convertTypes
      * @param array|null $parameters
+     * @param array|null $typeHints
      * @return array
      * @throws Exception
-     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      * @throws GC2Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
-    public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, ?string $nlt = null, ?string $nln = null, ?bool $convertTypes = false, array $parameters = null): array
+    public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, ?string $nlt = null, ?string $nln = null, ?bool $convertTypes = false, array $parameters = null, array $typeHints = null): array
     {
         // Check params
-        if ($parameters && is_array($parameters[0])) {
+        if (is_array($parameters) && array_key_exists(0, $parameters) && is_array($parameters[0])) {
             throw new GC2Exception("Only JSON objects are accepted in SELECT statements. Not arrays", 406);
         }
 
@@ -142,14 +150,24 @@ class Sql extends Model
         }
 
         // Get column types
-        $sqlView = "CREATE TEMPORARY VIEW $view as $q";
-        $res = $this->prepare($sqlView);
-        $res->execute();
-        $arrayWithFields = $this->getMetaData($view, true, false, null, md5($q)); // Temp VIEW
-        $columnTypes = [];
-        foreach ($arrayWithFields as $key => $value) {
-            $columnTypes[$key] = $value['typname'];
+        $this->execQuery("SET LOCAL session_replication_role  = replica");
+        $select = $this->prepare("select * from ($q) as foo LIMIT 1");
+
+        $convertedParameters = [];
+        if ($parameters) {
+            foreach ($parameters as $field => $value) {
+                $nativeType = $typeHints[$field] ?? 'json';
+                $convertedParameters[$field] = $this->convertToNative($nativeType, $value);
+            }
+            $select->execute($convertedParameters);
+        } else {
+            $select->execute();
         }
+        foreach (range(0, $select->columnCount() - 1) as $column_index) {
+            $meta = $select->getColumnMeta($column_index);
+            $columnTypes[$meta['name']] = $meta['native_type'];
+        }
+        $this->execQuery("SET LOCAL session_replication_role  = DEFAULT");
 
         $fieldsArr = [];
         foreach ($columnTypes as $key => $type) {
@@ -181,7 +199,7 @@ class Sql extends Model
             $this->execQuery("set client_encoding='$clientEncoding'");
         }
 
-        $this->prepare("DECLARE curs CURSOR FOR $sql")->execute($parameters);
+        $this->prepare("DECLARE curs CURSOR FOR $sql")->execute($convertedParameters);
         $innerStatement = $this->prepare("FETCH 1 FROM curs");
 
         $geometries = null;
@@ -196,20 +214,19 @@ class Sql extends Model
 
             while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
                 $arr = array();
-                foreach ($row as $key => $value) {
-                    if ($columnTypes[$key] == "geometry" && $value !== null) {
-                        $geometries[] = json_decode($value);
+                foreach ($row as $key => $rowValue) {
+                    $nativeType = $columnTypes[$key];
+                    if ($nativeType == "geometry" && $rowValue !== null) {
+                        $geometries[] = json_decode($rowValue);
                     } else {
                         if ($convertTypes) {
                             try {
-                                $convertedValue = (new DefaultTypeConverterFactory())->getConverterForTypeSpecification($columnTypes[$key])->input($value);
-                                $arr = $this->array_push_assoc($arr, $key, $convertedValue);
+                                $rowValue = $this->convertFromNative($nativeType, $rowValue);
                             } catch (\Exception) {
-                                $arr = $this->array_push_assoc($arr, $key, $value);
+                                // Pass
                             }
-                        } else {
-                            $arr = $this->array_push_assoc($arr, $key, $value);
                         }
+                        $arr = $this->array_push_assoc($arr, $key, $rowValue);
                     }
                 }
                 if ($geometries == null) {
@@ -458,26 +475,12 @@ class Sql extends Model
             foreach ($parameters as $parameter) {
                 $paramTmp = [];
                 foreach ($parameter as $field => $value) {
-                    $type = gettype($value);
-                    if ($type == 'array' || $type == 'object') {
-                        $nativeType = $typeHints[$field] ?? 'json';
-                        try {
-                            $nativeValue = $factory->getConverterForTypeSpecification($nativeType)->output($value);
-                        } catch (\Exception) {
-                            throw new GC2Exception("The value couldn't be parsed as $nativeType", 406, null, "VALUE_PARSE_ERROR");
-                        }
-                        $paramTmp[$field] = $nativeValue;
-                    } elseif ($type == 'boolean') {
-                        $nativeValue = $factory->getConverterForTypeSpecification($type)->output($value);
-                        $paramTmp[$field] = $nativeValue;
-                    } else {
-                        $paramTmp[$field] = $value;
-                    }
+                    $nativeType = $typeHints[$field] ?? 'json';
+                    $paramTmp[$field] = $this->convertToNative($nativeType, $value);
                 }
                 $convertedParameters[] = $paramTmp;
             }
         }
-
         $returning = null;
         $affectedRows = 0;
         $result = $this->prepare($q);
@@ -498,7 +501,7 @@ class Sql extends Model
                 $tmp = null;
                 foreach ($row as $field => $value) {
                     try {
-                        $convertedValue = $factory->getConverterForTypeSpecification($columnTypes[$field])->input($value);
+                        $convertedValue = $this->convertFromNative($columnTypes[$field], $value);
                         $tmp[$field] = $convertedValue;
                     } catch (\Exception) {
                         if ($columnTypes[$field] == 'geometry') {
@@ -532,7 +535,7 @@ class Sql extends Model
                     $tmp = null;
                     foreach ($row as $field => $value) {
                         try {
-                            $convertedValue = $factory->getConverterForTypeSpecification($columnTypes[$field])->input($value);
+                            $convertedValue = $this->convertFromNative($columnTypes[$field], $value);
                             $tmp[$field] = $convertedValue;
                         } catch (\Exception) {
                             if ($columnTypes[$field] == 'geometry') {
@@ -589,6 +592,165 @@ class Sql extends Model
         $res = $this->prepare($ex);
         $q = str_replace("\n", " ", $q);
         $res->execute(['username' => $username, 'statement' => $q, 'cost' => $cost]);
+    }
+
+
+    /**
+     * Converts a native type value into a corresponding PHP type.
+     *
+     * @param string $nativeType The native type specification to convert from.
+     * @param string $value The value in the native type format.
+     * @return array|string|ArrayRepresentable|JsonSerializable The converted value in PHP type.
+     */
+    private function convertFromNative(string $nativeType, string $value): array|string|ArrayRepresentable|JsonSerializable
+    {
+        $newValue = (new DefaultTypeConverterFactory())->getConverterForTypeSpecification($nativeType)->input($value);
+
+        // TODO multidimensionel
+        if (is_array($newValue)) {
+            /*
+             $tmp = [];
+             foreach ($newValue as $val) {
+                 $tmp[] = $this->convertPhpTypes($val);
+             }
+             $newValue = $tmp;
+            */
+            $newValue = self::processArray($newValue, fn($i) => $this->convertPhpTypes($i));
+
+        } else {
+            $newValue = $this->convertPhpTypes($newValue);
+        }
+        return $newValue;
+    }
+
+
+    /**
+     * Converts a given value to its native equivalent based on the specified native type.
+     *
+     * @param string $nativeType The native type to which the value needs to be converted.
+     * @param mixed $value The value to be converted.
+     * @return string The converted value in its native type.
+     * @throws GC2Exception
+     */
+    private function convertToNative(string $nativeType, mixed $value): string
+    {
+        $factory = new DefaultTypeConverterFactory();
+        $type = gettype($value);
+        if ($type == 'array' || $type == 'object') {
+            try {
+                if (in_array($nativeType, ['daterange', 'tsrange', 'tstzrange'])) {
+                    $value = $this->convertDateTimeRange($value);
+                }
+                if (in_array($nativeType, ['daterange[]', 'tsrange[]', 'tstzrange[]'])) {
+                    $value = self::processArray($value, fn($i) => $this->convertDateTimeRange($i));
+                }
+                if ($nativeType == 'interval') {
+                    $value = $this->convertInterval($value);
+                }
+                if ($nativeType == 'interval[]') {
+                    $value = self::processArray($value, fn($i) => $this->convertInterval($i));
+                }
+                if (in_array($nativeType, ['numrange[]', 'int4range[]', 'int8range[]'])) {
+                    $value = self::processArray($value, fn($i) => new Range(...$i));
+                }
+                $nativeValue = $factory->getConverterForTypeSpecification($nativeType)->output($value);
+            } catch (\Exception $e) {
+                throw new GC2Exception($e->getMessage(), 406, null, "VALUE_PARSE_ERROR");
+            }
+            $paramTmp = $nativeValue;
+        } elseif ($type == 'boolean') {
+            $nativeValue = $factory->getConverterForTypeSpecification($type)->output($value);
+            $paramTmp = $nativeValue;
+        } else {
+            $paramTmp = $value;
+        }
+        return $paramTmp;
+    }
+
+    /**
+     * Converts an associative array of time components to a DateInterval object.
+     *
+     * @param array $value An associative array containing keys 'y', 'm', 'd', 'h', 'i', 's', 'f' representing years, months, days, hours, minutes, seconds, and microseconds respectively.
+     * @return DateInterval Returns a DateInterval object with the specified time components.
+     */
+    private function convertInterval(array $value): DateInterval
+    {
+        $tmp = new DateInterval("P0D");
+        foreach (['y', 'm', 'd', 'h', 'i', 's', 'f'] as $key) {
+            $tmp->$key = $value[$key] ?? 0;
+        }
+        return $tmp;
+    }
+
+    /**
+     * @param array $value Array containing 'lower' and 'upper' keys with date and time strings
+     * @return Range An instance of the Range class initialized with datetime objects
+     * @throws DateMalformedStringException
+     */
+    private function convertDateTimeRange(array $value): Range
+    {
+        $value['lower'] = new \DateTimeImmutable($value['lower']);
+        $value['lower']->format("l jS \of F Y h:i:s A");
+        $value['upper'] = new \DateTimeImmutable($value['upper']);
+        $value['upper']->format("l jS \of F Y h:i:s A");
+        return new Range(...$value);
+    }
+
+    /**
+     * Converts specific PHP types to a more manageable format.
+     *
+     * @param mixed $value The value to be converted which could be an instance of DateTimeImmutable, DateInterval, or DateTimeRange.
+     * @return mixed The converted value in a standardized format.
+     */
+    private function convertPhpTypes(mixed $value): mixed
+    {
+        if ($value instanceof DateTimeImmutable) {
+            $value = $value->format('l jS \of F Y h:i:s A');
+        }
+        if ($value instanceof DateInterval) {
+            $tmp = [];
+            foreach ($value as $key => $n) {
+                if ($n) {
+                    $tmp[$key] = $n;
+                }
+            }
+            $value = $tmp;
+        }
+        if ($value instanceof DateTimeRange) {
+            $tmp['lower'] = $value->lower->format('l jS \of F Y h:i:s A');
+            $tmp['upper'] = $value->upper->format('l jS \of F Y h:i:s A');
+            $tmp['lowerInclusive'] = $value->lowerInclusive;
+            $tmp['upperInclusive'] = $value->upperInclusive;
+            $value = $tmp;
+        }
+        return $value;
+    }
+
+    /**
+     * Processes an array recursively with a given callback function.
+     *
+     * @param array|object $item The array to be processed.
+     * @param callable $func The callback function to apply to the array or its sub-arrays.
+     * @return array The processed array.
+     */
+    private static function processArray(array|object $item, callable $func): mixed
+    {
+        $hasSubArray = false;
+        foreach ($item as $subItem) {
+            if (is_array($subItem) || is_object($subItem)) {
+                $hasSubArray = true;
+                break;
+            }
+        }
+        if ($hasSubArray) {
+            $result = [];
+            foreach ($item as $key => $subItem) {
+                $result[$key] = self::processArray($subItem, $func);
+            }
+            return $result;
+        } else {
+            return $func($item);
+        }
     }
 }
 
