@@ -137,6 +137,7 @@ class Processvector extends Controller
             $res->execute();
         }
         $cmd = "PGCLIENTENCODING=$encoding ogr2ogr " .
+            "-nomd " .
             ($skipFailures ? "-skipfailures " : " ") .
             (($delete || $append) ? "-append " : " ") .
             (($overwrite && !$delete) ? "-overwrite " : " ") .
