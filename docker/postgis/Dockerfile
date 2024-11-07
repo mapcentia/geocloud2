@@ -69,6 +69,10 @@ RUN chown postgres:postgres /etc/pgbouncer/userlist.txt
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=2 \
     CMD pg_isready || exit 1
 
+# Install gc2-cli
+RUN wget https://gc2-cli.s3.eu-west-1.amazonaws.com/versions/2024.3.3/79bafc6/apt/gc2_2024.3.3.79bafc6-1_amd64.deb -O gc2-cli.deb &&\
+    dpkg -i gc2-cli.deb
+
 # Add Supervisor config and run the deamon
 ADD conf/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
