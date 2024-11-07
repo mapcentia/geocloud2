@@ -136,6 +136,7 @@ class Sql extends AbstractApi
                 "key" => $apiKey,
                 "srs" => "4326",
                 "convert_types" => true,
+                "format" => "json",
             ]
         );
         $res = $this->v2->get_index($user);
@@ -196,6 +197,9 @@ class Sql extends AbstractApi
                 new Assert\Type('array'),
                 new Assert\Count(['min' => 1]),
             ]),
+            'format' => new Assert\Optional(
+                new Assert\NotBlank(),
+            ),
         ]);
         if (!empty($body)) {
             $data = json_decode($body, true);

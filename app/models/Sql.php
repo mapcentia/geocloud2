@@ -152,7 +152,6 @@ class Sql extends Model
         // Get column types
         $this->execQuery("SET LOCAL session_replication_role  = replica");
         $select = $this->prepare("select * from ($q) as foo LIMIT 1");
-
         $convertedParameters = [];
         if ($parameters) {
             foreach ($parameters as $field => $value) {
@@ -172,7 +171,7 @@ class Sql extends Model
         $fieldsArr = [];
         foreach ($columnTypes as $key => $type) {
             if ($type == "geometry") {
-                if (($format == "geojson" || $format == "ndjson") || (($format == "csv" || $format == "excel") && $geoformat == "geojson")) {
+                if (in_array($format , ["geojson", "ndjson", "json"]) || (($format == "csv" || $format == "excel") && $geoformat == "geojson")) {
                     $fieldsArr[] = "ST_asGeoJson(ST_Transform($ST_Force2D(\"$key\"),$this->srs)) as \"$key\"";
                 } elseif ($format == "csv" || $format == "excel") {
                     $fieldsArr[] = "ST_asText(ST_Transform($ST_Force2D(\"$key\"),$this->srs)) as \"$key\"";
@@ -202,15 +201,51 @@ class Sql extends Model
         $this->prepare("DECLARE curs CURSOR FOR $sql")->execute($convertedParameters);
         $innerStatement = $this->prepare("FETCH 1 FROM curs");
 
-        $geometries = null;
-        $fieldsForStore = [];
-        $columnsForGrid = [];
-        $features = [];
+        if ($format == "json") {
 
-        if ($format == "geojson") {
+            // JSON output
+            // ==============
+
+            $arr = [];
+            while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
+                foreach ($row as $key => $rowValue) {
+                    $nativeType = $columnTypes[$key];
+                    if ($nativeType == "geometry" && $rowValue !== null) {
+                        $rowValue = json_decode($rowValue);
+                    } else {
+                        if ($convertTypes) {
+                            try {
+                                $rowValue = $this->convertFromNative($nativeType, $rowValue);
+                            } catch (\Exception) {
+                                // Pass
+                            }
+                        }
+                    }
+                    $arr = $this->array_push_assoc($arr, $key, $rowValue);
+                }
+            }
+            $this->execQuery("CLOSE curs");
+            $this->commit();
+            foreach ($columnTypes as $key => $type) {
+                $schema[$key] = [
+                    "type" => ltrim($type, '_'),
+                    "array" => str_starts_with($type, '_'),
+                    ];
+            }
+            $response['success'] = true;
+            $response['schema'] = $schema;
+            $response['data'] = $arr;
+            return $response;
+
+        } elseif ($format == "geojson") {
 
             // GeoJSON output
             // ==============
+
+            $geometries = null;
+            $fieldsForStore = [];
+            $columnsForGrid = [];
+            $features = [];
 
             while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
                 $arr = array();
@@ -250,7 +285,6 @@ class Sql extends Model
             $response['type'] = "FeatureCollection";
             $response['features'] = $features;
             return $response;
-
 
         } elseif ($format == "ndjson") {
 

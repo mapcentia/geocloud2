@@ -105,7 +105,7 @@ class Sql extends Controller
                     "q" => !empty($json["q"]) ? $json["q"] : null,
                     "client_encoding" => !empty($json["client_encoding"]) ? $json["client_encoding"] : null,
                     "srs" => !empty($json["srs"]) ? $json["srs"] : Input::$params["srs"],
-                    "format" => !empty($json["format"]) ? $json["format"] : null,
+                    "format" => !empty($json["format"]) ? $json["format"] : Input::$params["format"],
                     "geoformat" => !empty($json["geoformat"]) ? $json["geoformat"] : null,
                     "key" => !empty($json["key"]) ? $json["key"] : Input::$params["key"],
                     "geojson" => !empty($json["geojson"]) ? $json["geojson"] : null,
