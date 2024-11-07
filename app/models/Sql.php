@@ -600,7 +600,7 @@ class Sql extends Model
      *
      * @param string $nativeType The native type specification to convert from.
      * @param string $value The value in the native type format.
-     * @return array|string|ArrayRepresentable|JsonSerializable The converted value in PHP type.
+     * @return mixed.
      */
     private function convertFromNative(string $nativeType, string $value): mixed
     {
