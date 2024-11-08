@@ -41,6 +41,12 @@ class Sql extends Model
 
     public Sql $model;
 
+    private const string DEFAULT_TIMESTAMP_FORMAT = 'Y-m-d H:i:s';
+    private const string DEFAULT_TIMESTAMPTZ_FORMAT = 'Y-m-d H:i:s P';
+    private const string DEFAULT_TIME_FORMAT = 'H:i:s';
+    private const string DEFAULT_TIMETZ_FORMAT = 'H:i:s P';
+    private const string DEFAULT_DATE_FORMAT = 'Y-m-d';
+
     /**
      * Sql constructor.
      * @param string $srs
@@ -70,7 +76,7 @@ class Sql extends Model
      * @throws GC2Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
-    public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, ?string $nlt = null, ?string $nln = null, ?bool $convertTypes = false, array $parameters = null, array $typeHints = null): array
+    public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, ?string $nlt = null, ?string $nln = null, ?bool $convertTypes = false, array $parameters = null, array $typeHints = null, array $formats = null): array
     {
         // Check params
         if (is_array($parameters) && array_key_exists(0, $parameters) && is_array($parameters[0])) {
@@ -156,7 +162,8 @@ class Sql extends Model
         if ($parameters) {
             foreach ($parameters as $field => $value) {
                 $nativeType = $typeHints[$field] ?? 'json';
-                $convertedParameters[$field] = $this->convertToNative($nativeType, $value);
+                $formatT = $formats[$field] ?? self::getFormat($nativeType);
+                $convertedParameters[$field] = $this->convertToNative($nativeType, $value, $formatT);
             }
             $select->execute($convertedParameters);
         } else {
@@ -171,7 +178,7 @@ class Sql extends Model
         $fieldsArr = [];
         foreach ($columnTypes as $key => $type) {
             if ($type == "geometry") {
-                if (in_array($format , ["geojson", "ndjson", "json"]) || (($format == "csv" || $format == "excel") && $geoformat == "geojson")) {
+                if (in_array($format, ["geojson", "ndjson", "json"]) || (($format == "csv" || $format == "excel") && $geoformat == "geojson")) {
                     $fieldsArr[] = "ST_asGeoJson(ST_Transform($ST_Force2D(\"$key\"),$this->srs)) as \"$key\"";
                 } elseif ($format == "csv" || $format == "excel") {
                     $fieldsArr[] = "ST_asText(ST_Transform($ST_Force2D(\"$key\"),$this->srs)) as \"$key\"";
@@ -215,7 +222,8 @@ class Sql extends Model
                     } else {
                         if ($convertTypes) {
                             try {
-                                $rowValue = $this->convertFromNative($nativeType, $rowValue);
+                                $format = $formats[$key] ?? self::getFormat($nativeType);
+                                $rowValue = $this->convertFromNative($nativeType, $rowValue, $format);
                             } catch (\Exception) {
                                 // Pass
                             }
@@ -230,7 +238,7 @@ class Sql extends Model
                 $schema[$key] = [
                     "type" => ltrim($type, '_'),
                     "array" => str_starts_with($type, '_'),
-                    ];
+                ];
             }
             $response['success'] = true;
             $response['schema'] = $schema;
@@ -499,9 +507,8 @@ class Sql extends Model
      * @return array
      * @throws GC2Exception
      */
-    public function transaction(string $q, array $parameters = null, array $typeHints = null, bool $convertReturning = true): array
+    public function transaction(string $q, array $parameters = null, array $typeHints = null, bool $convertReturning = true, array $formats = null): array
     {
-        $factory = new DefaultTypeConverterFactory();
         $columnTypes = [];
         $convertedParameters = [];
         // Convert JSON to native types
@@ -510,7 +517,8 @@ class Sql extends Model
                 $paramTmp = [];
                 foreach ($parameter as $field => $value) {
                     $nativeType = $typeHints[$field] ?? 'json';
-                    $paramTmp[$field] = $this->convertToNative($nativeType, $value);
+                    $format = $formats[$field] ?? self::getFormat($nativeType);
+                    $paramTmp[$field] = $this->convertToNative($nativeType, $value, $format);
                 }
                 $convertedParameters[] = $paramTmp;
             }
@@ -535,7 +543,9 @@ class Sql extends Model
                 $tmp = null;
                 foreach ($row as $field => $value) {
                     try {
-                        $convertedValue = $this->convertFromNative($columnTypes[$field], $value);
+                        $nativeType = $typeHints[$field] ?? 'json';
+                        $format = $formats[$field] ?? self::getFormat($nativeType);
+                        $convertedValue = $this->convertFromNative($columnTypes[$field], $value, $format);
                         $tmp[$field] = $convertedValue;
                     } catch (\Exception) {
                         if ($columnTypes[$field] == 'geometry') {
@@ -636,13 +646,13 @@ class Sql extends Model
      * @param string $value The value in the native type format.
      * @return mixed.
      */
-    private function convertFromNative(string $nativeType, string $value): mixed
+    private function convertFromNative(string $nativeType, string $value, ?string $format): mixed
     {
         $newValue = (new DefaultTypeConverterFactory())->getConverterForTypeSpecification($nativeType)->input($value);
         if (is_array($newValue)) {
-            $newValue = self::processArray($newValue, fn($i) => $this->convertPhpTypes($i));
+            $newValue = self::processArray($newValue, fn($i, $format) => $this->convertPhpTypes($i, $format), $format);
         } else {
-            $newValue = $this->convertPhpTypes($newValue);
+            $newValue = $this->convertPhpTypes($newValue, $format);
         }
         return $newValue;
     }
@@ -656,26 +666,28 @@ class Sql extends Model
      * @return string The converted value in its native type.
      * @throws GC2Exception
      */
-    private function convertToNative(string $nativeType, mixed $value): string
+    private function convertToNative(string $nativeType, mixed $value, ?string $format): string
     {
         $factory = new DefaultTypeConverterFactory();
         $type = gettype($value);
+        $format = $format ?? self::getFormat($nativeType);
+
         if ($type == 'array' || $type == 'object') {
             try {
                 if (in_array($nativeType, ['daterange', 'tsrange', 'tstzrange'])) {
-                    $value = $this->convertDateTimeRange($value);
+                    $value = $this->convertDateTimeRange($value, $format);
                 }
                 if (in_array($nativeType, ['daterange[]', 'tsrange[]', 'tstzrange[]'])) {
-                    $value = self::processArray($value, fn($i) => $this->convertDateTimeRange($i));
+                    $value = self::processArray($value, fn($i, $format) => $this->convertDateTimeRange($i, $format), $format);
                 }
                 if ($nativeType == 'interval') {
                     $value = $this->convertInterval($value);
                 }
                 if ($nativeType == 'interval[]') {
-                    $value = self::processArray($value, fn($i) => $this->convertInterval($i));
+                    $value = self::processArray($value, fn($i) => $this->convertInterval($i), $format);
                 }
                 if (in_array($nativeType, ['numrange[]', 'int4range[]', 'int8range[]'])) {
-                    $value = self::processArray($value, fn($i) => new Range(...$i));
+                    $value = self::processArray($value, fn($i) => new Range(...$i), $format);
                 }
                 $nativeValue = $factory->getConverterForTypeSpecification($nativeType)->output($value);
             } catch (\Exception $e) {
@@ -709,14 +721,11 @@ class Sql extends Model
     /**
      * @param array $value Array containing 'lower' and 'upper' keys with date and time strings
      * @return Range An instance of the Range class initialized with datetime objects
-     * @throws DateMalformedStringException
      */
-    private function convertDateTimeRange(array $value): Range
+    private function convertDateTimeRange(array $value, ?string $format): Range
     {
-        $value['lower'] = new \DateTimeImmutable($value['lower']);
-        $value['lower']->format("l jS \of F Y h:i:s A");
-        $value['upper'] = new \DateTimeImmutable($value['upper']);
-        $value['upper']->format("l jS \of F Y h:i:s A");
+        $value['lower'] = DateTimeImmutable::createFromFormat($format, $value['lower']);
+        $value['upper'] = DateTimeImmutable::createFromFormat($format, $value['upper']);
         return new Range(...$value);
     }
 
@@ -726,10 +735,10 @@ class Sql extends Model
      * @param mixed $value The value to be converted which could be an instance of DateTimeImmutable, DateInterval, or DateTimeRange.
      * @return mixed The converted value in a standardized format.
      */
-    private function convertPhpTypes(mixed $value): mixed
+    private function convertPhpTypes(mixed $value, ?string $format): mixed
     {
         if ($value instanceof DateTimeImmutable) {
-            $value = $value->format('l jS \of F Y h:i:s A');
+            $value = $value->format($format ?? self::DEFAULT_TIMESTAMPTZ_FORMAT);
         }
         if ($value instanceof DateInterval) {
             $tmp = [];
@@ -741,8 +750,8 @@ class Sql extends Model
             $value = $tmp;
         }
         if ($value instanceof DateTimeRange) {
-            $tmp['lower'] = $value->lower->format('l jS \of F Y h:i:s A');
-            $tmp['upper'] = $value->upper->format('l jS \of F Y h:i:s A');
+            $tmp['lower'] = $value->lower->format($format);
+            $tmp['upper'] = $value->upper->format($format);
             $tmp['lowerInclusive'] = $value->lowerInclusive;
             $tmp['upperInclusive'] = $value->upperInclusive;
             $value = $tmp;
@@ -757,7 +766,7 @@ class Sql extends Model
      * @param callable $func The callback function to apply to the array or its sub-arrays.
      * @return array The processed array.
      */
-    private static function processArray(array|object $item, callable $func): mixed
+    private static function processArray(array|object $item, callable $func, ?string $format): mixed
     {
         $hasSubArray = false;
         foreach ($item as $subItem) {
@@ -769,12 +778,24 @@ class Sql extends Model
         if ($hasSubArray) {
             $result = [];
             foreach ($item as $key => $subItem) {
-                $result[$key] = self::processArray($subItem, $func);
+                $result[$key] = self::processArray($subItem, $func, $format);
             }
             return $result;
         } else {
-            return $func($item);
+            return $func($item, $format);
         }
+    }
+
+    private static function getFormat(string $format): ?string
+    {
+        return match ($format) {
+            'time', 'time[]', '_time' => self::DEFAULT_TIME_FORMAT,
+            'timetz', 'timetz[]', '_timetz' => self::DEFAULT_TIMETZ_FORMAT,
+            'timestamp', 'tsrange', 'timestamp[]', 'tsrange[]', '_timestamp', '_tsrange' => self::DEFAULT_TIMESTAMP_FORMAT,
+            'timestamptz', 'tstzrange', 'timestamptz[]', 'tstzrange[]' => self::DEFAULT_TIMESTAMPTZ_FORMAT,
+            'date', 'daterange', 'date[]', 'daterange[]', '_date', '_daterange' => self::DEFAULT_DATE_FORMAT,
+            default => null,
+        };
     }
 }
 

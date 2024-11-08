@@ -135,7 +135,7 @@ class Sql extends AbstractApi
             [
                 "key" => $apiKey,
                 "srs" => "4326",
-                "convert_types" => true,
+                "convert_types" => json_decode(Input::getBody(), true)['convert_types'] ?? true,
                 "format" => "json",
             ]
         );
@@ -197,9 +197,16 @@ class Sql extends AbstractApi
                 new Assert\Type('array'),
                 new Assert\Count(['min' => 1]),
             ]),
+            'formats' => new Assert\Optional([
+                new Assert\Type('array'),
+                new Assert\Count(['min' => 1]),
+            ]),
             'format' => new Assert\Optional(
                 new Assert\NotBlank(),
             ),
+            'convert_types' => new Assert\Optional([
+                new Assert\Type('boolean'),
+            ]),
         ]);
         if (!empty($body)) {
             $data = json_decode($body, true);
