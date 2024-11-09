@@ -76,7 +76,7 @@ class Sql extends Model
      * @throws GC2Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
-    public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, ?string $nlt = null, ?string $nln = null, ?bool $convertTypes = false, array $parameters = null, array $typeHints = null, array $formats = null): array
+    public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, ?string $nlt = null, ?string $nln = null, ?bool $convertTypes = false, array $parameters = null, array $typeHints = null, array $typeFormats = null): array
     {
         // Check params
         if (is_array($parameters) && array_key_exists(0, $parameters) && is_array($parameters[0])) {
@@ -162,7 +162,7 @@ class Sql extends Model
         if ($parameters) {
             foreach ($parameters as $field => $value) {
                 $nativeType = $typeHints[$field] ?? 'json';
-                $formatT = $formats[$field] ?? self::getFormat($nativeType);
+                $formatT = $typeFormats[$field] ?? self::getFormat($nativeType);
                 $convertedParameters[$field] = $this->convertToNative($nativeType, $value, $formatT);
             }
             $select->execute($convertedParameters);
@@ -222,7 +222,7 @@ class Sql extends Model
                     } else {
                         if ($convertTypes) {
                             try {
-                                $format = $formats[$key] ?? self::getFormat($nativeType);
+                                $format = $typeFormats[$key] ?? self::getFormat($nativeType);
                                 $rowValue = $this->convertFromNative($nativeType, $rowValue, $format);
                             } catch (\Exception) {
                                 // Pass
@@ -507,7 +507,7 @@ class Sql extends Model
      * @return array
      * @throws GC2Exception
      */
-    public function transaction(string $q, array $parameters = null, array $typeHints = null, bool $convertReturning = true, array $formats = null): array
+    public function transaction(string $q, array $parameters = null, array $typeHints = null, bool $convertReturning = true, array $typeFormats = null): array
     {
         $columnTypes = [];
         $convertedParameters = [];
@@ -517,7 +517,7 @@ class Sql extends Model
                 $paramTmp = [];
                 foreach ($parameter as $field => $value) {
                     $nativeType = $typeHints[$field] ?? 'json';
-                    $format = $formats[$field] ?? self::getFormat($nativeType);
+                    $format = $typeFormats[$field] ?? self::getFormat($nativeType);
                     $paramTmp[$field] = $this->convertToNative($nativeType, $value, $format);
                 }
                 $convertedParameters[] = $paramTmp;
@@ -544,7 +544,7 @@ class Sql extends Model
                 foreach ($row as $field => $value) {
                     try {
                         $nativeType = $typeHints[$field] ?? 'json';
-                        $format = $formats[$field] ?? self::getFormat($nativeType);
+                        $format = $typeFormats[$field] ?? self::getFormat($nativeType);
                         $convertedValue = $this->convertFromNative($columnTypes[$field], $value, $format);
                         $tmp[$field] = $convertedValue;
                     } catch (\Exception) {

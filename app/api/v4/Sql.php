@@ -197,7 +197,7 @@ class Sql extends AbstractApi
                 new Assert\Type('array'),
                 new Assert\Count(['min' => 1]),
             ]),
-            'formats' => new Assert\Optional([
+            'type_formats' => new Assert\Optional([
                 new Assert\Type('array'),
                 new Assert\Count(['min' => 1]),
             ]),

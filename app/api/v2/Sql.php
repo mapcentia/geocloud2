@@ -116,7 +116,7 @@ class Sql extends Controller
                     "convert_types" => !empty($json["convert_types"]) ? $json["convert_types"] : Input::$params["convert_types"],
                     "params" => !empty($json["params"]) ? $json["params"] : Input::$params["params"],
                     "type_hints" => !empty($json["type_hints"]) ? $json["type_hints"] : Input::$params["type_hints"],
-                    "formats" => !empty($json["formats"]) ? $json["formats"] : Input::$params["formats"],
+                    "type_formats" => !empty($json["type_formats"]) ? $json["type_formats"] : Input::$params["type_formats"],
                 ]
             );
         }
@@ -145,7 +145,7 @@ class Sql extends Controller
         $this->api->connect();
         $this->apiKey = $res['data']->api_key;
 
-        $serializedResponse = $this->transaction(Input::get('client_encoding'), Input::get('type_hints'), true, Input::get('formats'));
+        $serializedResponse = $this->transaction(Input::get('client_encoding'), Input::get('type_hints'), true, Input::get('type_formats'));
 
 
         // Check if $this->data is set in SELECT section
@@ -230,7 +230,7 @@ class Sql extends Controller
      * @throws PhpfastcacheInvalidArgumentException
      * @throws Exception
      */
-    private function transaction(?string $clientEncoding = null, ?array $typeHints = null, bool $convertReturning = true, ?array $formats = null): string
+    private function transaction(?string $clientEncoding = null, ?array $typeHints = null, bool $convertReturning = true, ?array $typeFormats = null): string
     {
         $response = [];
         $rule = new Rule();
@@ -288,7 +288,7 @@ class Sql extends Controller
                     return serialize($response);
                 }
             }
-            $this->response = $this->api->transaction($finaleStatement, Input::get('params') ?: null, Input::get('type_hints') ?: null, $convertReturning, Input::get('formats') ?: null);
+            $this->response = $this->api->transaction($finaleStatement, Input::get('params') ?: null, Input::get('type_hints') ?: null, $convertReturning, Input::get('type_formats') ?: null);
             $response["filters"] = $auth["filters"];
             $response["statement"] = $finaleStatement;
             $this->addAttr($response);
@@ -319,7 +319,7 @@ class Sql extends Controller
                     }
                 }
                 ob_start();
-                $this->response = $this->api->sql($this->q, $clientEncoding, Input::get('format') ?: "geojson", Input::get('geoformat') ?: null, Input::get('allstr') ?: null, Input::get('alias') ?: null, null, null, Input::get('convert_types') ?: null, Input::get('params') ?: null, $typeHints, $formats);
+                $this->response = $this->api->sql($this->q, $clientEncoding, Input::get('format') ?: "geojson", Input::get('geoformat') ?: null, Input::get('allstr') ?: null, Input::get('alias') ?: null, null, null, Input::get('convert_types') ?: null, Input::get('params') ?: null, $typeHints, $typeFormats);
                 $response["statement"] = $this->q;
                 $this->addAttr($response);
                 echo serialize($this->response);
