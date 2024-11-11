@@ -91,9 +91,10 @@ class Schema extends AbstractApi
         $response = [];
         if ($this->jwt['superUser'] && empty($this->schema)) {
             foreach ($schemas as $schema) {
+                $name = $schema["schema"];
                 $response["schemas"][] = [
-                    "name" => $schema["name"],
-                    "tables" => Table::getTables($schema["name"]),
+                    "name" => $name,
+                    "tables" => Table::getTables($name),
                 ];
             }
         } else {
