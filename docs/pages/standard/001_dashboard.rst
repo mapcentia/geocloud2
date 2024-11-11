@@ -19,7 +19,7 @@ Kontrolcenter er stedet hvor man i venstre side kan se en oversigt over skemaer 
 
 I den blå topbar er der et spørgsmålstegn, som giver adgang til dokumentationen, og der kan åbnes en brugerprofil for den bruger der logget ind ved at klikke på brugernavnet. Se mere om brugerprofil her: :ref:`dashboard_userprofile`
 
-.. figure:: ../../../_media/gettingstarted-dashboard.png
+.. figure:: ../../_media/gettingstarted-dashboard.png
     :width: 550px
     :align: center
     :name: gettingstarted-dashboard
@@ -58,15 +58,15 @@ Brugerprofil
 
 Når der er logget ind i GC2, kan man tilgå sin brugerprofil i den blå topbar. Der klikkes på brugernavnet, og der åbnes en dialogboks, hvor der kan ses brugeroplysninger og skiftes password.
 
-.. figure:: ../../../_media/gettingstarted-userprofile.png
+.. figure:: ../../_media/gettingstarted-userprofile.png
     :width: 550px
     :align: center
-    :name: gettingstarted-dashboard
+    :name: gettingstarted-userprofile
     :figclass: align-center
 
     Brugerprofil
 
-.. _dashboard_subuser
+.. _dashboard_subuser:
 
 Subusers
 -----------------------------------------------------------------

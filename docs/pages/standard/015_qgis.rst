@@ -37,7 +37,7 @@ Styling med QGIS
 QGIS skal hente data ud af GC2 for at kunne style dem, så først skal der forbindes til dín GC2 med WFS.
 
 
-.. figure:: ../../../_media/qgisstyling-gc2-services.png
+.. figure:: ../../_media/qgisstyling-gc2-services.png
     :width: 600px
     :align: center
     :name: qgisstyling-gc2-services
@@ -51,7 +51,7 @@ QGIS skal hente data ud af GC2 for at kunne style dem, så først skal der forbi
 
 Så skal du over i QGIS
 
-.. figure:: ../../../_media/qgisstyling-wfs-connect1.png
+.. figure:: ../../_media/qgisstyling-wfs-connect1.png
     :width: 600px
     :align: center
     :name: qgisstyling-wfs-connect1
@@ -63,7 +63,7 @@ Bemærk, at din QGIS opsætning kan se anderledes ud end på billederne.
 
 1. Etablere en ny WFS forbindelse.
 
-.. figure:: ../../../_media/qgisstyling-wfs-connect2.png
+.. figure:: ../../_media/qgisstyling-wfs-connect2.png
     :width: 600px
     :align: center
     :name: qgisstyling-wfs-connect2
@@ -76,7 +76,7 @@ Bemærk, at din QGIS opsætning kan se anderledes ud end på billederne.
 #. Klik OK.
 #. Klik Connect.
 
-.. figure:: ../../../_media/qgisstyling-wfs-connect3.png
+.. figure:: ../../_media/qgisstyling-wfs-connect3.png
     :width: 600px
     :align: center
     :name: qgisstyling-wfs-connect3
@@ -87,7 +87,7 @@ Bemærk, at din QGIS opsætning kan se anderledes ud end på billederne.
 1. Vælge hvilke lag du vil hente ind og opsætte.
 #. Klik Add.
 
-.. figure:: ../../../_media/qgisstyling-layer-styling.png
+.. figure:: ../../_media/qgisstyling-layer-styling.png
     :width: 600px
     :align: center
     :name: qgisstyling-layer-styling
@@ -98,7 +98,7 @@ Bemærk, at din QGIS opsætning kan se anderledes ud end på billederne.
 1. Opsæt laget med den ønskede styling.
 #. Gem projektet.
 
-.. figure:: ../../../_media/qgisstyling-gc2-upload-project
+.. figure:: ../../_media/qgisstyling-gc2-upload-project.png
     :width: 600px
     :align: center
     :name: qgisstyling-gc2-upload-project
@@ -111,7 +111,7 @@ Bemærk, at din QGIS opsætning kan se anderledes ud end på billederne.
 #. Klik Add Files og vælg din QGIS projektfil (her Untitled.qgs)
 #. Klik start upload.
 	
-.. figure:: ../../../_media/qgisstyling-gc2-upload-acknowledge.png
+.. figure:: ../../_media/qgisstyling-gc2-upload-acknowledge.png
     :width: 600px
     :align: center
     :name: qgisstyling-gc2-upload-acknowledge
@@ -122,7 +122,7 @@ Bemærk, at din QGIS opsætning kan se anderledes ud end på billederne.
 1. Efterfølgende vises hvilke lag, som har "modtaget" QGIS styling.
 
 
-.. figure:: ../../../_media/qgisstyling-gc2-update-tilecache.png
+.. figure:: ../../_media/qgisstyling-gc2-update-tilecache.png
     :width: 600px
     :align: center
     :name: qgisstyling-gc2-update-tilecache

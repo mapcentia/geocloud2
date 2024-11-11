@@ -30,7 +30,7 @@ I resten af fanen vises et kort, hvor de opsatte data kan se, når laget tændes
 
 .. _gettingstarted_admin_database:
 
-.. figure:: ../../../_media/gettingstarted-admin-map.png
+.. figure:: ../../_media/gettingstarted-admin-map.png
     :width: 690px
     :align: center
     :name: gettingstarted-admin-map
@@ -46,7 +46,7 @@ Database
 
 I Databasefanen kan databasen administreres. Det er her de overordnede egenskaber på lag sættes og tabelstrukturen kan ændres.
 
-.. figure:: ../../../_media/gettingstarted-admin-database.png
+.. figure:: ../../_media/gettingstarted-admin-database.png
     :width: 690px
     :align: center
     :name: gettingstarted-admin-database
@@ -59,7 +59,7 @@ Laglisten
 
 Øverste del af fanen er rummer en linje med forskllige funktioner. Under linjen findes laglisten.
 
-.. figure:: ../../../_media/gettingstarted-admin-database-layerlist.png
+.. figure:: ../../_media/gettingstarted-admin-database-layerlist.png
     :width: 690px
     :align: center
     :name: gettingstarted-database-layerlist
@@ -84,7 +84,7 @@ Tabelstruktur
 
 Når et lag i laglisten vælges, vises lagets tabelstruktur i sektion nedenunder. Her kan sættes egenskaber på kolonnerne. Egenskaber kan ændres ved at dobbeltklikke på det felt i listen, som ønskes ændret. Kolonner kan tilføjes og slettes.
 
-.. figure:: ../../../_media/gettingstarted-admin-database-table-structure.png
+.. figure:: ../../_media/gettingstarted-admin-database-table-structure.png
     :width: 690px
     :align: center
     :name: gettingstarted-admin-database-table-structure
@@ -112,7 +112,7 @@ Når et lag i laglisten vælges, vises lagets tabelstruktur i sektion nedenunder
 Flyt lag mellem schemaer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. figure:: ../../../_media/gettingstarted-admin-database-movelayer-schema.png
+.. figure:: ../../_media/gettingstarted-admin-database-movelayer-schema.png
     :width: 690px
     :align: center
     :name: gettingstarted-admin-database-movelayer-schema
@@ -126,7 +126,7 @@ Flyt lag mellem schemaer
 Omdøb lag
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. figure:: ../../../_media/gettingstarted-admin-database-rename-layer.png
+.. figure:: ../../_media/gettingstarted-admin-database-rename-layer.png
     :width: 690px
     :align: center
     :name: gettingstarted-admin-database-rename-layer
@@ -142,7 +142,7 @@ Skab tabel fra bunden
 
 Du kan skabe en ny tom tabel fra bunden ved først at klikke på nyt lag
 
-.. figure:: ../../../_media/gettingstarted-admin-database-create-table.png
+.. figure:: ../../_media/gettingstarted-admin-database-create-table.png
     :width: 690px
     :align: center
     :name: gettingstarted-admin-database-create-table
@@ -151,7 +151,7 @@ Du kan skabe en ny tom tabel fra bunden ved først at klikke på nyt lag
     Klik nyt lag
 
 
-.. figure:: ../../../_media/gettingstarted-admin-database-create-table-dialog.png
+.. figure:: ../../_media/gettingstarted-admin-database-create-table-dialog.png
     :width: 690px
     :align: center
     :name: gettingstarted-admin-database-create-table-dialog
@@ -182,7 +182,7 @@ Versionering foregår i WFS laget. Dvs. at det fungerer både ved redigering i G
 
 **Start "Tracking changes" på et lag**
 
-.. figure:: ../../../_media/versioning-start-tracking-changes.png
+.. figure:: ../../_media/versioning-start-tracking-changes.png
     :width: 600px
     :align: center
     :name: versioning-start-tracking-changes
@@ -195,7 +195,7 @@ Versionering foregår i WFS laget. Dvs. at det fungerer både ved redigering i G
 
 **Nye system-felter i tabellen**
 
-.. figure:: ../../../_media/versioning-system-fields.png
+.. figure:: ../../_media/versioning-system-fields.png
     :width: 600px
     :align: center
     :name: versioning-system-fields
@@ -218,7 +218,7 @@ Lagets tabel får fem nye system-felter (system-felter starter altid med "gc2").
 
 **Versionsdata i tabellen**
 
-.. figure:: ../../../_media/versioning-versiondata.png
+.. figure:: ../../_media/versioning-versiondata.png
     :width: 600px
     :align: center
     :name: versioning-versiondata
@@ -230,7 +230,7 @@ Dette er et eksempel på versionsdata i tabellen. Denne versionerede tabel har t
 
 **Se alle versioner**
 
-.. figure:: ../../../_media/versioning-see-all-versions.png
+.. figure:: ../../_media/versioning-see-all-versions.png
     :width: 600px
     :align: center
     :name: versioning-see-all-versions
@@ -244,7 +244,7 @@ Som standard vises kun aktuelle features, dvs. dem uden en gc2_version_end_date.
 #. Vælg "all" under "Time slicing", som skal tjekkes af i boksen.
 #. Load features.
 
-.. figure:: ../../../_media/versioning-example.png
+.. figure:: ../../_media/versioning-example.png
     :width: 600px
     :align: center
     :name: versioning-example
@@ -258,7 +258,7 @@ Afsluttede versioner vise med rød, stiplet kant. Disse kan ikke redgieres.
 
 **Time slicing**
 
-.. figure:: ../../../_media/versioning-timeslicing.png
+.. figure:: ../../_media/versioning-timeslicing.png
     :width: 600px
     :align: center
     :name: versioning-timeslicing
@@ -273,7 +273,7 @@ Det er muligt at se hvordan et lag så ud på et bestemt tidspunkt.
 #. Load features.
 
 
-.. figure:: ../../../_media/versioning-timeslicing-example.png
+.. figure:: ../../_media/versioning-timeslicing-example.png
     :width: 600px
     :align: center
     :name: versioning-timeslicing-example
@@ -286,7 +286,7 @@ Ved Time slicing vises de versioner, som var aktuelle på den pågældende dato/
 	**Versionering i ekstern editor fx QGIS**
 
 
-.. figure:: ../../../_media/versioning-example-qgis.png
+.. figure:: ../../_media/versioning-example-qgis.png
     :width: 600px
     :align: center
     :name: versioning-example-qgis
@@ -322,7 +322,7 @@ Workflow foregår i WFS laget. Dvs. at det fungerer både ved redigering i GC2's
 
 **Start "track changes" på laget.**
 
-.. figure:: ../../../_media/workflow-start-tracking-changes.png
+.. figure:: ../../_media/workflow-start-tracking-changes.png
     :width: 600px
     :align: center
     :name: workflow-start-tracking-changes
@@ -338,7 +338,7 @@ Workflow bygger oven på versionerings-systemet i GC2, så det er nødvendigt at
 
 **Tildel privilegier til sub-brugere**
 
-.. figure:: ../../../_media/workflow-add-privileges.png
+.. figure:: ../../_media/workflow-add-privileges.png
     :width: 600px
     :align: center
     :name: workflow-add-privileges
@@ -354,7 +354,7 @@ De sub-brugere, som skal have en rolle i workflowet, skal have tildelt privilegi
 
 **Start Workflow på laget**
 
-.. figure:: ../../../_media/workflow-start-workflow.png
+.. figure:: ../../_media/workflow-start-workflow.png
     :width: 600px
     :align: center
     :name: workflow-start-workflow
@@ -372,7 +372,7 @@ De sub-brugere, som skal have en rolle i workflowet, skal have tildelt privilegi
 
 **Tildel roller i Workflowet**
 
-.. figure:: ../../../_media/workflow-add-roles.png
+.. figure:: ../../_media/workflow-add-roles.png
     :width: 600px
     :align: center
     :name: workflow-add-roles
@@ -397,7 +397,7 @@ Bemærk, at det ikke er nødvendigt, at alle roller er besatte. Fx hvis man øns
 
 **Workflow fanen**
 
-.. figure:: ../../../_media/workflow-workflow-tab.png
+.. figure:: ../../_media/workflow-workflow-tab.png
     :width: 600px
     :align: center
     :name: workflow-workflow-tab
@@ -440,7 +440,7 @@ Knapper i Workflow
 
 **Efter "Review"**
 
-.. figure:: ../../../_media/workflow-after-review.png
+.. figure:: ../../_media/workflow-after-review.png
     :width: 600px
     :align: center
     :name: workflow-after-review
@@ -453,7 +453,7 @@ Eksemplet viser et punkt, som er reviewed (godkendt af Reviewer Carl). Punktet h
 
 **Efter "Publish"**
 
-.. figure:: ../../../_media/workflow-after-publish.png
+.. figure:: ../../_media/workflow-after-publish.png
     :width: 600px
     :align: center
     :name: workflow-after-publish
@@ -465,7 +465,7 @@ Eksemplet viser et punkt, som er published (godkendt af Publisher Julie). Punkte
 
 **Overspring i Workflow kæden**
 
-.. figure:: ../../../_media/workflow-skip-step.png
+.. figure:: ../../_media/workflow-skip-step.png
     :width: 600px
     :align: center
     :name: workflow-skip-step
@@ -477,7 +477,7 @@ Det er muligt for en bruger at springe et lavere led i workflow-kæden over. Eks
 
 **Workflow information i data**
 
-.. figure:: ../../../_media/workflow-display-data.png
+.. figure:: ../../_media/workflow-display-data.png
     :width: 600px
     :align: center
     :name: workflow-display-data
@@ -493,7 +493,7 @@ Workflow informationerne til de enkelte features bliver gemt i lagets tabel i fe
 
 **Brug af ekstern editor i Workflow**
 
-.. figure:: ../../../_media/workflow-in-qgis.png
+.. figure:: ../../_media/workflow-in-qgis.png
     :width: 600px
     :align: center
     :name: workflow-in-qgis
@@ -513,7 +513,7 @@ Log
 
 TBD
 
-.. figure:: ../../../_media/gettingstarted-admin-log.png
+.. figure:: ../../_media/gettingstarted-admin-log.png
     :width: 400px
     :align: center
     :name: gettingstarted-admin-log
@@ -533,7 +533,7 @@ Der findes flere forskellige lag:
 
 Før man begynder at lave lag i skemaet, er det en god idé at sørge for man ikke står i ``public``-skemaet. Dette skema har en bestemt betydning i PostgreSQL-databasen.
 
-.. figure:: ../../../_media/layer-create-schema.png
+.. figure:: ../../_media/layer-create-schema.png
     :width: 400px
     :align: center
     :name: layer-create-schema
@@ -551,7 +551,7 @@ Nyt Lag
 
 Man kan tilgå funktionen ``Nyt Lag`` (**1**) i enten :ref:`gettingstarted_admin_map` eller :ref:`gettingstarted_admin_database`.
 
-.. figure:: ../../../_media/layer-create-map.png
+.. figure:: ../../_media/layer-create-map.png
     :width: 200px
     :align: center
     :name: layer-create-map
@@ -559,7 +559,7 @@ Man kan tilgå funktionen ``Nyt Lag`` (**1**) i enten :ref:`gettingstarted_admin
 
     ``Nyt Lag`` i ``Map``-fanen
 
-.. figure:: ../../../_media/layer-create-database.png
+.. figure:: ../../_media/layer-create-database.png
     :width: 400px
     :align: center
     :name: layer-create-database
@@ -577,7 +577,7 @@ Vektor
 
 .. include:: ../../_subs/WARNING_OLD_DOC.rst
 
-.. figure:: ../../../_media/layer-create-vector.png
+.. figure:: ../../_media/layer-create-vector.png
     :width: 400px
     :align: center
     :name: layer-create-vector
@@ -614,7 +614,7 @@ Raster & billede
 
 .. include:: ../../_subs/WARNING_OLD_DOC.rst
 
-.. figure:: ../../../_media/layer-create-raster.png
+.. figure:: ../../_media/layer-create-raster.png
     :width: 400px
     :align: center
     :name: layer-create-raster
@@ -643,7 +643,7 @@ Views kan bruges i næsten alle sammenhænge som en rigtig tabel.
 Opret view
 *****************************************************************
 
-.. figure:: ../../../_media/layer-create-view.png
+.. figure:: ../../_media/layer-create-view.png
     :width: 400px
     :align: center
     :name: layer-create-view
@@ -726,7 +726,7 @@ Class Wizard
 
 For nemt at oprette en tematisering, er der lavet en wizard.
 
-.. figure:: ../../../_media/styling-wizard.png
+.. figure:: ../../_media/styling-wizard.png
     :width: 400px
     :align: center
     :name: styling-wizard
@@ -748,7 +748,7 @@ Tematiseringen af styres igennem regler kaldet ``class``. Dette svarer til et re
 Wizard-typer
 *****************************************************************
 
-.. figure:: ../../../_media/styling-wizard-open.png
+.. figure:: ../../_media/styling-wizard-open.png
     :width: 400px
     :align: center
     :name: styling-wizard-open
@@ -785,7 +785,7 @@ Symbol
 
 .. include:: ../../_subs/WARNING_OLD_DOC.rst
 
-.. figure:: ../../../_media/styling-wizard-symbol.png
+.. figure:: ../../_media/styling-wizard-symbol.png
     :width: 400px
     :align: center
     :name: styling-wizard-symbol
@@ -812,7 +812,7 @@ Label
 
 .. include:: ../../_subs/WARNING_OLD_DOC.rst
 
-.. figure:: ../../../_media/styling-wizard-label.png
+.. figure:: ../../_media/styling-wizard-label.png
     :width: 400px
     :align: center
     :name: styling-wizard-label
@@ -849,7 +849,7 @@ Manuel tematisering
 
 .. include:: ../../_subs/WARNING_OLD_DOC.rst
 
-.. figure:: ../../../_media/styling-manual.png
+.. figure:: ../../_media/styling-manual.png
     :width: 400px
     :align: center
     :name: styling-manual
@@ -868,7 +868,7 @@ Klasser
 
 .. include:: ../../_subs/WARNING_OLD_DOC.rst
 
-.. figure:: ../../../_media/styling-manual-classes.png
+.. figure:: ../../_media/styling-manual-classes.png
     :width: 200px
     :align: center
     :name: styling-manual-classes
@@ -887,7 +887,7 @@ Base
 
 .. include:: ../../_subs/WARNING_OLD_DOC.rst
 
-.. figure:: ../../../_media/styling-manual-base.png
+.. figure:: ../../_media/styling-manual-base.png
     :width: 200px
     :align: center
     :name: styling-manual-base
@@ -914,7 +914,7 @@ Symbol1/Symbol2
 
 .. include:: ../../_subs/WARNING_OLD_DOC.rst
 
-.. figure:: ../../../_media/styling-manual-symbol.png
+.. figure:: ../../_media/styling-manual-symbol.png
     :width: 200px
     :align: center
     :name: styling-manual-symbol
@@ -933,7 +933,7 @@ Label1/Label2
 
 .. include:: ../../_subs/WARNING_OLD_DOC.rst
 
-.. figure:: ../../../_media/styling-manual-label.png
+.. figure:: ../../_media/styling-manual-label.png
     :width: 200px
     :align: center
     :name: styling-manual-label
@@ -981,16 +981,16 @@ Det er også muligt at tematisere alle sine lag på én gang, eller enkeltvis me
 .. [#combo] Combobox - Man kan angive en fast værdi, eller koble til en kolonne.
 
 Privilegier
-=================================================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Det er muligt at styre rettighederne for den enkelte subbruger under menupunktet ``Privilegier``.
 
-.. image:: ../../../_media/layer-properties-privileges.png
+.. image:: ../../_media/layer-properties-privileges.png
 
 Hvis man er logget ind som databaseuser, er det muligt at sætte rettighederne for den enkelte subbruger. Bemærk at dette ikke berører de lag, der i forvejen er sat til offentlige.
 
 Eksempel - Authentication
------------------------------------------------------------------
+*****************************************************************
 
 I dette eksempel låses et lag og der tildeles rettigheder til det låste lag til en subbruger.
 
@@ -999,49 +999,42 @@ Der er lavet en subbruger , der hedder reader, som skal have læse rettigheder t
 1. Login med din admin bruger, så du kan se alle subbrugere.
 2. Tryk på tandhjulet for se de lag, der ligger under subbrugeren.
 
-.. image:: ../../../_media/authentication-on-layer/click_on_gear.png
+.. image:: ../../_media/authentication-on-layer/click_on_gear.png
 
 3. Tilføj authentication ved at klikke på et lag og ændre ``Write`` til ``Read/Write`` i ``Authentication`` kolonnen til højre. Dobbel klik på write.
 
-.. image:: ../../../_media/authentication-on-layer/add_read_write_on_layer.png
+.. image:: ../../_media/authentication-on-layer/add_read_write_on_layer.png
 
 4. Tildel rettigheder ved at klikke på et lag og derefter ``Privilegier`` i øverste venstre hjørne.
 
-.. image:: ../../../_media/authentication-on-layer/click_on_layer_and_privilegier.png
+.. image:: ../../_media/authentication-on-layer/click_on_layer_and_privilegier.png
 
 5. Klik på ``Kun Læse``.
 
-.. image:: ../../../_media/authentication-on-layer/add_read_privileger.png
+.. image:: ../../_media/authentication-on-layer/add_read_privileger.png
 
 
 For at kunne se det låse lag, skal der logges ind ved at trykke på låse ikonet på Vidi.
 
 Kald Lag Med Authentication
------------------------------------------------------------------
+*****************************************************************
 
 Hvis du ønsker at kalde et lag, der har read/write authentication slået til kan det gøres på følgende måde.
 
 1. Klik på den tandhjulet for den subbruger, der har laget, som er låst.
 
-.. image:: ../../../_media/authentication-on-layer/click_on_gear.png
+.. image:: ../../_media/authentication-on-layer/click_on_gear.png
 
 2. Click på ``Tjenester`` og tilføj et password i ``HTTP Basic Auth password for WMS and WFS`` og click opdater.
 
-.. image:: ../../../_media/authentication-on-layer/basic_authentication.png
+.. image:: ../../_media/authentication-on-layer/basic_authentication.png
 
 3. Det er derefter muligt at logge ind med subbrugeren og det password du lige har lavet, hvis du f.eks. kalder nedenståenden url:
 
 https://myDomain.com/ows/[subbruger]@[database]/wfs?service=wfs&request=getfeature&version=2.0.0&TYPENAMES=[database:subbruger.lag]&MAXFEATURES=1
 
-.. _otherlayers:
-
-Tilføj andre lagtyper
-=================================================================
-
-.. include:: ../../_subs/WARNING_OLD_DOC.rst
-
 Tilføj WMS kilde
------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tilføj lag fra en Web Map Service (WMS)
 
@@ -1050,7 +1043,7 @@ Tilføj lag fra en Web Map Service (WMS)
 Opret nyt lag
 *****************************************************************
 
-.. figure:: ../../../_media/otherlayers-new-layer.png
+.. figure:: ../../_media/otherlayers-new-layer.png
     :width: 600px
     :align: center
     :name: otherlayers-new-layer
@@ -1063,7 +1056,7 @@ Opret nyt lag
 Nyt blankt lag
 *****************************************************************
 
-.. figure:: ../../../_media/otherlayers-empty-layer.png
+.. figure:: ../../_media/otherlayers-empty-layer.png
     :width: 400px
     :align: center
     :name: otherlayers-empty-layer
@@ -1080,7 +1073,7 @@ Nyt blankt lag
 Åben avancerede indstillinger for laget
 *****************************************************************
 
-.. figure:: ../../../_media/otherlayers-advanced-layer-settings.png
+.. figure:: ../../_media/otherlayers-advanced-layer-settings.png
     :width: 600px
     :align: center
     :name: otherlayers-advanced-layer-settings
@@ -1094,7 +1087,7 @@ Nyt blankt lag
 Skriv WMS url'en ind
 *****************************************************************
 
-.. figure:: ../../../_media/otherlayers-input-wms-url.png
+.. figure:: ../../_media/otherlayers-input-wms-url.png
     :width: 400px
     :align: center
     :name: otherlayers-input-wms-url
@@ -1110,7 +1103,7 @@ LAYERS kan indeholde flere lag. I så fald vil de blive merged sammen i GC2 lage
 
 
 Brug af database view
------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Du kan skabe et view ovenpå en SELECT forespørgelse, der giver forespørgelsen et navn som du kan referere som en normal tabel. Views er meget anvendelige til fx at filtrere og sortere data, uden at skulle oprette en ny tabel.
 
@@ -1119,7 +1112,7 @@ Views kan bruges i næsten alle sammenhænge som en rigtig tabel.
 Opret view
 *****************************************************************
 
-.. figure:: ../../../_media/otherlayers-create-database-view.png
+.. figure:: ../../_media/otherlayers-create-database-view.png
     :width: 600px
     :align: center
     :name: otherlayers-create-database-view
@@ -1150,7 +1143,7 @@ SELECT 1 As gid, ST_SetSRID (ST_Point(-123.365556, 48.428611),4326)::geometry(Po
 Håndtering af views
 *****************************************************************
 
-.. figure:: ../../../_media/otherlayers-administrate-database-view.png
+.. figure:: ../../_media/otherlayers-administrate-database-view.png
     :width: 600px
     :align: center
     :name: otherlayers-administrate-database-view
@@ -1166,7 +1159,7 @@ En forskel på views og tabeller er, at views der kombinerer data fra forskellig
 Se et eksisterende views definition
 *****************************************************************
 
-.. figure:: ../../../_media/otherlayers-see-view-definition.png
+.. figure:: ../../_media/otherlayers-see-view-definition.png
     :width: 600px
     :align: center
     :name: otherlayers-see-view-definition

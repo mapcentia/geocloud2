@@ -51,7 +51,7 @@ Det er muligt at bruge enten brugernavn eller email.
 
 Hvis det lykkedes at logge ind bliver man automatisk bragt videre til :ref:`dashboard`
 
-.. figure:: ../../../_media/gettingstarted-login.png
+.. figure:: ../../_media/gettingstarted-login.png
     :width: 400px
     :align: center
     :name: gettingstarted-login
@@ -73,7 +73,7 @@ For at oprette en database-bruger trykker man ``Tilmeld``. Følg herefter regist
 
 Når man er færdig, kan man bruge oplysningerne til at logge ind.
 
-.. figure:: ../../../_media/gettingstarted-register.png
+.. figure:: ../../_media/gettingstarted-register.png
     :width: 400px
     :align: center
     :name: gettingstarted-register

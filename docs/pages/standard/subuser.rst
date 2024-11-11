@@ -39,7 +39,7 @@ Opret subuser
 
 For at oprette en subuser, navigeres der til :ref:`subuser`.
 
-.. figure:: ../../../_media/subuser-create.png
+.. figure:: ../../_media/subuser-create.png
     :width: 400px
     :align: center
     :name: subuser-create
@@ -75,7 +75,7 @@ TOOD: add image to explain idea
 Subuser oversigt
 -----------------------------------------------------------------
 
-.. figure:: ../../../_media/subuser-overwiev.png
+.. figure:: ../../_media/subuser-overview.png
     :width: 600px
     :align: center
     :name: subuser-overwiev
@@ -88,7 +88,7 @@ Alle sub-brugere vises ude til højre på dashboardet hvor de kan slettes.
 Tildeling af privilegier
 -----------------------------------------------------------------
 
-.. figure:: ../../../_media/subuser-add-priviliges.png
+.. figure:: ../../_media/subuser-add-priviliges.png
     :width: 600px
     :align: center
     :name: subuser-add-priviliges
@@ -110,7 +110,7 @@ Tildeling af privilegier
 
 **Vigtigt!**
 
-.. figure:: ../../../_media/subuser-important-priviliges.png
+.. figure:: ../../_media/subuser-important-priviliges.png
     :width: 600px
     :align: center
     :name: subuser-important-priviliges
@@ -124,7 +124,7 @@ Det er vigtigt at sætte lagets Authentication niveau til "Read/write", hvis nog
 Sub-bruger WMS/WFS password og API-nøgle
 -----------------------------------------------------------------
 
-.. figure:: ../../../_media/subuser-wms-wfs-password.png
+.. figure:: ../../_media/subuser-wms-wfs-password.png
     :width: 600px
     :align: center
     :name: subuser-wms-wfs-password
