@@ -619,15 +619,13 @@ class Table extends Model
         foreach ($fieldsArr as $key) {
             $value = $this->metaData[$key];
             if ($value['type'] != "geometry" && ($key != $this->primaryKey['attname'] || $includePriKey)) {
-                if (!preg_match($this->specialChars, $key)) {
-                    $fieldsForStore[] = array("name" => $key, "type" => $value['type']);
-                    $columnsForGrid[] = array("header" => $key,
-                        "dataIndex" => $key,
-                        "type" => $value['type'],
-                        "typeObj" => $value['typeObj'],
-                        "properties" => $fieldconfArr[$key]->properties ?? null,
-                        "editable" => !(($value['type'] == "bytea" || $key == $this->primaryKey['attname'])));
-                }
+                $fieldsForStore[] = array("name" => $key, "type" => $value['type']);
+                $columnsForGrid[] = array("header" => $key,
+                    "dataIndex" => $key,
+                    "type" => $value['type'],
+                    "typeObj" => $value['typeObj'],
+                    "properties" => $fieldconfArr[$key]->properties ?? null,
+                    "editable" => !(($value['type'] == "bytea" || $key == $this->primaryKey['attname'])));
             }
         }
         if ($createKeyFrom) {
@@ -1077,9 +1075,7 @@ class Table extends Model
         while ($row = $this->fetchRow($res)) {
             $arr = array();
             foreach ($row as $key => $value) {
-                if (!preg_match($this->specialChars, $key)) {
-                    $arr = $this->array_push_assoc($arr, $key, $value);
-                }
+                $arr = $this->array_push_assoc($arr, $key, $value);
             }
             $response['data'][] = $arr;
 
@@ -1501,7 +1497,7 @@ class Table extends Model
     {
         $this->clearCacheOnSchemaChanges();
         $type = $this->matchType($type);
-        $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ALTER COLUMN \"$column\" TYPE " . $type . " USING \"$column\"::" .$type;
+        $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ALTER COLUMN \"$column\" TYPE " . $type . " USING \"$column\"::" . $type;
         $res = $this->prepare($sql);
         $res->execute();
 
