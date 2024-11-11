@@ -170,12 +170,12 @@ class Column extends AbstractApi
             "type" => $type,
         ]);
         if (!$isNullable) {
-            $table->addNotNullConstraint($column);
+            $table->addNotNullConstraint($r["column"]);
         } else {
-            $table->dropNotNullConstraint($column);
+            $table->dropNotNullConstraint($r["column"]);
         }
         if ($setDefaultValue && isset($defaultValue)) {
-            $table->addDefaultValue($column, $defaultValue);
+            $table->addDefaultValue($r["column"], $defaultValue);
         }
         return $r["column"];
     }
