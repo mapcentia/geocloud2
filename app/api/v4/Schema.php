@@ -92,13 +92,13 @@ class Schema extends AbstractApi
         if ($this->jwt['superUser'] && empty($this->schema)) {
             foreach ($schemas as $schema) {
                 $response["schemas"][] = [
-                    "schema" => $schema["schema"],
-                    "tables" => Table::getTables($schema["schema"]),
+                    "name" => $schema["name"],
+                    "tables" => Table::getTables($schema["name"]),
                 ];
             }
         } else {
             $response = [
-                "schema" => $this->schema,
+                "name" => $this->schema,
                 "tables" => Table::getTables($this->schema),
             ];
         }
@@ -146,9 +146,9 @@ class Schema extends AbstractApi
         $body = Input::getBody();
         $data = json_decode($body);
         $this->table[0] = new TableModel(null);
-        $this->table[0]->postgisschema = $data->schema;
+        $this->table[0]->postgisschema = $data->name;
         $this->table[0]->begin();
-        $r = $this->schemaObj->createSchema($data->schema, $this->table[0]);
+        $r = $this->schemaObj->createSchema($data->name, $this->table[0]);
         // Add tables
         if (!empty($data->tables)) {
             foreach ($data->tables as $table) {

@@ -91,7 +91,7 @@ class Column extends AbstractApi
         if ($this->column) {
             foreach ($this->column as $col) {
                 foreach ($res as $datum) {
-                    if ($datum['column'] === $col) {
+                    if ($datum['name'] === $col) {
                         $r[] = $datum;
                     }
                 }
@@ -132,10 +132,10 @@ class Column extends AbstractApi
         $this->table[0]->begin();
         if (isset($data->columns)) {
             foreach ($data->columns as $datum) {
-                $list[] = self::addColumn($this->table[0], $datum->column, $datum->type, $setDefaultValue, $datum->default_value, $datum->is_nullable ?? true);
+                $list[] = self::addColumn($this->table[0], $datum->name, $datum->type, $setDefaultValue, $datum->default_value, $datum->is_nullable ?? true);
             }
         } else {
-            $list[] = self::addColumn($this->table[0], $data->column, $data->type, $setDefaultValue, $data->default_value, $data->is_nullable ?? true);
+            $list[] = self::addColumn($this->table[0], $data->name, $data->type, $setDefaultValue, $data->default_value, $data->is_nullable ?? true);
         }
         $this->table[0]->commit();
         header("Location: /api/v4/schemas/$this->schema/tables/{$this->unQualifiedName[0]}/columns/" . implode(',', $list));
@@ -151,7 +151,7 @@ class Column extends AbstractApi
         $response = [];
         $res = $table->getMetaData($name, false, true, null, null, false);
         foreach ($res as $key => $column) {
-            $column['column'] = $key;
+            $column = array_merge(['name' => $key], $column);
             $response[] = $column;
         }
         return $response;
@@ -213,7 +213,7 @@ class Column extends AbstractApi
                 $conf = json_decode($layer->getValueFromKey($key, 'fieldconf'));
                 $obj = $conf->{$oldColumnName} ?? new stdClass();
                 $obj->id = $oldColumnName;
-                $obj->column = $data->column ?? $oldColumnName;
+                $obj->column = $data->name ?? $oldColumnName;
                 $obj->type = $data->type;
                 $r = $this->table[0]->updateColumn($obj, $key, true);
                 $list[] = $r['name'];
@@ -279,18 +279,18 @@ class Column extends AbstractApi
 
         // Put and delete on collection is not allowed
         if (empty($column) && in_array(Input::getMethod(), ['put', 'delete'])) {
-            throw new GC2Exception("", 406);
+            throw new GC2Exception("fgfg", 406);
         }
         // Throw exception if tried with resource id
         if (Input::getMethod() == 'post' && $column) {
             $this->postWithResource();
         }
         $collection = new Assert\Collection([
-            'column' => new Assert\Required([
+            'name' => new Assert\Optional([
                 new Assert\Type('string'),
                 new Assert\NotBlank(),
             ]),
-            'type' => new Assert\Required([
+            'type' => new Assert\Optional([
                 new Assert\Type('string'),
                 new Assert\NotBlank(),
             ]),

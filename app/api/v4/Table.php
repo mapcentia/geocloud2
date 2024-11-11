@@ -92,11 +92,11 @@ class Table extends AbstractApi
         // Load pre extensions and run processAddTable
         $caller->runExtension('processAddTable', $table);
 
-        $r = $table->create($data->table, null, null, true);
+        $r = $table->create($data->name, null, null, true);
         // Add columns
         if (!empty($data->columns)) {
             foreach ($data->columns as $column) {
-                Column::addColumn($table, $column->column, $column->type, true, $column->default_value, $column->is_nullable ?? true);
+                Column::addColumn($table, $column->name, $column->type, true, $column->default_value, $column->is_nullable ?? true);
             }
         }
         // Add indices
@@ -200,7 +200,7 @@ class Table extends AbstractApi
         $columns = Column::getColumns($table, $name);
         $constraints = Constraint::getConstraints($table, $name);
         $indices = Index::getIndices($table, $name);
-        $response["table"] = $name;
+        $response["name"] = $name;
         $response["columns"] = $columns;
         $response["indices"] = $indices;
         $response["constraints"] = $constraints;
@@ -278,9 +278,9 @@ class Table extends AbstractApi
         $data = json_decode($body);
         $r = [];
         for ($i = 0; sizeof($this->unQualifiedName) > $i; $i++) {
-            if (isset($data->table) && $data->table != $this->unQualifiedName[$i]) {
+            if (isset($data->name) && $data->name != $this->unQualifiedName[$i]) {
                 $arg = new stdClass();
-                $arg->name = $data->table;
+                $arg->name = $data->name;
                 $r[] = $layer->rename($this->qualifiedName[$i], $arg)['name'];
             }
             if (isset($data->schema) && $data->schema != $this->schema) {
