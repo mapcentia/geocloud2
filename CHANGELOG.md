@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2024.11.0] - 2024-21-10
+
+## Fixed
+
+- Redis Cluster support for session was broken.
+- Support for both WMS 1.1 and 1.3 in WMS layers.
+- Disable transfer of metadata in newer versions of GDAL.
+- Columns with some special chars was filtered out. It doesn't seem that this is necessary anymore and the code is removed.
+
 ## [2024.10.1] - 2024-21-10
 
 ## Fixed
