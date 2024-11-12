@@ -60,7 +60,7 @@ use Symfony\Component\Validator\Constraints as Assert;
             title: "Request",
             description: "Rule match for request. 'select', 'insert', 'update' or 'delete'",
             type: "string",
-            example: "sql"
+            example: "select"
         ),
         new OA\Property(
             property: "layer",
