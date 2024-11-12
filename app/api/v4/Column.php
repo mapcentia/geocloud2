@@ -26,10 +26,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Column",
-    required: ["column", "type"],
+    required: [],
     properties: [
         new OA\Property(
-            property: "column",
+            property: "name",
             title: "Name of the column",
             description: "Name of the column",
             type: "string",
@@ -77,7 +77,7 @@ class Column extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException
      */
     #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}', operationId: 'getColumn', description: "Get column", tags: ['Column'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: false, example: 'my_columns')]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Column"))]
