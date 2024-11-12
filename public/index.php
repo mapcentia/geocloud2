@@ -457,7 +457,7 @@ try {
             }
         });
 
-        Route2::add("api/v4/schemas/{schema}/tables/{table}/privilege", new Privilege(), function () {
+        Route2::add("api/v4/schemas/{schema}/tables/{table}/privileges", new Privilege(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);

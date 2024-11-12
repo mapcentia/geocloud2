@@ -17,38 +17,44 @@ use Override;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
 use StdClass;
+use OpenApi\Attributes as OA;
+use Symfony\Component\Validator\Constraints as Assert;
 
-
-/**
- * Class User
- * @package app\api\v2
- */
+#[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
+#[OA\Schema(
+    schema: "Privilege",
+    required: ["subuser", "privileges"],
+    properties: [
+        new OA\Property(
+            property: "subuser",
+            title: "Sub-user",
+            description: "Name of the sub-user",
+            type: "string",
+            example: "joe",
+        ),
+        new OA\Property(
+            property: "privileges",
+            title: "Privileges",
+            description: "Either none, read, write",
+            type: "string",
+            example: "all",
+        ),
+    ],
+    type: "object"
+)]
+#[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
+#[AcceptableMethods(['GET', 'PUT', 'HEAD', 'OPTIONS'])]
 class Privilege extends AbstractApi
 {
-
-    /**
-     * @throws GC2Exception
-     * @throws PhpfastcacheInvalidArgumentException
-     */
-    #[Override] public function validate(): void
-    {
-        $table = Route2::getParam("table");
-        $schema = Route2::getParam("schema");
-        $this->jwt = Jwt::validate()["data"];
-        // Put and delete on collection is not allowed
-        if (empty($table) && in_array(Input::getMethod(), ['put', 'delete'])) {
-            throw new GC2Exception("", 406);
-        }
-        // Throw exception if tried with table resource
-        if (Input::getMethod() == 'post' && $table) {
-            $this->postWithResource();
-        }
-        $this->initiate($schema, $table, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
-    }
-
     /**
      * @return array
      */
+    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/privileges', operationId: 'getPrivileges', description: "Get privileges", tags: ['Privileges'])]
+    #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Privilege"))]
+    #[OA\Response(response: 404, description: 'Not found')]
+    #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
     public function get_index(): array
     {
@@ -58,7 +64,8 @@ class Privilege extends AbstractApi
         return ["privileges" => $res];
     }
 
-    #[Override] public function post_index(): array
+    #[Override]
+    public function post_index(): array
     {
         // TODO: Implement post_index() method.
         return [];
@@ -68,7 +75,16 @@ class Privilege extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException
      * @throws InvalidArgumentException|GC2Exception
      */
-    #[Override] public function put_index(): array
+    #[OA\Put(path: '/api/v4/schemas/{schema}/tables/{table}/privileges', operationId: 'putPrivileges', description: "Update privileges", tags: ['Privileges'])]
+    #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
+    #[OA\RequestBody(description: 'Privileges', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Privilege"))]
+    #[OA\Response(response: 204, description: "Privileges updated")]
+    #[OA\Response(response: 400, description: 'Bad request')]
+    #[OA\Response(response: 404, description: 'Not found')]
+    #[AcceptableContentTypes(['application/json'])]
+    #[Override]
+    public function put_index(): array
     {
         $layer = new Layer();
         $body = Input::getBody();
@@ -87,5 +103,43 @@ class Privilege extends AbstractApi
     {
         // TODO: Implement delete_index() method.
         return[];
+    }
+
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    #[Override] public function validate(): void
+    {
+        $table = Route2::getParam("table");
+        $schema = Route2::getParam("schema");
+        $body = Input::getBody();
+
+        $this->jwt = Jwt::validate()["data"];
+        // Put and delete on collection is not allowed
+        if (empty($table) && in_array(Input::getMethod(), ['put', 'delete'])) {
+            throw new GC2Exception("", 406);
+        }
+        // Throw exception if tried with table resource
+        if (Input::getMethod() == 'post' && $table) {
+            $this->postWithResource();
+        }
+
+        $collection = new Assert\Collection([
+            'subuser' => new Assert\Required([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+            ]),
+            'privileges' => new Assert\Required([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+            ]),
+        ]);
+        if (!empty($body)) {
+            $data = json_decode($body, true);
+            $this->validateRequest($collection, $data, 'privileges');
+        }
+
+        $this->initiate($schema, $table, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }
 }
