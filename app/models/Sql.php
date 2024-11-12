@@ -13,15 +13,12 @@ use app\conf\Connection;
 use app\exceptions\GC2Exception;
 use app\inc\Model;
 use DateInterval;
-use DateMalformedStringException;
 use DateTimeImmutable;
-use JsonSerializable;
 use PDO;
 use PDOException;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
 use PhpOffice\PhpSpreadsheet\Reader\Exception;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use sad_spirit\pg_wrapper\types\ArrayRepresentable;
 use sad_spirit\pg_wrapper\types\DateTimeRange;
 use sad_spirit\pg_wrapper\types\Range;
 use ZipArchive;
@@ -71,6 +68,7 @@ class Sql extends Model
      * @param bool|null $convertTypes
      * @param array|null $parameters
      * @param array|null $typeHints
+     * @param array|null $typeFormats
      * @return array
      * @throws Exception
      * @throws GC2Exception
@@ -222,8 +220,8 @@ class Sql extends Model
                     } else {
                         if ($convertTypes) {
                             try {
-                                $format = $typeFormats[$key] ?? self::getFormat($nativeType);
-                                $rowValue = $this->convertFromNative($nativeType, $rowValue, $format);
+                                $dateTimeFormat = $typeFormats[$key] ?? self::getFormat($nativeType);
+                                $rowValue = $this->convertFromNative($nativeType, $rowValue, $dateTimeFormat);
                             } catch (\Exception) {
                                 // Pass
                             }
@@ -264,7 +262,8 @@ class Sql extends Model
                     } else {
                         if ($convertTypes) {
                             try {
-                                $rowValue = $this->convertFromNative($nativeType, $rowValue);
+                                $dateTimeFormat = $typeFormats[$key] ?? self::getFormat($nativeType);
+                                $rowValue = $this->convertFromNative($nativeType, $rowValue, $dateTimeFormat);
                             } catch (\Exception) {
                                 // Pass
                             }
@@ -303,6 +302,7 @@ class Sql extends Model
             $i = 0;
             $json = "";
             $bulkSize = 1000;
+            $geometries = null;
             while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
                 $arr = [];
                 foreach ($row as $key => $value) {
@@ -504,6 +504,7 @@ class Sql extends Model
      * @param array|null $parameters
      * @param array|null $typeHints
      * @param bool $convertReturning
+     * @param array|null $typeFormats
      * @return array
      * @throws GC2Exception
      */
@@ -544,8 +545,8 @@ class Sql extends Model
                 foreach ($row as $field => $value) {
                     try {
                         $nativeType = $typeHints[$field] ?? 'json';
-                        $format = $typeFormats[$field] ?? self::getFormat($nativeType);
-                        $convertedValue = $this->convertFromNative($columnTypes[$field], $value, $format);
+                        $dateTimeFormat = $typeFormats[$field] ?? self::getFormat($nativeType);
+                        $convertedValue = $this->convertFromNative($columnTypes[$field], $value, $dateTimeFormat);
                         $tmp[$field] = $convertedValue;
                     } catch (\Exception) {
                         if ($columnTypes[$field] == 'geometry') {
@@ -579,7 +580,9 @@ class Sql extends Model
                     $tmp = null;
                     foreach ($row as $field => $value) {
                         try {
-                            $convertedValue = $this->convertFromNative($columnTypes[$field], $value);
+                            $nativeType = $typeHints[$field] ?? 'json';
+                            $dateTimeFormat = $typeFormats[$field] ?? self::getFormat($nativeType);
+                            $convertedValue = $this->convertFromNative($columnTypes[$field], $value, $dateTimeFormat);
                             $tmp[$field] = $convertedValue;
                         } catch (\Exception) {
                             if ($columnTypes[$field] == 'geometry') {
@@ -643,12 +646,13 @@ class Sql extends Model
      * Converts a native type value into a corresponding PHP type.
      *
      * @param string $nativeType The native type specification to convert from.
-     * @param string $value The value in the native type format.
+     * @param string|null $value The value in the native type format.
+     * @param string|null $format
      * @return mixed.
      */
-    private function convertFromNative(string $nativeType, string $value, ?string $format): mixed
+    private function convertFromNative(string $nativeType, ?string $value, ?string $format): mixed
     {
-        $newValue = (new DefaultTypeConverterFactory())->getConverterForTypeSpecification($nativeType)->input($value);
+        $newValue = (new DefaultTypeConverterFactory())->setConnection($this->getConnection())->getConverterForTypeSpecification($nativeType)->input($value);
         if (is_array($newValue)) {
             $newValue = self::processArray($newValue, fn($i, $format) => $this->convertPhpTypes($i, $format), $format);
         } else {
@@ -668,7 +672,7 @@ class Sql extends Model
      */
     private function convertToNative(string $nativeType, mixed $value, ?string $format): string
     {
-        $factory = new DefaultTypeConverterFactory();
+        $factory = (new DefaultTypeConverterFactory())->setConnection($this->getConnection());
         $type = gettype($value);
         $format = $format ?? self::getFormat($nativeType);
 
@@ -786,6 +790,13 @@ class Sql extends Model
         }
     }
 
+    /**
+     * Determines the appropriate format based on the provided format string.
+     *
+     * @param string $format The format string to check against predefined formats.
+     *
+     * @return string|null Returns the corresponding format constant or null if no match is found.
+     */
     private static function getFormat(string $format): ?string
     {
         return match ($format) {
@@ -796,6 +807,16 @@ class Sql extends Model
             'date', 'daterange', 'date[]', 'daterange[]', '_date', '_daterange' => self::DEFAULT_DATE_FORMAT,
             default => null,
         };
+    }
+
+    /**
+     * Establishes and returns a new connection to the PostgreSQL database.
+     *
+     * @return \sad_spirit\pg_wrapper\Connection
+     */
+    private function getConnection(): \sad_spirit\pg_wrapper\Connection
+    {
+        return new \sad_spirit\pg_wrapper\Connection("host=$this->postgishost user=$this->postgisuser dbname=$this->postgisdb password=$this->postgispw port=$this->postgisport");
     }
 }
 

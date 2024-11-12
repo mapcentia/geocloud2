@@ -21,6 +21,7 @@ use app\models\Geofence;
 use app\models\Preparedstatement as PreparedstatementModel;
 use app\models\Rule;
 use app\models\Setting;
+use Psr\Cache\InvalidArgumentException;
 use sad_spirit\pg_builder\StatementFactory;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Exception;
@@ -58,6 +59,7 @@ class Sql extends Controller
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public function get_index(): array
     {
