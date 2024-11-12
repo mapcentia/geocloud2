@@ -18,11 +18,96 @@ use app\models\Session;
 use app\models\Setting;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
+use OpenApi\Attributes as OA;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class Oauth
  * @package app\api\v4
  */
+#[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
+#[OA\Schema(
+    schema: "OAuth",
+    required: [],
+    properties: [
+        new OA\Property(
+            property: "grant_type",
+            title: "OAuth grant type",
+            type: "string",
+            example: "password",
+        ),
+        new OA\Property(
+            property: "username",
+            title: "Username",
+            description: "Username - either database user or sub-user",
+            type: "string",
+            example: "mydb",
+        ),
+        new OA\Property(
+            property: "password",
+            title: "Password",
+            type: "string",
+            example: "abc123!"
+        ),
+        new OA\Property(
+            property: "database",
+            title: "The database the user belongs to",
+            type: "string",
+            example: "mydb"
+        ),
+        new OA\Property(
+            property: "client_id",
+            title: "The OAuth client id",
+            type: "string",
+            example: "djskjskdj"
+        ),
+        new OA\Property(
+            property: "client_secret",
+            title: "The OAuth client secret",
+            type: "string",
+            example: "xxx"
+        ),
+    ],
+    type: "object"
+)]
+#[OA\Schema(
+    schema: "OAuthGrant",
+    required: [],
+    properties: [
+        new OA\Property(
+            property: "access_token",
+            title: "JWT access token",
+            type: "string",
+            example: "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+        ),
+        new OA\Property(
+            property: "token_type",
+            title: "Token type",
+            description: "Always 'bearer'",
+            type: "string",
+            example: "bearer",
+        ),
+        new OA\Property(
+            property: "expires_in",
+            title: "Expiration time",
+            type: "integer",
+            example: 3600,
+        ),
+        new OA\Property(
+            property: "refresh_token",
+            title: "JWT refresh token",
+            type: "string",
+            example: "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+        ),
+        new OA\Property(
+            property: "scope",
+            title: "Scope",
+            type: "string",
+            example: "sql",
+        ),
+    ],
+    type: "object"
+)]
 #[AcceptableMethods(['POST', 'HEAD', 'OPTIONS'])]
 class Oauth extends AbstractApi
 {
@@ -34,46 +119,14 @@ class Oauth extends AbstractApi
 
     /**
      * @return array<string, array<string, mixed>|bool|string|int>
-     *
-     * @OA\Post(
-     *   path="/api/v4/oauth",
-     *   tags={"OAuth"},
-     *   summary="Create token",
-     *   @OA\RequestBody(
-     *     description="OAuth password grant parameters",
-     *     @OA\MediaType(
-     *       mediaType="application/json",
-     *       @OA\Schema(
-     *         type="object",
-     *         @OA\Property(property="grant_type",type="string", example="password"),
-     *         @OA\Property(property="username",type="string", example="user@example.com"),
-     *         @OA\Property(property="password",type="string", example="1234Luggage"),
-     *         @OA\Property(property="database",type="string", example="roads"),
-     *         @OA\Property(property="client_id",type="string", example="xxxxxxxxxx"),
-     *         @OA\Property(property="client_secret",type="string", example="xxxxxxxxxx")
-     *       )
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="200",
-     *     description="Operation status",
-     *     @OA\MediaType(
-     *       mediaType="application/json",
-     *       @OA\Schema(
-     *         type="object",
-     *         @OA\Property(property="access_token",type="string", example="MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"),
-     *         @OA\Property(property="token_type",type="string", example="bearer"),
-     *         @OA\Property(property="expires_in",type="integer",  example=3600),
-     *         @OA\Property(property="refresh_token",type="string", example="IwOGYzYTlmM2YxOTQ5MGE3YmNmMDFkNTVk"),
-     *         @OA\Property(property="scope",type="string", example="sql")
-     *       )
-     *     )
-     *   )
-     * )
-     * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      * @throws InvalidArgumentException
      */
+    #[OA\Post(path: '/api/v4/oauth', operationId: 'postOauth', tags: ['OAuth'])]
+    #[OA\RequestBody(description: 'Create token', required: true, content: new OA\JsonContent(ref: "#/components/schemas/OAuth"))]
+    #[OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(ref: "#/components/schemas/OAuthGrant"))]
+    #[OA\Response(response: 400, description: 'Bad request')]
+    #[AcceptableContentTypes(['application/json'])]
     public function post_index(): array
     {
         $this->session = new Session();
@@ -224,8 +277,35 @@ class Oauth extends AbstractApi
         return [];
     }
 
+    /**
+     * @throws GC2Exception
+     */
     public function validate(): void
     {
-        // TODO: Implement validateUser() method.
+        $body = Input::getBody();
+        $collection = new Assert\Collection([
+            'grant_type' => new Assert\Required([
+                new Assert\NotBlank()
+            ]),
+            'username' => new Assert\Required([
+                new Assert\NotBlank()
+            ]),
+            'password' => new Assert\Required([
+                new Assert\NotBlank()
+            ]),
+            'database' => new Assert\Required([
+                new Assert\NotBlank()
+            ]),
+            'client_id' => new Assert\Optional([
+                new Assert\NotBlank()
+            ]),
+            'client_secret' => new Assert\Optional([
+                new Assert\NotBlank()
+            ]),
+        ]);
+        if (!empty($body)) {
+            $data = json_decode($body, true);
+            $this->validateRequest($collection, $data, 'indices');
+        }
     }
 }
