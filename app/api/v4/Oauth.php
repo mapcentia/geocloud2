@@ -28,7 +28,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "OAuth",
-    required: [],
+    required: ["grant_type", "username", "password", "database"],
     properties: [
         new OA\Property(
             property: "grant_type",

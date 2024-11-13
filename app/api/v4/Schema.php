@@ -25,7 +25,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Schema",
-    required: [],
+    required: ["name"],
     properties: [
         new OA\Property(
             property: "name",
@@ -159,11 +159,12 @@ class Schema extends AbstractApi
      * @return array
      * @throws GC2Exception
      */
-    #[OA\Put(path: '/api/v4/schemas/{schema}', operationId: 'putSchema', description: "Create schema", tags: ['Schema'])]
+    #[OA\Put(path: '/api/v4/schemas/{schema}', operationId: 'putSchema', description: "Rename schema", tags: ['Schema'])]
     #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: false, example: 'my_schema')]
     #[OA\RequestBody(description: 'Update schema', required: true, content: new OA\JsonContent(
         allOf: [
             new OA\Schema(
+                required: ["name"],
                 properties: [
                     new OA\Property(property: "name", description: "New name of schema", type: "string", example: "my_schema_with_new_name")
                 ]

@@ -165,7 +165,7 @@ class Column extends AbstractApi
         $data = json_decode($body);
 
         $layer = new Layer();
-        $geomFields = $layer->getGeometryColumnsFromTable($this->schema, $this->unQualifiedName[0]);
+        $geomFields = $layer->getGeometryColumnsFromTable($this->schema[0], $this->unQualifiedName[0]);
 
         $this->table[0]->begin();
         $r = [];
