@@ -959,6 +959,7 @@ class Table extends Model
      * @param int|null $srid
      * @param bool|null $minimum
      * @return array
+     * @throws InvalidArgumentException
      */
     public function create(string $table, ?string $type = null, ?int $srid = 4326, ?bool $minimum = false): array
     {

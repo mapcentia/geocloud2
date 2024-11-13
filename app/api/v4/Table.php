@@ -19,13 +19,45 @@ use Exception;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
 use stdClass;
+use OpenApi\Attributes as OA;
+use Symfony\Component\Validator\Constraints as Assert;
 
 
-/**
- * Class Sql
- * @package app\api\v4
- */
-#[AcceptableMethods(['GET', 'PUT', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
+#[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
+#[OA\Schema(
+    schema: "Table",
+    required: ["name"],
+    properties: [
+        new OA\Property(
+            property: "name",
+            title: "Name of the table",
+            description: "Name of the table",
+            type: "string",
+            example: "my-column",
+        ),
+        new OA\Property(
+            property: "columns",
+            title: "Columns",
+            type: "array",
+            items: new OA\Items(ref: "#/components/schemas/Column"),
+        ),
+        new OA\Property(
+            property: "indices",
+            title: "Indices",
+            type: "array",
+            items: new OA\Items(ref: "#/components/schemas/Index"),
+        ),
+        new OA\Property(
+            property: "constraints",
+            title: "Constraints",
+            type: "array",
+            items: new OA\Items(ref: "#/components/schemas/Constraint"),
+        ),
+    ],
+    type: "object"
+)]
+#[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
+#[AcceptableMethods(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Table extends AbstractApi
 {
     /**
@@ -38,27 +70,47 @@ class Table extends AbstractApi
 
     /**
      * @return array
-     * @OA\Post(
-     *   path="/api/v4/schemas/{schema}/tables",
-     *   tags={"Table"},
-     *   summary="Create a new table",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="schema",
-     *     example="my_schema",
-     *     in="path",
-     *     required=true,
-     *     description="Name of schema",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=201,
-     *     description="Created",
-     *   )
-     * )
+     * @throws PhpfastcacheInvalidArgumentException
      */
+    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'getTable', description: "Get table", tags: ['Table'])]
+    #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: false, example: 'my_table')]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Table"))]
+    #[OA\Response(response: 400, description: 'Bad request')]
+    #[OA\Response(response: 404, description: 'Not found')]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    #[Override]
+    public function get_index(): array
+    {
+        $r = [];
+        if (!empty($this->qualifiedName)) {
+            for ($i = 0; sizeof($this->qualifiedName) > $i; $i++) {
+                $r[] = self::getTable($this->table[$i], $this->qualifiedName[$i]);
+            }
+        } else {
+            $r = self::getTables($this->schema);
+        }
+        if (count($r) > 1) {
+            return ["tables" => $r];
+        } else {
+            return $r[0];
+        }
+    }
+
+    /**
+     * @return array
+     * @throws GC2Exception
+     * @throws InvalidArgumentException
+     */
+    #[OA\Post(path: '/api/v4/schemas/{schema}/tables', operationId: 'postTable', description: "Create table", tags: ['Table'])]
+    #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\RequestBody(description: 'New table', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Table"))]
+    #[OA\Response(response: 201, description: 'Created')]
+    #[OA\Response(response: 400, description: 'Bad request')]
+    #[OA\Response(response: 404, description: 'Not found')]
+    #[AcceptableContentTypes(['application/json'])]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    #[Override]
     public function post_index(): array
     {
         $body = Input::getBody();
@@ -81,6 +133,67 @@ class Table extends AbstractApi
         header("Location: /api/v4/schemas/$this->schema/tables/" . implode(",", $list));
         $res["code"] = "201";
         return $res;
+    }
+
+    /**
+     * @return array
+     * @throws GC2Exception
+     * @throws InvalidArgumentException
+     */
+    #[OA\Put(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'putTable', description: "Update table", tags: ['Table'])]
+    #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
+    #[OA\RequestBody(description: 'Table', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Table"))]
+    #[OA\Response(response: 204, description: 'Table updated')]
+    #[OA\Response(response: 400, description: 'Bad request')]
+    #[OA\Response(response: 404, description: 'Not found')]
+    #[AcceptableContentTypes(['application/json'])]
+    #[Override]
+    public function put_index(): array
+    {
+        $layer = new Layer();
+        $layer->begin();
+        $body = Input::getBody();
+        $data = json_decode($body);
+        $r = [];
+        for ($i = 0; sizeof($this->unQualifiedName) > $i; $i++) {
+            if (isset($data->name) && $data->name != $this->unQualifiedName[$i]) {
+                $arg = new stdClass();
+                $arg->name = $data->name;
+                $r[] = $layer->rename($this->qualifiedName[$i], $arg)['name'];
+            }
+            if (isset($data->schema) && $data->schema != $this->schema) {
+                if (!$this->jwt['superUser']) {
+                    throw new GC2Exception('Only super user can move tables between schemas');
+                }
+                $layer->setSchema([(isset($r[$i]) ? ($this->schema . '.' . $r[$i]) : $this->qualifiedName[$i])], $data->schema);
+            }
+        }
+        $this->schema = $data->schema;
+        $layer->commit();
+        header("Location: /api/v4/schemas/$this->schema/tables/" . (count($r) > 0 ? implode(',', $r) : implode(',', $this->unQualifiedName)));
+        return ["code" => "303"];
+    }
+
+
+    /**
+     * @return array
+     */
+    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'deleteTable', description: "Delete table", tags: ['Table'])]
+    #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
+    #[OA\Response(response: 204, description: 'Table deleted')]
+    #[OA\Response(response: 400, description: 'Bad request')]
+    #[OA\Response(response: 404, description: 'Not found')]
+    #[Override]
+    public function delete_index(): array
+    {
+        $this->table[0]->begin();
+        foreach ($this->table as $t) {
+            $t->destroy();
+        }
+        $this->table[0]->commit();
+        return ["code" => "204"];
     }
 
     /**
@@ -114,80 +227,7 @@ class Table extends AbstractApi
         return $r;
     }
 
-    /**
-     * @return array
-     * @throws PhpfastcacheInvalidArgumentException
-     * @OA\Get(
-     *   path="/api/v4/schemas/{schema}/tables/{table}",
-     *   tags={"Table"},
-     *   summary="Get description of table(s)",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="schema",
-     *     example="my_schema",
-     *     in="path",
-     *     required=true,
-     *     description="Name of schema",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Parameter(
-     *     name="table",
-     *     in="path",
-     *     required=false,
-     *     description="Name of table",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=200,
-     *     description="Successful operation",
-     *     @OA\JsonContent(
-     *       type="object",
-     *       @OA\Property(property="message", type="string", description="Success message"),
-     *       @OA\Property(property="success", type="boolean", example=true),
-     *       @OA\Property(property="columns", type="object", additionalProperties={
-     *         "type": "object",
-     *         "properties": {
-     *           "num": { "type":"number", "example":1},
-     *           "full_type": {"type": "string", "example":"varchar(255)"},
-     *           "is_nullable": {"type": "boolean", "example": true},
-     *           "character_maximum_length": {"type": "number", "example": 255},
-     *           "numeric_precision": {"type": "number", "example": 255},
-     *           "numeric_scale": {"type": "number", "example": 255},
-     *           "max_bytes": {"type": "number", "example": 255},
-     *           "reference": {"type": "string", "example": "my.table.field"},
-     *           "restriction": {"type": "object", "example": ""},
-     *           "geom_type": {"type": "string", "nullable": true, "example": "Point"},
-     *           "srid": {"type": "string", "nullable": true, "example": "4326"},
-     *           "is_primary": {"type": "boolean", "example": false},
-     *           "is_unique": {"type": "boolean", "example": false},
-     *           "index_method": {"type": "string", "nullable": true, "example"="btree"},
-     *         }
-     *       })
-     *       )
-     *     )
-     *   )
-     * )
-     */
-    public function get_index(): array
-    {
-        $r = [];
-        if (!empty($this->qualifiedName)) {
-            for ($i = 0; sizeof($this->qualifiedName) > $i; $i++) {
-                $r[] = self::getTable($this->table[$i], $this->qualifiedName[$i]);
-            }
-        } else {
-            $r = self::getTables($this->schema);
-        }
-        if (count($r) > 1) {
-            return ["tables" => $r];
-        } else {
-            return $r[0];
-        }
-    }
+
 
     /**
      * @param TableModel $table
@@ -219,123 +259,6 @@ class Table extends AbstractApi
             $tables[] = self::getTable(new TableModel($name), $schema . "." . $name);
         }
         return $tables;
-    }
-
-    /**
-     * @return array
-     * @OA\Put(
-     *   path="/api/v4/schemas/{schema}/tables/{table}",
-     *   tags={"Table"},
-     *   summary="Rename a table",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="schema",
-     *     example="my_schema",
-     *     in="path",
-     *     required=true,
-     *     description="Name of schema",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Parameter(
-     *     name="table",
-     *     in="path",
-     *     required=true,
-     *     description="Name of table",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\RequestBody(
-     *     description="New name of relation",
-     *     @OA\MediaType(
-     *       mediaType="application/json",
-     *       @OA\Schema(
-     *         type="object",
-     *         @OA\Property(property="name",type="string", example="new_name")
-     *       )
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=200,
-     *     description="Successful operation",
-     *     @OA\JsonContent(
-     *       type="object",
-     *       @OA\Property(property="message", type="string", description="Success message"),
-     *       @OA\Property(property="success", type="boolean", example=true),
-     *     )
-     *   )
-     * )
-     * @throws GC2Exception
-     * @throws InvalidArgumentException
-     */
-    public function put_index(): array
-    {
-        $layer = new Layer();
-        $layer->begin();
-        $body = Input::getBody();
-        $data = json_decode($body);
-        $r = [];
-        for ($i = 0; sizeof($this->unQualifiedName) > $i; $i++) {
-            if (isset($data->name) && $data->name != $this->unQualifiedName[$i]) {
-                $arg = new stdClass();
-                $arg->name = $data->name;
-                $r[] = $layer->rename($this->qualifiedName[$i], $arg)['name'];
-            }
-            if (isset($data->schema) && $data->schema != $this->schema) {
-                if (!$this->jwt['superUser']) {
-                    throw new GC2Exception('Only super user can move tables between schemas');
-                }
-                $layer->setSchema([(isset($r[$i]) ? ($this->schema . '.' . $r[$i]) : $this->qualifiedName[$i])], $data->schema);
-            }
-        }
-        $this->schema = $data->schema;
-        $layer->commit();
-        header("Location: /api/v4/schemas/$this->schema/tables/" . (count($r) > 0 ? implode(',', $r) : implode(',', $this->unQualifiedName)));
-        return ["code" => "303"];
-    }
-
-    /**
-     * @return array
-     * @OA\Delete(
-     *   path="/api/v4/schemas/{schema}/tables/{table}",
-     *   tags={"Table"},
-     *   summary="Delete a table",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="schema",
-     *     example="my_schema",
-     *     in="path",
-     *     required=true,
-     *     description="Name of schema",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Parameter(
-     *     name="table",
-     *     in="path",
-     *     required=true,
-     *     description="Name of table",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=204,
-     *     description="No content",
-     *   )
-     * )
-     */
-    public function delete_index(): array
-    {
-        $this->table[0]->begin();
-        foreach ($this->table as $t) {
-            $t->destroy();
-        }
-        $this->table[0]->commit();
-        return ["code" => "204"];
     }
 
     /**

@@ -17,13 +17,34 @@ use app\models\Table as TableModel;
 use Exception;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
+use OpenApi\Attributes as OA;
+use sad_spirit\pg_builder\converters\TypeNameNodeHandler;
+use Symfony\Component\Validator\Constraints as Assert;
 
 
-/**
- * Class Sql
- * @package app\api\v4
- */
-#[AcceptableMethods(['GET', 'PUT', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
+#[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
+#[OA\Schema(
+    schema: "Schema",
+    required: [],
+    properties: [
+        new OA\Property(
+            property: "name",
+            title: "Name of the column",
+            description: "Name of the column",
+            type: "string",
+            example: "my-column",
+        ),
+        new OA\Property(
+            property: "tables",
+            title: "Tables",
+            type: "array",
+            items: new OA\Items(ref: "#/components/schemas/Table"),
+        ),
+    ],
+    type: "object"
+)]
+#[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
+#[AcceptableMethods(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Schema extends AbstractApi
 {
 
@@ -97,44 +118,35 @@ class Schema extends AbstractApi
                     "tables" => Table::getTables($name),
                 ];
             }
+            return $response;
         } else {
-            $response = [
-                "name" => $this->schema,
-                "tables" => Table::getTables($this->schema),
-            ];
+            $r = [];
+            foreach ($this->schema as $schema) {
+                $r[] = [
+                    "name" => $schema,
+                    "tables" => Table::getTables($schema),
+                ];
+            }
+            if (count($r) > 1) {
+                return ["schemas" => $r];
+            } else {
+                return $r[0];
+            }
         }
-        return $response;
     }
 
     /**
      * @return array
-     * @OA\Post(
-     *   path="/api/table/v4",
-     *   tags={"Schema"},
-     *   summary="Create a new table",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="table",
-     *     in="path",
-     *     required=true,
-     *     description="Name of relation (table, view, etc.) Can be schema qualified",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=200,
-     *     description="Successful operation",
-     *     @OA\JsonContent(
-     *       type="object",
-     *       @OA\Property(property="message", type="string", description="Success message"),
-     *       @OA\Property(property="success", type="boolean", example=true),
-     *     )
-     *   )
-     * )
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
+    #[OA\Get(path: '/api/v4/schemas/{schema}', operationId: 'getSchema', description: "Get schema", tags: ['Schema'])]
+    #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Schema"))]
+    #[OA\Response(response: 400, description: 'Bad request')]
+    #[OA\Response(response: 404, description: 'Not found')]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    #[Override]
     public function post_index(): array
     {
         if (!$this->jwt['superUser']) {
@@ -147,59 +159,43 @@ class Schema extends AbstractApi
         $body = Input::getBody();
         $data = json_decode($body);
         $this->table[0] = new TableModel(null);
-        $this->table[0]->postgisschema = $data->name;
         $this->table[0]->begin();
-        $r = $this->schemaObj->createSchema($data->name, $this->table[0]);
-        // Add tables
-        if (!empty($data->tables)) {
-            foreach ($data->tables as $table) {
-                Table::addTable($this->table[0], $table, $this);
+        $list = [];
+
+        if (isset($data->schemas)) {
+            foreach ($data->schemas as $datum) {
+                $this->table[0]->postgisschema = $datum->name;
+                $r = $this->schemaObj->createSchema($datum->name, $this->table[0]);
+                $list[] = $r['schema'];
+                // Add tables
+                if (!empty($datum->tables)) {
+                    foreach ($datum->tables as $table) {
+                        Table::addTable($this->table[0], $table, $this);
+                    }
+                }
+            }
+        } else {
+            $this->table[0]->postgisschema = $data->name;
+            $r = $this->schemaObj->createSchema($data->name, $this->table[0]);
+            $list[] = $r['schema'];
+            // Add tables
+            if (!empty($data->tables)) {
+                foreach ($data->tables as $table) {
+                    Table::addTable($this->table[0], $table, $this);
+                }
             }
         }
         $this->table[0]->commit();
-        header("Location: /api/v4/schemas/{$r["schema"]}");
+        header("Location: /api/v4/schemas/" . implode(",", $list));
         $res["code"] = "201";
         return $res;
     }
 
     /**
      * @return array
-     * @OA\Put(
-     *   path="/api/table/v4/table/{table}",
-     *   tags={"Schema"},
-     *   summary="Rename a table",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="table",
-     *     in="path",
-     *     required=true,
-     *     description="New name of relation (table, view, etc.) Can be schema qualified",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\RequestBody(
-     *      description="New name of relation",
-     *      @OA\MediaType(
-     *        mediaType="application/json",
-     *        @OA\Schema(
-     *          type="object",
-     *          @OA\Property(property="name",type="string", example="new_name")
-     *        )
-     *      )
-     *    ),
-     *   @OA\Response(
-     *     response=200,
-     *     description="Successful operation",
-     *     @OA\JsonContent(
-     *       type="object",
-     *       @OA\Property(property="message", type="string", description="Success message"),
-     *       @OA\Property(property="success", type="boolean", example=true),
-     *     )
-     *   )
-     * )
      * @throws GC2Exception
      */
+
     public function put_index(): array
     {
         if (!$this->jwt['superUser']) {
@@ -207,7 +203,7 @@ class Schema extends AbstractApi
         }
         $body = Input::getBody();
         $data = json_decode($body);
-        $r = $this->schemaObj->renameSchema($this->schema, $data->schema);
+        $r = $this->schemaObj->renameSchema($this->schema[0], $data->name);
         header("Location: /api/v4/schemas/{$r['data']['name']}");
         $res["code"] = "303";
         return $res;
@@ -246,7 +242,12 @@ class Schema extends AbstractApi
         if (!$this->jwt['superUser']) {
             throw new GC2Exception("", 403);
         }
-        $r = $this->schemaObj->deleteSchema($this->schema);
+        $this->schemaObj->connect();
+        $this->schemaObj->begin();
+        foreach ($this->schema as $schema) {
+            $this->schemaObj->deleteSchema($schema, false);
+        }
+        $this->schemaObj->commit();
         $res["code"] = "204";
         return $res;
     }
@@ -258,9 +259,13 @@ class Schema extends AbstractApi
     {
         $schema = Route2::getParam("schema");
         $this->jwt = Jwt::validate()["data"];
-        // Put and delete on table collection is not allowed
+
+        // Put and delete on schema collection is not allowed
         if (empty($schema) && in_array(Input::getMethod(), ['put', 'delete'])) {
-            throw new GC2Exception("", 406);
+            throw new GC2Exception("Put and delete on schema collection is not allowed", 400);
+        }
+        if (!empty($schema) && count(explode(',', $schema)) > 1 && Input::getMethod() == 'put') {
+            throw new GC2Exception("Put multiple schemas is not allowed", 400);
         }
         $this->initiate($schema, null, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
         $this->schemaObj = new Database();

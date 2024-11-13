@@ -25,7 +25,7 @@ abstract class AbstractApi implements ApiInterface
 {
     // TODO
     public array $table;
-    public ?string $schema;
+    public ?array $schema;
     public ?array $qualifiedName;
     public ?array $unQualifiedName;
     public ?array $column;
@@ -50,7 +50,7 @@ abstract class AbstractApi implements ApiInterface
      */
     public function initiate(?string $schema, ?string $relation, ?string $key, ?string $column, ?string $index, ?string $constraint, string $userName, bool $superUser): void
     {
-        $this->schema = $schema;
+        $this->schema = $schema ? explode(',', $schema) : null;
         $this->unQualifiedName = $relation ? explode(',', $relation) : null;
         $this->column = $column ? explode(',', $column) : null;
         $this->index = $index ? explode(',', $index) : null;
@@ -84,8 +84,10 @@ abstract class AbstractApi implements ApiInterface
     public function doesSchemaExist(): void
     {
         $db = new Database();
-        if (!$db->doesSchemaExist($this->schema)) {
-            throw new GC2Exception("Schema not found", 404, null, "SCHEMA_NOT_FOUND");
+        foreach ($this->schema as $name) {
+            if (!$db->doesSchemaExist($name)) {
+                throw new GC2Exception("Schema not found", 404, null, "SCHEMA_NOT_FOUND");
+            }
         }
     }
 

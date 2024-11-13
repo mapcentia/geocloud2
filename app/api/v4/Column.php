@@ -116,6 +116,7 @@ class Column extends AbstractApi
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\RequestBody(description: 'New column', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Column"))]
     #[OA\Response(response: 201, description: 'Created')]
+    #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -142,44 +143,6 @@ class Column extends AbstractApi
         return ["code" => "201"];
     }
 
-
-    /**
-     * @throws PhpfastcacheInvalidArgumentException
-     */
-    public static function getColumns(TableModel $table, string $name): array
-    {
-        $response = [];
-        $res = $table->getMetaData($name, false, true, null, null, false);
-        foreach ($res as $key => $column) {
-            $column = array_merge(['name' => $key], $column);
-            $response[] = $column;
-        }
-        return $response;
-
-    }
-
-
-    /**
-     * @throws GC2Exception
-     * @throws InvalidArgumentException
-     */
-    public static function addColumn(TableModel $table, string $column, string $type, bool $setDefaultValue, mixed $defaultValue = null, bool $isNullable = true): string
-    {
-        $r = $table->addColumn([
-            "column" => $column,
-            "type" => $type,
-        ]);
-        if (!$isNullable) {
-            $table->addNotNullConstraint($r["column"]);
-        } else {
-            $table->dropNotNullConstraint($r["column"]);
-        }
-        if ($setDefaultValue && isset($defaultValue)) {
-            $table->addDefaultValue($r["column"], $defaultValue);
-        }
-        return $r["column"];
-    }
-
     /**
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
@@ -192,6 +155,7 @@ class Column extends AbstractApi
     #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: true, example: 'my_columns')]
     #[OA\RequestBody(description: 'Column', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Column"))]
     #[OA\Response(response: 204, description: "Column updated")]
+    #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]
     #[Override]
@@ -264,6 +228,42 @@ class Column extends AbstractApi
         }
         $this->table[0]->commit();
         return ["code" => "204"];
+    }
+
+    /**
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    public static function getColumns(TableModel $table, string $name): array
+    {
+        $response = [];
+        $res = $table->getMetaData($name, false, true, null, null, false);
+        foreach ($res as $key => $column) {
+            $column = array_merge(['name' => $key], $column);
+            $response[] = $column;
+        }
+        return $response;
+
+    }
+
+    /**
+     * @throws GC2Exception
+     * @throws InvalidArgumentException
+     */
+    public static function addColumn(TableModel $table, string $column, string $type, bool $setDefaultValue, mixed $defaultValue = null, bool $isNullable = true): string
+    {
+        $r = $table->addColumn([
+            "column" => $column,
+            "type" => $type,
+        ]);
+        if (!$isNullable) {
+            $table->addNotNullConstraint($r["column"]);
+        } else {
+            $table->dropNotNullConstraint($r["column"]);
+        }
+        if ($setDefaultValue && isset($defaultValue)) {
+            $table->addDefaultValue($r["column"], $defaultValue);
+        }
+        return $r["column"];
     }
 
     /**

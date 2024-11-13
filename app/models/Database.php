@@ -305,7 +305,7 @@ class Database extends Model
      * @param string $schema
      * @return array<bool|string|int>
      */
-    public function deleteSchema(string $schema): array
+    public function deleteSchema(string $schema, bool $commit = true): array
     {
         if ($schema == "public") {
             $response['success'] = false;
@@ -313,15 +313,19 @@ class Database extends Model
             $response['code'] = 401;
             return $response;
         }
-        $this->connect();
-        $this->begin();
+        if ($commit) {
+            $this->connect();
+            $this->begin();
+        }
         $query = "DROP SCHEMA $schema CASCADE";
         $res = $this->prepare($query);
         $res->execute();
         $query = "DELETE FROM settings.geometry_columns_join WHERE _key_ LIKE '$schema.%'";
         $res = $this->prepare($query);
         $res->execute();
-        $this->commit();
+        if ($commit) {
+            $this->commit();
+        }
         $response['success'] = true;
         $response['message'] = "$schema dropped";
         return $response;
