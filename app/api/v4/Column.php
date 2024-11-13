@@ -285,7 +285,19 @@ class Column extends AbstractApi
         if (Input::getMethod() == 'post' && $column) {
             $this->postWithResource();
         }
-        $collection = new Assert\Collection([
+        $collection = self::getAssert();
+
+        if (!empty($body)) {
+            $this->validateRequest($collection, $body, 'columns');
+        }
+
+        $this->jwt = Jwt::validate()["data"];
+        $this->initiate($schema, $table, null, $column, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
+    }
+
+    static public function getAssert(): Assert\Collection
+    {
+        return new Assert\Collection([
             'name' => new Assert\Optional([
                 new Assert\Type('string'),
                 new Assert\NotBlank(),
@@ -299,11 +311,5 @@ class Column extends AbstractApi
             ]),
             'default_value' => new Assert\Optional([]),
         ]);
-        if (!empty($body)) {
-            $this->validateRequest($collection, $body, 'columns');
-        }
-
-        $this->jwt = Jwt::validate()["data"];
-        $this->initiate($schema, $table, null, $column, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }
 }

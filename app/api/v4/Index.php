@@ -190,8 +190,16 @@ class Index extends AbstractApi
         if (Input::getMethod() == 'post' && !empty($id)) {
             $this->postWithResource();
         }
-
-        $collection = new Assert\Collection([
+        $collection = self::getAssert();
+        if (!empty($body)) {
+            $this->validateRequest($collection, $body, 'indices');
+        }
+        $this->jwt = Jwt::validate()["data"];
+        $this->initiate($schema, $table, null, null, $id, null, $this->jwt["uid"], $this->jwt["superUser"]);
+    }
+    static public function getAssert(): Assert\Collection
+    {
+        return new Assert\Collection([
             'name' => new Assert\Optional([
                 new Assert\NotBlank()
             ]),
@@ -203,14 +211,13 @@ class Index extends AbstractApi
                 ]),
             ]),
             'method' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\NotBlank()
+            ]),
+            'unique' => new Assert\Optional([
+                new Assert\Type('boolean'),
                 new Assert\NotBlank()
             ]),
         ]);
-        if (!empty($body)) {
-            $this->validateRequest($collection, $body, 'indices');
-        }
-
-        $this->jwt = Jwt::validate()["data"];
-        $this->initiate($schema, $table, null, null, $id, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }
 }

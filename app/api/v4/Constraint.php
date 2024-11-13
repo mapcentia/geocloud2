@@ -47,6 +47,13 @@ use Symfony\Component\Validator\Constraints as Assert;
             example: ["c1", "c2", "c3"],
         ),
         new OA\Property(
+            property: "check",
+            title: "Check",
+            description: "A check constraint",
+            type: "string",
+            example: "c1 > 0",
+        ),
+        new OA\Property(
             property: "referenced_table",
             title: "Referenced table",
             description: "Referenced table in a foreign key constraint",
@@ -278,6 +285,7 @@ class Constraint extends AbstractApi
         $table = Route2::getParam("table");
         $schema = Route2::getParam("schema");
         $constraint = Route2::getParam("constraint");
+        $body = Input::getBody();
         // Put and delete on collection is not allowed
         if (empty($constraint) && in_array(Input::getMethod(), ['put', 'delete'])) {
             throw new GC2Exception("", 406);
@@ -286,7 +294,49 @@ class Constraint extends AbstractApi
         if (Input::getMethod() == 'post' && $constraint) {
             $this->postWithResource();
         }
+        $collection = self::getAssert();
+        if (!empty($body)) {
+            $this->validateRequest($collection, $body, 'constraints');
+        }
         $this->jwt = Jwt::validate()["data"];
         $this->initiate($schema, $table, null, null, null, $constraint, $this->jwt["uid"], $this->jwt["superUser"]);
+    }
+
+    static public function getAssert(): Assert\Collection
+    {
+        return new Assert\Collection([
+            'name' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+            ]),
+            'constraint' => new Assert\Required([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+            ]),
+            'columns' => new Assert\Optional([
+                new Assert\Type('array'),
+                new Assert\Count(['min' => 1]),
+                new Assert\All([
+                    new Assert\NotBlank(),
+                    new Assert\Type('string'),
+                ]),
+            ]),
+            'referenced_table' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+            ]),
+            'referenced_columns' => new Assert\Optional([
+                new Assert\Type('array'),
+                new Assert\Count(['min' => 1]),
+                new Assert\All([
+                    new Assert\NotBlank(),
+                    new Assert\Type('string'),
+                ]),
+            ]),
+            'check' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+            ]),
+        ]);
     }
 }

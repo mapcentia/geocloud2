@@ -116,7 +116,7 @@ class Table extends AbstractApi
         $body = Input::getBody();
         $data = json_decode($body);
         $this->table[0] = new TableModel(null);
-        $this->table[0]->postgisschema = $this->schema;
+        $this->table[0]->postgisschema = $this->schema[0];
         $this->table[0]->begin();
         $list = [];
 
@@ -143,7 +143,16 @@ class Table extends AbstractApi
     #[OA\Put(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'putTable', description: "Update table", tags: ['Table'])]
     #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
-    #[OA\RequestBody(description: 'Table', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Table"))]
+    #[OA\RequestBody(description: 'Update table', required: true, content: new OA\JsonContent(
+        allOf: [
+            new OA\Schema(
+                properties: [
+                    new OA\Property(property: "name", description: "New name of table", type: "string", example: "my_table_with_new_name"),
+                    new OA\Property(property: "schema", description: "Move table to schema", type: "string", example: "my_other_schema"),
+                ]
+            )
+        ]
+    ))]
     #[OA\Response(response: 204, description: 'Table updated')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
@@ -162,16 +171,16 @@ class Table extends AbstractApi
                 $arg->name = $data->name;
                 $r[] = $layer->rename($this->qualifiedName[$i], $arg)['name'];
             }
-            if (isset($data->schema) && $data->schema != $this->schema) {
+            if (isset($data->schema) && $data->schema != $this->schema[0]) {
                 if (!$this->jwt['superUser']) {
                     throw new GC2Exception('Only super user can move tables between schemas');
                 }
-                $layer->setSchema([(isset($r[$i]) ? ($this->schema . '.' . $r[$i]) : $this->qualifiedName[$i])], $data->schema);
+                $layer->setSchema([(isset($r[$i]) ? ($this->schema[0] . '.' . $r[$i]) : $this->qualifiedName[$i])], $data->schema);
             }
         }
-        $this->schema = $data->schema;
+        $this->schema = explode(',', $data->schema);
         $layer->commit();
-        header("Location: /api/v4/schemas/$this->schema/tables/" . (count($r) > 0 ? implode(',', $r) : implode(',', $this->unQualifiedName)));
+        header("Location: /api/v4/schemas/$data->schema/tables/" . (count($r) > 0 ? implode(',', $r) : implode(',', $this->unQualifiedName)));
         return ["code" => "303"];
     }
 
@@ -269,18 +278,54 @@ class Table extends AbstractApi
     {
         $table = Route2::getParam("table");
         $schema = Route2::getParam("schema");
-        $this->jwt = Jwt::validate()["data"];
+        $body = Input::getBody();
         // Put and delete on collection is not allowed
         if (empty($table) && in_array(Input::getMethod(), ['put', 'delete'])) {
             throw new GC2Exception("Put and delete on a table collection is not allowed", 400);
-        }
-        if (!empty($table) && count(explode(',', $table)) > 1 && in_array(Input::getMethod(), ['put', 'delete'])) {
-            // throw new GC2Exception("Put and delete on multiple tables is not allowed", 406);
         }
         // Throw exception if tried with table resource
         if (Input::getMethod() == 'post' && $table) {
             $this->postWithResource();
         }
+        $collection = self::getAssert();
+        if (!empty($body)) {
+            $this->validateRequest($collection, $body, 'tables');
+        }
+        $this->jwt = Jwt::validate()["data"];
         $this->initiate($schema, $table, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
+    }
+
+    static public function getAssert(): Assert\Collection
+    {
+        return new Assert\Collection([
+            'name' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+            ]),
+            'columns' => new Assert\Optional([
+                new Assert\Type('array'),
+                new Assert\Count(['min' => 1]),
+                new Assert\All([
+                    new Assert\NotBlank(),
+                    Column::getAssert(),
+                ]),
+            ]),
+            'indices' => new Assert\Optional([
+                new Assert\Type('array'),
+                new Assert\Count(['min' => 1]),
+                new Assert\All([
+                    new Assert\NotBlank(),
+                    Index::getAssert(),
+                ]),
+            ]),
+            'constraints' => new Assert\Optional([
+                new Assert\Type('array'),
+                new Assert\Count(['min' => 1]),
+                new Assert\All([
+                    new Assert\NotBlank(),
+                    Constraint::getAssert(),
+                ]),
+            ]),
+        ]);
     }
 }

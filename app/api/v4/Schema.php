@@ -60,52 +60,15 @@ class Schema extends AbstractApi
 
     /**
      * @return array
-     * @OA\Get(
-     *   path="/api/table/v4/table/{table}",
-     *   tags={"Schema"},
-     *   summary="Get description of table",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="table",
-     *     in="path",
-     *     required=true,
-     *     description="Name of relation (table, view, etc.) Can be schema qualified",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=200,
-     *     description="Successful operation",
-     *     @OA\JsonContent(
-     *       type="object",
-     *       @OA\Property(property="message", type="string", description="Success message"),
-     *       @OA\Property(property="success", type="boolean", example=true),
-     *       @OA\Property(property="columns", type="object", additionalProperties={
-     *         "type": "object",
-     *         "properties": {
-     *           "num": { "type":"number", "example":1},
-     *           "full_type": {"type": "string", "example":"varchar(255)"},
-     *           "is_nullable": {"type": "boolean", "example": true},
-     *           "character_maximum_length": {"type": "number", "example": 255},
-     *           "numeric_precision": {"type": "number", "example": 255},
-     *           "numeric_scale": {"type": "number", "example": 255},
-     *           "max_bytes": {"type": "number", "example": 255},
-     *           "reference": {"type": "string", "example": "my.table.field"},
-     *           "restriction": {"type": "object", "example": ""},
-     *           "geom_type": {"type": "string", "nullable": true, "example": "Point"},
-     *           "srid": {"type": "string", "nullable": true, "example": "4326"},
-     *           "is_primary": {"type": "boolean", "example": false},
-     *           "is_unique": {"type": "boolean", "example": false},
-     *           "index_method": {"type": "string", "nullable": true, "example"="btree"},
-     *         }
-     *       })
-     *       )
-     *     )
-     *   )
-     * )
      * @throws PhpfastcacheInvalidArgumentException
      */
+    #[OA\Get(path: '/api/v4/schemas/{schema}', operationId: 'getSchema', description: "Get schema", tags: ['Schema'])]
+    #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: false, example: 'my_schema')]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Schema"))]
+    #[OA\Response(response: 400, description: 'Bad request')]
+    #[OA\Response(response: 404, description: 'Not found')]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    #[Override]
     public function get_index(): array
     {
         $schemas = $this->schemaObj->listAllSchemas()["data"];
@@ -140,11 +103,12 @@ class Schema extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Get(path: '/api/v4/schemas/{schema}', operationId: 'getSchema', description: "Get schema", tags: ['Schema'])]
-    #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
-    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Schema"))]
+    #[OA\Post(path: '/api/v4/schemas', operationId: 'postSchema', description: "Create schema", tags: ['Schema'])]
+    #[OA\RequestBody(description: 'New schema', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Schema"))]
+    #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
+    #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
     public function post_index(): array
@@ -195,7 +159,23 @@ class Schema extends AbstractApi
      * @return array
      * @throws GC2Exception
      */
-
+    #[OA\Put(path: '/api/v4/schemas/{schema}', operationId: 'putSchema', description: "Create schema", tags: ['Schema'])]
+    #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: false, example: 'my_schema')]
+    #[OA\RequestBody(description: 'Update schema', required: true, content: new OA\JsonContent(
+        allOf: [
+            new OA\Schema(
+                properties: [
+                    new OA\Property(property: "name", description: "New name of schema", type: "string", example: "my_schema_with_new_name")
+                ]
+            )
+        ]
+    ))]
+    #[OA\Response(response: 201, description: 'Created')]
+    #[OA\Response(response: 400, description: 'Bad request')]
+    #[OA\Response(response: 404, description: 'Not found')]
+    #[AcceptableContentTypes(['application/json'])]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    #[Override]
     public function put_index(): array
     {
         if (!$this->jwt['superUser']) {
@@ -211,32 +191,14 @@ class Schema extends AbstractApi
 
     /**
      * @return array
-     * @OA\Delete(
-     *   path="/api/table/v4/table/{table}",
-     *   tags={"Schema"},
-     *   summary="Delete a table",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="table",
-     *     in="path",
-     *     required=true,
-     *     description="Name of relation (table, view, etc.), which should be deleted. Can be schema qualified",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response=200,
-     *     description="Successful operation",
-     *     @OA\JsonContent(
-     *       type="object",
-     *       @OA\Property(property="message", type="string", description="Success message"),
-     *       @OA\Property(property="success", type="boolean", example=true),
-     *     )
-     *   )
-     * )
      * @throws GC2Exception
      */
+    #[OA\Delete(path: '/api/v4/schemas/{schema}', operationId: 'deleteSchema', description: "Delete schema", tags: ['Schema'])]
+    #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Response(response: 204, description: 'Schema deleted')]
+    #[OA\Response(response: 400, description: 'Bad request')]
+    #[OA\Response(response: 404, description: 'Not found')]
+    #[Override]
     public function delete_index(): array
     {
         if (!$this->jwt['superUser']) {
@@ -258,16 +220,45 @@ class Schema extends AbstractApi
     public function validate(): void
     {
         $schema = Route2::getParam("schema");
-        $this->jwt = Jwt::validate()["data"];
+        $body = Input::getBody();
 
         // Put and delete on schema collection is not allowed
         if (empty($schema) && in_array(Input::getMethod(), ['put', 'delete'])) {
             throw new GC2Exception("Put and delete on schema collection is not allowed", 400);
         }
         if (!empty($schema) && count(explode(',', $schema)) > 1 && Input::getMethod() == 'put') {
-            throw new GC2Exception("Put multiple schemas is not allowed", 400);
+            throw new GC2Exception("Put with multiple schemas is not allowed", 400);
         }
+        // Throw exception if tried with schema resource
+        if (Input::getMethod() == 'post' && $schema) {
+            $this->postWithResource();
+        }
+        $collection = self::getAssert();
+        if (!empty($body)) {
+            $this->validateRequest($collection, $body, 'schemas');
+        }
+
+
+        $this->jwt = Jwt::validate()["data"];
         $this->initiate($schema, null, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
         $this->schemaObj = new Database();
+    }
+
+    static public function getAssert(): Assert\Collection
+    {
+        return new Assert\Collection([
+            'name' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+            ]),
+            'tables' => new Assert\Optional([
+                new Assert\Type('array'),
+                new Assert\Count(['min' => 1]),
+                new Assert\All([
+                    new Assert\NotBlank(),
+                    Table::getAssert(),
+                ]),
+            ]),
+        ]);
     }
 }
