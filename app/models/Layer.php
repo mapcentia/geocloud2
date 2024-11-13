@@ -676,17 +676,17 @@ class Layer extends Table
 
     /**
      * @param object $data
+     * @param Table|null $table
      * @return array
-     * @throws PhpfastcacheInvalidArgumentException|PDOException
-     * @throws InvalidArgumentException
      * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
-    public function updatePrivileges(object $data): array
+    public function updatePrivileges(object $data, ?Table $table = null): array
     {
         (new User($data->subuser))->doesUserExist();
         $this->clearCacheOfColumns(explode(".", $data->_key_)[0] . "." . explode(".", $data->_key_)[1]);
         $this->clearCacheOnSchemaChanges();
-        $table = new Table("settings.geometry_columns_join");
+        $table = $table ?? new Table("settings.geometry_columns_join");
         $split = explode(".", $data->_key_);
         $geomCols = $this->getGeometryColumnsFromTable($split[0], $split[1]);
         if (sizeof($geomCols) == 0) {
@@ -809,7 +809,6 @@ class Layer extends Table
      * @param string $_key_
      * @param string $srs
      * @return array
-     * @throws PhpfastcacheInvalidArgumentException
      */
     public function getEstExtentAsGeoJSON(string $_key_, string $srs = "4326"): array
     {

@@ -12,7 +12,9 @@ use app\exceptions\GC2Exception;
 use app\inc\Jwt;
 use app\inc\Input;
 use app\inc\Route2;
+use app\models\Client as ClientModel;
 use app\models\Layer;
+use app\models\Table;
 use Override;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
@@ -88,13 +90,22 @@ class Privilege extends AbstractApi
     {
         $layer = new Layer();
         $body = Input::getBody();
-        $data = json_decode($body);
-        $obj = new StdClass();
-        $obj->_key_ = $this->qualifiedName[0];
-        $obj->privileges = $data->privileges;
-        $obj->subuser = $data->subuser;
+        $data = json_decode($body, true);
 
-        $layer->updatePrivileges($obj);
+        if (!isset($data['privileges'])) {
+            $data['privileges'] = [$data];
+        }
+        $table = new Table("settings.geometry_columns_join");
+        $table->begin();
+        foreach ($data['privileges'] as $datum) {
+
+            $obj = new StdClass();
+            $obj->_key_ = $this->qualifiedName[0];
+            $obj->privileges = $datum['privilege'];
+            $obj->subuser = $datum['subuser'];
+            $layer->updatePrivileges($obj, $table);
+        }
+        $table->commit();
         header("Location: /api/v4/schemas/$this->schema/tables/{$this->unQualifiedName[0]}/privileges/");
         return ["code" => "303"];
     }
@@ -130,7 +141,7 @@ class Privilege extends AbstractApi
                 new Assert\Type('string'),
                 new Assert\NotBlank(),
             ]),
-            'privileges' => new Assert\Required([
+            'privilege' => new Assert\Required([
                 new Assert\Type('string'),
                 new Assert\NotBlank(),
             ]),
