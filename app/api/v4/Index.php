@@ -207,8 +207,7 @@ class Index extends AbstractApi
             ]),
         ]);
         if (!empty($body)) {
-            $data = json_decode($body, true);
-            $this->validateRequest($collection, $data, 'indices');
+            $this->validateRequest($collection, $body, 'indices');
         }
 
         $this->jwt = Jwt::validate()["data"];

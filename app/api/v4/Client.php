@@ -270,8 +270,7 @@ class Client extends AbstractApi
             ]),
         ]);
         if (!empty($body)) {
-            $data = json_decode($body, true);
-            $this->validateRequest($collection, $data, 'clients');
+            $this->validateRequest($collection, $body, 'clients');
         }
     }
 }

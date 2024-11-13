@@ -289,8 +289,7 @@ class Geofence extends AbstractApi
             ]),
         ]);
         if (!empty($body)) {
-            $data = json_decode($body, true);
-            $this->validateRequest($collection, $data, 'rules');
+            $this->validateRequest($collection, $body, 'rules');
         }
     }
 }

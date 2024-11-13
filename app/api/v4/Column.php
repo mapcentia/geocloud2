@@ -300,8 +300,7 @@ class Column extends AbstractApi
             'default_value' => new Assert\Optional([]),
         ]);
         if (!empty($body)) {
-            $data = json_decode($body, true);
-            $this->validateRequest($collection, $data, 'columns');
+            $this->validateRequest($collection, $body, 'columns');
         }
 
         $this->jwt = Jwt::validate()["data"];

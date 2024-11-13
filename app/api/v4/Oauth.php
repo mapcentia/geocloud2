@@ -304,8 +304,7 @@ class Oauth extends AbstractApi
             ]),
         ]);
         if (!empty($body)) {
-            $data = json_decode($body, true);
-            $this->validateRequest($collection, $data, 'indices');
+            $this->validateRequest($collection, $body, '');
         }
     }
 }

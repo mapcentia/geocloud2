@@ -147,8 +147,7 @@ class Privilege extends AbstractApi
             ]),
         ]);
         if (!empty($body)) {
-            $data = json_decode($body, true);
-            $this->validateRequest($collection, $data, 'privileges');
+            $this->validateRequest($collection, $body, 'privileges');
         }
 
         $this->initiate($schema, $table, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);

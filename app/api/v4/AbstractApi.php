@@ -208,8 +208,12 @@ abstract class AbstractApi implements ApiInterface
     /**
      * @throws GC2Exception
      */
-    public function validateRequest(Collection $collection, array $data, string $resource): void
+    public function validateRequest(Collection $collection, string $data, string $resource): void
     {
+        if (!json_validate($data)) {
+            throw new GC2Exception("Invalid request data", 400, null, "INVALID_DATA");
+        }
+        $data = json_decode($data, true);
         $validator = Validation::createValidator();
 
         if (isset($data[$resource]) && is_array($data[$resource])) {
