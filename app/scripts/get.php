@@ -120,7 +120,7 @@ if (sizeof(explode("|http", $url)) > 1) {
         if ($header == "Content-Type: application/zip") {
             $getFunction = "getCmdZip";
         }
-        if ($header == "Content-Type: text/csv") {
+        if (str_contains($header, "text/csv")) {
             $contentIsCsv = true;
             $getFunction = "getCmd";
         }
@@ -157,7 +157,7 @@ if (!file_exists($dir)) {
 if (is_numeric($safeName[0])) {
     $safeName = "_" . $safeName;
 }
-function isCSV($filePath): bool
+function isCsv($filePath): bool
 {
     if (!file_exists($filePath) || !is_readable($filePath)) {
         return false;
