@@ -15,12 +15,49 @@ use app\inc\Input;
 use app\inc\Route2;
 use app\models\User as UserModel;
 use Exception;
+use OpenApi\Annotations\OpenApi;
+use OpenApi\Attributes as OA;
+use Symfony\Component\Validator\Constraints as Assert;
 
-
-/**
- * Class User
- * @package app\api\v2
- */
+#[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
+#[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
+#[OA\Schema(
+    schema: "User",
+    required: [],
+    properties: [
+        new OA\Property(
+            property: "name",
+            title: "Name",
+            description: "Name of user.",
+            type: "string",
+            example: "joe",
+        ),
+        new OA\Property(
+            property: "email",
+            title: "E-mail",
+            description: "Users e-mail.",
+            type: "string",
+            format: "email",
+            example: "joe@example.com",
+        ),
+        new OA\Property(
+            property: "password",
+            title: "Password",
+            description: "Users password. Min. 8 characters and at least one upper case letter and one number.",
+            type: "password",
+            example: "Abc123!",
+        ),
+        new OA\Property(
+            property: "properties",
+            title: "Properties",
+            description: "An object, which can contain any properties and values.",
+            type: "object",
+            example: ["phone" => "555-1234567", "address" => "123 Main St", "city" => "New York"],
+        ),
+    ],
+    type: "object"
+)]
+#[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['POST', 'PUT', 'DELETE', 'GET', 'HEAD', 'OPTIONS'])]
 class User extends AbstractApi
 {
@@ -38,99 +75,16 @@ class User extends AbstractApi
 
     }
 
-    private static function convertUserObject(array $user): array
-    {
-        return [
-            "name" => $user['screenName'] ?? $user['screenname'] ?? $user['userid'],
-            "user_group" => $user["usergroup"],
-            "email" => $user["email"],
-            "properties" => $user["properties"],
-        ];
-    }
-
     /**
      * @return array
-     *
-     * @OA\Post(
-     *   path="/api/v4/user",
-     *   tags={"User"},
-     *   summary="Creates user",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\RequestBody(
-     *     description="User data",
-     *     @OA\MediaType(
-     *       mediaType="application/json",
-     *       @OA\Schema(
-     *         type="object",
-     *         required={"name","email","password"},
-     *         @OA\Property(property="name",type="string",example="user"),
-     *         @OA\Property(property="email",type="string",example="user@example.com"),
-     *         @OA\Property(property="password",type="string",example="1234Luggage"),
-     *         @OA\Property(property="subuser",type="boolean",example=true),
-     *         @OA\Property(property="usergroup",type="string",example="My group"),
-     *         @OA\Property(property="properties",type="object",example={"org":"Ajax Inc."})
-     *       )
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="200",
-     *     description="Operation status"
-     *   )
-     * )
      * @throws Exception
      */
-    public function post_index(): array
-    {
-        if (!$this->jwt["superUser"]) {
-            throw new Exception("Sub-users are not allowed to create other sub users");
-        }
-        $list = [];
-        $model = new UserModel();
-        $data = json_decode(Input::getBody(), true) ?: [];
-        $model->connect();
-        $model->begin();
-        if (!isset($data['users'])) {
-            $data['users'] = [$data];
-        }
-        foreach ($data['users'] as $user) {
-            $user['parentdb'] = $this->jwt['database'];
-            // Load pre extensions and run processAddUser
-            $this->runExtension('processAddUser', $model);
-            try {
-                (new Database())->createSchema($user['name']);
-            } catch (Exception) {
-            }
-            $list[] = self::convertUserObject($model->createUser($user)['data'])['name'];
-        }
-        $model->commit();
-        header("Location: /api/v4/users/" . implode(",", $list));
-        return ["code" => 201];
-    }
-
-    /**
-     * @return array
-     *
-     * @OA\Get(
-     *   path="/api/v4/user/{userId}",
-     *   tags={"User"},
-     *   summary="Returns extended information about user (meta, schemas, groups). User data is available only for the actual user and his superuser",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="userId",
-     *     in="path",
-     *     required=true,
-     *     description="User identifier",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="200",
-     *     description="Operation status"
-     *   )
-     * )
-     * @throws Exception
-     */
+    #[OA\Get(path: '/api/v4/user/{name}', operationId: 'getUser', description: "Get rules", tags: ['Users'])]
+    #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: false, example: "joe")]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/User"))]
+    #[OA\Response(response: 404, description: 'Not found')]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    #[Override]
     public function get_index(): array
     {
         $r = [];
@@ -155,42 +109,58 @@ class User extends AbstractApi
 
     /**
      * @return array
-     *
-     * @OA\Put(
-     *   path="/api/v4/user/{userId}",
-     *   tags={"User"},
-     *   summary="Updates user information. User can only update himself or its subuser.",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="userId",
-     *     in="path",
-     *     required=true,
-     *     description="User identifier",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\RequestBody(
-     *     description="User data",
-     *     @OA\MediaType(
-     *       mediaType="application/json",
-     *       @OA\Schema(
-     *         type="object",
-     *         @OA\Property(property="currentPassword",type="string",example="1234Luggage"),
-     *         @OA\Property(property="password",type="string",example="1234Luggage"),
-     *         @OA\Property(property="email",type="string",example="user@example.com"),
-     *         @OA\Property(property="usergroup",type="string",example="My group"),
-     *         @OA\Property(property="properties",type="object",example={"org":"Ajax Inc."})
-     *       )
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="200",
-     *     description="Operation status"
-     *   )
-     * )
      * @throws Exception
      */
+    #[OA\Post(path: '/api/v4/users', operationId: 'postUser', description: "New user", tags: ['Users'])]
+    #[OA\RequestBody(description: 'New user', required: true, content: new OA\JsonContent(ref: "#/components/schemas/User"))]
+    #[OA\Response(response: 201, description: 'Created')]
+    #[OA\Response(response: 400, description: 'Bad request')]
+    #[OA\Response(response: 404, description: 'Not found')]
+    #[AcceptableContentTypes(['application/json'])]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    #[Override]
+    public function post_index(): array
+    {
+        if (!$this->jwt["superUser"]) {
+            throw new Exception("Sub-users are not allowed to create other sub users");
+        }
+        $list = [];
+        $model = new UserModel();
+        $data = json_decode(Input::getBody(), true) ?: [];
+        $data["usergroup"] = $data["user_group"];
+        $model->connect();
+        $model->begin();
+        if (!isset($data['users'])) {
+            $data['users'] = [$data];
+        }
+        foreach ($data['users'] as $user) {
+            $user['parentdb'] = $this->jwt['database'];
+            // Load pre extensions and run processAddUser
+            $this->runExtension('processAddUser', $model);
+            try {
+                (new Database())->createSchema($user['name']);
+            } catch (Exception) {
+            }
+            $list[] = self::convertUserObject($model->createUser($user)['data'])['name'];
+        }
+        $model->commit();
+        header("Location: /api/v4/users/" . implode(",", $list));
+        return ["code" => 201];
+    }
+
+    /**
+     * @return array
+     * @throws Exception
+     */
+    #[OA\Put(path: '/api/v4/users/{name}', operationId: 'putUser', description: "Update user", tags: ['Users'])]
+    #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: true, example: "joe")]
+    #[OA\RequestBody(description: 'User', required: true, content: new OA\JsonContent(ref: "#/components/schemas/User"))]
+    #[OA\Response(response: 204, description: "Rule updated")]
+    #[OA\Response(response: 400, description: 'Bad request')]
+    #[OA\Response(response: 404, description: 'Not found')]
+    #[AcceptableContentTypes(['application/json'])]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    #[Override]
     public function put_index(): array
     {
         $requestedUsers = explode(',', Route2::getParam("user"));
@@ -235,28 +205,12 @@ class User extends AbstractApi
 
     /**
      * @return array
-     *
-     * @OA\Delete(
-     *   path="/api/v4/user/{userId}",
-     *   tags={"User"},
-     *   summary="Deletes user. User can only delete himself or be deleted by its superuser.",
-     *   security={{"bearerAuth":{}}},
-     *   @OA\Parameter(
-     *     name="userId",
-     *     in="path",
-     *     required=true,
-     *     description="User identifier",
-     *     @OA\Schema(
-     *       type="string"
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="200",
-     *     description="Operation status"
-     *   )
-     * )
      * @throws Exception
      */
+    #[OA\Delete(path: '/api/v4/users/{name}', operationId: 'deleteUsers', description: "Delete user", tags: ['Users'])]
+    #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: true, example: "joe")]
+    #[OA\Response(response: 204, description: "User deleted")]
+    #[OA\Response(response: 404, description: 'Not found')]
     public function delete_index(): array
     {
         if (!$this->jwt["superUser"]) {
@@ -273,6 +227,16 @@ class User extends AbstractApi
         }
         $model->commit();
         return ["code" => "204"];
+    }
+
+    private static function convertUserObject(array $user): array
+    {
+        return [
+            "name" => $user['screenName'] ?? $user['screenname'] ?? $user['userid'],
+            "user_group" => $user["usergroup"],
+            "email" => $user["email"],
+            "properties" => $user["properties"],
+        ];
     }
 
     /**
@@ -294,13 +258,40 @@ class User extends AbstractApi
     {
         $this->jwt = Jwt::validate()["data"];
         $user = Route2::getParam("user");
+        $body = Input::getBody();
         // Put and delete on collection is not allowed
         if (empty($user) && in_array(Input::getMethod(), ['put', 'delete'])) {
-            throw new GC2Exception("", 406);
+            throw new GC2Exception("Put and delete on an user collection is not allowed.", 406);
         }
         // Throw exception if tried POST with resource
         if (Input::getMethod() == 'post' && $user) {
             $this->postWithResource();
         }
+        $collection = self::getAssert();
+        if (!empty($body)) {
+            $this->validateRequest($collection, $body, 'users');
+        }
+    }
+
+    static public function getAssert(): Assert\Collection
+    {
+        return new Assert\Collection([
+            'name' => new Assert\Optional([
+                new Assert\Length(['min' => 4])
+            ]),
+            'email' => new Assert\Optional([
+                new Assert\Email(),
+            ]),
+            'password' => new Assert\Optional([
+                new Assert\PasswordStrength(['minScore' => 1]),
+            ]),
+            'user_group' => new Assert\Optional([
+                new Assert\Length(['min' => 4])
+            ]),
+            'properties' => new Assert\Optional([
+                new Assert\Type('array'),
+                new Assert\NotBlank(),
+            ]),
+        ]);
     }
 }

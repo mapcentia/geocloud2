@@ -17,11 +17,6 @@ use Random\RandomException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\Validator\Constraints as Assert;
 
-
-/**
- * Class User
- * @package app\api\v2
- */
 #[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
@@ -57,7 +52,7 @@ use Symfony\Component\Validator\Constraints as Assert;
             description: "The URIs the auth server is allowed to redirect back to.",
             type: "array",
             items: new OA\Items(type: "string"),
-            example: ["id", "name"]
+            example: ["https://my_site1.com", "https://my_site2.com"]
         ),
     ],
     type: "object"

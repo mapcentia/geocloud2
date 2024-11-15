@@ -28,7 +28,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "OAuth",
-    required: ["grant_type", "username", "password", "database"],
+    required: ["grant_type"],
     properties: [
         new OA\Property(
             property: "grant_type",
@@ -51,22 +51,47 @@ use Symfony\Component\Validator\Constraints as Assert;
         ),
         new OA\Property(
             property: "database",
-            title: "The database the user belongs to",
+            title: "Database",
+            description: "The database the user belongs to",
             type: "string",
             example: "mydb"
         ),
         new OA\Property(
             property: "client_id",
-            title: "The OAuth client id",
+            title: "Client id",
+            description: "The OAuth client id",
             type: "string",
             example: "djskjskdj"
         ),
         new OA\Property(
             property: "client_secret",
-            title: "The OAuth client secret",
+            title: "Client secret",
+            description: "The OAuth client secret",
             type: "string",
             example: "xxx"
         ),
+        new OA\Property(
+            property: "code",
+            title: "Code",
+            description: "The code which is exchanged for an access token",
+            type: "string",
+            example: "xxx"
+        ),
+        new OA\Property(
+            property: "redirect_uri",
+            title: "Redirect uri",
+            description: "The code which is exchanged for an access token",
+            type: "string",
+            example: "xxx"
+        ),
+        new OA\Property(
+            property: "code_verifier",
+            title: "Code verifier",
+            description: "The code verifier",
+            type: "string",
+            example: "xxx"
+        ),
+
     ],
     type: "object"
 )]
@@ -228,7 +253,7 @@ class Oauth extends AbstractApi
             } catch (GC2Exception) {
                 return self::error("invalid_grant", "Client with identifier '{$data['client_id']}' was not found in the directory", 401);
             }
-            $token = (new Session())->createOAuthResponse($user['parentdb'], $user['screen_name'], !$user['subuser'], $user['usergroup'], false);
+            $token = (new Session())->createOAuthResponse($user['parentdb'], $user['screen_name'], !$user['subuser'], false, $user['usergroup']);
             Jwt::clearDeviceCode($data['device_code']);
             return $token;
         }
@@ -285,21 +310,32 @@ class Oauth extends AbstractApi
         $body = Input::getBody();
         $collection = new Assert\Collection([
             'grant_type' => new Assert\Required([
+                new Assert\NotBlank(),
+                new Assert\Choice(['password', 'authorization_code', 'refresh_token', 'device_code']),
+            ]),
+            'username' => new Assert\Optional([
                 new Assert\NotBlank()
             ]),
-            'username' => new Assert\Required([
+            'password' => new Assert\Optional([
                 new Assert\NotBlank()
             ]),
-            'password' => new Assert\Required([
-                new Assert\NotBlank()
-            ]),
-            'database' => new Assert\Required([
+            'database' => new Assert\Optional([
                 new Assert\NotBlank()
             ]),
             'client_id' => new Assert\Optional([
                 new Assert\NotBlank()
             ]),
             'client_secret' => new Assert\Optional([
+                new Assert\NotBlank()
+            ]),
+            'code' => new Assert\Optional([
+                new Assert\NotBlank()
+            ]),
+            'redirect_uri' => new Assert\Required([
+                new Assert\NotBlank(),
+                new Assert\Url(['requireTld' => false]),
+            ]),
+            'code_verifier' => new Assert\Optional([
                 new Assert\NotBlank()
             ]),
         ]);

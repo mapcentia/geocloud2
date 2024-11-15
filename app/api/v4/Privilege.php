@@ -144,6 +144,8 @@ class Privilege extends AbstractApi
             'privilege' => new Assert\Required([
                 new Assert\Type('string'),
                 new Assert\NotBlank(),
+                new Assert\Choice(['none', 'read', 'write']),
+
             ]),
         ]);
         if (!empty($body)) {

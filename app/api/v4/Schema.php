@@ -32,7 +32,7 @@ use Symfony\Component\Validator\Constraints as Assert;
             title: "Name of the column",
             description: "Name of the column",
             type: "string",
-            example: "my-column",
+            example: "my-schema",
         ),
         new OA\Property(
             property: "tables",

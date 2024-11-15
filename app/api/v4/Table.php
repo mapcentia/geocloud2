@@ -236,8 +236,6 @@ class Table extends AbstractApi
         return $r;
     }
 
-
-
     /**
      * @param TableModel $table
      * @param string $name
@@ -295,6 +293,9 @@ class Table extends AbstractApi
         $this->initiate($schema, $table, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }
 
+    /**
+     * @return Assert\Collection
+     */
     static public function getAssert(): Assert\Collection
     {
         return new Assert\Collection([

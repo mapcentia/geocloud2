@@ -147,7 +147,9 @@ class Geofence extends AbstractApi
     #[OA\Post(path: '/api/v4/rules', operationId: 'postRule', description: "New rules", tags: ['Rules'])]
     #[OA\RequestBody(description: 'New rule', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Rule"))]
     #[OA\Response(response: 201, description: 'Created')]
-    #[AcceptableContentTypes(['application/json'])]
+    #[OA\Response(response: 201, description: 'Created')]
+    #[OA\Response(response: 400, description: 'Bad request')]
+    #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
     public function post_index(): array
