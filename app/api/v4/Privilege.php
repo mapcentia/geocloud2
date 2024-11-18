@@ -45,7 +45,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     type: "object"
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
-#[AcceptableMethods(['GET', 'PUT', 'HEAD', 'OPTIONS'])]
+#[AcceptableMethods(['GET', 'PATCH', 'HEAD', 'OPTIONS'])]
 class Privilege extends AbstractApi
 {
     /**
@@ -77,7 +77,7 @@ class Privilege extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException
      * @throws InvalidArgumentException|GC2Exception
      */
-    #[OA\Put(path: '/api/v4/schemas/{schema}/tables/{table}/privileges', operationId: 'putPrivileges', description: "Update privileges", tags: ['Privileges'])]
+    #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}/privileges', operationId: 'patchPrivileges', description: "Update privileges", tags: ['Privileges'])]
     #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\RequestBody(description: 'Privileges', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Privilege"))]
@@ -86,7 +86,7 @@ class Privilege extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]
     #[Override]
-    public function put_index(): array
+    public function patch_index(): array
     {
         $layer = new Layer();
         $body = Input::getBody();
@@ -127,8 +127,8 @@ class Privilege extends AbstractApi
         $body = Input::getBody();
 
         $this->jwt = Jwt::validate()["data"];
-        // Put and delete on collection is not allowed
-        if (empty($table) && in_array(Input::getMethod(), ['put', 'delete'])) {
+        // Patch and delete on collection is not allowed
+        if (empty($table) && in_array(Input::getMethod(), ['patch', 'delete'])) {
             throw new GC2Exception("", 406);
         }
         // Throw exception if tried with table resource
@@ -153,5 +153,10 @@ class Privilege extends AbstractApi
         }
 
         $this->initiate($schema, $table, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
+    }
+
+    public function put_index(): array
+    {
+        // TODO: Implement put_index() method.
     }
 }

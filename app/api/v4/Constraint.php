@@ -163,25 +163,11 @@ class Constraint extends AbstractApi
         return $res;
     }
 
-    public static function addConstraint(TableModel $table, string $type, ?array $columns = null, ?string $check = null, ?string $name = null, ?string $referencedTable = null, ?array $referencedColumns = null): string
-    {
-        $newName = "";
-        switch ($type) {
-            case "primary":
-                $newName = $table->addPrimaryKeyConstraint($columns, $name);
-                break;
-            case "foreign":
-                $newName = $table->addForeignConstraint($columns, $referencedTable, $referencedColumns, $name);
-                break;
-            case "unique":
-                $newName = $table->addUniqueConstraint($columns, $name);
-                break;
-            case "check":
-                $newName = $table->addCheckConstraint($check, $name);
-                break;
 
-        }
-        return $newName;
+    public function patch_index(): array
+    {
+        // TODO: Implement patch_index() method.
+        return [];
     }
 
     /**
@@ -203,6 +189,27 @@ class Constraint extends AbstractApi
         $this->table[0]->commit();
         $res["code"] = "204";
         return $res;
+    }
+
+    public static function addConstraint(TableModel $table, string $type, ?array $columns = null, ?string $check = null, ?string $name = null, ?string $referencedTable = null, ?array $referencedColumns = null): string
+    {
+        $newName = "";
+        switch ($type) {
+            case "primary":
+                $newName = $table->addPrimaryKeyConstraint($columns, $name);
+                break;
+            case "foreign":
+                $newName = $table->addForeignConstraint($columns, $referencedTable, $referencedColumns, $name);
+                break;
+            case "unique":
+                $newName = $table->addUniqueConstraint($columns, $name);
+                break;
+            case "check":
+                $newName = $table->addCheckConstraint($check, $name);
+                break;
+
+        }
+        return $newName;
     }
 
     /**
@@ -270,12 +277,6 @@ class Constraint extends AbstractApi
         return array_map('trim', explode(',', $match[1][1]));
     }
 
-    public function put_index(): array
-    {
-        // TODO: Implement put_index() method.
-        return [];
-    }
-
     /**
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
@@ -286,8 +287,8 @@ class Constraint extends AbstractApi
         $schema = Route2::getParam("schema");
         $constraint = Route2::getParam("constraint");
         $body = Input::getBody();
-        // Put and delete on collection is not allowed
-        if (empty($constraint) && in_array(Input::getMethod(), ['put', 'delete'])) {
+        // Patch and delete on collection is not allowed
+        if (empty($constraint) && in_array(Input::getMethod(), ['patch', 'delete'])) {
             throw new GC2Exception("", 406);
         }
         // Throw exception if tried with resource id
@@ -338,5 +339,10 @@ class Constraint extends AbstractApi
                 new Assert\NotBlank(),
             ]),
         ]);
+    }
+
+    public function put_index(): array
+    {
+        // TODO: Implement put_index() method.
     }
 }

@@ -170,4 +170,9 @@ class Stat extends AbstractApi
     {
 
     }
+
+    public function patch_index(): array
+    {
+        // TODO: Implement patch_index() method.
+    }
 }

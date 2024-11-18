@@ -147,7 +147,7 @@ class Index extends AbstractApi
         return $table->addIndex($columns, $method, $name);
     }
 
-    public function put_index(): array
+    public function patch_index(): array
     {
         // TODO: Implement put_index() method.
     }
@@ -179,12 +179,12 @@ class Index extends AbstractApi
         $id = Route2::getParam("index");
         $body = Input::getBody();
 
-        // Put and delete on collection is not allowed
-        if (empty($id) && in_array(Input::getMethod(), ['put', 'delete'])) {
-            throw new GC2Exception("PUT and DELETE on a indices collection is not allowed.", 400);
+        // Patch and delete on collection is not allowed
+        if (empty($id) && in_array(Input::getMethod(), ['patch', 'delete'])) {
+            throw new GC2Exception("PATCH and DELETE on a indices collection is not allowed.", 400);
         }
-        if (empty($body) && in_array(Input::getMethod(), ['post', 'put'])) {
-            throw new GC2Exception("POST and PUT without request body is not allowed.", 400);
+        if (empty($body) && in_array(Input::getMethod(), ['post', 'patch'])) {
+            throw new GC2Exception("POST and PATCH without request body is not allowed.", 400);
         }
         // Throw exception if tried with table resource
         if (Input::getMethod() == 'post' && !empty($id)) {
@@ -219,5 +219,10 @@ class Index extends AbstractApi
                 new Assert\NotBlank()
             ]),
         ]);
+    }
+
+    public function put_index(): array
+    {
+        // TODO: Implement put_index() method.
     }
 }

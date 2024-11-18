@@ -32,7 +32,7 @@ use Override;
  */
 #[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
-#[AcceptableMethods(['PUT', 'POST', 'HEAD', 'OPTIONS'])]
+#[AcceptableMethods(['PATCH', 'POST', 'HEAD', 'OPTIONS'])]
 class Import extends AbstractApi
 {
 
@@ -155,7 +155,7 @@ class Import extends AbstractApi
      * @return array
      * @throws Exception
      */
-    #[OA\Put(path: '/api/v4/import/{schema}/{file}', operationId: 'putImport', description: 'Import files', tags: ['Import'])]
+    #[OA\Patch(path: '/api/v4/import/{schema}/{file}', operationId: 'patchImport', description: 'Import files', tags: ['Import'])]
     #[OA\Parameter(name: 'schema', description: 'Schema', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'file', description: 'File to import', in: 'path', required: true, example: 'file.csv')]
     #[OA\RequestBody(content: new OA\MediaType('application/json', new OA\Schema(
@@ -186,7 +186,7 @@ class Import extends AbstractApi
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
-    public function put_index(): array
+    public function patch_index(): array
     {
         $schema = Route2::getParam("schema");
         $fileName = Route2::getParam("file");
@@ -306,5 +306,10 @@ class Import extends AbstractApi
 
         $this->jwt = Jwt::validate()["data"];
         $this->initiate($schema, null, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
+    }
+
+    public function put_index(): array
+    {
+        // TODO: Implement patch_index() method.
     }
 }

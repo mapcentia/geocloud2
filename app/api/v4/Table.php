@@ -57,7 +57,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     type: "object"
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
-#[AcceptableMethods(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'])]
+#[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Table extends AbstractApi
 {
     /**
@@ -140,7 +140,7 @@ class Table extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Put(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'putTable', description: "Update table", tags: ['Table'])]
+    #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'patchTable', description: "Update table", tags: ['Table'])]
     #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\RequestBody(description: 'Update table', required: true, content: new OA\JsonContent(
@@ -158,7 +158,7 @@ class Table extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]
     #[Override]
-    public function put_index(): array
+    public function patch_index(): array
     {
         $layer = new Layer();
         $layer->begin();
@@ -277,9 +277,9 @@ class Table extends AbstractApi
         $table = Route2::getParam("table");
         $schema = Route2::getParam("schema");
         $body = Input::getBody();
-        // Put and delete on collection is not allowed
-        if (empty($table) && in_array(Input::getMethod(), ['put', 'delete'])) {
-            throw new GC2Exception("Put and delete on a table collection is not allowed", 400);
+        // Patch and delete on collection is not allowed
+        if (empty($table) && in_array(Input::getMethod(), ['patch', 'delete'])) {
+            throw new GC2Exception("Patch and delete on a table collection is not allowed", 400);
         }
         // Throw exception if tried with table resource
         if (Input::getMethod() == 'post' && $table) {
@@ -300,6 +300,10 @@ class Table extends AbstractApi
     {
         return new Assert\Collection([
             'name' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+            ]),
+            'schema' => new Assert\Optional([
                 new Assert\Type('string'),
                 new Assert\NotBlank(),
             ]),
@@ -328,5 +332,10 @@ class Table extends AbstractApi
                 ]),
             ]),
         ]);
+    }
+
+    public function put_index(): array
+    {
+        // TODO: Implement put_index() method.
     }
 }

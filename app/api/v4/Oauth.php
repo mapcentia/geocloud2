@@ -290,7 +290,7 @@ class Oauth extends AbstractApi
 
     /**
      */
-    public function put_index(): array
+    public function patch_index(): array
     {
         return [];
     }
@@ -342,5 +342,10 @@ class Oauth extends AbstractApi
         if (!empty($body)) {
             $this->validateRequest($collection, $body, '');
         }
+    }
+
+    public function put_index(): array
+    {
+        // TODO: Implement put_index() method.
     }
 }

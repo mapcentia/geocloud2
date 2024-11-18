@@ -58,7 +58,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     type: "object"
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
-#[AcceptableMethods(['POST', 'PUT', 'DELETE', 'GET', 'HEAD', 'OPTIONS'])]
+#[AcceptableMethods(['POST', 'PATCH', 'DELETE', 'GET', 'HEAD', 'OPTIONS'])]
 class Client extends AbstractApi
 {
     public function __construct()
@@ -169,14 +169,14 @@ class Client extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Put(path: '/api/v4/clients/{id}', operationId: 'putClient', description: "Update client", tags: ['Clients'])]
+    #[OA\Patch(path: '/api/v4/clients/{id}', operationId: 'patchClient', description: "Update client", tags: ['Clients'])]
     #[OA\Parameter(name: 'id', description: 'Id of client', in: 'path', required: true, example: '66f5005bd44c6')]
     #[OA\RequestBody(description: 'Properties to update. Partial update is allowed.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Client"))]
     #[OA\Response(response: 204, description: "Client updated")]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]
-    public function put_index(): array
+    public function patch_index(): array
     {
         $id = Route2::getParam("id");
         if (empty($id)) {
@@ -235,12 +235,12 @@ class Client extends AbstractApi
         $id = Route2::getParam("id");
         $body = Input::getBody();
 
-        // Put and delete on collection is not allowed
-        if (empty($id) && in_array(Input::getMethod(), ['put', 'delete'])) {
-            throw new GC2Exception("PUT and DELETE on a client collection is not allowed.", 400);
+        // Patch and delete on collection is not allowed
+        if (empty($id) && in_array(Input::getMethod(), ['patch', 'delete'])) {
+            throw new GC2Exception("PATCH and DELETE on a client collection is not allowed.", 400);
         }
-        if (empty($body) && in_array(Input::getMethod(), ['post', 'put'])) {
-            throw new GC2Exception("POST and PUT without request body is not allowed.", 400);
+        if (empty($body) && in_array(Input::getMethod(), ['post', 'patch'])) {
+            throw new GC2Exception("POST and PACTH without request body is not allowed.", 400);
         }
         // Throw exception if tried with table resource
         if (Input::getMethod() == 'post' && !empty($id)) {
@@ -267,5 +267,10 @@ class Client extends AbstractApi
         if (!empty($body)) {
             $this->validateRequest($collection, $body, 'clients');
         }
+    }
+
+    public function put_index(): array
+    {
+        // TODO: Implement put_index() method.
     }
 }

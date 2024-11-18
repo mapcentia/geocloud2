@@ -44,7 +44,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     type: "object"
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
-#[AcceptableMethods(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'])]
+#[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Schema extends AbstractApi
 {
 
@@ -159,7 +159,7 @@ class Schema extends AbstractApi
      * @return array
      * @throws GC2Exception
      */
-    #[OA\Put(path: '/api/v4/schemas/{schema}', operationId: 'putSchema', description: "Rename schema", tags: ['Schema'])]
+    #[OA\Patch(path: '/api/v4/schemas/{schema}', operationId: 'patchSchema', description: "Rename schema", tags: ['Schema'])]
     #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: false, example: 'my_schema')]
     #[OA\RequestBody(description: 'Update schema', required: true, content: new OA\JsonContent(
         allOf: [
@@ -177,7 +177,7 @@ class Schema extends AbstractApi
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
-    public function put_index(): array
+    public function patch_index(): array
     {
         if (!$this->jwt['superUser']) {
             throw new GC2Exception("", 403);
@@ -223,12 +223,12 @@ class Schema extends AbstractApi
         $schema = Route2::getParam("schema");
         $body = Input::getBody();
 
-        // Put and delete on schema collection is not allowed
-        if (empty($schema) && in_array(Input::getMethod(), ['put', 'delete'])) {
-            throw new GC2Exception("Put and delete on schema collection is not allowed", 400);
+        // Patch and delete on schema collection is not allowed
+        if (empty($schema) && in_array(Input::getMethod(), ['patch', 'delete'])) {
+            throw new GC2Exception("Patch and delete on schema collection is not allowed", 400);
         }
-        if (!empty($schema) && count(explode(',', $schema)) > 1 && Input::getMethod() == 'put') {
-            throw new GC2Exception("Put with multiple schemas is not allowed", 400);
+        if (!empty($schema) && count(explode(',', $schema)) > 1 && Input::getMethod() == 'patch') {
+            throw new GC2Exception("Patch with multiple schemas is not allowed", 400);
         }
         // Throw exception if tried with schema resource
         if (Input::getMethod() == 'post' && $schema) {
@@ -261,5 +261,10 @@ class Schema extends AbstractApi
                 ]),
             ]),
         ]);
+    }
+
+    public function put_index(): array
+    {
+        // TODO: Implement put_index() method.
     }
 }

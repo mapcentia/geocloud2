@@ -58,7 +58,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     type: "object"
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
-#[AcceptableMethods(['POST', 'PUT', 'DELETE', 'GET', 'HEAD', 'OPTIONS'])]
+#[AcceptableMethods(['POST', 'PATCH', 'DELETE', 'GET', 'HEAD', 'OPTIONS'])]
 class User extends AbstractApi
 {
     /**
@@ -152,7 +152,7 @@ class User extends AbstractApi
      * @return array
      * @throws Exception
      */
-    #[OA\Put(path: '/api/v4/users/{name}', operationId: 'putUser', description: "Update user", tags: ['Users'])]
+    #[OA\Patch(path: '/api/v4/users/{name}', operationId: 'patchUser', description: "Update user", tags: ['Users'])]
     #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: true, example: "joe")]
     #[OA\RequestBody(description: 'User', required: true, content: new OA\JsonContent(ref: "#/components/schemas/User"))]
     #[OA\Response(response: 204, description: "Rule updated")]
@@ -161,7 +161,7 @@ class User extends AbstractApi
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
-    public function put_index(): array
+    public function patch_index(): array
     {
         $requestedUsers = explode(',', Route2::getParam("user"));
 
@@ -259,9 +259,9 @@ class User extends AbstractApi
         $this->jwt = Jwt::validate()["data"];
         $user = Route2::getParam("user");
         $body = Input::getBody();
-        // Put and delete on collection is not allowed
-        if (empty($user) && in_array(Input::getMethod(), ['put', 'delete'])) {
-            throw new GC2Exception("Put and delete on an user collection is not allowed.", 406);
+        // Patch and delete on collection is not allowed
+        if (empty($user) && in_array(Input::getMethod(), ['patch', 'delete'])) {
+            throw new GC2Exception("Patch and delete on an user collection is not allowed.", 406);
         }
         // Throw exception if tried POST with resource
         if (Input::getMethod() == 'post' && $user) {
@@ -293,5 +293,10 @@ class User extends AbstractApi
                 new Assert\NotBlank(),
             ]),
         ]);
+    }
+
+    public function put_index(): array
+    {
+        // TODO: Implement put_index() method.
     }
 }

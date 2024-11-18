@@ -61,7 +61,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     type: "object"
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
-#[AcceptableMethods(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'])]
+#[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Column extends AbstractApi
 {
 
@@ -149,7 +149,7 @@ class Column extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Put(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}/', operationId: 'putColumn', description: "Update column(s)", tags: ['Column'])]
+    #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}/', operationId: 'patchColumn', description: "Update column(s)", tags: ['Column'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: true, example: 'my_columns')]
@@ -159,7 +159,7 @@ class Column extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]
     #[Override]
-    public function put_index(): array
+    public function patch_index(): array
     {
         $body = Input::getBody();
         $data = json_decode($body);
@@ -277,8 +277,8 @@ class Column extends AbstractApi
         $column = Route2::getParam("column");
         $body = Input::getBody();
 
-        // Put and delete on collection is not allowed
-        if (empty($column) && in_array(Input::getMethod(), ['put', 'delete'])) {
+        // Patch and delete on collection is not allowed
+        if (empty($column) && in_array(Input::getMethod(), ['patch', 'delete'])) {
             throw new GC2Exception("fgfg", 406);
         }
         // Throw exception if tried with resource id
@@ -311,5 +311,10 @@ class Column extends AbstractApi
             ]),
             'default_value' => new Assert\Optional([]),
         ]);
+    }
+
+    public function put_index(): array
+    {
+        // TODO: Implement put_index() method.
     }
 }

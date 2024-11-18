@@ -101,7 +101,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     ],
     type: "object"
 )]
-#[AcceptableMethods(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'])]
+#[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Geofence extends AbstractApi
 {
     public GeofenceModel $geofence;
@@ -177,7 +177,7 @@ class Geofence extends AbstractApi
      * @throws GC2Exception
      */
 
-    #[OA\Put(path: '/api/v4/rules/{id}', operationId: 'putRule', description: "New rules", tags: ['Rules'])]
+    #[OA\Patch(path: '/api/v4/rules/{id}', operationId: 'patchRule', description: "New rules", tags: ['Rules'])]
     #[OA\Parameter(name: 'id', description: 'Rule identifier', in: 'path', required: true, example: 2)]
     #[OA\RequestBody(description: 'Update rule', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Rule"))]
     #[OA\Response(response: 204, description: "Rule updated")]
@@ -185,7 +185,7 @@ class Geofence extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]
     #[Override]
-    public function put_index(): array
+    public function patch_index(): array
     {
         $id = Route2::getParam("id");
         if (empty($id)) {
@@ -238,12 +238,12 @@ class Geofence extends AbstractApi
         $id = Route2::getParam("id");
         $body = Input::getBody();
 
-        // Put and delete on collection is not allowed
-        if (empty($id) && in_array(Input::getMethod(), ['put', 'delete'])) {
-            throw new GC2Exception("PUT and DELETE on a rule collection is not allowed.", 400);
+        // Patch and delete on collection is not allowed
+        if (empty($id) && in_array(Input::getMethod(), ['patch', 'delete'])) {
+            throw new GC2Exception("PATCH and DELETE on a rule collection is not allowed.", 400);
         }
-        if (empty($body) && in_array(Input::getMethod(), ['post', 'put'])) {
-            throw new GC2Exception("POST and PUT without request body is not allowed.", 400);
+        if (empty($body) && in_array(Input::getMethod(), ['post', 'patch'])) {
+            throw new GC2Exception("POST and PATCH without request body is not allowed.", 400);
         }
         // Throw exception if tried with table resource
         if (Input::getMethod() == 'post' && !empty($id)) {
@@ -293,6 +293,11 @@ class Geofence extends AbstractApi
         if (!empty($body)) {
             $this->validateRequest($collection, $body, 'rules');
         }
+    }
+
+    public function put_index(): array
+    {
+        // TODO: Implement put_index() method.
     }
 }
 

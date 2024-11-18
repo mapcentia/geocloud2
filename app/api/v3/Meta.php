@@ -131,4 +131,9 @@ class Meta extends AbstractApi
         // TODO: Implement delete_index() method.
         return [];
     }
+
+    public function patch_index(): array
+    {
+        // TODO: Implement patch_index() method.
+    }
 }
