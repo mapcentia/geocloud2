@@ -71,7 +71,9 @@ if (Session::isAuth()) {
         exit();
     }
     $code = $_GET['response_type'] == 'code';
-    $data = (new SessionModel())->createOAuthResponse($_SESSION['parentdb'], $_SESSION['screen_name'], !$_SESSION['subuser'], $_SESSION['usergroup'], $code);
+    $codeChallenge = $_GET['code_challenge'];
+    $codeChallengeMethod = $_GET['code_challenge_method'];
+    $data = (new SessionModel())->createOAuthResponse($_SESSION['parentdb'], $_SESSION['screen_name'], !$_SESSION['subuser'], $code, $_SESSION['usergroup'], $codeChallenge, $codeChallengeMethod);
     $params = [];
     if ($code) {
         $params['code'] = $data['code'];

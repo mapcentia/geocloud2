@@ -209,13 +209,13 @@ class Oauth extends AbstractApi
         // Code grant
         if ($data['grant_type'] == GrantType::AUTHORIZATION_CODE->value) {
             try {
-                $token = Jwt::changeCodeForAccessToken($data['code']);
+                $token = Jwt::changeCodeForAccessToken($data['code'], $data['code_verifier']);
                 $tokenData = Jwt::parse($token)['data'];
                 // Create a refresh token from the access token
                 $superUserApiKey = (new Setting())->getApiKeyForSuperUser();
                 $refreshToken = Jwt::createJWT($superUserApiKey, $tokenData['database'], $tokenData['uid'], $tokenData['superUser'], $tokenData['userGroup'], false);
             } catch (GC2Exception) {
-                return self::error("invalid_grant", "Code doesn't exists or is expired", 400);
+                return self::error("invalid_grant", "Code doesn't exists, is expired or code challenge failed.", 400);
             }
             try {
                 (new \app\models\Client())->get($data['client_id']);

@@ -158,7 +158,7 @@ class Session extends Model
                 Database::setDb($response['data']['parentdb']);
                 $response['data']['api_key'] = (new Setting())->get()['data']->api_key;
             } else {
-                return $this->createOAuthResponse($response['data']['parentdb'], $response['data']['screen_name'], !$response['data']['subuser'], $response['data']['usergroup'], $grantType == GrantType::AUTHORIZATION_CODE);
+                return $this->createOAuthResponse($response['data']['parentdb'], $response['data']['screen_name'], !$response['data']['subuser'], $grantType == GrantType::AUTHORIZATION_CODE, $response['data']['usergroup']);
             }
             // Insert into logins
             $sql = "INSERT INTO logins (db, \"user\") VALUES(:parentDb, :sUserID)";
@@ -189,7 +189,7 @@ class Session extends Model
         return $response;
     }
 
-    public function createOAuthResponse(string $db, string $user, bool $isSuperUser, ?string $userGroup, bool $code): array
+    public function createOAuthResponse(string $db, string $user, bool $isSuperUser, bool $code, ?string $userGroup , ?string $codeChallenge = null, ?string $codeChallengeMethod = null): array
     {
         Database::setDb($db);
         $superUserApiKey = (new Setting())->getApiKeyForSuperUser();
@@ -205,7 +205,7 @@ class Session extends Model
             ];
 
         } else {
-            return Jwt::createJWT($superUserApiKey, $db, $user, $isSuperUser, $userGroup, true, true);
+            return Jwt::createJWT($superUserApiKey, $db, $user, $isSuperUser, $userGroup, true, true, $codeChallenge, $codeChallengeMethod);
         }
     }
 }

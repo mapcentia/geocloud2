@@ -128,7 +128,7 @@ abstract class Jwt
      * @param bool $returnCode
      * @return array
      */
-    public static function createJWT(string $secret, string $db, string $userId, bool $isSuperUser, string|null $userGroup, bool $access = true, bool $returnCode = false): array
+    public static function createJWT(string $secret, string $db, string $userId, bool $isSuperUser, string|null $userGroup, bool $access = true, bool $returnCode = false, ?string $codeChallenge = null, ?string $codeChallengeMethod = null): array
     {
         $token = [
             "iss" => App::$param["host"],
@@ -149,7 +149,7 @@ abstract class Jwt
         } else {
             $code = uniqid();
             $CachedString = Cache::getItem($code);
-            $CachedString->set($encoded)->expiresAfter(self::CODE_TTL);
+            $CachedString->set([$encoded, $codeChallenge, $codeChallengeMethod])->expiresAfter(self::CODE_TTL);
             Cache::save($CachedString);
             return [
                 "code" => $code
@@ -159,14 +159,26 @@ abstract class Jwt
 
     /**
      * @param string $code
+     * @param string|null $verifier
      * @return string
      * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
-    public static function changeCodeForAccessToken(string $code): string
+    public static function changeCodeForAccessToken(string $code, ?string $verifier = null): string
     {
         $CachedString = Cache::getItem($code);
         if ($CachedString != null && $CachedString->isHit()) {
-            return $CachedString->get();
+            $challenge = $CachedString->get()[1];
+            $method = $CachedString->get()[2] ?? 'plain';
+            if (
+                ($method == 'S256' && Util::base64urlEncode(pack('H*', hash('sha256', $verifier))) != $challenge) ||
+                ($method == 'plain' && Util::base64urlEncode($verifier) != $challenge)
+            ) {
+                throw new GC2Exception("Invalid code", 400);
+            }
+            $token = $CachedString->get()[0];
+            Cache::deleteItem($code);
+            return $token;
         } else {
             throw new GC2Exception("No token matches the code", 400, null, 'INVALID_REQUEST');
         }
@@ -201,7 +213,7 @@ abstract class Jwt
             if ($CachedString != null && $CachedString->isHit()) {
                 $val = $CachedString->get();
                 if (!empty($val) && $val == 1) {
-                    throw new GC2Exception("authorization_pending",400, null, 'AUTHORIZATION_PENDING');
+                    throw new GC2Exception("authorization_pending", 400, null, 'AUTHORIZATION_PENDING');
                 }
                 if (!empty($val) && is_array($val)) {
                     return $val;
@@ -218,6 +230,7 @@ abstract class Jwt
     {
         Cache::deleteItem($deviceCode);
     }
+
     private static function generateUserCode(): string
     {
         $characters = 'BCDFGHJKLMNPQRSTVWXZ';
