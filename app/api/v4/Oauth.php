@@ -308,37 +308,8 @@ class Oauth extends AbstractApi
     public function validate(): void
     {
         $body = Input::getBody();
-        $collection = new Assert\Collection([
-            'grant_type' => new Assert\Required([
-                new Assert\NotBlank(),
-                new Assert\Choice(['password', 'authorization_code', 'refresh_token', 'device_code']),
-            ]),
-            'username' => new Assert\Optional([
-                new Assert\NotBlank()
-            ]),
-            'password' => new Assert\Optional([
-                new Assert\NotBlank()
-            ]),
-            'database' => new Assert\Optional([
-                new Assert\NotBlank()
-            ]),
-            'client_id' => new Assert\Optional([
-                new Assert\NotBlank()
-            ]),
-            'client_secret' => new Assert\Optional([
-                new Assert\NotBlank()
-            ]),
-            'code' => new Assert\Optional([
-                new Assert\NotBlank()
-            ]),
-            'redirect_uri' => new Assert\Required([
-                new Assert\NotBlank(),
-                new Assert\Url(['requireTld' => false]),
-            ]),
-            'code_verifier' => new Assert\Optional([
-                new Assert\NotBlank()
-            ]),
-        ]);
+
+        $collection = self::getAssert(json_decode($body)->grant_type);
         if (!empty($body)) {
             $this->validateRequest($collection, $body, '');
         }
@@ -347,5 +318,65 @@ class Oauth extends AbstractApi
     public function put_index(): array
     {
         // TODO: Implement put_index() method.
+    }
+
+    static public function getAssert($type = null): Assert\Collection
+    {
+        $collection = new Assert\Collection([]);
+        $collection->fields['grant_type'] = new Assert\Required([
+            new Assert\NotBlank(),
+            new Assert\Choice(['password', 'authorization_code', 'refresh_token', 'device_code']),
+        ]);
+        $collection->fields['client_id'] = new Assert\Required([
+            new Assert\NotBlank()
+        ]);
+
+        if ($type == 'password') {
+            unset($collection->fields['client_id']);
+            $collection->fields['username'] = new Assert\Required([
+                new Assert\NotBlank()
+            ]);
+            $collection->fields['password'] = new Assert\Required([
+                new Assert\NotBlank()
+            ]);
+            $collection->fields['database'] = new Assert\Required([
+                new Assert\NotBlank()
+            ]);
+
+        } elseif ($type == 'authorization_code') {
+            $collection->fields['client_id'] = new Assert\Required([
+                new Assert\NotBlank()
+            ]);
+            $collection->fields['client_secret'] = new Assert\Optional([
+                new Assert\NotBlank()
+            ]);
+            $collection->fields['code'] = new Assert\Required([
+                new Assert\NotBlank()
+            ]);
+            $collection->fields['redirect_uri'] = new Assert\Required([
+                new Assert\NotBlank()
+            ]);
+            $collection->fields['code_verifier'] = new Assert\Required([
+                new Assert\NotBlank()
+            ]);
+
+        } elseif ($type == 'refresh_token') {
+            $collection->fields['client_id'] = new Assert\Required([
+                new Assert\NotBlank()
+            ]);
+            $collection->fields['refresh_token'] = new Assert\Required([
+                new Assert\NotBlank()
+            ]);
+
+        } elseif ($type == 'device_code') {
+            $collection->fields['client_id'] = new Assert\Required([
+                new Assert\NotBlank()
+            ]);
+            $collection->fields['device_code'] = new Assert\Required([
+                new Assert\NotBlank()
+            ]);
+        }
+
+        return $collection;
     }
 }
