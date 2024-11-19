@@ -154,8 +154,7 @@ class Sql extends Model
         }
 
         // Get column types
-        $this->execQuery("SET LOCAL session_replication_role  = replica");
-        $select = $this->prepare("select * from ($q) as foo LIMIT 1");
+        $select = $this->prepare("select * from ($q) as foo LIMIT 0");
         $convertedParameters = [];
         if ($parameters) {
             foreach ($parameters as $field => $value) {
@@ -171,7 +170,6 @@ class Sql extends Model
             $meta = $select->getColumnMeta($column_index);
             $columnTypes[$meta['name']] = $meta['native_type'];
         }
-        $this->execQuery("SET LOCAL session_replication_role  = DEFAULT");
 
         $fieldsArr = [];
         foreach ($columnTypes as $key => $type) {
