@@ -209,8 +209,9 @@ class Sql extends Model
             // JSON output
             // ==============
 
-            $arr = [];
+            $features = [];
             while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
+                $arr = [];
                 foreach ($row as $key => $rowValue) {
                     $nativeType = $columnTypes[$key];
                     if ($nativeType == "geometry" && $rowValue !== null) {
@@ -227,6 +228,7 @@ class Sql extends Model
                     }
                     $arr = $this->array_push_assoc($arr, $key, $rowValue);
                 }
+                $features[] = $arr;
             }
             $this->execQuery("CLOSE curs");
             $this->commit();
@@ -238,7 +240,7 @@ class Sql extends Model
             }
             $response['success'] = true;
             $response['schema'] = $schema;
-            $response['data'] = $arr;
+            $response['data'] = $features;
             return $response;
 
         } elseif ($format == "geojson") {

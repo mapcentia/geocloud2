@@ -125,12 +125,12 @@ class Preparedstatement extends Model
      * @return string The UUID of the created or updated prepared statement.
      * @throws InvalidArgumentException
      */
-    public function createPreparedStatement(string $name, string $statement): string
+    public function createPreparedStatement(string $name, string $statement, array $typeHints, array $typeFormats): string
     {
         $this->clearCacheOnSchemaChanges(md5($name));
-        $sql = "INSERT INTO settings.prepared_statements (name, statement) VALUES (:name, :statement) ON CONFLICT ON CONSTRAINT name_unique DO UPDATE SET statement=:statement RETURNING uuid";
+        $sql = "INSERT INTO settings.prepared_statements (name, statement, type_hints, type_formats) VALUES (:name, :statement, :type_hints, :type_formats) ON CONFLICT ON CONSTRAINT name_unique DO UPDATE SET statement=:statement,type_hints=:type_hints,type_formats=:type_formats RETURNING uuid";
         $res = $this->prepare($sql);
-        $res->execute(['name' => $name, 'statement' => $statement]);
+        $res->execute(['name' => $name, 'statement' => $statement, 'type_hints' => json_encode($typeHints), 'type_formats' => json_encode($typeFormats)]);
         $uuid = $res->fetchColumn();
         $this->clearCacheOnSchemaChanges($uuid);
         return $uuid;

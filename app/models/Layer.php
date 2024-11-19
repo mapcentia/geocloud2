@@ -651,6 +651,10 @@ class Layer extends Table
      */
     public function getPrivileges(string $_key_): array
     {
+        if (!empty(App::$param['dontUseGeometryColumnInJoin'])) {
+            $split = explode('.', $_key_);
+            $_key_ = $split[0] . '.' . $split[1];
+        }
         $privileges = json_decode($this->getValueFromKey($_key_, "privileges") ?: "{}");
         if (!empty(Session::get())) {
             $arr = Session::getByKey('subusers');

@@ -82,11 +82,14 @@ class Sql extends Controller
         // ======================================
         if ($json != null) {
 
+            $typeHints = !empty($json["type_hints"]) ? $json["type_hints"] : Input::$params["type_hints"];
+            $typeFormats = !empty($json["type_formats"]) ? $json["type_formats"] : Input::$params["type_formats"];
+
             if (!empty($json["id"])) {
                 $pres = new PreparedstatementModel();
                 // Upsert if both query and store
                 if (!empty($json["q"])) {
-                    $uuid = $pres->createPreparedStatement($json["id"], $json["q"]);
+                    $uuid = $pres->createPreparedStatement($json["id"], $json["q"], $typeHints, $typeFormats);
                     return [
                         'code' => 201,
                         'uuid' => $uuid,
@@ -96,8 +99,9 @@ class Sql extends Controller
                 // Else fetch the query and use it
                 else {
                     $json["q"] = $pres->getByName($json['id'])['data']['statement'];
+                    $typeHints = $typeHints ?? json_decode($pres->getByName($json['id'])['data']['type_hints'], true);
+                    $typeFormats = $typeFormats ?? json_decode($pres->getByName($json['id'])['data']['type_formats'], true);
                 }
-
             }
 
             // Set input params from JSON
@@ -117,8 +121,8 @@ class Sql extends Controller
                     "base64" => !empty($json["base64"]) ? $json["base64"] : null,
                     "convert_types" => !empty($json["convert_types"]) ? $json["convert_types"] : Input::$params["convert_types"],
                     "params" => !empty($json["params"]) ? $json["params"] : Input::$params["params"],
-                    "type_hints" => !empty($json["type_hints"]) ? $json["type_hints"] : Input::$params["type_hints"],
-                    "type_formats" => !empty($json["type_formats"]) ? $json["type_formats"] : Input::$params["type_formats"],
+                    "type_hints" => $typeHints,
+                    "type_formats" => $typeFormats,
                 ]
             );
         }
