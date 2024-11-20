@@ -17,6 +17,7 @@ use Exception;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\Validator\Constraints as Assert;
+use function PHPUnit\Framework\throwException;
 
 
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
@@ -87,6 +88,7 @@ class Constraint extends AbstractApi
     /**
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws GC2Exception
      */
     #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'getConstraint', description: "Get constraints", tags: ['Constraints'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
@@ -111,10 +113,12 @@ class Constraint extends AbstractApi
         } else {
             $r = $res;
         }
-        if (count($r) > 1) {
-            return ["constraints" => $r];
-        } else {
+        if (count($r) == 0) {
+            throw new GC2Exception("No constraints found for table", 404, null, 'NO_CONSTRAINTS');
+        } elseif (count($r) == 1) {
             return $r[0];
+        } else {
+            return ["constraints" => $r];
         }
     }
 
@@ -207,6 +211,8 @@ class Constraint extends AbstractApi
             case "check":
                 $newName = $table->addCheckConstraint($check, $name);
                 break;
+            default:
+                throw new GC2Exception("Unknown constraint type: $type");
 
         }
         return $newName;

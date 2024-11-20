@@ -95,10 +95,12 @@ class Client extends AbstractApi
         } else {
             $r = $client->get();
         }
-        if (count($r) > 1) {
-            return ["clients" => $r];
-        } else {
+        if (count($r) == 0) {
+            throw new GC2Exception("No clients found", 404, null, 'NO_CLIENTS');
+        } elseif (count($r) == 1) {
             return $r[0];
+        } else {
+            return ["clients" => $r];
         }
     }
 

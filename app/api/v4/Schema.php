@@ -61,6 +61,7 @@ class Schema extends AbstractApi
     /**
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws GC2Exception
      */
     #[OA\Get(path: '/api/v4/schemas/{schema}', operationId: 'getSchema', description: "Get schema", tags: ['Schema'])]
     #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: false, example: 'my_schema')]
@@ -90,10 +91,12 @@ class Schema extends AbstractApi
                     "tables" => Table::getTables($schema),
                 ];
             }
-            if (count($r) > 1) {
-                return ["schemas" => $r];
-            } else {
+            if (count($r) == 0) {
+                throw new GC2Exception("No schemas found", 404, null, 'NO_SCHEMAS');
+            } elseif (count($r) == 1) {
                 return $r[0];
+            } else {
+                return ["schemas" => $r];
             }
         }
     }

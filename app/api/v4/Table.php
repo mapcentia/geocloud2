@@ -71,6 +71,7 @@ class Table extends AbstractApi
     /**
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws GC2Exception
      */
     #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'getTable', description: "Get table", tags: ['Table'])]
     #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
@@ -88,12 +89,14 @@ class Table extends AbstractApi
                 $r[] = self::getTable($this->table[$i], $this->qualifiedName[$i]);
             }
         } else {
-            $r = self::getTables($this->schema);
+            $r = self::getTables($this->schema[0]);
         }
-        if (count($r) > 1) {
-            return ["tables" => $r];
-        } else {
+        if (count($r) == 0) {
+            throw new GC2Exception("No tables found in schema", 404, null, 'NO_TABLES');
+        } elseif (count($r) == 1) {
             return $r[0];
+        } else {
+            return ["tables" => $r];
         }
     }
 
@@ -130,7 +133,7 @@ class Table extends AbstractApi
             $list[] = $r['tableName'];
         }
         $this->table[0]->commit();
-        header("Location: /api/v4/schemas/$this->schema/tables/" . implode(",", $list));
+        header("Location: /api/v4/schemas/{$this->schema[0]}/tables/" . implode(",", $list));
         $res["code"] = "201";
         return $res;
     }
@@ -178,9 +181,9 @@ class Table extends AbstractApi
                 $layer->setSchema([(isset($r[$i]) ? ($this->schema[0] . '.' . $r[$i]) : $this->qualifiedName[$i])], $data->schema);
             }
         }
-        $this->schema = explode(',', $data->schema);
+        $schema =  $data->schema ?? $this->schema[0];
         $layer->commit();
-        header("Location: /api/v4/schemas/$data->schema/tables/" . (count($r) > 0 ? implode(',', $r) : implode(',', $this->unQualifiedName)));
+        header("Location: /api/v4/schemas/{$schema}/tables/" . (count($r) > 0 ? implode(',', $r) : implode(',', $this->unQualifiedName)));
         return ["code" => "303"];
     }
 

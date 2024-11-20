@@ -50,6 +50,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[AcceptableMethods(['GET', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Index extends AbstractApi
 {
+    /**
+     * @throws GC2Exception
+     */
     #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/indices/{index}', operationId: 'getIndex', description: "Get index", tags: ['Indices'])]
     #[OA\Parameter(name: 'schema', description: 'Schema', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table', in: 'path', required: true, example: 'my_table')]
@@ -81,10 +84,12 @@ class Index extends AbstractApi
         } else {
             $r = $res;
         }
-        if (count($r) > 1) {
-            return ["indices" => $r];
-        } else {
+        if (count($r) == 0) {
+            throw new GC2Exception("No indices found for table", 404, null, 'NO_INDICES');
+        } elseif (count($r) == 1) {
             return $r[0];
+        } else {
+            return ["indices" => $r];
         }
     }
     /**

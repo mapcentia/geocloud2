@@ -100,10 +100,12 @@ class User extends AbstractApi
             $userModelLocal = new UserModel($user, $this->jwt["database"]);
             $r[] = self::convertUserObject($userModelLocal->getData()["data"]);
         }
-        if (count($r) > 1) {
-            return ["users" => $r];
-        } else {
+        if (count($r) == 0) {
+            throw new GC2Exception("No users found", 404, null, 'NO_USERS');
+        } elseif (count($r) == 1) {
             return $r[0];
+        } else {
+            return ["users" => $r];
         }
     }
 

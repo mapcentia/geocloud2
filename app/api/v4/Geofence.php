@@ -124,6 +124,7 @@ class Geofence extends AbstractApi
     #[Override]
     public function get_index(): array
     {
+        $r = [];
         $geofence = new GeofenceModel(null);
         if (!empty(Route2::getParam("id"))) {
             $ids = explode(',', Route2::getParam("id"));
@@ -133,10 +134,12 @@ class Geofence extends AbstractApi
         } else {
             $r = $geofence->get(null);
         }
-        if (count($r) > 1) {
-            return ["rules" => $r];
-        } else {
+        if (count($r) == 0) {
+            throw new GC2Exception("No rules found", 404, null, 'NO_RULES');
+        } elseif (count($r) == 1) {
             return $r[0];
+        } else {
+            return ["rules" => $r];
         }
     }
 

@@ -75,6 +75,7 @@ class Column extends AbstractApi
     /**
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws GC2Exception
      */
     #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}', operationId: 'getColumn', description: "Get column", tags: ['Column'])]
     #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
@@ -99,10 +100,12 @@ class Column extends AbstractApi
         } else {
             $r = $res;
         }
-        if (count($r) > 1) {
-            return ["columns" => $r];
-        } else {
+        if (count($r) == 0) {
+            throw new GC2Exception("No columns found in table", 404, null, 'NO_COLUMNS');
+        } elseif (count($r) == 1) {
             return $r[0];
+        } else {
+            return ["columns" => $r];
         }
     }
 
