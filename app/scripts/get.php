@@ -762,7 +762,7 @@ function getCmdZip(): void
         print "\n" . $error_msg;
         cleanUp();
     }
-    $ext = array("shp", "tab", "geojson", "gml", "kml", "mif", "gdb", "csv", "json");
+    $ext = array("shp", "tab", "geojson", "gml", "kml", "mif", "gdb", "csv", "json", "gpkg");
 
     // ZIP start
     // =========
