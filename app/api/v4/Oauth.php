@@ -323,7 +323,7 @@ class Oauth extends AbstractApi
     static public function getAssert($type = null): Assert\Collection
     {
         $collection = new Assert\Collection([]);
-        $collection->fields['grant_type'] = new Assert\Required([
+        $collection->fields['grant_type'] = new Assert\Optional([
             new Assert\NotBlank(),
             new Assert\Choice(['password', 'authorization_code', 'refresh_token', 'device_code']),
         ]);
