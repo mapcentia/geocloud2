@@ -162,6 +162,7 @@ class Input
             case "put":
             case "delete":
             case "post":
+            case "patch":
                 $query = static::parseQueryString(file_get_contents('php://input'), $raw);
                 break;
         }
