@@ -85,6 +85,8 @@ RUN chmod +x /run-fpm.sh
 
 RUN a2disconf other-vhosts-access-log
 
+COPY conf/fpm/opcache.ini  /etc/php/8.3/mods-available/
+
 # Clean up job for app/tmp
 RUN crontab -l 2>/dev/null| { cat; echo "0 0 * * * php -f /var/www/geocloud2/app/scripts/clean_tmp_dir.php 1>> /dev/null 2>&1";} | crontab
 # Clean up job for tmp tables created by scheduler
