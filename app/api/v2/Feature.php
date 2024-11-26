@@ -96,32 +96,6 @@ class Feature extends Controller
                  xsi:schemaLocation=\"http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/WFS-transaction.xsd\">\n";
     }
 
-    /**
-     * @param string $code
-     * @return string
-     */
-    private function decodeCode(string $code): string
-    {
-        $replacements = [
-            "\\" => "\\\\",
-            "\n" => "\\n",
-            "\r" => "\\r",
-            "\t" => "\\t",
-        ];
-        return strtr(preg_replace_callback(
-            '@\\\\(x)?([0-9a-fA-F]{2,5})@',
-            function ($m) {
-                $num = $m[1] ? hexdec($m[2]) : octdec($m[2]);
-                if ($num > 255) {
-                    // For Unicode characters
-                    return mb_convert_encoding('&#' . $num . ';', 'UTF-8', 'HTML-ENTITIES');
-                }
-                return chr($num);
-            },
-            $code
-        ), $replacements);
-    }
-
     public function get_index(): array
     {
         $response = [];
@@ -208,17 +182,13 @@ class Feature extends Controller
      * @return array
      * @throws GuzzleException
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws \JsonException
      */
     public function post_index(): array
     {
 
         // Decode GeoJSON
-        if (!$features = json_decode($this->decodeCode(Input::getBody()), true)["features"]) {
-            $response['success'] = false;
-            $response['message'] = json_last_error_msg();
-            $response['code'] = 500;
-            return $response;
-        }
+        $features = json_decode(Input::getBody(false), true, 512, JSON_THROW_ON_ERROR)["features"];
 
         // Start build the WFS transaction
         $xml = $this->transactionHeader;
@@ -249,7 +219,7 @@ class Feature extends Controller
             foreach ($props as $elem => $value) {
                 if (isset($this->field) && $this->field != $elem) {
                     if (is_string($value)) {
-                        $value = "<![CDATA[{$value}]]>";
+                        $value = "<![CDATA[" . urldecode($value) . "]]>";
                     }
                     if ($value === false) {
                         $value = 'f';
@@ -271,17 +241,14 @@ class Feature extends Controller
     /**
      * @return array
      * @throws GuzzleException
+     * @throws \JsonException
+     * @throws PhpfastcacheInvalidArgumentException
      */
     public function put_index(): array
     {
 
         // Decode GeoJSON
-        if (!$features = json_decode($this->decodeCode(Input::getBody()), true)["features"]) {
-            $response['success'] = false;
-            $response['message'] = json_last_error_msg();
-            $response['code'] = 500;
-            return $response;
-        }
+        $features = json_decode(Input::getBody(false), true, 512, JSON_THROW_ON_ERROR)["features"];
 
         // Start build the WFS transaction
         $xml = $this->transactionHeader;
@@ -319,7 +286,7 @@ class Feature extends Controller
             // Create the elements
             foreach ($props as $elem => $value) {
                 if (is_string($value)) {
-                    $value = "<![CDATA[{$value}]]>";
+                    $value = "<![CDATA[" . urldecode($value) . "]]>";
                 }
                 if ($value === false) {
                     $value = 'f';
