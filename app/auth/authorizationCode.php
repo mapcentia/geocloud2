@@ -52,6 +52,8 @@ if (Session::isAuth()) {
     }
     $redirectUri = $_GET['redirect_uri'] ?? $uris[0];
 
+    $separator = str_contains($redirectUri, '?') ? '&' : '?';
+
     // Check client secret if is set
     if (isset($_GET['client_secret'])) {
         try {
@@ -65,7 +67,7 @@ if (Session::isAuth()) {
     // If error we send user back with error parameters
     if ($gotError) {
         $paramsStr = http_build_query(['error' => $error, 'error_description' => $errorDesc]);
-        $header = "Location: $redirectUri?$paramsStr";
+        $header = "Location: $redirectUri$separator$paramsStr";
         //echo $header;
         header($header);
         exit();
@@ -88,12 +90,12 @@ if (Session::isAuth()) {
     $paramsStr = http_build_query($params);
 
     $client = $clientData[0]['name'];
-    $location =  "$redirectUri?$paramsStr";
+    $location =  "$redirectUri$separator$paramsStr";
 
     if ($client != 'gc2-cli') {
         echo $twig->render('allow.html.twig', ['name' => $client, 'location' => $location]);
     } else {
-        $header = "Location: $redirectUri?$paramsStr";
+        $header = "Location: $redirectUri$separator$paramsStr";
         header($header);
     }
     exit();
