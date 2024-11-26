@@ -1349,32 +1349,30 @@ class Model
     }
 
     /**
-     * Retrieves statistics about all tables in the PostgreSQL database,
-     * including table name, schema name, total size, total size in bytes, total size of indices,
-     * table size, and row count.
+     * Retrieves statistics about database tables including their size, row count, and associated costs.
      *
-     * @return array<string, mixed> An array containing the following information:
-     *     - "tables": An array of tables. Each table is represented by an array with the following keys:
-     *         - "tableName": The name of the table.
-     *         - "schemaName": The name of the schema.
-     *         - "totalSize": The total size of the table in human-readable format.
-     *         - "totalSizeBytes": The total size of the table in bytes.
-     *         - "totalSizeIndices": The total size of the table's indices in human-readable format.
-     *         - "tableSize": The size of the table in human-readable format.
-     *         - "rowCount": The number of rows in the table.
-     *     - "totalSize": The sum of the total sizes of all tables in bytes.
-     *     - "totalSizePretty": The sum of the total sizes of all tables in human-readable format.
-     *     - "numberOfTables": The number of tables in the database.
+     * The method compiles a list of tables and their respective schema names, sizes in various formats
+     * (human-readable and bytes), row counts, and the total cumulative size of all tables.
+     * Additionally, it includes the storage cost associated with the database.
+     *
+     * @return array<string, mixed> An array containing:
+     *                              - "tables" (array<int, array<string, mixed>>): List of table statistics.
+     *                              - "totalSize" (int): Total size in bytes of all tables.
+     *                              - "totalSizePretty" (string): Human-readable total size of all tables.
+     *                              - "numberOfTables" (int): Number of tables.
+     *                              - "cost" (float): Storage cost of the database.
      */
     public function getStats(): array
     {
-        $sql = "SELECT distinct i.relname                                     as \"tableName\",
-                                i.schemaname                                  as \"schemaName\",
-                                pg_size_pretty(pg_total_relation_size(relid)) as \"totalSize\",
-                                pg_total_relation_size(relid)                 as \"totalSizeBytes\",
-                                pg_size_pretty(pg_indexes_size(relid))        as \"totalSizeIndices\",
-                                pg_size_pretty(pg_relation_size(relid))       as \"tableSize\",
-                                reltuples::bigint                                \"rowCount\"
+        $sql = "SELECT distinct i.relname                                     as \"table_name\",
+                                i.schemaname                                  as \"schema_name\",
+                                pg_size_pretty(pg_total_relation_size(relid)) as \"total_size\",
+                                pg_total_relation_size(relid)                 as \"total_size_bytes\",
+                                pg_size_pretty(pg_relation_size(relid))       as \"table_size\",
+                                pg_relation_size(relid)                       as \"table_size_bytes\",
+                                pg_size_pretty(pg_indexes_size(relid))        as \"indices_size\",
+                                pg_indexes_size(relid)                        as \"indices_size_bytes\",
+                                reltuples::bigint                                \"row_count\"
                 FROM pg_stat_all_tables i
                          join pg_class c ON i.relid = c.oid
                 WHERE i.schemaname NOT IN ('information_schema', 'settings')
@@ -1386,7 +1384,7 @@ class Model
         $tables = [];
         foreach ($this->fetchAll($res, 'assoc') as $table) {
             $tables[] = $table;
-            $totalSize += $table['totalSizeBytes'];
+            $totalSize += $table['total_size_bytes'];
         }
         $sql = "select pg_size_pretty($totalSize::bigint) as p";
         $res = $this->prepare($sql);
@@ -1399,9 +1397,9 @@ class Model
         }
         return [
             "tables" => $tables,
-            "totalSize" => $totalSize,
-            "totalSizePretty" => $row[0]['p'],
-            "numberOfTables" => count($tables),
+            "total_size" => $row[0]['p'],
+            "total_size_byte" => $totalSize,
+            "number_of_tables" => count($tables),
             "cost" => $cost,
         ];
     }
@@ -1432,7 +1430,8 @@ class Model
      * @param string $rel The name of the relation to check.
      * @return bool True if the relation exists, false otherwise.
      */
-    public function doesRelationExists($rel) : bool {
+    public function doesRelationExists($rel): bool
+    {
         $sql = "SELECT FROM " . $this->doubleQuoteQualifiedName($rel) . " LIMIT 1";
         try {
             $this->execQuery($sql);
