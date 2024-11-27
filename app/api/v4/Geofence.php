@@ -277,9 +277,12 @@ class Geofence extends AbstractApi
                 new Assert\NotBlank(),
             ]),
             'iprange' => new Assert\Optional([
-                new Assert\Type('string'),
-                new Assert\NotBlank(),
-                new Assert\Cidr(),
+                new Assert\AtLeastOneOf([
+                    'constraints' => [
+                        new Assert\Cidr(),
+                        new Assert\EqualTo('*'),
+                    ],
+                ])
             ]),
             'schema' => new Assert\Optional([
                 new Assert\Type('string'),
