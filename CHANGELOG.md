@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2024.11.2] - 2024-28-11
+
+## Fixed
+- OPTIONS request to API v4 now without auth header. Browsers don't send auth headers with preflight requests.
+- In rule API iprange can now be either '*' or a cdri block. Before only the latter or empty was allowed. 
+
 ## [2024.11.1] - 2024-26-11
 
 ## Fixed
