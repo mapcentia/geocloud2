@@ -36,14 +36,10 @@ abstract class Jwt
      */
     public static function validate(): array
     {
-        // TODO why?
         // If OPTIONS we don't check token og return an empty response
-
-        /*
         if (Input::getMethod() == 'options') {
-            return ["success" => true, "data" => []];
+            return ["success" => true];
         }
-        */
 
         // Check if there is a JWT token in header
         $jwtToken = Input::getJwtToken();
