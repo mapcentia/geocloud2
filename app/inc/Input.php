@@ -107,9 +107,12 @@ class Input
     /**
      * @return string
      */
-    public static function getBody(bool $decode = true): string
+    public static function getBody(bool $decode = true): string|null
     {
         $content = file_get_contents('php://input');
+        if (empty($content)) {
+            return null;
+        }
         if ($decode) {
             return urldecode($content);
         } else {

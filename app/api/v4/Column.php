@@ -288,11 +288,8 @@ class Column extends AbstractApi
         if (Input::getMethod() == 'post' && $column) {
             $this->postWithResource();
         }
-        $collection = self::getAssert();
 
-        if (!empty($body)) {
-            $this->validateRequest($collection, $body, 'columns');
-        }
+        $this->validateRequest(self::getAssert(), $body, 'columns', Input::getMethod());
 
         $this->jwt = Jwt::validate()["data"];
         $this->initiate($schema, $table, null, $column, null, null, $this->jwt["uid"], $this->jwt["superUser"]);

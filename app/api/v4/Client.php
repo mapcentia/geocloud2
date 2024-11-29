@@ -242,33 +242,33 @@ class Client extends AbstractApi
             throw new GC2Exception("PATCH and DELETE on a client collection is not allowed.", 400);
         }
         if (empty($body) && in_array(Input::getMethod(), ['post', 'patch'])) {
-            throw new GC2Exception("POST and PACTH without request body is not allowed.", 400);
+            throw new GC2Exception("POST and PATCH without request body is not allowed.", 400);
         }
         // Throw exception if tried with table resource
         if (Input::getMethod() == 'post' && !empty($id)) {
             $this->postWithResource();
         }
 
-        $collection = new Assert\Collection([
-            'name' => new Assert\Length(['min' => 3]),
-            'homepage' => new Assert\Optional(
-                new Assert\Url(['requireTld' => true]),
-            ),
-            'description' => new Assert\Optional([
-                new Assert\Length(['min' => 3])
-            ]),
-            'redirect_uri' => new Assert\Required([
-                new Assert\Type('array'),
-                new Assert\Count(['min' => 1]),
-                new Assert\All([
-                    new Assert\NotBlank(),
-                    new Assert\Url(['requireTld' => true]),
-                ]),
-            ]),
-        ]);
-        if (!empty($body)) {
-            $this->validateRequest($collection, $body, 'clients');
-        }
+        $this->validateRequest(self::getAssert(), $body, 'clients', Input::getMethod());
+
+    }
+
+    static public function getAssert(): Assert\Collection
+    {
+        return new Assert\Collection([
+        'name' => new Assert\Length(['min' => 3]),
+        'homepage' => new Assert\Optional(
+            new Assert\Url(['requireTld' => true]),
+        ),
+        'description' => new Assert\Optional([
+            new Assert\Length(['min' => 3])
+        ]),
+        'redirect_uri' => new Assert\Required([
+            new Assert\Type('array'),
+            new Assert\Count(['min' => 1]),
+            new Assert\NotBlank(),
+        ]),
+    ]);
     }
 
     public function put_index(): array

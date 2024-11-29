@@ -210,12 +210,22 @@ abstract class AbstractApi implements ApiInterface
     /**
      * @throws GC2Exception
      */
-    public function validateRequest(Collection $collection, string $data, string $resource): void
+    public function validateRequest(Collection $collection, ?string $data, string $resource, string $method): void
     {
-        if (!json_validate($data)) {
+        if (!empty($data) && !json_validate($data)) {
             throw new GC2Exception("Invalid request data", 400, null, "INVALID_DATA");
         }
-        $data = json_decode($data, true);
+
+        $data = $data == null ? null : json_decode($data, true);
+
+        if (in_array($method, ['delete', 'get']) && !empty($data)) {
+            throw new GC2Exception("You can't use a payload in DELETE or GET", 400, null, "INVALID_DATA");
+        }
+
+        if ($method == 'patch' && isset($data[$resource])) {
+            throw new GC2Exception("You can't PATCH with a collection of $resource", 400, null, "INVALID_DATA");
+        }
+
         $validator = Validation::createValidator();
 
         if (isset($data[$resource]) && is_array($data[$resource])) {
