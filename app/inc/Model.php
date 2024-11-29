@@ -1133,7 +1133,9 @@ class Model
         foreach ($rows as $row) {
             $tmp = [];
             $def = $row['definition'];
-            $tmp['definition'] = preg_replace('#(?<=SELECT)(.|\n)*?(?= FROM)#', ' *', $def, 1);
+            preg_match('#(?<=FROM )(.|\n)*?(?= \w)#', $def, $matches);
+            $replacement = " $matches[0].*";
+            $tmp['definition'] = preg_replace('#(?<=SELECT)(.|\n)*?(?= FROM)#', $replacement, $def, 1);
             $tmp['name'] = $row['name'];
             $tmp['schemaname'] = $row['schemaname'];
             $tmp['ismat'] = $row['ismat'];
