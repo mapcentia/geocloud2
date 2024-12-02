@@ -77,10 +77,10 @@ class OAuthManagementCest
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
         $payload = json_encode([
-            'schema' => $this->schemaName,
+            'name' => $this->schemaName,
             'tables' => [
-                ['table' => $this->tableName1],
-                ['table' => $this->tableName2],
+                ['name' => $this->tableName1],
+                ['name' => $this->tableName2],
             ]
         ]);
         $I->sendPOST('/api/v4/schemas', $payload);
@@ -106,9 +106,9 @@ class OAuthManagementCest
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
         $payload = json_encode([
-            'schema' => 'new_schema_name',
+            'name' => 'new_schema_name',
         ]);
-        $I->sendPUT($this->schemaUri, $payload);
+        $I->sendPatch($this->schemaUri, $payload);
         $I->seeResponseCodeIs(HttpCode::OK);
 
         $I->seeResponseContains('new_schema_name');
@@ -117,9 +117,9 @@ class OAuthManagementCest
 
         $I->stopFollowingRedirects();
         $payload = json_encode([
-            'schema' => $this->schemaName,
+            'name' => $this->schemaName,
         ]);
-        $I->sendPUT('/api/v4/schemas/' . $newName, $payload);
+        $I->sendPatch('/api/v4/schemas/' . $newName, $payload);
         $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
         $location = $I->grabHttpHeader('Location');
         $this->schemaUri = $location;

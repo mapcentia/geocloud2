@@ -324,6 +324,24 @@ class DatabaseManagementCest
     // Start of testing read/write access
     // *************************************
 
+    public function shouldSetTheAuthenticationLevelToWrite(ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
+        $I->sendPUT('/controllers/layer/records/public.parkeringsomraade.the_geom', json_encode([
+            'data' => [
+                "authentication" => "Write",
+                "_key_" => "public.parkeringsomraade.the_geom",
+            ],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'success' => true,
+            'message' => 'Row updated',
+        ]);
+    }
+
     // Super user SQL API request to unprotected data source from outside session
     public function shouldGetDataFromSqlApiAsSuperUserOutsideSession(ApiTester $I)
     {
@@ -399,9 +417,7 @@ class DatabaseManagementCest
     public function shouldNotGetDataFromWfstAsSubUserOutsideSession(ApiTester $I)
     {
         $I->sendGET('/wfs/' . $this->subUserId . "@" . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
-        $I->seeResponseCodeIs(HttpCode::OK);
-        $I->seeResponseIsXml();
-        $I->canSeeResponseContains('ServiceExceptionReport');
+        $I->seeResponseCodeIs(HttpCode::UNAUTHORIZED);
     }
 
     // Super user WFS-t request to protected data source from inside session
@@ -601,6 +617,37 @@ class DatabaseManagementCest
         $I->seeXmlResponseMatchesXpath('/wfs:FeatureCollection/gml:featureMember');
     }
 
+    public function shouldNotInsertFeatureFromWfstOutsideSession(ApiTester $I)
+    {
+        $xml = '<Transaction xmlns="http://www.opengis.net/wfs" service="WFS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://127.0.0.1:8080/database_test_super_user_name_1652789277/public http://127.0.0.1:8080/wfs/database_test_super_user_name_1652789277/public/25832?SERVICE=WFS&amp;REQUEST=DescribeFeatureType&amp;VERSION=1.0.0&amp;TYPENAME=public:parkeringsomraade"
+             xmlns:public="http://127.0.0.1:8080/database_test_super_user_name_1652789277/public" version="1.1.0"
+             xmlns:gml="http://www.opengis.net/gml">
+                <Insert xmlns="http://www.opengis.net/wfs">
+                    <parkeringsomraade xmlns="http://127.0.0.1:8080/database_test_super_user_name_1652789277/public">
+                        <gid xmlns="http://127.0.0.1:8080/database_test_super_user_name_1652789277/public">9999</gid>
+                        <gml_id xmlns="http://127.0.0.1:8080/database_test_super_user_name_1652789277/public">1</gml_id>
+                        <the_geom xmlns="http://127.0.0.1:8080/database_test_super_user_name_1652789277/public">
+                            <gml:Polygon srsName="urn:ogc:def:crs:EPSG::25832">
+                                <gml:exterior>
+                                    <gml:LinearRing>
+                                        <gml:posList srsDimension="2">454842.21109413472004235 6263122.48121249489486217
+                                            453523.46825459849787876 6264829.0895930714905262 456316.10015008697519079
+                                            6265139.38202590309083462 458177.8547470792545937 6263006.12155018281191587
+                                            454842.21109413472004235 6263122.48121249489486217
+                    </gml:posList>
+                                    </gml:LinearRing>
+                                </gml:exterior>
+                            </gml:Polygon>
+                        </the_geom>
+                    </parkeringsomraade>
+                </Insert>
+            </Transaction>';
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPost('/wfs/' . $this->userId . '/public', $xml);
+        $I->seeResponseCodeIs(HttpCode::UNAUTHORIZED);
+
+    }
     public function shouldNotInsertFeatureFromWfstAsSubUserFromWithInSessionAndWithoutWritePrivileges(ApiTester $I)
     {
         $xml = '<Transaction xmlns="http://www.opengis.net/wfs" service="WFS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -824,9 +871,9 @@ class DatabaseManagementCest
             </Transaction>';
         $username = $this->subUserId . "@" . $this->userId;
         $password = $this->password;
-        $I->amHttpAuthenticated($username, $password);
+        $I->amHttpAuthenticated($this->subUserId, $password);
         $I->haveHttpHeader('Content-Type', 'application/xml');
-        $I->sendPost('/wfs/' . $username . '/public', $xml);
+        $I->sendPost('/wfs/' . $this->userId . '/public', $xml);
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsXml();
         $I->seeResponseContains('<wfs:totalInserted>1</wfs:totalInserted>');
