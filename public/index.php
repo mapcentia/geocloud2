@@ -187,7 +187,7 @@ try {
         // V2
         //======================
         Route::add("api/v2/sql/{user}/[method]", function () {
-            if ((empty(Input::get("key")) || Input::get("key") == "null") && empty(json_decode(Input::getBody())->key)) { // Only start session if no API key is provided
+            if ((empty(Input::get("key")) || Input::get("key") == "null") && empty(json_decode(Input::getBody() ?? '{}')->key)) { // Only start session if no API key is provided
                 Session::start();
             }
             $r = func_get_arg(0);
@@ -590,19 +590,14 @@ try {
         };
         Session::start();
         include_once("../app/auth/" . (Input::getPath()->part(3) ? 'backends/' . Input::getPath()->part(3) : $file));
+
     } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
         if (!empty(Input::getCookies()["PHPSESSID"])) { // Do not start session if no cookie is set
             Session::start();
-        }
-        $db = Input::getPath()->part(2);
+        }$db = Input::getPath()->part(2);
         $dbSplit = explode("@", $db);
         if (sizeof($dbSplit) == 2) {
             $db = $dbSplit[1];
-            $user = $dbSplit[0];
-            $parentUser = false;
-        } else {
-            $user = $db;
-            $parentUser = true;
         }
         Database::setDb($db);
         new Wms();
@@ -611,16 +606,17 @@ try {
         if (!empty(Input::getCookies()["PHPSESSID"])) {
             Session::start();
         }
+
         $db = Input::getPath()->part(2);
+        $user = Input::getAuthUser();
         $dbSplit = explode("@", $db);
         if (sizeof($dbSplit) == 2) {
             $db = $dbSplit[1];
-            $user = $dbSplit[0];
             $parentUser = false;
         } else {
-            $user = $db;
             $parentUser = true;
         }
+        $parentUser = empty($user);
         Database::setDb($db);
         Connection::$param["postgisschema"] = Input::getPath()->part(3);
         include_once("app/wfs/server.php");

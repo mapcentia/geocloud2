@@ -30,11 +30,10 @@ include __DIR__ . "/../libs/PEAR/XML/Unserializer.php";
  */
 class Wms extends Controller
 {
-    public null|string $service;
-    private array $layers;
+    public null|string $service = null;
+    private array $layers = [];
     private null|string $user;
     private Rule $rules;
-    private null|string $subUser;
 
     /**
      * Wms constructor.
@@ -47,20 +46,17 @@ class Wms extends Controller
 
         header("Cache-Control: no-store");
 
-        $this->layers = [];
         $this->rules = new Rule();
+
         $postgisschema = Input::getPath()->part(3);
+
         $db = Input::getPath()->part(2);
-        $this->user = $db;
         $dbSplit = explode("@", $db);
-        $this->service = null;
         if (sizeof($dbSplit) == 2) {
-            $subUser = $dbSplit[0];
             $db = $dbSplit[1];
-        } else {
-            $subUser = null;
         }
-        $this->subUser = $subUser;
+
+        $this->user = Input::getAuthUser() ?? $db;
 
         $trusted = false;
         foreach (App::$param["trustedAddresses"] as $address) {
@@ -89,7 +85,7 @@ class Wms extends Controller
                 foreach ($this->layers as $layer) {
                     // Strip name space if any
                     $layer = sizeof(explode(":", $layer)) > 1 ? explode(":", $layer)[1] : $layer;
-                    $this->basicHttpAuthLayer($layer, $db, $subUser);
+                    $this->basicHttpAuthLayer($layer, $db, $this->user);
                 }
             }
             $this->get($db, $postgisschema);
@@ -119,7 +115,7 @@ class Wms extends Controller
             $layer = sizeof(explode(":", $typeName)) > 1 ? explode(":", $typeName)[1] : $typeName;
             // If IP not trusted, when check auth on layer
             if (!$trusted) {
-                $this->basicHttpAuthLayer($layer, $db, $subUser);
+                $this->basicHttpAuthLayer($layer, $db, $this->user);
             }
             $this->post($db, $postgisschema, $request, $typeName);
         }
@@ -355,7 +351,6 @@ class Wms extends Controller
             return strlen($header_line);
         });
         $content = curl_exec($ch);
-        $content = str_replace("__USER__", $this->user, $content);
         curl_close($ch);
         echo $content;
         exit();
@@ -445,7 +440,7 @@ class Wms extends Controller
         foreach ($layers as $layer) {
             $layer = sizeof(explode(":", $layer)) > 1 ? explode(":", $layer)[1] : $layer;
             $split = explode(".", $layer);
-            $userFilter = new UserFilter($this->isAuth() ? $this->subUser ?: $this->user : "*", "ows", "select", "*", $split[0], $split[1]);
+            $userFilter = new UserFilter($this->isAuth() ? $this->user : "*", "ows", "select", "*", $split[0], $split[1]);
             $geofence = new Geofence($userFilter);
             $auth = $geofence->authorize($rules);
             if (isset($auth["access"])) {

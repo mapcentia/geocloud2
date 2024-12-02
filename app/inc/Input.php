@@ -133,7 +133,12 @@ class Input
      */
     public static function getAuthUser(): string|null
     {
-        return $_SERVER['PHP_AUTH_USER'];
+        $user = $_SERVER['PHP_AUTH_USER'];
+        // Check for deprecated form: subuser@database
+        if (str_contains($user, '@')) {
+            $user = explode('@', $user)[0];
+        }
+        return $user;
     }
 
     /**

@@ -130,10 +130,8 @@ class Controller
             Database::setDb($db);
             $postgisObject = new Model();
             $auth = $postgisObject->getGeometryColumns($layer, "authentication");
-            $layerSplit = explode(".", $layer);
-            $HTTP_FORM_VARS["TYPENAME"] = $layerSplit[1];
             if ($auth == "Read/write" || !empty(Input::getAuthUser())) {
-                include(__DIR__ . '/http_basic_authen.php');
+                (new BasicAuth())->authenticate($layer, false);
             }
             $_SESSION[$key] = true;
         }
@@ -146,7 +144,6 @@ class Controller
      * @param string|null $subUser
      * @param string|null $inputApiKey
      * @return array|null
-     * @throws GC2Exception
      */
     public function ApiKeyAuthLayer(string $layer, bool $transaction, array $rels, ?string $subUser = null, ?string $inputApiKey = null): ?array
     {

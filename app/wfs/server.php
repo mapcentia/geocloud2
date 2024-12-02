@@ -9,6 +9,7 @@
 use app\conf\App;
 use app\controllers\Tilecache;
 use app\exceptions\GC2Exception;
+use app\inc\BasicAuth;
 use app\inc\Input;
 use app\inc\Log;
 use app\inc\PgHStore;
@@ -249,7 +250,8 @@ if (strcasecmp($outputFormat, "XMLSCHEMA") != 0 && strcasecmp($outputFormat, "GM
 if (!$trusted) {
     $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"], "authentication");
     if ($auth == "Read/write" || !empty(Input::getAuthUser())) {
-        include(__DIR__ . "/../inc/http_basic_authen.php");
+        (new BasicAuth())->authenticate($postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"], false);
+
     }
 }
 // End HTTP basic authentication
@@ -1292,7 +1294,7 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     // Start rules
     $rule = new Rule();
     $walkerRelation = new TableWalkerRelation();
-    $walkerRule = new TableWalkerRule(isAuth() ? $user : "*", "wfst", 'select', '');
+    $walkerRule = new TableWalkerRule($user, "wfst", 'select', '');
     $factory = new StatementFactory(PDOCompatible: true);
     // End rules
 
@@ -1735,7 +1737,7 @@ function doParse(array $arr)
                             $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $typeName, "authentication");
                             if ($auth == "Write" || $auth == "Read/write" || !empty(Input::getAuthUser())) {
                                 $HTTP_FORM_VARS["TYPENAME"] = $typeName;
-                                include(__DIR__ . "/../inc/http_basic_authen.php");
+                                (new BasicAuth())->authenticate($postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"], $HTTP_FORM_VARS["TRANSACTION"]);
                             }
                         }
                         // End HTTP basic authentication
@@ -1828,7 +1830,7 @@ function doParse(array $arr)
                     $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
                     if ($auth == "Write" || $auth == "Read/write" || !empty(Input::getAuthUser())) {
                         $HTTP_FORM_VARS["TYPENAME"] = $hey['typeName'];
-                        include(__DIR__ . "/../inc/http_basic_authen.php");
+                        (new BasicAuth())->authenticate($postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"], $HTTP_FORM_VARS["TRANSACTION"]);
                     }
                 }
                 // End HTTP basic authentication
@@ -1879,7 +1881,7 @@ function doParse(array $arr)
                     $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
                     if ($auth == "Write" || $auth == "Read/write" || !empty(Input::getAuthUser())) {
                         $HTTP_FORM_VARS["TYPENAME"] = $hey['typeName'];
-                        include(__DIR__ . "./../inc/http_basic_authen.php");
+                        (new BasicAuth())->authenticate($postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"], $HTTP_FORM_VARS["TRANSACTION"]);
                     }
                 }
                 // End HTTP basic authentication
