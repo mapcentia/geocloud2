@@ -9,6 +9,7 @@
 namespace app\models;
 
 use app\conf\App;
+use app\inc\Cache;
 use app\inc\Model;
 use app\inc\Session;
 use app\inc\Util;
@@ -16,6 +17,7 @@ use Exception;
 use PDOException;
 use Postmark\PostmarkClient;
 use app\exceptions\GC2Exception;
+use Psr\Cache\InvalidArgumentException;
 
 
 /**
@@ -40,6 +42,18 @@ class User extends Model
         $this->userId = $userId;
         $this->parentdb = $parentdb;
         $this->postgisdb = "mapcentia";
+    }
+
+    /**
+     *
+     * @throws InvalidArgumentException
+     */
+    private function clearCacheOnSchemaChanges(): void
+    {
+        $patterns = [
+            $this->parentdb . '_settings_*',
+        ];
+        Cache::deleteByPatterns($patterns);
     }
 
     /**
@@ -137,9 +151,12 @@ class User extends Model
      * @param array<string|bool> $data
      * @return array
      * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public function createUser(array $data): array
     {
+        $this->clearCacheOnSchemaChanges();
+
         $mandatoryParameters = ['name', 'email', 'password'];
         foreach ($mandatoryParameters as $item) {
             if (empty($data[$item])) {
@@ -294,9 +311,12 @@ class User extends Model
      * @param array<string> $data
      * @return array<bool|string|int|string[]>
      * @throws Exception
+     * @throws InvalidArgumentException
      */
     public function updateUser(array $data): array
     {
+        $this->clearCacheOnSchemaChanges();
+
         $user = isset($data["user"]) ? Model::toAscii($data["user"], NULL, "_") : null;
 
         // Check if such email already exists
@@ -363,9 +383,12 @@ class User extends Model
      * @param string $data
      * @return array<bool|string|int>
      * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public function deleteUser(string $data): array
     {
+        $this->clearCacheOnSchemaChanges();
+
         $user = $data ? Model::toAscii($data, NULL, "_") : null;
         $sQuery = "DELETE FROM users WHERE screenname=:sUserID AND parentdb=:parentDb";
         $res = $this->prepare($sQuery);
