@@ -46,6 +46,7 @@ class Setting extends Model
 
     /**
      * @return stdClass
+     * @throws PDOException
      */
     public function getArray(): stdClass
     {
@@ -249,15 +250,7 @@ class Setting extends Model
             }
             $response["cache"]["signature"] = md5(serialize($response));
         } else {
-            try {
-                $arr = $this->getArray();
-            } catch (PDOException $e) {
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 400;
-                return $response;
-            }
-
+            $arr = $this->getArray();
             if (!empty($_SESSION["subuser"])) {
                 $arr->pw = $arr->pw_subuser->{$_SESSION["screen_name"]} ?? null;
                 $arr->api_key = isset($arr->api_key_subuser) ? $arr->api_key_subuser->{$_SESSION["screen_name"]} : null;
