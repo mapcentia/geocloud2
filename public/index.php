@@ -187,7 +187,7 @@ try {
         // V2
         //======================
         Route::add("api/v2/sql/{user}/[method]", function () {
-            if ((empty(Input::get("key")) || Input::get("key") == "null") && empty(json_decode(Input::getBody())->key)) { // Only start session if no API key is provided
+            if ((empty(Input::get("key")) || Input::get("key") == "null") && empty(json_decode(Input::getBody() ?? '{}')->key)) { // Only start session if no API key is provided
                 Session::start();
             }
             $r = func_get_arg(0);
