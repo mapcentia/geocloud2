@@ -76,7 +76,7 @@ class Sql extends Controller
         // Check if body is JSON
         // Supports both GET and POST
         // ==========================
-        $json = json_decode(Input::getBody(), true);
+        $json = Input::getBody() ? json_decode(Input::getBody(), true) : null;
 
         // If JSON body when set GET input params
         // ======================================
