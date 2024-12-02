@@ -34,7 +34,7 @@ addShape.init = function () {
         autoHeight: true,
         html: "<div id='shape_uploader'>" + __("You need Flash or a modern browser, which supports HTML5") + "</div>",
         afterRender: function () {
-            var arr = [], ext = ["shp", "tab", "geojson", "gml", "kml", "kmz", "mif", "zip", "rar", "dwg", "dgn", "dxf", "csv", "mdb", "accdb"], geoType, encoding, ignoreErrors, overwrite, append, _delete, srs, flag = false;
+            var arr = [], ext = ["shp", "tab", "geojson", "gml", "kml", "kmz", "mif", "zip", "rar", "dwg", "dgn", "dxf", "csv", "gpkg"], geoType, encoding, ignoreErrors, overwrite, append, _delete, srs, flag = false;
             $("#shape_uploader").pluploadQueue({
                 runtimes: 'html5',
                 url: '/controllers/upload/vector',
@@ -128,7 +128,7 @@ addShape.init = function () {
                     e.fadeOut(500).fadeIn(500);
                 }, 500);
                 window.setTimeout(function () {
-                    e.html(__("Vector formats") + ": " + ".shp .geojson .gml .kml .tab .mif .csv .gdb* .mdb**" + "<br><br>" + __("You can also upload datasets compressed with zip or rar. If a archive has more than one dataset, only the first one will be imported.<br><br>*The FileGDB folder must be compressed with either zip or rar. Supports datasets created by ArcGIS 9 and above.<br>**There will be created a table for each table in the MS Access database."));
+                    e.html(__("Vector formats") + ": " + ".shp .geojson .gml .kml .tab .mif .csv .gpkg .gdb*" + "<br><br>" + __("You can also upload datasets compressed with zip or rar. If a archive has more than one dataset, only the first one will be imported.<br><br>*The FileGDB folder must be compressed with either zip or rar. Supports datasets created by ArcGIS 9 and above."));
                 }, 1000);
             }, 200);
         },
