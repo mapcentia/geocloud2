@@ -58,9 +58,9 @@ class Input
     /**
      * @return string
      */
-    public static function getAccept(): string
+    public static function getAccept(): ?string
     {
-        return strtolower($_SERVER['HTTP_ACCEPT']);
+        return $_SERVER['HTTP_ACCEPT'];
     }
 
     /**
