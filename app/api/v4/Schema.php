@@ -238,10 +238,7 @@ class Schema extends AbstractApi
             $this->postWithResource();
         }
         $collection = self::getAssert();
-        if (!empty($body)) {
-            $this->validateRequest($collection, $body, 'schemas');
-        }
-
+        $this->validateRequest($collection, $body, 'schemas', Input::getMethod());
 
         $this->jwt = Jwt::validate()["data"];
         $this->initiate($schema, null, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);

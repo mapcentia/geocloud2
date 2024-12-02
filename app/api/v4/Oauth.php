@@ -311,7 +311,7 @@ class Oauth extends AbstractApi
 
         $collection = self::getAssert(json_decode($body)->grant_type);
         if (!empty($body)) {
-            $this->validateRequest($collection, $body, '');
+            $this->validateRequest($collection, $body, '', Input::getMethod());
         }
     }
 

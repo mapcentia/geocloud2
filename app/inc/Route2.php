@@ -96,7 +96,7 @@ class Route2
             if (!method_exists($controller, $action)) {
                 $method = Input::getMethod();
                 $contentType = Input::getContentType() ? trim(explode(';', Input::getContentType())[0]): "application/json";
-                $accepts = Input::getAccept() ? array_map(fn($str) => trim(explode(';',$str)[0]) ,explode(',', Input::getAccept())) : "*/*";
+                $accepts = Input::getAccept() ? array_map(fn($str) => trim(explode(';',$str)[0]) ,explode(',', Input::getAccept())) : ["*/*"];
                 $action = $method . "_index";
                 $attributes = $reflectionClass->getAttributes(AcceptableMethods::class);
                 foreach ($attributes as $attribute) {

@@ -181,7 +181,7 @@ class Table extends AbstractApi
                 $layer->setSchema([(isset($r[$i]) ? ($this->schema[0] . '.' . $r[$i]) : $this->qualifiedName[$i])], $data->schema);
             }
         }
-        $schema =  $data->schema ?? $this->schema[0];
+        $schema = $data->schema ?? $this->schema[0];
         $layer->commit();
         header("Location: /api/v4/schemas/{$schema}/tables/" . (count($r) > 0 ? implode(',', $r) : implode(',', $this->unQualifiedName)));
         return ["code" => "303"];
@@ -289,9 +289,8 @@ class Table extends AbstractApi
             $this->postWithResource();
         }
         $collection = self::getAssert();
-        if (!empty($body)) {
-            $this->validateRequest($collection, $body, 'tables');
-        }
+        $this->validateRequest($collection, $body, 'tables', Input::getMethod());
+
         $this->jwt = Jwt::validate()["data"];
         $this->initiate($schema, $table, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }
