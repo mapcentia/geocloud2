@@ -434,6 +434,7 @@ class Wms extends Controller
      * @param array $filters
      * @return array
      * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
      */
     private function setFilterFromRules(array $layers, array $filters): array
     {
@@ -450,6 +451,11 @@ class Wms extends Controller
                 } elseif ($auth["access"] == "limit" && !empty($auth["filters"]["filter"])) {
                     $filters[$layer][] = "({$auth["filters"]["filter"]})";
                 }
+            }
+            $model = new Model();
+            $versioning = $model->doesColumnExist($layer, "gc2_version_gid");
+            if ($versioning) {
+                $filters[$layer][] = 'gc2_version_end_date IS NULL';
             }
         }
         return $filters;

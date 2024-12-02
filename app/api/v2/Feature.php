@@ -386,6 +386,7 @@ class Feature extends Controller
         try {
             $res = $this->client->post($url, ['body' => $xml, 'cookies' => CookieJar::fromArray([
                 "PHPSESSID" => $id,
+                "XDEBUG_SESSION" => "XDEBUG_ECLIPSE"
             ], 'localhost')]);
         } catch (Exception $e) {
             $response['success'] = false;

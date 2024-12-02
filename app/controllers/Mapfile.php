@@ -357,13 +357,7 @@ class Mapfile extends Controller
                 }
 
                 $rel = "{$row['f_table_schema']}.{$row['f_table_name']}";
-                $versioning = $postgisObject->doesColumnExist($rel, "gc2_version_gid");
-                $versioning = $versioning["exists"];
-
                 $meta = $postgisObject->getMetaData($rel);
-                $workflow = $postgisObject->doesColumnExist($rel, "gc2_status");
-                $workflow = $workflow["exists"];
-
                 $arr = !empty($row['def']) ? json_decode($row['def'], true) : [];
                 $props = array("label_column", "theme_column");
                 foreach ($props as $field) {
@@ -456,15 +450,6 @@ class Mapfile extends Controller
                                 $dataSql = "SELECT *,\\\"{$row['f_geometry_column']}\\\" as " . strtolower($row['f_geometry_column']) . " FROM \\\"{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
                             } else {
                                 $dataSql = "SELECT * FROM \\\"" . "{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
-                            }
-                            if ($versioning || $workflow) {
-                                $dataSql .= " WHERE 1=1";
-                            }
-                            if ($versioning) {
-                                $dataSql .= " AND gc2_version_end_date IS NULL";
-                            }
-                            if ($workflow) {
-                                //$dataSql .= " AND gc2_status = 3";
                             }
                         } else {
                             $dataSql = $row['data'];
@@ -1380,11 +1365,7 @@ class Mapfile extends Controller
                 }
 
                 $rel = "{$row['f_table_schema']}.{$row['f_table_name']}";
-                $versioning = $postgisObject->doesColumnExist($rel, "gc2_version_gid");
-                $versioning = $versioning["exists"];
-                $workflow = $postgisObject->doesColumnExist($rel, "gc2_status");
                 $meta = $postgisObject->getMetaData($rel);
-                $workflow = $workflow["exists"];
                 $arr = !empty($row['def']) ? (array)json_decode($row['def']) : []; // Cast stdclass to array
                 $props = array("label_column", "theme_column");
                 foreach ($props as $field) {
@@ -1451,15 +1432,6 @@ class Mapfile extends Controller
                         $dataSql = "SELECT *,\\\"{$row['f_geometry_column']}\\\" as " . strtolower($row['f_geometry_column']) . " FROM \\\"{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
                     } else {
                         $dataSql = "SELECT * FROM \\\"" . "{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
-                    }
-                    if ($versioning || $workflow) {
-                        $dataSql .= " WHERE 1=1";
-                    }
-                    if ($versioning) {
-                        $dataSql .= " AND gc2_version_end_date IS NULL";
-                    }
-                    if ($workflow) {
-                        //$dataSql .= " AND gc2_status = 3";
                     }
                 } else {
                     $dataSql = $row['data'];

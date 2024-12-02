@@ -608,7 +608,7 @@ try {
         }
 
         $db = Input::getPath()->part(2);
-        $user = Input::getAuthUser();
+        $user = Input::getAuthUser() ?? Session::getUser();
         $dbSplit = explode("@", $db);
         if (sizeof($dbSplit) == 2) {
             $db = $dbSplit[1];

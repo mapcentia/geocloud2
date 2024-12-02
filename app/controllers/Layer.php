@@ -207,8 +207,9 @@ class Layer extends Controller
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function put_roles(): array
     {
