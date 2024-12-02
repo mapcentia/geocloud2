@@ -123,17 +123,13 @@ class Controller
      * @param string|null $subUser
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function basicHttpAuthLayer(string $layer, string $db, string $subUser = null): void
+    public function basicHttpAuthLayer(string $layer, string $db): void
     {
-        $key = "http_auth_" . $layer . "_" . ($subUser ?: $db);
-        if (!$_SESSION[$key]) {
-            Database::setDb($db);
-            $postgisObject = new Model();
-            $auth = $postgisObject->getGeometryColumns($layer, "authentication");
-            if ($auth == "Read/write" || !empty(Input::getAuthUser())) {
-                (new BasicAuth())->authenticate($layer, false);
-            }
-            $_SESSION[$key] = true;
+        Database::setDb($db);
+        $postgisObject = new Model();
+        $auth = $postgisObject->getGeometryColumns($layer, "authentication");
+        if ($auth == "Read/write" || !empty(Input::getAuthUser())) {
+            (new BasicAuth())->authenticate($layer, false);
         }
     }
 

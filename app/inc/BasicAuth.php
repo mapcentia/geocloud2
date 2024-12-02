@@ -32,7 +32,7 @@ final class BasicAuth
      * The method also evaluates user privileges for accessing certain layers.
      *
      * @param string $layerName The name of the layer to be accessed. It is used to determine the schema and check user privileges.
-     *
+     * @param bool $isTransaction
      * @return void
      */
     public function authenticate(string $layerName, bool $isTransaction): void
@@ -52,8 +52,6 @@ final class BasicAuth
             }
             if (empty($this->user) || (isset($password) && isset($passwordCheck) && Setting::encryptPw($password) != $passwordCheck)) {
                 self::setAuthHeader($setting->postgisdb);
-            } else {
-                Session::set('http_auth', $setting->postgisdb);
             }
         }
         // AUTHENTICATION SUCCESSFUL

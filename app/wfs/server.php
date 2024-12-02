@@ -13,6 +13,7 @@ use app\inc\BasicAuth;
 use app\inc\Input;
 use app\inc\Log;
 use app\inc\PgHStore;
+use app\inc\Session;
 use app\inc\Util;
 use app\models\Setting;
 use app\models\Table;
@@ -3023,18 +3024,5 @@ function getClassName(string $classname): string
 
 function isAuth(): bool
 {
-    global $user;
-    $auth = false;
-    $sess = $_SESSION;
-    if (isset($_SESSION) && sizeof($_SESSION) > 0) {
-        if ($user == $sess["screen_name"]) {
-            $auth = true;
-        } elseif (!empty($sess["http_auth"]) && ($user == $sess["http_auth"])) {
-            $auth = true;
-        }
-    } elseif (isset($_SERVER['PHP_AUTH_USER'])) {
-        $user = explode("@", $_SERVER['PHP_AUTH_USER'])[0];
-        $auth = true;
-    }
-    return $auth;
+    return Session::isAuth() || !empty(Input::getAuthUser());
 }

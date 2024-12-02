@@ -15,6 +15,7 @@ use app\inc\Model;
 use app\inc\UserFilter;
 use app\inc\Util;
 use app\inc\Input;
+use app\inc\Session;
 use app\models\Geofence;
 use app\models\Rule;
 use mapObj;
@@ -56,7 +57,7 @@ class Wms extends Controller
             $db = $dbSplit[1];
         }
 
-        $this->user = Input::getAuthUser() ?? $db;
+        $this->user = Session::getUser() ?? Input::getAuthUser() ?? $db;
 
         $trusted = false;
         foreach (App::$param["trustedAddresses"] as $address) {
@@ -85,7 +86,7 @@ class Wms extends Controller
                 foreach ($this->layers as $layer) {
                     // Strip name space if any
                     $layer = sizeof(explode(":", $layer)) > 1 ? explode(":", $layer)[1] : $layer;
-                    $this->basicHttpAuthLayer($layer, $db, $this->user);
+                    $this->basicHttpAuthLayer($layer, $db);
                 }
             }
             $this->get($db, $postgisschema);
@@ -115,7 +116,7 @@ class Wms extends Controller
             $layer = sizeof(explode(":", $typeName)) > 1 ? explode(":", $typeName)[1] : $typeName;
             // If IP not trusted, when check auth on layer
             if (!$trusted) {
-                $this->basicHttpAuthLayer($layer, $db, $this->user);
+                $this->basicHttpAuthLayer($layer, $db);
             }
             $this->post($db, $postgisschema, $request, $typeName);
         }
@@ -440,7 +441,7 @@ class Wms extends Controller
         foreach ($layers as $layer) {
             $layer = sizeof(explode(":", $layer)) > 1 ? explode(":", $layer)[1] : $layer;
             $split = explode(".", $layer);
-            $userFilter = new UserFilter($this->isAuth() ? $this->user : "*", "ows", "select", "*", $split[0], $split[1]);
+            $userFilter = new UserFilter(Session::isAuth() || !empty(Input::getAuthUser()) ? $this->user : "*", "ows", "select", "*", $split[0], $split[1]);
             $geofence = new Geofence($userFilter);
             $auth = $geofence->authorize($rules);
             if (isset($auth["access"])) {
@@ -452,24 +453,6 @@ class Wms extends Controller
             }
         }
         return $filters;
-    }
-
-    private function isAuth(): bool
-    {
-        global $user;
-        $auth = false;
-        $sess = $_SESSION;
-        if (isset($_SESSION) && sizeof($_SESSION) > 0) {
-            if ($user == $sess["screen_name"]) {
-                $auth = true;
-            } elseif (!empty($sess["http_auth"]) && ($user == $sess["http_auth"])) {
-                $auth = true;
-            }
-        } elseif (isset($_SERVER['PHP_AUTH_USER'])) {
-            $user = explode("@", $_SERVER['PHP_AUTH_USER'])[0];
-            $auth = true;
-        }
-        return $auth;
     }
 
     /**
