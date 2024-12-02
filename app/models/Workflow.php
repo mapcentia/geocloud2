@@ -98,6 +98,7 @@ class Workflow extends Model
             $response['code'] = 401;
             return $response;
         }
+        $this->connect();
         $this->begin();
         $query = "SELECT * FROM \"{$schema}\".\"{$table}\" WHERE {$primeryKey['attname']}=:gid";
         $res = $this->prepare($query);

@@ -767,7 +767,7 @@ class Layer extends Table
         $role->{$data->subuser} = $data->roles;
         $roles['roles'] = json_encode($role);
         $roles['_key_'] = $data->_key_;
-        $table->updateRecord(json_decode(json_encode($roles)), "_key_");
+        $table->updateRecord(json_decode(json_encode($roles), true), "_key_");
         $response['success'] = true;
         $response['message'] = "Roles updates";
         return $response;
