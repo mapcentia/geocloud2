@@ -76,7 +76,7 @@ class Sql extends Controller
         // Check if body is JSON
         // Supports both GET and POST
         // ==========================
-        $json = json_decode(Input::getBody(), true);
+        $json = Input::getBody() ? json_decode(Input::getBody(), true) : null;
 
         // If JSON body when set GET input params
         // ======================================
@@ -139,12 +139,6 @@ class Sql extends Controller
 
         $settings = new Setting();
         $res = $settings->get();
-
-        // Check if success
-        // ================
-        if (!$res["success"]) {
-            return $res;
-        }
 
         $srs = Input::get('srs') ?: "3857";
         $this->api = new \app\models\Sql($srs);
