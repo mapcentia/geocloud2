@@ -11,7 +11,7 @@ namespace app\inc;
 use app\api\v2\Sql;
 use app\conf\App;
 use app\conf\Connection;
-use app\exceptions\GC2Exception;
+use app\exceptions\ServiceException;
 use app\models\Database;
 use app\models\Layer;
 use app\models\Setting;
@@ -120,22 +120,15 @@ class Controller
     /**
      * @param string $layer
      * @param string $db
-     * @param string|null $subUser
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws ServiceException
      */
-    public function basicHttpAuthLayer(string $layer, string $db, string $subUser = null): void
+    public function basicHttpAuthLayer(string $layer, string $db): void
     {
-        $key = "http_auth_" . $layer . "_" . ($subUser ?: $db);
-        if (!$_SESSION[$key]) {
-            Database::setDb($db);
-            $postgisObject = new Model();
-            $auth = $postgisObject->getGeometryColumns($layer, "authentication");
-            $layerSplit = explode(".", $layer);
-            $HTTP_FORM_VARS["TYPENAME"] = $layerSplit[1];
-            if ($auth == "Read/write" || !empty(Input::getAuthUser())) {
-                include(__DIR__ . '/http_basic_authen.php');
-            }
-            $_SESSION[$key] = true;
+        Database::setDb($db);
+        $postgisObject = new Model();
+        $auth = $postgisObject->getGeometryColumns($layer, "authentication");
+        if ($auth == "Read/write" || !empty(Input::getAuthUser())) {
+            (new BasicAuth())->authenticate($layer, false);
         }
     }
 
@@ -146,7 +139,6 @@ class Controller
      * @param string|null $subUser
      * @param string|null $inputApiKey
      * @return array|null
-     * @throws GC2Exception
      */
     public function ApiKeyAuthLayer(string $layer, bool $transaction, array $rels, ?string $subUser = null, ?string $inputApiKey = null): ?array
     {

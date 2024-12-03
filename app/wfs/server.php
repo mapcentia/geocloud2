@@ -9,9 +9,13 @@
 use app\conf\App;
 use app\controllers\Tilecache;
 use app\exceptions\GC2Exception;
+use app\exceptions\OwsException;
+use app\exceptions\ServiceException;
+use app\inc\BasicAuth;
 use app\inc\Input;
 use app\inc\Log;
 use app\inc\PgHStore;
+use app\inc\Session;
 use app\inc\Util;
 use app\models\Setting;
 use app\models\Table;
@@ -249,7 +253,8 @@ if (strcasecmp($outputFormat, "XMLSCHEMA") != 0 && strcasecmp($outputFormat, "GM
 if (!$trusted) {
     $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"], "authentication");
     if ($auth == "Read/write" || !empty(Input::getAuthUser())) {
-        include(__DIR__ . "/../inc/http_basic_authen.php");
+        (new BasicAuth())->authenticate($postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"], false);
+
     }
 }
 // End HTTP basic authentication
@@ -347,9 +352,12 @@ try {
             break;
         default:
             makeExceptionReport("No such operation WFS {$HTTP_FORM_VARS["REQUEST"]}", ["exceptionCode" => "OperationNotSupported", "locator" => $HTTP_FORM_VARS["REQUEST"]]);
-            break;
     }
-} catch (Exception $e) {
+}
+catch (OwsException $e) {
+    makeExceptionReport($e->getMessage(), $e->getAttributes());
+}
+catch (Exception $e) {
     makeExceptionReport($e->getMessage());
 }
 
@@ -1292,7 +1300,7 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     // Start rules
     $rule = new Rule();
     $walkerRelation = new TableWalkerRelation();
-    $walkerRule = new TableWalkerRule(isAuth() ? $user : "*", "wfst", 'select', '');
+    $walkerRule = new TableWalkerRule($user, "wfst", 'select', '');
     $factory = new StatementFactory(PDOCompatible: true);
     // End rules
 
@@ -1735,7 +1743,7 @@ function doParse(array $arr)
                             $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $typeName, "authentication");
                             if ($auth == "Write" || $auth == "Read/write" || !empty(Input::getAuthUser())) {
                                 $HTTP_FORM_VARS["TYPENAME"] = $typeName;
-                                include(__DIR__ . "/../inc/http_basic_authen.php");
+                                (new BasicAuth())->authenticate($postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"], $HTTP_FORM_VARS["TRANSACTION"]);
                             }
                         }
                         // End HTTP basic authentication
@@ -1828,7 +1836,7 @@ function doParse(array $arr)
                     $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
                     if ($auth == "Write" || $auth == "Read/write" || !empty(Input::getAuthUser())) {
                         $HTTP_FORM_VARS["TYPENAME"] = $hey['typeName'];
-                        include(__DIR__ . "/../inc/http_basic_authen.php");
+                        (new BasicAuth())->authenticate($postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"], $HTTP_FORM_VARS["TRANSACTION"]);
                     }
                 }
                 // End HTTP basic authentication
@@ -1879,7 +1887,7 @@ function doParse(array $arr)
                     $auth = $postgisObject->getGeometryColumns($postgisschema . "." . $hey['typeName'], "authentication");
                     if ($auth == "Write" || $auth == "Read/write" || !empty(Input::getAuthUser())) {
                         $HTTP_FORM_VARS["TYPENAME"] = $hey['typeName'];
-                        include(__DIR__ . "./../inc/http_basic_authen.php");
+                        (new BasicAuth())->authenticate($postgisschema . "." . $HTTP_FORM_VARS["TYPENAME"], $HTTP_FORM_VARS["TRANSACTION"]);
                     }
                 }
                 // End HTTP basic authentication
@@ -2384,55 +2392,18 @@ function doParse(array $arr)
 /**
  * @param string|array<string> $value
  * @param array<string> $attributes
+ * @throws OwsException
+ * @throws ServiceException
  */
 function makeExceptionReport($value, array $attributes = []): void
 {
     global $version;
-
-    ob_get_clean();
-    ob_start();
-    header("HTTP/1.0 200 " . Util::httpCodeText("200"));
+    $value = is_array($value) ? implode("\n", $value) : $value;
     if ($version == "1.1.0") {
-        echo '<ows:ExceptionReport
-                xmlns:xs="http://www.w3.org/2001/XMLSchema" 
-                xmlns:ows="http://www.opengis.net/ows" 
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-                version="1.0.0" 
-                xsi:schemaLocation="http://www.opengis.net/ows http://bp.schemas.opengis.net/06-080r2/ows/1.0.0/owsExceptionReport.xsd">';
-        writeTag("open", "ows", "Exception", $attributes, true, true);
-        writeTag("open", "ows", "ExceptionText", null, true, false);
+        throw new OwsException($value, 0, null, $attributes);
     } else {
-        echo '<ServiceExceptionReport
-        	   version="1.2.0"
-	           xmlns="http://www.opengis.net/ogc"
-	           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	           xsi:schemaLocation="http://www.opengis.net/ogc http://schemas.opengis.net/wfs/1.0.0/OGC-exception.xsd">';
-        writeTag("open", null, "ServiceException", null, true, true);
+        throw new ServiceException($value);
     }
-    print "<![CDATA[";
-    if (is_array($value)) {
-        if (sizeof($value) == 1) {
-            print $value[0];
-        } else {
-            print_r($value);
-        }
-    } else {
-        print $value;
-    }
-    print "]]>";
-
-    if ($version == "1.1.0") {
-        writeTag("close", "ows", "ExceptionText", null, true, true);
-        writeTag("close", "ows", "Exception", null, true, true);
-        writeTag("close", "ows", "ExceptionReport", null, true, true);
-    } else {
-        writeTag("close", null, "ServiceException", null, true, true);
-        writeTag("close", null, "ServiceExceptionReport", null, true, true);
-    }
-
-    $data = ob_get_clean();
-    echo $data;
-    die();
 }
 
 print("\n<!-- Memory used: " . round(memory_get_peak_usage() / 1024) . " KB -->\n");
@@ -3021,18 +2992,5 @@ function getClassName(string $classname): string
 
 function isAuth(): bool
 {
-    global $user;
-    $auth = false;
-    $sess = $_SESSION;
-    if (isset($_SESSION) && sizeof($_SESSION) > 0) {
-        if ($user == $sess["screen_name"]) {
-            $auth = true;
-        } elseif (!empty($sess["http_auth"]) && ($user == $sess["http_auth"])) {
-            $auth = true;
-        }
-    } elseif (isset($_SERVER['PHP_AUTH_USER'])) {
-        $user = explode("@", $_SERVER['PHP_AUTH_USER'])[0];
-        $auth = true;
-    }
-    return $auth;
+    return Session::isAuth() || !empty(Input::getAuthUser());
 }

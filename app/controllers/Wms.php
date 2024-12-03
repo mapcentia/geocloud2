@@ -10,13 +10,17 @@ namespace app\controllers;
 
 use app\conf\App;
 use app\exceptions\GC2Exception;
+use app\exceptions\OwsException;
+use app\exceptions\ServiceException;
 use app\inc\Controller;
 use app\inc\Model;
 use app\inc\UserFilter;
 use app\inc\Util;
 use app\inc\Input;
+use app\inc\Session;
 use app\models\Geofence;
 use app\models\Rule;
+use Exception;
 use mapObj;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use XML_Unserializer;
@@ -30,16 +34,14 @@ include __DIR__ . "/../libs/PEAR/XML/Unserializer.php";
  */
 class Wms extends Controller
 {
-    public null|string $service;
-    private array $layers;
+    public null|string $service = null;
+    private array $layers = [];
     private null|string $user;
     private Rule $rules;
-    private null|string $subUser;
 
     /**
      * Wms constructor.
-     * @throws PhpfastcacheInvalidArgumentException
-     * @throws GC2Exception
+     * @throws ServiceException
      */
     function __construct()
     {
@@ -47,20 +49,17 @@ class Wms extends Controller
 
         header("Cache-Control: no-store");
 
-        $this->layers = [];
         $this->rules = new Rule();
+
         $postgisschema = Input::getPath()->part(3);
+
         $db = Input::getPath()->part(2);
-        $this->user = $db;
         $dbSplit = explode("@", $db);
-        $this->service = null;
         if (sizeof($dbSplit) == 2) {
-            $subUser = $dbSplit[0];
             $db = $dbSplit[1];
-        } else {
-            $subUser = null;
         }
-        $this->subUser = $subUser;
+
+        $this->user = Session::getUser() ?? Input::getAuthUser() ?? $db;
 
         $trusted = false;
         foreach (App::$param["trustedAddresses"] as $address) {
@@ -89,10 +88,14 @@ class Wms extends Controller
                 foreach ($this->layers as $layer) {
                     // Strip name space if any
                     $layer = sizeof(explode(":", $layer)) > 1 ? explode(":", $layer)[1] : $layer;
-                    $this->basicHttpAuthLayer($layer, $db, $subUser);
+                    $this->basicHttpAuthLayer($layer, $db);
                 }
             }
-            $this->get($db, $postgisschema);
+            try {
+                $this->get($db, $postgisschema);
+            } catch (Exception $e) {
+                throw new ServiceException($e->getMessage());
+            }
         }
         // Only WFS uses POST
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -119,9 +122,13 @@ class Wms extends Controller
             $layer = sizeof(explode(":", $typeName)) > 1 ? explode(":", $typeName)[1] : $typeName;
             // If IP not trusted, when check auth on layer
             if (!$trusted) {
-                $this->basicHttpAuthLayer($layer, $db, $subUser);
+                $this->basicHttpAuthLayer($layer, $db);
             }
-            $this->post($db, $postgisschema, $request, $typeName);
+            try {
+                $this->post($db, $postgisschema, $request, $typeName);
+            } catch (Exception $e) {
+                throw new ServiceException($e->getMessage());
+            }
         }
     }
 
@@ -355,7 +362,6 @@ class Wms extends Controller
             return strlen($header_line);
         });
         $content = curl_exec($ch);
-        $content = str_replace("__USER__", $this->user, $content);
         curl_close($ch);
         echo $content;
         exit();
@@ -438,6 +444,7 @@ class Wms extends Controller
      * @param array $filters
      * @return array
      * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
      */
     private function setFilterFromRules(array $layers, array $filters): array
     {
@@ -445,7 +452,7 @@ class Wms extends Controller
         foreach ($layers as $layer) {
             $layer = sizeof(explode(":", $layer)) > 1 ? explode(":", $layer)[1] : $layer;
             $split = explode(".", $layer);
-            $userFilter = new UserFilter($this->isAuth() ? $this->subUser ?: $this->user : "*", "ows", "select", "*", $split[0], $split[1]);
+            $userFilter = new UserFilter(Session::isAuth() || !empty(Input::getAuthUser()) ? $this->user : "*", "ows", "select", "*", $split[0], $split[1]);
             $geofence = new Geofence($userFilter);
             $auth = $geofence->authorize($rules);
             if (isset($auth["access"])) {
@@ -455,26 +462,13 @@ class Wms extends Controller
                     $filters[$layer][] = "({$auth["filters"]["filter"]})";
                 }
             }
+            $model = new Model();
+            $versioning = $model->doesColumnExist($layer, "gc2_version_gid");
+            if ($versioning) {
+                $filters[$layer][] = 'gc2_version_end_date IS NULL';
+            }
         }
         return $filters;
-    }
-
-    private function isAuth(): bool
-    {
-        global $user;
-        $auth = false;
-        $sess = $_SESSION;
-        if (isset($_SESSION) && sizeof($_SESSION) > 0) {
-            if ($user == $sess["screen_name"]) {
-                $auth = true;
-            } elseif (!empty($sess["http_auth"]) && ($user == $sess["http_auth"])) {
-                $auth = true;
-            }
-        } elseif (isset($_SERVER['PHP_AUTH_USER'])) {
-            $user = explode("@", $_SERVER['PHP_AUTH_USER'])[0];
-            $auth = true;
-        }
-        return $auth;
     }
 
     /**

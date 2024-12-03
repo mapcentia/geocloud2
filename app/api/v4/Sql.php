@@ -211,9 +211,8 @@ class Sql extends AbstractApi
                 new Assert\Type('boolean'),
             ]),
         ]);
-        if (!empty($body)) {
-            $this->validateRequest($collection, $body, 'clients');
-        }
+            $this->validateRequest($collection, $body, 'clients', Input::getMethod());
+
     }
 
     public function put_index(): array

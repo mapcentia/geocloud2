@@ -113,7 +113,7 @@ class Session
      */
     public static function getDatabase(): ?string
     {
-        return $_SESSION['parentdb'];
+        return $_SESSION['parentdb'] ?? null;
     }
 
     /**

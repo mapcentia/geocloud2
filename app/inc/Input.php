@@ -90,7 +90,7 @@ class Input
     /**
      * @return string|null
      */
-    public static function getJwtToken(): string|null
+    public static function getJwtToken(): ?string
     {
         if (isset($_SERVER["HTTP_AUTHORIZATION"])) {
             list($type, $data) = explode(" ", $_SERVER["HTTP_AUTHORIZATION"], 2);
@@ -107,7 +107,7 @@ class Input
     /**
      * @return string
      */
-    public static function getBody(bool $decode = true): string|null
+    public static function getBody(bool $decode = true): ?string
     {
         $content = file_get_contents('php://input');
         if (empty($content)) {
@@ -131,15 +131,20 @@ class Input
     /**
      * @return string|null
      */
-    public static function getAuthUser(): string|null
+    public static function getAuthUser(): ?string
     {
-        return $_SERVER['PHP_AUTH_USER'];
+        $user = $_SERVER['PHP_AUTH_USER'] ?? null;
+        // Check for deprecated form: subuser@database
+        if (!empty($user) && str_contains($user, '@')) {
+            $user = explode('@', $user)[0];
+        }
+        return $user;
     }
 
     /**
      * @return string|null
      */
-    public static function getAuthPw(): string|null
+    public static function getAuthPw(): ?string
     {
         return $_SERVER['PHP_AUTH_PW'];
     }

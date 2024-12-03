@@ -439,7 +439,7 @@ class DatabaseManagementCest
         $I->sendGET('/wfs/' . $this->subUserId . "@" . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsXml();
-        $I->canSeeResponseContains('ServiceExceptionReport');
+        $I->canSeeResponseContains('ExceptionReport');
     }
 
     // WFS-t tests end
