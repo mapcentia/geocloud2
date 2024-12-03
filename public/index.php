@@ -28,6 +28,8 @@ use app\conf\App;
 use app\conf\Connection;
 use app\controllers\Wms;
 use app\exceptions\GC2Exception;
+use app\exceptions\OwsException;
+use app\exceptions\ServiceException;
 use app\inc\Cache;
 use app\inc\Input;
 use app\inc\Jwt;
@@ -594,12 +596,9 @@ try {
     } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
         if (!empty(Input::getCookies()["PHPSESSID"])) { // Do not start session if no cookie is set
             Session::start();
-        }$db = Input::getPath()->part(2);
-        $dbSplit = explode("@", $db);
-        if (sizeof($dbSplit) == 2) {
-            $db = $dbSplit[1];
         }
-        Database::setDb($db);
+        $dbSplit = explode("@", Input::getPath()->part(2));
+        Database::setDb($dbSplit[1] ?? $dbSplit[0]);
         new Wms();
 
     } elseif (Input::getPath()->part(1) == "wfs") {
@@ -607,16 +606,13 @@ try {
             Session::start();
         }
 
-        $db = Input::getPath()->part(2);
-        $user = Input::getAuthUser() ?? Session::getUser();
-        $dbSplit = explode("@", $db);
-        if (sizeof($dbSplit) == 2) {
-            $db = $dbSplit[1];
-            $parentUser = false;
-        } else {
-            $parentUser = true;
-        }
-        $parentUser = empty($user);
+        // Support of legacy user@database notation in URI. The user part (before @) will be completely ignored
+        $dbSplit = explode("@", Input::getPath()->part(2));
+        // User is either from basic auth, session or URI. The latter is same as database
+        $user = Input::getAuthUser() ?? Session::getUser() ?? $dbSplit[1] ?? $dbSplit[0];
+        $db = $dbSplit[1] ?? $dbSplit[0];
+        // parentUser is superuser
+        $parentUser = $user == $db;
         Database::setDb($db);
         Connection::$param["postgisschema"] = Input::getPath()->part(3);
         include_once("app/wfs/server.php");
@@ -639,17 +635,14 @@ try {
     $response["code"] = $exception->getCode();
     $response["errorCode"] = $exception->getErrorCode();
     echo Response::toJson($response);
-} catch (PDOException $exception) {
-    $response["success"] = false;
-    $response["message"] = $exception->getMessage();
-    $response["code"] = 400;
-    $response["errorCode"] = "SQL_ERROR";
-    echo Response::toJson($response);
+} catch (OwsException|ServiceException $exception) {
+    header('Content-Type:text/xml; charset=UTF-8', TRUE);
+    echo $exception->getReport();
 } catch (Throwable $exception) {
     $response["success"] = false;
     $response["message"] = $exception->getMessage();
-  $response["file"] = $exception->getFile();
-  $response["line"] = $exception->getLine();
+    $response["file"] = $exception->getFile();
+    $response["line"] = $exception->getLine();
 //  $response["trace"] = $exception->getTraceAsString();
     $response["code"] = 500;
     echo Response::toJson($response);

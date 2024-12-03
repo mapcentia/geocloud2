@@ -9,6 +9,8 @@
 use app\conf\App;
 use app\controllers\Tilecache;
 use app\exceptions\GC2Exception;
+use app\exceptions\OwsException;
+use app\exceptions\ServiceException;
 use app\inc\BasicAuth;
 use app\inc\Input;
 use app\inc\Log;
@@ -350,9 +352,12 @@ try {
             break;
         default:
             makeExceptionReport("No such operation WFS {$HTTP_FORM_VARS["REQUEST"]}", ["exceptionCode" => "OperationNotSupported", "locator" => $HTTP_FORM_VARS["REQUEST"]]);
-            break;
     }
-} catch (Exception $e) {
+}
+catch (OwsException $e) {
+    makeExceptionReport($e->getMessage(), $e->getAttributes());
+}
+catch (Exception $e) {
     makeExceptionReport($e->getMessage());
 }
 
@@ -2387,55 +2392,18 @@ function doParse(array $arr)
 /**
  * @param string|array<string> $value
  * @param array<string> $attributes
+ * @throws OwsException
+ * @throws ServiceException
  */
 function makeExceptionReport($value, array $attributes = []): void
 {
     global $version;
-
-    ob_get_clean();
-    ob_start();
-    header("HTTP/1.0 200 " . Util::httpCodeText("200"));
+    $value = is_array($value) ? implode("\n", $value) : $value;
     if ($version == "1.1.0") {
-        echo '<ows:ExceptionReport
-                xmlns:xs="http://www.w3.org/2001/XMLSchema" 
-                xmlns:ows="http://www.opengis.net/ows" 
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-                version="1.0.0" 
-                xsi:schemaLocation="http://www.opengis.net/ows http://bp.schemas.opengis.net/06-080r2/ows/1.0.0/owsExceptionReport.xsd">';
-        writeTag("open", "ows", "Exception", $attributes, true, true);
-        writeTag("open", "ows", "ExceptionText", null, true, false);
+        throw new OwsException($value, 0, null, $attributes);
     } else {
-        echo '<ServiceExceptionReport
-        	   version="1.2.0"
-	           xmlns="http://www.opengis.net/ogc"
-	           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	           xsi:schemaLocation="http://www.opengis.net/ogc http://schemas.opengis.net/wfs/1.0.0/OGC-exception.xsd">';
-        writeTag("open", null, "ServiceException", null, true, true);
+        throw new ServiceException($value);
     }
-    print "<![CDATA[";
-    if (is_array($value)) {
-        if (sizeof($value) == 1) {
-            print $value[0];
-        } else {
-            print_r($value);
-        }
-    } else {
-        print $value;
-    }
-    print "]]>";
-
-    if ($version == "1.1.0") {
-        writeTag("close", "ows", "ExceptionText", null, true, true);
-        writeTag("close", "ows", "Exception", null, true, true);
-        writeTag("close", "ows", "ExceptionReport", null, true, true);
-    } else {
-        writeTag("close", null, "ServiceException", null, true, true);
-        writeTag("close", null, "ServiceExceptionReport", null, true, true);
-    }
-
-    $data = ob_get_clean();
-    echo $data;
-    die();
 }
 
 print("\n<!-- Memory used: " . round(memory_get_peak_usage() / 1024) . " KB -->\n");

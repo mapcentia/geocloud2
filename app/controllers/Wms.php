@@ -10,6 +10,8 @@ namespace app\controllers;
 
 use app\conf\App;
 use app\exceptions\GC2Exception;
+use app\exceptions\OwsException;
+use app\exceptions\ServiceException;
 use app\inc\Controller;
 use app\inc\Model;
 use app\inc\UserFilter;
@@ -18,6 +20,7 @@ use app\inc\Input;
 use app\inc\Session;
 use app\models\Geofence;
 use app\models\Rule;
+use Exception;
 use mapObj;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use XML_Unserializer;
@@ -38,8 +41,7 @@ class Wms extends Controller
 
     /**
      * Wms constructor.
-     * @throws PhpfastcacheInvalidArgumentException
-     * @throws GC2Exception
+     * @throws ServiceException
      */
     function __construct()
     {
@@ -89,7 +91,11 @@ class Wms extends Controller
                     $this->basicHttpAuthLayer($layer, $db);
                 }
             }
-            $this->get($db, $postgisschema);
+            try {
+                $this->get($db, $postgisschema);
+            } catch (Exception $e) {
+                throw new ServiceException($e->getMessage());
+            }
         }
         // Only WFS uses POST
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -118,7 +124,11 @@ class Wms extends Controller
             if (!$trusted) {
                 $this->basicHttpAuthLayer($layer, $db);
             }
-            $this->post($db, $postgisschema, $request, $typeName);
+            try {
+                $this->post($db, $postgisschema, $request, $typeName);
+            } catch (Exception $e) {
+                throw new ServiceException($e->getMessage());
+            }
         }
     }
 

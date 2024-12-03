@@ -9,6 +9,7 @@
 namespace app\inc;
 
 
+use app\exceptions\ServiceException;
 use app\models\Setting;
 use PDOException;
 
@@ -34,6 +35,7 @@ final class BasicAuth
      * @param string $layerName The name of the layer to be accessed. It is used to determine the schema and check user privileges.
      * @param bool $isTransaction
      * @return void
+     * @throws ServiceException
      */
     public function authenticate(string $layerName, bool $isTransaction): void
     {
@@ -61,19 +63,15 @@ final class BasicAuth
             $postgisObject = new Model();
             $res = $postgisObject->prepare($sql);
             try {
-                //die($schema);
                 $res->execute(array("schema" => $layerName . ".%"));
             } catch (PDOException $e) {
-                $response['success'] = false;
-                $response['message'] = $e->getMessage();
-                $response['code'] = 401;
-                makeExceptionReport($response);
+                throw new ServiceException($e->getMessage());
             }
             while ($row = $postgisObject->fetchRow($res)) {
                 $privileges = json_decode($row["privileges"]);
                 $prop = $userGroup ?: $this->user;
                 if ((!$privileges->$prop || $privileges->$prop == "none" || ($privileges->$prop == "read" && $isTransaction)) && ($prop != $schema)) {
-                    self::makeExceptionReport(array("You don't have privileges to this layer. Please contact the database owner, which can grant you privileges."));
+                    throw new ServiceException("You don't have privileges to this layer. Please contact the database owner, which can grant you privileges.");
                 }
             }
         }
@@ -88,32 +86,5 @@ final class BasicAuth
         header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
         // Text to send if user hits Cancel button
         die("Attempt to login using Basic Auth was cancelled");
-    }
-
-    public static function makeExceptionReport(string|array $value): never
-    {
-        ob_get_clean();
-        ob_start();
-
-        echo '<ServiceExceptionReport
-	   version="1.2.0"
-	   xmlns="http://www.opengis.net/ogc"
-	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	   xsi:schemaLocation="http://www.opengis.net/ogc http://wfs.plansystem.dk:80/geoserver/schemas//wfs/1.0.0/OGC-exception.xsd">
-	   <ServiceException>';
-        if (is_array($value)) {
-            if (sizeof($value) == 1) {
-                print $value[0];
-            } else {
-                print_r($value);
-            }
-        } else {
-            print $value;
-        }
-        echo '</ServiceException>
-	</ServiceExceptionReport>';
-        $data = ob_get_clean();
-        echo $data;
-        exit();
     }
 }

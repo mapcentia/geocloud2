@@ -11,7 +11,7 @@ namespace app\inc;
 use app\api\v2\Sql;
 use app\conf\App;
 use app\conf\Connection;
-use app\exceptions\GC2Exception;
+use app\exceptions\ServiceException;
 use app\models\Database;
 use app\models\Layer;
 use app\models\Setting;
@@ -120,8 +120,7 @@ class Controller
     /**
      * @param string $layer
      * @param string $db
-     * @param string|null $subUser
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws ServiceException
      */
     public function basicHttpAuthLayer(string $layer, string $db): void
     {
