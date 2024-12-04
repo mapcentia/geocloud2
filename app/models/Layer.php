@@ -85,7 +85,7 @@ class Layer extends Table
             $p = json_decode($privilege, true);
         }
         foreach ($p as $k => $v) {
-            $response[] = ['subuser' => $k, 'privileges' => $v];
+            $response[] = ['subuser' => $k, 'privilege' => $v];
         }
         return $response;
     }

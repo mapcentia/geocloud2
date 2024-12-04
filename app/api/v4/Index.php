@@ -15,6 +15,7 @@ use app\inc\Route2;
 use app\models\Table as TableModel;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use OpenApi\Attributes as OA;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
@@ -92,6 +93,7 @@ class Index extends AbstractApi
             return ["indices" => $r];
         }
     }
+
     /**
      * @return array
      */
@@ -118,7 +120,7 @@ class Index extends AbstractApi
             $list[] = self::addIndices($this->table[0], $columns, $method, $name);
         }
         $this->table[0]->commit();
-        header("Location: /api/v4/schemas/$this->schema/tables/{$this->unQualifiedName[0]}/indices/" . implode(',', $list));
+        header("Location: /api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/indices/" . implode(',', $list));
         $res["code"] = "201";
         return $res;
     }
@@ -147,6 +149,9 @@ class Index extends AbstractApi
         return $res2;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public static function addIndices(TableModel $table, array $columns, string $method, ?string $name = null): string
     {
         return $table->addIndex($columns, $method, $name);
@@ -196,12 +201,12 @@ class Index extends AbstractApi
             $this->postWithResource();
         }
         $collection = self::getAssert();
-        if (!empty($body)) {
-            $this->validateRequest($collection, $body, 'indices');
-        }
+        $this->validateRequest($collection, $body, 'indices', Input::getMethod());
+
         $this->jwt = Jwt::validate()["data"];
         $this->initiate($schema, $table, null, null, $id, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }
+
     static public function getAssert(): Assert\Collection
     {
         return new Assert\Collection([

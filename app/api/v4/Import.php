@@ -16,6 +16,7 @@ use app\inc\Jwt;
 use app\inc\Model;
 use app\inc\Route2;
 use app\inc\Session;
+use app\models\Layer;
 use Exception;
 use OpenApi\Annotations\OpenApi;
 use OpenApi\Attributes as OA;
@@ -204,6 +205,8 @@ class Import extends AbstractApi
                 $data->import = true;
             }
             $result = $this->import($schema, $fileName, $data);
+            (new Layer())->insertDefaultMeta();
+
             $response['cmd'] = $result['cmd'];
             $response['data'] = $result['data'];
             $response["success"] = true;
@@ -300,9 +303,7 @@ class Import extends AbstractApi
             ]),
         ]);
 
-        if (!empty($body)) {
-            $this->validateRequest($collection, $body, 'rules');
-        }
+        $this->validateRequest($collection, $body, '', Input::getMethod());
 
         $this->jwt = Jwt::validate()["data"];
         $this->initiate($schema, null, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);

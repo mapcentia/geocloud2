@@ -106,14 +106,14 @@ class Privilege extends AbstractApi
             $layer->updatePrivileges($obj, $table);
         }
         $table->commit();
-        header("Location: /api/v4/schemas/$this->schema/tables/{$this->unQualifiedName[0]}/privileges/");
+        header("Location: /api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/privileges/");
         return ["code" => "303"];
     }
 
     #[Override] public function delete_index(): array
     {
         // TODO: Implement delete_index() method.
-        return[];
+        return [];
     }
 
     /**
@@ -148,9 +148,7 @@ class Privilege extends AbstractApi
 
             ]),
         ]);
-        if (!empty($body)) {
-            $this->validateRequest($collection, $body, 'privileges');
-        }
+        $this->validateRequest($collection, $body, 'privileges', Input::getMethod(), true);
 
         $this->initiate($schema, $table, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }

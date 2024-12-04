@@ -122,7 +122,7 @@ abstract class AbstractApi implements ApiInterface
      */
     public function doesIndexExist(): void
     {
-        $indices = $this->table[0]->getIndexes($this->schema, $this->unQualifiedName[0])["indices"];
+        $indices = $this->table[0]->getIndexes($this->schema[0], $this->unQualifiedName[0])["indices"];
         foreach ($this->index as $index) {
             foreach ($indices as $i) {
                 if ($index === $i["index"]) {
@@ -149,7 +149,7 @@ abstract class AbstractApi implements ApiInterface
                 default => ''
             };
             if ($type != "n") {
-                $constraints = $this->table[0]->getConstrains($this->schema, $this->unQualifiedName[0], $type)['data'];
+                $constraints = $this->table[0]->getConstrains($this->schema[0], $this->unQualifiedName[0], $type)['data'];
                 $exists = false;
                 foreach ($constraints as $c) {
                     if ($c['conname'] == $constraint) {
@@ -210,7 +210,7 @@ abstract class AbstractApi implements ApiInterface
     /**
      * @throws GC2Exception
      */
-    public function validateRequest(Collection $collection, ?string $data, string $resource, string $method): void
+    public function validateRequest(Collection $collection, ?string $data, string $resource, string $method, bool $allowPatchOnCollection = false): void
     {
         if (!empty($data) && !json_validate($data)) {
             throw new GC2Exception("Invalid request data", 400, null, "INVALID_DATA");
@@ -222,7 +222,7 @@ abstract class AbstractApi implements ApiInterface
             throw new GC2Exception("You can't use a payload in DELETE or GET", 400, null, "INVALID_DATA");
         }
 
-        if ($method == 'patch' && isset($data[$resource])) {
+        if (!$allowPatchOnCollection && $method == 'patch' && isset($data[$resource])) {
             throw new GC2Exception("You can't PATCH with a collection of $resource", 400, null, "INVALID_DATA");
         }
 

@@ -302,9 +302,8 @@ class Constraint extends AbstractApi
             $this->postWithResource();
         }
         $collection = self::getAssert();
-        if (!empty($body)) {
-            $this->validateRequest($collection, $body, 'constraints');
-        }
+        $this->validateRequest($collection, $body, 'constraints', Input::getMethod());
+
         $this->jwt = Jwt::validate()["data"];
         $this->initiate($schema, $table, null, null, null, $constraint, $this->jwt["uid"], $this->jwt["superUser"]);
     }

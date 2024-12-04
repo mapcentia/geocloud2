@@ -17,6 +17,7 @@ use app\models\Preparedstatement as PreparedstatementModel;
 use app\models\Setting;
 use OpenApi\Annotations\OpenApi;
 use OpenApi\Attributes as OA;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Validator\Constraints as Assert;
 use Override;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
@@ -113,6 +114,7 @@ class Sql extends AbstractApi
     /**
      * @return array
      * @throws PhpfastcacheInvalidArgumentException|GC2Exception
+     * @throws InvalidArgumentException
      */
     #[OA\Post(path: '/api/v4/sql', operationId: 'postSql', description: "Run SQL statements", tags: ['Sql'])]
     #[OA\RequestBody(description: 'Sql statement to run', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sql"))]
@@ -204,11 +206,26 @@ class Sql extends AbstractApi
                 new Assert\Type('array'),
                 new Assert\Count(['min' => 1]),
             ]),
-            'format' => new Assert\Optional(
+            'output_format' => new Assert\Optional(
                 new Assert\NotBlank(),
             ),
             'convert_types' => new Assert\Optional([
                 new Assert\Type('boolean'),
+            ]),
+            'base64' => new Assert\Optional([
+                new Assert\Type('boolean'),
+            ]),
+            'lifetime' => new Assert\Optional([
+                new Assert\Type('integer'),
+            ]),
+            'srs' => new Assert\Optional(
+                new Assert\Type('integer'),
+            ),
+            'geo_format' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+                new Assert\Choice(['wkt', 'geojson']),
+
             ]),
         ]);
             $this->validateRequest($collection, $body, 'clients', Input::getMethod());
