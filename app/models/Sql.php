@@ -99,7 +99,6 @@ class Sql extends Model
                 "-mapFieldType Time=String " .
                 "-f \"" . explode("/", $format)[1] . "\" " . $path . " " .
                 "-t_srs \"EPSG:" . $this->srs . "\" " .
-                "-a_srs \"EPSG:" . $this->srs . "\" " .
                 ($nlt ? "-nlt " . $nlt . " " : "") .
                 ($nln ? "-nln " . $nln . " " : "") .
                 "-preserve_fid " .
