@@ -417,9 +417,8 @@ class DatabaseManagementCest
     public function shouldNotGetDataFromWfstAsSubUserOutsideSession(ApiTester $I)
     {
         $I->sendGET('/wfs/' . $this->subUserId . "@" . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
-        $I->seeResponseCodeIs(HttpCode::OK);
-        $I->seeResponseIsXml();
-        $I->canSeeResponseContains('ServiceExceptionReport');
+        $I->seeResponseCodeIs(HttpCode::UNAUTHORIZED);
+
     }
 
     // Super user WFS-t request to protected data source from inside session
