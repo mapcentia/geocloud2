@@ -270,9 +270,8 @@ class User extends AbstractApi
             $this->postWithResource();
         }
         $collection = self::getAssert();
-        if (!empty($body)) {
-            $this->validateRequest($collection, $body, 'users');
-        }
+        $this->validateRequest($collection, $body, 'users', Input::getMethod());
+
     }
 
     static public function getAssert(): Assert\Collection
@@ -288,7 +287,6 @@ class User extends AbstractApi
                 new Assert\PasswordStrength(['minScore' => 1]),
             ]),
             'user_group' => new Assert\Optional([
-                new Assert\Length(['min' => 4])
             ]),
             'properties' => new Assert\Optional([
                 new Assert\Type('array'),

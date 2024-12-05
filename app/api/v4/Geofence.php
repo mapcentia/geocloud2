@@ -236,6 +236,9 @@ class Geofence extends AbstractApi
         return ["code" => "204"];
     }
 
+    /**
+     * @throws GC2Exception
+     */
     #[Override] public function validate(): void
     {
         $id = Route2::getParam("id");
@@ -296,9 +299,8 @@ class Geofence extends AbstractApi
                 new Assert\Type('string'),
             ]),
         ]);
-        if (!empty($body)) {
-            $this->validateRequest($collection, $body, 'rules');
-        }
+        $this->validateRequest($collection, $body, 'rules', Input::getMethod());
+
     }
 
     public function put_index(): array
