@@ -11,7 +11,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - It's now possible to upload files in GeoPackages format (.gpkg). The Admin still doesn't use org2postgis, so gpkg files with multiple layers will not get all layers imported.
 
 ## Fixed
-- Workflow now works. Please notice: Workflow and Rules doesn't work together. This will be fixed.
+- Workflow now works. Please notice: Workflow and Rules don't work together. This will be fixed.
 
 ## [2024.11.2] - 2024-28-11
 
