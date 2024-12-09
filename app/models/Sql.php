@@ -769,7 +769,7 @@ class Sql extends Model
      * @param callable $func The callback function to apply to the array or its sub-arrays.
      * @return array The processed array.
      */
-    private static function processArray(array|object $item, callable $func, ?string $format): mixed
+    private static function processArray(mixed $item, callable $func, ?string $format): mixed
     {
         $hasSubArray = false;
         foreach ($item as $subItem) {
