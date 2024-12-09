@@ -1,10 +1,14 @@
 <form hx-post="/auth/backends/login.php">
     <h1 class="h3 mb-3 fw-normal">Please sign in</h1>
 
-    <div class="form-floating">
-        <input class="form-control upper" type="text" name="user" id="user" value="{{ user }}"
-               placeholder="User name" {% if databases|length == 0 %} autofocus {% endif %} required/>
-        <label class="form-label" for="user">User name</label>
+    <div class="input-group">
+        <div class="form-floating">
+            <input class="form-control upper" type="text" name="user" id="user" placeholder="User name" required
+                    {% if databases|length == 0 %} autofocus {% endif %}
+                   value="{{ user }}"/>
+            <label class="form-label" for="user">User name</label>
+        </div>
+        <button style="border-color: #dee2e6; margin-bottom: -1px; border-bottom-right-radius: 0;" class="btn btn-outline-secondary" type="submit"><i style="color: #dee2e6" class="bi bi-arrow-right-circle"></i></button>
     </div>
 
     <div class="form-floating">

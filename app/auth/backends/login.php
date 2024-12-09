@@ -30,7 +30,7 @@ if ($_POST['database'] && $_POST['user'] && $_POST['password']) {
     $res = [];
     $res = (new \app\models\User())->getDatabasesForUser($user);
     if (sizeof($res['databases']) > 0) {
-        echo "<div id='alert' hx-swap-oob='true'>ss</div>";
+        echo "<div id='alert' hx-swap-oob='true'></div>";
     } else {
         echo "<div id='alert' hx-swap-oob='true'>" . $twig->render('error.html.twig', ['message' => 'User doesn\'t exists']) ."</div>";
     }
