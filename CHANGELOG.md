@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2024.12.1] - 2024-11-12
+
+## Changed
+- The http basic auth script is written to a class. This makes it align with overall object-oriented approach.
+- The OWS exceptions are now handled by custom exception classes: ServiceException and OWSException.
+- In sql API requests the properties `format` and `geoformat` can now be changed to `output_format` and `geo_format`. The latter must be used in v4/sql.
+
+## Fixed
+- Refactor processArray in `app/models/Sql` to accept mixed type parameter. This was an issue with JSON fields with content with boolean properties.
+
 ## [2024.12.0] - 2024-2-12
 
 ## Added
