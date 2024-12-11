@@ -464,7 +464,7 @@ class Wms extends Controller
             }
             $model = new Model();
             $versioning = $model->doesColumnExist($layer, "gc2_version_gid");
-            if ($versioning) {
+            if (!empty($versioning['exists'])) {
                 $filters[$layer][] = 'gc2_version_end_date IS NULL';
             }
         }
