@@ -765,17 +765,19 @@ class Sql extends Model
     /**
      * Processes an array recursively with a given callback function.
      *
-     * @param array|object $item The array to be processed.
+     * @param mixed $item The value to be processed.
      * @param callable $func The callback function to apply to the array or its sub-arrays.
      * @return array The processed array.
      */
     private static function processArray(mixed $item, callable $func, ?string $format): mixed
     {
         $hasSubArray = false;
-        foreach ($item as $subItem) {
-            if (is_array($subItem) || is_object($subItem)) {
-                $hasSubArray = true;
-                break;
+        if (is_array($item) || is_object($item)) {
+            foreach ($item as $subItem) {
+                if (is_array($subItem) || is_object($subItem)) {
+                    $hasSubArray = true;
+                    break;
+                }
             }
         }
         if ($hasSubArray) {

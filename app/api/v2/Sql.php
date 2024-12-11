@@ -82,8 +82,8 @@ class Sql extends Controller
         // ======================================
         if ($json != null) {
 
-            $typeHints = !empty($json["type_hints"]) ? $json["type_hints"] : Input::$params["type_hints"];
-            $typeFormats = !empty($json["type_formats"]) ? $json["type_formats"] : Input::$params["type_formats"];
+            $typeHints = $json["type_hints"] ?? Input::$params["type_hints"] ?? null;
+            $typeFormats = $json["type_formats"] ?? Input::$params["type_formats"] ?? null;
 
             if (!empty($json["id"])) {
                 $pres = new PreparedstatementModel();
