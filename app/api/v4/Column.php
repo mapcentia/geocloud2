@@ -142,7 +142,7 @@ class Column extends AbstractApi
             $list[] = self::addColumn($this->table[0], $data->name, $data->type, $setDefaultValue, $data->default_value, $data->is_nullable ?? true);
         }
         $this->table[0]->commit();
-        header("Location: /api/v4/schemas/$this->schema/tables/{$this->unQualifiedName[0]}/columns/" . implode(',', $list));
+        header("Location: /api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/columns/" . implode(',', $list));
         return ["code" => "201"];
     }
 
