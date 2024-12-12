@@ -10,7 +10,6 @@ namespace app\controllers;
 
 use app\conf\App;
 use app\exceptions\GC2Exception;
-use app\exceptions\OwsException;
 use app\exceptions\ServiceException;
 use app\inc\Controller;
 use app\inc\Model;
@@ -74,7 +73,7 @@ class Wms extends Controller
             foreach ($_GET as $k => $v) {
                 // Get the layer names from either WMS (layer) or WFS (typename)
                 if (strtolower($k) == "layers" || strtolower($k) == "layer" || strtolower($k) == "typename" || strtolower($k) == "typenames") {
-                    $this->layers[] = $v;
+                    $this->layers = explode(',', $v);
                 }
                 // Get the service. wms, wfs or UTFGRID
                 if (strtolower($k) == "service") {
@@ -215,31 +214,27 @@ class Wms extends Controller
      */
     private function get(string $db, string $postgisschema): never
     {
-        $layers = [];
         $model = new Model();
         $useFilters = false;
-        if (sizeof($this->layers) > 0) {
-            $layers = explode(",", $this->layers[0]);
-        }
         $filters = isset($_GET["filters"]) ? json_decode(Util::base64urlDecode($_GET["filters"]), true) : [];
-        $qgs = $this->getQGSFilePath($db, $postgisschema, $layers);
+        $qgs = $this->getQGSFilePath($db, $postgisschema, $this->layers);
         // Filters and multiple layers are a no-go, because layers can be defined in different QGS files.
-        if ($filters && $qgs && sizeof($layers) > 1) {
+        if ($filters && $qgs && sizeof($this->layers) > 1) {
             throw new ServiceException("One or more layers are served by QGIS Server. Filters don't work with multiple layers, where one or more is QGIS backed.");
         }
         // If multiple layers, then always use MapFile.
-        if (sizeof($layers) > 1) {
+        if (sizeof($this->layers) > 1) {
             $qgs = false;
         }
         // Check rules
-        $filters = $this->setFilterFromRules($layers, $filters);
+        $filters = $this->setFilterFromRules($this->layers, $filters);
         // Check if WMS filters are set
         if ($filters || (isset($_GET["labels"]) && $_GET["labels"] == "false")) {
             // Parse filter. Both base64 and base64url is tried
             $name = md5(rand(1, 999999999) . microtime());
             $disableLabels = isset($_GET["labels"]) && $_GET["labels"] == "false";
             // If QGIS is used
-            if ($qgs && sizeof($layers) == 1) {
+            if ($qgs && sizeof($this->layers) == 1) {
                 // Read the file
                 $file = fopen($qgs, "r");
                 $str = fread($file, filesize($qgs));
@@ -249,7 +244,7 @@ class Wms extends Controller
                 $newMapFile = fopen($mapFile, "w");
                 fwrite($newMapFile, $str);
                 fclose($newMapFile);
-                foreach ($layers as $layer) {
+                foreach ($this->layers as $layer) {
                     $split = explode(".", $layer);
                     $versionWhere = $model->doesColumnExist("$split[0].$split[1]", "gc2_version_gid")["exists"] ? "gc2_version_end_date IS NULL" : "";
                     $where = "1=1";
@@ -283,7 +278,7 @@ class Wms extends Controller
                 // Write out a tmp MapFile
                 $tmpMapFile = $this->writeTmpMapFile($path);
                 $split = [];
-                foreach ($layers as $layer) {
+                foreach ($this->layers as $layer) {
                     $layer = sizeof(explode(":", $layer)) > 1 ? explode(":", $layer)[1] : $layer;
                     $split = explode(".", $layer);
                     if (!empty($filters[$layer])) {
@@ -314,7 +309,7 @@ class Wms extends Controller
                     default => $db . "_" . $postgisschema . "_wms.map",
                 };
                 $useWmsSource = false;
-                if ($source = $this->getWmsSource($db, $postgisschema, $layers)) {
+                if ($source = $this->getWmsSource($db, $postgisschema, $this->layers)) {
                     parse_str(parse_url($_SERVER["QUERY_STRING"])['path'], $query);
                     $query = array_change_key_case($query, CASE_UPPER);
                     // Use parameters from WMS source if set and use those from query for not set parameters
@@ -375,6 +370,8 @@ class Wms extends Controller
      * @param string $layer
      * @return never
      * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     * @throws ServiceException
      */
     private function post(string $db, string $postgisschema, string $data, string $layer): never
     {
