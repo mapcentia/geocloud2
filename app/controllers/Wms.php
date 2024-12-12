@@ -116,7 +116,7 @@ class Wms extends Controller
                 $typeName = !empty($arr["wfs:TypeName"]) ? $arr["wfs:TypeName"] : $arr["TypeName"];
             }
             if (empty($typeName)) {
-                self::report("Could not get the typeName from the requests");
+                throw new ServiceException("Could not get the typeName from the requests");
             }
             // Strip name space if any
             $layer = sizeof(explode(":", $typeName)) > 1 ? explode(":", $typeName)[1] : $typeName;
@@ -211,6 +211,7 @@ class Wms extends Controller
      * @param $db string
      * @param $postgisschema string
      * @throws PhpfastcacheInvalidArgumentException|GC2Exception
+     * @throws ServiceException
      */
     private function get(string $db, string $postgisschema): never
     {
@@ -224,7 +225,7 @@ class Wms extends Controller
         $qgs = $this->getQGSFilePath($db, $postgisschema, $layers);
         // Filters and multiple layers are a no-go, because layers can be defined in different QGS files.
         if ($filters && $qgs && sizeof($layers) > 1) {
-            self::report("One or more layers are served by QGIS Server. Filters don't work with multiple layers, where one or more is QGIS backed.");
+            throw new ServiceException("One or more layers are served by QGIS Server. Filters don't work with multiple layers, where one or more is QGIS backed.");
         }
         // If multiple layers, then always use MapFile.
         if (sizeof($layers) > 1) {
@@ -419,32 +420,12 @@ class Wms extends Controller
     }
 
     /**
-     * @param string $value
-     */
-    private static function report(string $value): never
-    {
-        ob_get_clean();
-        ob_start();
-        echo '<ServiceExceptionReport
-                       version="1.2.0"
-                       xmlns="http://www.opengis.net/ogc"
-                       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                       xsi:schemaLocation="http://www.opengis.net/ogc https://schemas.opengis.net/ows/1.0.0/owsExceptionReport.xsd">
-                       <ServiceException code="InvalidParameterValue">';
-        print $value;
-        echo '</ServiceException>
-	        </ServiceExceptionReport>';
-        header("HTTP/1.0 200 " . Util::httpCodeText("200"));
-        header('Content-Type:text/xml; charset=UTF-8');
-        exit();
-    }
-
-    /**
      * @param array $layers
      * @param array $filters
      * @return array
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws ServiceException
      */
     private function setFilterFromRules(array $layers, array $filters): array
     {
@@ -457,7 +438,7 @@ class Wms extends Controller
             $auth = $geofence->authorize($rules);
             if (isset($auth["access"])) {
                 if ($auth["access"] == "deny") {
-                    self::report("DENY");
+                    throw new ServiceException("DENY");
                 } elseif ($auth["access"] == "limit" && !empty($auth["filters"]["filter"])) {
                     $filters[$layer][] = "({$auth["filters"]["filter"]})";
                 }
