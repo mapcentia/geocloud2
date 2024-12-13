@@ -103,7 +103,7 @@ class Sql extends Model
                 ($nln ? "-nln " . $nln . " " : "") .
                 "-preserve_fid " .
                 ($format == "ogr/GPX" ? "-lco 'FORCE_GPX_ROUTE=YES' " : "") .
-                "PG:'host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
+                "PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
                 "-sql \"" . $q . "\"";
 //            die($cmd);
             exec($cmd . ' 2>&1', $out);

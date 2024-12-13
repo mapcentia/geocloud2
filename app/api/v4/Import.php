@@ -245,7 +245,7 @@ class Import extends AbstractApi
             $fileFullPath = $dir . "/" . $safeName;
         }
         $connectionStr =
-            "\"PG:host=" . Connection::$param["postgishost"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "\"";
+            "\"PG:host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "\"";
         $cmd = "ogr2postgis" .
             " --json" .
             ($args && property_exists($args, 's_srs') ? " --s_srs " . $args->s_srs : "") .
