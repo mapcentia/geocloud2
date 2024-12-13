@@ -14,6 +14,7 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## Fixed
 - Refactor processArray in `app/models/Sql` to accept mixed type parameter. This was an issue with JSON fields with content with boolean properties.
+- The parameter `postgisport` was not used in some instances. This is now fixed.
 
 ## [2024.12.0] - 2024-2-12
 
