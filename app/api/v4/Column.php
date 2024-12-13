@@ -134,12 +134,11 @@ class Column extends AbstractApi
         }
         $list = [];
         $this->table[0]->begin();
-        if (isset($data->columns)) {
-            foreach ($data->columns as $datum) {
-                $list[] = self::addColumn($this->table[0], $datum->name, $datum->type, $setDefaultValue, $datum->default_value, $datum->is_nullable ?? true);
-            }
-        } else {
-            $list[] = self::addColumn($this->table[0], $data->name, $data->type, $setDefaultValue, $data->default_value, $data->is_nullable ?? true);
+        if (!isset($data->columns)) {
+            $data->columns = [$data];
+        }
+        foreach ($data->columns as $datum) {
+            $list[] = self::addColumn($this->table[0], $datum->name, $datum->type, $setDefaultValue, $datum->default_value, $datum->is_nullable ?? true, $datum->comment);
         }
         $this->table[0]->commit();
         header("Location: /api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/columns/" . implode(',', $list));
@@ -182,6 +181,9 @@ class Column extends AbstractApi
                 $obj->id = $oldColumnName;
                 $obj->column = $data->name ?? $oldColumnName;
                 $obj->type = $data->type;
+                if (property_exists($data, 'comment')) {
+                    $obj->comment = $data->comment;
+                }
                 $r = $this->table[0]->updateColumn($obj, $key, true);
                 $list[] = $r['name'];
             }
@@ -252,11 +254,12 @@ class Column extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    public static function addColumn(TableModel $table, string $column, string $type, bool $setDefaultValue, mixed $defaultValue = null, bool $isNullable = true): string
+    public static function addColumn(TableModel $table, string $column, string $type, bool $setDefaultValue, mixed $defaultValue = null, bool $isNullable = true, ?string $comment= null): string
     {
         $r = $table->addColumn([
             "column" => $column,
             "type" => $type,
+            "comment" => $comment,
         ]);
         if (!$isNullable) {
             $table->addNotNullConstraint($r["column"]);
@@ -301,6 +304,9 @@ class Column extends AbstractApi
             'name' => new Assert\Optional([
                 new Assert\Type('string'),
                 new Assert\NotBlank(),
+            ]),
+            'comment' => new Assert\Optional([
+                new Assert\Type('string'),
             ]),
             'type' => new Assert\Optional([
                 new Assert\Type('string'),

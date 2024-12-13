@@ -377,13 +377,16 @@ class Model
                 $res->execute(array("table" => "\"" . $_schema . "\".\"" . $_table . "\""));
             }
             $index = $this->getIndexes($_schema, $_table);
+            $comments = $this->getColumnComments($_schema, $_table);
+
             while ($row = $this->fetchRow($res)) {
+                $column = $row["column_name"];
                 $foreignValues = [];
                 $checkValues = [];
                 $references = [];
                 if ($restriction && !$restrictions) {
                     foreach ($foreignConstrains as $value) {
-                        if ($row["column_name"] == $value["child_column"] /*&& $value["parent_column"] != $primaryKey*/) {
+                        if ($column == $value["child_column"] /*&& $value["parent_column"] != $primaryKey*/) {
                             $references[] = $value["parent_schema"] . "." . $value["parent_table"] . "." . $value["parent_column"];
                             if ($getEnums) {
                                 $sql = "SELECT {$value["parent_column"]} FROM {$value["parent_schema"]}.{$value["parent_table"]}";
@@ -426,12 +429,12 @@ class Model
                     }
                 } elseif (isset($restrictions[$row["column_name"]]) && $restrictions[$row["column_name"]] == "*" && $getEnums) {
                     $t = new Table($table);
-                    foreach ($t->getGroupByAsArray($row["column_name"])["data"] as $value) {
+                    foreach ($t->getGroupByAsArray($column)["data"] as $value) {
                         $foreignValues[] = ["value" => $value, "alias" => (string)$value];
                     }
                 }
                 foreach ($checkConstrains as $check) {
-                    if ($check['column_name'] == $row["column_name"]) {
+                    if ($check['column_name'] == $column) {
                         $checkValues[] = $check["con"];
                     }
                 }
@@ -455,6 +458,7 @@ class Model
                         preg_match('#\((.*?)\)#', $con, $match);
                         return $match[1];
                     }, $checkValues) : null,
+                    "comment" => $comments[$column],
                 );
                 // Get type and srid of geometry
                 if ($row["udt_name"] == "geometry") {
@@ -464,8 +468,9 @@ class Model
                     $arr[$row["column_name"]]["srid"] = $matches[0];
                 }
             }
+
+
             $CachedString->set($arr)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-            //$CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $arr;
         }
@@ -1432,7 +1437,7 @@ class Model
      * @param string $rel The name of the relation to check.
      * @return bool True if the relation exists, false otherwise.
      */
-    public function doesRelationExists($rel): bool
+    public function doesRelationExists(string $rel): bool
     {
         $sql = "SELECT FROM " . $this->doubleQuoteQualifiedName($rel) . " LIMIT 1";
         try {
@@ -1441,5 +1446,47 @@ class Model
         } catch (PDOException) {
             return false;
         }
+    }
+
+    private function getColumnComments(string $schema, string $table): false|array
+    {
+        $sql = "SELECT
+                    cols.column_name, (
+                    SELECT
+                        pg_catalog.col_description(c.oid, cols.ordinal_position::int)
+                    FROM
+                        pg_catalog.pg_class c
+                    WHERE
+                        c.oid = (SELECT ('\"' || cols.table_name || '\"')::regclass::oid)
+                      AND c.relname = cols.table_name
+                ) AS column_comment
+                FROM
+                    information_schema.columns cols
+                WHERE
+                   cols.table_name   = :table
+                  AND cols.table_schema = :schema";
+
+        $res = $this->prepare($sql);
+        $res->execute(['table' => $table, 'schema' => $schema]);
+        $comments = [];
+        foreach ($res->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $comments[$row['column_name']] = $row['column_comment'];
+        }
+        return $comments;
+    }
+
+    public function getTableComment(string $schema, string $table)
+    {
+        $sql = "SELECT t.table_name, pg_catalog.obj_description(pgc.oid, 'pg_class')
+                FROM information_schema.tables t
+                         INNER JOIN pg_catalog.pg_class pgc
+                                    ON t.table_name = pgc.relname
+                WHERE t.table_type='BASE TABLE'
+                  AND t.table_name=:table
+                  AND t.table_schema=:schema";
+
+        $res = $this->prepare($sql);
+        $res->execute(['table' => $table, 'schema' => $schema]);
+        return $res->fetchColumn(1);
     }
 }

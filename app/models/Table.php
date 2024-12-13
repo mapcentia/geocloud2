@@ -763,6 +763,9 @@ class Table extends Model
                 $response['message'] = "Updated";
                 $response['name'] = $value->id;
             }
+            if (property_exists($value, 'comment')) {
+                $this->setColumnComment($value->comment, $safeColumn);
+            }
 
             $fieldconfArr[$safeColumn] = $value;
         }
@@ -864,7 +867,13 @@ class Table extends Model
         // We set the data type
         $type = $this->matchType($data['type']);
         $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ADD COLUMN \"$safeColumn\" $type";
-        $this->execQuery($sql, "PDO", "transaction");
+        $res = $this->prepare($sql);
+        $res->execute();
+
+        if (isset($data['comment'])) {
+            $this->setColumnComment($data['comment'], $safeColumn);
+        }
+
         $response["success"] = true;
         $response["column"] = $safeColumn;
         return $response;
@@ -961,7 +970,7 @@ class Table extends Model
      * @return array
      * @throws InvalidArgumentException
      */
-    public function create(string $table, ?string $type = null, ?int $srid = 4326, ?bool $minimum = false): array
+    public function create(string $table, ?string $type = null, ?int $srid = 4326, ?bool $minimum = false, ?string $comment = null): array
     {
         $this->clearCacheOnSchemaChanges();
         $response = [];
@@ -970,9 +979,9 @@ class Table extends Model
             $table = "_" . $table;
         }
         if ($minimum) {
-            $sql = "CREATE TABLE $this->postgisschema.$table ();";
+            $sql = "CREATE TABLE \"$this->postgisschema\".\"$table\" ();";
         } else {
-            $sql = "CREATE TABLE $this->postgisschema.$table (gid SERIAL PRIMARY KEY,id INT);";
+            $sql = "CREATE TABLE \"$this->postgisschema\".\"$table\" (gid SERIAL PRIMARY KEY,id INT);";
         }
         $res = $this->prepare($sql);
         $res->execute();
@@ -982,6 +991,9 @@ class Table extends Model
             $res->execute();
         }
         $this->table = $this->postgisschema . '.' . $table;
+        if ($comment) {
+            $this->setTableComment($comment);
+        }
         $response['success'] = true;
         $response['tableName'] = $table;
         $response['message'] = "Layer created";
@@ -1501,16 +1513,13 @@ class Table extends Model
         $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ALTER COLUMN \"$column\" TYPE " . $type . " USING \"$column\"::" . $type;
         $res = $this->prepare($sql);
         $res->execute();
-
-        //alter table public.bygning
-        //    alter column gml_id type int using gml_id::int;
-
     }
 
     /**
      * @param string $column
      * @return void
      * @throws PDOException
+     * @throws InvalidArgumentException
      */
     public function addNotNullConstraint(string $column): void
     {
@@ -1524,6 +1533,7 @@ class Table extends Model
      * @param string $column
      * @return void
      * @throws PDOException
+     * @throws InvalidArgumentException
      */
     public function dropNotNullConstraint(string $column): void
     {
@@ -1531,6 +1541,26 @@ class Table extends Model
         $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ALTER \"$column\" DROP NOT NULL";
         $res = $this->prepare($sql);
         $res->execute();
+    }
+
+    public function getComment() {
+        return $this->getTableComment($this->schema, $this->tableWithOutSchema);
+    }
+
+    public function setTableComment(?string $comment):void {
+        $this->clearCacheOnSchemaChanges();
+        $sql = "COMMENT ON TABLE " . $this->doubleQuoteQualifiedName($this->table) . " IS '$comment';";
+        $res = $this->prepare($sql);
+        $res->execute();
+    }
+
+    public function setColumnComment(?string $comment, string $column):void {
+        $this->clearCacheOnSchemaChanges();
+        $sql = "COMMENT ON COLUMN {$this->doubleQuoteQualifiedName($this->table)}.$column IS '$comment';";
+        $res = $this->prepare($sql);
+        $res->execute();
+
+
     }
 
 

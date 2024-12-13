@@ -180,6 +180,11 @@ class Table extends AbstractApi
                 }
                 $layer->setSchema([(isset($r[$i]) ? ($this->schema[0] . '.' . $r[$i]) : $this->qualifiedName[$i])], $data->schema);
             }
+            // Set comment
+            if (property_exists($data, 'comment')) {
+                $layer->table =$this->qualifiedName[$i];
+                $layer->setTableComment($data->comment);
+            }
         }
         $schema = $data->schema ?? $this->schema[0];
         $layer->commit();
@@ -212,12 +217,12 @@ class Table extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    public static function addTable(TableModel $table, stdClass $data, $caller): array
+    public static function addTable(TableModel $table, stdClass $data, ApiInterface $caller): array
     {
         // Load pre extensions and run processAddTable
         $caller->runExtension('processAddTable', $table);
 
-        $r = $table->create($data->name, null, null, true);
+        $r = $table->create($data->name, null, null, true, $data->comment);
         // Add columns
         if (!empty($data->columns)) {
             foreach ($data->columns as $column) {
@@ -236,6 +241,7 @@ class Table extends AbstractApi
                 Constraint::addConstraint($table, $constraint->constraint, $constraint->columns, $constraint->check, $constraint->name, $constraint->referenced_table, $constraint->referenced_columns);
             }
         }
+
         return $r;
     }
 
@@ -250,10 +256,12 @@ class Table extends AbstractApi
         $columns = Column::getColumns($table, $name);
         $constraints = Constraint::getConstraints($table, $name);
         $indices = Index::getIndices($table, $name);
+        $comment = $table->getComment();
         $response["name"] = $name;
         $response["columns"] = $columns;
         $response["indices"] = $indices;
         $response["constraints"] = $constraints;
+        $response["comment"] = $comment;
         return $response;
     }
 
@@ -304,6 +312,9 @@ class Table extends AbstractApi
             'name' => new Assert\Optional([
                 new Assert\Type('string'),
                 new Assert\NotBlank(),
+            ]),
+            'comment' => new Assert\Optional([
+                new Assert\Type('string'),
             ]),
             'schema' => new Assert\Optional([
                 new Assert\Type('string'),
