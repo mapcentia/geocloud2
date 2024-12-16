@@ -636,6 +636,7 @@ try {
     $response["errorCode"] = $exception->getErrorCode();
     echo Response::toJson($response);
 } catch (OwsException|ServiceException $exception) {
+    ob_clean();
     header('Content-Type:text/xml; charset=UTF-8', TRUE);
     echo $exception->getReport();
 } catch (Throwable $exception) {
