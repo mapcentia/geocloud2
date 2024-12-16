@@ -8,9 +8,13 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [2024.12.1] - 2024-11-12
 
 ## Changed
-- The http basic auth script is written to a class. This makes it align with overall object-oriented approach.
+- The http basic auth script is rewritten to a class. This makes it align with overall object-oriented approach.
+- It's no longer required to add username in the ows/wfs URL and database name in the basic auth user. 
+  - Before: `/ows|wfs/username@database/` and `username@database` in the basic auth prompt. 
+  - Now: `/ows|wfs/database/` and just `username` in the basic auth prompt. 
+  - For backward compatibility the old method is still supported. The unnecessary parts will just be ignored. 
 - The OWS exceptions are now handled by custom exception classes: ServiceException and OWSException.
-- In sql API requests the properties `format` and `geoformat` can now be changed to `output_format` and `geo_format`. The latter must be used in v4/sql.
+- In SQL API requests the properties `format` and `geoformat` can now be changed to `output_format` and `geo_format`. The latter must be used in v4/sql.
 
 ## Fixed
 - Refactor processArray in `app/models/Sql` to accept mixed type parameter. This was an issue with JSON fields with content with boolean properties.
