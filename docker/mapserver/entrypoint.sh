@@ -1,4 +1,5 @@
 #!/bin/bash
+
 set -e
 
 # If container is run without commando, then check if pgsql pw for gc2 is passed.
