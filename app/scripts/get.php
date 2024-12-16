@@ -843,7 +843,7 @@ $table = new Table($schema . "." . $safeName);
 // Begin transaction
 // =================
 $table->begin();
-$this->execQuery("SET LOCAL statement_timeout = 36000000");
+$table->execQuery("SET LOCAL statement_timeout = 36000000");
 
 $sql = "CREATE SCHEMA IF NOT EXISTS {$workingSchema}";
 $res = $table->prepare($sql);
