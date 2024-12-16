@@ -97,13 +97,27 @@ class Wms extends Controller
             $namespace = $xml->getNamespaces(true);
             $queries = $xml->children($namespace['wfs'])->Query;
             foreach ($queries as $query) {
-                $typeName = (string)$query->attributes()['typeName'][0];
-                // Strip name space if any
-                $layer = sizeof(explode(":", $typeName)) > 1 ? explode(":", $typeName)[1] : $typeName;
-                $this->layers[] = $layer;
-                // If IP not trusted, when check auth on layer
-                if (!$trusted) {
-                    $this->basicHttpAuthLayer($layer, $db);
+                if (!empty($query->attributes()['typeName'][0])) {
+                    $typeName = (string)$query->attributes()['typeName'][0];
+                    // Strip name space if any
+                    $layer = sizeof(explode(":", $typeName)) > 1 ? explode(":", $typeName)[1] : $typeName;
+                    $this->layers[] = $layer;
+                    // If IP not trusted, when check auth on layer
+                    if (!$trusted) {
+                        $this->basicHttpAuthLayer($layer, $db);
+                    }
+                }
+                if (!empty($query->attributes()['typeNames'][0])) {
+                    $typeNames = explode(',', (string)$query->attributes()['typeNames'][0]);
+                    // Strip name space if any
+                    foreach ($typeNames as $typeName) {
+                        $layer = sizeof(explode(":", $typeName)) > 1 ? explode(":", $typeName)[1] : $typeName;
+                        $this->layers[] = $layer;
+                        // If IP not trusted, when check auth on layer
+                        if (!$trusted) {
+                            $this->basicHttpAuthLayer($layer, $db);
+                        }
+                    }
                 }
             }
             if (count($this->layers) == 0) {
