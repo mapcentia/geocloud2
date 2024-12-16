@@ -12,7 +12,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - It's no longer required to add username in the ows/wfs URL and database name in the basic auth user. 
   - Before: `/ows|wfs/username@database/` and `username@database` in the basic auth prompt. 
   - Now: `/ows|wfs/database/` and just `username` in the basic auth prompt. 
-  - For backward compatibility the old method is still supported. The unnecessary parts will just be ignored. 
+  - For backward compatibility, the old method is still supported. The unnecessary parts will just be ignored. 
 - The OWS exceptions are now handled by custom exception classes: ServiceException and OWSException.
 - In SQL API requests the properties `format` and `geoformat` can now be changed to `output_format` and `geo_format`. The latter must be used in v4/sql.
 
