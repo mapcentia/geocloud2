@@ -2,7 +2,7 @@ FROM mapcentia/gc2core8:gdal
 MAINTAINER Martin Høgh<mh@mapcentia.com>
 
 RUN export DEBIAN_FRONTEND=noninteractive
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Set php session timeout to one day
 RUN sed -i "s/session.gc_maxlifetime = 1440/session.gc_maxlifetime = 86400/g" /etc/php/8.3/fpm/php.ini
@@ -100,9 +100,19 @@ RUN crontab -l 2>/dev/null| { cat; echo "* * * * * sudo -u www-data php -f /var/
 
 RUN crontab -l 2>/dev/null| { cat; echo "";} | crontab
 
+# Install ogr2postgis
+RUN cd ~ &&\
+    git clone https://github.com/mapcentia/ogr2postgis.git --branch gui &&\
+    cd ogr2postgis &&\
+    mkdir build &&\
+    cd build &&\
+    cmake .. && make && make install
+
 # Install gc2-cli
-RUN wget https://gc2-cli.s3.eu-west-1.amazonaws.com/versions/2024.3.3/79bafc6/apt/gc2_2024.3.3.79bafc6-1_amd64.deb -O gc2-cli.deb &&\
-    dpkg -i gc2-cli.deb
+RUN wget -qO- https://gc2-cli.s3.eu-west-1.amazonaws.com/channels/stable/apt/release.key | apt-key add - &&\
+    echo "deb  https://gc2-cli.s3.eu-west-1.amazonaws.com/channels/stable/apt ./" > /etc/apt/sources.list.d/gc2-cli.list &&\
+    apt update &&\
+    apt install gc2
 
 # Expose standard ports for HTTP and HTTPS
 EXPOSE 80
@@ -111,6 +121,6 @@ EXPOSE 443
 HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=3 \
     CMD curl --fail http://127.0.0.1/fpm-ping || exit 1
 
-COPY entrypoint.sh /entrypoint.sh
+ADD entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
