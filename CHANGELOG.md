@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2024.12.2] - 2024-17-12
+
+## Changed
+- `FORCE_GPX_ROUTE=YES` is removed from `app/models/Sql.php`. Multilinestring geometry would cause an error in ogr2ogr. Now route or track is controlled by whether linestring is single or multi.
+
 ## [2024.12.1] - 2024-11-12
 
 ## Changed
