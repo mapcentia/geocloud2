@@ -218,7 +218,7 @@ class Layer extends Table
             }
 
             while ($row = $this->fetchRow($res)) {
-                // TODO Here check priviliges and continue loop if user doesn't has accees
+                // TODO Here check privileges and continue loop if user doesn't has access
                 //if (isset($_SESSION) && $_SESSION["subuser"]) {
                 //    $privileges = (array)json_decode($row["privileges"]);
                 //}

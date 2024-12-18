@@ -69,7 +69,7 @@ class Meta extends AbstractApi
         $res = $layers->getAll($jwt["database"], $auth, Route2::getParam("query"), false, true);
         $rows = $res["data"];
         $out = $this->processRows($rows);
-        return !$res["success"] ? $res : ["success" => true, "data" => $out];
+        return !$res["success"] ? $res : ["relations" => $out];
     }
 
     private function processRows(array $rows): array

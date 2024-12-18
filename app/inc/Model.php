@@ -317,10 +317,7 @@ class Model
                 $_schema = str_replace(".", "", $_schema);
             }
 
-            if ($restriction && !$restrictions) {
-                $foreignConstrains = $this->getForeignConstrains($_schema, $_table)["data"];
-                //  $primaryKey = $this->getPrimeryKey($table)['attname'];
-            }
+            $foreignConstrains = $this->getForeignConstrains($_schema, $_table)["data"];
             $checkConstrains = $this->getConstrains($_schema, $_table, 'c')["data"];
             $sql = "SELECT
                   attname                          AS column_name,
@@ -432,6 +429,12 @@ class Model
                     foreach ($t->getGroupByAsArray($column)["data"] as $value) {
                         $foreignValues[] = ["value" => $value, "alias" => (string)$value];
                     }
+                } else {
+                    foreach ($foreignConstrains as $value) {
+                        if ($column == $value["child_column"]) {
+                            $references[] = $value["parent_schema"] . "." . $value["parent_table"] . "." . $value["parent_column"];
+                        }
+                    }
                 }
                 foreach ($checkConstrains as $check) {
                     if ($check['column_name'] == $column) {
@@ -439,12 +442,14 @@ class Model
                     }
                 }
                 $arr[$row["column_name"]] = array(
-                    "num" => $row["ordinal_position"],
                     "type" => $row["udt_name"],
-                    "typname" => $row["typname"],
-                    "full_type" => $row['full_type'],
                     "is_nullable" => !$row['is_nullable'],
                     "default_value" => $row['default_value'],
+                    "comment" => $comments[$column],
+                    // Derived
+                    "num" => $row["ordinal_position"],
+                    "typname" => $row["typname"],
+                    "full_type" => $row['full_type'],
                     "character_maximum_length" => $row["character_maximum_length"],
                     "numeric_precision" => $row["numeric_precision"],
                     "numeric_scale" => $row["numeric_scale"],
@@ -458,7 +463,6 @@ class Model
                         preg_match('#\((.*?)\)#', $con, $match);
                         return $match[1];
                     }, $checkValues) : null,
-                    "comment" => $comments[$column],
                 );
                 // Get type and srid of geometry
                 if ($row["udt_name"] == "geometry") {
