@@ -101,7 +101,7 @@ class Constraint extends AbstractApi
     public function get_index(): array
     {
         $r = [];
-        $res = self::getConstraints($this->table[0], $this->qualifiedName[0]);
+        $res = self::getConstraints($this->table[0]);
         if (!empty($this->constraint)) {
             foreach ($this->constraint as $constraint) {
                 foreach ($res as $c) {
@@ -221,11 +221,11 @@ class Constraint extends AbstractApi
     /**
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public static function getConstraints(TableModel $table, $name): array
+    public static function getConstraints(TableModel $table): array
     {
         $res = [];
         $res2 = [];
-        $split = explode('.', $name);
+        $split = explode('.', $table->table);
         $constraints = $table->getConstrains($split[0], $split[1])['data'];
         foreach ($constraints as $constraint) {
             $res[$constraint['conname']]['constraint'] = $constraint['con'];

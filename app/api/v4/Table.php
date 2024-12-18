@@ -86,7 +86,7 @@ class Table extends AbstractApi
         $r = [];
         if (!empty($this->qualifiedName)) {
             for ($i = 0; sizeof($this->qualifiedName) > $i; $i++) {
-                $r[] = self::getTable($this->table[$i], $this->qualifiedName[$i]);
+                $r[] = self::getTable($this->table[$i]);
             }
         } else {
             $r = self::getTables($this->schema[0]);
@@ -247,17 +247,16 @@ class Table extends AbstractApi
 
     /**
      * @param TableModel $table
-     * @param string $name
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public static function getTable(TableModel $table, string $name): array
+    public static function getTable(TableModel $table): array
     {
-        $columns = Column::getColumns($table, $name);
-        $constraints = Constraint::getConstraints($table, $name);
-        $indices = Index::getIndices($table, $name);
+        $columns = Column::getColumns($table);
+        $constraints = Constraint::getConstraints($table);
+        $indices = Index::getIndices($table);
         $comment = $table->getComment();
-        $response["name"] = $name;
+        $response["name"] = $table->table;
         $response["columns"] = $columns;
         $response["indices"] = $indices;
         $response["constraints"] = $constraints;
@@ -274,7 +273,8 @@ class Table extends AbstractApi
     {
         $tables = [];
         foreach ((new Model())->getTablesFromSchema($schema) as $name) {
-            $tables[] = self::getTable(new TableModel($name), $schema . "." . $name);
+            $tableName = $schema . "." . $name;
+            $tables[] = self::getTable(new TableModel($tableName));
         }
         return $tables;
     }

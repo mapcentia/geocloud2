@@ -73,7 +73,7 @@ class Index extends AbstractApi
     public function get_index(): array
     {
         $r = [];
-        $res = self::getIndices($this->table[0], $this->qualifiedName[0]);
+        $res = self::getIndices($this->table[0]);
         if (!empty($this->index)) {
             foreach ($this->index as $index) {
                 foreach ($res as $i) {
@@ -126,12 +126,12 @@ class Index extends AbstractApi
     }
 
 
-    public static function getIndices(TableModel $table, string $name): array
+    public static function getIndices(TableModel $table): array
     {
 
         $res = [];
         $res2 = [];
-        $split = explode('.', $name);
+        $split = explode('.', $table->table);
         $indices = $table->getIndexes($split[0], $split[1])['indices'];
         foreach ($indices as $index) {
             $res[$index['index']]['columns'][] = $index['column_name'];
