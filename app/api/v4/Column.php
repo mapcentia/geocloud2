@@ -88,7 +88,7 @@ class Column extends AbstractApi
     public function get_index(): array
     {
         $r = [];
-        $res = self::getColumns($this->table[0], $this->qualifiedName[0]);
+        $res = self::getColumns($this->table[0]);
         if ($this->column) {
             foreach ($this->column as $col) {
                 foreach ($res as $datum) {
@@ -238,15 +238,15 @@ class Column extends AbstractApi
     /**
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public static function getColumns(TableModel $table, string $name): array
+    public static function getColumns(TableModel $table): array
     {
         $response = [];
-        $res = $table->getMetaData($name, false, true, null, null, false);
+        $res = $table->getMetaData($table->table, false, true, null, null, false);
         foreach ($res as $key => $column) {
             $column = array_merge(['name' => $key], $column);
             $response[] = $column;
         }
-        return $response;
+        return parent::setPropertiesToPrivate($response);
 
     }
 
@@ -254,7 +254,7 @@ class Column extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    public static function addColumn(TableModel $table, string $column, string $type, bool $setDefaultValue, mixed $defaultValue = null, bool $isNullable = true, ?string $comment= null): string
+    public static function addColumn(TableModel $table, string $column, string $type, bool $setDefaultValue, mixed $defaultValue = null, bool $isNullable = true, ?string $comment = null): string
     {
         $r = $table->addColumn([
             "column" => $column,

@@ -23,7 +23,6 @@ use Symfony\Component\Validator\Validation;
  */
 abstract class AbstractApi implements ApiInterface
 {
-    // TODO
     public array $table;
     public ?array $schema;
     public ?array $qualifiedName;
@@ -32,6 +31,9 @@ abstract class AbstractApi implements ApiInterface
     public ?array $index;
     public ?array $constraint;
     public array $jwt;
+    private const array PRIVATE_PROPERTIES = ['num', 'typname', 'full_type', 'character_maximum_length',
+        'numeric_precision', 'numeric_scale', 'max_bytes', 'reference', 'restriction', 'is_primary', 'is_unique',
+        'index_method', 'checks', 'geom_type', 'srid'];
 
     abstract public function validate(): void;
 
@@ -134,8 +136,13 @@ abstract class AbstractApi implements ApiInterface
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
-     * @throws GC2Exception
+     * Validates the existence of specified constraints on a database table or column.
+     * Each constraint is checked against the metadata or existing constraints of the table.
+     * Throws an exception if any constraint is not found or adheres to invalid properties.
+     *
+     * @return void
+     *
+     * @throws GC2Exception If a constraint is not found or validation fails for the specified constraints.
      */
     private function doesConstraintExist(): void
     {
@@ -208,7 +215,20 @@ abstract class AbstractApi implements ApiInterface
     }
 
     /**
-     * @throws GC2Exception
+     * Validates the request based on the provided collection, data, resource, and method.
+     * Ensures that the data is in a valid format and adheres to the defined validation rules.
+     * Throws exceptions for invalid data or disallowed operations based on the method and requirements.
+     *
+     * @param Collection $collection The validation rules or constraints to be applied to the data.
+     * @param string|null $data The JSON-encoded payload of the request, or null if no data is provided.
+     * @param string $resource The resource being validated within the request.
+     * @param string $method The HTTP method used in the request (e.g., GET, POST, PATCH, DELETE).
+     * @param bool $allowPatchOnCollection Whether patching on a collection of resources is allowed.
+     *
+     * @return void
+     *
+     * @throws GC2Exception If the data is invalid, contains a payload in disallowed methods,
+     *                      or violates the provided constraints.
      */
     public function validateRequest(Collection $collection, ?string $data, string $resource, string $method, bool $allowPatchOnCollection = false): void
     {
@@ -239,6 +259,13 @@ abstract class AbstractApi implements ApiInterface
         }
     }
 
+    /**
+     * Checks the provided list of constraint violations and throws an exception if any violations are present.
+     *
+     * @param ConstraintViolationListInterface $list A list of constraint violations to check.
+     *
+     * @throws GC2Exception Thrown if there are validation errors in the provided list, with details about the violated constraints.
+     */
     private function checkViolations(ConstraintViolationListInterface $list): void
     {
         if (count($list) > 0) {
@@ -248,5 +275,28 @@ abstract class AbstractApi implements ApiInterface
             }
             throw new GC2Exception(implode(' ', $v), 400, null, "INPUT_VALIDATION_ERROR");
         }
+    }
+
+    /**
+     * Adjusts the given array of properties by prefixing private property keys with an underscore.
+     *
+     * @param array $properties An array of properties where keys may match private properties.
+     * @return array An array with private properties prefixed by an underscore.
+     */
+    protected static function setPropertiesToPrivate(array $properties): array
+    {
+        $newArray = [];
+        foreach ($properties as $property) {
+            $col = [];
+            foreach ($property as $key => $value) {
+                if (in_array($key, self::PRIVATE_PROPERTIES)) {
+                    $col['_' . $key] = $value;
+                } else {
+                    $col[$key] = $value;
+                }
+            }
+            $newArray[] = $col;
+        }
+        return $newArray;
     }
 }
