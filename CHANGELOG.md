@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2024.12.3] - 2024-20-12
+
+## Changed
+- `format` can now again be used instead of the newer `output_format` in SQL API v4 (see 2024.12.1). This role back is done to support clients who still are using `format`.
+
 ## [2024.12.2] - 2024-17-12
 
 ## Changed
