@@ -209,6 +209,9 @@ class Sql extends AbstractApi
             'output_format' => new Assert\Optional(
                 new Assert\NotBlank(),
             ),
+            'format' => new Assert\Optional(
+                new Assert\NotBlank(),
+            ),
             'convert_types' => new Assert\Optional([
                 new Assert\Type('boolean'),
             ]),
