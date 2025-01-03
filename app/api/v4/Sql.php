@@ -79,7 +79,7 @@ class Sql extends AbstractApi
     }
 
     #[OA\Get(path: '/api/v4/sql/{id}', operationId: 'getSql', description: "Get stored SQL statements", tags: ['Sql'])]
-    #[OA\Parameter(name: 'id', description: 'Identifier of stored statement', in: 'path', required: true, example: 'my_statement')]
+    #[OA\Parameter(name: 'id', description: 'Identifier of stored statement', in: 'path', required: false, example: 'my_statement')]
     #[OA\Response(response: 200, description: 'Ok')]
     #[OA\Response(response: 400, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -118,7 +118,7 @@ class Sql extends AbstractApi
      */
     #[OA\Post(path: '/api/v4/sql', operationId: 'postSql', description: "Run SQL statements", tags: ['Sql'])]
     #[OA\RequestBody(description: 'Sql statement to run', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sql"))]
-    #[OA\Response(response: 200, description: 'Ok', content: new OA\MediaType('application/zip'))]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\MediaType('application/json'))]
     #[OA\Response(response: 201, description: 'Insert/update a prepared statement')]
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
