@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2024 MapCentia ApS
+ * @copyright  2013-2025 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -17,6 +17,7 @@ use app\inc\Log;
 use app\inc\PgHStore;
 use app\inc\Session;
 use app\inc\Util;
+use app\inc\WfsFilter;
 use app\models\Setting;
 use app\models\Table;
 use app\models\Layer;
@@ -230,10 +231,10 @@ $version = !empty($HTTP_FORM_VARS["VERSION"]) ? $HTTP_FORM_VARS["VERSION"] : "1.
 $service = !empty($HTTP_FORM_VARS["SERVICE"]) ? $HTTP_FORM_VARS["SERVICE"] : ($HTTP_FORM_VARS["REQUEST"] == "GetFeature" ? "WFS" : null);
 $maxFeatures = !empty($HTTP_FORM_VARS["MAXFEATURES"]) ? $HTTP_FORM_VARS["MAXFEATURES"] : null;
 $outputFormat = !empty($HTTP_FORM_VARS["OUTPUTFORMAT"]) ? $HTTP_FORM_VARS["OUTPUTFORMAT"] : ($version == "1.1.0" ? "GML3" : "GML2");
-$srs = $srsName ? parseEpsgCode($srsName) : ($srs ?: App::$param["epsg"] ?: null);
+$srs = $srsName ? WfsFilter::parseEpsgCode($srsName) : ($srs ?: App::$param["epsg"] ?: null);
 
 if (!empty($HTTP_FORM_VARS["FILTER"])) {
-    $wheres[$HTTP_FORM_VARS["TYPENAME"]] = parseFilter($HTTP_FORM_VARS["FILTER"], $HTTP_FORM_VARS["TYPENAME"]);
+    $wheres[$HTTP_FORM_VARS["TYPENAME"]] = WfsFilter::explode($HTTP_FORM_VARS["FILTER"]);
 }
 
 if ($version != "1.0.0" && $version != "1.1.0") {
@@ -242,7 +243,7 @@ if ($version != "1.0.0" && $version != "1.1.0") {
 if (!$service || strcasecmp($service, "wfs") != 0) {
     makeExceptionReport("No service", ["exceptionCode" => "MissingParameterValue", "locator" => "service"]);
 }
-if (strpos($outputFormat, "gml/3") != false) {
+if (strpos($outputFormat, "gml/3")) {
     $outputFormat = "GML3";
 }
 if (strcasecmp($outputFormat, "XMLSCHEMA") != 0 && strcasecmp($outputFormat, "GML2") != 0 && strcasecmp($outputFormat, "GML3") != 0) {
@@ -297,17 +298,17 @@ if (!(empty($bbox[0]))) {
     }
     foreach ($tables as $table) {
         $bbox[4] = $bbox[4] ?? $srsName ?? $srs;
-        $axisOrder = getAxisOrder($bbox[4]);
+        $axisOrder = WfsFilter::getAxisOrder($bbox[4]);
         if ($axisOrder == "longitude") {
             $wheres[$table] .= "ST_intersects"
                 . "(ST_Transform(ST_GeometryFromText('POLYGON((" . $bbox[0] . " " . $bbox[1] . "," . $bbox[0] . " " . $bbox[3] . "," . $bbox[2] . " " . $bbox[3] . "," . $bbox[2] . " " . $bbox[1] . "," . $bbox[0] . " " . $bbox[1] . "))',"
-                . parseEpsgCode($bbox[4])
+                . WfsFilter::parseEpsgCode($bbox[4])
                 . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $table, "srid") . "),"
                 . $postgisObject->getGeometryColumns($postgisschema . "." . $table, "f_geometry_column") . ")";
         } else {
             $wheres[$table] .= "ST_intersects"
                 . "(ST_Transform(ST_GeometryFromText('POLYGON((" . $bbox[1] . " " . $bbox[0] . "," . $bbox[3] . " " . $bbox[0] . "," . $bbox[3] . " " . $bbox[2] . "," . $bbox[1] . " " . $bbox[2] . "," . $bbox[1] . " " . $bbox[0] . "))',"
-                . parseEpsgCode($bbox[4])
+                . WfsFilter::parseEpsgCode($bbox[4])
                 . ")," . $postgisObject->getGeometryColumns($postgisschema . "." . $table, "srid") . "),"
                 . $postgisObject->getGeometryColumns($postgisschema . "." . $table, "f_geometry_column") . ")";
         }
@@ -1679,7 +1680,7 @@ function doParse(array $arr)
                                 makeExceptionReport("You don't have a role in the workflow of '{$typeName}'");
                             }
                             if (is_array($value) && numberOfDimensions($value) > 1) { // Must be geom if array
-                                $wktArr = toWkt($value, false, getAxisOrder($globalSrsName), parseEpsgCode($globalSrsName));
+                                $wktArr = WfsFilter::toWkt($value, false, WfsFilter::getAxisOrder($globalSrsName), WfsFilter::parseEpsgCode($globalSrsName));
                                 //makeExceptionReport(print_r($value, true));
                                 $values[] = array("{$field}" => $wktArr[0], "srid" => $wktArr[1]);
                                 if (!empty($wktArr[2])) {
@@ -1763,11 +1764,15 @@ function doParse(array $arr)
             $walkerRule = new TableWalkerRule(isAuth() ? $user : "*", "wfst", 'update', '');
             $factory = new StatementFactory(PDOCompatible: true);
             foreach ($featureMember as $hey) {
+                if (!isset($hey['Filter'])) {
+                    makeExceptionReport("Must specify filter for update", ["exceptionCode" => "MissingParameterValue"]);
+                }
                 $globalSrsName = $hey["srsName"] ?? null;
                 $hey["typeName"] = dropAllNameSpaces($hey["typeName"]);
                 if (isset($hey['Property']) && !isset($hey['Property'][0])) {
                     $hey['Property'] = array(0 => $hey['Property']);
                 }
+                $primeryKey = $postgisObject->getPrimeryKey($postgisschema . "." . $hey["typeName"]);
 
                 /**
                  * Load pre-processors
@@ -1817,7 +1822,7 @@ function doParse(array $arr)
                         makeExceptionReport("You don't have a role in the workflow of '{$hey['typeName']}'");
                     }
                     if (is_array($pair['Value'])) { // Must be geom if array
-                        $wktArr = toWkt($pair["Value"], false, getAxisOrder($globalSrsName), parseEpsgCode($globalSrsName));
+                        $wktArr = WfsFilter::toWkt($pair["Value"], false, WfsFilter::getAxisOrder($globalSrsName), WfsFilter::parseEpsgCode($globalSrsName));
                         $values[$fid][] = (array("{$pair['Name']}" => $wktArr[0], "srid" => $wktArr[1]));
                         unset($gmlCon);
                         unset($wktArr);
@@ -1828,7 +1833,7 @@ function doParse(array $arr)
                 $forSql2['tables'][$fid] = $hey['typeName'];
                 $forSql2['fields'] = $fields;
                 $forSql2['values'] = $values;
-                $forSql2['wheres'][$fid] = parseFilter($hey['Filter'], $hey['typeName']);
+                $forSql2['wheres'][$fid] =  WfsFilter::explode($hey['Filter'], null, null, $primeryKey["attname"]);
                 $fid++;
 
                 // Start HTTP basic authentication
@@ -1854,10 +1859,11 @@ function doParse(array $arr)
             $walkerRule = new TableWalkerRule(isAuth() ? $user : "*", "wfst", 'delete', '');
             $factory = new StatementFactory(PDOCompatible: true);
             foreach ($featureMember as $hey) {
-                $hey['typeName'] = dropAllNameSpaces($hey['typeName']);
                 if (!isset($hey['Filter'])) {
                     makeExceptionReport("Must specify filter for delete", ["exceptionCode" => "MissingParameterValue"]);
                 }
+                $hey['typeName'] = dropAllNameSpaces($hey['typeName']);
+                $primeryKey = $postgisObject->getPrimeryKey($postgisschema . "." . $hey["typeName"]);
 
                 /**
                  * Load pre-processors
@@ -1874,7 +1880,7 @@ function doParse(array $arr)
                 }
 
                 $forSql3['tables'][] = $hey['typeName'];
-                $forSql3['wheres'][] = parseFilter($hey['Filter'], $hey['typeName']);
+                $forSql3['wheres'][] =  WfsFilter::explode($hey['Filter'], null, null, $primeryKey["attname"]);
                 $roleObj = $layerObj->getRole($postgisschema, $hey['typeName'], $user);
                 $role = $roleObj["data"][$user] ?? "none";
                 $tableObj = new table($postgisschema . "." . $hey["typeName"]);
@@ -2414,315 +2420,6 @@ flush();
 ob_flush();
 
 /**
- * @param array<mixed> $arr
- * @return array<mixed>
- */
-function addNs(array $arr): array
-{
-    return array_combine(
-        array_map(function ($k) {
-            if ($k == "srsName" || $k == "_content") {
-                return $k;
-            } else {
-                return 'gml:' . $k;
-            }
-        }, array_keys($arr)),
-        array_map(function ($k) {
-            if (is_array($k)) {
-                return addNs($k);
-            } else {
-                return $k;
-            }
-        }, $arr)
-    );
-}
-
-/**
- * @param array<mixed> $arr
- * @return array<mixed>
- */
-function removeNs(array $arr): array
-{
-    return array_combine(
-        array_map(function ($k) {
-            return preg_replace("/[\w-]*:/", "", $k);
-        }, array_keys($arr)),
-        array_map(function ($k) {
-            if (is_array($k)) {
-                return removeNs($k);
-            } else {
-                return $k;
-            }
-        }, $arr)
-    );
-}
-
-/**
- * @param array<array<mixed>> $arr
- * @param bool|null $coordsOnly
- * @param string|null $axisOrder
- * @param string|null $globalSrid
- * @return array<string|null>
- */
-function toWkt(array $arr, ?bool $coordsOnly = false, ?string $axisOrder = null, ?string $globalSrid = null): array
-{
-    $arr = removeNs($arr);
-    $arr = addNs($arr);
-    $strEnd = "";
-    $srid = null;
-    $fid = null;
-    foreach ($arr as $key => $value) {
-        $str = "";
-        $strEnd = ")";
-        $srid = isset($value["srsName"]) ? parseEpsgCode($value["srsName"]) : $globalSrid;
-        $fid = $value["gml:id"] ?? null;
-        if (isset($value["srsName"])) {
-            $axisOrder = getAxisOrder($value["srsName"]);
-        }
-        if (sizeof(explode(":", $key)) == 1) {
-            $key = "gml:" . $key;
-        }
-        switch ($key) {
-            case "gml:Point":
-            case "gml:LineString":
-
-                $str .= $coordsOnly ? "(" : ($key == "gml:Point" ? "POINT" : "LINESTRING") . "(";
-                if (isset($value["gml:coordinates"]) && is_array($value["gml:coordinates"])) {
-                    $str .= coordinatesToWKT($value["gml:coordinates"]["_content"], $axisOrder);
-                } elseif (isset($value["gml:coordinates"])) {
-                    $str .= coordinatesToWKT($value["gml:coordinates"], $axisOrder);
-                } elseif (isset($value["gml:pos"]) && is_array($value["gml:pos"])) {
-                    $str .= postListToWKT($value["gml:pos"]["_content"], $axisOrder);
-                } elseif (isset($value["gml:pos"])) {
-                    $str .= postListToWKT($value["gml:pos"], $axisOrder);
-                } elseif (isset($value["gml:posList"]) && is_array($value["gml:posList"])) {
-                    $str .= postListToWKT($value["gml:posList"]["_content"], $axisOrder);
-                } elseif (isset($value["gml:posList"])) {
-                    $str .= postListToWKT($value["gml:posList"], $axisOrder);
-                }
-                break;
-            case "gml:Polygon":
-
-                $str .= $coordsOnly ? "((" : "POLYGON((";
-                $v = $value["gml:outerBoundaryIs"]["gml:LinearRing"] ?: $value["gml:exterior"]["gml:LinearRing"];
-                if (isset($v["gml:coordinates"]) && is_array($v["gml:coordinates"])) {
-                    $str .= coordinatesToWKT($v["gml:coordinates"]["_content"], $axisOrder);
-                } elseif (isset($v["gml:coordinates"])) {
-                    $str .= coordinatesToWKT($v["gml:coordinates"], $axisOrder);
-                } elseif (isset($v["gml:posList"]) && is_array($v["gml:posList"])) {
-                    $str .= postListToWKT($v["gml:posList"]["_content"], $axisOrder);
-                } elseif (isset($v["gml:posList"])) {
-                    $str .= postListToWKT($v["gml:posList"], $axisOrder);
-                }
-                $str .= ")";
-                $inner = $value["gml:innerBoundaryIs"] ?: $value["gml:interior"] ?: null;
-                if (isset($inner)) {
-                    $inner = addDiminsionOnArray($inner);
-                }
-                if (isset($inner[0]["gml:LinearRing"])) {
-                    foreach ($inner as $linearRing) {
-                        $v = $linearRing["gml:LinearRing"];
-                        if (isset($v["gml:coordinates"]) && is_array($v["gml:coordinates"])) {
-                            $str .= ",(" . coordinatesToWKT($v["gml:coordinates"]["_content"], $axisOrder) . ")";
-                        } elseif (isset($v["gml:coordinates"])) {
-                            $str .= ",(" . coordinatesToWKT($v["gml:coordinates"], $axisOrder) . ")";
-                        } elseif (isset($v["gml:posList"]) && is_array($v["gml:posList"])) {
-                            $str .= ",(" . postListToWKT($v["gml:posList"]["_content"], $axisOrder) . ")";
-                        } elseif (isset($v["gml:posList"])) {
-                            $str .= ",(" . postListToWKT($v["gml:posList"], $axisOrder) . ")";
-                        }
-                    }
-                }
-                break;
-            case "gml:MultiPoint":
-                $str .= "MULTIPOINT(";
-                $arr = [];
-                if (isset(reset($value["gml:pointMember"])["gml:Point"])) {
-                    foreach ($value["gml:pointMember"] as $member) {
-                        $arr[] = toWkt($member, true, $axisOrder)[0];
-                    }
-                } elseif (isset($value["gml:pointMember"])) {
-                    $arr[] = toWkt($value["gml:pointMember"], true, $axisOrder)[0];
-                }
-                // MapInfo v15 uses pointMembers instead of pointMember
-                if (isset($value["gml:pointMembers"]) && is_array($value["gml:pointMembers"]) && isset(reset($value["gml:pointMembers"])["gml:Point"])) {
-                    foreach ($value["gml:pointMembers"] as $member) {
-                        $arr[] = toWkt($member, true, $axisOrder)[0];
-                    }
-                } elseif (isset($value["gml:pointMembers"])) {
-                    $arr[] = toWkt($value["gml:pointMembers"], true, $axisOrder)[0];
-                }
-
-                $str .= implode(",", $arr);
-                break;
-            case "gml:MultiLineString":
-                $str .= "MULTILINESTRING(";
-                $arr = [];
-                if (isset(reset($value["gml:lineStringMember"])["gml:LineString"])) {
-                    foreach ($value["gml:lineStringMember"] as $member) {
-                        $arr[] = toWkt($member, true, $axisOrder)[0];
-                    }
-                } else {
-                    $arr[] = toWkt($value["gml:lineStringMember"], true, $axisOrder)[0];
-                }
-                $str .= implode(",", $arr);
-                break;
-            case "gml:MultiCurve":
-                $str .= "MULTILINESTRING(";
-                $arr = [];
-                if (isset(reset($value["gml:curveMember"])["gml:LineString"])) {
-                    foreach ($value["gml:curveMember"] as $member) {
-                        $arr[] = toWkt($member, true, $axisOrder)[0];
-                    }
-                } else {
-                    $arr[] = toWkt($value["gml:curveMember"], true, $axisOrder)[0];
-                }
-                $str .= implode(",", $arr);
-                break;
-            case "gml:MultiPolygon":
-                $str .= "MULTIPOLYGON(";
-                $arr = [];
-                if (isset(reset($value["gml:polygonMember"])["gml:Polygon"])) {
-                    foreach ($value["gml:polygonMember"] as $member) {
-                        $arr[] = toWkt($member, true, $axisOrder)[0];
-                    }
-                } else {
-                    $arr[] = toWkt($value["gml:polygonMember"], true, $axisOrder)[0];
-                }
-                $str .= implode(",", $arr);
-                break;
-            case "gml:MultiSurface":
-                $str .= "MULTIPOLYGON(";
-                $arr = [];
-                if (isset(reset($value["gml:surfaceMember"])["gml:Polygon"])) {
-                    foreach ($value["gml:surfaceMember"] as $member) {
-                        $arr[] = toWkt($member, true, $axisOrder)[0];
-                    }
-                } else {
-                    $arr[] = toWkt($value["gml:surfaceMember"], true, $axisOrder)[0];
-                }
-                $str .= implode(",", $arr);
-                break;
-        }
-    }
-    return [$str . $strEnd, $srid, $fid];
-}
-
-/**
- * @param string $str
- * @param string $axisOrder
- * @return string
- */
-function coordinatesToWKT(string $str, string $axisOrder): string
-{
-    $str = trim(preg_replace('/\s\s+/', ' ', $str));
-    $str = str_replace(" ", "&", $str);
-    $str = str_replace(",", " ", $str);
-    $str = str_replace("&", ",", $str);
-    // If urn EPSG reverse the axixOrder
-    if ($axisOrder == "latitude") {
-        $split = explode(",", $str);
-        foreach ($split as $value) {
-            $splitCoord = explode(" ", $value);
-            $reversedArr[] = $splitCoord[1] . " " . $splitCoord[0];
-        }
-        $str = implode(",", $reversedArr);
-    }
-    return $str;
-}
-
-/**
- * @param string $str
- * @param string $axisOrder
- * @return string
- */
-function postListToWKT(string $str, string $axisOrder): string
-{
-    $str = trim(preg_replace('/\s\s+/', ' ', $str));
-    $arr = explode(" ", trim($str));
-    $i = 1;
-    $newStr = "";
-    foreach ($arr as $value) {
-        $newStr .= $value;
-        if (is_int($i / 2)) {
-            $newStr .= ",";
-        } else {
-            $newStr .= " ";
-        }
-        $i++;
-    }
-    $newStr = substr($newStr, 0, strlen($newStr) - 1);
-    // If urn EPSG reverse the axixOrder
-    if ($axisOrder == "latitude") {
-        $split = explode(",", $newStr);
-        foreach ($split as $value) {
-            $splitCoord = explode(" ", $value);
-            $reversedArr[] = $splitCoord[1] . " " . $splitCoord[0];
-        }
-        $newStr = implode(",", $reversedArr);
-
-    }
-    return $newStr;
-}
-
-/**
- * EPSG:4326 longitude/latitude assumption
- * http://www.opengis.net/gml/srs/epsg.xml#xxxx longitude/latitude strict
- * urn:x-ogc:def:crs:EPSG:xxxx latitude/longitude strict
- * urn:ogc:def:crs:EPSG::4326 latitude/longitude strict
- *
- * @param string|null $epsg
- * @return string|null
- */
-function getAxisOrder(?string $epsg): ?string
-{
-    if (!$epsg) return null;
-    if ($epsg == "urn:ogc:def:crs:EPSG::4326" || substr($epsg, 0, 23) === "urn:x-ogc:def:crs:EPSG:") {
-        $first = "latitude";
-    } else {
-        $first = "longitude";
-    }
-    return $first;
-}
-
-/**
- * EPSG:4326 longitude/latitude assumption
- * http://www.opengis.net/gml/srs/epsg.xml#xxxx longitude/latitude strict
- * urn:x-ogc:def:crs:EPSG:xxxx latitude/longitude strict
- * urn:ogc:def:crs:EPSG::4326 latitude/longitude strict
- *
- * @param string|null $epsg
- * @return string|null
- */
-function parseEpsgCode(?string $epsg): ?string
-{
-    if (!$epsg) {
-        return null;
-    }
-    if (strpos($epsg, "#") !== false) {
-        $separartor = "#";
-    } else {
-        $separartor = ":";
-    }
-
-    $split = explode($separartor, $epsg);
-    $clean = end($split);
-    return preg_replace("/[\w]\./", "", $clean);
-}
-
-/**
- * @param array|null $array $array
- * @return array|array[]|null
- */
-function addDiminsionOnArray(?array $array): ?array
-{
-    if (!is_array($array[0]) && isset($array)) {
-        $array = array(0 => $array);
-    }
-    return $array;
-}
-
-/**
  * @param string $type
  * @param string|null $ns
  * @param string|null $tag
@@ -2757,217 +2454,6 @@ function writeTag(string $type, ?string $ns, ?string $tag, ?array $atts, ?bool $
     }
     echo $str;
     return null;
-}
-
-function isAssoc(array $arr)
-{
-    if (array() === $arr) return false;
-    return array_keys($arr) !== range(0, count($arr) - 1);
-}
-
-/**
- * @param array|string $filter
- * @param string $table
- * @return string
- * @throws PhpfastcacheInvalidArgumentException
- */
-function parseFilter($filter, string $table): string
-{
-    global $postgisObject;
-    global $postgisschema;
-    global $srsName;
-    global $srs;
-
-    $table = dropAllNameSpaces($table);
-    $st = \app\inc\Model::explodeTableName($table);
-    if (!$st['schema']) {
-        $st['schema'] = $postgisschema;
-    }
-    $primeryKey = $postgisObject->getPrimeryKey($st['schema'] . "." . $st['table']);
-    if (!isset($filter[0]) && !(isset($filter['And']) || isset($filter['Or']))) {
-        $filter = array(0 => $filter);
-    }
-    $sridOfTable = $postgisObject->getGeometryColumns($table, "srid");
-    $i = 0;
-    $boolOperator = null;
-    $where = [];
-    foreach ($filter as $key => $arr) {
-        // Skip xmlns:gml key
-        if (!is_array($arr)) {
-            continue;
-        }
-        if ($key == "And" || $key == "Or") {
-            $boolOperator = $key;
-        }
-        $first = array_key_first($arr);
-        if ($first !== "Not" && is_array($arr[$first]) && !isAssoc($arr[$first])) {
-            foreach ($arr[$first] as $f) {
-                $where[] = parseFilter([$first => $f], $table);
-            }
-        } elseif (isset($arr["And"]) || isset($arr["Or"]) && $key !== "Not") {
-            if (isset($arr["And"]) && !isAssoc($arr["And"])) {
-                foreach ($arr["And"] as $f) {
-                    $where[] = parseFilter(["And" => $f], $table);
-                }
-            } elseif (isset($arr["Or"]) && !isAssoc($arr["Or"])) {
-                foreach ($arr["Or"] as $f) {
-                    $where[] = parseFilter(["Or" => $f], $table);
-                }
-            } else {
-                $where[] = parseFilter($arr, $table);
-            }
-        }
-
-        // TODO strip double qoutes from PropertyName - OpenLayers adds them!
-        $prop = "Not";
-        if (isset($arr[$prop])) {
-            $value = $arr[$prop];
-            if (is_array($value) && !isAssoc($value)) {
-                foreach ($value as $f) {
-                    $where[] = "NOT" . parseFilter($f, $table);
-                }
-            } else {
-                $where[] = "NOT" . parseFilter($arr["Not"], $table);
-            }
-        }
-        $prop = "PropertyIsEqualTo";
-        if (isset($arr[$prop]) && isAssoc($arr[$prop]) && $key !== "Not") {
-            $value = $arr[$prop];
-            $matchCase = !(isset($value["matchCase"]) && $value["matchCase"] == "false");
-            $value["PropertyName"] = $value["PropertyName"] == "gml:name" ? $primeryKey["attname"] : $value["PropertyName"];
-            $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . ($matchCase ? "\"=" : "\" ILIKE ") . $postgisObject->quote($value['Literal']);
-        }
-
-        $prop = "PropertyIsNotEqualTo";
-        if (isset($arr[$prop]) && isAssoc($arr[$prop]) && $key !== "Not") {
-            $value = $arr[$prop];
-            $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . "\"<>'" . $value['Literal'] . "'";
-        }
-
-        $prop = "PropertyIsLessThan";
-        if (isset($arr[$prop]) && isAssoc($arr[$prop]) && $key !== "Not") {
-            $value = $arr[$prop];
-            $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . "\"<'" . $value['Literal'] . "'";
-        }
-
-        $prop = "PropertyIsGreaterThan";
-        if (isset($arr[$prop]) && isAssoc($arr[$prop]) && $key !== "Not") {
-            $value = $arr[$prop];
-            $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . "\">'" . $value['Literal'] . "'";
-        }
-
-        $prop = "PropertyIsLessThanOrEqualTo";
-        if (isset($arr[$prop]) && isAssoc($arr[$prop]) && $key !== "Not") {
-            $value = $arr[$prop];
-            $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . "\"<='" . $value['Literal'] . "'";
-        }
-
-        $prop = "PropertyIsGreaterThanOrEqualTo";
-        if (isset($arr[$prop]) && isAssoc($arr[$prop]) && $key !== "Not") {
-            $value = $arr[$prop];
-            $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . "\">='" . $value['Literal'] . "'";
-        }
-
-        $prop = "PropertyIsLike";
-        if (isset($arr[$prop]) && isAssoc($arr[$prop]) && $key !== "not") {
-            $value = $arr[$prop];
-            $where[] = "\"" . dropAllNameSpaces($value['PropertyName']) . "\" LIKE '%" . $value['Literal'] . "%'";
-        }
-
-        $prop = "PropertyIsBetween";
-        if (isset($arr[$prop]) && isAssoc($arr[$prop]) && $key !== "not") {
-            $value = $arr[$prop];
-            $w = [];
-            $value['PropertyName'] = dropAllNameSpaces($value['PropertyName']);
-            if ($value['LowerBoundary']) {
-                $w[] = "\"" . $value['PropertyName'] . "\" > '" . $value['LowerBoundary']['Literal'] . "'";
-            }
-            if ($value['UpperBoundary']) {
-                $w[] = "\"" . $value['PropertyName'] . "\" < '" . $value['UpperBoundary']['Literal'] . "'";
-            }
-            $where[] = "(" . implode(" AND ", $w) . ")";
-        }
-
-        // FeatureID
-        if (isset($arr['FeatureId']) && !isset($arr['FeatureId'][0])) {
-            $arr['FeatureId'] = array(0 => $arr['FeatureId']);
-        }
-        if (isset($arr['FeatureId'])) foreach ($arr['FeatureId'] as $value) {
-            $value['fid'] = preg_replace("/{$table}\./", "", $value['fid']); // remove table name
-            $where[] = "{$primeryKey['attname']}='" . $value['fid'] . "'";
-        }
-        // GmlObjectId
-        if (isset($arr['GmlObjectId'])) {
-            $arr['GmlObjectId'] = addDiminsionOnArray($arr['GmlObjectId']);
-            if (is_array($arr['GmlObjectId'])) foreach ($arr['GmlObjectId'] as $value) {
-                $value['gml:id'] = preg_replace("/{$table}\./", "", $value['gml:id']); // remove table name
-                $where[] = "{$primeryKey['attname']}='" . $value['gml:id'] . "'";
-            }
-        }
-
-        $prop = "Intersects";
-        if (isset($arr[$prop]) && isAssoc($arr[$prop]) && $key !== "not") {
-            $value = $arr[$prop];
-            $value['PropertyName'] = dropAllNameSpaces($value['PropertyName']);
-            $wktArr = toWKT($value, false, $srsName ? getAxisOrder($srsName) : "latitude");
-            $sridOfFilter = $wktArr[1];
-            if (empty($sridOfFilter)) $sridOfFilter = $srs; // If no filter on BBOX we think it must be same as the requested srs
-            if (empty($sridOfFilter)) $sridOfFilter = $sridOfTable; // If still no filter on BBOX we set it to native srs
-            $g = "ST_Transform(ST_GeometryFromText('" . $wktArr[0] . "'," . $sridOfFilter . "),$sridOfTable)";
-            $where[] =
-                "ST_Intersects"
-                . "({$g},"
-                . dropAllNameSpaces($value['PropertyName']) . ")";
-            unset($wktArr);
-        }
-        //BBox
-        if ($arr['BBOX']) {
-            $axisOrder = null;
-            $sridOfFilter = null;
-            if (is_array($arr['BBOX']['gml:Box']['gml:coordinates'])) {
-                $arr['BBOX']['gml:Box']['gml:coordinates']['_content'] = str_replace(" ", ",", $arr['BBOX']['gml:Box']['gml:coordinates']['_content']);
-                $coordsArr = explode(",", $arr['BBOX']['gml:Box']['gml:coordinates']['_content']);
-            } else {
-                $arr['BBOX']['gml:Box']['gml:coordinates'] = str_replace(" ", ",", $arr['BBOX']['gml:Box']['gml:coordinates']);
-                $coordsArr = explode(",", $arr['BBOX']['gml:Box']['gml:coordinates']);
-
-            }
-            if (is_array($arr['BBOX']['gml:Box'])) {
-                $sridOfFilter = parseEpsgCode($arr['BBOX']['gml:Box']['srsName']);
-                $axisOrder = getAxisOrder($arr['BBOX']['gml:Box']['srsName']);
-                if (!$sridOfFilter) $sridOfFilter = $srs; // If no filter on BBOX we think it must be same as the requested srs
-                if (!$sridOfFilter) $sridOfFilter = $sridOfTable; // If still no filter on BBOX we set it to native srs
-            }
-            if (isset($arr['BBOX']['gml:Envelope'])) {
-                $coordsArr = array_merge(explode(" ", $arr['BBOX']['gml:Envelope']['gml:lowerCorner']), explode(" ", $arr['BBOX']['gml:Envelope']['gml:upperCorner']));
-                $sridOfFilter = parseEpsgCode($arr['BBOX']['gml:Envelope']['srsName']);
-                $axisOrder = getAxisOrder($arr['BBOX']['gml:Envelope']['srsName']);
-                if (!$sridOfFilter) $sridOfFilter = $srs; // If no filter on BBOX we think it must be same as the requested srs
-                if (!$sridOfFilter) $sridOfFilter = $sridOfTable; // If still no filter on BBOX we set it to native srs
-            }
-            if ($axisOrder == "longitude") {
-                $where[] = "ST_Intersects"
-                    . "(ST_Transform(ST_GeometryFromText('POLYGON((" . $coordsArr[0] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[3] . "," . $coordsArr[2] . " " . $coordsArr[1] . "," . $coordsArr[0] . " " . $coordsArr[1] . "))',"
-                    . $sridOfFilter
-                    . "),$sridOfTable),"
-                    . "\"" . (dropAllNameSpaces($arr['BBOX']['PropertyName']) ?: $postgisObject->getGeometryColumns($table, "f_geometry_column")) . "\")";
-            } else {
-                $where[] = "ST_Intersects"
-                    . "(ST_Transform(ST_GeometryFromText('POLYGON((" . $coordsArr[1] . " " . $coordsArr[0] . "," . $coordsArr[3] . " " . $coordsArr[0] . "," . $coordsArr[3] . " " . $coordsArr[2] . "," . $coordsArr[1] . " " . $coordsArr[2] . "," . $coordsArr[1] . " " . $coordsArr[0] . "))',"
-                    . $sridOfFilter
-                    . "),$sridOfTable),"
-                    . "\"" . (dropAllNameSpaces($arr['BBOX']['PropertyName']) ?: $postgisObject->getGeometryColumns($table, "f_geometry_column")) . "\")";
-            }
-        }
-        // End of filter parsing
-        $i++;
-    }
-    if (empty($boolOperator)) {
-        $boolOperator = "OR";
-    }
-//    print_r($where);
-//    die();
-    return "(" . implode(" " . $boolOperator . " ", $where) . ")";
 }
 
 /**
