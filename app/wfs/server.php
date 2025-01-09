@@ -1300,8 +1300,7 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     }
     // Start rules
     $rule = new Rule();
-    $walkerRelation = new TableWalkerRelation();
-    $walkerRule = new TableWalkerRule($user, "wfst", 'select', '');
+    $walkerRule = new TableWalkerRule(isAuth() ? $user : "*", "wfst", 'select', '');
     $factory = new StatementFactory(PDOCompatible: true);
     // End rules
 
@@ -2194,7 +2193,7 @@ function doParse(array $arr)
                 } else {
                     $split = explode(".", $usedRelations["updateAndDelete"][0]);
                 }
-                $userFilter = new UserFilter($user, "wfs", $operation, "*", $split[0], $split[1]);
+                $userFilter = new UserFilter(isAuth() ? $user : "*", "wfs", $operation, "*", $split[0], $split[1]);
                 $geofence = new Geofence($userFilter);
                 // Try post proccesing
                 try {
