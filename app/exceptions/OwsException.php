@@ -34,7 +34,7 @@ class OwsException extends Exception
                 $str.= ' ' . $key . '="' . $value . '"';
             }
         }
-        $xml = "<ows:ExceptionReport xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" 
+        return "<ows:ExceptionReport xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" 
                 xmlns:ows=\"http://www.opengis.net/ows\" 
                 xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" 
                 version=\"1.0.0\" 
@@ -46,6 +46,5 @@ class OwsException extends Exception
                 </ows:Exception>
                 </ows:ExceptionReport>
                 ";
-        return $xml;
     }
 }

@@ -22,7 +22,7 @@ class ServiceException extends Exception
 
     public function getReport(): string
     {
-        $xml = "
+        return "
         <ServiceExceptionReport
         	   version=\"1.2.0\"
 	           xmlns=\"http://www.opengis.net/ogc\"
@@ -32,7 +32,5 @@ class ServiceException extends Exception
 	           </ServiceExceptionReport>
                 
                 ";
-
-        return $xml;
     }
 }
