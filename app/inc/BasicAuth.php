@@ -39,6 +39,7 @@ final class BasicAuth
      */
     public function authenticate(string $layerName, bool $isTransaction): void
     {
+        $userGroup = null;
         $setting = new Setting();
         $settings = $setting->get();
         if (!$this->isSession || $_SESSION['parentdb'] != $setting->postgisdb) {
@@ -47,7 +48,6 @@ final class BasicAuth
                 $password = Input::getAuthPw();
                 $userGroup = !empty($settings["data"]->userGroups->{$this->user}) ? $settings["data"]->userGroups->{$this->user} : null;
             }
-
             if (!empty($this->user) && !empty($password)) {
                 $this->isSubuser = $this->user != $setting->postgisdb;
                 $passwordCheck = !$this->isSubuser ? $settings["data"]->pw : $settings["data"]->pw_subuser->{$this->user};
@@ -77,6 +77,13 @@ final class BasicAuth
         }
     }
 
+    /**
+     * Sets the HTTP authentication headers for Basic Authentication
+     * and terminates the script with an unauthorized response.
+     *
+     * @param string $realm The authentication realm to display in the WWW-Authenticate header.
+     * @return never This method does not return a value as it terminates script execution.
+     */
     private static function setAuthHeader(string $realm): never
     {
         header("WWW-Authenticate: Basic realm=\"$realm\"");
