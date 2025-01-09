@@ -709,11 +709,9 @@ class DatabaseManagementCest
                     </parkeringsomraade>
                 </Insert>
             </Transaction>';
-        $username = $this->subUserId . "@" . $this->userId;
-        $password = $this->password;
-        $I->amHttpAuthenticated($username, $password);
+        $I->amHttpAuthenticated($this->subUserId, $this->password);
         $I->haveHttpHeader('Content-Type', 'application/xml');
-        $I->sendPost('/wfs/' . $username . '/public', $xml);
+        $I->sendPost('/wfs/' . $this->userId . '/public', $xml);
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsXml();
         $I->seeXmlResponseMatchesXpath('/ows:ExceptionReport');
@@ -870,11 +868,9 @@ class DatabaseManagementCest
                     </parkeringsomraade>
                 </Insert>
             </Transaction>';
-        $username = $this->subUserId . "@" . $this->userId;
-        $password = $this->password;
-        $I->amHttpAuthenticated($username, $password);
+        $I->amHttpAuthenticated($this->subUserId, $this->password);
         $I->haveHttpHeader('Content-Type', 'application/xml');
-        $I->sendPost('/wfs/' . $username . '/public', $xml);
+        $I->sendPost('/wfs/' . $this->userId . '/public', $xml);
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsXml();
         $I->seeResponseContains('<wfs:totalInserted>1</wfs:totalInserted>');
