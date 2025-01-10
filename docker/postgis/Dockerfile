@@ -42,6 +42,7 @@ RUN mkdir /var/www &&\
 # Add config files from Docker repo
 COPY conf/postgresql/pg_hba.conf /etc/postgresql/15/main/
 COPY conf/gc2/geometry_columns_join.sql /var/www/geocloud2/public/install/
+COPY conf/tds_fdw/locales.conf /etc/freetds/locales.conf
 
 # Copy GC2 config files from GIT repo, so we can create the template database and run migrations
 COPY conf/gc2/App.php /var/www/geocloud2/app/conf/App.php
