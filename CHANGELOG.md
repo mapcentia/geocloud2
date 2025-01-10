@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2025.1.0] - 2025-10-1
+
+### Security
+- Security bug in WFS-t/Geofence fixed. WFS username from URL was sent to the Geofence API even if the user was not authenticated (For queries, not transactions). Now username '*' is sent for non-authenticated users.
+
 ## [2024.12.3] - 2024-20-12
 
 ## Changed
