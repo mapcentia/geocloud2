@@ -153,6 +153,7 @@ class Sql extends AbstractApi
     {
         // TODO: Implement put_index() method.
     }
+
     #[OA\Delete(path: '/api/v4/sql/{id}', operationId: 'deleteSql', description: "Delete stored statement", tags: ['Sql'])]
     #[OA\Parameter(name: 'id', description: 'Id of statement', in: 'path', required: true, example: 'my_statement')]
     #[OA\Response(response: 204, description: "Statement deleted")]
@@ -231,8 +232,7 @@ class Sql extends AbstractApi
 
             ]),
         ]);
-            $this->validateRequest($collection, $body, 'clients', Input::getMethod());
-
+        $this->validateRequest($collection, $body, 'clients', Input::getMethod());
     }
 
     public function put_index(): array
