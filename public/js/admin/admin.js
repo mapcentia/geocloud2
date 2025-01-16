@@ -3687,8 +3687,22 @@ $(document).ready(function () {
                                             type: 'GET',
                                             success: function (response, textStatus, http) {
                                                 var validProperties = true,
-                                                    fieldsForStore = response.forStore,
-                                                    columnsForGrid = response.forGrid;
+                                                    fieldsForStore = response.forStore.map(e => {
+                                                        return {
+                                                            name: e.name.replace(/\./g, '_'),
+                                                            convert: function (v, record) {
+                                                                return record[e.name];  // Adgang til property med prik
+                                                            }
+                                                        }
+                                                    }),
+                                                    columnsForGrid = response.forGrid
+                                                        .map(e => {
+                                                        e.dataIndex = e.dataIndex.replace(/\./g, '_')
+                                                        return e;
+
+                                                    });
+
+                                                console.log(fieldsForStore, columnsForGrid)
 
                                                 // We add an editor to the fields
                                                 for (var i in columnsForGrid) {
@@ -3743,11 +3757,15 @@ $(document).ready(function () {
                                                                 //
                                                             }
                                                         },
-                                                        beforewrite: function () {
+                                                        beforewrite: function (proxy, action, record, options) {
                                                             if (r.data.hasPkey === false) {
                                                                 App.setAlert(App.STATUS_NOTICE, __("You can't edit a relation without a primary key"));
                                                                 dataStore.reload();
                                                                 return false;
+                                                            }
+                                                            if (action === 'update') {
+                                                                // console.log(record);
+                                                                record.data['id.namespace'] = record.get('id_namespace');
                                                             }
                                                         },
                                                         exception: function (proxy, type, action, options, response, arg) {
@@ -3773,7 +3791,7 @@ $(document).ready(function () {
                                                         successProperty: 'success',
                                                         idProperty: r.data.pkey,
                                                         root: 'data',
-                                                        messageProperty: 'message'
+                                                        messageProperty: 'message',
                                                     }, fieldsForStore),
                                                     proxy: proxy,
                                                     autoSave: true

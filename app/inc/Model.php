@@ -1056,6 +1056,23 @@ class Model
         return $response;
     }
 
+    public function createView(string $statement, string $name): void
+    {
+        $sql = "CREATE VIEW " . $name . " AS " . $statement;
+        $res = $this->prepare($sql);
+        $res->execute();
+    }
+
+    public function createMatView(string $statement, string $name, bool $withNoData = false): void
+    {
+        $sql = "CREATE MATERIALIZED VIEW " . $name . " AS " . $statement;
+        if ($withNoData) {
+            $sql.= " WITH NO DATA";
+        }
+        $res = $this->prepare($sql);
+        $res->execute();
+    }
+
     public function getTablesFromSchema(string $schema): array
     {
         $response = [];

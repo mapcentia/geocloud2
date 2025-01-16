@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2025.1.1] - 2025-16-1
+
+## Fixed
+- The GC2 Admin Data grid could not display data if a field name had a period. This is due to ExtJS handling of periods in JSON as paths. A fix is implemented, so data can be viewed, buy fields with periods can't still be updated.
+- Create views in GC2 Admin now works again. The SQL API was used, but it doesn't support CREATE VIEW any longer. A dedicated controller is created for creating (mat) views.
+
 ## [2025.1.0] - 2025-10-1
 
 ### Security
@@ -46,7 +52,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [2024.11.2] - 2024-28-11
 
 ## Fixed
-- OPTIONS request to API v4 now without auth header. Browsers don't send auth headers with preflight requests.
+- OPTIONS request to API v4 now works without auth headers. Browsers don't send auth headers with preflight requests.
 - In rule API iprange can now be either '*' or a cdri block. Before only the latter or empty was allowed. 
 
 ## [2024.11.1] - 2024-26-11

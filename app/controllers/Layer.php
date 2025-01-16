@@ -10,6 +10,7 @@ namespace app\controllers;
 
 use app\inc\Controller;
 use app\inc\Input;
+use app\inc\Util;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
 
@@ -223,5 +224,20 @@ class Layer extends Controller
     public function get_tags(): array
     {
         return $this->table->getTags();
+    }
+
+    public function post_view(): array
+    {
+        $data = json_decode(Input::get(), true);
+        $response = $this->auth(null, array());
+        if (!$response['success']) {
+            return $response;
+        }
+        if ($data['mat']) {
+            $this->table->createMatView(Util::base64urlDecode($data['q']), $data['name']);
+        } else {
+            $this->table->createView(Util::base64urlDecode($data['q']), $data['name']);
+        }
+        return ['success' => true];
     }
 }

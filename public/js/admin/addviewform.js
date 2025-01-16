@@ -69,11 +69,18 @@ addView.init = function () {
                         if (Ext.isNumber(safeName.charAt(0))) {
                             safeName = "_" + safeName;
                         }
-                        var param = "q=CREATE " + (values.matview === "on" ? "MATERIALIZED" : "") + " VIEW " + schema + "." + safeName + " AS " + encodeURIComponent(values.select) + "&key=" + settings.api_key;
+                        var param = {
+                            q: btoa(values.select).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''),
+                            mat: values.matview === "on",
+                            name: schema + '.' + safeName,
+                        };
                         Ext.Ajax.request({
-                            url: '/api/v2/sql/' + (subUser ? screenName + "@" + parentdb : screenName),
+                            url: '/controllers/layer/view',
                             method: 'post',
-                            params: param,
+                            params: Ext.util.JSON.encode(param),
+                            headers: {
+                                'Content-Type': 'application/json; charset=utf-8'
+                            },
                             success: function () {
                                 reLoadTree();
                                 writeFiles();
