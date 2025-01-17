@@ -234,7 +234,15 @@ $outputFormat = !empty($HTTP_FORM_VARS["OUTPUTFORMAT"]) ? $HTTP_FORM_VARS["OUTPU
 $srs = $srsName ? WfsFilter::parseEpsgCode($srsName) : ($srs ?: App::$param["epsg"] ?: null);
 
 if (!empty($HTTP_FORM_VARS["FILTER"])) {
-    $wheres[$HTTP_FORM_VARS["TYPENAME"]] = WfsFilter::explode($HTTP_FORM_VARS["FILTER"]);
+    $rel = $HTTP_FORM_VARS["TYPENAME"];
+    $f = $postgisObject->getGeometryColumns($postgisschema . "." . $rel, '*');
+    $wheres[$HTTP_FORM_VARS["TYPENAME"]] = WfsFilter::explode(
+        $HTTP_FORM_VARS["FILTER"],
+        $f['srid'],
+        $srs,
+        $postgisObject->getPrimeryKey($postgisschema . "." . $rel)['attname'],
+        $f['f_geometry_column'],
+    );
 }
 
 if ($version != "1.0.0" && $version != "1.1.0") {
