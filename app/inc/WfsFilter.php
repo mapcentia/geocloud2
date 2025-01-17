@@ -514,8 +514,7 @@ final class WfsFilter
                 $value['PropertyName'] = self::dropAllNameSpaces($value['PropertyName']);
                 $wktArr = self::toWkt($value);
                 $sridOfFilter = $wktArr[1];
-                if (empty($sridOfFilter)) $sridOfFilter = $srs; // If no filter on BBOX we think it must be same as the requested srs
-                if (empty($sridOfFilter)) $sridOfFilter = $sridOfTable; // If still no filter on BBOX we set it to native srs
+                $sridOfFilter = $sridOfFilter ?? $srs ?? $sridOfTable; // If no filter on BBOX we think it must be same as the requested srs. If still no filter on BBOX we set it to native srs.
                 $g = "ST_Transform(ST_GeometryFromText('" . $wktArr[0] . "'," . $sridOfFilter . "),$sridOfTable)";
                 $where[] =
                     "ST_Intersects"
