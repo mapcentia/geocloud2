@@ -360,7 +360,7 @@ class Layer extends Table
 
                 // Sort fields
                 uksort($fields, function ($a, $b) use ($fieldConf) {
-                    if (isset($fieldConf[$a]) && isset($fieldConf[$b])) {
+                    if (isset($fieldConf[$a]) && isset($fieldConf[$b]) && is_int($fieldConf[$a]) && is_int($fieldConf[$b])) {
                         $sortIdA = (int)$fieldConf[$a]['sort_id'];
                         $sortIdB = (int)$fieldConf[$b]['sort_id'];
                         return $sortIdA - $sortIdB;
