@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2025.1.2] - 2025-17-1
+
+## Fixed
+- Bug in WFSt filters, caused by the refactoring of the filter parser.
+
 ## [2025.1.1] - 2025-16-1
 
 ## Fixed
