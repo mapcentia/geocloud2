@@ -24,11 +24,6 @@ module.exports = function (grunt) {
                     ],
                     // Admin
                     'public/css/build/styles.min.css': [
-                        //'public/js/ext/examples/ux/superboxselect/superboxselect.css',
-                        //'public/js/ext/resources/css/ext-all-notheme.css',
-                        //'public/js/ext/resources/css/xtheme-dark.css',
-                        //'public/js/ext/examples/ux/gridfilters/css/GridFilters.css',
-                        //'public/js/ext/examples/ux/gridfilters/css/RangeMenu.css',
                         'public/js/bootstrap/css/bootstrap.icons.min.css',
                         'public/css/jquery.plupload.queue.css',
                         'public/css/styles.css'
@@ -59,7 +54,6 @@ module.exports = function (grunt) {
             all: ['public/js/*.js']
         },
         uglify: {
-            //adhoc: {files: {'public/js/openlayers/OpenLayers.js': ['public/js/openlayers/OpenLayers.js']}},
             options: {
                 mangle: false,
                 compress: false
