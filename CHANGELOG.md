@@ -9,6 +9,7 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## Fixed
 - Bug in WFSt filters, caused by the refactoring of the filter parser.
+- Refined regex in app\Model::getStarViewsFromStore for better matching of SQL fragments.
 
 ## [2025.1.1] - 2025-16-1
 

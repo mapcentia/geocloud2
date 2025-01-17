@@ -1159,7 +1159,7 @@ class Model
         foreach ($rows as $row) {
             $tmp = [];
             $def = $row['definition'];
-            preg_match('#(?<=FROM )(.|\n)*?(?= \w)#', $def, $matches);
+            preg_match('#(?<=FROM )(.|\n)*?((?=,)|(?=\s))#', $def, $matches);
             $replacement = " $matches[0].*";
             $tmp['definition'] = preg_replace('#(?<=SELECT)(.|\n)*?(?= FROM)#', $replacement, $def, 1);
             $tmp['name'] = $row['name'];

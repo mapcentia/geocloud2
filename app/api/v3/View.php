@@ -85,7 +85,7 @@ class View extends Controller
     /**
      * @throws GC2Exception
      */
-    public function put_index(): array
+    public function patch_index(): array
     {
         $model = new Model();
         $body = Input::getBody();
@@ -100,7 +100,7 @@ class View extends Controller
     /**
      * @throws Throwable
      */
-    public function put_refresh(): array
+    public function patch_refresh(): array
     {
         $model = new Model();
         $body = Input::getBody();
