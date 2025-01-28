@@ -8,7 +8,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [2025.1.2] - 2025-17-1
 
 ## Fixed
-- Bug in WFSt filters, caused by the refactoring of the filter parser.
+- Bug in WFS-t filters, caused by the refactoring of the filter parser.
 - Refined regex in app\Model::getStarViewsFromStore for better matching of SQL fragments.
 
 ## [2025.1.1] - 2025-16-1
@@ -53,7 +53,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - It's now possible to upload files in GeoPackages format (.gpkg). The Admin still doesn't use org2postgis, so gpkg files with multiple layers will not get all layers imported.
 
 ## Fixed
-- Workflow now works. Please notice: Workflow and Rules don't work together. This will be fixed.
+- 'Workflow' now works. Please notice: Workflow and Rules don't work together. This will be fixed.
 
 ## [2024.11.2] - 2024-28-11
 
@@ -73,13 +73,13 @@ and this project adheres to [CalVer](https://calver.org/).
 - Redis Cluster support for session was broken.
 - Support for both WMS 1.1 and 1.3 in WMS layers.
 - Disable transfer of metadata in newer versions of GDAL.
-- Columns with some special chars was filtered out. It doesn't seem that this is necessary anymore and the code is removed.
+- Columns with some special chars were filtered out. It doesn't seem that this is necessary anymore and the code is removed.
 
 ## [2024.10.1] - 2024-21-10
 
 ## Fixed
 
-- `app/controllers/upload/Processvector` class had a syntax error in TRUNCATE statement.
+- `app/controllers/upload/Processvector` class had a syntax error in the TRUNCATE statement.
 
 ## [2024.10.0] - 2024-7-10
 
