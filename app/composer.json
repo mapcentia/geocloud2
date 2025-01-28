@@ -32,7 +32,8 @@
         "ext-dba": "*",
         "twig/twig": "^3.0",
         "ext-redis": "*",
-        "symfony/validator": "^7.1"
+        "symfony/validator": "^7.1",
+        "voryx/pgasync": "^2.0"
     },
     "require-dev": {
         "phpstan/phpstan": "^1.10",
