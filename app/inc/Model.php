@@ -1117,9 +1117,13 @@ class Model
     }
 
     /**
-     * @param array $schemas
-     * @return int
-     * @throws GC2Exception
+     * Stores views from the specified schemas into the settings.views table.
+     *
+     * @param array $schemas The array of schemas from which to retrieve and store views.
+     *
+     * @return int The total number of views stored across all schemas.
+     * @throws GC2Exception If a specified schema does not exist.
+     *
      */
     public function storeViewsFromSchema(array $schemas): int
     {
@@ -1145,8 +1149,12 @@ class Model
     }
 
     /**
-     * @param string $schema
-     * @return array
+     * Retrieves a list of star view definitions from the specified schema.
+     *
+     * @param string $schema The name of the schema from which to retrieve star view definitions.
+     *
+     * @return array An array of star view definitions, each including the view name, schema name, modified definition, and materialization status.
+     *
      */
     public function getStarViewsFromStore(string $schema): array
     {
@@ -1159,7 +1167,7 @@ class Model
         foreach ($rows as $row) {
             $tmp = [];
             $def = $row['definition'];
-            preg_match('#(?<=FROM )(.|\n)*?((?=,)|(?=\s))#', $def, $matches);
+            preg_match('#(?<=FROM )(.|\n)*?((?=,)|(?=\s)|(?=;)|(?=$))#', $def, $matches);
             $replacement = " $matches[0].*";
             $tmp['definition'] = preg_replace('#(?<=SELECT)(.|\n)*?(?= FROM)#', $replacement, $def, 1);
             $tmp['name'] = $row['name'];
