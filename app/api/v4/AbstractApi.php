@@ -33,7 +33,7 @@ abstract class AbstractApi implements ApiInterface
     public array $jwt;
     private const array PRIVATE_PROPERTIES = ['num', 'typname', 'full_type', 'character_maximum_length',
         'numeric_precision', 'numeric_scale', 'max_bytes', 'reference', 'restriction', 'is_primary', 'is_unique',
-        'index_method', 'checks', 'geom_type', 'srid'];
+        'index_method', 'checks', 'geom_type', 'srid', 'is_array'];
 
     abstract public function validate(): void;
 
@@ -67,7 +67,7 @@ abstract class AbstractApi implements ApiInterface
         }
         if ($this->qualifiedName) {
             $this->doesTableExist();
-            $this->table = array_map(fn($n) => new TableModel($n, false, false), $this->qualifiedName);
+            $this->table = array_map(fn($n) => new TableModel($n, false, false, false), $this->qualifiedName);
         }
         if (!empty($this->column)) {
             $this->doesColumnExist();

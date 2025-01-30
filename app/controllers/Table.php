@@ -19,11 +19,14 @@ class Table extends Controller
 {
     private $table;
 
+    /**
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     function __construct()
     {
         parent::__construct();
 
-        $this->table = new \app\models\Table(Input::getPath()->part(4));
+        $this->table = new \app\models\Table(Input::getPath()->part(4), false, true, false);
     }
 
     /**

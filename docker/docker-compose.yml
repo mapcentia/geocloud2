@@ -42,9 +42,9 @@ services:
       - POSTGIS_HOST=postgis
       - POSTGIS_DB=postgres
       - POSTGIS_USER=gc2
-      - POSTGIS_PORT=5432
+      - POSTGIS_PORT=6432
       - POSTGIS_PW=1234
-      - POSTGIS_PGBOUNCER=false
+      - POSTGIS_PGBOUNCER=true
       - MODE_ENV=${MODE_ENV}
       - BUILD_ID=${BUILD_ID}
     extra_hosts:

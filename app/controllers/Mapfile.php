@@ -357,7 +357,7 @@ class Mapfile extends Controller
                 }
 
                 $rel = "{$row['f_table_schema']}.{$row['f_table_name']}";
-                $meta = $postgisObject->getMetaData($rel);
+                $meta = $postgisObject->getMetaData($rel, false, false, null, null, false, false);
                 $arr = !empty($row['def']) ? json_decode($row['def'], true) : [];
                 $props = array("label_column", "theme_column");
                 foreach ($props as $field) {
@@ -1365,7 +1365,7 @@ class Mapfile extends Controller
                 }
 
                 $rel = "{$row['f_table_schema']}.{$row['f_table_name']}";
-                $meta = $postgisObject->getMetaData($rel);
+                $meta = $postgisObject->getMetaData($rel, false, false, null, null, false, false);
                 $arr = !empty($row['def']) ? (array)json_decode($row['def']) : []; // Cast stdclass to array
                 $props = array("label_column", "theme_column");
                 foreach ($props as $field) {

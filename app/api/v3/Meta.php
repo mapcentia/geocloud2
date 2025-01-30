@@ -66,7 +66,7 @@ class Meta extends AbstractApi
         $layers = new Layer();
         $jwt = Jwt::validate()["data"];
         $auth = $jwt['superUser'];
-        $res = $layers->getAll($jwt["database"], $auth, Route2::getParam("query"), false, true);
+        $res = $layers->getAll($jwt["database"], $auth, Route2::getParam("query"), false, true, false, false);
         $rows = $res["data"];
         $out = $this->processRows($rows);
         return !$res["success"] ? $res : ["relations" => $out];

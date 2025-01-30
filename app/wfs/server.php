@@ -1128,7 +1128,7 @@ function doQuery(string $queryType)
                     $fields[$table] = substr($fields[$table], 0, strlen($fields[$table]) - 1);
                     $fieldsArr[$table] = explode(",", $fields[$table]);
                 } else {
-                    foreach ($postgisObject->getMetaData($table) as $key => $value) {
+                    foreach ($postgisObject->getMetaData($table, false, false, null, null, false, false) as $key => $value) {
                         if (!preg_match($specialChars, $key)) {
                             $fieldsArr[$table][] = $key;
                         }

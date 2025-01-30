@@ -114,7 +114,7 @@ class Layer extends Table
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function getAll(string $db, ?bool $auth, ?string $query = null, ?bool $includeExtent = false, ?bool $parse = false, ?bool $es = false): array
+    public function getAll(string $db, ?bool $auth, ?string $query = null, ?bool $includeExtent = false, ?bool $parse = false, ?bool $es = false, ?bool $lookupForeignTables = true): array
     {
         // If user is signed in with another user than the requested,
         // when consider the user as not signed in.
@@ -356,11 +356,11 @@ class Layer extends Table
                 } else {
                     $fieldConf = [];
                 }
-                $fields = $this->getMetaData($rel, false, true, $restrictions);
+                $fields = $this->getMetaData($rel, false, true, $restrictions, null, true, $lookupForeignTables);
 
                 // Sort fields
                 uksort($fields, function ($a, $b) use ($fieldConf) {
-                    if (isset($fieldConf[$a]) && isset($fieldConf[$b]) && is_int($fieldConf[$a]) && is_int($fieldConf[$b])) {
+                    if (isset($fieldConf[$a]) && isset($fieldConf[$b])) {
                         $sortIdA = (int)$fieldConf[$a]['sort_id'];
                         $sortIdB = (int)$fieldConf[$b]['sort_id'];
                         return $sortIdA - $sortIdB;

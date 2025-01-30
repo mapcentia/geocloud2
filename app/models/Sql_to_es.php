@@ -113,7 +113,7 @@ class Sql_to_es extends Model
             return $response;
         }
 
-        $arrayWithFields = $this->getMetaData($view, true); // Temp VIEW
+        $arrayWithFields = $this->getMetaData($view, true, false, false, null, null, false); // Temp VIEW
         $postgisVersion = $this->postgisVersion();
         $bits = explode(".", $postgisVersion["version"]);
         if ((int)$bits[0] < 3 && (int)$bits[1] === 0) {

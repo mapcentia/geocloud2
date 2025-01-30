@@ -386,7 +386,7 @@ function getCmdPaging(): void
     $gotFields = false;
     foreach ($cellTemps as $t) {
         if (!$gotFields) {
-            foreach ($table->getMetaData("{$workingSchema}.{$t}") as $k => $v) {
+            foreach ($table->getMetaData("{$workingSchema}.{$t}", false, false, null, null, false, false) as $k => $v) {
                 if (
                     array_reverse(explode("_", $k))[0] != "nil" &&
                     $k != "description_href" &&
@@ -980,7 +980,7 @@ if ($fieldObj) {
 }
 
 $fields = [];
-foreach ($table->getMetaData("{$workingSchema}.{$randTableName}") as $k => $v) {
+foreach ($table->getMetaData("{$workingSchema}.{$randTableName}", false, false, null, null, false, false) as $k => $v) {
     if (!in_array($k, $extras)) {
         $fields[] = $k;
     }

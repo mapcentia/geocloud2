@@ -44,7 +44,7 @@ class Table extends Model
      * @param bool $getEnums
      * @throws PhpfastcacheInvalidArgumentException
      */
-    function __construct(?string $table, bool $temp = false, bool $getEnums = true)
+    function __construct(?string $table, bool $temp = false, bool $getEnums = true, bool $lookupForeignTables = true)
     {
         parent::__construct();
         // Make sure db connection is init
@@ -81,7 +81,7 @@ class Table extends Model
 
             if ($this->exists) {
                 $this->geometryColumns = $this->getGeometryColumns($this->table, "*");
-                $this->metaData = $this->getMetaData($this->table, $temp, true, null, null, $getEnums);
+                $this->metaData = $this->getMetaData($this->table, $temp, true, null, null, $getEnums, $lookupForeignTables);
                 $this->geomField = $this->geometryColumns["f_geometry_column"];
                 $this->geomType = $this->geometryColumns["type"];
                 $this->primaryKey = $this->getPrimeryKey($this->table);
@@ -138,7 +138,7 @@ class Table extends Model
      */
     private function getType(array $field): array
     {
-        $field['is_array'] = (bool)preg_match("/\[]/", $field['type']);
+//        $field['is_array'] = (bool)preg_match("/\[]/", $field['type']);
 
         if (str_contains($field['type'], "smallint") ||
             str_contains($field['type'], "integer") ||
@@ -511,7 +511,7 @@ class Table extends Model
                         $value = $value ?: [];
                         if (!$raw) {
                             if ($pKeyValue) {
-                                $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["tags"], true) ?: [];
+                                $rec = $this->getRecordByPri($pKeyValue)["data"]["tags"] ? (json_decode($this->getRecordByPri($pKeyValue)["data"]["tags"], true) ?: []) : [];
                                 if ($append) {
                                     $value = array_merge($rec, $value);
                                 }
@@ -702,7 +702,6 @@ class Table extends Model
     public function purgeFieldConf(string $_key_): array
     {
         $this->clearCacheOnSchemaChanges();
-        $this->metaData = $this->getMetaData($this->table);
         $this->setType();
         $fieldconfArr = $this->geometryColumns["fieldconf"] === null ? [] : (array)json_decode($this->geometryColumns["fieldconf"]);
         foreach ($fieldconfArr as $key => $value) {
@@ -1069,7 +1068,7 @@ class Table extends Model
     public function getData(string $table, string $offset, string $limit): array
     {
         $response = [];
-        $arrayWithFields = $this->getMetaData($table);
+        $arrayWithFields = $this->getMetaData($table, false, false, null, null, false, false);
         foreach ($arrayWithFields as $key => $arr) {
             if ($arr['type'] == "bytea") {
                 $fieldsArr[] = "'binary' AS \"$key\"";

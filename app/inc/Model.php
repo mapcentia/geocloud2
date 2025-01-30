@@ -294,18 +294,17 @@ class Model
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function getMetaData(string $table, bool $temp = false, bool $restriction = true, array $restrictions = null, string $cacheKey = null, bool $getEnums = true): array
+    public function getMetaData(string $table, bool $temp = false, bool $restriction = true, array $restrictions = null, string $cacheKey = null, bool $getEnums = true, bool $lookupForeignTables = true): array
     {
         $cacheType = "metadata";
         $cacheRel = $cacheKey ?: $table;
         $cacheId = $this->postgisdb . "_" . $cacheRel . "_" . $cacheType . "_" . ($temp ? 'temp' : 'notTemp') . "_" . ($restriction ? 'restriction' : 'notRestriction') . "_" . ($getEnums ? 'enums' : 'notEnums') . "_" . ($restrictions ? 'restrictions_' . md5(serialize($restrictions)) : 'noRestrictions');
         $CachedString = Cache::getItem($cacheId);
-        $primaryKey = null;
+        $primaryKey = $this->getPrimeryKey($table)['attname'];
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
         } else {
             $arr = [];
-            $foreignConstrains = [];
 
             $_schema = sizeof(explode(".", $table)) > 1 ? explode(".", $table)[0] : null;
 
@@ -383,9 +382,8 @@ class Model
                 $references = [];
                 if ($restriction && !$restrictions) {
                     foreach ($foreignConstrains as $value) {
-                        if ($column == $value["child_column"] /*&& $value["parent_column"] != $primaryKey*/) {
-                            $references[] = $value["parent_schema"] . "." . $value["parent_table"] . "." . $value["parent_column"];
-                            if ($getEnums) {
+                        if ($column == $value["child_column"] && $value["parent_column"] != $primaryKey) {
+                            if ($getEnums && $lookupForeignTables) {
                                 $sql = "SELECT {$value["parent_column"]} FROM {$value["parent_schema"]}.{$value["parent_table"]}";
                                 $resC = $this->prepare($sql);
                                 $resC->execute();
@@ -429,13 +427,13 @@ class Model
                     foreach ($t->getGroupByAsArray($column)["data"] as $value) {
                         $foreignValues[] = ["value" => $value, "alias" => (string)$value];
                     }
-                } else {
-                    foreach ($foreignConstrains as $value) {
-                        if ($column == $value["child_column"]) {
-                            $references[] = $value["parent_schema"] . "." . $value["parent_table"] . "." . $value["parent_column"];
-                        }
+                }
+                foreach ($foreignConstrains as $value) {
+                    if ($column == $value["child_column"]) {
+                        $references[] = $value["parent_schema"] . "." . $value["parent_table"] . "." . $value["parent_column"];
                     }
                 }
+
                 foreach ($checkConstrains as $check) {
                     if ($check['column_name'] == $column) {
                         $checkValues[] = $check["con"];
@@ -449,6 +447,7 @@ class Model
                     // Derived
                     "num" => $row["ordinal_position"],
                     "typname" => $row["typname"],
+                    "is_array" => (bool)preg_match("/\[]/", $row["udt_name"]),
                     "full_type" => $row['full_type'],
                     "character_maximum_length" => $row["character_maximum_length"],
                     "numeric_precision" => $row["numeric_precision"],
@@ -511,7 +510,7 @@ class Model
                 $this->db = $c ?: null;
                 break;
             case "PDO" :
-                $this->db = new PDO("pgsql:dbname=$this->postgisdb;host=$this->postgishost;" . (($this->postgisport) ? "port=$this->postgisport" : ""), "$this->postgisuser", "$this->postgispw");
+                $this->db = new PDO("pgsql:dbname=$this->postgisdb;host=$this->postgishost;" . (($this->postgisport) ? "port=$this->postgisport" : ""), "$this->postgisuser", "$this->postgispw", [PDO::ATTR_EMULATE_PREPARES => true]);
                 $this->execQuery("set client_encoding='UTF8'");
                 break;
         }
@@ -826,7 +825,7 @@ class Model
 
             $res = $this->prepare($sql);
             $res->execute(["table" => $table, "schema" => $schema]);
-            $rows = $this->fetchAll($res);
+            $rows = $this->fetchAll($res, 'assoc');
             $response['success'] = true;
             $response['data'] = $rows;
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);
@@ -1067,7 +1066,7 @@ class Model
     {
         $sql = "CREATE MATERIALIZED VIEW " . $name . " AS " . $statement;
         if ($withNoData) {
-            $sql.= " WITH NO DATA";
+            $sql .= " WITH NO DATA";
         }
         $res = $this->prepare($sql);
         $res->execute();

@@ -51,6 +51,6 @@ class Meta extends Controller
         if (sizeof($dbSplit) == 2) {
             $db = $dbSplit[1];
         }
-        return $this->layers->getAll($db, Session::isAuth(), Route::getParam("query"), Input::get("iex"), Input::get("parse"), Input::get("es"));
+        return $this->layers->getAll($db, Session::isAuth(), Route::getParam("query"), Input::get("iex"), Input::get("parse"), Input::get("es"), false);
     }
 }
