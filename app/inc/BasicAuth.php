@@ -39,23 +39,23 @@ final class BasicAuth
      */
     public function authenticate(string $layerName, bool $isTransaction): void
     {
-        $userGroup = null;
         $setting = new Setting();
         $settings = $setting->get();
         if (!$this->isSession || $_SESSION['parentdb'] != $setting->postgisdb) {
             if (!empty(Input::getAuthUser())) {
                 $this->user = Input::getAuthUser();
                 $password = Input::getAuthPw();
-                $userGroup = !empty($settings["data"]->userGroups->{$this->user}) ? $settings["data"]->userGroups->{$this->user} : null;
             }
-            if (!empty($this->user) && !empty($password)) {
+            if (!empty($this->user) && isset($password)) {
                 $this->isSubuser = $this->user != $setting->postgisdb;
                 $passwordCheck = !$this->isSubuser ? $settings["data"]->pw : $settings["data"]->pw_subuser->{$this->user};
             }
-            if (empty($this->user) || (isset($password) && isset($passwordCheck) && Setting::encryptPw($password) != $passwordCheck)) {
+            if (empty($this->user) || empty($password) || empty($passwordCheck) || Setting::encryptPw($password) !== $passwordCheck) {
                 self::setAuthHeader($setting->postgisdb);
             }
         }
+        $userGroup = !empty($settings["data"]->userGroups->{$this->user}) ? $settings["data"]->userGroups->{$this->user} : null;
+
         // AUTHENTICATION SUCCESSFUL
         $schema = explode('.', $layerName)[0];
         if ($this->isSubuser && $this->user != $schema) {
