@@ -274,8 +274,7 @@ class Table extends AbstractApi
         $tables = [];
         foreach ((new Model())->getTablesFromSchema($schema) as $name) {
             $tableName = $schema . "." . $name;
-            $tables[] = self::getTable(new TableModel($tableName, false, true, false));
-            //$tables[] = ['name' => $tableName];
+            $tables[] = Input::get('namesOnly') !== null ? ['name' => $tableName] : self::getTable(new TableModel($tableName, false, true, false));
         }
         return $tables;
     }

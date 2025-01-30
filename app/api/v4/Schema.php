@@ -77,19 +77,25 @@ class Schema extends AbstractApi
         if ($this->jwt['superUser'] && empty($this->schema)) {
             foreach ($schemas as $schema) {
                 $name = $schema["schema"];
-                $response["schemas"][] = [
-                    "name" => $name,
-                    "tables" => Table::getTables($name),
+                $t = [
+                    'name' => $name,
                 ];
+                if (Input::get('namesOnly') === null) {
+                    $t['tables'] = Table::getTables($name);
+                }
+                $response["schemas"][] = $t;
             }
             return $response;
         } else {
             $r = [];
             foreach ($this->schema as $schema) {
-                $r[] = [
-                    "name" => $schema,
-                    "tables" => Table::getTables($schema),
+                $t = [
+                    'name' => $schema,
                 ];
+                if (Input::get('namesOnly') === null) {
+                    $t['tables'] = Table::getTables($schema);
+                }
+                $r[] = $t;
             }
             if (count($r) == 0) {
                 throw new GC2Exception("No schemas found", 404, null, 'NO_SCHEMAS');
