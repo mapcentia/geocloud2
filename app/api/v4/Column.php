@@ -243,7 +243,7 @@ class Column extends AbstractApi
         $response = [];
         $res = $table->getMetaData($table->table, false, true, null, null, false);
         foreach ($res as $key => $column) {
-            $column = array_merge(['name' => $key], $column);
+            $column = ['name' => $key, ...$column];
             $response[] = $column;
         }
         return parent::setPropertiesToPrivate($response);
