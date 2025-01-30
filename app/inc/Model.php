@@ -300,7 +300,7 @@ class Model
         $cacheRel = $cacheKey ?: $table;
         $cacheId = $this->postgisdb . "_" . $cacheRel . "_" . $cacheType . "_" . ($temp ? 'temp' : 'notTemp') . "_" . ($restriction ? 'restriction' : 'notRestriction') . "_" . ($getEnums ? 'enums' : 'notEnums') . "_" . ($restrictions ? 'restrictions_' . md5(serialize($restrictions)) : 'noRestrictions');
         $CachedString = Cache::getItem($cacheId);
-        $primaryKey = $this->getPrimeryKey($table)['attname'];
+
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
         } else {
@@ -315,7 +315,7 @@ class Model
             } else {
                 $_schema = str_replace(".", "", $_schema);
             }
-
+            $primaryKey = $this->getPrimeryKey($_schema . '.' . $_table)['attname'];
             $foreignConstrains = $this->getForeignConstrains($_schema, $_table)["data"];
             $checkConstrains = $this->getConstrains($_schema, $_table, 'c')["data"];
             $sql = "SELECT
