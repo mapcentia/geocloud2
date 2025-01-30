@@ -33,7 +33,7 @@ abstract class AbstractApi implements ApiInterface
     public array $jwt;
     private const array PRIVATE_PROPERTIES = ['num', 'typname', 'full_type', 'character_maximum_length',
         'numeric_precision', 'numeric_scale', 'max_bytes', 'reference', 'restriction', 'is_primary', 'is_unique',
-        'index_method', 'checks', 'geom_type', 'srid', 'is_array'];
+        'index_method', 'checks', 'geom_type', 'srid', 'is_array', 'udt_name'];
 
     abstract public function validate(): void;
 
@@ -237,6 +237,16 @@ abstract class AbstractApi implements ApiInterface
         }
 
         $data = $data == null ? null : json_decode($data, true);
+        function removeUnderscoreKeys(array $array): array {
+            $filteredArray = [];
+            foreach ($array as $key => $value) {
+                if (!is_string($key) || !str_starts_with($key, '_')) {
+                    $filteredArray[$key] = is_array($value) ? removeUnderscoreKeys($value) : $value;
+                }
+            }
+            return $filteredArray;
+        }
+        $data = is_array($data) ? removeUnderscoreKeys($data) : $data;
 
         if (in_array($method, ['delete', 'get']) && !empty($data)) {
             throw new GC2Exception("You can't use a payload in DELETE or GET", 400, null, "INVALID_DATA");
