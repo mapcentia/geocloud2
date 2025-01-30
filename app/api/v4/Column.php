@@ -241,7 +241,7 @@ class Column extends AbstractApi
     public static function getColumns(TableModel $table): array
     {
         $response = [];
-        $res = $table->metaData;
+        $res = $table->getMetaData($table->table, false, true, null, null, false);
         unset($res['typeObj']);
         foreach ($res as $key => $column) {
             $column = ['name' => $key, ...$column];
