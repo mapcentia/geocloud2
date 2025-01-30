@@ -226,7 +226,6 @@ class Index extends AbstractApi
             ]),
             'unique' => new Assert\Optional([
                 new Assert\Type('boolean'),
-                new Assert\NotBlank()
             ]),
         ]);
     }
