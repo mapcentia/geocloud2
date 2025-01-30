@@ -242,10 +242,8 @@ class Column extends AbstractApi
     {
         $response = [];
         $res = $table->getMetaData($table->table, false, true, null, null, false);
-        unset($res['typeObj']);
         foreach ($res as $key => $column) {
             $column = ['name' => $key, ...$column];
-            unset($column['typeObj']);
             $response[] = $column;
         }
         return parent::setPropertiesToPrivate($response);
