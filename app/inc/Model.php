@@ -440,13 +440,14 @@ class Model
                     }
                 }
                 $arr[$row["column_name"]] = array(
-                    "type" => $row["udt_name"],
+                    "type" => $row['full_type'],
                     "is_nullable" => !$row['is_nullable'],
                     "default_value" => $row['default_value'],
                     "comment" => $comments[$column],
                     // Derived
                     "num" => $row["ordinal_position"],
                     "typname" => $row["typname"],
+                    "udt_name" => $row["udt_name"],
                     "is_array" => (bool)preg_match("/\[]/", $row["udt_name"]),
                     "full_type" => $row['full_type'],
                     "character_maximum_length" => $row["character_maximum_length"],
