@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2025.1.3] - 2025-30-1
+
+## Security
+- Fix authentication flow and improve password validation in Basic Auth
+
 ## [2025.1.2] - 2025-17-1
 
 ## Fixed
