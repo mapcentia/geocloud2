@@ -125,17 +125,7 @@ class Client extends AbstractApi
                 ),
             ],
             type: "object"
-        ),
-        links: [
-            new OA\Link(
-                link: "getClient",
-                operationId: "getClient",
-                parameters: [
-                    "id" => '$response.body#/id'
-                ],
-                description: "Link to the new client"
-            )
-        ]
+        )
     )]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json'])]
@@ -263,7 +253,7 @@ class Client extends AbstractApi
         'description' => new Assert\Optional([
             new Assert\Length(['min' => 3])
         ]),
-        'redirect_uri' => new Assert\Required([
+        'redirect_uri' => new Assert\Optional([
             new Assert\Type('array'),
             new Assert\Count(['min' => 1]),
             new Assert\NotBlank(),

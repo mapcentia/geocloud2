@@ -74,9 +74,47 @@ class Table extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'getTable', description: "Get table", tags: ['Table'])]
-    #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: false, example: 'my_table')]
-    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Table"))]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Table"),
+        links: [
+            new OA\Link(
+                link: "getColumn",
+                operationId: "getColumn",
+                parameters: [
+                    "schema" => '$request.path.schema',
+                    "table " => '$request.path.table',
+                ],
+                description: "Link to columns."
+            ),
+            new OA\Link(
+                link: "getConstraint",
+                operationId: "getConstraint",
+                parameters: [
+                    "schema" => '$request.path.schema',
+                    "table " => '$request.path.table',
+                ],
+                description: "Link to constraints."
+            ),
+            new OA\Link(
+                link: "getIndex",
+                operationId: "getIndex",
+                parameters: [
+                    "schema" => '$request.path.schema',
+                    "table " => '$request.path.table',
+                ],
+                description: "Link to indices."
+            ),
+            new OA\Link(
+                link: "getPrivileges",
+                operationId: "getPrivileges",
+                parameters: [
+                    "schema" => '$request.path.schema',
+                    "table " => '$request.path.table',
+                ],
+                description: "Link to privileges."
+            )
+        ])]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -182,7 +220,7 @@ class Table extends AbstractApi
             }
             // Set comment
             if (property_exists($data, 'comment')) {
-                $layer->table =$this->qualifiedName[$i];
+                $layer->table = $this->qualifiedName[$i];
                 $layer->setTableComment($data->comment);
             }
         }
@@ -241,7 +279,6 @@ class Table extends AbstractApi
                 Constraint::addConstraint($table, $constraint->constraint, $constraint->columns, $constraint->check, $constraint->name, $constraint->referenced_table, $constraint->referenced_columns);
             }
         }
-
         return $r;
     }
 
@@ -256,11 +293,17 @@ class Table extends AbstractApi
         $constraints = Constraint::getConstraints($table);
         $indices = Index::getIndices($table);
         $comment = $table->getComment();
-        $response["name"] = $table->table;
-        $response["columns"] = $columns;
-        $response["indices"] = $indices;
-        $response["constraints"] = $constraints;
-        $response["comment"] = $comment;
+        $response['name'] = $table->table;
+        $response['columns'] = $columns;
+        $response['indices'] = $indices;
+        $response['constraints'] = $constraints;
+        $response['comment'] = $comment;
+        $response['links'] = [
+            'columns' => "/api/v4/schemas/{$table->schema}/tables/$table->tableWithOutSchema/columns",
+            'indices' => "/api/v4/schemas/{$table->schema}/tables/$table->tableWithOutSchema/indices",
+            'constraints' => "/api/v4/schemas/{$table->schema}/tables/$table->tableWithOutSchema/constraints",
+            'privileges' => "/api/v4/schemas/{$table->schema}/tables/$table->tableWithOutSchema/privileges",
+        ];
         return $response;
     }
 

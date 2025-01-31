@@ -52,7 +52,7 @@ class Privilege extends AbstractApi
      * @return array
      */
     #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/privileges', operationId: 'getPrivileges', description: "Get privileges", tags: ['Privileges'])]
-    #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Privilege"))]
     #[OA\Response(response: 404, description: 'Not found')]
@@ -78,7 +78,7 @@ class Privilege extends AbstractApi
      * @throws InvalidArgumentException|GC2Exception
      */
     #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}/privileges', operationId: 'patchPrivileges', description: "Update privileges", tags: ['Privileges'])]
-    #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\RequestBody(description: 'Privileges', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Privilege"))]
     #[OA\Response(response: 204, description: "Privileges updated")]

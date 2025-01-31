@@ -64,8 +64,18 @@ class Schema extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Get(path: '/api/v4/schemas/{schema}', operationId: 'getSchema', description: "Get schema", tags: ['Schema'])]
-    #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: false, example: 'my_schema')]
-    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Schema"))]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: false, example: 'my_schema')]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Schema"),
+        links: [
+            new OA\Link(
+                link: "getTableLink",
+                operationId: "getTable",
+                parameters: [
+                    "schema" => '$request.path.schema'
+                ],
+                description: "Link to tables in schema."
+            )
+        ])]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -74,27 +84,36 @@ class Schema extends AbstractApi
     {
         $schemas = $this->schemaObj->listAllSchemas()["data"];
         $response = [];
+
         if ($this->jwt['superUser'] && empty($this->schema)) {
             foreach ($schemas as $schema) {
                 $name = $schema["schema"];
+                $links = [
+                    'tables' => '/api/v4/schemas/' . $name . '/tables',
+                ];
                 $t = [
                     'name' => $name,
                 ];
                 if (Input::get('namesOnly') === null) {
                     $t['tables'] = Table::getTables($name);
                 }
+                $t['links'] = $links;
                 $response["schemas"][] = $t;
             }
             return $response;
         } else {
             $r = [];
             foreach ($this->schema as $schema) {
+                $links = [
+                    'tables' => '/api/v4/schemas/' . $schema . '/tables',
+                ];
                 $t = [
                     'name' => $schema,
                 ];
                 if (Input::get('namesOnly') === null) {
                     $t['tables'] = Table::getTables($schema);
                 }
+                $t['links'] = $links;
                 $r[] = $t;
             }
             if (count($r) == 0) {
@@ -169,7 +188,7 @@ class Schema extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Patch(path: '/api/v4/schemas/{schema}', operationId: 'patchSchema', description: "Rename schema", tags: ['Schema'])]
-    #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: false, example: 'my_schema')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: false, example: 'my_schema')]
     #[OA\RequestBody(description: 'Update schema', required: true, content: new OA\JsonContent(
         allOf: [
             new OA\Schema(
@@ -204,7 +223,7 @@ class Schema extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Delete(path: '/api/v4/schemas/{schema}', operationId: 'deleteSchema', description: "Delete schema", tags: ['Schema'])]
-    #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Response(response: 204, description: 'Schema deleted')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
