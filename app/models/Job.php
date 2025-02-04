@@ -111,7 +111,7 @@ class Job extends Model
                 if ($force) {
                     $job["delete_append"] = '0';
                 }
-                $cmd = "/usr/bin/nohup /usr/bin/timeout -s SIGINT 20h php " . __DIR__ . "/../scripts/get.php --db {$job["db"]} --schema {$job["schema"]} --safeName {$job["name"]} --url \"{$job["url"]}\" --srid {$job["epsg"]} --type {$job["type"]} --encoding {$job["encoding"]} --jobId {$job["id"]} --deleteAppend {$job["delete_append"]} --extra " . (base64_encode($job["extra"]) ?: "null") . " --preSql " . (base64_encode($job["presql"]) ?: "null") . " --postSql " . (base64_encode($job["postsql"]) ?: "null") . " --downloadSchema {$job["download_schema"]}";
+                $cmd = "/usr/bin/nohup /usr/bin/timeout -s SIGINT 20h php " . __DIR__ . "/../scripts/get.php --db {$job["db"]} --schema {$job["schema"]} --safeName {$job["name"]} --url \"{$job["url"]}\" --srid {$job["epsg"]} --type {$job["type"]} --encoding {$job["encoding"]} --jobId {$job["id"]} --deleteAppend {$job["delete_append"]} --extra " . (!empty($job["extra"]) ? base64_encode($job["extra"]) : "null") . " --preSql " . (!empty($job["presql"]) ? base64_encode($job["presql"]) : "null") . " --postSql " . (!empty($job["postsql"]) ? base64_encode($job["postsql"]) : "null") . " --downloadSchema {$job["download_schema"]}";
                 break;
             }
         }
