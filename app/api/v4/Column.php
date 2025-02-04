@@ -243,6 +243,8 @@ class Column extends AbstractApi
         $response = [];
         $res = $table->getMetaData($table->table, false, true, null, null, false);
         foreach ($res as $key => $column) {
+            $column['type'] = $column['full_type'];
+            unset($column['full_type']);
             $column = ['name' => $key, ...$column];
             $response[] = $column;
         }
