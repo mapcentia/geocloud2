@@ -255,7 +255,7 @@ class Table extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    public static function addTable(TableModel $table, stdClass $data, ApiInterface $caller): array
+    public static function addTable(TableModel $table, stdClass $data, AbstractApi $caller): array
     {
         // Load pre extensions and run processAddTable
         $caller->runExtension('processAddTable', $table);
