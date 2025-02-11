@@ -19,7 +19,7 @@ if ($_POST['database'] && $_POST['user'] && $_POST['password']) {
             default => null,
         };
         $data = (new SessionModel())->start($_POST['user'], $_POST['password'], "public", $_POST['database']);
-        header('HX-Refresh:true');
+        header('HX-Refresh: true');
     } catch (Exception) {
         $res = (new \app\models\User())->getDatabasesForUser($_POST['user']);
         echo $twig->render('login.html.twig', [...$res, ...$_POST]);
