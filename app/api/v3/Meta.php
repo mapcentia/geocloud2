@@ -68,20 +68,20 @@ class Meta extends AbstractApi
         $auth = $jwt['superUser'];
         $res = $layers->getAll($jwt["database"], $auth, Route2::getParam("query"), false, true, false, false);
         $rows = $res["data"];
-        $out = $this->processRows($rows);
+        $out = self::processRows($rows);
         return !$res["success"] ? $res : ["relations" => $out];
     }
 
-    private function processRows(array $rows): array
+    static function processRows(array $rows): array
     {
         $out = [];
         foreach ($rows as $row) {
-            $out[$row["_key_"]] = $this->processRow($row);
+            $out[$row["_key_"]] = self::processRow($row);
         }
         return $out;
     }
 
-    private function processRow(array $row): array
+    static function processRow(array $row): array
     {
         return [
             "uuid" => $row["uuid"],

@@ -124,7 +124,7 @@ abstract class Jwt
      * @param bool $returnCode
      * @return array
      */
-    public static function createJWT(string $secret, string $db, string $userId, bool $isSuperUser, string|null $userGroup, bool $access = true, bool $returnCode = false, ?string $codeChallenge = null, ?string $codeChallengeMethod = null): array
+    public static function createJWT(string $secret, string $db, string $userId, bool $isSuperUser, ?string $userGroup, bool $access = true, bool $returnCode = false, ?string $codeChallenge = null, ?string $codeChallengeMethod = null): array
     {
         $token = [
             "iss" => App::$param["host"],

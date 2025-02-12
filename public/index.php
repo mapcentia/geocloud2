@@ -14,6 +14,7 @@ use app\api\v3\Meta;
 use app\api\v4\Client;
 use app\api\v4\Column;
 use app\api\v4\Constraint;
+use app\api\v4\Commit;
 use app\api\v4\Geofence;
 use app\api\v4\Import;
 use app\api\v4\Index;
@@ -536,6 +537,20 @@ try {
             }
         });
 
+        Route2::add("api/v4/commit", new Commit(), function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                if (!$jwt["data"]["superUser"]) {
+                    echo Response::toJson(Response::SUPER_USER_ONLY);
+                    exit();
+                }
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
         Route::miss();
 
     } elseif (Input::getPath()->part(1) == "admin") {
@@ -642,8 +657,8 @@ try {
 } catch (Throwable $exception) {
     $response["success"] = false;
     $response["message"] = $exception->getMessage();
-    $response["file"] = $exception->getFile();
-    $response["line"] = $exception->getLine();
+//    $response["file"] = $exception->getFile();
+//    $response["line"] = $exception->getLine();
 //  $response["trace"] = $exception->getTraceAsString();
     $response["code"] = 500;
     echo Response::toJson($response);

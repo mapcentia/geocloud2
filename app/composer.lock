@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b78a1d6ffc1d6ebbd6a7811e6953dfae",
+    "content-hash": "e068c5b72c8f3c83658bd719d154f2ec",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -154,6 +154,58 @@
                 "source": "https://github.com/aws/aws-sdk-php/tree/3.297.1"
             },
             "time": "2024-01-25T19:18:40+00:00"
+        },
+        {
+            "name": "czproject/git-php",
+            "version": "v4.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/czproject/git-php.git",
+                "reference": "f7fe85cc526c5f8e7ed809f7f9c68f2696940a8a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/czproject/git-php/zipball/f7fe85cc526c5f8e7ed809f7f9c68f2696940a8a",
+                "reference": "f7fe85cc526c5f8e7ed809f7f9c68f2696940a8a",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.6.0"
+            },
+            "require-dev": {
+                "nette/tester": "^2.0"
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Jan Pecha",
+                    "email": "janpecha@email.cz"
+                }
+            ],
+            "description": "Library for work with Git repository in PHP.",
+            "keywords": [
+                "git"
+            ],
+            "support": {
+                "issues": "https://github.com/czproject/git-php/issues",
+                "source": "https://github.com/czproject/git-php/tree/v4.3.0"
+            },
+            "funding": [
+                {
+                    "url": "https://www.janpecha.cz/donate/git-php/",
+                    "type": "other"
+                }
+            ],
+            "time": "2024-08-05T13:28:31+00:00"
         },
         {
             "name": "dragonmantank/cron-expression",

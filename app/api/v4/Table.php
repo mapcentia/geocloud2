@@ -293,7 +293,7 @@ class Table extends AbstractApi
         $constraints = Constraint::getConstraints($table);
         $indices = Index::getIndices($table);
         $comment = $table->getComment();
-        $response['name'] = $table->table;
+        $response['name'] = $table->tableWithOutSchema;
         $response['columns'] = $columns;
         $response['indices'] = $indices;
         $response['constraints'] = $constraints;
