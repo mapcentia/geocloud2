@@ -227,7 +227,8 @@ class Layer extends Table
                 $schema = $row['f_table_schema'];
                 $rel = $row['f_table_schema'] . "." . $row['f_table_name'];
                 $primeryKey = $this->getPrimeryKey($rel); // Is cached
-                $resVersioning = $this->doesColumnExist($rel, "gc2_version_gid");  // Is cached
+                $resVersioning = $this->doesColumnExist($rel, "gc2_version_gid");
+                $relType = $this->isTableOrView($rel)['data'];
                 $versioning = $resVersioning["exists"];
                 $extent = null;
                 if ($row['type'] != "RASTER" && $includeExtent) {
@@ -291,6 +292,8 @@ class Layer extends Table
                 $arr = $this->array_push_assoc($arr, "pkey", $primeryKey['attname']);
 
                 $arr = $this->array_push_assoc($arr, "versioning", $versioning);
+
+                $arr = $this->array_push_assoc($arr, "rel_type", $relType);
 
                 if ($includeExtent) {
                     $arr = $this->array_push_assoc($arr, "extent", $extent);

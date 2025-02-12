@@ -439,10 +439,8 @@ class Model
                         $checkValues[] = $check["con"];
                     }
                 }
-                $arr[$row["column_name"]] = array(
+                $tmpArr = array(
                     "type" => $row['udt_name'],
-                    "is_nullable" => !$row['is_nullable'],
-                    "default_value" => $row['default_value'],
                     "comment" => $comments[$column],
                     // Derived
                     "num" => $row["ordinal_position"],
@@ -455,14 +453,23 @@ class Model
                     "max_bytes" => $row["max_bytes"],
                     "reference" => $references,
                     "restriction" => sizeof($foreignValues) > 0 ? $foreignValues : null,
-                    "is_primary" => !empty($index["is_primary"][$row["column_name"]]),
-                    "is_unique" => !empty($index["is_unique"][$row["column_name"]]),
-                    "index_method" => !empty($index["index_method"][$row["column_name"]]) ? $index["index_method"][$row["column_name"]] : null,
-                    "checks" => sizeof($checkValues) > 0 ? array_map(function ($con) {
+                );
+
+                // The following is only set on tables
+                if ($this->isTableOrView($table)['data'] == "TABLE") {
+                    $tmpArr["is_unique"] = !empty($index["is_unique"][$row["column_name"]]);
+                    $tmpArr["is_primary"] = !empty($index["is_primary"][$row["column_name"]]);
+                    $tmpArr["is_nullable"] = !$row['is_nullable'];
+                    $tmpArr["default_value"] = !$row['default_value'];
+                    $tmpArr["index_method"] = !empty($index["index_method"][$row["column_name"]]) ? $index["index_method"][$row["column_name"]] : null;
+                    $tmpArr["checks"] = sizeof($checkValues) > 0 ? array_map(function ($con) {
                         preg_match('#\((.*?)\)#', $con, $match);
                         return $match[1];
-                    }, $checkValues) : null,
-                );
+                    }, $checkValues) : null;
+                }
+
+                $arr[$row["column_name"]] = $tmpArr;
+
                 // Get type and srid of geometry
                 if ($row["udt_name"] == "geometry") {
                     preg_match("/[A-Z]\w+/", $row["full_type"], $matches);
@@ -471,8 +478,6 @@ class Model
                     $arr[$row["column_name"]]["srid"] = $matches[0];
                 }
             }
-
-
             $CachedString->set($arr)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
             Cache::save($CachedString);
             return $arr;

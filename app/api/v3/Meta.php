@@ -91,6 +91,7 @@ class Meta extends AbstractApi
             "f_table_abstract" => $row["f_table_abstract"],
             "f_table_title" => $row["f_table_title"],
             "pkey" => $row["pkey"],
+            "rel_type" => $row["rel_type"],
             "coord_dimension" => $row["coord_dimension"],
             "type" => $row["type"],
             "srid" => $row["srid"],
@@ -101,7 +102,7 @@ class Meta extends AbstractApi
             "tags" => $row["tags"],
 //            "privileges" => $row["privileges"],
             "fields" => $row["fields"],
-            "children" => $row["children"]
+            "children" => $row["children"],
         ];
     }
 
