@@ -114,15 +114,15 @@ class Commit extends AbstractApi
         $repo = $git->cloneRepository($repoStr, $targetDir);
         $baseDir = $repo->getRepositoryPath();
 
-        @mkdir($baseDir . "/$schema/schema", 0777, true);
-        @mkdir($baseDir . "/$schema/schema/tables", 0777, true);
+        @mkdir($baseDir . "/$schema", 0777, true);
+        @mkdir($baseDir . "/$schema/tables", 0777, true);
         @mkdir($baseDir . '/meta', 0777, true);
 
         foreach ((new Model())->getTablesFromSchema($schema) as $name) {
             $table = Table::getTable(new TableModel($schema . "." . $name, false, true, false));
-            $file = $baseDir . "/$schema/schema/tables/" . $name . '.json';
+            $file = $baseDir . "/$schema/tables/" . $name . '.json';
             file_put_contents($file, json_encode($table, JSON_PRETTY_PRINT));
-       //     $repo->removeFile($schema . '/schema/tables/' . $name . '.json');
+            //$repo->removeFile($schema . '/tables/' . $name . '.json');
         }
 
         if ($metaQuery) {
@@ -135,7 +135,7 @@ class Commit extends AbstractApi
             foreach ($out as $item) {
                 $file = $baseDir . '/meta/' . $item['f_table_schema']. '.' .$item['f_table_name'] . '.json';
                 file_put_contents($file, json_encode($item, JSON_PRETTY_PRINT));
-         // $repo->removeFile('meta/' . $item['f_table_name'] . '.json');
+                //$repo->removeFile('meta/' . $item['f_table_schema']. '.' .$item['f_table_name'] . '.json');
             }
         }
         $response['changes'] = false;

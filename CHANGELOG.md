@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2025.2.1] - 2025-12-2
+### Added
+- A new `v4/api/commit` API creates table JSON documents from a specific schema
+  and commit/push them to a remote Git repo. The Git repo must exist beforehand
+  A Meta query string can be submitted, and meta JSON documents will be committed also.
+
+```http
+POST http://127.0.0.1:8080/api/v4/commit HTTP/1.1
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer abc123
+
+{
+  "schema": "my-schema",
+  "message": "Update schema",
+  "repo": "https://user:password@github.com/path/repo.git",
+  "meta_query": "tag:my-tag"
+}
+```
+  Git folder structure:
+```text
+  repo/   
+  ├── my-schema/   
+  │   └── tables/   
+  │       ├── my-table1.json   
+  │       ├── my-table2.json   
+  │       └── my-table3.json   
+  └── meta/   
+      ├── schema.my-meta1.json    
+      └── schema.my-meta2.json  
+``` 
+
 ## [2025.2.0] - 2025-5-2
 ### Fixed
 - Regression regarding using `full_type` instead `udt_name` as type property in Model::getMetaData. Now rolled back to `udt_name`.
