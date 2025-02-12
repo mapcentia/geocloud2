@@ -52,6 +52,7 @@ use Symfony\Component\Validator\Constraints as Assert;
             title: "Meta query string",
             description: "Only commit meta for this search",
             type: "string",
+            default: null,
             example: "tags:mytables"
         ),
     ],
@@ -82,7 +83,7 @@ class Commit extends AbstractApi
         $schema = $data->schema;
         $message = $data->message;
         $repoStr = $data->repo;
-        $metaQuery = $data->meta_query ?? $schema;
+        $metaQuery = $data->meta_query;
         $response = [];
         $targetDir = App::$param['path'] . self::PATH;
 
@@ -123,16 +124,18 @@ class Commit extends AbstractApi
 //            $repo->removeFile($schema . '/schema/tables/' . $name . '.json');
         }
 
-        $layers = new Layer();
-        $jwt = Jwt::validate()["data"];
-        $auth = $jwt['superUser'];
-        $res = $layers->getAll($jwt["database"], $auth, $metaQuery, false, true, false, false);
-        $rows = $res["data"];
-        $out = Meta::processRows($rows);
-        foreach ($out as $item) {
-            $file = $baseDir . '/meta/' . $item['f_table_name'] . '.json';
-            file_put_contents($file, json_encode($item, JSON_PRETTY_PRINT));
+        if ($metaQuery) {
+            $layers = new Layer();
+            $jwt = Jwt::validate()["data"];
+            $auth = $jwt['superUser'];
+            $res = $layers->getAll($jwt["database"], $auth, $metaQuery, false, true, false, false);
+            $rows = $res["data"];
+            $out = Meta::processRows($rows);
+            foreach ($out as $item) {
+                $file = $baseDir . '/meta/' . $item['f_table_name'] . '.json';
+                file_put_contents($file, json_encode($item, JSON_PRETTY_PRINT));
 //            $repo->removeFile($schema. '/meta/' . $item['f_table_name'] . '.json');
+            }
         }
 
         $response['changes'] = false;
@@ -193,7 +196,6 @@ class Commit extends AbstractApi
             ]),
             'meta_query' => new Assert\Optional([
                 new Assert\Type('string'),
-                new Assert\NotBlank()
             ]),
         ]);
     }
