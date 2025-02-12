@@ -53,7 +53,7 @@ use Symfony\Component\Validator\Constraints as Assert;
             description: "Only commit meta for this search",
             type: "string",
             default: null,
-            example: "tags:mytables"
+            example: "tag:mytables"
         ),
     ],
     type: "object"
@@ -85,7 +85,7 @@ class Commit extends AbstractApi
         $repoStr = $data->repo;
         $metaQuery = $data->meta_query;
         $response = [];
-        $targetDir = App::$param['path'] . self::PATH;
+        $targetDir = App::$param['path'] . self::PATH . Jwt::validate()['data']['uid'] . '/';
 
         function destroy($dir): void
         {
@@ -106,22 +106,23 @@ class Commit extends AbstractApi
             }
             closedir($mydir);
         }
-
         destroy($targetDir);
+
+        //die();
 
         $git = new Git;
         $repo = $git->cloneRepository($repoStr, $targetDir);
-        $baseDir = $repo->getRepositoryPath() . '/' . $schema;
+        $baseDir = $repo->getRepositoryPath();
 
-        @mkdir($baseDir . '/schema', 0777, true);
-        @mkdir($baseDir . '/schema/tables', 0777, true);
+        @mkdir($baseDir . "/$schema/schema", 0777, true);
+        @mkdir($baseDir . "/$schema/schema/tables", 0777, true);
         @mkdir($baseDir . '/meta', 0777, true);
 
         foreach ((new Model())->getTablesFromSchema($schema) as $name) {
             $table = Table::getTable(new TableModel($schema . "." . $name, false, true, false));
-            $file = $baseDir . '/schema/tables/' . $name . '.json';
+            $file = $baseDir . "/$schema/schema/tables/" . $name . '.json';
             file_put_contents($file, json_encode($table, JSON_PRETTY_PRINT));
-//            $repo->removeFile($schema . '/schema/tables/' . $name . '.json');
+       //     $repo->removeFile($schema . '/schema/tables/' . $name . '.json');
         }
 
         if ($metaQuery) {
@@ -132,12 +133,11 @@ class Commit extends AbstractApi
             $rows = $res["data"];
             $out = Meta::processRows($rows);
             foreach ($out as $item) {
-                $file = $baseDir . '/meta/' . $item['f_table_name'] . '.json';
+                $file = $baseDir . '/meta/' . $item['f_table_schema']. '.' .$item['f_table_name'] . '.json';
                 file_put_contents($file, json_encode($item, JSON_PRETTY_PRINT));
-//            $repo->removeFile($schema. '/meta/' . $item['f_table_name'] . '.json');
+         // $repo->removeFile('meta/' . $item['f_table_name'] . '.json');
             }
         }
-
         $response['changes'] = false;
         $repo->addAllChanges();
         if ($repo->hasChanges()) {
