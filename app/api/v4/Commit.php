@@ -47,6 +47,13 @@ use Symfony\Component\Validator\Constraints as Assert;
             type: "string",
             example: "My first commit"
         ),
+        new OA\Property(
+            property: "meta_query",
+            title: "Meta query string",
+            description: "Only commit meta for this search",
+            type: "string",
+            example: "tags:mytables"
+        ),
     ],
     type: "object"
 )]
@@ -55,12 +62,14 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Commit extends AbstractApi
 {
 
+    protected const string PATH = 'app/tmp/git/';
+
     /**
      * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
      * @throws GitException
      */
-    #[OA\Post(path: '/api/v4/commit', operationId: 'postCommit',description: "Commit schema changes to Git and push to remote", tags: ['Commit'],)]
+    #[OA\Post(path: '/api/v4/commit', operationId: 'postCommit', description: "Commit schema changes to Git and push to remote", tags: ['Commit'],)]
     #[OA\RequestBody(description: 'New index', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Commit"))]
     #[OA\Response(response: 200, description: 'Committed')]
     #[OA\Response(response: 400, description: 'Bad request')]
@@ -72,9 +81,10 @@ class Commit extends AbstractApi
 
         $schema = $data->schema;
         $message = $data->message;
-        $repo = $data->repo;
+        $repoStr = $data->repo;
+        $metaQuery = $data->meta_query ?? $schema;
         $response = [];
-        $targetDir = App::$param['path'] . 'app/tmp/git/';
+        $targetDir = App::$param['path'] . self::PATH;
 
         function destroy($dir): void
         {
@@ -99,36 +109,37 @@ class Commit extends AbstractApi
         destroy($targetDir);
 
         $git = new Git;
-        $repo = $git->cloneRepository($repo, $targetDir);
+        $repo = $git->cloneRepository($repoStr, $targetDir);
         $baseDir = $repo->getRepositoryPath() . '/' . $schema;
 
         @mkdir($baseDir . '/schema', 0777, true);
+        @mkdir($baseDir . '/schema/tables', 0777, true);
         @mkdir($baseDir . '/meta', 0777, true);
 
         foreach ((new Model())->getTablesFromSchema($schema) as $name) {
             $table = Table::getTable(new TableModel($schema . "." . $name, false, true, false));
-            $file = $baseDir . '/schema/' . $name . '.json';
+            $file = $baseDir . '/schema/tables/' . $name . '.json';
             file_put_contents($file, json_encode($table, JSON_PRETTY_PRINT));
-//           $repo->removeFile('schema/' . $name . '.json');
+//            $repo->removeFile($schema . '/schema/tables/' . $name . '.json');
         }
 
         $layers = new Layer();
         $jwt = Jwt::validate()["data"];
         $auth = $jwt['superUser'];
-        $res = $layers->getAll($jwt["database"], $auth, 'tag:test', false, true, false, false);
+        $res = $layers->getAll($jwt["database"], $auth, $metaQuery, false, true, false, false);
         $rows = $res["data"];
         $out = Meta::processRows($rows);
         foreach ($out as $item) {
             $file = $baseDir . '/meta/' . $item['f_table_name'] . '.json';
             file_put_contents($file, json_encode($item, JSON_PRETTY_PRINT));
-//            $repo->removeFile('meta/' . $item['f_table_name'] . '.json');
+//            $repo->removeFile($schema. '/meta/' . $item['f_table_name'] . '.json');
         }
 
         $response['changes'] = false;
         $repo->addAllChanges();
         if ($repo->hasChanges()) {
             $repo->commit($message);
-            $repo->push(null, ['--repo' => $repo]);
+            $repo->push(null, ['--repo' => $repoStr]);
             $response['changes'] = true;
         }
         return $response;
@@ -179,6 +190,10 @@ class Commit extends AbstractApi
             ]),
             'repo' => new Assert\Required([
                 new Assert\Type('string'),
+            ]),
+            'meta_query' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\NotBlank()
             ]),
         ]);
     }
