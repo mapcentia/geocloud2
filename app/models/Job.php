@@ -96,7 +96,7 @@ class Job extends Model
      * @param array|null $include
      * @return true
      */
-    public function runJob(int $id, string $db, ?string $name = null, bool $force = false, ?array $include = null): true
+    public function runJob(int $id, string $db, ?string $name = null, bool $force = false, ?array $include = null, bool $async = false): true
     {
         $cmd = null;
         $job = null;
@@ -116,11 +116,19 @@ class Job extends Model
             }
         }
         if ($cmd) {
-            $pid = (int)exec($cmd . " > " . __DIR__ . "/../../public/logs/{$job["id"]}_scheduler.log  & echo $!");
+            $pid = (int)exec($cmd . " > " . __DIR__ . "/../../public/logs/{$job["id"]}_scheduler.log  </dev/null & echo $!");
             try {
                 $this->insert($job['id'], $pid, $job['db'], $name);
             } catch (Exception) {
                 $this->kill($pid); // If we can't insert the pid we kill the process if its running
+            }
+            if (!$async) {
+                do {
+                    $out = [];
+                    sleep(1);
+                    $cmd = "pgrep timeout";
+                    exec($cmd, $out);
+                } while (in_array($pid, $out));
             }
         }
         return true;

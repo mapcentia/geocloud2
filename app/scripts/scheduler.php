@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2025 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -13,7 +13,6 @@ use app\conf\App;
 use app\models\Database;
 use app\inc\Model;
 use GO\Scheduler;
-
 
 new App();
 Database::setDb("gc2scheduler");
@@ -36,45 +35,26 @@ try {
 while ($row = $model->fetchRow($res)) {
     if (!empty($row["active"]) && ((isset(App::$param["gc2scheduler"][$row["db"]]) && App::$param["gc2scheduler"][$row["db"]] === true) || (isset(App::$param["gc2scheduler"]["*"]) && App::$param["gc2scheduler"]["*"] === true))) {
         $args = [
+            "--id" => $row["id"],
             "--db" => $row["db"],
-            "--schema" => $row["schema"],
-            "--safeName" => $row["name"],
-            "--url" => $row["url"],
-            "--srid" => $row["epsg"],
-            "--type" => $row["type"],
-            "--encoding" => $row["encoding"],
-            "--jobId" => $row["id"],
-            "--deleteAppend" => $row["delete_append"],
-            "--extra" => (base64_encode($row["extra"]) ?: "null"),
-            "--preSql" => (base64_encode($row["presql"]) ?: "null"),
-            "--postSql" => (base64_encode($row["postsql"]) ?: "null"),
-            "--downloadSchema" => $row["download_schema"]
         ];
-        $cmd = "/var/www/geocloud2/app/scripts/get.php";
-        $scheduler->php(
-            $cmd,
-            "/usr/bin/php",
-            $args,
-            $row["id"] . "_" . $row["name"]
-        )->at("{$row["min"]} {$row["hour"]} {$row["dayofmonth"]} {$row["month"]} {$row["dayofweek"]}")->output([
-            __DIR__ . "/../../public/logs/{$row["id"]}_scheduler.log"
-        ])->onlyOne();
-        $scheduler->run();
+        // We run the job function through another script, so it runs async
+        // If using $scheduler->call() jobs will run in sync
+        $cmd = "/var/www/geocloud2/app/scripts/scheduler_run_job.php";
+        try {
+            $scheduler->php(
+                $cmd,
+                "/usr/bin/php",
+                $args,
+                $row["id"] . "_" . $row["name"]
+            )->at("{$row["min"]} {$row["hour"]} {$row["dayofmonth"]} {$row["month"]} {$row["dayofweek"]}")->output([
+                __DIR__ . "/../../public/logs/{$row["id"]}_scheduler.log"
+            ])->onlyOne();
+            $scheduler->run();
+        } catch (Exception $e) {
+            echo "Could not run job {$row['id']}. ERROR: " . $e->getMessage() . "\n";
+        }
     }
 }
 
-//while ($row = $model->fetchRow($res)) {
-//    if (!empty($row["active"]) && ((isset(App::$param["gc2scheduler"][$row["db"]]) && App::$param["gc2scheduler"][$row["db"]] === true) || (isset(App::$param["gc2scheduler"]["*"]) && App::$param["gc2scheduler"]["*"] === true))) {
-//        $cmd = "/var/www/geocloud2/app/scripts/get.php";
-//        $scheduler->call(
-//            function ($model, $row) {
-//                $model->runJob($row['id'], $row['db']);
-//            },
-//            [$model, $row],
-//            $row["id"]
-//        )->at("{$row["min"]} {$row["hour"]} {$row["dayofmonth"]} {$row["month"]} {$row["dayofweek"]}")->output([
-//            __DIR__ . "/../../public/logs/{$row["id"]}_scheduler.log"
-//        ])->onlyOne();
-//        $scheduler->run();
-//    }
-//}
+
