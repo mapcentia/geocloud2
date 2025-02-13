@@ -132,8 +132,8 @@ class Model
     public function getPrimeryKey(string $table): ?array
     {
         $cacheType = "prikey";
-        $cacheRel = ($table);
-        $cacheId = ($this->postgisdb . "_" . $cacheRel . "_" . $cacheType);
+        $cacheRel = $table;
+        $cacheId = $this->postgisdb . "_" . $cacheRel . "_" . $cacheType;
         if (!empty(App::$param["defaultPrimaryKey"])) {
             return ["attname" => App::$param["defaultPrimaryKey"]];
         }
@@ -678,54 +678,63 @@ class Model
     /**
      * @param string $table
      * @return array<string, string|int|bool>
+     * @throws GC2Exception
      */
     public function isTableOrView(string $table): array
     {
-        $bits = explode(".", $table);
-        // Check if table
-        $sql = "SELECT count(*) AS count FROM pg_tables WHERE schemaname = '$bits[0]' AND tablename='$bits[1]'";
-        $res = $this->prepare($sql);
-        $res->execute();
-        $row = $this->fetchRow($res);
-        if ($row["count"] > 0) {
-            $response['data'] = "TABLE";
-            $response['success'] = true;
-            return $response;
+        $cacheType = "isTableOrView";
+        $cacheRel = $table;
+        $cacheId = $this->postgisdb . "_" . $cacheRel  . "_" . $cacheType;
+        $CachedString = Cache::getItem($cacheId);
+        if ($CachedString != null && $CachedString->isHit()) {
+            return $CachedString->get();
+        } else {
+            $bits = explode(".", $table);
+            // Check if table
+            $sql = "SELECT count(*) AS count FROM pg_tables WHERE schemaname = '$bits[0]' AND tablename='$bits[1]'";
+            $res = $this->prepare($sql);
+            $res->execute();
+            $row = $this->fetchRow($res);
+            if ($row["count"] > 0) {
+                $response['data'] = "TABLE";
+                $response['success'] = true;
+
+            }
+            // Check if view
+            $sql = "SELECT count(*) AS count FROM pg_views WHERE schemaname = '$bits[0]' AND viewname='$bits[1]'";
+            $res = $this->prepare($sql);
+            $res->execute();
+            $row = $this->fetchRow($res);
+            if ($row["count"] > 0) {
+                $response['data'] = "VIEW";
+                $response['success'] = true;
+            }
+            // Check if materialized view
+            $sql = "SELECT count(*) AS count FROM pg_matviews WHERE schemaname = '$bits[0]' AND matviewname='$bits[1]'";
+            $res = $this->prepare($sql);
+            $res->execute();
+            $row = $this->fetchRow($res);
+            if ($row["count"] > 0) {
+                $response['data'] = "MATERIALIZED VIEW";
+                $response['success'] = true;
+            }
+            // Check if FOREIGN TABLE
+            $sql = "SELECT count(*) FROM information_schema.foreign_tables WHERE foreign_table_schema='$bits[0]' AND  foreign_table_name='$bits[1]'";
+            $res = $this->prepare($sql);
+            $res->execute();
+            $row = $this->fetchRow($res);
+            if ($row["count"] > 0) {
+                $response['data'] = "FOREIGN TABLE";
+                $response['success'] = true;
+            }
+
+            if (!empty($response['success'])) {
+                $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);
+                Cache::save($CachedString);
+                return $response;
+            }
+            throw new GC2Exception("Relation doesn't exists", 406, null, "RELATION_DO_NOT_EXISTS");
         }
-        // Check if view
-        $sql = "SELECT count(*) AS count FROM pg_views WHERE schemaname = '$bits[0]' AND viewname='$bits[1]'";
-        $res = $this->prepare($sql);
-        $res->execute();
-        $row = $this->fetchRow($res);
-        if ($row["count"] > 0) {
-            $response['data'] = "VIEW";
-            $response['success'] = true;
-            return $response;
-        }
-        // Check if materialized view
-        $sql = "SELECT count(*) AS count FROM pg_matviews WHERE schemaname = '$bits[0]' AND matviewname='$bits[1]'";
-        $res = $this->prepare($sql);
-        $res->execute();
-        $row = $this->fetchRow($res);
-        if ($row["count"] > 0) {
-            $response['data'] = "MATERIALIZED VIEW";
-            $response['success'] = true;
-            return $response;
-        }
-        // Check if FOREIGN TABLE
-        $sql = "SELECT count(*) FROM information_schema.foreign_tables WHERE foreign_table_schema='$bits[0]' AND  foreign_table_name='$bits[1]'";
-        $res = $this->prepare($sql);
-        $res->execute();
-        $row = $this->fetchRow($res);
-        if ($row["count"] > 0) {
-            $response['data'] = "FOREIGN TABLE";
-            $response['success'] = true;
-            return $response;
-        }
-        $response['success'] = false;
-        $response['message'] = "Relation doesn't exists";
-        $response['code'] = 406;
-        return $response;
     }
 
     /**
@@ -765,8 +774,8 @@ class Model
     public function doesColumnExist(string $table, string $column): array
     {
         $cacheType = "columnExist";
-        $cacheRel = ($table);
-        $cacheId = ($this->postgisdb . "_" . $cacheRel . "_" . $column . "_" . $cacheType);
+        $cacheRel = $table;
+        $cacheId = $this->postgisdb . "_" . $cacheRel . "_" . $column . "_" . $cacheType;
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
@@ -1510,11 +1519,12 @@ class Model
 
     public function getTableComment(string $schema, string $table)
     {
+        $type = $this->isTableOrView($schema. '.' . $table)['data'] == 'TABLE' ? 'BASE TABLE' : 'VIEW';
         $sql = "SELECT t.table_name, pg_catalog.obj_description(pgc.oid, 'pg_class')
                 FROM information_schema.tables t
                          INNER JOIN pg_catalog.pg_class pgc
                                     ON t.table_name = pgc.relname
-                WHERE t.table_type='BASE TABLE'
+                WHERE t.table_type='$type'
                   AND t.table_name=:table
                   AND t.table_schema=:schema";
 

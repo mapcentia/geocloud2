@@ -295,9 +295,11 @@ class Table extends AbstractApi
         $comment = $table->getComment();
         $response['name'] = $table->tableWithOutSchema;
         $response['columns'] = $columns;
-        $response['indices'] = $indices;
-        $response['constraints'] = $constraints;
         $response['comment'] = $comment;
+        if ($table->relType == "TABLE") {
+            $response['indices'] = $indices;
+            $response['constraints'] = $constraints;
+        }
         $response['links'] = [
             'columns' => "/api/v4/schemas/{$table->schema}/tables/$table->tableWithOutSchema/columns",
             'indices' => "/api/v4/schemas/{$table->schema}/tables/$table->tableWithOutSchema/indices",

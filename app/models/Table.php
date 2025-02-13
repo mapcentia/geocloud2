@@ -30,6 +30,7 @@ class Table extends Model
     public array $metaData;
     public ?string $geomField;
     public ?string $geomType;
+    public string $relType;
     public bool $exists;
     public bool $versioning;
     public bool $workflow;
@@ -43,6 +44,7 @@ class Table extends Model
      * @param bool $temp
      * @param bool $getEnums
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws GC2Exception
      */
     function __construct(?string $table, bool $temp = false, bool $getEnums = true, bool $lookupForeignTables = true)
     {
@@ -85,6 +87,7 @@ class Table extends Model
                 $this->geomField = $this->geometryColumns["f_geometry_column"];
                 $this->geomType = $this->geometryColumns["type"];
                 $this->primaryKey = $this->getPrimeryKey($this->table);
+                $this->relType = $this->isTableOrView(($this->table))['data'];
                 $this->setType();
                 $this->exists = true;
                 $res = $this->doesColumnExist($this->table, "gc2_version_gid");
@@ -1546,9 +1549,13 @@ class Table extends Model
         return $this->getTableComment($this->schema, $this->tableWithOutSchema);
     }
 
+    /**
+     * @throws GC2Exception
+     * @throws InvalidArgumentException
+     */
     public function setTableComment(?string $comment):void {
         $this->clearCacheOnSchemaChanges();
-        $sql = "COMMENT ON TABLE " . $this->doubleQuoteQualifiedName($this->table) . " IS '$comment';";
+        $sql = "COMMENT ON ". $this->isTableOrView($this->table)['data'] ." " . $this->doubleQuoteQualifiedName($this->table) . " IS '$comment';";
         $res = $this->prepare($sql);
         $res->execute();
     }
