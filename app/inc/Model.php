@@ -1490,7 +1490,7 @@ class Model
         }
     }
 
-    private function getColumnComments(string $schema, string $table): false|array
+    protected function getColumnComments(string $schema, string $table): array
     {
         $sql = "SELECT
                     cols.column_name, (

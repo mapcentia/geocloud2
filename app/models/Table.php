@@ -678,7 +678,7 @@ class Table extends Model
                     $arr = $this->array_push_assoc($arr, "properties", !empty($fieldconfArr[$key]->properties) ? $fieldconfArr[$key]->properties : null);
                     $arr = $this->array_push_assoc($arr, "ignore", !empty($fieldconfArr[$key]->ignore) && $fieldconfArr[$key]->ignore);
                     $arr = $this->array_push_assoc($arr, "is_nullable", !empty($value['is_nullable']));
-                    $arr = $this->array_push_assoc($arr, "desc", !empty($fieldconfArr[$key]->desc) ? $fieldconfArr[$key]->desc : "");
+                    $arr = $this->array_push_assoc($arr, "desc", $this->getColumnComment($key) ?: (empty($fieldconfArr[$key]->desc) ? $fieldconfArr[$key]->desc : ""));
                     if ($value['typeObj']['type'] == "decimal") {
                         $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
                     } else {
@@ -743,6 +743,10 @@ class Table extends Model
                 $res->execute();
                 $response['success'] = true;
                 return $response;
+            }
+            if ($this->metaData[$value->id]["desc"] != $value->desc && !$onlyRename) {
+                $this->setColumnComment($value->desc, $value->id);
+
             }
             // Case of renaming column
             if ($value->id != $value->column && ($value->column) && ($value->id)) {
@@ -1545,7 +1549,8 @@ class Table extends Model
         $res->execute();
     }
 
-    public function getComment() {
+    public function getComment()
+    {
         return $this->getTableComment($this->schema, $this->tableWithOutSchema);
     }
 
@@ -1553,20 +1558,26 @@ class Table extends Model
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    public function setTableComment(?string $comment):void {
+    public function setTableComment(?string $comment): void
+    {
         $this->clearCacheOnSchemaChanges();
-        $sql = "COMMENT ON ". $this->isTableOrView($this->table)['data'] ." " . $this->doubleQuoteQualifiedName($this->table) . " IS '$comment';";
+        $sql = "COMMENT ON " . $this->isTableOrView($this->table)['data'] . " " . $this->doubleQuoteQualifiedName($this->table) . " IS '$comment';";
         $res = $this->prepare($sql);
         $res->execute();
     }
 
-    public function setColumnComment(?string $comment, string $column):void {
+    public function setColumnComment(?string $comment, string $column): void
+    {
         $this->clearCacheOnSchemaChanges();
         $sql = "COMMENT ON COLUMN {$this->doubleQuoteQualifiedName($this->table)}.$column IS '$comment';";
         $res = $this->prepare($sql);
         $res->execute();
+    }
 
-
+    public function getColumnComment(string $column): ?string
+    {
+        $comments = $this->getColumnComments($this->schema, $this->tableWithOutSchema);
+        return $comments[$column];
     }
 
 
