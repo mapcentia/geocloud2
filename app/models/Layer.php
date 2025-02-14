@@ -286,6 +286,9 @@ class Layer extends Table
                             $value = json_decode($value);
                         }
                     }
+                    if ($key == "f_table_abstract") {
+                        $value = $this->getTableComment($row['f_table_schema'], $row['f_table_name']);
+                    }
                     $arr = $this->array_push_assoc($arr, $key, $value);
 
                 }

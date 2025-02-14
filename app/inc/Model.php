@@ -1493,20 +1493,20 @@ class Model
     protected function getColumnComments(string $schema, string $table): array
     {
         $sql = "SELECT
-                    cols.column_name, (
-                    SELECT
-                        pg_catalog.col_description(c.oid, cols.ordinal_position::int)
-                    FROM
-                        pg_catalog.pg_class c
-                    WHERE
-                        c.oid = (SELECT ('\"' || cols.table_schema || '\".\"' || cols.table_name || '\"')::regclass::oid)
-                      AND c.relname = cols.table_name
-                ) AS column_comment
-                FROM
-                    information_schema.columns cols
-                WHERE
-                   cols.table_name   = :table
-                  AND cols.table_schema = :schema";
+                    a.attname    AS column_name,
+                    pgd.description AS column_comment
+                FROM pg_class c
+                         JOIN pg_namespace n ON n.oid = c.relnamespace
+                         JOIN pg_attribute a ON a.attrelid = c.oid
+                         LEFT JOIN pg_description pgd
+                                   ON pgd.objoid = c.oid
+                                       AND pgd.objsubid = a.attnum
+                WHERE c.relkind IN ('r', 'p', 'v', 'm', 'f')  -- table, partitioned table, view, mat. view, foreign table
+                  AND a.attnum > 0                           -- skip system columns
+                  AND NOT a.attisdropped                     -- skip dropped columns
+                  AND n.nspname = :schema
+                  AND c.relname = :table
+                ORDER BY a.attnum";
 
         $res = $this->prepare($sql);
         $res->execute(['table' => $table, 'schema' => $schema]);
@@ -1519,17 +1519,16 @@ class Model
 
     public function getTableComment(string $schema, string $table)
     {
-        $type = $this->isTableOrView($schema. '.' . $table)['data'] == 'TABLE' ? 'BASE TABLE' : 'VIEW';
-        $sql = "SELECT t.table_name, pg_catalog.obj_description(pgc.oid, 'pg_class')
-                FROM information_schema.tables t
-                         INNER JOIN pg_catalog.pg_class pgc
-                                    ON t.table_name = pgc.relname
-                WHERE t.table_type='$type'
-                  AND t.table_name=:table
-                  AND t.table_schema=:schema";
+        $sql = "SELECT
+                    obj_description(c.oid, 'pg_class') AS comment
+                FROM pg_class c
+                JOIN pg_namespace n ON n.oid = c.relnamespace
+                WHERE c.relkind IN ('r', 'v', 'm', 'f')
+                  AND n.nspname = :schema
+                  AND c.relname = :table";
 
         $res = $this->prepare($sql);
         $res->execute(['table' => $table, 'schema' => $schema]);
-        return $res->fetchColumn(1);
+        return $res->fetchColumn();
     }
 }

@@ -318,6 +318,9 @@ class Table extends Model
                             $value = "MULTI" . $def->geotype;
                         }
                     }
+                    if ($key == "f_table_abstract") {
+                        $value = $this->getTableComment($row['f_table_schema'], $row['f_table_name']);
+                    }
                     // Set empty strings to NULL
                     $value = $value == "" ? null : $value;
                     $arr = $this->array_push_assoc($arr, $key, $value);
@@ -380,7 +383,6 @@ class Table extends Model
                 } else {
                     $arr = $this->array_push_assoc($arr, "indexed_in_es", null);
                 }
-
                 $response['data'][] = $arr;
             }
         }
@@ -535,6 +537,10 @@ class Table extends Model
                     } else {
                         if (is_object($value) || is_array($value)) {
                             $value = json_encode($value, JSON_UNESCAPED_UNICODE);
+                        }
+                        if ($key == "f_table_abstract") {
+                            $keySplit = explode(".", $data[0]['_key_']);
+                            (new Table($keySplit[0] . '.' . $keySplit[1]))->setTableComment($value);
                         }
                     }
                 }
@@ -1549,7 +1555,7 @@ class Table extends Model
         $res->execute();
     }
 
-    public function getComment()
+    public function getComment(): ?string
     {
         return $this->getTableComment($this->schema, $this->tableWithOutSchema);
     }
