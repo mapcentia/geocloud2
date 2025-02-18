@@ -345,19 +345,20 @@ class Elasticsearch extends Controller
         // Check which relation type we are dealing with
         // =============================================
 
-        $relationCheck = $model->isTableOrView($triggerSchema . "." . $triggerTable);
-        if (!$relationCheck["success"]) {
+        try {
+            $relationCheck = $model->isTableOrView($triggerSchema . "." . $triggerTable);
+            if ($relationCheck["data"] == "TABLE") {
+                $installTrigger = true;
+            }
+        } catch (GC2Exception) {
             return array
             (
                 "success" => false,
                 "message" => "Trigger table doesn't exists",
                 "code" => "406"
             );
-        } else {
-            if ($relationCheck["data"] == "TABLE") {
-                $installTrigger = true;
-            }
         }
+
         $relationType = $model->isTableOrView($fullTable);
         $priObj = $model->getPrimeryKey($fullTable);
         $priKey = $priObj["attname"];
@@ -491,51 +492,51 @@ class Elasticsearch extends Controller
         ];
 
         $map = [
+            "properties" =>
+                [
                     "properties" =>
                         [
+                            "type" => "object",
                             "properties" =>
                                 [
-                                    "type" => "object",
-                                    "properties" =>
+                                    "_key_" =>
                                         [
-                                            "_key_" =>
-                                                [
-                                                    "type" => "keyword"
-                                                ],
-                                            "f_table_name" => $typeahead,
-                                            "f_table_abstract" => $typeahead,
-                                            "f_table_title" => $typeahead,
-                                            "created" =>
-                                                [
-                                                    "type" => "text"
-                                                ],
-                                            "lastmodified" =>
-                                                [
-                                                    "type" => "text"
-                                                ],
-                                            "layergroup" => $typeahead,
-                                            "uuid" =>
-                                                [
-                                                    "type" => "text"
-                                                ],
-                                            "tags" =>
-                                                [
-                                                    "type" => "text"
-                                                ],
+                                            "type" => "keyword"
+                                        ],
+                                    "f_table_name" => $typeahead,
+                                    "f_table_abstract" => $typeahead,
+                                    "f_table_title" => $typeahead,
+                                    "created" =>
+                                        [
+                                            "type" => "text"
+                                        ],
+                                    "lastmodified" =>
+                                        [
+                                            "type" => "text"
+                                        ],
+                                    "layergroup" => $typeahead,
+                                    "uuid" =>
+                                        [
+                                            "type" => "text"
+                                        ],
+                                    "tags" =>
+                                        [
+                                            "type" => "text"
+                                        ],
 
-                                            "meta" =>
-                                                [
-                                                    "type" => "object",
-                                                    "properties" => [
-                                                        "meta_desc" => $typeahead,
-                                                        "layer_search_include" => [
-                                                            "type" => "boolean"
-                                                        ]
-                                                    ]
+                                    "meta" =>
+                                        [
+                                            "type" => "object",
+                                            "properties" => [
+                                                "meta_desc" => $typeahead,
+                                                "layer_search_include" => [
+                                                    "type" => "boolean"
                                                 ]
+                                            ]
                                         ]
                                 ]
                         ]
+                ]
         ];
 
         $ch = curl_init($this->host);
