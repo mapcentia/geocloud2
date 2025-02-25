@@ -96,7 +96,7 @@ class Sql extends Model
             $fileOrFolder .= "." . self::toAscii($formatSplit[1], null, "_");
             $path = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__vectors/" . $fileOrFolder;
             $cmd = "ogr2ogr " .
-                "-mapFieldType Time=String " .
+                "-mapFieldType Time=String,Binary=String " .
                 "-f \"" . explode("/", $format)[1] . "\" " . $path . " " .
                 "-t_srs \"EPSG:" . $this->srs . "\" " .
                 ($nlt ? "-nlt " . $nlt . " " : "") .
@@ -178,6 +178,7 @@ class Sql extends Model
                 }
             } elseif ($type == "bytea") {
                 $fieldsArr[] = "encode(\"$key\",'escape') as \"$key\"";
+//                $fieldsArr[] = "'https://' as \"$key\"";
             } else {
                 $fieldsArr[] = "\"$key\"";
             }
