@@ -984,6 +984,7 @@ class Table extends Model
      */
     public function create(string $table, ?string $type = null, ?int $srid = 4326, ?bool $minimum = false, ?string $comment = null): array
     {
+        $key = "$this->postgisschema.$table.";
         $this->clearCacheOnSchemaChanges();
         $response = [];
         $table = self::toAscii($table, array(), "_");
@@ -998,14 +999,22 @@ class Table extends Model
         $res = $this->prepare($sql);
         $res->execute();
         if ($type && $srid) {
-            $sql = "SELECT AddGeometryColumn('" . $this->postgisschema . "','$table','the_geom',$srid,'$type',2);"; // Must use schema prefix cos search path include public
+            $geomField = 'the_geom';
+            $sql = "SELECT AddGeometryColumn('" . $this->postgisschema . "','$table','$geomField',$srid,'$type',2);"; // Must use schema prefix cos search path include public
             $res = $this->prepare($sql);
             $res->execute();
+            $key.= $geomField;
+        } else {
+            $key.= 'gc2_non_postgis';
         }
         $this->table = $this->postgisschema . '.' . $table;
         if ($comment) {
             $this->setTableComment($comment);
         }
+        $sql = "INSERT into settings.geometry_columns_join (_key_) values (:key) ON CONFLICT DO NOTHING";
+        $res = $this->prepare($sql);
+        $res->execute(['key' => $key]);
+
         $response['success'] = true;
         $response['tableName'] = $table;
         $response['message'] = "Layer created";
