@@ -684,7 +684,7 @@ class Table extends Model
                     $arr = $this->array_push_assoc($arr, "properties", !empty($fieldconfArr[$key]->properties) ? $fieldconfArr[$key]->properties : null);
                     $arr = $this->array_push_assoc($arr, "ignore", !empty($fieldconfArr[$key]->ignore) && $fieldconfArr[$key]->ignore);
                     $arr = $this->array_push_assoc($arr, "is_nullable", !empty($value['is_nullable']));
-                    $arr = $this->array_push_assoc($arr, "desc", $this->getColumnComment($key) ?: (empty($fieldconfArr[$key]->desc) ? $fieldconfArr[$key]->desc : ""));
+                    $arr = $this->array_push_assoc($arr, "desc", $this->getColumnComment($key) ?: (!empty($fieldconfArr[$key]->desc) ? $fieldconfArr[$key]->desc : ""));
                     if ($value['typeObj']['type'] == "decimal") {
                         $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
                     } else {
