@@ -461,7 +461,7 @@ class Model
 
                 // The following is only set on tables
                 if (!$temp) {
-                    if ($this->isTableOrView($table)['data'] == "TABLE") {
+                    if ($this->isTableOrView($_schema . '.' . $_table)['data'] == "TABLE") {
                         $tmpArr["is_unique"] = !empty($index["is_unique"][$row["column_name"]]);
                         $tmpArr["is_primary"] = !empty($index["is_primary"][$row["column_name"]]);
                         $tmpArr["is_nullable"] = !$row['is_nullable'];
@@ -690,7 +690,7 @@ class Model
     {
         $cacheType = "isTableOrView";
         $cacheRel = $table;
-        $cacheId = $this->postgisdb . "_" . $cacheRel  . "_" . $cacheType;
+        $cacheId = $this->postgisdb . "_" . $cacheRel . "_" . $cacheType;
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
