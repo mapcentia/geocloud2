@@ -364,6 +364,13 @@ class Layer extends Table
                 }
                 $fields = $this->getMetaData($rel, false, true, $restrictions, null, true, $lookupForeignTables);
 
+                // If column comment is empty, we output from field conf
+                foreach ($fields as $key => $field) {
+                    if (empty($field['comment'])) {
+                        $fields[$key]['comment'] = $fieldConf[$key]['desc'];
+                    }
+                }
+
                 // Sort fields
                 uksort($fields, function ($a, $b) use ($fieldConf) {
                     if (isset($fieldConf[$a]) && isset($fieldConf[$b])) {
