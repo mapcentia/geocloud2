@@ -63,7 +63,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Commit extends AbstractApi
 {
 
-    protected const string PATH = 'app/tmp/git/';
+    protected const string PATH = 'app/tmp/';
 
     /**
      * @throws PhpfastcacheInvalidArgumentException
@@ -85,7 +85,7 @@ class Commit extends AbstractApi
         $repoStr = $data->repo;
         $metaQuery = $data->meta_query;
         $response = [];
-        $targetDir = App::$param['path'] . self::PATH . Jwt::validate()['data']['uid'] . '/';
+        $targetDir = App::$param['path'] . self::PATH . Jwt::validate()['data']['uid'] . '/__git/';
 
         function destroy($dir): void
         {
@@ -106,14 +106,16 @@ class Commit extends AbstractApi
             }
             closedir($mydir);
         }
-        destroy($targetDir);
 
-        //die();
+        destroy($targetDir);
 
         $git = new Git;
         $repo = $git->cloneRepository($repoStr, $targetDir);
-        $baseDir = $repo->getRepositoryPath();
+//        $baseDir = $repo->getRepositoryPath();
+        $baseDir = $repo->getRepositoryPath() . '/_data';
 
+        @mkdir($baseDir);
+        @mkdir($baseDir . "/$schema", 0777, true);
         @mkdir($baseDir . "/$schema", 0777, true);
         @mkdir($baseDir . "/$schema/tables", 0777, true);
         @mkdir($baseDir . '/meta', 0777, true);
@@ -122,7 +124,6 @@ class Commit extends AbstractApi
             $table = Table::getTable(new TableModel($schema . "." . $name, false, true, false));
             $file = $baseDir . "/$schema/tables/" . $name . '.json';
             file_put_contents($file, json_encode($table, JSON_PRETTY_PRINT));
-            //$repo->removeFile($schema . '/tables/' . $name . '.json');
         }
 
         if ($metaQuery) {
@@ -133,9 +134,14 @@ class Commit extends AbstractApi
             $rows = $res["data"];
             $out = Meta::processRows($rows);
             foreach ($out as $item) {
-                $file = $baseDir . '/meta/' . $item['f_table_schema']. '.' .$item['f_table_name'] . '.json';
+                $file = $baseDir . '/meta/' . $item['f_table_schema'] . '.' . $item['f_table_name'] . '.json';
                 file_put_contents($file, json_encode($item, JSON_PRETTY_PRINT));
-                //$repo->removeFile('meta/' . $item['f_table_schema']. '.' .$item['f_table_name'] . '.json');
+                // Check if template and write it out
+                $template = App::$param['path'] . '/app/conf/template.markdown';
+                if (is_file($template)) {
+                    $file = $repo->getRepositoryPath() . '/' . str_replace('t_', '', $item['f_table_name']) . '.markdown';
+                    file_put_contents($file, file_get_contents($template));
+                }
             }
         }
         $response['changes'] = false;
