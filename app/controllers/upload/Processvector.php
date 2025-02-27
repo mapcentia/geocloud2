@@ -124,7 +124,7 @@ class Processvector extends Controller
         };
 
         $model = new Model();
-        $tableExist = $model->isTableOrView(Connection::$param["postgisschema"] . "." . $safeName);
+        $tableExist = $model->doesRelationExists(Connection::$param["postgisschema"] . "." . $safeName);
         $tableExist = $tableExist["success"];
 
         if ($tableExist && !$overwrite && !$delete && !$append) {
