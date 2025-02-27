@@ -201,7 +201,7 @@ class Import extends AbstractApi
                 $result = $this->import($schema, $fileName, $data);
 
                 $result['schema'] = $schema;
-                $this->runExtension('processImport', (new Model()), $result);
+                $this->runPreExtension('processImport', (new Model()), $result);
                 $data->import = true;
             }
             $result = $this->import($schema, $fileName, $data);

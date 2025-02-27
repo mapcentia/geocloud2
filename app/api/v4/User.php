@@ -138,7 +138,7 @@ class User extends AbstractApi
         foreach ($data['users'] as $user) {
             $user['parentdb'] = $this->jwt['database'];
             // Load pre extensions and run processAddUser
-            $this->runExtension('processAddUser', $model);
+            $this->runPreExtension('processAddUser', $model);
             try {
                 (new Database())->createSchema($user['name']);
             } catch (Exception) {

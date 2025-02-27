@@ -124,10 +124,10 @@ class Table extends AbstractApi
         $r = [];
         if (!empty($this->qualifiedName)) {
             for ($i = 0; sizeof($this->qualifiedName) > $i; $i++) {
-                $r[] = self::getTable($this->table[$i]);
+                $r[] = self::getTable($this->table[$i], $this);
             }
         } else {
-            $r = self::getTables($this->schema[0]);
+            $r = self::getTables($this->schema[0], $this);
         }
         if (count($r) == 0) {
             throw new GC2Exception("No tables found in schema", 404, null, 'NO_TABLES');
@@ -258,7 +258,7 @@ class Table extends AbstractApi
     public static function addTable(TableModel $table, stdClass $data, AbstractApi $caller): array
     {
         // Load pre extensions and run processAddTable
-        $caller->runExtension('processAddTable', $table);
+        $caller->runPreExtension('processAddTable', $table);
 
         $r = $table->create($data->name, null, null, true, $data->comment);
         // Add columns
@@ -284,10 +284,11 @@ class Table extends AbstractApi
 
     /**
      * @param TableModel $table
+     * @param ApiInterface $self
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public static function getTable(TableModel $table): array
+    public static function getTable(TableModel $table, ApiInterface $self): array
     {
         $columns = Column::getColumns($table);
         $constraints = Constraint::getConstraints($table);
@@ -306,20 +307,22 @@ class Table extends AbstractApi
             'constraints' => "/api/v4/schemas/{$table->schema}/tables/$table->tableWithOutSchema/constraints",
             'privileges' => "/api/v4/schemas/{$table->schema}/tables/$table->tableWithOutSchema/privileges",
         ];
-        return $response;
+        return $self->runPostExtension('processGetTable', $table, $response);
     }
 
     /**
      * @param string $schema
+     * @param ApiInterface $self
      * @return array[]
+     * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public static function getTables(string $schema): array
+    public static function getTables(string $schema, ApiInterface $self): array
     {
         $tables = [];
         foreach ((new Model())->getTablesFromSchema($schema) as $name) {
             $tableName = $schema . "." . $name;
-            $tables[] = Input::get('namesOnly') !== null ? ['name' => $tableName] : self::getTable(new TableModel($tableName, false, true, false));
+            $tables[] = Input::get('namesOnly') !== null ? ['name' => $tableName] : self::getTable(new TableModel($tableName, false, true, false), $self);
         }
         return $tables;
     }

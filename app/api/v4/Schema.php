@@ -95,7 +95,7 @@ class Schema extends AbstractApi
                     'name' => $name,
                 ];
                 if (Input::get('namesOnly') === null) {
-                    $t['tables'] = Table::getTables($name);
+                    $t['tables'] = Table::getTables($name, $this);
                 }
                 $t['links'] = $links;
                 $response["schemas"][] = $t;
@@ -111,7 +111,7 @@ class Schema extends AbstractApi
                     'name' => $schema,
                 ];
                 if (Input::get('namesOnly') === null) {
-                    $t['tables'] = Table::getTables($schema);
+                    $t['tables'] = Table::getTables($schema, $this);
                 }
                 $t['links'] = $links;
                 $r[] = $t;

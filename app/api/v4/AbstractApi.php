@@ -203,13 +203,24 @@ abstract class AbstractApi implements ApiInterface
      * @param array|null $data The data to be passed to the method of each pre-processor.
      * @return array The modified data after being processed by all pre-processor classes.
      */
-    public function runExtension(string $method, Model $model, ?array $data = []): array
+    public function runPreExtension(string $method, Model $model, ?array $data = []): array
     {
         foreach (glob(dirname(__FILE__) . "/processors/*/classes/pre/*.php") as $filename) {
             $class = "app\\api\\v4\\processors\\" . array_reverse(explode("/", $filename))[3] .
                 "\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
             $preProcessor = new $class($this->jwt);
             $data = $preProcessor->{$method}($model, $data);
+        }
+        return $data;
+    }
+
+    public function runPostExtension(string $method, Model $model, ?array $data = []): array
+    {
+        foreach (glob(dirname(__FILE__) . "/processors/*/classes/post/*.php") as $filename) {
+            $class = "app\\api\\v4\\processors\\" . array_reverse(explode("/", $filename))[3] .
+                "\\classes\\post\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
+            $postProcessor = new $class($this->jwt);
+            $data = $postProcessor->{$method}($model, $data);
         }
         return $data;
     }
