@@ -103,6 +103,7 @@ class Meta extends AbstractApi
 //            "privileges" => $row["privileges"],
             "fields" => $row["fields"],
             "children" => $row["children"],
+            "meta" => $row["meta"],
         ];
     }
 
