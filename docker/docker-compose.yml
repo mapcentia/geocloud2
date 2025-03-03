@@ -36,6 +36,7 @@ services:
       - internal
     ports:
       - "8080:80"
+      - "8081:8080"
     expose:
       - 9000
     environment:
