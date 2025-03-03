@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2025.3.0] - 2025-3-3
+### Added
+- Commit API will now write out templates for each Meta object. The template should be defined in 'app/conf/template.markdown'. The template could be a Jekyll template for Github pages.
+- Layer Meta is now included in Meta v3 API.
+
+### CHANGED
+- Improvements in scheduler. Scheduler started jobs will now be logged and appear in Scheduler Status API. They will be tagged with 'Started by Scheduler'. When started from Admin they are tagged with 'Started from web-ui'.
+- Description on column will now be set as SQL comments also. For backward compatibility descriptions, which are not set as database comments will still be shown in GC2 Admin. But SQL comments will have precedence in GC2 Admin.
+- Description on layer will now be set as SQL comments also. For backward compatibility descriptions, which are not set as database comments will still be shown in GC2 Admin. But SQL comments will have precedence in GC2 Admin.
+- Make sure that the new tables created by API v4 are registered in settings.geometry_columns_join.
+
+### Fixed
+- mapFieldType (ogr2ogr flag) for Binary fields are set as 'String' in SQL API.
+
 ## [2025.2.1] - 2025-12-2
 ### Added
 - A new `v4/api/commit` API creates table JSON documents from a specific schema
