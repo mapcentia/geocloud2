@@ -98,9 +98,19 @@ RUN crontab -l 2>/dev/null| { cat; echo "* * * * * sudo -u www-data php -f /var/
 
 RUN crontab -l 2>/dev/null| { cat; echo "";} | crontab
 
+# Install ogr2postgis
+RUN cd ~ &&\
+    git clone https://github.com/mapcentia/ogr2postgis.git --branch gui &&\
+    cd ogr2postgis &&\
+    mkdir build &&\
+    cd build &&\
+    cmake .. && make && make install
+
 # Install gc2-cli
-RUN wget https://gc2-cli.s3.eu-west-1.amazonaws.com/versions/2024.3.3/79bafc6/apt/gc2_2024.3.3.79bafc6-1_amd64.deb -O gc2-cli.deb &&\
-    dpkg -i gc2-cli.deb
+RUN wget -qO- https://gc2-cli.s3.eu-west-1.amazonaws.com/channels/stable/apt/release.key | apt-key add - &&\
+    echo "deb  https://gc2-cli.s3.eu-west-1.amazonaws.com/channels/stable/apt ./" > /etc/apt/sources.list.d/gc2-cli.list &&\
+    apt update &&\
+    apt install gc2
 
 # Expose standard ports for HTTP and HTTPS
 EXPOSE 80
