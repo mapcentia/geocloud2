@@ -52,12 +52,12 @@ class Scheduler extends Controller
             $name = $data->name;
         }
         if (is_numeric($jobId)) {
-            $this->job->runJob((int)$jobId, $this->db, $name, $force);
+            $this->job->runJob((int)$jobId, $this->db, $name, $force, null, true);
         } else {
             $jobs = $this->job->getAll($this->db)['data'];
             foreach ($jobs as $job) {
                 if ($job['schema'] == $jobId) {
-                    $this->job->runJob($job['id'], $this->db, $name, $force, $include);
+                    $this->job->runJob($job['id'], $this->db, $name, $force, $include, true);
                 }
             }
         }
