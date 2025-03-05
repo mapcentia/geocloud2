@@ -111,14 +111,13 @@ class Commit extends AbstractApi
 
         $git = new Git;
         $repo = $git->cloneRepository($repoStr, $targetDir);
-//        $baseDir = $repo->getRepositoryPath();
         $baseDir = $repo->getRepositoryPath() . '/_data';
 
         @mkdir($baseDir);
         @mkdir($baseDir . "/$schema", 0777, true);
-        @mkdir($baseDir . "/$schema", 0777, true);
         @mkdir($baseDir . "/$schema/tables", 0777, true);
         @mkdir($baseDir . '/meta', 0777, true);
+        @mkdir($repo->getRepositoryPath() . '/pages', 0777, true);
 
         foreach ((new Model())->getTablesFromSchema($schema) as $name) {
             $table = Table::getTable(new TableModel($schema . "." . $name, false, true, false), $this);
@@ -139,7 +138,8 @@ class Commit extends AbstractApi
                 // Check if template and write it out
                 $template = App::$param['path'] . '/app/conf/template.markdown';
                 if (is_file($template)) {
-                    $file = $repo->getRepositoryPath() . '/' . str_replace('t_', '', $item['f_table_name']) . '.markdown';
+                    $file = $repo->getRepositoryPath() . '/pages/' . str_replace('t_', '', $item['f_table_name']) . '.markdown';
+                    echo $file . "\n";
                     file_put_contents($file, file_get_contents($template));
                 }
             }
