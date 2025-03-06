@@ -2,12 +2,14 @@
 
 namespace app\event;
 
+use Amp\ByteStream\BufferException;
 use Amp\Websocket\WebsocketClient;
 use Amp\Websocket\Server\WebsocketClientGateway;
 use Amp\Websocket\Server\WebsocketClientHandler;
 use Amp\Websocket\Server\WebsocketGateway;
 use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
+use Amp\Websocket\WebsocketClosedException;
 
 readonly class WsBroadcast implements WebsocketClientHandler
 {
@@ -15,6 +17,10 @@ readonly class WsBroadcast implements WebsocketClientHandler
     {
     }
 
+    /**
+     * @throws WebsocketClosedException
+     * @throws BufferException
+     */
     public function handleClient(WebsocketClient $client, Request $request, Response $response): void
     {
         $this->gateway->addClient($client);
@@ -33,6 +39,9 @@ readonly class WsBroadcast implements WebsocketClientHandler
         $this->gateway->broadcastText($text);
     }
 
+    /**
+     * @throws WebsocketClosedException
+     */
     public function sendToClient(WebsocketClient $client, string $text): void
     {
         $client->sendText($text . " " . $client->getId());

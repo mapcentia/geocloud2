@@ -8,13 +8,9 @@ use Amp\Log\StreamHandler;
 use Amp\Socket;
 use Amp\Websocket\Server\Rfc6455Acceptor;
 use Amp\Websocket\Server\Websocket;
-use Amp\Websocket\Server\WebsocketClientGateway;
 use app\conf\App;
 use Monolog\Logger;
 use app\event\WsBroadcast;
-
-
-use app\event\Message;
 use function Amp\trapSignal;
 use function Amp\ByteStream\getStdout;
 use function Amp\async;
@@ -51,7 +47,7 @@ $server->start($router, $errorHandler);
 
 async(function () use (&$broadcastHandler) {
     while (true) {
-        $broadcastHandler->sendToAll(json_encode(["hello" => 1]));
+        //$broadcastHandler->sendToAll(json_encode(["hello" => 1]));
         delay(3);
     }
 });

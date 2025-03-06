@@ -60,7 +60,7 @@ $connectionFactory = new Rfc6455ConnectionFactory(
     closePeriod: 0.5, // 0.5 seconds
 );
 
-function preparePayload(array $payLoad, $db)
+function preparePayload(array $payLoad, $db): array
 {
     $h = [];
     foreach ($payLoad as $p) {
@@ -70,7 +70,7 @@ function preparePayload(array $payLoad, $db)
     return ($h);
 }
 
-$flushBatch = function (string $db, int &$count, int &$startTime, string $channelName = '')
+$flushBatch = function (string $db, int &$count, int &$startTime, string $channelName = '') use ($payLoad)
 {
     global $broadcastHandler, $payLoad;
     echo "\n==========================================\n";
