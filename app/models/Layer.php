@@ -111,7 +111,9 @@ class Layer extends Table
      * @param bool|null $includeExtent
      * @param bool|null $parse
      * @param bool|null $es
+     * @param bool|null $lookupForeignTables
      * @return array
+     * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function getAll(string $db, ?bool $auth, ?string $query = null, ?bool $includeExtent = false, ?bool $parse = false, ?bool $es = false, ?bool $lookupForeignTables = true): array
@@ -633,6 +635,7 @@ class Layer extends Table
      * @param array $tables
      * @return array
      * @throws InvalidArgumentException
+     * @throws GC2Exception
      */
     public function delete(array $tables): array
     {

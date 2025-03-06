@@ -11,6 +11,7 @@ namespace app\inc;
 use app\api\v2\Sql;
 use app\conf\App;
 use app\conf\Connection;
+use app\exceptions\GC2Exception;
 use app\exceptions\ServiceException;
 use app\models\Database;
 use app\models\Layer;
@@ -184,7 +185,12 @@ class Controller
         // We check if relation is a real table/view or similar or an alias.
         // If its real and authentication is not set we throw an exception.
         // This would be the case if relation is not in geometry_columns_join
-        $isRelation = $postgisObject->isTableOrView($layer)['success'];
+        try {
+            $postgisObject->isTableOrView($layer);
+            $isRelation = true;
+        } catch (GC2Exception $e) {
+            $isRelation = false;
+        }
         if (empty($auth) && $isRelation) {
             $response['success'] = false;
             $response['message'] = $layer . " is a relation, but authentication is not set. It might be that the relation is not registered.";

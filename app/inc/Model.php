@@ -739,7 +739,7 @@ class Model
                 Cache::save($CachedString);
                 return $response;
             }
-            throw new GC2Exception("Relation doesn't exists", 406, null, "RELATION_DO_NOT_EXISTS");
+            throw new GC2Exception("Relation doesn't exists", 406, null, "RELATION_DOES_NOT_EXISTS");
         }
     }
 
