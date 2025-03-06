@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2025.3.1] - 2025-6-3
+### Fixed
+- The Scheduler API was not starting jobs async, but hang until job was finished.
+- Bug regarding check of a relation type in SQL API. If an alias was used like in a WITH statement, an error was thrown.
+
 ## [2025.3.0] - 2025-3-3
 ### Added
 - Commit API will now write out templates for each Meta object. The template should be defined in 'app/conf/template.markdown'. The template could be a Jekyll template for Github pages.
