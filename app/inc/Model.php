@@ -397,13 +397,8 @@ class Model
                             }
                         }
                     }
-                    if (sizeof($references) == 1) {
-                        $references = $references[0];
-                    } elseif (sizeof($references) == 0) {
-                        $references = null;
-                    }
                 } elseif (isset($restrictions[$row["column_name"]]->_rel) && $restriction && $restrictions) {
-                    $references = $restrictions[$row["column_name"]]->_rel . "." . $restrictions[$row["column_name"]]->_value;
+                    $references[] = $restrictions[$row["column_name"]]->_rel . "." . $restrictions[$row["column_name"]]->_value;
                     if ($getEnums) {
                         $rel = $restrictions[$row["column_name"]];
                         $sql = "SELECT $rel->_value AS value, $rel->_text AS text FROM $rel->_rel";
@@ -455,7 +450,7 @@ class Model
                     "numeric_precision" => $row["numeric_precision"],
                     "numeric_scale" => $row["numeric_scale"],
                     "max_bytes" => $row["max_bytes"],
-                    "reference" => $references,
+                    "reference" => count($references) == 0 ? null : $references,
                     "restriction" => sizeof($foreignValues) > 0 ? $foreignValues : null,
                 );
 
