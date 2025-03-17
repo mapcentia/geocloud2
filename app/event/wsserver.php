@@ -36,7 +36,6 @@ $errorHandler = new DefaultErrorHandler();
 $acceptor = new Rfc6455Acceptor();
 
 $broadcastHandler = new WsBroadcast();
-
 $wsBroadcast = new Websocket($server, $logger, $acceptor, $broadcastHandler);
 
 $router = new Router($server, $logger, $errorHandler);
