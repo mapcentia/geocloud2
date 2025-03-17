@@ -291,7 +291,9 @@ class Model
      * @param array<array>|null $restrictions
      * @param string|null $cacheKey
      * @param bool $getEnums
+     * @param bool $lookupForeignTables
      * @return array
+     * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function getMetaData(string $table, bool $temp = false, bool $restriction = true, array $restrictions = null, string $cacheKey = null, bool $getEnums = true, bool $lookupForeignTables = true): array
@@ -1491,6 +1493,12 @@ class Model
         }
     }
 
+    /**
+     * @param string $schema
+     * @param string $table
+     * @return array
+     * @throws PDOException
+     */
     protected function getColumnComments(string $schema, string $table): array
     {
         $sql = "SELECT
@@ -1518,13 +1526,19 @@ class Model
         return $comments;
     }
 
-    public function getTableComment(string $schema, string $table)
+    /**
+     * @param string $schema
+     * @param string $table
+     * @return string|null
+     * @throws PDOException
+     */
+    public function getTableComment(string $schema, string $table) : ?string
     {
         $sql = "SELECT
                     obj_description(c.oid, 'pg_class') AS comment
                 FROM pg_class c
                 JOIN pg_namespace n ON n.oid = c.relnamespace
-                WHERE c.relkind IN ('r', 'v', 'm', 'f')
+                WHERE c.relkind IN ('r', 'p', 'v', 'm', 'f')
                   AND n.nspname = :schema
                   AND c.relname = :table";
 

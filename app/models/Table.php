@@ -319,7 +319,7 @@ class Table extends Model
                         }
                     }
                     if ($key == "f_table_abstract") {
-                        $value = $this->getTableComment($row['f_table_schema'], $row['f_table_name']);
+                        $value = $this->getTableComment($row['f_table_schema'], $row['f_table_name']) ?? $row['f_table_abstract'];
                     }
                     // Set empty strings to NULL
                     $value = $value == "" ? null : $value;
@@ -1564,6 +1564,9 @@ class Table extends Model
         $res->execute();
     }
 
+    /**
+     * @return string|null
+     */
     public function getComment(): ?string
     {
         return $this->getTableComment($this->schema, $this->tableWithOutSchema);
@@ -1581,6 +1584,12 @@ class Table extends Model
         $res->execute();
     }
 
+    /**
+     * @param string|null $comment
+     * @param string $column
+     * @return void
+     * @throws InvalidArgumentException
+     */
     public function setColumnComment(?string $comment, string $column): void
     {
         $this->clearCacheOnSchemaChanges();
@@ -1589,6 +1598,10 @@ class Table extends Model
         $res->execute();
     }
 
+    /**
+     * @param string $column
+     * @return string|null
+     */
     public function getColumnComment(string $column): ?string
     {
         $comments = $this->getColumnComments($this->schema, $this->tableWithOutSchema);

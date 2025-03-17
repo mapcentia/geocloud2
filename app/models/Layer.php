@@ -289,7 +289,7 @@ class Layer extends Table
                         }
                     }
                     if ($key == "f_table_abstract") {
-                        $value = $this->getTableComment($row['f_table_schema'], $row['f_table_name']);
+                        $value = $this->getTableComment($row['f_table_schema'], $row['f_table_name']) ?? $row['f_table_abstract'];
                     }
                     $arr = $this->array_push_assoc($arr, $key, $value);
 
