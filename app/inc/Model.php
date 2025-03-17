@@ -127,7 +127,6 @@ class Model
     /**
      * @param string $table
      * @return array|string[]|null
-     * @throws PhpfastcacheInvalidArgumentException
      */
     public function getPrimeryKey(string $table): ?array
     {
@@ -1501,7 +1500,14 @@ class Model
      */
     protected function getColumnComments(string $schema, string $table): array
     {
-        $sql = "SELECT
+        $cacheType = 'colComments';
+        $cacheRel = $schema . '.' . $table;
+        $cacheId = $this->postgisdb . '_' . $cacheRel . '_' . $cacheType;
+        $CachedString = Cache::getItem($cacheId);
+        if ($CachedString != null && $CachedString->isHit()) {
+            return $CachedString->get();
+        } else {
+            $sql = "SELECT
                     a.attname    AS column_name,
                     pgd.description AS column_comment
                 FROM pg_class c
@@ -1517,13 +1523,16 @@ class Model
                   AND c.relname = :table
                 ORDER BY a.attnum";
 
-        $res = $this->prepare($sql);
-        $res->execute(['table' => $table, 'schema' => $schema]);
-        $comments = [];
-        foreach ($res->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $comments[$row['column_name']] = $row['column_comment'];
+            $res = $this->prepare($sql);
+            $res->execute(['table' => $table, 'schema' => $schema]);
+            $comments = [];
+            foreach ($res->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $comments[$row['column_name']] = $row['column_comment'];
+            }
+            $CachedString->set($comments)->expiresAfter(Globals::$cacheTtl);
+            Cache::save($CachedString);
+            return $comments;
         }
-        return $comments;
     }
 
     /**
@@ -1534,7 +1543,14 @@ class Model
      */
     public function getTableComment(string $schema, string $table) : ?string
     {
-        $sql = "SELECT
+        $cacheType = 'tableComment';
+        $cacheRel = $schema . '.' . $table;
+        $cacheId = $this->postgisdb . '_' . $cacheRel . '_' . $cacheType;
+        $CachedString = Cache::getItem($cacheId);
+        if ($CachedString != null && $CachedString->isHit()) {
+            return $CachedString->get();
+        } else {
+            $sql = "SELECT
                     obj_description(c.oid, 'pg_class') AS comment
                 FROM pg_class c
                 JOIN pg_namespace n ON n.oid = c.relnamespace
@@ -1542,8 +1558,12 @@ class Model
                   AND n.nspname = :schema
                   AND c.relname = :table";
 
-        $res = $this->prepare($sql);
-        $res->execute(['table' => $table, 'schema' => $schema]);
-        return $res->fetchColumn();
+            $res = $this->prepare($sql);
+            $res->execute(['table' => $table, 'schema' => $schema]);
+            $comment = $res->fetchColumn();
+            $CachedString->set($comment)->expiresAfter(Globals::$cacheTtl);
+            Cache::save($CachedString);
+            return $comment;
+        }
     }
 }
