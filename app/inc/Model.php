@@ -916,36 +916,37 @@ class Model
             return $CachedString->get();
         } else {
             $response = [];
-            $sql = "SELECT tc.*, ccu.column_name
-                    FROM information_schema.table_constraints tc
-                    RIGHT JOIN information_schema.constraint_column_usage ccu
-                          ON tc.constraint_catalog=ccu.constraint_catalog
-                         AND tc.constraint_schema = ccu.constraint_schema
-                         AND tc.constraint_name = ccu.constraint_name
-                    AND (ccu.table_schema, ccu.table_name) IN ((:schema, :table))
-                    WHERE lower(tc.constraint_type) IN ('foreign key') AND constraint_type='FOREIGN KEY'";
+            $sql = "
+                    SELECT con.oid AS constraint_oid,
+                           con.conname AS constraint_name,
+                           sch.nspname AS schema_name,
+                           tbl.relname AS table_name,
+                           col.attname AS column_name,
+                           ftbl.relname AS foreign_table_name,
+                           fcol.attname AS foreign_column_name
+                    FROM pg_constraint con
+                    JOIN pg_class tbl ON tbl.oid = con.conrelid
+                    JOIN pg_namespace sch ON sch.oid = tbl.relnamespace
+                    JOIN pg_attribute col ON col.attrelid = tbl.oid AND col.attnum = ANY(con.conkey)
+                    JOIN pg_class ftbl ON ftbl.oid = con.confrelid
+                    JOIN pg_attribute fcol ON fcol.attrelid = ftbl.oid AND fcol.attnum = ANY(con.confkey)
+                    WHERE con.contype = 'f'
+                      AND sch.nspname = :schema
+                      AND tbl.relname = :table;
+                   ";
 
             $res = $this->prepare($sql);
             $res->execute(["table" => $table, "schema" => $schema]);
 
             while ($row = $this->fetchRow($res)) {
-                $arr = [];
-                $foreignConstrains = $this->getForeignConstrains($row["table_schema"], $row["table_name"])["data"];
-                foreach ($foreignConstrains as $value) {
-                    if ($schema == $value["parent_schema"] && $table == $value["parent_table"]) {
-                        $arr = $value;
-                        break;
-                    }
-                }
                 $response['data'][] = [
-                    "rel" => $row["table_schema"] . "." . $row["table_name"],
+                    "rel" => $row["schema_name"] . "." . $row["foreign_table_name"],
                     "parent_column" => $row["column_name"],
-                    "child_column" => $arr["child_column"],
+                    "child_column" => $row["foreign_column_name"],
                 ];
             }
             $response['success'] = true;
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-            //  $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $response;
         }
