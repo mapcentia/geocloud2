@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED] - 2025-18-3
+### Fixed
+- Change from using `information_schema` to `pg_catalog` for query of foreign constraints, which speeds up several APIs.
+- Implemented caching for both table comments and column comments retrieval.
+- Smaller performance fixes.
+- Bug: If database table comment was null, no fallback to `settings` was implemented. It is now.
+
 ## [2025.3.2] - 2025-11-3
 ### Fixed
 - Type bug: Array $reference could be converted to string and after used as an array. Now it's never converted, and the final output is also kept as an array or null.
