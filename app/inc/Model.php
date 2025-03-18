@@ -700,6 +700,9 @@ class Model
             if ($row["count"] > 0) {
                 $response['data'] = "TABLE";
                 $response['success'] = true;
+                $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);
+                Cache::save($CachedString);
+                return $response;
 
             }
             // Check if view
@@ -710,6 +713,9 @@ class Model
             if ($row["count"] > 0) {
                 $response['data'] = "VIEW";
                 $response['success'] = true;
+                $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);
+                Cache::save($CachedString);
+                return $response;
             }
             // Check if materialized view
             $sql = "SELECT count(*) AS count FROM pg_matviews WHERE schemaname = '$bits[0]' AND matviewname='$bits[1]'";
@@ -719,6 +725,9 @@ class Model
             if ($row["count"] > 0) {
                 $response['data'] = "MATERIALIZED VIEW";
                 $response['success'] = true;
+                $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);
+                Cache::save($CachedString);
+                return $response;
             }
             // Check if FOREIGN TABLE
             $sql = "SELECT COUNT(*) FROM pg_catalog.pg_foreign_table ft JOIN pg_catalog.pg_class c ON ft.ftrelid = c.oid JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid WHERE n.nspname = '$bits[0]' AND c.relname = '$bits[1]'";
@@ -728,9 +737,6 @@ class Model
             if ($row["count"] > 0) {
                 $response['data'] = "FOREIGN TABLE";
                 $response['success'] = true;
-            }
-
-            if (!empty($response['success'])) {
                 $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);
                 Cache::save($CachedString);
                 return $response;
@@ -1122,7 +1128,11 @@ class Model
     public function getForeignTablesFromSchema(string $schema): array
     {
         $response = [];
-        $sql = "SELECT foreign_table_name as name FROM information_schema._pg_foreign_tables WHERE foreign_table_schema = :schema";
+        $sql = "SELECT relname as name
+                    FROM pg_catalog.pg_foreign_table ft
+                             JOIN pg_catalog.pg_class c ON ft.ftrelid = c.oid
+                             JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
+                    WHERE n.nspname = :schema";
         $res = $this->prepare($sql);
         $res->execute(["schema" => $schema]);
         while ($row = $this->fetchRow($res)) {
