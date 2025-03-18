@@ -721,7 +721,7 @@ class Model
                 $response['success'] = true;
             }
             // Check if FOREIGN TABLE
-            $sql = "SELECT count(*) FROM information_schema.foreign_tables WHERE foreign_table_schema='$bits[0]' AND  foreign_table_name='$bits[1]'";
+            $sql = "SELECT COUNT(*) FROM pg_catalog.pg_foreign_table ft JOIN pg_catalog.pg_class c ON ft.ftrelid = c.oid JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid WHERE n.nspname = '$bits[0]' AND c.relname = '$bits[1]'";
             $res = $this->prepare($sql);
             $res->execute();
             $row = $this->fetchRow($res);
@@ -904,7 +904,6 @@ class Model
      * @param string $schema
      * @param string $table
      * @return array
-     * @throws PhpfastcacheInvalidArgumentException
      */
     public function getChildTables(string $schema, string $table): array
     {
@@ -946,7 +945,7 @@ class Model
                 ];
             }
             $response['success'] = true;
-            $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
+            $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);
             Cache::save($CachedString);
             return $response;
         }

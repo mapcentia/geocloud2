@@ -265,7 +265,7 @@ class Table extends Model
         }
 
         // Check if FOREIGN TABLE
-        $sql = "SELECT foreign_table_schema,foreign_table_name,foreign_server_name FROM information_schema.foreign_tables WHERE foreign_table_schema = :sSchema";
+        $sql = "SELECT relname as foreign_table_name FROM pg_catalog.pg_foreign_table ft JOIN pg_catalog.pg_class c ON ft.ftrelid = c.oid JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid WHERE n.nspname = :sSchema";
         $resView = $this->prepare($sql);
         $resView->execute(array("sSchema" => $whereClause));
         while ($row = $this->fetchRow($resView)) {
