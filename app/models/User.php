@@ -102,9 +102,6 @@ class User extends Model
      */
     public function getDatabasesForUser(string $userIdentifier): array
     {
-        if (empty($userIdentifier)) {
-            throw new Exception('User name or email should not be empty');
-        }
         $data = [];
         if (strrpos($userIdentifier, '@') === false) {
             $userName = Model::toAscii($userIdentifier, NULL, "_");
@@ -120,6 +117,9 @@ class User extends Model
         }
         while ($row = $this->fetchRow($res)) {
             $data[] = $row;
+        }
+        if (empty($data)) {
+            throw new GC2Exception('User does not exists', 404, null, 'USER_DOES_NOT_EXISTS');
         }
         return [
             'databases' => $data,
@@ -191,7 +191,7 @@ class User extends Model
         $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE screenname = '$userId'");
         $result = $this->fetchRow($res);
         if ($result['count'] > 0) {
-            if ($data['subuser']) {
+            if (!empty($data['subuser'])) {
                 $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE screenname = '" . $userId . "' AND parentdb = '" . $this->userId . "'");
                 $result = $this->fetchRow($res);
                 if ($result['count'] > 0) {
@@ -232,20 +232,19 @@ class User extends Model
         $encryptedPassword = Setting::encryptPwSecure($password);
 
         // Create new database
-        if ($data['subuser'] === false) {
-            $db = new Database();
+        $db = new Database();
+        if (isset($data['subuser']) && $data['subuser'] === false) {
             $db->postgisdb = $this->postgisdb;
             try {
                 $db->createdb($userId, App::$param['databaseTemplate']);
             } catch (Exception $e) {
-                // Clean up
-                try {
-                    $db->dropUser($userId);
-                    $db->dropDatabase($userId);
-                } catch (PDOException $e) {
-                    // Pass
-                }
                 throw new GC2Exception($e->getMessage(), 400);
+            }
+        } else {
+            try {
+                $db->createUser($userId, $parentDb);
+            } catch (PDOException $e) {
+                throw new GC2Exception($e->getMessage(), 400, null, 'USER_CREATION_FAILED');
             }
         }
 
@@ -316,9 +315,7 @@ class User extends Model
     public function updateUser(array $data): array
     {
         $this->clearCacheOnSchemaChanges();
-
         $user = isset($data["user"]) ? Model::toAscii($data["user"], NULL, "_") : null;
-
         // Check if such email already exists
         $email = null;
         if (isset($data["email"])) {
@@ -329,7 +326,6 @@ class User extends Model
             }
             $email = $data["email"];
         }
-
         // Check if the password is strong enough
         $password = null;
         if (isset($data["password"])) {
@@ -340,10 +336,8 @@ class User extends Model
             }
             $password = Setting::encryptPwSecure(Util::format($data["password"]));
         }
-
         $userGroup = $data["usergroup"] ?? null;
         $properties = isset($data["properties"]) ? json_encode($data["properties"]) : null;
-
         $sQuery = "UPDATE users SET screenname=screenname";
         if ($password) $sQuery .= ", pw=:sPassword";
         if ($email) $sQuery .= ", email=:sEmail";
@@ -354,24 +348,35 @@ class User extends Model
             $userGroups[$user] = !empty($userGroup) ? $userGroup : null;
             Session::set("usergroups", $userGroups);
         }
-
         if (!empty($data["parentdb"])) {
             $sQuery .= " WHERE screenname=:sUserID AND parentdb=:sParentDb RETURNING screenname,email,usergroup,properties";
         } else {
             $sQuery .= " WHERE screenname=:sUserID RETURNING screenname,email,usergroup,properties";
         }
         $res = $this->prepare($sQuery);
-        if ($password) $res->bindParam(":sPassword", $password);
-        if ($email) $res->bindParam(":sEmail", $email);
+        if ($password) {
+            $res->bindParam(":sPassword", $password);
+        }
+        if ($email) {
+            $res->bindParam(":sEmail", $email);
+        }
         if (isset($userGroup)) {
             $str = $userGroup !== "" ? $userGroup : null;
             $res->bindParam(":sUsergroup", $str);
         }
-        if ($properties) $res->bindParam(":sProperties", $properties);
+        if ($properties) {
+            $res->bindParam(":sProperties", $properties);
+        }
         $res->bindParam(":sUserID", $user);
-        if (!empty($data["parentdb"])) $res->bindParam(":sParentDb", $data["parentdb"]);
+        if (!empty($data["parentdb"])) {
+            $res->bindParam(":sParentDb", $data["parentdb"]);
+        }
         $res->execute();
         $row = $this->fetchRow($res);
+        // If password, when use Database::createUser to set it
+        if ($password) {
+            (new Database())->createUser($user, $password);
+        }
         $row["properties"] = !empty($row["properties"]) ? json_decode($row["properties"]) : null;
         $response['success'] = true;
         $response['message'] = "User was updated";
@@ -380,16 +385,16 @@ class User extends Model
     }
 
     /**
-     * @param string $data
+     * @param string $userName
      * @return array<bool|string|int>
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    public function deleteUser(string $data): array
+    public function deleteUser(string $userName): array
     {
         $this->clearCacheOnSchemaChanges();
 
-        $user = $data ? Model::toAscii($data, NULL, "_") : null;
+        $user = $userName ? Model::toAscii($userName, NULL, "_") : null;
         $sQuery = "DELETE FROM users WHERE screenname=:sUserID AND parentdb=:parentDb";
         $res = $this->prepare($sQuery);
         $res->execute([":sUserID" => $user, ":parentDb" => $this->userId]);
@@ -403,6 +408,11 @@ class User extends Model
             $subuserEmails = array_diff($subuserEmails, [$user]);
             Session::set("subusers", $subusers);
             Session::set("subuserEmails", $subuserEmails);
+        }
+        try {
+            (new Database())->dropUser($userName);
+        } catch (PDOException $e) {
+            error_log("Could not drop user: " . $e->getMessage());
         }
         $response['success'] = true;
         $response['message'] = "User was deleted";

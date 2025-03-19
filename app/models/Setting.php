@@ -68,20 +68,28 @@ class Setting extends Model
     }
 
     /**
-     * @return array<mixed>
+     * Updates the API key for a specified user and stores it in the database.
+     * Differentiates between superuser and subuser to appropriately assign the API key.
+     *
+     * @param string $userName The username of the user for whom the API key is being updated.
+     * @param bool $isSuperuser Indicates whether the user is a superuser or a subuser.
+     *
+     * @return string Returns the generated API key.
+     *
+     * @throws PDOException|InvalidArgumentException If an error occurs during the database update process.
      */
-    public function updateApiKey(): array
+    public function updateApiKeyForUser(string $userName, bool $isSuperuser): string
     {
         $this->clearCacheOnSchemaChanges();
         $apiKey = md5(microtime() . rand());
         $arr = $this->getArray();
-        if (!$_SESSION["subuser"]) {
+        if ($isSuperuser) {
             $arr->api_key = $apiKey;
-        } elseif (!empty($_SESSION["screen_name"])) {
+        } else {
             if (!isset($arr->api_key_subuser)) {
                 $arr->api_key_subuser = new stdClass();
             }
-            $arr->api_key_subuser->{$_SESSION["screen_name"]} = $apiKey;
+            $arr->api_key_subuser->{$userName} = $apiKey;
         }
         if (App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(App::$param["path"] . "app/conf/public.key");
@@ -90,9 +98,20 @@ class Setting extends Model
             $sql = "UPDATE settings.viewer SET viewer='" . json_encode($arr) . "'";
         }
         $this->execQuery($sql, "PDO", "transaction");
+        return $apiKey;
+    }
+
+    /**
+     * Updates the API key for the current user session.
+     *
+     * @return array An associative array containing the status of the update, a success message, and the updated API key.
+     * @throws InvalidArgumentException
+     */
+    public function updateApiKey(): array
+    {
         $response['success'] = true;
         $response['message'] = "API key updated";
-        $response['key'] = $apiKey;
+        $response['key'] = $this->updateApiKeyForUser($_SESSION["screen_name"], !$_SESSION["subuser"]);;
         return $response;
     }
 

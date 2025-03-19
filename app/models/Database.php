@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2024 MapCentia ApS
+ * @copyright  2013-2025 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -11,7 +11,6 @@ namespace app\models;
 use app\conf\App;
 use app\conf\Connection;
 use app\inc\Model;
-use Exception;
 use PDOException;
 
 
@@ -23,14 +22,32 @@ class Database extends Model
 {
     /**
      * @param string $name
+     * @param null $db
      * @return void
-     * @throws PDOException
      */
-    private function createUser(string $name): void
+    public function createUser(string $name, $db = null): void
     {
         $this->connect();
-        $sql = "CREATE USER \"$name\"";
+        // First try to create user if not exists
+        $sql = "select usename from pg_user where usename=:name";
+        $res = $this->prepare($sql);
+        $res->execute(['name' => $name]);
+        if ($res->rowCount() == 0) {
+            $sql = "CREATE USER \"$name\"";
+            $this->db->query($sql);
+        }
+        // Set password
+        $sql = "ALTER ROLE \"$name\" PASSWORD '" . Connection::$param['postgispw'] . "'";
         $this->db->query($sql);
+        // Set grants
+        if ($db) {
+            //We grant the owner to user
+            $sql = "GRANT \"$db\" TO \"$name\"";
+            $this->db->query($sql);
+            // And connect
+            $sql = "GRANT CONNECT ON DATABASE \"$db\" TO \"$name\"";
+            $this->db->query($sql);
+        }
     }
 
     /**
@@ -84,16 +101,20 @@ class Database extends Model
      */
     public function createdb(string $screenName, string $template, string $encoding = "UTF8"): void
     {
+        // Create user for the database
         $this->createUser($screenName);
-        $postgisUser = explode('@', $this->postgisuser)[0];
-        $sql = "GRANT $screenName to $postgisUser";
+        // Create the database if not exists
+        $sql = "select datname from pg_database where datname=:db";
+        $res = $this->prepare($sql);
+        $res->execute(['db' => $screenName]);
+        if ($res->rowCount() == 0) {
+            $sql = "CREATE DATABASE {$screenName} WITH ENCODING='$encoding' TEMPLATE=$template CONNECTION LIMIT=-1 OWNER='$screenName'";
+            $this->db->query($sql);
+        }
+        // We revoke connect from public, so other users can't connect to this database
+        $sql = "REVOKE connect ON DATABASE $screenName FROM PUBLIC";
         $this->db->query($sql);
-        $sql = "CREATE DATABASE {$screenName}
-                        WITH ENCODING='$encoding'
-                        TEMPLATE=$template
-                        CONNECTION LIMIT=-1
-                        OWNER='$screenName'";
-        $this->db->query($sql);
+        // Change ownership on all objects in the database
         $this->changeOwner($screenName, $screenName);
     }
 
@@ -201,7 +222,6 @@ class Database extends Model
         $res = $this->db->query($sql);
         $rows3 = $this->fetchAll($res);
 
-
         $sql = "SELECT '\"'||sequence_schema||'\".\"'||sequence_name||'\"' AS \"table\" FROM information_schema.sequences WHERE sequence_schema NOT LIKE 'pg_%' AND sequence_schema<>'information_schema'";
         $res = $this->db->query($sql);
         $rows4 = $this->fetchAll($res);
@@ -226,9 +246,7 @@ class Database extends Model
             $this->db->query($sql);
             $sql = "ALTER TABLE {$row["table"]} OWNER TO $newOwner";
         }
-
         $this->commit();
-
     }
 
     /**
@@ -237,6 +255,19 @@ class Database extends Model
     static function setDb(?string $db): void
     {
         Connection::$param["postgisdb"] = $db;
+    }
+
+    static function setFromJwt(array $jwt): void
+    {
+        $data = $jwt['data'];
+        Database::setDb("mapcentia");
+        $users = new Model();
+        $sQuery = "SELECT pw FROM users WHERE screenname = :user";
+        $res = $users->prepare($sQuery);
+        $res->execute([":user" => $data['uid']]);
+        // Set connection params
+        Connection::$param["postgisdb"] = $data['database'];
+        Connection::$param["postgisuser"] = $data['uid'];
     }
 
     /**

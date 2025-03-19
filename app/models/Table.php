@@ -58,7 +58,7 @@ class Table extends Model
         if (!$_schema) {
             // If temp, then don't prefix with schema. Used when table/view is temporary
             if (!$temp) {
-                $_schema = Connection::$param['postgisschema'];
+                $_schema = Connection::$param['postgisschema'] ?? null;
                 $table = $_schema . "." . $table;
             }
         } else {
@@ -1607,6 +1607,4 @@ class Table extends Model
         $comments = $this->getColumnComments($this->schema, $this->tableWithOutSchema);
         return $comments[$column];
     }
-
-
 }

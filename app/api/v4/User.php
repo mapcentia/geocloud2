@@ -13,6 +13,7 @@ use app\exceptions\GC2Exception;
 use app\inc\Jwt;
 use app\inc\Input;
 use app\inc\Route2;
+use app\models\Setting;
 use app\models\User as UserModel;
 use Exception;
 use OpenApi\Annotations\OpenApi;
@@ -129,7 +130,7 @@ class User extends AbstractApi
         $list = [];
         $model = new UserModel();
         $data = json_decode(Input::getBody(), true) ?: [];
-        $data["usergroup"] = $data["user_group"];
+        $data["usergroup"] = $data["user_group"] ?? null;
         $model->connect();
         $model->begin();
         if (!isset($data['users'])) {
@@ -143,7 +144,9 @@ class User extends AbstractApi
                 (new Database())->createSchema($user['name']);
             } catch (Exception) {
             }
-            $list[] = self::convertUserObject($model->createUser($user)['data'])['name'];
+            $userName = self::convertUserObject($model->createUser($user)['data'])['name'];
+            $list[] = $userName;
+            (new Setting())->updateApiKeyForUser($userName, false);
         }
         $model->commit();
         header("Location: /api/v4/users/" . implode(",", $list));
@@ -235,9 +238,10 @@ class User extends AbstractApi
     {
         return [
             "name" => $user['screenName'] ?? $user['screenname'] ?? $user['userid'],
-            "user_group" => $user["usergroup"],
-            "email" => $user["email"],
-            "properties" => $user["properties"],
+            "user_group" => $user["usergroup"] ?? null,
+            "email" => $user["email"] ?? null,
+            "properties" => $user["properties"] ?? null,
+            "password" => $user["password"] ?? null,
         ];
     }
 

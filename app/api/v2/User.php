@@ -108,6 +108,7 @@ class User extends Controller
                     'code' => 400
                 ];
             }
+            $data['parentdb'] = Session::getUser() ?? null;
             $response = $this->user->createUser($data);
             if (!$response["success"]) {
                 return $response;
