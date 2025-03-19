@@ -194,7 +194,7 @@ class Layer extends Controller
     public function put_copymeta(): array
     {
         $response = $this->auth(Input::getPath()->part(4));
-        return !$response['success'] ? $response : $this->table->copyMeta(Input::getPath()->part(4), Input::getPath()->part(5));
+        return !$response['success'] ? $response : $this->table->copyMeta(Input::getPath()->part(4), json_decode(Input::get())->data);
     }
 
     /**

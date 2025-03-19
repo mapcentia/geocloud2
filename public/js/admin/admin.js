@@ -734,7 +734,6 @@ $(document).ready(function () {
      * @type {Ext.grid.EditorGridPanel}
      */
     var grid = new Ext.grid.EditorGridPanel({
-        //plugins: [editor],
         store: store,
         viewConfig: {
             forceFit: true,
@@ -1306,195 +1305,196 @@ $(document).ready(function () {
                             frame: false,
                             border: false,
                             layout: 'border',
-                            items: [new Ext.FormPanel({
-                                labelWidth: 100,
-                                // label settings here cascade unless overridden
-                                frame: false,
-                                border: false,
-                                region: 'center',
-                                viewConfig: {
-                                    forceFit: true
-                                },
-                                id: "detailform",
-                                bodyStyle: 'padding: 10px 10px 0 10px;',
+                            items: [
+                                new Ext.FormPanel({
+                                    labelWidth: 100,
+                                    // label settings here cascade unless overridden
+                                    frame: false,
+                                    border: false,
+                                    region: 'center',
+                                    viewConfig: {
+                                        forceFit: true
+                                    },
+                                    id: "detailform",
+                                    bodyStyle: 'padding: 10px 10px 0 10px;',
 
-                                items: [
-                                    {
-                                        xtype: 'fieldset',
-                                        title: __('Settings'),
-                                        defaults: {
-                                            anchor: '100%'
-                                        },
-                                        items: [
-                                            {
-                                                name: '_key_',
-                                                xtype: 'hidden',
-                                                value: r.data._key_
+                                    items: [
+                                        {
+                                            xtype: 'fieldset',
+                                            title: __('Settings'),
+                                            defaults: {
+                                                anchor: '100%'
                                             },
-                                            {
-                                                xtype: 'textfield',
-                                                fieldLabel: __('Meta data URL'),
-                                                name: 'meta_url',
-                                                value: r.data.meta_url
-                                            },
-                                            {
-                                                xtype: 'textfield',
-                                                fieldLabel: __('WMS source'),
-                                                name: 'wmssource',
-                                                value: r.data.wmssource
-                                            },
-                                            {
-                                                xtype: 'textfield',
-                                                fieldLabel: __('WMS EPSGs'),
-                                                name: 'wmsclientepsgs',
-                                                value: r.data.wmsclientepsgs
-                                            },
-                                            {
-                                                xtype: 'combo',
-                                                store: new Ext.data.ArrayStore({
-                                                    fields: ['name', 'value'],
-                                                    data: [
-                                                        ['true', true],
-                                                        ['false', false]
-                                                    ]
-                                                }),
-                                                displayField: 'name',
-                                                valueField: 'value',
-                                                mode: 'local',
-                                                typeAhead: false,
-                                                editable: false,
-                                                triggerAction: 'all',
-                                                name: 'not_querable',
-                                                fieldLabel: __('Not queryable'),
-                                                value: r.data.not_querable
-                                            },
-                                            {
-                                                xtype: 'combo',
-                                                store: new Ext.data.ArrayStore({
-                                                    fields: ['name', 'value'],
-                                                    data: [
-                                                        ['true', true],
-                                                        ['false', false]
-                                                    ]
-                                                }),
-                                                displayField: 'name',
-                                                valueField: 'value',
-                                                mode: 'local',
-                                                typeAhead: false,
-                                                editable: false,
-                                                triggerAction: 'all',
-                                                name: 'baselayer',
-                                                fieldLabel: 'Is baselayer',
-                                                value: r.data.baselayer
-                                            },
-                                            {
-                                                xtype: 'textfield',
-                                                fieldLabel: __('SQL where clause'),
-                                                name: 'filter',
-                                                value: r.data.filter
-                                            },
-                                            {
-                                                xtype: 'textfield',
-                                                fieldLabel: __('File source'),
-                                                name: 'bitmapsource',
-                                                value: r.data.bitmapsource
-                                            },
-                                            {
-                                                xtype: 'combo',
-                                                store: new Ext.data.ArrayStore({
-                                                    fields: ['name', 'value'],
-                                                    data: [
-                                                        ['true', true],
-                                                        ['false', false]
-                                                    ]
-                                                }),
-                                                displayField: 'name',
-                                                valueField: 'value',
-                                                mode: 'local',
-                                                typeAhead: false,
-                                                editable: false,
-                                                triggerAction: 'all',
-                                                name: 'enablesqlfilter',
-                                                fieldLabel: 'Enable sql filtering in Viewer',
-                                                value: r.data.enablesqlfilter
-                                            },
-                                            {
-                                                xtype: 'textfield',
-                                                fieldLabel: __('ES trigger table'),
-                                                name: 'triggertable',
-                                                value: r.data.triggertable
-                                            },
-                                            {
-                                                xtype: 'textfield',
-                                                fieldLabel: __('Feature id'),
-                                                name: 'featureid',
-                                                value: r.data.featureid
-                                            },
-                                            {
-                                                xtype: 'textarea',
-                                                height: 100,
-                                                fieldLabel: __('View definition'),
-                                                name: 'viewdefinition',
-                                                value: r.json.viewdefinition || r.json.matviewdefinition,
-                                                disabled: true
-                                            }]
-                                    }
-                                ],
-                                buttons: [
-                                    {
-                                        text: '<i class="fa fa-check"></i> ' + __('Update'),
-                                        handler: function () {
-                                            var f = Ext.getCmp('detailform');
-                                            if (f.form.isValid()) {
-                                                var values = f.form.getValues();
+                                            items: [
+                                                {
+                                                    name: '_key_',
+                                                    xtype: 'hidden',
+                                                    value: r.data._key_
+                                                },
+                                                {
+                                                    xtype: 'textfield',
+                                                    fieldLabel: __('Meta data URL'),
+                                                    name: 'meta_url',
+                                                    value: r.data.meta_url
+                                                },
+                                                {
+                                                    xtype: 'textfield',
+                                                    fieldLabel: __('WMS source'),
+                                                    name: 'wmssource',
+                                                    value: r.data.wmssource
+                                                },
+                                                {
+                                                    xtype: 'textfield',
+                                                    fieldLabel: __('WMS EPSGs'),
+                                                    name: 'wmsclientepsgs',
+                                                    value: r.data.wmsclientepsgs
+                                                },
+                                                {
+                                                    xtype: 'combo',
+                                                    store: new Ext.data.ArrayStore({
+                                                        fields: ['name', 'value'],
+                                                        data: [
+                                                            ['true', true],
+                                                            ['false', false]
+                                                        ]
+                                                    }),
+                                                    displayField: 'name',
+                                                    valueField: 'value',
+                                                    mode: 'local',
+                                                    typeAhead: false,
+                                                    editable: false,
+                                                    triggerAction: 'all',
+                                                    name: 'not_querable',
+                                                    fieldLabel: __('Not queryable'),
+                                                    value: r.data.not_querable
+                                                },
+                                                {
+                                                    xtype: 'combo',
+                                                    store: new Ext.data.ArrayStore({
+                                                        fields: ['name', 'value'],
+                                                        data: [
+                                                            ['true', true],
+                                                            ['false', false]
+                                                        ]
+                                                    }),
+                                                    displayField: 'name',
+                                                    valueField: 'value',
+                                                    mode: 'local',
+                                                    typeAhead: false,
+                                                    editable: false,
+                                                    triggerAction: 'all',
+                                                    name: 'baselayer',
+                                                    fieldLabel: 'Is baselayer',
+                                                    value: r.data.baselayer
+                                                },
+                                                {
+                                                    xtype: 'textfield',
+                                                    fieldLabel: __('SQL where clause'),
+                                                    name: 'filter',
+                                                    value: r.data.filter
+                                                },
+                                                {
+                                                    xtype: 'textfield',
+                                                    fieldLabel: __('File source'),
+                                                    name: 'bitmapsource',
+                                                    value: r.data.bitmapsource
+                                                },
+                                                {
+                                                    xtype: 'combo',
+                                                    store: new Ext.data.ArrayStore({
+                                                        fields: ['name', 'value'],
+                                                        data: [
+                                                            ['true', true],
+                                                            ['false', false]
+                                                        ]
+                                                    }),
+                                                    displayField: 'name',
+                                                    valueField: 'value',
+                                                    mode: 'local',
+                                                    typeAhead: false,
+                                                    editable: false,
+                                                    triggerAction: 'all',
+                                                    name: 'enablesqlfilter',
+                                                    fieldLabel: 'Enable sql filtering in Viewer',
+                                                    value: r.data.enablesqlfilter
+                                                },
+                                                {
+                                                    xtype: 'textfield',
+                                                    fieldLabel: __('ES trigger table'),
+                                                    name: 'triggertable',
+                                                    value: r.data.triggertable
+                                                },
+                                                {
+                                                    xtype: 'textfield',
+                                                    fieldLabel: __('Feature id'),
+                                                    name: 'featureid',
+                                                    value: r.data.featureid
+                                                },
+                                                {
+                                                    xtype: 'textarea',
+                                                    height: 100,
+                                                    fieldLabel: __('View definition'),
+                                                    name: 'viewdefinition',
+                                                    value: r.json.viewdefinition || r.json.matviewdefinition,
+                                                    disabled: true
+                                                }]
+                                        }
+                                    ],
+                                    buttons: [
+                                        {
+                                            text: '<i class="fa fa-check"></i> ' + __('Update'),
+                                            handler: function () {
+                                                var f = Ext.getCmp('detailform');
+                                                if (f.form.isValid()) {
+                                                    var values = f.form.getValues();
 
-                                                for (var key in values) {
-                                                    if (values.hasOwnProperty(key)) {
-                                                        values[key] = encodeURIComponent(values[key]);
+                                                    for (var key in values) {
+                                                        if (values.hasOwnProperty(key)) {
+                                                            values[key] = encodeURIComponent(values[key]);
+                                                        }
                                                     }
+
+                                                    var param = {
+                                                        data: values
+                                                    };
+                                                    param = Ext.util.JSON.encode(param);
+                                                    Ext.Ajax.request({
+                                                        url: '/controllers/layer/records/_key_',
+                                                        method: 'put',
+                                                        headers: {
+                                                            'Content-Type': 'application/json; charset=utf-8'
+                                                        },
+                                                        params: param,
+                                                        success: function () {
+                                                            //TODO deselect/select
+                                                            grid.getSelectionModel().clearSelections();
+                                                            store.reload();
+                                                            groupsStore.load();
+                                                            App.setAlert(App.STATUS_NOTICE, __("Settings updated"));
+                                                            winMoreSettings.close();
+                                                        },
+                                                        failure: function (response) {
+                                                            winMoreSettings.close();
+                                                            Ext.MessageBox.show({
+                                                                title: 'Failure',
+                                                                msg: __(Ext.decode(response.responseText).message),
+                                                                buttons: Ext.MessageBox.OK,
+                                                                width: 400,
+                                                                height: 300,
+                                                                icon: Ext.MessageBox.ERROR
+                                                            });
+                                                        }
+                                                    });
+                                                } else {
+                                                    var s = '';
+                                                    Ext.iterate(f.form.getValues(), function (key, value) {
+                                                        s += String.format("{0} = {1}<br />", key, value);
+                                                    }, this);
                                                 }
-
-                                                var param = {
-                                                    data: values
-                                                };
-                                                param = Ext.util.JSON.encode(param);
-                                                Ext.Ajax.request({
-                                                    url: '/controllers/layer/records/_key_',
-                                                    method: 'put',
-                                                    headers: {
-                                                        'Content-Type': 'application/json; charset=utf-8'
-                                                    },
-                                                    params: param,
-                                                    success: function () {
-                                                        //TODO deselect/select
-                                                        grid.getSelectionModel().clearSelections();
-                                                        store.reload();
-                                                        groupsStore.load();
-                                                        App.setAlert(App.STATUS_NOTICE, __("Settings updated"));
-                                                        winMoreSettings.close();
-                                                    },
-                                                    failure: function (response) {
-                                                        winMoreSettings.close();
-                                                        Ext.MessageBox.show({
-                                                            title: 'Failure',
-                                                            msg: __(Ext.decode(response.responseText).message),
-                                                            buttons: Ext.MessageBox.OK,
-                                                            width: 400,
-                                                            height: 300,
-                                                            icon: Ext.MessageBox.ERROR
-                                                        });
-                                                    }
-                                                });
-                                            } else {
-                                                var s = '';
-                                                Ext.iterate(f.form.getValues(), function (key, value) {
-                                                    s += String.format("{0} = {1}<br />", key, value);
-                                                }, this);
                                             }
                                         }
-                                    }
-                                ]
-                            })]
+                                    ]
+                                })]
                         })]
                     });
                     winMoreSettings.show(this);
@@ -2295,35 +2295,153 @@ $(document).ready(function () {
                 tooltip: __("Copy all properties from another layer"),
                 disabled: true,
                 handler: function () {
-                    var record = grid.getSelectionModel().getSelected();
-                    if (!record) {
+                    var records = grid.getSelectionModel().getSelections();
+                    if (records.length === 0) {
                         App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
                         return false;
                     }
-                    var winCopyMeta = new Ext.Window({
+                    new Ext.Window({
                         title: '<i class="fa fa-copy"></i> ' + __("Copy all properties from another layer"),
                         modal: true,
                         layout: 'fit',
-                        width: 580,
-                        height: 67,
+                        width: 450,
+                        height: 410,
                         closeAction: 'close',
                         plain: true,
                         border: false,
                         items: [
-                            {
-                                defaults: {
-                                    border: false
-                                },
+                            new Ext.FormPanel({
+                                labelWidth: 100,
+                                // label settings here cascade unless overridden
+                                frame: false,
                                 border: false,
+                                region: 'center',
+                                viewConfig: {
+                                    forceFit: true
+                                },
+                                id: "copyMetaForm",
+                                bodyStyle: 'padding: 10px 10px 0 10px;',
+
                                 items: [
                                     {
-                                        xtype: "form",
-                                        id: "copyMetaForm",
-                                        layout: 'hbox',
-                                        bodyStyle: 'padding: 10px',
+                                        xtype: 'fieldset',
+                                        title: __('What to copy'),
+                                        checkboxToggle: false,
+                                        collapsed: false,
+                                        defaults: {
+                                            anchor: '100%'
+                                        },
+                                        layout: 'column',
+                                        items: [
+                                            {
+                                                columnWidth: .5,
+                                                layout: 'form',
+                                                items: [
+                                                    {
+                                                        xtype: 'checkbox',
+                                                        fieldLabel: __('Title'),
+                                                        name: 'f_table_title',
+                                                        checked: true
+                                                    }, {
+                                                        xtype: 'checkbox',
+                                                        fieldLabel: __('Description'),
+                                                        name: 'f_table_abstract',
+                                                        checked: true
+                                                    },
+                                                    {
+                                                        xtype: 'checkbox',
+                                                        fieldLabel: __('Note'),
+                                                        name: 'note',
+                                                        checked: true
+                                                    }, {
+                                                        xtype: 'checkbox',
+                                                        fieldLabel: __('Group'),
+                                                        name: 'layergroup',
+                                                        checked: true
+                                                    },
+                                                    {
+                                                        xtype: 'checkbox',
+                                                        fieldLabel: __('OWS'),
+                                                        name: 'enableows',
+                                                        checked: true
+                                                    },
+                                                    {
+                                                        xtype: 'checkbox',
+                                                        fieldLabel: __('Sort id'),
+                                                        name: 'sort_id',
+                                                        checked: true
+                                                    },
+                                                    {
+                                                        xtype: 'checkbox',
+                                                        fieldLabel: __('Authentication'),
+                                                        name: 'authentication',
+                                                        checked: true
+                                                    },
+                                                ]
+                                            },
+                                            {
+                                                columnWidth: .5,
+                                                layout: 'form',
+                                                items: [
+                                                    {
+                                                        xtype: 'checkbox',
+                                                        fieldLabel: __('Editable'),
+                                                        name: 'editable',
+                                                        checked: true
+                                                    },
+                                                    {
+                                                        xtype: 'checkbox',
+                                                        fieldLabel: __('Field settings'),
+                                                        name: 'fieldconf',
+                                                        checked: true
+                                                    },
+                                                    {
+                                                        xtype: 'checkbox',
+                                                        fieldLabel: __('Layers definition'),
+                                                        name: 'def',
+                                                        checked: true
+                                                    },
+                                                    {
+                                                        xtype: 'checkbox',
+                                                        fieldLabel: __('Classes'),
+                                                        name: 'class',
+                                                        checked: true
+                                                    },
+                                                    {
+                                                        xtype: 'checkbox',
+                                                        fieldLabel: __('Privileges'),
+                                                        name: 'privileges',
+                                                        checked: true
+                                                    },
+                                                    {
+                                                        xtype: 'checkbox',
+                                                        fieldLabel: __('Meta'),
+                                                        name: 'meta',
+                                                        checked: true
+                                                    },
+                                                    {
+                                                        xtype: 'checkbox',
+                                                        fieldLabel: __('Tile cache'),
+                                                        name: 'tilecache',
+                                                        checked: true
+                                                    },
+                                                ]
+                                            },
+
+                                        ]
+                                    },
+                                    {
+                                        xtype: 'fieldset',
+                                        title: __('Copy from'),
+                                        checkboxToggle: false,
+                                        collapsed: false,
+                                        defaults: {
+                                            anchor: '100%'
+                                        },
                                         items: [
                                             {
                                                 xtype: "combo",
+                                                fieldLabel: __('Schema'),
                                                 store: schemasStore,
                                                 displayField: 'schema',
                                                 editable: false,
@@ -2333,7 +2451,6 @@ $(document).ready(function () {
                                                 name: 'schema',
                                                 width: 200,
                                                 allowBlank: false,
-                                                emptyText: __('Schema'),
                                                 listeners: {
                                                     'select': function (combo, value, index) {
                                                         Ext.getCmp('copyMetaFormKeys').clearValue();
@@ -2363,8 +2480,10 @@ $(document).ready(function () {
                                                         }());
                                                     }
                                                 }
-                                            }, {
+                                            },
+                                            {
                                                 xtype: "combo",
+                                                fieldLabel: __('Layer'),
                                                 id: "copyMetaFormKeys",
                                                 store: new Ext.data.Store({
                                                     reader: new Ext.data.JsonReader({
@@ -2388,55 +2507,68 @@ $(document).ready(function () {
                                                 name: 'key',
                                                 width: 300,
                                                 allowBlank: false,
-                                                emptyText: __('Layer')
                                             },
-                                            {
-                                                layout: 'form',
-                                                bodyStyle: 'padding-left: 10px',
 
-                                                items: [
-                                                    {
-                                                        xtype: 'button',
-                                                        text: __('Copy'),
-
-                                                        handler: function () {
-                                                            var f = Ext.getCmp('copyMetaForm');
-                                                            if (f.form.isValid()) {
-                                                                Ext.Ajax.request({
-                                                                    url: '/controllers/layer/copymeta/' + record.data._key_ + "/" + Ext.getCmp('copyMetaFormKeys').value,
-                                                                    method: 'put',
-                                                                    headers: {
-                                                                        'Content-Type': 'application/json; charset=utf-8'
-                                                                    },
-                                                                    success: function () {
-                                                                        reLoadTree();
-                                                                        App.setAlert(App.STATUS_OK, __("Layer properties copied"));
-                                                                    },
-                                                                    failure: function (response) {
-                                                                        Ext.MessageBox.show({
-                                                                            title: __('Failure'),
-                                                                            msg: __(Ext.decode(response.responseText).message),
-                                                                            buttons: Ext.MessageBox.OK,
-                                                                            width: 400,
-                                                                            height: 300,
-                                                                            icon: Ext.MessageBox.ERROR
-                                                                        });
-                                                                    }
-                                                                });
-                                                            } else {
-                                                                var s = '';
-                                                                Ext.iterate(f.form.getValues(), function (key, value) {
-                                                                    s += String.format("{0} = {1}<br />", key, value);
-                                                                }, this);
-                                                            }
-                                                        }
-                                                    }
-                                                ]
-                                            }
                                         ]
+                                    },
+                                ],
+                                buttons: [
+                                    {
+                                        text: __('Copy'),
+                                        handler: function () {
+                                            var f = Ext.getCmp('copyMetaForm');
+                                            if (f.form.isValid()) {
+                                                var fields = [];
+                                                Ext.iterate(f.form.getValues(), function (key, value) {
+                                                    if (value === 'on') {
+                                                        fields.push(key)
+                                                    }
+                                                })
+                                                console.log(fields)
+
+                                                var keys = [];
+                                                Ext.iterate(records, function (v) {
+                                                    keys.push(v.get("_key_"));
+                                                });
+                                                var param = {
+                                                    data: {
+                                                        keys,
+                                                        fields
+                                                    }
+                                                };
+                                                param = Ext.util.JSON.encode(param);
+                                                Ext.Ajax.request({
+                                                    url: '/controllers/layer/copymeta/' + Ext.getCmp('copyMetaFormKeys').value,
+                                                    method: 'put',
+                                                    headers: {
+                                                        'Content-Type': 'application/json; charset=utf-8'
+                                                    },
+                                                    params: param,
+                                                    success: function () {
+                                                        reLoadTree();
+                                                        App.setAlert(App.STATUS_OK, __("Layer properties copied"));
+                                                    },
+                                                    failure: function (response) {
+                                                        Ext.MessageBox.show({
+                                                            title: __('Failure'),
+                                                            msg: __(Ext.decode(response.responseText).message),
+                                                            buttons: Ext.MessageBox.OK,
+                                                            width: 400,
+                                                            height: 300,
+                                                            icon: Ext.MessageBox.ERROR
+                                                        });
+                                                    }
+                                                });
+                                            } else {
+                                                var s = '';
+                                                Ext.iterate(f.form.getValues(), function (key, value) {
+                                                    s += String.format("{0} = {1}<br />", key, value);
+                                                }, this);
+                                            }
+                                        }
                                     }
                                 ]
-                            }
+                            })
                         ]
                     }).show(this);
                 }
@@ -3225,7 +3357,6 @@ $(document).ready(function () {
         Ext.getCmp('privileges-btn').setDisabled(true);
         Ext.getCmp('workflow-btn').setDisabled(true);
         Ext.getCmp('renamelayer-btn').setDisabled(true);
-        Ext.getCmp('copy-properties-btn').setDisabled(true);
         Ext.getCmp('deletelayer-btn').setDisabled(true);
         Ext.getCmp('movelayer-btn').setDisabled(true);
     };
@@ -3697,10 +3828,10 @@ $(document).ready(function () {
                                                     }),
                                                     columnsForGrid = response.forGrid
                                                         .map(e => {
-                                                        e.dataIndex = e.dataIndex.replace(/\./g, '_')
-                                                        return e;
+                                                            e.dataIndex = e.dataIndex.replace(/\./g, '_')
+                                                            return e;
 
-                                                    });
+                                                        });
 
                                                 console.log(fieldsForStore, columnsForGrid)
 
@@ -4373,20 +4504,21 @@ $(document).ready(function () {
                 Ext.getCmp('privileges-btn').setDisabled(false);
                 Ext.getCmp('workflow-btn').setDisabled(false);
                 Ext.getCmp('renamelayer-btn').setDisabled(false);
-                Ext.getCmp('copy-properties-btn').setDisabled(false);
             }
         } else {
             Ext.getCmp('advanced-btn').setDisabled(true);
             Ext.getCmp('privileges-btn').setDisabled(true);
             Ext.getCmp('workflow-btn').setDisabled(true);
             Ext.getCmp('renamelayer-btn').setDisabled(true);
-            Ext.getCmp('copy-properties-btn').setDisabled(true);
         }
         if (records.length > 0 && subUser === false) {
             Ext.getCmp('movelayer-btn').setDisabled(false);
         }
         if (records.length > 0 && (subUser === false || screenName === schema)) {
             Ext.getCmp('deletelayer-btn').setDisabled(false);
+        }
+        if (records.length > 0 && (subUser === false || screenName === schema)) {
+            Ext.getCmp('copy-properties-btn').setDisabled(false);
         }
         onEdit();
     });

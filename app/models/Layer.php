@@ -867,31 +867,37 @@ class Layer extends Table
      * @return array
      * @throws InvalidArgumentException
      */
-    public function copyMeta(string $to, string $from): array
+    public function copyMeta(string $from, object $data): array
     {
         $this->clearCacheOnSchemaChanges();
         $query = "SELECT * FROM settings.geometry_columns_join WHERE _key_ =:from";
         $res = $this->prepare($query);
         $res->execute(array("from" => $from));
-        $booleanFields = array("editable", "baselayer", "tilecache", "not_querable", "single_tile", "enablesqlfilter", "skipconflict", "enableows");
         $row = $this->fetchRow($res);
-        foreach ($row as $k => $v) {
-            if (in_array($k, $booleanFields)) {
-                $conf[$k] = $v ?: "0";
-            } else {
-                $conf[$k] = $v;
+        foreach ($data->keys as $to) {
+            $booleanFields = array("editable", "baselayer", "tilecache", "not_querable", "single_tile", "enablesqlfilter", "skipconflict", "enableows");
+            foreach ($row as $k => $v) {
+                if (in_array($k, $data->fields)) {
+                    if (in_array($k, $booleanFields)) {
+                        $conf[$k] = $v ?: "0";
+                    } else {
+                        $conf[$k] = $v;
+                    }
+                }
+            }
+            $conf['_key_'] = $to;
+            $geometryColumnsObj = new table("settings.geometry_columns_join");
+            $res = $geometryColumnsObj->updateRecord($conf, "_key_", true);
+            if (!$res["success"]) {
+                $response['success'] = false;
+                $response['message'] = $res["message"];
+                $response['code'] = "406";
+                return $response;
             }
         }
-        $conf['_key_'] = $to;
-        $geometryColumnsObj = new table("settings.geometry_columns_join");
-        $res = $geometryColumnsObj->updateRecord($conf, "_key_", true);
-        if (!$res["success"]) {
-            $response['success'] = false;
-            $response['message'] = $res["message"];
-            $response['code'] = "406";
-            return $response;
-        }
-        return $res;
+        return [
+            'success' => true,
+        ];
     }
 
     /**

@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED] - 2025-18-3
+### Changed
+- It's now possible in GC2 Admin to copy properties from one layer to _multiple_ layers and select what properties to copy.
+
 ## [2025.3.3] - 2025-18-3
 ### Fixed
 - Change from using `information_schema` to `pg_catalog` for querying of foreign constraints, which speeds up several APIs.
@@ -26,7 +30,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Commit API will now write out templates for each Meta object. The template should be defined in 'app/conf/template.markdown'. The template could be a Jekyll template for Github pages.
 - Layer Meta is now included in Meta v3 API.
 
-### CHANGED
+### Changed
 - Improvements in scheduler. Scheduler started jobs will now be logged and appear in Scheduler Status API. They will be tagged with 'Started by Scheduler'. When started from Admin they are tagged with 'Started from web-ui'.
 - Description on column will now be set as SQL comments also. For backward compatibility descriptions, which are not set as database comments will still be shown in GC2 Admin. But SQL comments will have precedence in GC2 Admin.
 - Description on layer will now be set as SQL comments also. For backward compatibility descriptions, which are not set as database comments will still be shown in GC2 Admin. But SQL comments will have precedence in GC2 Admin.
