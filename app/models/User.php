@@ -152,6 +152,7 @@ class User extends Model
      * @return array
      * @throws GC2Exception
      * @throws InvalidArgumentException
+     * @throws PDOException
      */
     public function createUser(array $data): array
     {
@@ -235,11 +236,7 @@ class User extends Model
         $db = new Database();
         if (isset($data['subuser']) && $data['subuser'] === false) {
             $db->postgisdb = $this->postgisdb;
-            try {
-                $db->createdb($userId, App::$param['databaseTemplate']);
-            } catch (Exception $e) {
-                throw new GC2Exception($e->getMessage(), 400);
-            }
+            $db->createdb($userId, App::$param['databaseTemplate']);
         } else {
             try {
                 $db->createUser($userId, $parentDb);

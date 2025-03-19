@@ -98,6 +98,7 @@ class Database extends Model
      * @param string $template
      * @param string $encoding
      * @return void
+     * @throws PDOException
      */
     public function createdb(string $screenName, string $template, string $encoding = "UTF8"): void
     {
