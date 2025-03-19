@@ -23,9 +23,10 @@ class Database extends Model
     /**
      * @param string $name
      * @param null $db
+     * @param bool $isSuperUser
      * @return void
      */
-    public function createUser(string $name, $db = null): void
+    public function createUser(string $name, $db = null, bool $isSuperUser = false): void
     {
         $this->connect();
         // First try to create user if not exists
@@ -46,6 +47,12 @@ class Database extends Model
             $this->db->query($sql);
             // And connect
             $sql = "GRANT CONNECT ON DATABASE \"$db\" TO \"$name\"";
+            $this->db->query($sql);
+        }
+        if ($isSuperUser) {
+            $sql = "GRANT \"" . Connection::$param['postgisuser'] . "\" TO \"$name\"";
+            $this->db->query($sql);
+            $sql = "ALTER ROLE \"$name\" CREATEROLE";
             $this->db->query($sql);
         }
     }
@@ -103,7 +110,7 @@ class Database extends Model
     public function createdb(string $screenName, string $template, string $encoding = "UTF8"): void
     {
         // Create user for the database
-        $this->createUser($screenName);
+        $this->createUser($screenName, null, true);
         // Create the database if not exists
         $sql = "select datname from pg_database where datname=:db";
         $res = $this->prepare($sql);

@@ -370,10 +370,6 @@ class User extends Model
         }
         $res->execute();
         $row = $this->fetchRow($res);
-        // If password, when use Database::createUser to set it
-        if ($password) {
-            (new Database())->createUser($user, $password);
-        }
         $row["properties"] = !empty($row["properties"]) ? json_decode($row["properties"]) : null;
         $response['success'] = true;
         $response['message'] = "User was updated";
