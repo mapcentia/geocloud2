@@ -199,6 +199,8 @@ gc2i18n = {
         "Copy": "Copy",
         "Copy from": "Copy from",
         "What to copy": "What to copy",
+        "All on": "All on",
+        "All off": "All off",
         "Add": "Add",
         "Copy properties": "Copy properties",
         "Copy all properties from another layer": "Copy all properties from another layer",

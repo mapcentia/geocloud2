@@ -2310,7 +2310,8 @@ $(document).ready(function () {
                         plain: true,
                         border: false,
                         items: [
-                            new Ext.FormPanel({
+                            {
+                                xtype: 'form',
                                 labelWidth: 100,
                                 // label settings here cascade unless overridden
                                 frame: false,
@@ -2331,103 +2332,133 @@ $(document).ready(function () {
                                         defaults: {
                                             anchor: '100%'
                                         },
-                                        layout: 'column',
                                         items: [
                                             {
-                                                columnWidth: .5,
-                                                layout: 'form',
+                                                xtype: 'container',
+                                                layout: 'column',
+
                                                 items: [
                                                     {
-                                                        xtype: 'checkbox',
-                                                        fieldLabel: __('Title'),
-                                                        name: 'f_table_title',
-                                                        checked: true
-                                                    }, {
-                                                        xtype: 'checkbox',
-                                                        fieldLabel: __('Description'),
-                                                        name: 'f_table_abstract',
-                                                        checked: true
+                                                        columnWidth: .5,
+                                                        layout: 'form',
+                                                        items: [
+                                                            {
+                                                                xtype: 'checkbox',
+                                                                fieldLabel: __('Title'),
+                                                                name: 'f_table_title',
+                                                                checked: true
+                                                            }, {
+                                                                xtype: 'checkbox',
+                                                                fieldLabel: __('Description'),
+                                                                name: 'f_table_abstract',
+                                                                checked: true
+                                                            },
+                                                            {
+                                                                xtype: 'checkbox',
+                                                                fieldLabel: __('Note'),
+                                                                name: 'note',
+                                                                checked: true
+                                                            }, {
+                                                                xtype: 'checkbox',
+                                                                fieldLabel: __('Group'),
+                                                                name: 'layergroup',
+                                                                checked: true
+                                                            },
+                                                            {
+                                                                xtype: 'checkbox',
+                                                                fieldLabel: __('OWS'),
+                                                                name: 'enableows',
+                                                                checked: true
+                                                            },
+                                                            {
+                                                                xtype: 'checkbox',
+                                                                fieldLabel: __('Sort id'),
+                                                                name: 'sort_id',
+                                                                checked: true
+                                                            },
+                                                            {
+                                                                xtype: 'checkbox',
+                                                                fieldLabel: __('Authentication'),
+                                                                name: 'authentication',
+                                                                checked: true
+                                                            },
+                                                        ]
                                                     },
                                                     {
-                                                        xtype: 'checkbox',
-                                                        fieldLabel: __('Note'),
-                                                        name: 'note',
-                                                        checked: true
-                                                    }, {
-                                                        xtype: 'checkbox',
-                                                        fieldLabel: __('Group'),
-                                                        name: 'layergroup',
-                                                        checked: true
-                                                    },
-                                                    {
-                                                        xtype: 'checkbox',
-                                                        fieldLabel: __('OWS'),
-                                                        name: 'enableows',
-                                                        checked: true
-                                                    },
-                                                    {
-                                                        xtype: 'checkbox',
-                                                        fieldLabel: __('Sort id'),
-                                                        name: 'sort_id',
-                                                        checked: true
-                                                    },
-                                                    {
-                                                        xtype: 'checkbox',
-                                                        fieldLabel: __('Authentication'),
-                                                        name: 'authentication',
-                                                        checked: true
+                                                        columnWidth: .5,
+                                                        layout: 'form',
+                                                        items: [
+                                                            {
+                                                                xtype: 'checkbox',
+                                                                fieldLabel: __('Editable'),
+                                                                name: 'editable',
+                                                                checked: true
+                                                            },
+                                                            {
+                                                                xtype: 'checkbox',
+                                                                fieldLabel: __('Field settings'),
+                                                                name: 'fieldconf',
+                                                                checked: true
+                                                            },
+                                                            {
+                                                                xtype: 'checkbox',
+                                                                fieldLabel: __('Layers definition'),
+                                                                name: 'def',
+                                                                checked: true
+                                                            },
+                                                            {
+                                                                xtype: 'checkbox',
+                                                                fieldLabel: __('Classes'),
+                                                                name: 'class',
+                                                                checked: true
+                                                            },
+                                                            {
+                                                                xtype: 'checkbox',
+                                                                fieldLabel: __('Privileges'),
+                                                                name: 'privileges',
+                                                                checked: true
+                                                            },
+                                                            {
+                                                                xtype: 'checkbox',
+                                                                fieldLabel: __('Meta'),
+                                                                name: 'meta',
+                                                                checked: true
+                                                            },
+                                                            {
+                                                                xtype: 'checkbox',
+                                                                fieldLabel: __('Tile cache'),
+                                                                name: 'tilecache',
+                                                                checked: true
+                                                            },
+                                                        ]
                                                     },
                                                 ]
                                             },
                                             {
-                                                columnWidth: .5,
-                                                layout: 'form',
+                                                xtype: 'container',
+                                                layout: 'hbox',
                                                 items: [
                                                     {
-                                                        xtype: 'checkbox',
-                                                        fieldLabel: __('Editable'),
-                                                        name: 'editable',
-                                                        checked: true
+                                                        xtype: 'button',
+                                                        text: __('All off'),
+                                                        handler: function () {
+                                                            Ext.each(Ext.getCmp('copyMetaForm').findByType('checkbox'), function (chk) {
+                                                                chk.setValue(false);
+                                                            });
+                                                        }
                                                     },
+                                                    {xtype: 'spacer', width: 10},
                                                     {
-                                                        xtype: 'checkbox',
-                                                        fieldLabel: __('Field settings'),
-                                                        name: 'fieldconf',
-                                                        checked: true
-                                                    },
-                                                    {
-                                                        xtype: 'checkbox',
-                                                        fieldLabel: __('Layers definition'),
-                                                        name: 'def',
-                                                        checked: true
-                                                    },
-                                                    {
-                                                        xtype: 'checkbox',
-                                                        fieldLabel: __('Classes'),
-                                                        name: 'class',
-                                                        checked: true
-                                                    },
-                                                    {
-                                                        xtype: 'checkbox',
-                                                        fieldLabel: __('Privileges'),
-                                                        name: 'privileges',
-                                                        checked: true
-                                                    },
-                                                    {
-                                                        xtype: 'checkbox',
-                                                        fieldLabel: __('Meta'),
-                                                        name: 'meta',
-                                                        checked: true
-                                                    },
-                                                    {
-                                                        xtype: 'checkbox',
-                                                        fieldLabel: __('Tile cache'),
-                                                        name: 'tilecache',
-                                                        checked: true
+                                                        xtype: 'button',
+                                                        text: __('All on'),
+                                                        handler: function () {
+                                                            Ext.each(Ext.getCmp('copyMetaForm').findByType('checkbox'), function (chk) {
+                                                                chk.setValue(true);
+                                                            });
+                                                        }
                                                     },
                                                 ]
                                             },
-
                                         ]
                                     },
                                     {
@@ -2524,8 +2555,6 @@ $(document).ready(function () {
                                                         fields.push(key)
                                                     }
                                                 })
-                                                console.log(fields)
-
                                                 var keys = [];
                                                 Ext.iterate(records, function (v) {
                                                     keys.push(v.get("_key_"));
@@ -2568,7 +2597,7 @@ $(document).ready(function () {
                                         }
                                     }
                                 ]
-                            })
+                            }
                         ]
                     }).show(this);
                 }

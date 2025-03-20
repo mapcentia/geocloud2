@@ -199,6 +199,8 @@ gc2i18n = {
         "Copy": "Kopier",
         "Copy from": "Kopier fra",
         "What to copy": "Hvad skal kopieres",
+        "All on": "Tjek alle",
+        "All off": "Aftjek alle",
         "Add": "Tilføj",
         "Copy properties": "Kopier egenskaber",
         "Copy all properties from another layer": "Kopier egenskaber fra et andet lag",
