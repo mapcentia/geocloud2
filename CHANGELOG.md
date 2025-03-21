@@ -8,6 +8,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [UNRELEASED] - 2025-18-3
 ### Changed
 - It's now possible in GC2 Admin to copy properties from one layer to _multiple_ layers and select what properties to copy.
+- It's now possible to set privileges on multiple layers at once.
 
 ## [2025.3.3] - 2025-18-3
 ### Fixed

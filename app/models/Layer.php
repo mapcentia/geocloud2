@@ -704,23 +704,27 @@ class Layer extends Table
     public function updatePrivileges(object $data, ?Table $table = null): array
     {
         (new User($data->subuser))->doesUserExist();
-        $this->clearCacheOfColumns(explode(".", $data->_key_)[0] . "." . explode(".", $data->_key_)[1]);
         $this->clearCacheOnSchemaChanges();
-        $table = $table ?? new Table("settings.geometry_columns_join");
-        $split = explode(".", $data->_key_);
-        $geomCols = $this->getGeometryColumnsFromTable($split[0], $split[1]);
-        if (sizeof($geomCols) == 0) {
-            throw new GC2Exception('columns not found');
+        $LayerKeys = explode(',', $data->_key_);
+        foreach ($LayerKeys as $layerKey) {
+            $this->clearCacheOfColumns(explode(".", $layerKey)[0] . "." . explode(".", $layerKey)[1]);
+            $table = $table ?? new Table("settings.geometry_columns_join");
+            $split = explode(".", $layerKey);
+            $geomCols = $this->getGeometryColumnsFromTable($split[0], $split[1]);
+            if (sizeof($geomCols) == 0) {
+                throw new GC2Exception('columns not found');
+            }
+            foreach ($geomCols as $geomCol) {
+                $key = $split[0] . '.' . $split[1] . '.' . $geomCol;
+                $jsonStr = $this->getValueFromKey($key, "privileges");
+                $privilege = !empty($jsonStr) ? json_decode($jsonStr, true) : [];
+                $privilege[$data->subuser] = $data->privileges;
+                $privileges['privileges'] = json_encode($privilege);
+                $privileges['_key_'] = $key;
+                $table->updateRecord($privileges, "_key_");
+            }
         }
-        foreach ($geomCols as $geomCol) {
-            $key = $split[0] . '.' . $split[1] . '.' . $geomCol;
-            $jsonStr = $this->getValueFromKey($key, "privileges");
-            $privilege = !empty($jsonStr) ? json_decode($jsonStr, true) : [];
-            $privilege[$data->subuser] = $data->privileges;
-            $privileges['privileges'] = json_encode($privilege);
-            $privileges['_key_'] = $key;
-            $table->updateRecord($privileges, "_key_");
-        }
+
         $response['success'] = true;
         $response['message'] = "Privileges updates";
         return $response;

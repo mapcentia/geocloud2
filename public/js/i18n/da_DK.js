@@ -75,6 +75,7 @@ gc2i18n = {
         "Only read": "Kun læse",
         "Read and write": "Læse og skrive",
         "All": "Alle",
+        "Multiple layers are selected. Any changes will effect all selected layers.": "Flere lag er valgt. Ændringer vil have effekt på alle valgte lag.",
         "The layer doesn't exist for the sub-user.": "Laget eksisterer ikke for sub-brugeren",
         "The sub-user can see and query the layer.": "Sub-brugeren kan se og forespørge laget",
         "The sub-user can edit the layer.": "Sub-brugeren kan skrive til laget",

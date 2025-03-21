@@ -958,7 +958,7 @@ $(document).ready(function () {
                                             width: 300,
                                             height: 300
                                         });
-                                        privilgesWin.close();
+                                        privilegesWin.close();
                                     }
                                 }
                             }
@@ -966,8 +966,8 @@ $(document).ready(function () {
                         autoSave: true
                     });
                     privilegesStore.load();
-                    var privilgesWin = new Ext.Window({
-                        title: '<i class="fa fa-user"></i> ' + __("Grant privileges to sub-users on") + " '" + records[0].get("f_table_name") + "'",
+                    const privilegesWin = new Ext.Window({
+                        title: '<i class="fa fa-user"></i> ' + __("Grant privileges to sub-users on") + " '" + records.map(k => k.get("f_table_name")).join(', ') + "'",
                         modal: true,
                         width: 600,
                         height: 330,
@@ -976,12 +976,24 @@ $(document).ready(function () {
                         border: false,
                         layout: 'border',
                         items: [
-                            new Ext.Panel({
+                            {
+                                xtype: 'panel',
                                 height: 500,
                                 region: "center",
                                 layout: 'border',
                                 border: false,
                                 items: [
+                                    {
+                                        xtype: 'panel',
+                                        border: false,
+                                        region: 'north',
+                                        bodyStyle: {
+                                            padding: '7px'
+                                        },
+                                        html: "<i class='fa fa-exclamation-circle'></i> " + __("Multiple layers are selected. Any changes will effect all selected layers."),
+                                        hidden: records.length === 1
+
+                                    },
                                     new Ext.grid.EditorGridPanel({
                                         store: privilegesStore,
                                         viewConfig: {
@@ -995,7 +1007,8 @@ $(document).ready(function () {
                                         }),
                                         cm: new Ext.grid.ColumnModel({
                                             defaults: {
-                                                sortable: true
+                                                sortable: true,
+                                                menuDisabled: true
                                             },
                                             columns: [
                                                 {
@@ -1009,17 +1022,19 @@ $(document).ready(function () {
                                                     dataIndex: 'privileges',
                                                     sortable: false,
                                                     renderer: function (val, cell, record, rowIndex, colIndex, store) {
-                                                        var _key_ = records[0].get("_key_"), disabled;
+                                                        const _key_ = records.map(k => k.get("_key_")).join(',');
+                                                        const multiple = records.length > 1;
+                                                        let disabled;
                                                         if (!record.data.group) {
                                                             disabled = "";
                                                         } else {
                                                             disabled = "disabled";
                                                         }
                                                         var retval =
-                                                            '<input ' + disabled + ' data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="none" name="' + rowIndex + '"' + ((val === 'none') ? ' checked="checked"' : '') + '>&nbsp;' + __('None') + '&nbsp;&nbsp;&nbsp;' +
-                                                            '<input ' + disabled + ' data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="read" name="' + rowIndex + '"' + ((val === 'read') ? ' checked="checked"' : '') + '>&nbsp;' + __('Only read') + '&nbsp;&nbsp;&nbsp;' +
-                                                            '<input ' + disabled + ' data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="write" name="' + rowIndex + '"' + ((val === 'write') ? ' checked="checked"' : '') + '>&nbsp;' + __('Read and write') + '&nbsp;&nbsp;&nbsp;' +
-                                                            '<input ' + disabled + ' data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="all" name="' + rowIndex + '"' + ((val === 'all') ? ' checked="checked"' : '') + '>&nbsp;' + __('All') + '&nbsp;&nbsp;&nbsp;'
+                                                            '<input ' + disabled + ' data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="none" name="' + rowIndex + '"' + ((val === 'none' && !multiple) ? ' checked="checked"' : '') + '>&nbsp;' + __('None') + '&nbsp;&nbsp;&nbsp;' +
+                                                            '<input ' + disabled + ' data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="read" name="' + rowIndex + '"' + ((val === 'read' && !multiple) ? ' checked="checked"' : '') + '>&nbsp;' + __('Only read') + '&nbsp;&nbsp;&nbsp;' +
+                                                            '<input ' + disabled + ' data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="write" name="' + rowIndex + '"' + ((val === 'write' && !multiple) ? ' checked="checked"' : '') + '>&nbsp;' + __('Read and write') + '&nbsp;&nbsp;&nbsp;' +
+                                                            '<input ' + disabled + ' data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="all" name="' + rowIndex + '"' + ((val === 'all' && !multiple) ? ' checked="checked"' : '') + '>&nbsp;' + __('All') + '&nbsp;&nbsp;&nbsp;'
                                                         ;
                                                         return retval;
                                                     }
@@ -1038,33 +1053,32 @@ $(document).ready(function () {
                                             ]
                                         })
                                     }),
-                                    new Ext.Panel({
-                                            border: false,
-                                            region: "south",
-                                            bodyStyle: {
-                                                padding: '7px'
-                                            },
-                                            html: "<ul>" +
-                                                "<li>" + "<b>" + __("None") + "</b>: " + __("The layer doesn't exist for the sub-user.") + "</li>" +
-                                                "<li>" + "<b>" + __("Only read") + "</b>: " + __("The sub-user can see and query the layer.") + "</li>" +
-                                                "<li>" + "<b>" + __("Read and write") + "</b>: " + __("The sub-user can edit the layer.") + "</li>" +
-                                                "<li>" + "<b>" + __("All") + "</b>: " + __("The sub-user change properties like style and alter table structure.") + "</li>" +
-                                                "<ul>" +
-                                                "<br><p>" +
-                                                __("If a sub-user is set to inherit the privileges of another sub-user, you can't change the privileges of the sub-user.") +
-                                                "</p>" +
-                                                "<br><p>" +
-                                                __("The privileges are granted for both Admin and external services like WMS and WFS.") +
-                                                "</p>"
-                                        }
-                                    )
+                                    {
+                                        xtype: 'panel',
+                                        border: false,
+                                        region: "south",
+                                        bodyStyle: {
+                                            padding: '7px'
+                                        },
+                                        html: "<ul>" +
+                                            "<li>" + "<b>" + __("None") + "</b>: " + __("The layer doesn't exist for the sub-user.") + "</li>" +
+                                            "<li>" + "<b>" + __("Only read") + "</b>: " + __("The sub-user can see and query the layer.") + "</li>" +
+                                            "<li>" + "<b>" + __("Read and write") + "</b>: " + __("The sub-user can edit the layer.") + "</li>" +
+                                            "<li>" + "<b>" + __("All") + "</b>: " + __("The sub-user change properties like style and alter table structure.") + "</li>" +
+                                            "<ul>" +
+                                            "<br><p>" +
+                                            __("If a sub-user is set to inherit the privileges of another sub-user, you can't change the privileges of the sub-user.") +
+                                            "</p>" +
+                                            "<br><p>" +
+                                            __("The privileges are granted for both Admin and external services like WMS and WFS.") +
+                                            "</p>"
+                                    }
                                 ]
-
-                            })
+                            }
                         ]
                     }).show();
                 },
-                disabled: true
+                disabled: false
             },
             {
                 text: '<i class="fa fa-users"></i> ' + __('Workflow'),
@@ -3383,7 +3397,6 @@ $(document).ready(function () {
      */
     resetButtons = function () {
         Ext.getCmp('advanced-btn').setDisabled(true);
-        Ext.getCmp('privileges-btn').setDisabled(true);
         Ext.getCmp('workflow-btn').setDisabled(true);
         Ext.getCmp('renamelayer-btn').setDisabled(true);
         Ext.getCmp('deletelayer-btn').setDisabled(true);
@@ -4530,13 +4543,11 @@ $(document).ready(function () {
         if (records.length === 1) {
             Ext.getCmp('advanced-btn').setDisabled(false);
             if (subUser === false || screenName === schema) {
-                Ext.getCmp('privileges-btn').setDisabled(false);
                 Ext.getCmp('workflow-btn').setDisabled(false);
                 Ext.getCmp('renamelayer-btn').setDisabled(false);
             }
         } else {
             Ext.getCmp('advanced-btn').setDisabled(true);
-            Ext.getCmp('privileges-btn').setDisabled(true);
             Ext.getCmp('workflow-btn').setDisabled(true);
             Ext.getCmp('renamelayer-btn').setDisabled(true);
         }
