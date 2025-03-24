@@ -27,7 +27,7 @@
         "softcreatr/jsonpath": "^0.8.1",
         "aws/aws-sdk-php": "^3.263",
         "league/flysystem-aws-s3-v3": "^3.13",
-        "phpoffice/phpspreadsheet": "^1.29",
+        "phpoffice/phpspreadsheet": "^4.1",
         "sad_spirit/pg_wrapper": "^2.5",
         "ext-dba": "*",
         "twig/twig": "^3.0",
