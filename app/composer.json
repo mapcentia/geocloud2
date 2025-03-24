@@ -38,14 +38,15 @@
         "cboden/ratchet": "^0.4.4",
         "amphp/amp": "^3.1",
         "amphp/socket": "^2.3",
-        "amphp/postgres": "^2.1",
+        "amphp/postgres": "^2",
         "amphp/websocket": "^2.0",
         "amphp/websocket-server": "^4.0",
         "psr/log": "^3.0",
         "amphp/http-server-router": "^2.0",
         "amphp/http-server-static-content": "^2.0",
         "amphp/log": "^2.0",
-        "amphp/websocket-client": "^2.0"
+        "amphp/websocket-client": "^2.0",
+        "revolt/event-loop": "^1.0"
     },
     "require-dev": {
         "phpstan/phpstan": "^1.10",

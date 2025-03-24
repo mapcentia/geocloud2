@@ -9,6 +9,8 @@ use Amp\Postgres\PostgresConnectionPool;
 use Amp\Postgres\PostgresListener;
 use function Amp\async;
 use function Amp\delay;
+use function Amp\trapSignal;
+
 
 //
 // --- Configuration ---
@@ -156,6 +158,7 @@ $startListenerForDb = function (
             // If DB isn't available, this will throw.
             $pool = new PostgresConnectionPool($config);
 
+
             // Now attempt to listen on your channel.
             // If DB fails mid-listen, it throws inside consumer loop.
             $listener = $pool->listen($channel);
@@ -185,42 +188,6 @@ $startListenerForDb = function (
 };
 
 // -----------------------------------------------------
-// Initialize batch state for each DB and start the listener tasks
-// -----------------------------------------------------
-$dbListenersStarted = 0;
-
-foreach ($dbs as $db) {
-    if (in_array($db, $skipList, true) || str_contains($db, 'test')) {
-        continue;
-    }
-
-    // Initialize batch state for this DB
-    $batchState[$db] = [
-        'count'     => 0,
-        'startTime' => time(),
-        'payLoad'   => []
-    ];
-
-    // Spawn an async task that continuously attempts to connect and listen
-    $futures[] = async(
-        $startListenerForDb,
-        $db,
-        $batchState,
-        $consumer,
-        $flushBatch,
-        $batchSize,
-        $reconnectDelay
-    );
-
-    $dbListenersStarted++;
-}
-
-if ($dbListenersStarted === 0) {
-    echo "[INFO] No databases to listen on. Exiting.\n";
-    exit(0);
-}
-
-// -----------------------------------------------------
 // Periodic timer to flush partial batches if too old
 // -----------------------------------------------------
 async(function () use (
@@ -244,13 +211,56 @@ async(function () use (
     }
 });
 
-// -----------------------------------------------------
-// Wait for all async tasks (listeners + timer) to finish
-// (In practice, they run indefinitely.)
-// -----------------------------------------------------
-try {
-    Future\await($futures);
-} catch (Throwable $error) {
-    echo "[FATAL] Uncaught error: " . $error->getMessage() . "\n";
-}
+// --- Supervisor loop (Never exits, always restarts listeners) ---
+async(function () use (
+    $dbs, $skipList, &$batchState, $consumer,
+    $flushBatch, $batchSize, $reconnectDelay, $startListenerForDb
+) {
+    while (true) {
+        $futures = [];
+
+        foreach ($dbs as $db) {
+            if (in_array($db, $skipList, true) || str_contains($db, 'test')) {
+                continue;
+            }
+
+            $batchState[$db] = [
+                'count'     => 0,
+                'startTime' => time(),
+                'payLoad'   => []
+            ];
+
+            $futures[$db] = async(function () use (
+                $db, &$batchState, $consumer, $flushBatch,
+                $batchSize, $reconnectDelay, $startListenerForDb
+            ) {
+                while (true) {
+                    try {
+                        $startListenerForDb(
+                            $db, $batchState, $consumer, $flushBatch,
+                            $batchSize, $reconnectDelay
+                        );
+                    } catch (Throwable $e) {
+                        echo "[CRITICAL] Listener crashed for DB '{$db}': " . $e->getMessage() . "\n";
+                        echo "[INFO] Restarting listener for DB '{$db}' in {$reconnectDelay}s...\n";
+                        delay($reconnectDelay);
+                    }
+                }
+            });
+        }
+
+        // Wait until ANY of the futures complete or fail unexpectedly
+        try {
+            Future\await(array_values($futures));
+            echo "[WARNING] All listeners unexpectedly completed. Restarting immediately...\n";
+        } catch (Throwable $e) {
+            echo "[CRITICAL] One or more listeners failed unexpectedly: " . $e->getMessage() . "\n";
+        }
+
+        // If you reach this point, something caused your listener tasks to finish/crash.
+        // Sleep briefly to avoid rapid looping on permanent errors.
+        delay($reconnectDelay);
+        echo "[INFO] Supervisor restarting listeners...\n";
+    }
+});
 
