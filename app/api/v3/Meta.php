@@ -9,6 +9,8 @@
 namespace app\api\v3;
 
 use app\api\v4\AbstractApi;
+use app\api\v4\AcceptableAccepts;
+use app\api\v4\AcceptableMethods;
 use app\exceptions\GC2Exception;
 use app\inc\Jwt;
 use app\inc\Route2;
@@ -20,6 +22,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
  * Class Meta
  * @package app\api\v4
  */
+#[AcceptableMethods(['GET', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Meta extends AbstractApi
 {
 
@@ -29,6 +32,7 @@ class Meta extends AbstractApi
     function __construct()
     {
     }
+
 
     /**
      * @return array
@@ -60,6 +64,7 @@ class Meta extends AbstractApi
      *   )
      * )
      */
+    #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
     public function get_index(): array
     {
