@@ -461,7 +461,7 @@ class Model
                         $tmpArr["is_unique"] = !empty($index["is_unique"][$row["column_name"]]);
                         $tmpArr["is_primary"] = !empty($index["is_primary"][$row["column_name"]]);
                         $tmpArr["is_nullable"] = !$row['is_nullable'];
-                        $tmpArr["default_value"] = !$row['default_value'];
+                        $tmpArr["default_value"] = $row['default_value'];
                         $tmpArr["index_method"] = !empty($index["index_method"][$row["column_name"]]) ? $index["index_method"][$row["column_name"]] : null;
                         $tmpArr["checks"] = sizeof($checkValues) > 0 ? array_map(function ($con) {
                             preg_match('#\((.*?)\)#', $con, $match);
