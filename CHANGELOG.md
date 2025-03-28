@@ -5,10 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED] - 2025-18-3
+## [2025.3.4] - 2025-28-3
 ### Changed
 - It's now possible in GC2 Admin to copy properties from one layer to _multiple_ layers and select what properties to copy.
 - It's now possible to set privileges on multiple layers at once.
+
+## Fixed
+- Better handling of user creation. Check the existence of both database and pg user when creating a GC2 superuser. So new it's possible to create a GC2 user for an already existing database and PG user. 
 
 ## [2025.3.3] - 2025-18-3
 ### Fixed
