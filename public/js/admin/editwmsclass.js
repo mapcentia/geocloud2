@@ -371,6 +371,9 @@ wmsClass.init = function (id) {
                 name: 'angle'
             },
             {
+                name: 'gap'
+            },
+            {
                 name: 'style_opacity'
             },
             {
@@ -568,6 +571,9 @@ wmsClass.init = function (id) {
                 name: 'overlayangle'
             },
             {
+                name: 'overlaygap'
+            },
+            {
                 name: 'overlaystyle_opacity'
             },
             {
@@ -641,6 +647,7 @@ wmsClass.init = function (id) {
                             'size',
                             'width',
                             'angle',
+                            'gap',
                             'style_opacity',
                             'geomtransform',
                             'minsize',
@@ -667,6 +674,7 @@ wmsClass.init = function (id) {
                             'overlaysize',
                             'overlaywidth',
                             'overlayangle',
+                            'overlaygap',
                             'overlaystyle_opacity',
                             'overlaygeomtransform',
                             'overlayminsize',
@@ -815,6 +823,7 @@ wmsClass.init = function (id) {
             size: 'Style: symbol size',
             width: 'Style: line width',
             angle: 'Style: symbol angle',
+            gap: 'Style: symbol gap' + __("specifies the distance between SYMBOLs (center to center) for decorated lines and polygon fills in layer SIZEUNITS. For polygon fills, GAP specifies the distance between SYMBOLs in both the X and the Y direction. For lines, the centers of the SYMBOLs are placed on the line. For lines, a negative GAP value will cause the symbols’ X axis to be aligned relative to the tangent of the line. For lines, a positive GAP value aligns the symbols’ X axis relative to the X axis of the output device.", true),
             style_opacity: 'Style: opacity',
             linecap: 'Style: line cap',
             pattern: 'Style: pattern',
@@ -861,11 +870,16 @@ wmsClass.init = function (id) {
                 editable: true,
                 triggerAction: 'all'
             }), {}),
-            /*   'width': new Ext.grid.GridEditor(new Ext.form.NumberField({
+            'width': new Ext.grid.GridEditor(new Ext.form.NumberField({
                    decimalPrecision: 0,
                    decimalSeparator: '¤'// Some strange char
                    // nobody is using
-               }), {}),*/
+               }), {}),
+            'gap': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char
+                // nobody is using
+            }), {}),
             'style_opacity': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
@@ -1014,6 +1028,7 @@ wmsClass.init = function (id) {
             overlaycolor: 'Style: color',
             overlaysize: 'Style: symbol size',
             overlayangle: 'Style: symbol angle',
+            overlaygap: 'Style: symbol gap' + __("specifies the distance between SYMBOLs (center to center) for decorated lines and polygon fills in layer SIZEUNITS. For polygon fills, GAP specifies the distance between SYMBOLs in both the X and the Y direction. For lines, the centers of the SYMBOLs are placed on the line. For lines, a negative GAP value will cause the symbols’ X axis to be aligned relative to the tangent of the line. For lines, a positive GAP value aligns the symbols’ X axis relative to the X axis of the output device.", true),
             overlaystyle_opacity: 'Style: opacity',
             overlaylinecap: 'Style: line cap',
             overlaypattern: 'Style: pattern',
@@ -1144,6 +1159,11 @@ wmsClass.init = function (id) {
                 triggerAction: 'all'
             }), {}),
             'overlaywidth': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                decimalPrecision: 0,
+                decimalSeparator: '¤'// Some strange char
+                // nobody is using
+            }), {}),
+            'overlaygap': new Ext.grid.GridEditor(new Ext.form.NumberField({
                 decimalPrecision: 0,
                 decimalSeparator: '¤'// Some strange char
                 // nobody is using

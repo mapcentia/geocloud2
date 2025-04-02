@@ -631,6 +631,13 @@ class Mapfile extends Controller
                         }
                         echo "\n";
                         ?>
+                        #GAP
+                        <?php
+                        if (!empty($class['gap'])) {
+                            echo "GAP " . $class['gap'];
+                        }
+                        echo "\n";
+                        ?>
                         #GEOMTRANSFORM
                         <?php
                         if (!empty($class['geomtransform'])) {
@@ -717,6 +724,13 @@ class Mapfile extends Controller
                                 echo "ANGLE " . $class['overlayangle'];
                             else
                                 echo "ANGLE [{$class['overlayangle']}]";
+                        }
+                        echo "\n";
+                        ?>
+                        #GAP
+                        <?php
+                        if (!empty($class['overlaygap'])) {
+                            echo "GAP " . $class['overlaygap'];
                         }
                         echo "\n";
                         ?>
@@ -1565,6 +1579,13 @@ class Mapfile extends Controller
                         }
                         echo "\n";
                         ?>
+                        #GAP
+                        <?php
+                        if (!empty($class['gap'])) {
+                            echo "GAP " . $class['gap'];
+                        }
+                        echo "\n";
+                        ?>
                         #GEOMTRANSFORM
                         <?php
                         if (!empty($class['geomtransform'])) {
@@ -1645,6 +1666,13 @@ class Mapfile extends Controller
                                 echo "ANGLE " . $class['overlayangle'];
                             else
                                 echo "ANGLE [{$class['overlayangle']}]";
+                        }
+                        echo "\n";
+                        ?>
+                        #GAP
+                        <?php
+                        if (!empty($class['overlaygap'])) {
+                            echo "GAP " . $class['overlaygap'];
                         }
                         echo "\n";
                         ?>

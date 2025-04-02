@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED] - 2025-28-3
+### Added
+- MapServer GAP parameter is added to GC2 Admin GUI. GAP specifies the distance between SYMBOLs (center to center) for decorated lines and polygon fills in layer SIZEUNITS.
+
 ## [2025.3.4] - 2025-28-3
 ### Changed
 - It's now possible in GC2 Admin to copy properties from one layer to _multiple_ layers and select what properties to copy.
