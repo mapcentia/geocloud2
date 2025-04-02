@@ -371,6 +371,8 @@ class Layer extends Table
                     if (empty($field['comment'])) {
                         $fields[$key]['comment'] = $fieldConf[$key]['desc'];
                     }
+                    $fields[$key]['alias'] = $fieldConf[$key]['alias'];
+                    $fields[$key]['queryable'] = (bool)$fieldConf[$key]['querable'];
                 }
 
                 // Sort fields
