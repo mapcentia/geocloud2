@@ -109,10 +109,8 @@ RUN cd ~ &&\
     cmake .. && make && make install
 
 # Install gc2-cli
-RUN wget -qO- https://gc2-cli.s3.eu-west-1.amazonaws.com/channels/stable/apt/release.key | apt-key add - &&\
-    echo "deb  https://gc2-cli.s3.eu-west-1.amazonaws.com/channels/stable/apt ./" > /etc/apt/sources.list.d/gc2-cli.list &&\
-    apt update &&\
-    apt install gc2
+RUN wget https://gc2-cli.s3.eu-west-1.amazonaws.com/versions/2025.4.0/d3a2e2c/apt/gc2_2025.4.0.d3a2e2c-1_amd64.deb -O gc2.deb &&\
+    dpkg -i gc2.deb
 
 # Expose standard ports for HTTP and HTTPS
 EXPOSE 80
