@@ -11,6 +11,8 @@ namespace app\models;
 use app\conf\App;
 use app\conf\Connection;
 use app\exceptions\GC2Exception;
+use app\inc\Cache;
+use app\inc\Globals;
 use app\inc\Model;
 use DateInterval;
 use DateTimeImmutable;
@@ -150,22 +152,31 @@ class Sql extends Model
             $ST_Force2D = "ST_Force2D";
         }
 
-        // Get column types
-        $select = $this->prepare("select * from ($q) as foo LIMIT 0");
-        $convertedParameters = [];
-        if ($parameters) {
-            foreach ($parameters as $field => $value) {
-                $nativeType = $typeHints[$field] ?? 'json';
-                $formatT = $typeFormats[$field] ?? self::getFormat($nativeType);
-                $convertedParameters[$field] = $this->convertToNative($nativeType, $value, $formatT);
-            }
-            $select->execute($convertedParameters);
+        // Get column types and cache them with 'meta' tag
+        $cacheType = "meta";
+        $cacheId = $this->postgisdb . "_types_" . $cacheType . "_" . md5($q);
+        $CachedString = Cache::getItem($cacheId);
+        if ($CachedString != null && $CachedString->isHit()) {
+            $columnTypes = $CachedString->get();
         } else {
-            $select->execute();
-        }
-        foreach (range(0, $select->columnCount() - 1) as $column_index) {
-            $meta = $select->getColumnMeta($column_index);
-            $columnTypes[$meta['name']] = $meta['native_type'];
+            $select = $this->prepare("select * from ($q) as foo LIMIT 0");
+            $convertedParameters = [];
+            if ($parameters) {
+                foreach ($parameters as $field => $value) {
+                    $nativeType = $typeHints[$field] ?? 'json';
+                    $formatT = $typeFormats[$field] ?? self::getFormat($nativeType);
+                    $convertedParameters[$field] = $this->convertToNative($nativeType, $value, $formatT);
+                }
+                $select->execute($convertedParameters);
+            } else {
+                $select->execute();
+            }
+            foreach (range(0, $select->columnCount() - 1) as $column_index) {
+                $meta = $select->getColumnMeta($column_index);
+                $columnTypes[$meta['name']] = $meta['native_type'];
+            }
+            $CachedString->set($columnTypes)->expiresAfter(Globals::$cacheTtl);
+            Cache::save($CachedString);
         }
 
         $fieldsArr = [];
