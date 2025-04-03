@@ -253,11 +253,17 @@ class Import extends AbstractApi
             ($args && property_exists($args, 'import') && $args->import === true ? " --schema $schema" : "") .
             ($args && property_exists($args, 'import') && $args->import === true ? " --p_multi" : "") .
             ($args && property_exists($args, 'import') && $args->import === true ? " --import" : "") .
+            ($args && property_exists($args, 'append') && $args->import === true ? " --append" : "") .
+            ($args && property_exists($args, 'truncate') && $args->import === true ? " --truncate" : "") .
+            ($args && property_exists($args, 'timestamp') && $args->import === true ? " --timestamp " . $args->timestamp : "") .
+            ($args && property_exists($args, 'x_possible_names') && $args->import === true ? " --x_possible_names " . $args->x_possible_names : "") .
+            ($args && property_exists($args, 'y_possible_names') && $args->import === true ? " --y_possible_names " . $args->y_possible_names : "") .
             ($args && property_exists($args, 'import') && $args->import === true ? " --connection $connectionStr" : "") .
             " '" . $fileFullPath . "'";
 
         exec($cmd, $out);
-        $args = json_decode($out[0], null, 512, JSON_THROW_ON_ERROR);
+        $args = !empty($out[0]) ? json_decode($out[0], null, 512, JSON_THROW_ON_ERROR) : null
+        ;
         return [
             'data' => $args,
             'cmd' => $cmd,
@@ -293,11 +299,29 @@ class Import extends AbstractApi
             'import' => new Assert\Optional(
                 new Assert\Type('boolean'),
             ),
+            'append' => new Assert\Optional(
+                new Assert\Type('boolean'),
+            ),
+            'truncate' => new Assert\Optional(
+                new Assert\Type('boolean'),
+            ),
             't_srs' => new Assert\Optional([
                 new Assert\Type('string'),
                 new Assert\NotBlank(),
             ]),
             's_srs' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+            ]),
+            'timestamp' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+            ]),
+            'x_possible_names' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+            ]),
+            'y_possible_names' => new Assert\Optional([
                 new Assert\Type('string'),
                 new Assert\NotBlank(),
             ]),
