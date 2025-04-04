@@ -1593,7 +1593,7 @@ class Table extends Model
     public function setColumnComment(?string $comment, string $column): void
     {
         $this->clearCacheOnSchemaChanges();
-        $sql = "COMMENT ON COLUMN {$this->doubleQuoteQualifiedName($this->table)}.$column IS :comment";
+        $sql = "COMMENT ON COLUMN {$this->doubleQuoteQualifiedName($this->table)}.\"$column\" IS :comment";
         $res = $this->prepare($sql);
         $res->execute(['comment' => $comment]);
     }
