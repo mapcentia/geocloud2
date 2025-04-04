@@ -20,10 +20,14 @@ RUN apt-get -y install cron vim wget g++ build-essential git unzip rng-tools apa
     libgeos++-dev curl libapache2-mod-fcgid libfcgi-dev xvfb osm2pgsql postgis  sudo \
     apt-transport-https ca-certificates software-properties-common \
     libprotobuf-c-dev libprotobuf-dev libprotobuf-c1 libprotobuf32 protobuf-compiler protobuf-c-compiler libtool \
-    python3-dev bison python3-setuptools jq libwxgtk3.2-dev libuv1 libuv1-dev
+    python3-dev bison python3-setuptools jq libwxgtk3.2-dev libuv1-dev libpq-dev
 
-# Install PECL modules
-RUN pecl install uv pq
+# Install PECL modules for realtime
+RUN pecl install pq
+RUN pecl config-set preferred_state beta
+RUN pecl install uv
+RUN echo "extension=pq.so" >> /etc/php/8.3/cli/php.ini
+RUN echo "extension=uv.so" >> /etc/php/8.3/cli/php.ini
 
 # Compile SWIG > 4.0.0 to get PHP8 support
 RUN git clone https://github.com/swig/swig.git &&\
