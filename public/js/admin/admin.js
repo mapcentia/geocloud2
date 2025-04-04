@@ -2319,7 +2319,7 @@ $(document).ready(function () {
                         modal: true,
                         layout: 'fit',
                         width: 450,
-                        height: 410,
+                        height: 470,
                         closeAction: 'close',
                         plain: true,
                         border: false,
@@ -2396,6 +2396,18 @@ $(document).ready(function () {
                                                                 name: 'authentication',
                                                                 checked: true
                                                             },
+                                                            {
+                                                                xtype: 'checkbox',
+                                                                fieldLabel: __('WMS source'),
+                                                                name: 'wmssource',
+                                                                checked: true
+                                                            },
+                                                            {
+                                                                xtype: 'checkbox',
+                                                                fieldLabel: __('WMS EPSGs'),
+                                                                name: 'wmsclientepsgs',
+                                                                checked: true
+                                                            },
                                                         ]
                                                     },
                                                     {
@@ -2442,6 +2454,18 @@ $(document).ready(function () {
                                                                 xtype: 'checkbox',
                                                                 fieldLabel: __('Tile cache'),
                                                                 name: 'tilecache',
+                                                                checked: true
+                                                            },
+                                                            {
+                                                                xtype: 'checkbox',
+                                                                fieldLabel: __('Bitmap source'),
+                                                                name: 'bitmapsource',
+                                                                checked: true
+                                                            },
+                                                            {
+                                                                xtype: 'checkbox',
+                                                                fieldLabel: __('Tags'),
+                                                                name: 'tags',
                                                                 checked: true
                                                             },
                                                         ]
