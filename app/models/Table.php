@@ -1579,9 +1579,9 @@ class Table extends Model
     public function setTableComment(?string $comment): void
     {
         $this->clearCacheOnSchemaChanges();
-        $sql = "COMMENT ON " . $this->isTableOrView($this->table)['data'] . " " . $this->doubleQuoteQualifiedName($this->table) . " IS '$comment';";
+        $sql = "COMMENT ON " . $this->isTableOrView($this->table)['data'] . " " . $this->doubleQuoteQualifiedName($this->table) . " IS :comment";
         $res = $this->prepare($sql);
-        $res->execute();
+        $res->execute([':comment' => $comment]);
     }
 
     /**
@@ -1593,9 +1593,9 @@ class Table extends Model
     public function setColumnComment(?string $comment, string $column): void
     {
         $this->clearCacheOnSchemaChanges();
-        $sql = "COMMENT ON COLUMN {$this->doubleQuoteQualifiedName($this->table)}.$column IS '$comment';";
+        $sql = "COMMENT ON COLUMN {$this->doubleQuoteQualifiedName($this->table)}.$column IS :comment";
         $res = $this->prepare($sql);
-        $res->execute();
+        $res->execute(['comment' => $comment]);
     }
 
     /**
