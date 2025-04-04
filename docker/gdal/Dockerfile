@@ -4,14 +4,15 @@ MAINTAINER Martin Høgh<mh@mapcentia.com>
 RUN export DEBIAN_FRONTEND=noninteractive
 ENV DEBIAN_FRONTEND noninteractive
 
-# Install GDAL 3.8.3 from source
-RUN wget http://download.osgeo.org/gdal/3.9.2/gdal392.zip && \
-    unzip gdal392.zip
+ENV GDAL_VERSION 3.9.2
 
-RUN cd gdal-3.9.2 &&\
+RUN wget http://download.osgeo.org/gdal/$GDAL_VERSION/gdal392.zip -O gdal.zip && \
+    unzip gdal.zip
+
+RUN cd gdal-$GDAL_VERSION &&\
     mkdir build
 
-WORKDIR gdal-3.9.2/build
+WORKDIR gdal-$GDAL_VERSION/build
 
 RUN cmake -DWITH_PYTHON=YES -DWITH_LIBKML=yes -DWITH_ECW=/usr/local/ ..
 
