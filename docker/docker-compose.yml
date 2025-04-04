@@ -84,6 +84,12 @@ services:
       - POSTGIS_PORT=5432
       - POSTGIS_PW=1234
       - POSTGIS_DB=postgres
+    healthcheck:
+      test: "psql -U postgres -t -c select || exit 1"
+      interval: 10s
+      timeout: 10s
+      retries: 2
+      start_period: 10s
 
 #  limesurvey:
 #    image: acspri/limesurvey
