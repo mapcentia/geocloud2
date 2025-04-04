@@ -4,6 +4,7 @@ MAINTAINER Martin Høgh<mh@mapcentia.com>
 RUN export DEBIAN_FRONTEND=noninteractive
 ENV DEBIAN_FRONTEND noninteractive
 
+# Locked at this version. Newer version of GDAL requires ECW 5.5.0
 ENV GDAL_VERSION 3.5.3
 
 # Install GDAL 2.4.4 from source
