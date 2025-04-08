@@ -1,15 +1,19 @@
 <?php
 
-namespace app\event;
+namespace app\event\sockets;
 
 use Amp\ByteStream\BufferException;
-use Amp\Websocket\WebsocketClient;
+use Amp\Http\Server\Request;
+use Amp\Http\Server\Response;
+use Amp\Parallel\Worker\Execution;
 use Amp\Websocket\Server\WebsocketClientGateway;
 use Amp\Websocket\Server\WebsocketClientHandler;
 use Amp\Websocket\Server\WebsocketGateway;
-use Amp\Http\Server\Request;
-use Amp\Http\Server\Response;
+use Amp\Websocket\WebsocketClient;
 use Amp\Websocket\WebsocketClosedException;
+use app\event\tasks\RunQueryTask;
+use function Amp\Parallel\Worker\createWorker;
+
 
 readonly class WsBroadcast implements WebsocketClientHandler
 {
@@ -29,7 +33,8 @@ readonly class WsBroadcast implements WebsocketClientHandler
         while ($message = $client->receive()) {
             $payload = $message->buffer();
             echo $payload . " from " . $client->getId() . PHP_EOL;
-            $this->sendToClient($client, "Hello");
+            $r = $this->sql($payload, 'mydb');
+            $this->sendToClient($client, json_encode($r->await()));
         }
     }
 
@@ -46,5 +51,12 @@ readonly class WsBroadcast implements WebsocketClientHandler
     {
         $client->sendText($text . " " . $client->getId());
 
+    }
+
+    private function sql(string $sql, string $db): Execution
+    {
+        $task = new RunQueryTask($sql, $db);
+        $worker = createWorker();
+        return $worker->submit($task);
     }
 }

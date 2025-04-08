@@ -5,29 +5,8 @@ networks:
     external: false
 
 services:
-  base:
-    build: ./base
-    image: mapcentia/gc2core8:base
-  ecw:
-    build: ./ecw
-    image: mapcentia/gc2core8:ecw
-    depends_on:
-      - base
-  gdal:
-    build: ./gdal
-    image: mapcentia/gc2core8:gdal
-    depends_on:
-      - ecw
-  mapserver:
-    build: ./mapserver
-    image: mapcentia/gc2core8:mapserver
-    depends_on:
-      - gdal
   gc2core:
-    build: ./stable
-    image: mapcentia/gc2core8
-    depends_on:
-      - mapserver
+    image: dev_ecw3
     privileged: true
     volumes:
       - ../../geocloud2:/var/www/geocloud2
@@ -37,6 +16,30 @@ services:
     ports:
       - "8080:80"
       - "8081:8080"
+    expose:
+      - 9000
+    environment:
+      - POSTGIS_HOST=postgis
+      - POSTGIS_DB=postgres
+      - POSTGIS_USER=gc2
+      - POSTGIS_PORT=6432
+      - POSTGIS_PW=1234
+      - POSTGIS_PGBOUNCER=true
+      - MODE_ENV=${MODE_ENV}
+      - BUILD_ID=${BUILD_ID}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  event:
+    image: event
+    privileged: true
+    volumes:
+      - ../../geocloud2:/var/www/geocloud2
+    networks:
+      - default
+      - internal
+    ports:
+      - "8088:8080"
     expose:
       - 9000
     environment:

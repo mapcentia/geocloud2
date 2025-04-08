@@ -1,12 +1,14 @@
 <?php
 
-use app\conf\App;
-use app\conf\Connection;
-use app\models\Database;
 use Amp\Future;
+use Amp\Parallel\Worker\Execution;
 use Amp\Postgres\PostgresConfig;
 use Amp\Postgres\PostgresConnectionPool;
 use Amp\Postgres\PostgresListener;
+use app\conf\App;
+use app\conf\Connection;
+use app\event\tasks\PreparePayloadTask;
+use app\models\Database;
 use function Amp\async;
 use function Amp\delay;
 
@@ -59,7 +61,7 @@ $futures = [];
  *
  * @return Future Resolves to the final structured result.
  */
-function preparePayload(array $batchPayload, string $db): Future
+function preparePayloadWithPQ(array $batchPayload, string $db): Future
 {
     return async(function () use ($batchPayload, $db) {
         $host = Connection::$param["postgishost"];
@@ -132,6 +134,14 @@ function preparePayload(array $batchPayload, string $db): Future
     });
 }
 
+function preparePayloadWithPDO(array $batchPayload, string $db): Execution
+{
+    $task = new PreparePayloadTask($batchPayload, $db);
+    $worker = Amp\Parallel\Worker\createWorker();
+
+    return $worker->submit($task);
+}
+
 /**
  * Flush batch for a specific DB asynchronously.
  */
@@ -150,12 +160,13 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
         echo "==========================================\n\n";
 
         // Await the asynchronous preparePayload to complete
-        $p = preparePayload($payLoad, $db)->await();
+        $p = preparePayloadWithPDO($payLoad, $db)->await();
 
-        print_r($p);
+       // print_r($p);
 
         try {
             // Send to all connected clients (or your own message bus).
+            // TODO not send to all.
             $broadcastHandler->sendToAll(json_encode($p));
         } catch (Throwable $error) {
             echo "[ERROR in flushBatch] " . $error->getMessage() . "\n";
@@ -323,3 +334,4 @@ async(function () use (
         echo "[INFO] Supervisor restarting listeners...\n";
     }
 });
+

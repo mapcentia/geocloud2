@@ -9,12 +9,12 @@ use Amp\Socket;
 use Amp\Websocket\Server\Rfc6455Acceptor;
 use Amp\Websocket\Server\Websocket;
 use app\conf\App;
+use app\event\sockets\WsBroadcast;
 use Monolog\Logger;
-use app\event\WsBroadcast;
-use function Amp\trapSignal;
-use function Amp\ByteStream\getStdout;
 use function Amp\async;
+use function Amp\ByteStream\getStdout;
 use function Amp\delay;
+use function Amp\trapSignal;
 
 require_once __DIR__ . "/../vendor/autoload.php";
 include_once __DIR__ . "/../conf/App.php";
