@@ -16,8 +16,8 @@ use app\inc\Util;
 use app\inc\Route;
 use app\conf\App;
 use app\models\Sql_to_es;
-use Exception;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
@@ -229,9 +229,9 @@ class Elasticsearch extends Controller
                 }
             }
 
-        } catch (Exception $e) {
+        } catch (ClientException $e) {
             $response['success'] = false;
-            $response['message'] = $e->getMessage();
+            $response['message'] = json_decode($e->getResponse()->getBody()->getContents());
             $response['code'] = $e->getCode();
             return $response;
         }
