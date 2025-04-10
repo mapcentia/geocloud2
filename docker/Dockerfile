@@ -203,9 +203,7 @@ RUN git clone --branch rsvg_fix https://github.com/mapcentia/mapserver.git \
       .. \
     && make -j"$(nproc)" \
     && make install \
-    && cp mapserv /usr/lib/cgi-bin/mapserv.fcgi \
-    && cd ../.. \
-    && rm -rf mapserver
+    && cp mapserv /usr/lib/cgi-bin/mapserv.fcgi
 
 # Enable PHP-MapScript
 RUN echo "extension=php_mapscriptng.so" >> /etc/php/8.3/fpm/php.ini
