@@ -68,7 +68,7 @@ RUN chown postgres:postgres /etc/pgbouncer/pgbouncer.ini
 RUN chown postgres:postgres /etc/pgbouncer/userlist.txt
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=2 \
-    CMD pg_isready -U postgres  || exit 1
+    CMD psql -U postgres -t -c select || exit 1
 
 # Install gc2-cli
 RUN wget https://gc2-cli.s3.eu-west-1.amazonaws.com/versions/2024.3.3/79bafc6/apt/gc2_2024.3.3.79bafc6-1_amd64.deb -O gc2-cli.deb &&\
