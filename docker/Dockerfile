@@ -10,7 +10,7 @@ LABEL maintainer="Martin Høgh <mh@mapcentia.com>"
 ENV DEBIAN_FRONTEND=noninteractive
 
 # 1) Update and install wget + gnupg2 in the same step
-RUN apt-get -y update && apt-get -y install wget gnupg2 && rm -rf /var/lib/apt/lists/*
+RUN apt-get -y  update && apt-get -y install wget gnupg2 && rm -rf /var/lib/apt/lists/*
 
 # Add PHP8 repo
 RUN echo "deb https://packages.sury.org/php/ bookworm main" \
@@ -24,20 +24,21 @@ RUN echo "deb https://packages.sury.org/php/ bookworm main" \
     php8.3-fpm php8.3-pgsql php8.3-redis php8.3-memcached \
     php8.3-curl php8.3-sqlite3 php8.3-mbstring php8.3-gd \
     php8.3-cli php8.3-dev php8.3-zip php8.3-simplexml php8.3-dba \
-    php8.3-raphf \
-    cmake libgdal-dev librsvg2-dev libpng++-dev libjpeg-dev libfreetype6-dev \
+    cmake librsvg2-dev libpng++-dev libjpeg-dev libfreetype6-dev \
     libproj-dev libfribidi-dev libharfbuzz-dev libcairo2-dev libgeos++-dev \
     curl libapache2-mod-fcgid libfcgi-dev xvfb osm2pgsql postgis sudo \
     apt-transport-https ca-certificates software-properties-common \
     libprotobuf-c-dev libprotobuf-dev libprotobuf-c1 libprotobuf32 \
     protobuf-compiler protobuf-c-compiler libtool python3-dev bison \
-    python3-setuptools jq libwxgtk3.2-dev libuv1-dev libpq-dev \
+    python3-setuptools jq libwxgtk3.2-dev libuv1-dev libpq-dev libxml2-dev libgif-dev\
     && rm -rf /var/lib/apt/lists/*
 
 ###############################################################################
 # PECL modules (pq and uv)
 ###############################################################################
-RUN pecl install pq \
+RUN pecl install raphf \
+    && echo "extension=raphf.so" >> /etc/php/8.3/cli/php.ini \
+    && pecl install pq \
     && pecl config-set preferred_state beta \
     && pecl install uv \
     && echo "extension=pq.so" >> /etc/php/8.3/cli/php.ini \
@@ -291,6 +292,9 @@ EXPOSE 80 443
 HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=3 \
     CMD curl --fail http://127.0.0.1/fpm-ping || exit 1
 
+# Set workdir
+WORKDIR /var/www/geocloud2
+
 ADD entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
@@ -336,9 +340,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends php8.3-xdebug \
     && rm -rf /var/lib/apt/lists/*
 COPY conf/fpm/xdebug.ini /etc/php/8.3/mods-available/
 RUN phpenmod xdebug
-
-# Set workdir
-WORKDIR /var/www/geocloud2
 
 # Final CMD
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
