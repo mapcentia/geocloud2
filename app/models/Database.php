@@ -116,6 +116,8 @@ class Database extends Model
         $res = $this->prepare($sql);
         $res->execute(['db' => $screenName]);
         if ($res->rowCount() == 0) {
+            $sql = "SET ROLE $screenName";
+            $this->db->query($sql);
             $sql = "CREATE DATABASE {$screenName} WITH ENCODING='$encoding' TEMPLATE=$template CONNECTION LIMIT=-1 OWNER='$screenName'";
             $this->db->query($sql);
         }
@@ -268,11 +270,6 @@ class Database extends Model
     static function setFromJwt(array $jwt): void
     {
         $data = $jwt['data'];
-        Database::setDb("mapcentia");
-        $users = new Model();
-        $sQuery = "SELECT pw FROM users WHERE screenname = :user";
-        $res = $users->prepare($sQuery);
-        $res->execute([":user" => $data['uid']]);
         // Set connection params
         Connection::$param["postgisdb"] = $data['database'];
         Connection::$param["postgisuser"] = $data['uid'];
