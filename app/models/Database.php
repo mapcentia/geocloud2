@@ -41,17 +41,37 @@ class Database extends Model
         $sql = "ALTER ROLE \"$name\" PASSWORD '" . Connection::$param['postgispw'] . "'";
         $this->db->query($sql);
         // Set grants
-        if ($db) {
-            //We grant the owner to user
-            $sql = "GRANT \"$db\" TO \"$name\"";
+
+        // Grant mapcentia role.
+        // This role must have LOGIN to database mapcentia and CRUD to table users
+        // This can only be done by a superuser
+        try {
+            $sql = "GRANT mapcentia TO \"$name\"";
             $this->db->query($sql);
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
+        }
+        if ($db && !$isSuperUser) {
+            // We grant the owner to user
+            // This can only be done by a superuser
+            try {
+                $sql = "GRANT \"$db\" TO \"$name\"";
+                $this->db->query($sql);
+            } catch (PDOException $e) {
+                error_log($e->getMessage());
+            }
+            try {
+                $sql = "GRANT mapcentia TO \"$name\"";
+                $this->db->query($sql);
+            } catch (PDOException $e) {
+                error_log($e->getMessage());
+            }
             // And connect
             $sql = "GRANT CONNECT ON DATABASE \"$db\" TO \"$name\"";
             $this->db->query($sql);
         }
         if ($isSuperUser) {
-            $sql = "GRANT \"" . Connection::$param['postgisuser'] . "\" TO \"$name\"";
-            $this->db->query($sql);
+            // Make the superuser able to create new users
             $sql = "ALTER ROLE \"$name\" CREATEROLE";
             $this->db->query($sql);
         }
