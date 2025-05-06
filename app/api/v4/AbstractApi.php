@@ -35,8 +35,6 @@ abstract class AbstractApi implements ApiInterface
         'numeric_precision', 'numeric_scale', 'max_bytes', 'reference', 'restriction', 'is_primary', 'is_unique',
         'index_method', 'checks', 'geom_type', 'srid', 'is_array', 'udt_name'];
 
-    abstract public function validate(): void;
-
     /**
      * @param string|null $schema
      * @param string|null $relation

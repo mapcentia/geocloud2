@@ -9,4 +9,5 @@ interface ApiInterface
     public function put_index(): array;
     public function patch_index(): array;
     public function delete_index(): array;
+    public function validate(): void;
 }
