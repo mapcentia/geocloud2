@@ -373,6 +373,7 @@ class Layer extends Table
                     }
                     $fields[$key]['alias'] = $fieldConf[$key]['alias'];
                     $fields[$key]['queryable'] = (bool)$fieldConf[$key]['querable'];
+                    $fields[$key]['sort_id'] = $fieldConf[$key]['sort_id'];
                 }
 
                 // Sort fields
