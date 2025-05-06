@@ -141,7 +141,7 @@ WORKDIR /gdal-$GDAL_VERSION/build
 
 # Build GDAL with ECW and LibKML
 ENV GDAL_PYTHON_BINDINGS_WITHOUT_NUMPY=YES
-RUN cmake -DWITH_PYTHON=YES -DWITH_LIBKML=YES -DWITH_ECW=/usr/local/ .. \
+RUN cmake -DWITH_PYTHON=YES -DWITH_LIBKML=YES -DWITH_ECW=/usr/local/ -DCMAKE_BUILD_TYPE=Release .. \
     && cmake --build . -j"$(nproc)" \
     && cmake --build . --target install \
     && ln -s /usr/local/bin/ogr2ogr /usr/bin/ogr2ogr
