@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [2025.4.0] - 2025-3-4
+## [UNRELEASED] - 2025-10-4
 ### Changed
 - Change from separate Dockerfiles to a single with stages. Use the arg ECW_VERSION to control which ECW SDK version GDAL is compiled with (default to 3):
   - docker build --target=dev -t gc2_dev_ecw3 . --build-arg ECW_VERSION=3
@@ -16,7 +16,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [2025.4.0] - 2025-3-4
 ### Added
 - MapServer GAP parameter is added to GC2 Admin GUI. GAP specifies the distance between SYMBOLs (center to center) for decorated lines and polygon fills in layer SIZEUNITS.
-- New properties for api/v4/import payload to support more ogr2postgis feature (see Swagger docs for more):
+- New properties for api/v4/import payload to support more ogr2postgis features (see Swagger docs for more):
   - append
   - truncate
   - timestamp
