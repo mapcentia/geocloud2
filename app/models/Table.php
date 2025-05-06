@@ -750,7 +750,10 @@ class Table extends Model
                 $response['success'] = true;
                 return $response;
             }
-            if ($this->metaData[$value->id]["desc"] != $value->desc && !$onlyRename) {
+            if ($this->metaData[$value->id]["desc"] !== $value->desc && !$onlyRename) {
+                if ($value->desc === "") {
+                    $value->desc = null;
+                }
                 $this->setColumnComment($value->desc, $value->id);
 
             }
