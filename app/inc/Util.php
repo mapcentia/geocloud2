@@ -340,7 +340,11 @@ class Util
      */
     public static function base64urlDecode(string $str): string
     {
-        return base64_decode(str_replace(array('-', '_'), array('+', '/'), $str));
+        $decoded = "";
+        for ($i=0; $i < ceil(strlen($str)/256); $i++) {
+            $decoded = $decoded . base64_decode(substr($str,$i*256,256));
+        }
+        return $decoded;
     }
 
     /**
