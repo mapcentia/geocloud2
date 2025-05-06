@@ -54,6 +54,11 @@ class Globals
                     "type" => "text",
                     "title" => "Buffer",
                 ],
+                [
+                    "name" => "sql_conflict",
+                    "type" => "textarea",
+                    "title" => "Analyse",
+                ],
 
             ]
         ],
