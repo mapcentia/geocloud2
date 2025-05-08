@@ -38,14 +38,13 @@ class Model
     public string $postgisdb;
     public string $postgispw;
     public ?string $postgisschema;
-    public null|PDO|\PgSql\Connection $db;
+    public null|PDO|\PgSql\Connection $db = null;
     public bool $connectionFailed;
     public ?string $theGeometry;
 
     // If Connection::$params are not set, then set them from environment variables
     function __construct()
     {
-        $this->db = null;
         $this->connectionFailed = false;
 
         // If Connection::$params are not set, when set them from environment variables
@@ -188,7 +187,6 @@ class Model
     public function commit(): void
     {
         $this->db->commit();
-        $this->db = NULL;
     }
 
     /**
@@ -197,7 +195,6 @@ class Model
     public function rollback(): void
     {
         $this->db->rollback();
-        $this->db = NULL;
     }
 
     /**
