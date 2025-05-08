@@ -154,10 +154,11 @@ class Sql extends Model
 
         // Get column types and cache them with 'meta' tag
         $cacheType = "meta";
-        $cacheId = $this->postgisdb . "_types_" . $cacheType . "_" . md5($q);
+        $cacheId = $this->postgisdb . "_types_" . $cacheType . "_" . md5($q) . md5(serialize($parameters));
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
-            $columnTypes = $CachedString->get();
+            $columnTypes = $CachedString->get()[0];
+            $convertedParameters = $CachedString->get()[1];
         } else {
             $select = $this->prepare("select * from ($q) as foo LIMIT 0");
             $convertedParameters = [];
@@ -175,7 +176,7 @@ class Sql extends Model
                 $meta = $select->getColumnMeta($column_index);
                 $columnTypes[$meta['name']] = $meta['native_type'];
             }
-            $CachedString->set($columnTypes)->expiresAfter(Globals::$cacheTtl);
+            $CachedString->set([$columnTypes, $convertedParameters])->expiresAfter(Globals::$cacheTtl);
             Cache::save($CachedString);
         }
 
