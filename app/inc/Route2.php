@@ -152,7 +152,9 @@ class Route2
                 unset($response["code"]);
             }
             header("HTTP/1.0 $code " . Util::httpCodeText($code));
-            $response["_execution_time"] = round((Util::microtime_float() - $time_start), 3);
+            if (!array_is_list($response)) {
+                $response["_execution_time"] = round((Util::microtime_float() - $time_start), 3);
+            }
             header('Content-type: application/json; charset=utf-8');
             if (!in_array($code, ['204', '303'])) {
                 echo json_encode($response, JSON_UNESCAPED_UNICODE);
