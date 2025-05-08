@@ -177,6 +177,7 @@ class Sql
                     )";
         $sqls[] = "alter table settings.prepared_statements add type_hints jsonb";
         $sqls[] = "alter table settings.prepared_statements add type_formats jsonb";
+        $sqls[] = "alter table settings.prepared_statements add output_format varchar(255)";;
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
                     SELECT
