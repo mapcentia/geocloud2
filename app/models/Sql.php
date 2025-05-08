@@ -211,6 +211,18 @@ class Sql extends Model
             $this->execQuery("set client_encoding='$clientEncoding'");
         }
 
+        // Insert cost
+        if (!empty(App::$param['insertCost'])) {
+            try {
+                $this->insertCost($sql, $this->subUser ?? $this->postgisdb, $convertedParameters);
+            } catch (Exception) {
+                if ($this->db->inTransaction()) {
+                    $this->db->rollBack();
+                }
+
+            }
+        }
+
         $this->prepare("DECLARE curs CURSOR FOR $sql")->execute($convertedParameters);
         $innerStatement = $this->prepare("FETCH 1 FROM curs");
 
@@ -634,18 +646,18 @@ class Sql extends Model
      * @return void
      * @throws PDOException
      */
-    public function insertCost(string $q, string $username): void
+    public function insertCost(string $q, string $username, $convertedParameters): void
     {
         // Get total cost and insert in cost
         $cost = 0;
         $ex = "EXPLAIN (format json) $q";
-        $res = $this->execQuery($ex);
+        $res = $this->prepare($ex);
+        $res->execute($convertedParameters);
         $plan = $res->fetchAll();
         if (isset($plan[0]['QUERY PLAN'])) {
             $cost = json_decode($plan[0]['QUERY PLAN'], true)[0]['Plan']['Total Cost'];
         }
-        $ex = "INSERT INTO settings.cost (username, statement, cost) VALUES 
-                   (:username, :statement, :cost)";
+        $ex = "INSERT INTO settings.cost (username, statement, cost) VALUES (:username, :statement, :cost)";
         $res = $this->prepare($ex);
         $q = str_replace("\n", " ", $q);
         $res->execute(['username' => $username, 'statement' => $q, 'cost' => $cost]);
