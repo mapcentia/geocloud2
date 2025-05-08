@@ -66,6 +66,13 @@ class Sql extends Controller
         // Get the URI params from request
         // /{user}
         $r = func_get_arg(0);
+        try {
+            $this->api = func_get_arg(1);
+        } catch (\Throwable $e) {
+            $srs = Input::get('srs') ?: "3857";
+            $this->api = new \app\models\Sql($srs);
+            $this->api->connect();
+        }
         $dbSplit = explode("@", $r["user"]);
         if (sizeof($dbSplit) == 2) {
             $this->subUser = $dbSplit[0];
@@ -82,8 +89,8 @@ class Sql extends Controller
         // ======================================
         if ($json != null) {
 
-            $typeHints = $json["type_hints"] ?? Input::$params["type_hints"] ?? null;
-            $typeFormats = $json["type_formats"] ?? Input::$params["type_formats"] ?? null;
+            $typeHints = $json["type_hints"] ?? Input::$params["type_hints"] ?? [];
+            $typeFormats = $json["type_formats"] ?? Input::$params["type_formats"] ?? [];
             $outputFormat = !empty($json["format"]) ? $json["format"] : (!empty($json["output_format"]) ? $json["output_format"] : Input::$params["format"] ?? Input::$params["output_format"]);
 
             if (!empty($json["method"])) {
@@ -143,10 +150,6 @@ class Sql extends Controller
 
         $settings = new Setting();
         $res = $settings->get();
-
-        $srs = Input::get('srs') ?: "3857";
-        $this->api = new \app\models\Sql($srs);
-        $this->api->connect();
         $this->apiKey = $res['data']->api_key;
 
         $serializedResponse = $this->transaction(Input::get('client_encoding'), Input::get('type_hints'), true, Input::get('type_formats'));
@@ -319,7 +322,10 @@ class Sql extends Controller
                     try {
                         $this->api->insertCost($this->q, $this->subUser ?? $this->api->postgisdb);
                     } catch (Exception) {
-                        // Pass
+                        if ($this->api->db->inTransaction()) {
+                            $this->api->db->rollBack();
+                        }
+
                     }
                 }
                 ob_start();

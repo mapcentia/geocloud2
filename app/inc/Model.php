@@ -178,7 +178,9 @@ class Model
      */
     public function begin(): void
     {
-        $this->db->beginTransaction();
+        if (!$this->db->inTransaction()) {
+            $this->db->beginTransaction();
+        }
     }
 
     /**
@@ -1548,7 +1550,7 @@ class Model
      * @return string|null
      * @throws PDOException
      */
-    public function getTableComment(string $schema, string $table) : ?string
+    public function getTableComment(string $schema, string $table): ?string
     {
         $cacheType = 'tableComment';
         $cacheRel = $schema . '.' . $table;

@@ -133,19 +133,54 @@ class Sql extends AbstractApi
         ];
         $settingsData = (new Setting())->get()["data"];
         $apiKey = $isSuperUser ? $settingsData->api_key : $settingsData->api_key_subuser->$uid;
-        Input::setParams(
-            [
-                "key" => $apiKey,
-                "srs" => "4326",
-                "convert_types" => json_decode(Input::getBody(), true)['convert_types'] ?? true,
-                "format" => "json",
-            ]
-        );
-        $res = $this->v2->get_index($user);
-        unset($res['success']);
-        // unset($res['forStore']);
-        unset($res['forGrid']);
-        return $res;
+        $decodedBody = json_decode(Input::getBody(), true);
+
+        if (!array_is_list($decodedBody)) {
+            $decodedBody = [$decodedBody];
+        }
+        $result = [];
+        $api = new \app\models\Sql("3857");
+        $api->connect();
+        $api->begin();
+        foreach ($decodedBody as $value) {
+            Input::setBody(json_encode($value));
+            Input::setParams(
+                [
+                    "key" => $apiKey,
+                    "srs" => "4326",
+                    "convert_types" => $value['convert_types'] ?? true,
+                    "format" => "json",
+                ]
+            );
+
+
+            $res = $this->v2->get_index($user, $api);
+
+            unset($res['success']);
+            // unset($res['forStore']);
+            unset($res['forGrid']);
+
+
+            if (!empty($value['jsonrpc'])) {
+                $jsonrpcResponse = [
+                    'jsonrpc' => $value['jsonrpc'],
+                    'result' => $res,
+                ];
+                if (isset($value['id'])) {
+                    $jsonrpcResponse['id'] = $value['id'];
+                }
+                $result[] = $jsonrpcResponse;
+            } else {
+                $result[] = $res;
+            }
+        }
+        if ($api->db->inTransaction()) {
+            $api->commit();
+        }
+        if (count($result) == 1) {
+            return $result[0];
+        }
+        return $result;
     }
 
     #[Override]
@@ -188,55 +223,88 @@ class Sql extends AbstractApi
         if (Input::getMethod() == 'post' && !empty($id)) {
             $this->postWithResource();
         }
-        $collection = new Assert\Collection([
-            'q' => new Assert\Optional(
-                new Assert\NotBlank(),
-            ),
-            'id' => new Assert\Optional(
-                new Assert\NotBlank(),
-            ),
-            'params' => new Assert\Optional([
-                new Assert\Type('array'),
-                new Assert\Count(['min' => 1]),
-            ]),
-            'type_hints' => new Assert\Optional([
-                new Assert\Type('array'),
-                new Assert\Count(['min' => 1]),
-            ]),
-            'type_formats' => new Assert\Optional([
-                new Assert\Type('array'),
-                new Assert\Count(['min' => 1]),
-            ]),
-            'output_format' => new Assert\Optional(
-                new Assert\NotBlank(),
-            ),
-            'format' => new Assert\Optional(
-                new Assert\NotBlank(),
-            ),
-            'convert_types' => new Assert\Optional([
-                new Assert\Type('boolean'),
-            ]),
-            'base64' => new Assert\Optional([
-                new Assert\Type('boolean'),
-            ]),
-            'lifetime' => new Assert\Optional([
-                new Assert\Type('integer'),
-            ]),
-            'srs' => new Assert\Optional(
-                new Assert\Type('integer'),
-            ),
-            'geo_format' => new Assert\Optional([
-                new Assert\Type('string'),
-                new Assert\NotBlank(),
-                new Assert\Choice(['wkt', 'geojson']),
+        $decodedBody = json_decode($body);
 
-            ]),
-        ]);
-        $this->validateRequest($collection, $body, 'clients', Input::getMethod());
+        if (is_array($decodedBody)) {
+            foreach ($decodedBody as $value) {
+                $this->validateRequest(self::getAssert($value), json_encode($value), 'sql', Input::getMethod());
+            }
+        } else {
+            $this->validateRequest(self::getAssert($decodedBody), $body, 'sql', Input::getMethod());
+        }
     }
 
     public function put_index(): array
     {
         // TODO: Implement put_index() method.
+    }
+
+    static public function getAssert($decodedBody): Assert\Collection
+    {
+        if (!isset($decodedBody->jsonrpc)) {
+            return new Assert\Collection([
+                'q' => new Assert\Required(
+                    new Assert\NotBlank(),
+                ),
+                'method' => new Assert\Optional(
+                    new Assert\NotBlank(),
+                ),
+                'params' => new Assert\Optional([
+                    new Assert\Type('array'),
+                    new Assert\Count(['min' => 1]),
+                ]),
+                'type_hints' => new Assert\Optional([
+                    new Assert\Type('array'),
+                    new Assert\Count(['min' => 1]),
+                ]),
+                'type_formats' => new Assert\Optional([
+                    new Assert\Type('array'),
+                    new Assert\Count(['min' => 1]),
+                ]),
+                'output_format' => new Assert\Optional(
+                    new Assert\NotBlank(),
+                ),
+                'format' => new Assert\Optional(
+                    new Assert\NotBlank(),
+                ),
+                'convert_types' => new Assert\Optional([
+                    new Assert\Type('boolean'),
+                ]),
+                'base64' => new Assert\Optional([
+                    new Assert\Type('boolean'),
+                ]),
+                'lifetime' => new Assert\Optional([
+                    new Assert\Type('integer'),
+                ]),
+                'srs' => new Assert\Optional(
+                    new Assert\Type('integer'),
+                ),
+                'geo_format' => new Assert\Optional([
+                    new Assert\Type('string'),
+                    new Assert\NotBlank(),
+                    new Assert\Choice(['wkt', 'geojson']),
+
+                ]),
+            ]);
+        } else {
+            return new Assert\Collection([
+                'jsonrpc' => new Assert\Required([
+                    new Assert\Type('string'),
+                    new Assert\Choice(['2.0']),
+                ]),
+                'method' => new Assert\Required(([
+                    new Assert\NotBlank(),
+                    new Assert\Type('string'),
+                ])),
+                'params' => new Assert\Optional([
+                    new Assert\Type('array'),
+                    new Assert\Count(['min' => 1]),
+                ]),
+                'id' => new Assert\Optional([
+                    new Assert\NotBlank(),
+                ]),
+            ]);
+        }
+
     }
 }
