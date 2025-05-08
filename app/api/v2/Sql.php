@@ -84,23 +84,27 @@ class Sql extends Controller
 
             $typeHints = $json["type_hints"] ?? Input::$params["type_hints"] ?? null;
             $typeFormats = $json["type_formats"] ?? Input::$params["type_formats"] ?? null;
+            $outputFormat = !empty($json["format"]) ? $json["format"] : (!empty($json["output_format"]) ? $json["output_format"] : Input::$params["format"] ?? Input::$params["output_format"]);
 
-            if (!empty($json["id"])) {
+            if (!empty($json["method"])) {
+                $method = $json["method"];
                 $pres = new PreparedstatementModel();
                 // Upsert if both query and store
                 if (!empty($json["q"])) {
-                    $uuid = $pres->createPreparedStatement($json["id"], $json["q"], $typeHints, $typeFormats);
+                    $uuid = $pres->createPreparedStatement($method, $json["q"], $typeHints, $typeFormats, $outputFormat);
                     return [
                         'code' => 201,
                         'uuid' => $uuid,
-                        'name' => $json["id"],
+                        'name' => $method,
                     ];
                 }
                 // Else fetch the query and use it
                 else {
-                    $json["q"] = $pres->getByName($json['id'])['data']['statement'];
-                    $typeHints = $typeHints ?? json_decode($pres->getByName($json['id'])['data']['type_hints'], true);
-                    $typeFormats = $typeFormats ?? json_decode($pres->getByName($json['id'])['data']['type_formats'], true);
+                    $preStm = $pres->getByName($method);
+                    $json["q"] = $preStm['data']['statement'];
+                    $typeHints = json_decode($preStm['data']['type_hints'], true);
+                    $typeFormats = json_decode($preStm['data']['type_formats'], true);
+                    $outputFormat = $preStm['data']['output_format'];
                 }
             }
 
@@ -111,7 +115,6 @@ class Sql extends Controller
                     "q" => !empty($json["q"]) ? $json["q"] : null,
                     "client_encoding" => !empty($json["client_encoding"]) ? $json["client_encoding"] : null,
                     "srs" => !empty($json["srs"]) ? $json["srs"] : Input::$params["srs"],
-                    "format" => !empty($json["format"]) ? $json["format"] : (!empty($json["output_format"]) ? $json["output_format"] : Input::$params["format"] ?? Input::$params["output_format"]),
                     "geoformat" => !empty($json["geoformat"]) ? $json["geoformat"] : (!empty($json["geo_format"]) ? $json["geo_format"] : null),
                     "key" => !empty($json["key"]) ? $json["key"] : Input::$params["key"],
                     "geojson" => !empty($json["geojson"]) ? $json["geojson"] : null,
@@ -123,6 +126,7 @@ class Sql extends Controller
                     "params" => !empty($json["params"]) ? $json["params"] : Input::$params["params"],
                     "type_hints" => $typeHints,
                     "type_formats" => $typeFormats,
+                    "format" => $outputFormat,
                 ]
             );
         }
