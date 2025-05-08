@@ -18,11 +18,12 @@ class Input
     /**
      * @var array<string>
      */
-    static $params;
-    const TEXT_PLAIN = "text/plain";
-    const APPLICATION_JSON = "application/json";
-    const APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
-    const MULTIPART_FORM_DATA = "multipart/form-data";
+    static ?array $params = null;
+    static string $body;
+    const string TEXT_PLAIN = "text/plain";
+    const string APPLICATION_JSON = "application/json";
+    const string APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
+    const string MULTIPART_FORM_DATA = "multipart/form-data";
 
     /**
      *
@@ -31,6 +32,11 @@ class Input
     public static function setParams(array $arr): void
     {
         self::$params = $arr;
+    }
+
+    public static function setBody(string $body): void
+    {
+        self::$body = $body;
     }
 
     /**
@@ -109,6 +115,11 @@ class Input
      */
     public static function getBody(bool $decode = true): ?string
     {
+
+        if (isset(self::$body)) {
+            return self::$body;
+        }
+
         $content = file_get_contents('php://input');
         if (empty($content)) {
             return null;
