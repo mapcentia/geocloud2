@@ -246,16 +246,8 @@ abstract class AbstractApi implements ApiInterface
         }
 
         $data = $data == null ? null : json_decode($data, true);
-        function removeUnderscoreKeys(array $array): array {
-            $filteredArray = [];
-            foreach ($array as $key => $value) {
-                if (!is_string($key) || !str_starts_with($key, '_')) {
-                    $filteredArray[$key] = is_array($value) ? removeUnderscoreKeys($value) : $value;
-                }
-            }
-            return $filteredArray;
-        }
-        $data = is_array($data) ? removeUnderscoreKeys($data) : $data;
+
+        $data = is_array($data) ? self::removeUnderscoreKeys($data) : $data;
 
         if (in_array($method, ['delete', 'get']) && !empty($data)) {
             throw new GC2Exception("You can't use a payload in DELETE or GET", 400, null, "INVALID_DATA");
@@ -276,6 +268,16 @@ abstract class AbstractApi implements ApiInterface
             $violations = $validator->validate($data, $collection);
             $this->checkViolations($violations);
         }
+    }
+
+    static private function removeUnderscoreKeys(array $array): array {
+        $filteredArray = [];
+        foreach ($array as $key => $value) {
+            if (!is_string($key) || !str_starts_with($key, '_')) {
+                $filteredArray[$key] = is_array($value) ? self::removeUnderscoreKeys($value) : $value;
+            }
+        }
+        return $filteredArray;
     }
 
     /**
