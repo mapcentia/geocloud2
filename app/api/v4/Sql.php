@@ -139,7 +139,7 @@ class Sql extends AbstractApi
             $decodedBody = [$decodedBody];
         }
         $result = [];
-        $api = new \app\models\Sql("3857");
+        $api = new \app\models\Sql("4326");
         $api->connect();
         $api->begin();
         foreach ($decodedBody as $value) {
@@ -152,15 +152,10 @@ class Sql extends AbstractApi
                     "format" => "json",
                 ]
             );
-
-
             $res = $this->v2->get_index($user, $api);
-
             unset($res['success']);
             // unset($res['forStore']);
             unset($res['forGrid']);
-
-
             if (!empty($value['jsonrpc'])) {
                 $jsonrpcResponse = [
                     'jsonrpc' => $value['jsonrpc'],
@@ -168,8 +163,9 @@ class Sql extends AbstractApi
                 ];
                 if (isset($value['id'])) {
                     $jsonrpcResponse['id'] = $value['id'];
+                    $result[] = $jsonrpcResponse;
+
                 }
-                $result[] = $jsonrpcResponse;
             } else {
                 $result[] = $res;
             }
@@ -177,6 +173,11 @@ class Sql extends AbstractApi
         if ($api->db->inTransaction()) {
             $api->commit();
         }
+
+        if (count($result) == 0 && !empty($value['jsonrpc'])) {
+            return ['code' => '204'];
+        }
+
         if (count($result) == 1) {
             return $result[0];
         }
@@ -241,7 +242,7 @@ class Sql extends AbstractApi
 
     static public function getAssert($decodedBody): Assert\Collection
     {
-        if (!isset($decodedBody->jsonrpc)) {
+        if (!isset($decodedBody->jsonrpc) && Input::getContentType() != 'application/json-rpc') {
             return new Assert\Collection([
                 'q' => new Assert\Required(
                     new Assert\NotBlank(),
@@ -287,24 +288,7 @@ class Sql extends AbstractApi
                 ]),
             ]);
         } else {
-            return new Assert\Collection([
-                'jsonrpc' => new Assert\Required([
-                    new Assert\Type('string'),
-                    new Assert\Choice(['2.0']),
-                ]),
-                'method' => new Assert\Required(([
-                    new Assert\NotBlank(),
-                    new Assert\Type('string'),
-                ])),
-                'params' => new Assert\Optional([
-                    new Assert\Type('array'),
-                    new Assert\Count(['min' => 1]),
-                ]),
-                'id' => new Assert\Optional([
-                    new Assert\NotBlank(),
-                ]),
-            ]);
+            return self::getRpcAssert();
         }
-
     }
 }
