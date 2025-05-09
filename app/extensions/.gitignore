@@ -1,3 +1,5 @@
 *
 !.gitignore
 !demo/
+!demo/api
+!demo/routes
