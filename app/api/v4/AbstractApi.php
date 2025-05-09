@@ -17,6 +17,7 @@ use ReflectionClass;
 use Symfony\Component\Validator\Constraints\Collection;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validation;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  *
@@ -262,11 +263,11 @@ abstract class AbstractApi implements ApiInterface
         if (isset($data[$resource]) && is_array($data[$resource])) {
             foreach ($data[$resource] as $datum) {
                 $violations = $validator->validate($datum, $collection);
-                self::checkViolations($violations);
+                $this->checkViolations($violations);
             }
         } else {
             $violations = $validator->validate($data, $collection);
-            self::checkViolations($violations);
+            $this->checkViolations($violations);
         }
     }
 
@@ -287,7 +288,7 @@ abstract class AbstractApi implements ApiInterface
      *
      * @throws GC2Exception Thrown if there are validation errors in the provided list, with details about the violated constraints.
      */
-    public static function checkViolations(ConstraintViolationListInterface $list): void
+    private function checkViolations(ConstraintViolationListInterface $list): void
     {
         if (count($list) > 0) {
             $v = [];
@@ -319,5 +320,26 @@ abstract class AbstractApi implements ApiInterface
             $newArray[] = $col;
         }
         return $newArray;
+    }
+
+    public static function getRpcAssert(): Collection
+    {
+        return new Assert\Collection([
+            'jsonrpc' => new Assert\Required([
+                new Assert\Type('string'),
+                new Assert\Choice(['2.0']),
+            ]),
+            'method' => new Assert\Required(([
+                new Assert\NotBlank(),
+                new Assert\Type('string'),
+            ])),
+            'params' => new Assert\Optional([
+                new Assert\Type('array'),
+                new Assert\Count(['min' => 1]),
+            ]),
+            'id' => new Assert\Optional([
+                new Assert\NotBlank(),
+            ]),
+        ]);
     }
 }
