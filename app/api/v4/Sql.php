@@ -120,7 +120,7 @@ class Sql extends AbstractApi
     #[OA\RequestBody(description: 'Sql statement to run', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sql"))]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\MediaType('application/json'))]
     #[OA\Response(response: 201, description: 'Insert/update a prepared statement')]
-    #[AcceptableContentTypes(['application/json'])]
+    #[AcceptableContentTypes(['application/json', 'application/json-rpc'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
     public function post_index(): array
