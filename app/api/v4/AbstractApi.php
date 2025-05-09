@@ -262,11 +262,11 @@ abstract class AbstractApi implements ApiInterface
         if (isset($data[$resource]) && is_array($data[$resource])) {
             foreach ($data[$resource] as $datum) {
                 $violations = $validator->validate($datum, $collection);
-                $this->checkViolations($violations);
+                self::checkViolations($violations);
             }
         } else {
             $violations = $validator->validate($data, $collection);
-            $this->checkViolations($violations);
+            self::checkViolations($violations);
         }
     }
 
@@ -287,7 +287,7 @@ abstract class AbstractApi implements ApiInterface
      *
      * @throws GC2Exception Thrown if there are validation errors in the provided list, with details about the violated constraints.
      */
-    private function checkViolations(ConstraintViolationListInterface $list): void
+    public static function checkViolations(ConstraintViolationListInterface $list): void
     {
         if (count($list) > 0) {
             $v = [];
