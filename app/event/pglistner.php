@@ -100,7 +100,7 @@ function preparePayloadWithPQ(array $batchPayload, string $db): Future
             }
         }
         // Create a connection pool for asynchronous queries.
-        $config = PostgresConfig::fromString("host={$host} user={$user} password={$pw} dbname={$db}");
+        $config = PostgresConfig::fromString("host={$host} user={$user} password={$pw} dbname={$db} sslmode=allow");
         $pool = new PostgresConnectionPool($config);
         // For each group, issue a single batched query.
         foreach ($grouped as $group) {
@@ -167,7 +167,12 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
         try {
             // Send to all connected clients (or your own message bus).
             // TODO not send to all.
-            $broadcastHandler->sendToAll(json_encode($p));
+            //$broadcastHandler->sendToAll(json_encode($p));
+            $clients = $broadcastHandler->gateway->getClients();
+            foreach ($clients as $client) {
+                echo "Sending to: " . $client->getId() . "\n";
+                $client->sendText(json_encode($p));
+            }
         } catch (Throwable $error) {
             echo "[ERROR in flushBatch] " . $error->getMessage() . "\n";
         }
@@ -232,7 +237,7 @@ $startListenerForDb = function (
         $pool = null;
         try {
             $config = PostgresConfig::fromString(
-                "host={$host} user={$user} password={$pw} dbname={$db}"
+                "host={$host} user={$user} password={$pw} dbname={$db} sslmode=allow"
             );
             // Attempt to connect + create a pool.
             // If DB isn't available, this will throw.
@@ -252,9 +257,7 @@ $startListenerForDb = function (
             echo "[ERROR] DB '{$db}' => " . $error->getMessage() . "\n";
         } finally {
             // Clean up the pool if we got that far
-            if ($pool !== null) {
-                $pool->close();
-            }
+            $pool?->close();
         }
         // Delay before attempting to reconnect
         echo "[INFO] Reconnecting to DB '{$db}' in {$reconnectDelay} second(s)...\n";
