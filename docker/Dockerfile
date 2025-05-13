@@ -315,18 +315,10 @@ RUN cd /var/www/geocloud2 \
     && grunt production
 
 # Install dashboard
-RUN mkdir -p /var/www/geocloud2/public/dashboard \
-    && mkdir /dashboardtmp \
-    && cd /dashboardtmp \
-    && git clone https://github.com/mapcentia/dashboard.git \
-    && cd dashboard \
+RUN cd /var/www/geocloud2/dashboard \
     && npm install \
-    && cp ./app/config.js.sample ./app/config.js \
-    && cp ./.env.production ./.env \
     && npm run build \
-    && cp -R ./build/* /var/www/geocloud2/public/dashboard/ \
-    && cd ~ \
-    && rm -rf /dashboardtmp
+    && ln -s /var/www/geocloud2/dashboard/build /var/www/geocloud2/public/dashboard
 
 # Copy in GC2 custom config
 COPY conf/gc2/App.php /var/www/geocloud2/app/conf/
