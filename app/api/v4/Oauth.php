@@ -151,11 +151,22 @@ class Oauth extends AbstractApi
     #[OA\RequestBody(description: 'Create token', required: true, content: new OA\JsonContent(ref: "#/components/schemas/OAuth"))]
     #[OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(ref: "#/components/schemas/OAuthGrant"))]
     #[OA\Response(response: 400, description: 'Bad request')]
-    #[AcceptableContentTypes(['application/json'])]
+    #[AcceptableContentTypes(['application/json', 'application/x-www-form-urlencoded'])]
     public function post_index(): array
     {
         $this->session = new Session();
-        $data = json_decode(Input::getBody(), true) ?: [];
+
+        if (Input::getContentType() == 'application/json') {
+            $data = json_decode(Input::getBody(), true) ?: [];
+        } else {
+            // Parse application/x-www-form-urlencoded body into array
+            $body = Input::getBody();
+            $data = [];
+            if (!empty($body)) {
+                parse_str($body, $data);
+            }
+        }
+
 
         // Password grant. We don't check clint_id or client_secret
         if ($data['grant_type'] == GrantType::PASSWORD->value) {
@@ -307,10 +318,13 @@ class Oauth extends AbstractApi
      */
     public function validate(): void
     {
-        $body = Input::getBody();
-
-        $collection = self::getAssert(json_decode($body)->grant_type);
-        $this->validateRequest($collection, $body, '', Input::getMethod());
+        // Only validate application/json
+        // POST also accepts application/x-www-form-urlencoded
+        if (Input::getContentType() == 'application/json') {
+            $body = Input::getBody();
+            $collection = self::getAssert(json_decode($body)->grant_type);
+            $this->validateRequest($collection, $body, '', Input::getMethod());
+        }
     }
 
     public function put_index(): array
