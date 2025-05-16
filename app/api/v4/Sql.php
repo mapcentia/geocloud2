@@ -139,15 +139,16 @@ class Sql extends AbstractApi
             $decodedBody = [$decodedBody];
         }
         $result = [];
-        $api = new \app\models\Sql("4326");
+        $api = new \app\models\Sql();
         $api->connect();
         $api->begin();
         foreach ($decodedBody as $value) {
+            $srs = $value['srs'] ?? 4326;
+            $api->setSRS($srs);
             Input::setBody(json_encode($value));
             Input::setParams(
                 [
                     "key" => $apiKey,
-                    "srs" => "4326",
                     "convert_types" => $value['convert_types'] ?? true,
                     "format" => "json",
                 ]
