@@ -125,12 +125,12 @@ class Preparedstatement extends Model
      * @return string The UUID of the created or updated prepared statement.
      * @throws InvalidArgumentException
      */
-    public function createPreparedStatement(string $name, string $statement, array $typeHints, array $typeFormats, string $outputFormat): string
+    public function createPreparedStatement(string $name, string $statement, array $typeHints, array $typeFormats, string $outputFormat, ?int $srs): string
     {
         $this->clearCacheOnSchemaChanges(md5($name));
-        $sql = "INSERT INTO settings.prepared_statements (name, statement, type_hints, type_formats, output_format) VALUES (:name, :statement, :type_hints, :type_formats, :output_format) ON CONFLICT ON CONSTRAINT name_unique DO UPDATE SET statement=:statement,type_hints=:type_hints,type_formats=:type_formats,output_format=:output_format RETURNING uuid";
+        $sql = "INSERT INTO settings.prepared_statements (name, statement, type_hints, type_formats, output_format, srs) VALUES (:name, :statement, :type_hints, :type_formats, :output_format, :srs) ON CONFLICT ON CONSTRAINT name_unique DO UPDATE SET statement=:statement,type_hints=:type_hints,type_formats=:type_formats,output_format=:output_format,srs=:srs RETURNING uuid";
         $res = $this->prepare($sql);
-        $res->execute(['name' => $name, 'statement' => $statement, 'type_hints' => json_encode($typeHints), 'type_formats' => json_encode($typeFormats), 'output_format' => $outputFormat]);
+        $res->execute(['name' => $name, 'statement' => $statement, 'type_hints' => json_encode($typeHints), 'type_formats' => json_encode($typeFormats), 'output_format' => $outputFormat, 'srs' => $srs]);
         $uuid = $res->fetchColumn();
         $this->clearCacheOnSchemaChanges($uuid);
         return $uuid;

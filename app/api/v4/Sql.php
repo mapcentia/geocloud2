@@ -151,6 +151,7 @@ class Sql extends AbstractApi
                     "key" => $apiKey,
                     "convert_types" => $value['convert_types'] ?? true,
                     "format" => "json",
+                    "srs" => $srs,
                 ]
             );
             $res = $this->v2->get_index($user, $api);

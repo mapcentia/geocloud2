@@ -59,10 +59,10 @@ class Sql extends Model
     }
 
     /**
-     * @param int $srs The spatial reference system identifier to set.
+     * @param int|null $srs The spatial reference system identifier to set.
      * @return void
      */
-    public function setSRS(int $srs): void {
+    public function setSRS(?int $srs): void {
         $this->srs = $srs;;
     }
 

@@ -70,7 +70,7 @@ class Sql extends Controller
             $this->api = func_get_arg(1);
         } catch (\Throwable $e) {
             $srs = Input::get('srs') ?: "3857";
-            $this->api = new \app\models\Sql($srs);
+            $this->api = new \app\models\Sql();
             $this->api->connect();
         }
         $dbSplit = explode("@", $r["user"]);
@@ -91,6 +91,7 @@ class Sql extends Controller
 
             $typeHints = $json["type_hints"] ?? Input::$params["type_hints"] ?? [];
             $typeFormats = $json["type_formats"] ?? Input::$params["type_formats"] ?? [];
+            $srs = $json["srs"] ?? Input::$params["srs"] ?? $srs ?? null;
             $outputFormat = !empty($json["format"]) ? $json["format"] : (!empty($json["output_format"]) ? $json["output_format"] : Input::$params["format"] ?? Input::$params["output_format"]);
 
             if (!empty($json["method"])) {
@@ -98,7 +99,7 @@ class Sql extends Controller
                 $pres = new PreparedstatementModel();
                 // Upsert if both query and store
                 if (!empty($json["q"])) {
-                    $uuid = $pres->createPreparedStatement($method, $json["q"], $typeHints, $typeFormats, $outputFormat);
+                    $uuid = $pres->createPreparedStatement($method, $json["q"], $typeHints, $typeFormats, $outputFormat, $srs);
                     return [
                         'code' => 201,
                         'uuid' => $uuid,
@@ -112,6 +113,7 @@ class Sql extends Controller
                     $typeHints = json_decode($preStm['data']['type_hints'], true);
                     $typeFormats = json_decode($preStm['data']['type_formats'], true);
                     $outputFormat = $preStm['data']['output_format'];
+                    $srs = $preStm['data']['srs'];
                 }
             }
 
@@ -121,7 +123,6 @@ class Sql extends Controller
                 [
                     "q" => !empty($json["q"]) ? $json["q"] : null,
                     "client_encoding" => !empty($json["client_encoding"]) ? $json["client_encoding"] : null,
-                    "srs" => !empty($json["srs"]) ? $json["srs"] : Input::$params["srs"],
                     "geoformat" => !empty($json["geoformat"]) ? $json["geoformat"] : (!empty($json["geo_format"]) ? $json["geo_format"] : null),
                     "key" => !empty($json["key"]) ? $json["key"] : Input::$params["key"],
                     "geojson" => !empty($json["geojson"]) ? $json["geojson"] : null,
@@ -134,9 +135,12 @@ class Sql extends Controller
                     "type_hints" => $typeHints,
                     "type_formats" => $typeFormats,
                     "format" => $outputFormat,
+                    "srs" => $srs,
                 ]
             );
         }
+
+        $this->api->setSRS($srs);
 
         if (Input::get('base64') === true || Input::get('base64') === "true") {
             $this->q = Util::base64urlDecode(Input::get("q"));
