@@ -1,0 +1,8 @@
+<form hx-post="/console/backends/activation.php">
+    <h1 class="h3 mb-3 fw-normal">Get an activation code</h1>
+    <div class="form-floating mb-3">
+        <input class="form-control" type="email" name="email" id="email" placeholder="E-mail" value="{{ email }}" required/>
+        <label class="form-label" for="user">E-mail</label>
+    </div>
+    <button class="btn btn-primary w-100 py-2" type="submit">Request activation code</button>
+</form>

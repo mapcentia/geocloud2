@@ -28,11 +28,13 @@ if ($_POST['database'] && $_POST['user'] && $_POST['password']) {
 } elseif ($user = $_POST['user']) {
     // Get database for user
     $res = [];
-    $res = (new \app\models\User())->getDatabasesForUser($user);
-    if (sizeof($res['databases']) > 0) {
+    try {
+        $res = (new \app\models\User())->getDatabasesForUser($user);
         echo "<div id='alert' hx-swap-oob='true'></div>";
-    } else {
+
+    } catch (Exception $e) {
         echo "<div id='alert' hx-swap-oob='true'>" . $twig->render('error.html.twig', ['message' => 'User doesn\'t exists']) ."</div>";
+
     }
     echo $twig->render('login.html.twig', [...$res, ...$_POST]);
 } else {

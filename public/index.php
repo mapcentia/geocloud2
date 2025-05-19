@@ -598,16 +598,6 @@ try {
         Route::add("controllers/workflow");
         Route::add("controllers/qgis/");
 
-    } elseif (in_array($p = Input::getPath()->part(1), ['auth', 'device', 'forgot'])) {
-        $file = match ($p) {
-            'auth' => 'authorizationCode.php',
-            'device' => 'deviceCode.php',
-            'forgot' => 'forgotPassword.php',
-            default => ''
-        };
-        Session::start();
-        include_once("../app/auth/" . (Input::getPath()->part(3) ? 'backends/' . Input::getPath()->part(3) : $file));
-
     } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
         if (!empty(Input::getCookies()["PHPSESSID"])) { // Do not start session if no cookie is set
             Session::start();
@@ -640,6 +630,9 @@ try {
         }
     } else {
         foreach (glob(dirname(__FILE__) . "/../app/extensions/**/routes/*.php") as $filename) {
+            include_once($filename);
+        }
+        foreach (glob(dirname(__FILE__) . "/../app/auth/routes/*.php") as $filename) {
             include_once($filename);
         }
         Route::miss();

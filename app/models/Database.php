@@ -136,8 +136,8 @@ class Database extends Model
         $res = $this->prepare($sql);
         $res->execute(['db' => $screenName]);
         if ($res->rowCount() == 0) {
-            $sql = "SET ROLE $screenName";
-            $this->db->query($sql);
+//            $sql = "SET ROLE $screenName";
+//            $this->db->query($sql);
             $sql = "CREATE DATABASE {$screenName} WITH ENCODING='$encoding' TEMPLATE=$template CONNECTION LIMIT=-1 OWNER='$screenName'";
             $this->db->query($sql);
         }

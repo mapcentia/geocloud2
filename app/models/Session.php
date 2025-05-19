@@ -16,6 +16,7 @@ use app\inc\Model;
 use app\inc\Util;
 use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use stdClass;
 
 
 /**
@@ -189,13 +190,13 @@ class Session extends Model
         return $response;
     }
 
-    public function createOAuthResponse(string $db, string $user, bool $isSuperUser, bool $code, ?string $userGroup , ?string $codeChallenge = null, ?string $codeChallengeMethod = null): array
+    public function createOAuthResponse(string $db, string $user, bool $isSuperUser, bool $code, ?string $userGroup, ?string $codeChallenge = null, ?string $codeChallengeMethod = null, ?stdClass $properties = null, ?string $email = null): array
     {
         Database::setDb($db);
         $superUserApiKey = (new Setting())->getApiKeyForSuperUser();
         if (!$code) {
-            $accessToken = Jwt::createJWT($superUserApiKey, $db, $user, $isSuperUser, $userGroup);
-            $refreshToken = Jwt::createJWT($superUserApiKey, $db, $user, $isSuperUser, $userGroup, false);
+            $accessToken = Jwt::createJWT($superUserApiKey, $db, $user, $isSuperUser, $userGroup, true, false, null, null, $properties, $email);
+            $refreshToken = Jwt::createJWT($superUserApiKey, $db, $user, $isSuperUser, $userGroup, false, false, null, null, $properties, $email);
             return [
                 "access_token" => $accessToken['token'],
                 "token_type" => "bearer",
@@ -205,7 +206,7 @@ class Session extends Model
             ];
 
         } else {
-            return Jwt::createJWT($superUserApiKey, $db, $user, $isSuperUser, $userGroup, true, true, $codeChallenge, $codeChallengeMethod);
+            return Jwt::createJWT($superUserApiKey, $db, $user, $isSuperUser, $userGroup, true, true, $codeChallenge, $codeChallengeMethod, $properties, $email);
         }
     }
 }

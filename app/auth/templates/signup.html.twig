@@ -1,0 +1,24 @@
+<form hx-post="/auth/backends/signup.php">
+    <h1 class="h3 mb-3 fw-normal">Please sign up</h1>
+
+    <div class="form-floating">
+        <input class="form-control" id="code" type="text" name="code" placeholder="Activation code"  value="{{ code }}" required autofocus/>
+        <label class="form-label" for="code">Activation code</label>
+    </div>
+    <p>We're in beta, so you need a <a href="/activation">activation code</a></p>
+    <div class="form-floating mt-4">
+        <input class="form-control upper" id="user" type="text" name="name" placeholder="User name" value="{{ name }}" required autofocus/>
+        <label class="form-label" for="user">User name</label>
+    </div>
+    <div class="form-floating">
+        <input class="form-control middle" type="email" id="email" name="email" placeholder="E-mail" value="{{ email }}" required/>
+        <label class="form-label" for="email">E-mail</label>
+    </div>
+    <div class="form-floating">
+        <input class="form-control lower" type="password" name="password" id="password" placeholder="password" required/>
+        <label class="form-label" for="password">Password</label>
+    </div>
+    <input type="hidden" name="db" value="{{ db }}">
+    <button class="btn btn-primary w-100 py-2 mt-3" type="submit">Sign up</button>
+    <p>Already have an account? <a href="?a=i">Sign in</a></p>
+</form>

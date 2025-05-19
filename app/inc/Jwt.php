@@ -16,6 +16,7 @@ use app\models\Setting;
 use Exception;
 use Firebase\JWT\Key;
 use Psr\Cache\InvalidArgumentException;
+use stdClass;
 
 
 /**
@@ -124,7 +125,7 @@ abstract class Jwt
      * @param bool $returnCode
      * @return array
      */
-    public static function createJWT(string $secret, string $db, string $userId, bool $isSuperUser, ?string $userGroup, bool $access = true, bool $returnCode = false, ?string $codeChallenge = null, ?string $codeChallengeMethod = null): array
+    public static function createJWT(string $secret, string $db, string $userId, bool $isSuperUser, ?string $userGroup, bool $access = true, bool $returnCode = false, ?string $codeChallenge = null, ?string $codeChallengeMethod = null, ?stdClass $properties = null, ?string $email = null): array
     {
         $token = [
             "iss" => App::$param["host"],
@@ -135,6 +136,8 @@ abstract class Jwt
             "superUser" => $isSuperUser,
             "userGroup" => $userGroup,
             "response_type" => $access ? ResponseType::TOKEN->value : ResponseType::REFRESH->value,
+            "properties" => $properties,
+            "email" => $email,
         ];
         $encoded = \Firebase\JWT\JWT::encode($token, $secret, "HS256");
         if (!$returnCode) {

@@ -205,7 +205,7 @@ class Oauth extends AbstractApi
                         return self::error("invalid_client", "Client secret is wrong", 401);
                     }
                 $superUserApiKey = (new Setting())->getApiKeyForSuperUser();
-                $accessToken = Jwt::createJWT($superUserApiKey, $parsedToken['database'], $parsedToken['uid'], $parsedToken['superUser'], $parsedToken['userGroup']);
+                $accessToken = Jwt::createJWT($superUserApiKey, $parsedToken['database'], $parsedToken['uid'], $parsedToken['superUser'], $parsedToken['userGroup'], true, false, null, null, $parsedToken['properties'], $parsedToken['email']);
                 return [
                     "access_token" => $accessToken['token'],
                     "token_type" => "bearer",
