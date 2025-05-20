@@ -24,11 +24,11 @@ if ($_POST['name'] && $_POST['email'] && $_POST['password'] && $_POST['code']) {
             'parentdb' => $_POST['db']
         ]);
         $model->commit();
-        //  $data = (new SessionModel())->start($_POST['name'], $_POST['password'], "public", $res['screenname']);
-        header('HX-Refresh:true');
+        $data = (new SessionModel())->start($_POST['name'], $_POST['password'], "public", $res['screenname']);
+        $header = "HX-Redirect: " . urldecode($_POST['r']);
+        header($header);
     } catch (Exception $e) {
         echo "<div id='alert' hx-swap-oob='true'>" . $twig->render('error.html.twig', ['message' => $e->getMessage()]) . "</div>";
     }
-
 }
 echo $twig->render('signup.html.twig', [...$_POST, ...$_GET]);
