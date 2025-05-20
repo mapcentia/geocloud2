@@ -5,13 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED] - 2025-10-4
+## [2025.5.0] - 2025-20-5
 ### Changed
 - Change from separate Dockerfiles to a single with stages. Use the arg ECW_VERSION to control which ECW SDK version GDAL is compiled with (default to 3):
   - docker build --target=dev -t gc2_dev_ecw3 . --build-arg ECW_VERSION=3
   - docker build --target=dev -t gc2_dev_ecw5 . --build-arg ECW_VERSION=5
   - To build the mapserver base image:
   - docker build --target=mapserver -t mapserver .
+- Update PostGIS healthcheck to use a basic SQL query. Replaced `pg_isready` with a simple `psql` query to improve healthcheck reliability. This ensures the database is responsive to actual queries, not just connection availability.
 
 ## [2025.4.0] - 2025-3-4
 ### Added
