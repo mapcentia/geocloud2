@@ -663,6 +663,17 @@ q:after, q:before {
     overflow: visible !important;
 }
 
+.vertical-text {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    color: rgba(255, 255, 255, .5);
+    font-weight: bold;
+    font-size: 11px;
+    font-family: 'Open Sans', arial, verdana, sans-serif;
+    padding: 5px 3px 4px 5px;
+
+}
+
 
 
 

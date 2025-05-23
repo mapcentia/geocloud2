@@ -51,7 +51,9 @@ class Classification extends Controller
     public function put_index(): array
     {
         $response = $this->auth(Input::getPath()->part(4));
-        return (!$response['success']) ? $response : $this->class->update(Input::getPath()->part(5), json_decode(Input::get(null, true))->data);
+        $data = json_decode(Input::get(null, true))->data;
+        $data->force = true;
+        return (!$response['success']) ? $response : $this->class->update(Input::getPath()->part(5), $data);
     }
 
     /**

@@ -757,7 +757,6 @@ wmsClass.init = function (id) {
     });
     wmsClass.grid = new Ext.grid.PropertyGrid({
         id: 'propGrid',
-        height: 350,
         modal: false,
         region: 'center',
         border: false,
@@ -812,7 +811,6 @@ wmsClass.init = function (id) {
     });
     wmsClass.grid2 = new Ext.grid.PropertyGrid({
         id: 'propGrid2',
-        height: 350,
         modal: false,
         region: 'center',
         border: false,
@@ -1017,7 +1015,6 @@ wmsClass.init = function (id) {
     });
     wmsClass.grid3 = new Ext.grid.PropertyGrid({
         id: 'propGrid3',
-        height: 350,
         modal: false,
         region: 'center',
         border: false,
@@ -1225,7 +1222,6 @@ wmsClass.init = function (id) {
     });
     wmsClass.grid4 = new Ext.grid.PropertyGrid({
         id: 'propGrid4',
-        height: 350,
         modal: false,
         region: 'center',
         border: false,
@@ -1382,7 +1378,6 @@ wmsClass.init = function (id) {
     });
     wmsClass.grid5 = new Ext.grid.PropertyGrid({
         id: 'propGrid5',
-        height: 350,
         modal: false,
         region: 'center',
         border: false,

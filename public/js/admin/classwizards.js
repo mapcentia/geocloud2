@@ -135,6 +135,8 @@ classWizards.init = function (record) {
             f = Ext.getCmp(pre + "Form").form.getValues();
         f.pre = pre;
         values.custom = f;
+        values.custom.force = Ext.getCmp("forceRecreation").getValue();
+        console.log(values);
         return Ext.util.JSON.encode({data: values});
     };
     classWizards.getAddForm = function (pre) {
@@ -142,6 +144,7 @@ classWizards.init = function (record) {
         return new Ext.Panel({
             region: "east",
             border: false,
+            forceLayout: true,
             items: [
                 {
                     xtype: "form",
@@ -490,8 +493,7 @@ classWizards.init = function (record) {
                                     ]
                                 }
                             ]
-                        }
-
+                        },
                     ]
                 }
             ]
@@ -501,16 +503,13 @@ classWizards.init = function (record) {
         labelWidth: 1,
         frame: false,
         border: false,
-        //autoHeight: true,
-        height: 772,
         region: 'center',
-        layout: "border",
         split: true,
+        forceLayout: true,
         items: [
             new Ext.Panel({
                 region: 'center',
                 border: true,
-                layout: "border",
                 defaults: {
                     border: false
                 },
@@ -556,8 +555,8 @@ classWizards.init = function (record) {
                                         items: [
                                             {
                                                 html: '<table class="map-thumbs-table">' +
-                                                '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/single_class.png\')"></td></tr>' +
-                                                '</table>'
+                                                    '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/single_class.png\')"></td></tr>' +
+                                                    '</table>'
                                             },
                                             {
                                                 padding: "5px",
@@ -672,8 +671,8 @@ classWizards.init = function (record) {
                                         items: [
                                             {
                                                 html: '<table class="map-thumbs-table">' +
-                                                '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/unique_classes.png\')"></td></tr>' +
-                                                '</table>'
+                                                    '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/unique_classes.png\')"></td></tr>' +
+                                                    '</table>'
                                             },
                                             {
 
@@ -755,56 +754,56 @@ classWizards.init = function (record) {
                                                                                 items: [
                                                                                     {
                                                                                         boxLabel: '<span class="color-ramp" style="background-color:#a6cee3;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#1f78b4;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#b2df8a;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#33a02c;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#fb9a99;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#e31a1c;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#fdbf6f;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#ff7f00;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#cab2d6;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#6a3d9a;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#ffff99;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#b15928;"></span>',
+                                                                                            '<span class="color-ramp" style="background-color:#1f78b4;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#b2df8a;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#33a02c;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#fb9a99;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#e31a1c;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#fdbf6f;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#ff7f00;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#cab2d6;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#6a3d9a;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#ffff99;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#b15928;"></span>',
                                                                                         inputValue: "0",
                                                                                         checked: (customIsSet && classWizards.setting.custom.colorramp === "0") ? true : null
                                                                                     },
                                                                                     {
                                                                                         boxLabel: '<span class="color-ramp" style="background-color:#e41a1c;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#377eb8;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#4daf4a;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#984ea3;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#ff7f00;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#ffff33;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#a65628;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#f781bf;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#999999;"></span>',
+                                                                                            '<span class="color-ramp" style="background-color:#377eb8;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#4daf4a;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#984ea3;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#ff7f00;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#ffff33;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#a65628;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#f781bf;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#999999;"></span>',
                                                                                         inputValue: "3",
                                                                                         checked: (customIsSet && classWizards.setting.custom.colorramp === "3") ? true : null
 
                                                                                     },
                                                                                     {
                                                                                         boxLabel: '<span class="color-ramp" style="background-color:#7fc97f;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#beaed4;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#fdc086;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#ffff99;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#386cb0;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#f0027f;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#bf5b17;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#666666;"></span>',
+                                                                                            '<span class="color-ramp" style="background-color:#beaed4;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#fdc086;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#ffff99;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#386cb0;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#f0027f;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#bf5b17;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#666666;"></span>',
                                                                                         inputValue: "4",
                                                                                         checked: (customIsSet && classWizards.setting.custom.colorramp === "4") ? true : null
 
                                                                                     },
                                                                                     {
                                                                                         boxLabel: '<span class="color-ramp" style="background-color:#1b9e77;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#d95f02;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#7570b3;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#e7298a;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#66a61e;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#e6ab02;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#a6761d;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#666666;"></span>',
+                                                                                            '<span class="color-ramp" style="background-color:#d95f02;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#7570b3;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#e7298a;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#66a61e;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#e6ab02;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#a6761d;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#666666;"></span>',
                                                                                         inputValue: "5",
                                                                                         checked: (customIsSet && classWizards.setting.custom.colorramp === "5") ? true : null
 
@@ -826,57 +825,57 @@ classWizards.init = function (record) {
                                                                                 items: [
                                                                                     {
                                                                                         boxLabel: '<span class="color-ramp" style="background-color:#8dd3c7;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#ffffb3;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#bebada;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#fb8072;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#80b1d3;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#fdb462;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#b3de69;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#fccde5;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#d9d9d9;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#bc80bd;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#ccebc5;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#ffed6f;"></span>',
+                                                                                            '<span class="color-ramp" style="background-color:#ffffb3;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#bebada;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#fb8072;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#80b1d3;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#fdb462;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#b3de69;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#fccde5;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#d9d9d9;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#bc80bd;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#ccebc5;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#ffed6f;"></span>',
                                                                                         inputValue: "1",
                                                                                         checked: (customIsSet && classWizards.setting.custom.colorramp === "1") ? true : null
 
                                                                                     },
                                                                                     {
                                                                                         boxLabel: '<span class="color-ramp" style="background-color:#fbb4ae;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#b3cde3;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#ccebc5;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#decbe4;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#fed9a6;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#ffffcc;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#e5d8bd;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#fddaec;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#f2f2f2;"></span>',
+                                                                                            '<span class="color-ramp" style="background-color:#b3cde3;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#ccebc5;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#decbe4;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#fed9a6;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#ffffcc;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#e5d8bd;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#fddaec;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#f2f2f2;"></span>',
                                                                                         inputValue: "2",
                                                                                         checked: (customIsSet && classWizards.setting.custom.colorramp === "2") ? true : null
 
                                                                                     },
                                                                                     {
                                                                                         boxLabel: '<span class="color-ramp" style="background-color:#66c2a5;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#fc8d62;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#8da0cb;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#e78ac3;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#a6d854;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#ffd92f;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#e5c494;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#b3b3b3;"></span>',
+                                                                                            '<span class="color-ramp" style="background-color:#fc8d62;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#8da0cb;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#e78ac3;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#a6d854;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#ffd92f;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#e5c494;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#b3b3b3;"></span>',
                                                                                         inputValue: "8",
                                                                                         checked: (customIsSet && classWizards.setting.custom.colorramp === "8") ? true : null
 
                                                                                     },
                                                                                     {
                                                                                         boxLabel: '<span class="color-ramp" style="background-color:#b3e2cd;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#fdcdac;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#cbd5e8;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#f4cae4;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#e6f5c9;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#fff2ae;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#f1e2cc;"></span>' +
-                                                                                        '<span class="color-ramp" style="background-color:#cccccc;"></span>',
+                                                                                            '<span class="color-ramp" style="background-color:#fdcdac;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#cbd5e8;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#f4cae4;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#e6f5c9;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#fff2ae;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#f1e2cc;"></span>' +
+                                                                                            '<span class="color-ramp" style="background-color:#cccccc;"></span>',
                                                                                         inputValue: "7",
                                                                                         checked: (customIsSet && classWizards.setting.custom.colorramp === "7") ? true : null
                                                                                     }
@@ -962,8 +961,8 @@ classWizards.init = function (record) {
                                         },
                                         items: [{
                                             html: '<table class="map-thumbs-table">' +
-                                            '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/interval_classes.png\')"></td></tr>' +
-                                            '</table>'
+                                                '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/interval_classes.png\')"></td></tr>' +
+                                                '</table>'
                                         },
                                             {
 
@@ -1119,10 +1118,10 @@ classWizards.init = function (record) {
                                                                             params = classWizards.getAddvalues("interval");
                                                                         Ext.Ajax.request({
                                                                             url: '/controllers/classification/' + values.type.toLowerCase() + '/' + record._key_ + '/' +
-                                                                            values.value + '/' +
-                                                                            values.num + '/' +
-                                                                            values.start.replace("#", "") + '/' +
-                                                                            values.end.replace("#", "") + '/',
+                                                                                values.value + '/' +
+                                                                                values.num + '/' +
+                                                                                values.start.replace("#", "") + '/' +
+                                                                                values.end.replace("#", "") + '/',
                                                                             method: 'put',
                                                                             params: params,
                                                                             headers: {
@@ -1170,8 +1169,8 @@ classWizards.init = function (record) {
                                         },
                                         items: [{
                                             html: '<table class="map-thumbs-table">' +
-                                            '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/cluster_classes.png\')"></td></tr>' +
-                                            '</table>'
+                                                '<tr class="x-grid3-row"><td class="map-thumbs" style="background-image:url(\'/assets/images/cluster_classes.png\')"></td></tr>' +
+                                                '</table>'
                                         },
                                             {
                                                 padding: "5px",
@@ -1230,8 +1229,10 @@ classWizards.init = function (record) {
                                                                             method: 'put',
                                                                             params: Ext.util.JSON.encode({
                                                                                 data: {
+                                                                                    force: false,
                                                                                     custom: {
                                                                                         pre: "cluster",
+                                                                                        force: Ext.getCmp("forceRecreation").getValue(),
                                                                                         clusterdistance: values.clusterdistance
                                                                                     }
                                                                                 }
@@ -1275,11 +1276,58 @@ classWizards.init = function (record) {
                                             }]
                                     }
                                 ]
-                            })]
+                            }),
+                            {
+                                xtype: 'panel',
+                                bodyStyle: "padding : 0 0 0 7px",
+                                items: [
+                                    {
+                                        xtype: 'container',
+                                        layout: 'hbox',
+                                        items: [
+                                            {
+                                                xtype: "checkbox",
+                                                triggerAction: "all",
+                                                name: "force",
+                                                id: "forceRecreation",
+                                                allowBlank: true,
+
+                                            },
+                                            {
+                                                xtype: 'box',
+                                                html: __("Force") + __("Force re-creation of all classes. Any external changes will be overwritten", true)
+                                            },
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
                     }),
-                    legendPanel
+                    // legendPanel
                 ]
             })
         ]
     });
 };
+
+classWizards.placeHolder = function () {
+    return new Ext.Panel({
+        labelWidth: 1,
+        frame: false,
+        border: false,
+        autoHeight: true,
+        region: 'center',
+        split: true,
+        items: [
+            {
+                xtype: "panel",
+                autoScroll: true,
+                region: 'center',
+                frame: true,
+                plain: true,
+                border: false,
+                html: __("Choose a layer to create a classification for.")
+            }
+        ]
+    })
+}

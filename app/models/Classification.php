@@ -127,6 +127,85 @@ class Classification extends Model
         $tableObj->updateRecord($data, '_key_');
     }
 
+    private function storeForce($class): void
+    {
+        $tableObj = new Table("settings.geometry_columns_join");
+        $data['_key_'] = $this->layer;
+        $data['class'] = $class;
+        $tableObj->updateRecord($data, '_key_');
+        $data['class_cache'] = $class;
+        $tableObj->updateRecord($data, '_key_');
+    }
+
+    private function storeFromWizard(string $class): void
+    {
+        $tableObj = new Table("settings.geometry_columns_join");
+
+        $existingClass = $tableObj->getGeometryColumns($this->layer, "*")["class"];
+        $classCache = $tableObj->getGeometryColumns($this->layer, "*")["class_cache"];
+
+        $newClass = json_decode($class, true);
+
+        $existingClass = $existingClass ? json_decode($tableObj->getGeometryColumns($this->layer, "*")["class"], true) : [];
+        $cachedClass = $classCache ? json_decode($classCache, true) : [];
+        $mergedClass = $this->mergeClasses($cachedClass, $existingClass, $newClass);
+
+        $merged['_key_'] = $this->layer;
+        $merged['class'] = $mergedClass;
+        $tableObj->updateRecord($merged, '_key_');
+
+        $cached['_key_'] = $this->layer;
+        $cached['class_cache'] = $newClass;
+        $tableObj->updateRecord($cached, '_key_');
+    }
+
+    function mergeClasses(array $cachedClass, array $existingClass, array $newClass): array
+    {
+        // Helper to map by name for comparison
+        $byName = function ($arr) {
+            $out = [];
+            foreach ($arr as $item) {
+                if (is_array($item) && isset($item['name'])) {
+                    $out[$item['name']] = $item;
+                }
+            }
+            return $out;
+        };
+
+        $cached = $byName($cachedClass);
+        $existing = $byName($existingClass);
+        $incoming = $byName($newClass);
+
+        // Merge, property by property
+        $result = [];
+
+        $allNames = array_unique(array_merge(array_keys($cached), array_keys($existing), array_keys($incoming)));
+        foreach ($allNames as $name) {
+            // Start from current existing if it exists, otherwise cache
+            $target = $existing[$name] ?? $cached[$name] ?? $incoming[$name] ?? [];
+
+            // If property has NOT been edited externally, we can update from wizard
+            // Compare cached vs. existing for this class by property
+            if (isset($cached[$name]) && isset($existing[$name]) && isset($incoming[$name])) {
+                // Compare all public properties
+                foreach ($incoming[$name] as $prop => $newVal) {
+                    $cachedVal = $cached[$name][$prop] ?? null;
+                    $existingVal = $existing[$name][$prop] ?? null;
+                    // Only update property if not changed externally (existing == cached)
+                    if ($existingVal === $cachedVal) {
+                        $target[$prop] = $newVal;
+                    }
+                    // else: keep the externally modified value
+                }
+            } elseif (isset($incoming[$name])) {
+                // New class or wasn't in cache/existing
+                $target = $incoming[$name];
+            }
+            $result[$name] = $target;
+        }
+        return array_values($result);
+    }
+
     /**
      * @param $classWizard
      * @return void
@@ -208,19 +287,21 @@ class Classification extends Model
         $def["data"][0]["cluster"] = null;
         $defJson = (object)$def["data"][0];
         $this->tile->update($defJson);
-
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
      */
     public function createSingle($data, $color): array
     {
         $this->setLayerDef();
-        $this->reset();
         $layer = new Layer();
         $geometryType = $this->geometryType ?: $layer->getValueFromKey($this->layer, "type");
-        $this->update("0", self::createClass($geometryType, $layer->getValueFromKey($this->layer, "f_table_title") ?: $layer->getValueFromKey($this->layer, "f_table_name"), null, 10, "#" . $color, $data));
+        $classes = [self::createClass($geometryType, $layer->getValueFromKey($this->layer, "f_table_title") ?: $layer->getValueFromKey($this->layer, "f_table_name"), null, 10, "#" . $color, $data)];
+        if ($data->custom->force) {
+            $this->storeForce(json_encode($classes, JSON_UNESCAPED_UNICODE));
+        } else {
+            $this->storeFromWizard(json_encode($classes, JSON_UNESCAPED_UNICODE));
+        }
         $response['success'] = true;
         $response['message'] = "Updated one class";
         $this->storeWizard(json_encode($data, JSON_UNESCAPED_UNICODE));
@@ -228,7 +309,6 @@ class Classification extends Model
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
      */
     public function createUnique($field, $data): array
     {
@@ -247,7 +327,7 @@ class Classification extends Model
             return $response;
         }
         $rows = $this->fetchAll($res);
-        $this->reset();
+//        $this->reset();
         $type = $fieldObj['type'];
         if (sizeof($rows) > 1000) {
             $response['success'] = false;
@@ -277,10 +357,15 @@ class Classification extends Model
             }
             $cArr[$key] = self::createClass($geometryType, $name, $expression, ($key * 10) + 10, $c, $data);
         }
-        $this->store(json_encode($cArr, JSON_UNESCAPED_UNICODE));
         $response['success'] = true;
         $response['message'] = "Updated " . sizeof($rows) . " classes";
+        if ($data->custom->force) {
+            $this->storeForce(json_encode($cArr, JSON_UNESCAPED_UNICODE));
+        } else {
+            $this->storeFromWizard(json_encode($cArr, JSON_UNESCAPED_UNICODE));
+        }
         $this->storeWizard(json_encode($data, JSON_UNESCAPED_UNICODE));
+
         return $response;
     }
 
@@ -312,9 +397,9 @@ class Classification extends Model
         $row = $this->fetchRow($res);
         $diff = $row["max"] - $row["min"];
         $interval = $diff / $num;
-        $this->reset();
 
         $grad = Util::makeGradient($startColor, $endColor, $num);
+        $classes = [];
         for ($i = 1; $i <= ($num); $i++) {
             $top = $row['min'] + ($interval * $i);
             $bottom = $top - $interval;
@@ -325,7 +410,12 @@ class Classification extends Model
             }
             $name = " < " . round(($top), 2);
             $class = self::createClass($geometryType, $name, $expression, ((($i - 1) * 10) + 10), $grad[$i - 1], $data);
-            $this->update(($i - 1), $class);
+            $classes[] = $class;
+        }
+        if ($data->custom->force) {
+            $this->storeForce(json_encode($classes, JSON_UNESCAPED_UNICODE));
+        } else {
+            $this->storeFromWizard(json_encode($classes, JSON_UNESCAPED_UNICODE));
         }
         $response['success'] = true;
         $response['message'] = "Updated " . $num . " classes";
@@ -336,7 +426,7 @@ class Classification extends Model
     /**
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function createQuantile($field, $num, $startColor, $endColor, $data, $update = true): array
+    public function createQuantile($field, $num, $startColor, $endColor, $data): array
     {
         $this->setLayerDef();
         $layer = new Layer();
@@ -350,12 +440,13 @@ class Classification extends Model
         $query = "SELECT * FROM " . $this->table->table . " ORDER BY $field";
         $res = $this->prepare($query);
         $res->execute();
-        $this->reset();
+//        $this->reset();
         $grad = Util::makeGradient($startColor, $endColor, $num);
         $bottom = 0;
         $top = 0;
         $tops = [];
         $u = 0;
+        $classes = [];
         for ($i = 1; $i <= $count; $i++) {
             $row = $res->fetch(PDO::FETCH_ASSOC);
             if ($i == 1) {
@@ -373,13 +464,17 @@ class Classification extends Model
                 }
                 $name = " < " . round(($top), 2);
                 $tops[] = array($top, $grad[$u]);
-                if ($update) {
-                    $class = self::createClass($geometryType, $name, $expression, (($u + 1) * 10), $grad[$u], $data);
-                    $this->update($u, $class);
-                }
+                $class = self::createClass($geometryType, $name, $expression, (($u + 1) * 10), $grad[$u], $data);
+                $classes[] = $class;
+
                 $u++;
                 $temp = $temp + $numPerClass;
             }
+        }
+        if ($data->custom->force) {
+            $this->storeForce(json_encode($classes, JSON_UNESCAPED_UNICODE));
+        } else {
+            $this->storeFromWizard(json_encode($classes, JSON_UNESCAPED_UNICODE));
         }
         $response['success'] = true;
         $response['values'] = $tops;
@@ -401,7 +496,8 @@ class Classification extends Model
             $response['code'] = 400;
             return $response;
         }
-        $this->reset();
+
+        $classes = [];
 
         // Set layer def
         $def = $this->tile->get();
@@ -414,7 +510,7 @@ class Classification extends Model
         $ClusterFeatureCount = "Cluster_FeatureCount";
         $expression = "[$ClusterFeatureCount]=1";
         $name = "Single";
-        $this->update(0, self::createClass($geometryType, $name, $expression, 10, "#0000FF", $data));
+        $classes[] = self::createClass($geometryType, $name, $expression, 10, "#0000FF", $data);
         //Set cluster class
         $expression = "[$ClusterFeatureCount]>1";
         $name = "Cluster";
@@ -430,7 +526,13 @@ class Classification extends Model
         $data->overlayOpacity = "70";
         $data->force = true;
 
-        $this->update(1, self::createClass($geometryType, $name, $expression, 20, "#00FF00", $data));
+        $classes[] = self::createClass($geometryType, $name, $expression, 20, "#00FF00", $data);
+
+        if ($data->custom->force) {
+            $this->storeForce(json_encode($classes, JSON_UNESCAPED_UNICODE));
+        } else {
+            $this->storeFromWizard(json_encode($classes, JSON_UNESCAPED_UNICODE));
+        }
         $response['success'] = true;
         $response['message'] = "Updated 2 classes";
         $this->storeWizard(json_encode($data, JSON_UNESCAPED_UNICODE));

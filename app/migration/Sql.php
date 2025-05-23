@@ -179,6 +179,8 @@ class Sql
         $sqls[] = "alter table settings.prepared_statements add type_formats jsonb";
         $sqls[] = "alter table settings.prepared_statements add output_format varchar(255)";;
         $sqls[] = "alter table settings.prepared_statements add srs int4";;
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN class_cache jsonb";
+        $sqls[] = "alter table settings.geometry_columns_join alter class type jsonb using class::jsonb;";
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
                     SELECT
