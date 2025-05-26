@@ -195,7 +195,7 @@ $(document).ready(function () {
                         onLoad: function () {
                             var layerObj = qstore[this.id], out = [], source = {}, pkeyValue;
                             isEmpty = layerObj.isEmpty();
-                            if ((!isEmpty)) {
+                            if (!isEmpty) {
                                 queryWin.show();
                                 $.each(layerObj.geoJSON.features, function (i, feature) {
                                     $.each(feature.properties, function (name, property) {
@@ -3780,7 +3780,6 @@ $(document).ready(function () {
                                 new Ext.Panel({
                                     id: "classWizardPanel",
                                     title: "Class wizard",
-                                    titleCollapse: true,
                                     hideMode: "visibility",
                                     floatable: false,
                                     collapsed: true,
@@ -3789,7 +3788,6 @@ $(document).ready(function () {
                                     collapsible: true,
                                     split: false,
                                     plain: true,
-                                    animCollapse: false,
                                     width: 436,
                                     layout: "fit",
                                     items: [
@@ -3805,6 +3803,9 @@ $(document).ready(function () {
                                                     xtype: "panel",
                                                     id: "a7",
                                                     layout: "fit",
+                                                    items: [
+                                                        classWizards.placeHolder()
+                                                    ]
                                                 }
                                             ]
                                         }

@@ -38,8 +38,7 @@ classWizards.init = function (record) {
                 },
                 listeners: {
                     write: function () {
-                        classGrid.getSelectionModel().clearSelections();
-                        Ext.getCmp("a3").remove(wmsClass.grid);
+                        classWizards.clearAfterUpdate();
                         wmsClasses.store.load();
                         writeFiles(record._key_, map);
                         store.load();
@@ -628,7 +627,7 @@ classWizards.init = function (record) {
                                                                                 'Content-Type': 'application/json; charset=utf-8'
                                                                             },
                                                                             success: function (response) {
-                                                                                Ext.getCmp("a3").remove(wmsClass.grid);
+                                                                                classWizards.clearAfterUpdate();
                                                                                 wmsClasses.store.load();
                                                                                 writeFiles(record._key_, map);
                                                                                 store.load({
@@ -884,12 +883,7 @@ classWizards.init = function (record) {
                                                                             {
                                                                                 xtype: 'box',
                                                                                 height: 7
-                                                                            },
-                                                                            {
-                                                                                xtype: 'box',
-                                                                                html: "<span style='font-size: 7pt'>Colors from www.ColorBrewer.org by Cynthia A. Brewer, Penn State.</span>"
                                                                             }
-
                                                                         ]
                                                                     }
                                                                 ]
@@ -918,7 +912,7 @@ classWizards.init = function (record) {
                                                                                 'Content-Type': 'application/json; charset=utf-8'
                                                                             },
                                                                             success: function (response) {
-                                                                                Ext.getCmp("a3").remove(wmsClass.grid);
+                                                                                classWizards.clearAfterUpdate();
                                                                                 wmsClasses.store.load();
                                                                                 writeFiles(record._key_, map);
                                                                                 store.load({
@@ -1128,7 +1122,7 @@ classWizards.init = function (record) {
                                                                                 'Content-Type': 'application/json; charset=utf-8'
                                                                             },
                                                                             success: function (response) {
-                                                                                Ext.getCmp("a3").remove(wmsClass.grid);
+                                                                                classWizards.clearAfterUpdate();
                                                                                 wmsClasses.store.load();
                                                                                 writeFiles(record._key_, map);
                                                                                 store.load({
@@ -1241,7 +1235,7 @@ classWizards.init = function (record) {
                                                                                 'Content-Type': 'application/json; charset=utf-8'
                                                                             },
                                                                             success: function (response) {
-                                                                                Ext.getCmp("a3").remove(wmsClass.grid);
+                                                                                classWizards.clearAfterUpdate();
                                                                                 wmsClasses.store.load();
                                                                                 writeFiles(record._key_, map);
                                                                                 store.load({
@@ -1330,4 +1324,14 @@ classWizards.placeHolder = function () {
             }
         ]
     })
+}
+
+classWizards.clearAfterUpdate = function () {
+    Ext.getCmp("a3").removeAll();
+    Ext.getCmp("a8").removeAll();
+    Ext.getCmp("a9").removeAll();
+    Ext.getCmp("a10").removeAll();
+    Ext.getCmp("a11").removeAll();
+    wmsClasses.grid.getSelectionModel().clearSelections();
+    Ext.getCmp("classTabs").disable();
 }
