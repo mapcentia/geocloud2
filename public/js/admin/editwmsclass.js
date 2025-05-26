@@ -7,7 +7,6 @@
 
 Ext.namespace('wmsClasses');
 wmsClasses.init = function (record) {
-
     wmsClasses.table = record._key_;
     wmsClasses.reader = new Ext.data.JsonReader({
         totalProperty: 'total',
@@ -280,6 +279,10 @@ function test() {
 
 Ext.namespace('wmsClass');
 wmsClass.init = function (id) {
+    var checkboxRender = function (d) {
+        var checked = d ? 'property-grid-check-on' : '';
+        return '<div class="' + checked + '">';
+    };
     var cc = function (value, meta) {
         meta.style = meta.style + "background-color:" + value;
         return value;
@@ -1249,13 +1252,16 @@ wmsClass.init = function (id) {
             label_minfeaturesize: 'Label: min feature size' + __("Minimum size a feature must be to be labeled. Given in pixels. For line data the overall length of the displayed line is used, for polygons features the smallest dimension of the bounding box is used. “Auto” keyword tells MapServer to only label features that are larger than their corresponding label.", true)
         },
         customRenderers: {
+            label: checkboxRender,
+            label_force: checkboxRender,
             label_color: cc,
             label_outlinecolor: cc,
             label_backgroundcolor: cc,
             label_position: Ext.util.Format.comboRenderer(labelPositionCombo)
-
         },
         customEditors: {
+            'label': new Ext.grid.GridEditor(new Ext.form.Checkbox({}), {}),
+            'label_force': new Ext.grid.GridEditor(new Ext.form.Checkbox({}), {}),
             'label_offsetx': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: -100,
                 maxValue: 100,
@@ -1405,6 +1411,8 @@ wmsClass.init = function (id) {
             label2_minfeaturesize: 'Label: min feature size' + __("Minimum size a feature must be to be labeled. Given in pixels. For line data the overall length of the displayed line is used, for polygons features the smallest dimension of the bounding box is used. “Auto” keyword tells MapServer to only label features that are larger than their corresponding label.", true)
         },
         customRenderers: {
+            label2: checkboxRender,
+            label2_force: checkboxRender,
             label2_color: cc,
             label2_outlinecolor: cc,
             label2_backgroundcolor: cc,
@@ -1412,6 +1420,8 @@ wmsClass.init = function (id) {
 
         },
         customEditors: {
+            'label2': new Ext.grid.GridEditor(new Ext.form.Checkbox({}), {}),
+            'label2_force': new Ext.grid.GridEditor(new Ext.form.Checkbox({}), {}),
             'label2_offsetx': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: -100,
                 maxValue: 100,

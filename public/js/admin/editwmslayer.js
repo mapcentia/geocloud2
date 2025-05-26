@@ -10,7 +10,6 @@ wmsLayer.init = function (record) {
     var checkboxRender = function (d) {
         var checked = d ? 'property-grid-check-on' : '';
         return '<div class="' + checked + '">';
-
     };
     wmsLayer.fieldsForStore = [];
     wmsLayer.numFieldsForStore = [];

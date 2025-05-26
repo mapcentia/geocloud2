@@ -135,7 +135,6 @@ classWizards.init = function (record) {
         f.pre = pre;
         values.custom = f;
         values.custom.force = Ext.getCmp("forceRecreation").getValue();
-        console.log(values);
         return Ext.util.JSON.encode({data: values});
     };
     classWizards.getAddForm = function (pre) {
@@ -159,7 +158,8 @@ classWizards.init = function (record) {
                                     xtype: 'container',
                                     layout: 'hbox',
                                     defaults: {
-                                        width: 95
+                                        width: 95,
+                                        style: 'padding-bottom: 5px'
                                     },
                                     items: [
                                         {
@@ -228,7 +228,8 @@ classWizards.init = function (record) {
                                     layout: 'hbox',
                                     width: 285,
                                     defaults: {
-                                        width: 95
+                                        width: 95,
+                                        style: 'padding-bottom: 5px'
                                     },
                                     items: [
                                         {
@@ -238,6 +239,10 @@ classWizards.init = function (record) {
                                         {
                                             xtype: 'box',
                                             html: __("Opacity") + __('Set opacity level between 1 and 100, where 100 is solid.', true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Gap") + __('specifies the distance between SYMBOLs (center to center) for decorated lines and polygon fills in layer SIZEUNITS. For polygon fills, GAP specifies the distance between SYMBOLs in both the X and the Y direction. For lines, the centers of the SYMBOLs are placed on the line. For lines, a negative GAP value will cause the symbols’ X axis to be aligned relative to the tangent of the line. For lines, a positive GAP value aligns the symbols’ X axis relative to the X axis of the output device.', true)
                                         }
                                     ]
                                 },
@@ -272,6 +277,16 @@ classWizards.init = function (record) {
                                             allowBlank: true,
                                             value: (customIsSet && c) ? classWizards.setting.opacity : ""
 
+                                        }),
+                                        new Ext.ux.form.SpinnerField({
+                                            name: "gap",
+                                            allowDecimals: false,
+                                            decimalPrecision: 0,
+                                            incrementValue: 1,
+                                            accelerate: true,
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.gap : ""
+
                                         })
                                     ]
                                 }
@@ -285,7 +300,8 @@ classWizards.init = function (record) {
                                     xtype: 'container',
                                     layout: 'hbox',
                                     defaults: {
-                                        width: 95
+                                        width: 95,
+                                        style: 'padding-bottom: 5px'
                                     },
                                     items: [
                                         {
@@ -393,7 +409,8 @@ classWizards.init = function (record) {
                                     xtype: 'container',
                                     layout: 'hbox',
                                     defaults: {
-                                        width: 95
+                                        width: 95,
+                                        style: 'padding-bottom: 5px'
                                     },
                                     items: [
                                         {
