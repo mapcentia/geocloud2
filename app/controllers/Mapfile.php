@@ -356,8 +356,21 @@ class Mapfile extends Controller
                     $extent = $this->bbox;
                 }
 
+                // Get columns
                 $rel = "{$row['f_table_schema']}.{$row['f_table_name']}";
-                $meta = $postgisObject->getMetaData($rel, false, false, null, null, false, false);
+                $meta = [];
+                if (!empty($row["data"])) {
+                    $q = $row["data"];
+                } else {
+                    $q = "select * from $rel";
+                }
+                $select = $postgisObject->prepare("select * from ($q) as foo LIMIT 0");
+                $select->execute();
+                foreach (range(0, $select->columnCount() - 1) as $column_index) {
+                    $col = $select->getColumnMeta($column_index);
+                    $meta[$col["name"]] = $col["native_type"];
+                }
+
                 $arr = !empty($row['def']) ? json_decode($row['def'], true) : [];
                 $props = array("label_column", "theme_column");
                 foreach ($props as $field) {
@@ -445,14 +458,14 @@ class Mapfile extends Controller
                     <?php
                 } else {
                     if ($type != "RASTER") {
-                        if (!$row['data']) {
+                        if (empty($row["data"])) {
                             if (preg_match('/[A-Z]/', $row['f_geometry_column'])) {
                                 $dataSql = "SELECT *,\\\"{$row['f_geometry_column']}\\\" as " . strtolower($row['f_geometry_column']) . " FROM \\\"{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
                             } else {
                                 $dataSql = "SELECT * FROM \\\"" . "{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
                             }
                         } else {
-                            $dataSql = $row['data'];
+                            $dataSql = $row["data"];
                         }
                         $fieldConf = !empty($row['fieldconf']) ? json_decode($row['fieldconf'], true) : [];
                         $includeItemsStr = "all";
@@ -1378,8 +1391,21 @@ class Mapfile extends Controller
                     $extent = $this->bbox;
                 }
 
+                // Get columns
                 $rel = "{$row['f_table_schema']}.{$row['f_table_name']}";
-                $meta = $postgisObject->getMetaData($rel, false, false, null, null, false, false);
+                $meta = [];
+                if (!empty($row["data"])) {
+                    $q = $row["data"];
+                } else {
+                    $q = "select * from $rel";
+                }
+                $select = $postgisObject->prepare("select * from ($q) as foo LIMIT 0");
+                $select->execute();
+                foreach (range(0, $select->columnCount() - 1) as $column_index) {
+                    $col = $select->getColumnMeta($column_index);
+                    $meta[$col["name"]] = $col["native_type"];
+                }
+
                 $arr = !empty($row['def']) ? (array)json_decode($row['def']) : []; // Cast stdclass to array
                 $props = array("label_column", "theme_column");
                 foreach ($props as $field) {
@@ -1441,14 +1467,14 @@ class Mapfile extends Controller
                             break;
                     }
                 }
-                if (!$row['data']) {
+                if (empty($row["data"])) {
                     if (preg_match('/[A-Z]/', $row['f_geometry_column'])) {
                         $dataSql = "SELECT *,\\\"{$row['f_geometry_column']}\\\" as " . strtolower($row['f_geometry_column']) . " FROM \\\"{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
                     } else {
                         $dataSql = "SELECT * FROM \\\"" . "{$row['f_table_schema']}\\\".\\\"{$row['f_table_name']}\\\"";
                     }
                 } else {
-                    $dataSql = $row['data'];
+                    $dataSql = $row["data"];
                 }
                 $fieldConf = !empty($row['fieldconf']) ? json_decode($row['fieldconf'], true) : [];
                 $includeItemsStr = "all";

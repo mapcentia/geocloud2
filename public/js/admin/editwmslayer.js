@@ -209,10 +209,6 @@ wmsLayer.init = function (record) {
                     var f = Ext.getCmp('sqlForm');
                     if (f.form.isValid()) {
                         var values = f.form.getValues();
-                        // Submit empty if default sql is not changed. Extjs3 is submitting EmptyText!
-                        if (values.data === wmsLayer.defaultSql) {
-                            values.data = "";
-                        }
                         values.data = encodeURIComponent(values.data);
                         var param = {
                             data: values
