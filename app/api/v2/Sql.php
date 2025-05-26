@@ -69,7 +69,7 @@ class Sql extends Controller
         try {
             $this->api = func_get_arg(1);
         } catch (\Throwable $e) {
-            $srs = Input::get('srs') ?: "3857";
+            $srs = is_numeric(Input::get('srs')) ? Input::get('srs') : 3857;
             $this->api = new \app\models\Sql();
             $this->api->connect();
         }
@@ -105,9 +105,7 @@ class Sql extends Controller
                         'uuid' => $uuid,
                         'name' => $method,
                     ];
-                }
-                // Else fetch the query and use it
-                else {
+                } else { // Else fetch the query and use it
                     $preStm = $pres->getByName($method);
                     $json["q"] = $preStm['data']['statement'];
                     $typeHints = json_decode($preStm['data']['type_hints'], true);
@@ -140,7 +138,9 @@ class Sql extends Controller
             );
         }
 
-        $this->api->setSRS($srs);
+        if (!empty($srs)) {
+            $this->api->setSRS($srs);
+        }
 
         if (Input::get('base64') === true || Input::get('base64') === "true") {
             $this->q = Util::base64urlDecode(Input::get("q"));
