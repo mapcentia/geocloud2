@@ -3753,7 +3753,7 @@ $(document).ready(function () {
                                                             {
                                                                 xtype: "panel",
                                                                 title: __('Legend'),
-                                                                autoHeight: true,
+                                                                border: false,
                                                                 defaults: {
                                                                     border: false,
                                                                     bodyStyle: "padding : 7px"
