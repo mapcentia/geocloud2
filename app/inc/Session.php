@@ -27,6 +27,9 @@ class Session
         ini_set("session.gc_maxlifetime", (string)$sessionMaxAge);
         ini_set("session.gc_probability", "1");
         ini_set("session.gc_divisor", "1");
+        if (!empty(App::$param["sessionDomain"])) {
+            ini_set("session.cookie_domain", App::$param["sessionDomain"]);
+        }
         if (Util::protocol() == "https") {
             ini_set("session.cookie_samesite", "None");
             ini_set("session.cookie_secure", 'On');
