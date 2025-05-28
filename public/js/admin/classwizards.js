@@ -164,20 +164,20 @@ classWizards.init = function (record) {
                                     items: [
                                         {
                                             xtype: 'box',
+                                            html: __("Outline color") + __('Color to use for outlining polygons and certain marker symbols (ellipse, vector polygons and truetype). Has no effect for lines.', true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Pattern") + __('Used to define a dash pattern for line work (lines, polygon outlines, hatch lines, …). The numbers (doubles) specify the lengths of the dashes and gaps of the dash pattern in layer SIZEUNITS. When scaling of symbols is in effect (SYMBOLSCALEDENOM is specified for the LAYER), the numbers specify the lengths of the dashes and gaps in layer SIZEUNITS at the map scale 1:SYMBOLSCALEDENOM.', true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Line cap") + __('Sets the line cap type for lines. Default is round.', true)
+                                        },
+                                        {
+                                            xtype: 'box',
                                             html: __("Symbol") + __("Select a symbol for layer drawing. Leave empty for solid line and area style.", true)
                                         },
-                                        {
-                                            xtype: 'box',
-                                            html: __("Angle") + __("Angle, given in degrees, to rotate the symbol (counter clockwise). Combo field: Either select an integer attribute or write an integer.", true)
-                                        },
-                                        {
-                                            xtype: 'box',
-                                            html: __("Size") + __("Height, in pixels, of the symbol/pattern to be used. Combo field: Either select an integer attribute or write an integer.", true)
-                                        },
-                                        {
-                                            xtype: 'box',
-                                            html: __("Outline color") + __('Color to use for outlining polygons and certain marker symbols (ellipse, vector polygons and truetype). Has no effect for lines.', true)
-                                        }
                                     ]
                                 },
                                 {
@@ -187,6 +187,23 @@ classWizards.init = function (record) {
                                         width: 95
                                     },
                                     items: [
+                                        new Ext.form.ColorField({
+                                            name: "outlineColor",
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.outlineColor : ""
+                                        }),
+                                        new Ext.form.TimeField({
+                                            name: "pattern",
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.pattern : ""
+                                        }),
+                                        new Ext.form.ComboBox({
+                                            store: ['round', 'butt', 'square'],
+                                            editable: false,
+                                            triggerAction: 'all',
+                                            name: "linecap",
+                                            value: (customIsSet && c) ? classWizards.setting.linecap : ""
+                                        }),
                                         new Ext.form.ComboBox({
                                             store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow'],
                                             editable: false,
@@ -194,29 +211,6 @@ classWizards.init = function (record) {
                                             name: "symbol",
                                             value: (customIsSet && c) ? classWizards.setting.symbol : ""
                                         }),
-                                        {
-                                            xtype: "combo",
-                                            store: wmsLayer.numFieldsForStore,
-                                            editable: true,
-                                            triggerAction: "all",
-                                            name: "angle",
-                                            allowBlank: true,
-                                            value: (customIsSet && c) ? classWizards.setting.angle : ""
-                                        },
-                                        {
-                                            xtype: "combo",
-                                            store: wmsLayer.numFieldsForStore,
-                                            editable: true,
-                                            triggerAction: "all",
-                                            name: "symbolSize",
-                                            allowBlank: true,
-                                            value: (customIsSet && c) ? classWizards.setting.symbolSize : ""
-                                        },
-                                        new Ext.form.ColorField({
-                                            name: "outlineColor",
-                                            allowBlank: true,
-                                            value: (customIsSet && c) ? classWizards.setting.outlineColor : ""
-                                        })
                                     ]
                                 },
                                 {
@@ -226,7 +220,6 @@ classWizards.init = function (record) {
                                 {
                                     xtype: 'container',
                                     layout: 'hbox',
-                                    width: 285,
                                     defaults: {
                                         width: 95,
                                         style: 'padding-bottom: 5px'
@@ -234,26 +227,39 @@ classWizards.init = function (record) {
                                     items: [
                                         {
                                             xtype: 'box',
+                                            html: __("Size") + __("Height, in pixels, of the symbol/pattern to be used. Combo field: Either select an integer attribute or write an integer.", true)
+                                        },
+                                        {
+                                            xtype: 'box',
                                             html: __("Line width") + __('Thickness of line work drawn, in pixels.', true)
                                         },
                                         {
                                             xtype: 'box',
-                                            html: __("Opacity") + __('Set opacity level between 1 and 100, where 100 is solid.', true)
+                                            html: __("Angle") + __("Angle, given in degrees, to rotate the symbol (counter clockwise). Combo field: Either select an integer attribute or write an integer.", true)
                                         },
                                         {
                                             xtype: 'box',
                                             html: __("Gap") + __('specifies the distance between SYMBOLs (center to center) for decorated lines and polygon fills in layer SIZEUNITS. For polygon fills, GAP specifies the distance between SYMBOLs in both the X and the Y direction. For lines, the centers of the SYMBOLs are placed on the line. For lines, a negative GAP value will cause the symbols’ X axis to be aligned relative to the tangent of the line. For lines, a positive GAP value aligns the symbols’ X axis relative to the X axis of the output device.', true)
-                                        }
+                                        },
+
                                     ]
                                 },
                                 {
                                     xtype: 'container',
                                     layout: 'hbox',
-                                    width: 285,
                                     defaults: {
                                         width: 95
                                     },
                                     items: [
+                                        {
+                                            xtype: "combo",
+                                            store: wmsLayer.numFieldsForStore,
+                                            editable: true,
+                                            triggerAction: "all",
+                                            name: "symbolSize",
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.symbolSize : ""
+                                        },
                                         new Ext.ux.form.SpinnerField({
                                             name: "lineWidth",
                                             minValue: 0,
@@ -266,6 +272,64 @@ classWizards.init = function (record) {
                                             value: (customIsSet && c) ? classWizards.setting.lineWidth : ""
 
                                         }),
+                                        {
+                                            xtype: "combo",
+                                            store: wmsLayer.numFieldsForStore,
+                                            editable: true,
+                                            triggerAction: "all",
+                                            name: "angle",
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.angle : ""
+                                        },
+                                        new Ext.ux.form.SpinnerField({
+                                            name: "gap",
+                                            allowDecimals: false,
+                                            decimalPrecision: 0,
+                                            incrementValue: 1,
+                                            accelerate: true,
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.gap : ""
+                                        }),
+
+                                    ]
+                                },
+                                {
+                                    xtype: 'box',
+                                    height: 7
+                                },
+                                {
+                                    xtype: 'container',
+                                    layout: 'hbox',
+                                    defaults: {
+                                        width: 95,
+                                        style: 'padding-bottom: 5px'
+                                    },
+                                    items: [
+                                        {
+                                            xtype: 'box',
+                                            html: __("Opacity") + __('Set opacity level between 1 and 100, where 100 is solid.', true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Geotransform") + __('...', true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Min size") + __('...', true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Max size") + __('...', true)
+                                        },
+                                    ]
+                                },
+                                {
+                                    xtype: 'container',
+                                    layout: 'hbox',
+                                    defaults: {
+                                        width: 95
+                                    },
+                                    items: [
                                         new Ext.ux.form.SpinnerField({
                                             name: "opacity",
                                             minValue: 0,
@@ -276,20 +340,113 @@ classWizards.init = function (record) {
                                             accelerate: true,
                                             allowBlank: true,
                                             value: (customIsSet && c) ? classWizards.setting.opacity : ""
-
+                                        }),
+                                        new Ext.form.ComboBox({
+                                            store: ['', 'bbox', 'centroid', 'end', 'labelpnt', 'labelpoly', 'start', 'vertices'],
+                                            editable: false,
+                                            triggerAction: 'all',
+                                            name: "geotransform",
+                                            value: (customIsSet && c) ? classWizards.setting.geotransform : ""
                                         }),
                                         new Ext.ux.form.SpinnerField({
-                                            name: "gap",
+                                            name: "minsize",
+                                            minValue: 0,
                                             allowDecimals: false,
                                             decimalPrecision: 0,
                                             incrementValue: 1,
                                             accelerate: true,
                                             allowBlank: true,
-                                            value: (customIsSet && c) ? classWizards.setting.gap : ""
+                                            value: (customIsSet && c) ? classWizards.setting.minsize : ""
+                                        }),
+                                        new Ext.ux.form.SpinnerField({
+                                            name: "maxsize",
+                                            minValue: 0,
+                                            allowDecimals: false,
+                                            decimalPrecision: 0,
+                                            incrementValue: 1,
+                                            accelerate: true,
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.maxsize : ""
+                                        }),
 
-                                        })
                                     ]
-                                }
+                                },
+
+                                {
+                                    xtype: 'box',
+                                    height: 7
+                                },
+                                {
+                                    xtype: 'container',
+                                    layout: 'hbox',
+                                    defaults: {
+                                        width: 95,
+                                        style: 'padding-bottom: 5px'
+                                    },
+                                    items: [
+                                        {
+                                            xtype: 'box',
+                                            html: __("Offset X") + __('...', true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Offset Y") + __('...', true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Polar offset radius") + __('...', true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Polar offset abgle") + __('...', true)
+                                        },
+                                    ]
+                                },
+                                {
+                                    xtype: 'container',
+                                    layout: 'hbox',
+                                    defaults: {
+                                        width: 95
+                                    },
+                                    items: [
+                                        {
+                                            xtype: "combo",
+                                            store: wmsLayer.numFieldsForStore,
+                                            editable: true,
+                                            triggerAction: "all",
+                                            name: "style_offsetx",
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.style_offsetx : ""
+                                        },
+                                        {
+                                            xtype: "combo",
+                                            store: wmsLayer.numFieldsForStore,
+                                            editable: true,
+                                            triggerAction: "all",
+                                            name: "style_offsety",
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.style_offsety : ""
+                                        },
+                                        {
+                                            xtype: "combo",
+                                            store: wmsLayer.numFieldsForStore,
+                                            editable: true,
+                                            triggerAction: "all",
+                                            name: "style_polaroffsetr",
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.style_polaroffsetr : ""
+                                        },
+                                        {
+                                            xtype: "combo",
+                                            store: wmsLayer.numFieldsForStore,
+                                            editable: true,
+                                            triggerAction: "all",
+                                            name: "style_polaroffsetd",
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.style_polaroffsetd : ""
+                                        },
+                                    ]
+                                },
                             ]
                         },
                         {

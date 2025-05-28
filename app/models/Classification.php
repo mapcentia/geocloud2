@@ -589,6 +589,13 @@ class Classification extends Model
             "style_opacity" => !empty($data->opacity) ? $data->opacity : "",
             "overlaystyle_opacity" => !empty($data->overlayOpacity) ? $data->overlayOpacity : "",
             "label_force" => !empty($data->force) ? $data->force : "",
+            "gap" => !empty($data->gap) ? $data->gap : "",
+            "minsize" => !empty($data->minsize) ? $data->minsize : "",
+            "maxsize" => !empty($data->maxsize) ? $data->maxsize : "",
+            "style_offsetx" => !empty($data->style_offsetx) ? $data->style_offsetx : "",
+            "style_offsety" => !empty($data->style_offsety) ? $data->style_offsety : "",
+            "style_polaroffsetr" => !empty($data->style_polaroffsetr) ? $data->style_polaroffsetr : "",
+            "style_polaroffsetd" => !empty($data->style_polaroffsetd) ? $data->style_polaroffsetd : "",
         );
     }
 }

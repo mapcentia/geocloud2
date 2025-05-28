@@ -785,27 +785,35 @@ wmsClass.init = function (id) {
                 decimalPrecision: 0,
                 incrementValue: 1,
                 accelerate: true
-            }), {}),
-            'class_minscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
+            })),
+            'class_minscaledenom': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'class_maxscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                incrementValue: 1,
+                accelerate: true
+            })),
+            'class_maxscaledenom': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'leader_gridstep': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                incrementValue: 1,
+                accelerate: true
+            })),
+            'leader_gridstep': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'leader_maxdistance': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                incrementValue: 1,
+                accelerate: true
+            })),
+            'leader_maxdistance': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
+                incrementValue: 1,
+                accelerate: true
+            })),
             'leader_color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {})
         },
         viewConfig: {
@@ -818,23 +826,23 @@ wmsClass.init = function (id) {
         region: 'center',
         border: false,
         propertyNames: {
-            outlinecolor: 'Style: outline color',
-            symbol: 'Style: symbol',
-            color: 'Style: color',
-            size: 'Style: symbol size',
-            width: 'Style: line width',
-            angle: 'Style: symbol angle',
-            gap: 'Style: symbol gap' + __("specifies the distance between SYMBOLs (center to center) for decorated lines and polygon fills in layer SIZEUNITS. For polygon fills, GAP specifies the distance between SYMBOLs in both the X and the Y direction. For lines, the centers of the SYMBOLs are placed on the line. For lines, a negative GAP value will cause the symbols’ X axis to be aligned relative to the tangent of the line. For lines, a positive GAP value aligns the symbols’ X axis relative to the X axis of the output device.", true),
-            style_opacity: 'Style: opacity',
-            linecap: 'Style: line cap',
-            pattern: 'Style: pattern',
-            geomtransform: 'Style: geomtransform',
-            minsize: 'Style: minsize' + __("Minimum size in pixels to draw a symbol. Default is 0. The value can also be a decimal value (and not only integer)", true),
-            maxsize: 'Style: maxsize' + __("Maximum size in pixels to draw a symbol. Default is 500. The value can also be a decimal value (and not only integer)", true),
-            style_offsetx: 'Style: offset X' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - x", true),
-            style_offsety: 'Style: offset Y' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - Y", true),
-            style_polaroffsetr: 'Style: polar offset radius' + __("Offset given in polar coordinates - radius/distance.", true),
-            style_polaroffsetd: 'Style: polar offset angle' + __("Offset given in polar coordinates - angle (counter clockwise).", true)
+            outlinecolor: 'Outline color',
+            symbol: 'Symbol',
+            color: 'Color',
+            size: 'Size',
+            width: 'Line width',
+            angle: 'Angle',
+            gap: 'Gap' + __("specifies the distance between SYMBOLs (center to center) for decorated lines and polygon fills in layer SIZEUNITS. For polygon fills, GAP specifies the distance between SYMBOLs in both the X and the Y direction. For lines, the centers of the SYMBOLs are placed on the line. For lines, a negative GAP value will cause the symbols’ X axis to be aligned relative to the tangent of the line. For lines, a positive GAP value aligns the symbols’ X axis relative to the X axis of the output device.", true),
+            style_opacity: 'Opacity',
+            linecap: 'line cap',
+            pattern: 'Pattern' + __('Used to define a dash pattern for line work (lines, polygon outlines, hatch lines, …). The numbers (doubles) specify the lengths of the dashes and gaps of the dash pattern in layer SIZEUNITS. When scaling of symbols is in effect (SYMBOLSCALEDENOM is specified for the LAYER), the numbers specify the lengths of the dashes and gaps in layer SIZEUNITS at the map scale 1:SYMBOLSCALEDENOM.', true),
+            geomtransform: 'Geomtransform',
+            minsize: 'Min size' + __("Minimum size in pixels to draw a symbol. Default is 0. The value can also be a decimal value (and not only integer)", true),
+            maxsize: 'Max size' + __("Maximum size in pixels to draw a symbol. Default is 500. The value can also be a decimal value (and not only integer)", true),
+            style_offsetx: 'Offset X' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - x", true),
+            style_offsety: 'Offset Y' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - Y", true),
+            style_polaroffsetr: 'Polar offset radius' + __("Offset given in polar coordinates - radius/distance.", true),
+            style_polaroffsetd: 'Polar offset angle' + __("Offset given in polar coordinates - angle (counter clockwise).", true)
         },
         customRenderers: {
             color: cc,
@@ -871,126 +879,47 @@ wmsClass.init = function (id) {
                 editable: true,
                 triggerAction: 'all'
             }), {}),
-            'width': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                   decimalPrecision: 0,
-                   decimalSeparator: '¤'// Some strange char
-                   // nobody is using
-               }), {}),
-            'gap': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'style_opacity': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'class_minscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'class_maxscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'label_size': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.numFieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'label_minscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'label_maxscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'label_buffer': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'leader_gridstep': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'leader_maxdistance': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'label_repeatdistance': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'label_color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'label_backgroundcolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'label_backgroundpadding': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+            'width': new Ext.grid.GridEditor(new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: 0,
-                maxValue: 15,
                 allowDecimals: false,
                 decimalPrecision: 0,
                 incrementValue: 1,
                 accelerate: true
-            }), {}),
-            'leader_color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'label_outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'overlaycolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'overlayoutlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'overlaysymbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow', 'arrow2'],
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-
-            'overlaysize': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.numFieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'overlaywidth': new Ext.grid.GridEditor(new Ext.form.NumberField({
+            }))),
+            'gap': new Ext.grid.GridEditor(new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
+                incrementValue: 1,
+                accelerate: true
+            }))),
+            'style_opacity': new Ext.grid.GridEditor(new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                maxValue: 100,
+                allowDecimals: false,
+                decimalPrecision: 0,
+                incrementValue: 1,
+                accelerate: true
+            }))),
             'angle': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 store: wmsLayer.numFieldsForStore,
                 editable: true,
                 triggerAction: 'all'
             }), {}),
-            'overlayangle': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.numFieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'label_text': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.fieldsForStoreBrackets,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'overlaystyle_opacity': new Ext.grid.GridEditor(new Ext.form.NumberField({
+            'minsize': new Ext.grid.GridEditor(new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'minsize': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                incrementValue: 1,
+                accelerate: true
+            }))),
+            'maxsize': new Ext.grid.GridEditor(new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'maxsize': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
+                incrementValue: 1,
+                accelerate: true
+            }))),
             'style_offsetx': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 store: wmsLayer.numFieldsForStore,
                 editable: true,
@@ -1022,23 +951,23 @@ wmsClass.init = function (id) {
         region: 'center',
         border: false,
         propertyNames: {
-            overlaywidth: 'Style: line width',
-            overlayoutlinecolor: 'Style: outline color',
-            overlaysymbol: 'Style: symbol',
-            overlaycolor: 'Style: color',
-            overlaysize: 'Style: symbol size',
-            overlayangle: 'Style: symbol angle',
-            overlaygap: 'Style: symbol gap' + __("specifies the distance between SYMBOLs (center to center) for decorated lines and polygon fills in layer SIZEUNITS. For polygon fills, GAP specifies the distance between SYMBOLs in both the X and the Y direction. For lines, the centers of the SYMBOLs are placed on the line. For lines, a negative GAP value will cause the symbols’ X axis to be aligned relative to the tangent of the line. For lines, a positive GAP value aligns the symbols’ X axis relative to the X axis of the output device.", true),
-            overlaystyle_opacity: 'Style: opacity',
-            overlaylinecap: 'Style: line cap',
-            overlaypattern: 'Style: pattern',
-            overlaygeomtransform: 'Style: geomtransform',
-            overlayminsize: 'Style: minsize' + __("Minimum size in pixels to draw a symbol. Default is 0. The value can also be a decimal value (and not only integer)", true),
-            overlaymaxsize: 'Style: maxsize' + __("Maximum size in pixels to draw a symbol. Default is 500. The value can also be a decimal value (and not only integer)", true),
-            overlaystyle_offsetx: 'Style: offset X' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - x", true),
-            overlaystyle_offsety: 'Style: offset Y' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - Y", true),
-            overlaystyle_polaroffsetr: 'Style: polar offset radius' + __("Offset given in polar coordinates - radius/distance.", true),
-            overlaystyle_polaroffsetd: 'Style: polar offset angle' + __("Offset given in polar coordinates - angle (counter clockwise).", true)
+            overlaywidth: 'Line width',
+            overlayoutlinecolor: 'Outline color',
+            overlaysymbol: 'Symbol',
+            overlaycolor: 'Color',
+            overlaysize: 'Size',
+            overlayangle: 'Angle',
+            overlaygap: 'Gap' + __("specifies the distance between SYMBOLs (center to center) for decorated lines and polygon fills in layer SIZEUNITS. For polygon fills, GAP specifies the distance between SYMBOLs in both the X and the Y direction. For lines, the centers of the SYMBOLs are placed on the line. For lines, a negative GAP value will cause the symbols’ X axis to be aligned relative to the tangent of the line. For lines, a positive GAP value aligns the symbols’ X axis relative to the X axis of the output device.", true),
+            overlaystyle_opacity: 'Opacity',
+            overlaylinecap: 'line cap' + __('Sets the line cap type for lines. Default is round.', true),
+            overlaypattern: 'Pattern',
+            overlaygeomtransform: 'Geomtransform',
+            overlayminsize: 'Min size' + __("Minimum size in pixels to draw a symbol. Default is 0. The value can also be a decimal value (and not only integer)", true),
+            overlaymaxsize: 'Max size' + __("Maximum size in pixels to draw a symbol. Default is 500. The value can also be a decimal value (and not only integer)", true),
+            overlaystyle_offsetx: 'Offset X' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - x", true),
+            overlaystyle_offsety: 'Offset Y' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - Y", true),
+            overlaystyle_polaroffsetr: 'Polar offset radius' + __("Offset given in polar coordinates - radius/distance.", true),
+            overlaystyle_polaroffsetd: 'Polar offset angle' + __("Offset given in polar coordinates - angle (counter clockwise).", true)
         },
         customRenderers: {
             overlaycolor: cc,
@@ -1046,101 +975,11 @@ wmsClass.init = function (id) {
             label_position: Ext.util.Format.comboRenderer(labelPositionCombo)
         },
         customEditors: {
-            'sortid': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: -100,
-                maxValue: 9999,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            }), {}),
-            'color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'symbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow', 'arrow2'],
-                editable: false,
-                triggerAction: 'all'
-            }), {}),
             'overlaylinecap': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 store: ['round', 'butt', 'square'],
                 editable: false,
                 triggerAction: 'all'
             }), {}),
-            'size': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.numFieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'width': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'style_opacity': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'class_minscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'class_maxscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'label_size': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.numFieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'label_minscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'label_maxscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'label_buffer': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'label_position': new Ext.grid.GridEditor(labelPositionCombo, {
-                renderer: Ext.util.Format.comboRenderer(labelPositionCombo),
-            }),
-            'leader_gridstep': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'leader_maxdistance': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'label_repeatdistance': new Ext.grid.GridEditor(new Ext.form.NumberField({
-                decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'label_color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'label_backgroundcolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'label_backgroundpadding': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: 0,
-                maxValue: 15,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            }), {}),
-            'leader_color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'label_outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'overlaycolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'overlayoutlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'overlaysymbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
@@ -1158,46 +997,47 @@ wmsClass.init = function (id) {
                 editable: true,
                 triggerAction: 'all'
             }), {}),
-            'overlaywidth': new Ext.grid.GridEditor(new Ext.form.NumberField({
+            'overlaywidth': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'overlaygap': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                incrementValue: 1,
+                accelerate: true
+            })),
+            'overlaygap': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'angle': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.numFieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
+                incrementValue: 1,
+                accelerate: true
+            })),
             'overlayangle': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 store: wmsLayer.numFieldsForStore,
                 editable: true,
                 triggerAction: 'all'
             }), {}),
-            'label_text': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.fieldsForStoreBrackets,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'overlaystyle_opacity': new Ext.grid.GridEditor(new Ext.form.NumberField({
+            'overlaystyle_opacity': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                maxValue: 100,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'overlayminsize': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                incrementValue: 1,
+                accelerate: true
+            })),
+            'overlayminsize': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'overlaymaxsize': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                incrementValue: 1,
+                accelerate: true
+            })),
+            'overlaymaxsize': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
+                incrementValue: 1,
+                accelerate: true
+            })),
             'overlaystyle_offsetx': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 store: wmsLayer.numFieldsForStore,
                 editable: true,
@@ -1288,21 +1128,27 @@ wmsClass.init = function (id) {
                 editable: true,
                 triggerAction: 'all'
             }), {}),
-            'label_minscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
+            'label_minscaledenom': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'label_maxscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                incrementValue: 1,
+                accelerate: true
+            })),
+            'label_maxscaledenom': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'label_buffer': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                incrementValue: 1,
+                accelerate: true
+            })),
+            'label_buffer': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
+                incrementValue: 1,
+                accelerate: true
+            })),
             'label_position': new Ext.grid.GridEditor(labelPositionCombo, {
                 renderer: Ext.util.Format.comboRenderer(labelPositionCombo)
             }),
@@ -1351,11 +1197,13 @@ wmsClass.init = function (id) {
                     ]
                 })
             }), {}),
-            'label_repeatdistance': new Ext.grid.GridEditor(new Ext.form.NumberField({
+            'label_repeatdistance': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
+                incrementValue: 1,
+                accelerate: true
+            })),
             'label_color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'label_backgroundcolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'label_backgroundpadding': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
@@ -1372,11 +1220,20 @@ wmsClass.init = function (id) {
                 editable: true,
                 triggerAction: 'all'
             }), {}),
-            'label_maxsize': new Ext.grid.GridEditor(new Ext.form.NumberField({
+            'label_maxsize': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {})
+                incrementValue: 1,
+                accelerate: true
+            })),
+            'label_minfeaturesize': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
+                decimalPrecision: 0,
+                incrementValue: 1,
+                accelerate: true
+            })),
         },
         viewConfig: {
             forceFit: true
@@ -1448,21 +1305,27 @@ wmsClass.init = function (id) {
                 editable: true,
                 triggerAction: 'all'
             }), {}),
-            'label2_minscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
+            'label2_minscaledenom': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'label2_maxscaledenom': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                incrementValue: 1,
+                accelerate: true
+            })),
+            'label2_maxscaledenom': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
-            'label2_buffer': new Ext.grid.GridEditor(new Ext.form.NumberField({
+                incrementValue: 1,
+                accelerate: true
+            })),
+            'label2_buffer': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
+                incrementValue: 1,
+                accelerate: true
+            })),
             'label2_position': new Ext.grid.GridEditor(labelPositionCombo, {
                 renderer: Ext.util.Format.comboRenderer(labelPositionCombo)
             }),
@@ -1512,11 +1375,13 @@ wmsClass.init = function (id) {
                     ]
                 })
             }), {}),
-            'label2_repeatdistance': new Ext.grid.GridEditor(new Ext.form.NumberField({
+            'label2_repeatdistance': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {}),
+                incrementValue: 1,
+                accelerate: true
+            })),
             'label2_color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'label2_outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'label2_backgroundcolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
@@ -1533,11 +1398,20 @@ wmsClass.init = function (id) {
                 editable: true,
                 triggerAction: 'all'
             }), {}),
-            'label2_maxsize': new Ext.grid.GridEditor(new Ext.form.NumberField({
+            'label2_maxsize': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
                 decimalPrecision: 0,
-                decimalSeparator: '¤'// Some strange char
-                // nobody is using
-            }), {})
+                incrementValue: 1,
+                accelerate: true
+            })),
+            'label2_minfeaturesize': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
+                decimalPrecision: 0,
+                incrementValue: 1,
+                accelerate: true
+            })),
         },
         viewConfig: {
             forceFit: true
