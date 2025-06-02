@@ -6,12 +6,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
 ## [2025.6.0] - 2025-2-6
+### Added
+- Added logic to set the session.cookie_domain based on the `sessionDomain` parameter in the configuration. This ensures sharing of sessions in multi-domain setups.
+
 ### Changed
 - CLass wizard is improved:
   - The class wizard will not overwrite external set symbol and label properties. This makes it easier to update classes with the wizard after manual adjustments in the class dialog.
   - All symbol and label settings are now available in the class wizard.
   - The class wizard is moved to a panel to the right instead of the modal. This makes it easier to use together with the class dialog. 
-
+  - Replaced Ext.form.NumberField instances with Ext.ux.form.SpinnerField to enhance user experience through consistent increment/decrement functionality and better control over numeric inputs.
+  - Added the MapServer `gap` option.
+ 
 ### Fixed
 - Regression: 'Vitual' fields in layer Settings → SQL like `SELECT *, 'hello world' as virtual_field FROM test.test` now is written to MapFiles, so then can be used in classes and UTF-grids.
 
