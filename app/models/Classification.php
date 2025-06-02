@@ -596,6 +596,17 @@ class Classification extends Model
             "style_offsety" => !empty($data->style_offsety) ? $data->style_offsety : "",
             "style_polaroffsetr" => !empty($data->style_polaroffsetr) ? $data->style_polaroffsetr : "",
             "style_polaroffsetd" => !empty($data->style_polaroffsetd) ? $data->style_polaroffsetd : "",
+            "label_outlinecolor" => !empty($data->label_outlinecolor) ? $data->label_outlinecolor : "",
+            "label_buffer" => !empty($data->label_buffer) ? $data->label_buffer : "",
+            "label_repeatdistance" => !empty($data->label_repeatdistance) ? $data->label_repeatdistance : "",
+            "label_backgroundpadding" => !empty($data->label_backgroundpadding) ? $data->label_backgroundpadding : "",
+            "label_offsetx" => !empty($data->label_offsetx) ? $data->label_offsetx : "",
+            "label_offsety" => !empty($data->label_offsety) ? $data->label_offsety : "",
+            "label_expression" => !empty($data->label_expression) ? $data->label_expression : "",
+            "label_maxsize" => !empty($data->label_maxsize) ? $data->label_maxsize : "",
+            "label_minfeaturesize" => !empty($data->label_minfeaturesize) ? $data->label_minfeaturesize : "",
+            "label_minscaledenom" => !empty($data->label_minscaledenom) ? $data->label_minscaledenom : "",
+            "label_maxscaledenom" => !empty($data->label_maxscaledenom) ? $data->label_maxscaledenom : "",
         );
     }
 }

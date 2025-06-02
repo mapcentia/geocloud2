@@ -192,7 +192,7 @@ classWizards.init = function (record) {
                                             allowBlank: true,
                                             value: (customIsSet && c) ? classWizards.setting.outlineColor : ""
                                         }),
-                                        new Ext.form.TimeField({
+                                        new Ext.form.TextField({
                                             name: "pattern",
                                             allowBlank: true,
                                             value: (customIsSet && c) ? classWizards.setting.pattern : ""
@@ -467,17 +467,21 @@ classWizards.init = function (record) {
                                         },
                                         {
                                             xtype: 'box',
-                                            html: __("Color") + __("Color to draw text with.", true)
+                                            html: __("Force") + __("...", true)
                                         },
                                         {
                                             xtype: 'box',
-                                            html: __("Size") + __("Size of the text in pixels. Combo field: Either select an integer attribute or write an integer.", true)
+                                            html: __("Min scale denominator") + __("Minimum scale at which this LABEL is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true)
                                         },
                                         {
                                             xtype: 'box',
-                                            html: __("Position") + __("Position of the label relative to the labeling point.", true)
-                                        }
+                                            html: __("Max scale denominator") + __("Maximum scale at which this LABEL is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true)
+                                        },
                                     ]
+                                },
+                                {
+                                    xtype: 'box',
+                                    height: 7
                                 },
                                 {
                                     xtype: 'container',
@@ -495,20 +499,89 @@ classWizards.init = function (record) {
                                             allowBlank: true,
                                             value: (customIsSet && c) ? classWizards.setting.labelText : ""
                                         },
-                                        new Ext.form.ColorField({
-                                            name: "labelColor",
-                                            allowBlank: true,
-                                            value: (customIsSet && c) ? classWizards.setting.labelColor : ""
-                                        }),
                                         {
                                             xtype: "combo",
-                                            store: wmsLayer.numFieldsForStore,
-                                            editable: true,
+                                            editable: false,
+                                            displayField: 'name',
+                                            valueField: 'value',
+                                            mode: 'local',
+                                            store: new Ext.data.JsonStore({
+                                                fields: ['name', 'value'],
+                                                data: [
+                                                    {
+                                                        name: 'True',
+                                                        value: true
+                                                    }, {
+                                                        name: 'False',
+                                                        value: false
+                                                    }
+                                                ]
+                                            }),
                                             triggerAction: "all",
-                                            name: "labelSize",
+                                            name: "force",
                                             allowBlank: true,
-                                            value: (customIsSet && c) ? classWizards.setting.labelSize : ""
+                                            value: (customIsSet && c) ? classWizards.setting.force : ""
                                         },
+                                        new Ext.ux.form.SpinnerField({
+                                            name: "label_minscaledenom",
+                                            minValue: 1,
+                                            allowDecimals: false,
+                                            decimalPrecision: 0,
+                                            incrementValue: 1,
+                                            accelerate: true,
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.label_minscaledenom : ""
+                                        }),
+                                        new Ext.ux.form.SpinnerField({
+                                            name: "label_maxscaledenom",
+                                            minValue: 1,
+                                            allowDecimals: false,
+                                            decimalPrecision: 0,
+                                            incrementValue: 1,
+                                            accelerate: true,
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.label_maxscaledenom : ""
+                                        }),
+
+                                    ]
+                                },
+                                {
+                                    xtype: 'box',
+                                    height: 7
+                                },
+                                {
+                                    xtype: 'container',
+                                    layout: 'hbox',
+                                    defaults: {
+                                        width: 95,
+                                        style: 'padding-bottom: 5px'
+                                    },
+                                    items: [
+                                        {
+                                            xtype: 'box',
+                                            html: __("Position") + __("Position of the label relative to the labeling point.", true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Size") + __("Size of the text in pixels. Combo field: Either select an integer attribute or write an integer.", true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Font") + __("Font to use for labeling.", true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Font weight") + __("Font weight.", true)
+                                        },
+                                    ]
+                                },
+                                {
+                                    xtype: 'container',
+                                    layout: 'hbox',
+                                    defaults: {
+                                        width: 95
+                                    },
+                                    items: [
                                         {
                                             xtype: "combo",
                                             editable: false,
@@ -555,61 +628,16 @@ classWizards.init = function (record) {
                                             name: "labelPosition",
                                             allowBlank: true,
                                             value: (customIsSet && c) ? classWizards.setting.labelPosition : ""
-                                        }
-                                    ]
-                                },
-                                {
-                                    xtype: 'box',
-                                    height: 7
-                                },
-                                {
-                                    xtype: 'container',
-                                    layout: 'hbox',
-                                    defaults: {
-                                        width: 95,
-                                        style: 'padding-bottom: 5px'
-                                    },
-                                    items: [
-                                        {
-                                            xtype: 'box',
-                                            html: __("Angle") + __("Angle, counterclockwise, given in degrees, to draw the label. Combo field: Either select an integer attribute or write an integer.", true)
                                         },
-                                        {
-                                            xtype: 'box',
-                                            html: __("Background") + __("Color to draw a background rectangle (i.e. billboard)", true)
-                                        },
-                                        {
-                                            xtype: 'box',
-                                            html: __("Font") + __("Font to use for labeling.", true)
-                                        },
-                                        {
-                                            xtype: 'box',
-                                            html: __("Font weight") + __("Font weight.", true)
-                                        }
-                                    ]
-                                },
-                                {
-                                    xtype: 'container',
-                                    layout: 'hbox',
-                                    defaults: {
-                                        width: 95
-                                    },
-                                    items: [
-
                                         {
                                             xtype: "combo",
                                             store: wmsLayer.numFieldsForStore,
                                             editable: true,
                                             triggerAction: "all",
-                                            name: "labelAngle",
+                                            name: "labelSize",
                                             allowBlank: true,
-                                            value: (customIsSet && c) ? classWizards.setting.labelAngle : ""
+                                            value: (customIsSet && c) ? classWizards.setting.labelSize : ""
                                         },
-                                        new Ext.form.ColorField({
-                                            name: "labelBackgroundcolor",
-                                            allowBlank: true,
-                                            value: (customIsSet && c) ? classWizards.setting.labelBackgroundcolor : ""
-                                        }),
                                         {
                                             xtype: "combo",
                                             editable: false,
@@ -662,9 +690,230 @@ classWizards.init = function (record) {
                                                     }
                                                 ]
                                             })
-                                        }
+                                        },
                                     ]
-                                }
+                                },
+                                {
+                                    xtype: 'box',
+                                    height: 7
+                                },
+                                {
+                                    xtype: 'container',
+                                    layout: 'hbox',
+                                    defaults: {
+                                        width: 95,
+                                        style: 'padding-bottom: 5px'
+                                    },
+                                    items: [
+                                        {
+                                            xtype: 'box',
+                                            html: __("Color") + __("Color to draw text with.", true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Outline color") + __("...", true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Buffer") + __("...", true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Repeat distance") + __("...", true)
+                                        },
+                                    ]
+                                },
+                                {
+                                    xtype: 'container',
+                                    layout: 'hbox',
+                                    defaults: {
+                                        width: 95
+                                    },
+                                    items: [
+                                        new Ext.form.ColorField({
+                                            name: "labelColor",
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.labelColor : ""
+                                        }),
+                                        new Ext.form.ColorField({
+                                            name: "label_outlinecolor",
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.label_outlinecolor : ""
+                                        }),
+                                        new Ext.ux.form.SpinnerField({
+                                            name: "label_buffer",
+                                            minValue: 0,
+                                            allowDecimals: false,
+                                            decimalPrecision: 0,
+                                            incrementValue: 1,
+                                            accelerate: true,
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.label_buffer : ""
+                                        }),
+                                        new Ext.ux.form.SpinnerField({
+                                            name: "label_repeatdistance",
+                                            minValue: 0,
+                                            allowDecimals: false,
+                                            decimalPrecision: 0,
+                                            incrementValue: 1,
+                                            accelerate: true,
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.label_repeatdistance : ""
+                                        }),
+                                    ]
+                                },
+                                {
+                                    xtype: 'box',
+                                    height: 7
+                                },
+                                {
+                                    xtype: 'container',
+                                    layout: 'hbox',
+                                    defaults: {
+                                        width: 95,
+                                        style: 'padding-bottom: 5px'
+                                    },
+                                    items: [
+                                        {
+                                            xtype: 'box',
+                                            html: __("Angle") + __("Angle, counterclockwise, given in degrees, to draw the label. Combo field: Either select an integer attribute or write an integer.", true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Background") + __("Color to draw a background rectangle (i.e. billboard)", true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Padding") + __("...", true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Offset x") + __("...", true)
+                                        },
+                                    ]
+                                },
+                                {
+                                    xtype: 'container',
+                                    layout: 'hbox',
+                                    defaults: {
+                                        width: 95
+                                    },
+                                    items: [
+                                        {
+                                            xtype: "combo",
+                                            store: wmsLayer.numFieldsForStore,
+                                            editable: true,
+                                            triggerAction: "all",
+                                            name: "labelAngle",
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.labelAngle : ""
+                                        },
+                                        new Ext.form.ColorField({
+                                            name: "labelBackgroundcolor",
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.labelBackgroundcolor : ""
+                                        }),
+                                        new Ext.ux.form.SpinnerField({
+                                            name: "label_backgroundpadding",
+                                            minValue: 0,
+                                            allowDecimals: false,
+                                            decimalPrecision: 0,
+                                            incrementValue: 1,
+                                            accelerate: true,
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.label_backgroundpadding : ""
+                                        }),
+                                        new Ext.ux.form.SpinnerField({
+                                            name: "label_offsetx",
+                                            minValue: -100,
+                                            maxValue: 100,
+                                            allowDecimals: false,
+                                            decimalPrecision: 0,
+                                            incrementValue: 1,
+                                            accelerate: true,
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.label_offsetx : ""
+                                        }),
+                                    ]
+                                },
+                                {
+                                    xtype: 'box',
+                                    height: 7
+                                },
+                                {
+                                    xtype: 'container',
+                                    layout: 'hbox',
+                                    defaults: {
+                                        width: 95,
+                                        style: 'padding-bottom: 5px'
+                                    },
+                                    items: [
+                                        {
+                                            xtype: 'box',
+                                            html: __("Offset y") + __("...", true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Expression") + __("...", true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Max size") + __("Maximum font size to use when scaling text (pixels). Default is 256.", true)
+                                        },
+                                        {
+                                            xtype: 'box',
+                                            html: __("Min feature size") + __("Minimum size a feature must be to be labeled. Given in pixels. For line data the overall length of the displayed line is used, for polygons features the smallest dimension of the bounding box is used. “Auto” keyword tells MapServer to only label features that are larger than their corresponding label.", true)
+                                        },
+                                    ]
+                                },
+                                {
+                                    xtype: 'container',
+                                    layout: 'hbox',
+                                    defaults: {
+                                        width: 95,
+                                    },
+                                    items: [
+                                        new Ext.ux.form.SpinnerField({
+                                            name: "label_offsety",
+                                            minValue: -100,
+                                            maxValue: 100,
+                                            allowDecimals: false,
+                                            decimalPrecision: 0,
+                                            incrementValue: 1,
+                                            accelerate: true,
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.label_offsety : "",
+                                        }),
+                                        new Ext.form.TextField({
+                                            name: "label_expression",
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.label_expression : "",
+                                            style: {
+                                                borderRight: "15px"
+                                            }
+                                        }),
+                                        new Ext.ux.form.SpinnerField({
+                                            name: "label_maxsize",
+                                            minValue: 1,
+                                            allowDecimals: false,
+                                            decimalPrecision: 0,
+                                            incrementValue: 1,
+                                            accelerate: true,
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.label_maxsize : "",
+                                        }),
+                                        new Ext.ux.form.SpinnerField({
+                                            name: "label_minfeaturesize",
+                                            minValue: 1,
+                                            allowDecimals: false,
+                                            decimalPrecision: 0,
+                                            incrementValue: 1,
+                                            accelerate: true,
+                                            allowBlank: true,
+                                            value: (customIsSet && c) ? classWizards.setting.label_minfeaturesize : "",
+                                        }),
+                                    ]
+                                },
                             ]
                         },
                     ]
