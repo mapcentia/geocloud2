@@ -295,6 +295,14 @@ HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=3 \
 # Set workdir
 WORKDIR /var/www/geocloud2
 
+# Install dashboard
+RUN cd dashboard \
+    && npm install \
+    && cp ./app/config.js.sample ./app/config.js \
+    && cp ./.env.production ./.env \
+    && npm run build \
+    && ln -s /var/www/geocloud2/dashboard/build/ /var/www/geocloud2/public/dashboard
+
 ADD entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
@@ -313,20 +321,6 @@ RUN mkdir -p /var/www \
 RUN cd /var/www/geocloud2 \
     && npm install \
     && grunt production
-
-# Install dashboard
-RUN mkdir -p /var/www/geocloud2/public/dashboard \
-    && mkdir /dashboardtmp \
-    && cd /dashboardtmp \
-    && git clone https://github.com/mapcentia/dashboard.git \
-    && cd dashboard \
-    && npm install \
-    && cp ./app/config.js.sample ./app/config.js \
-    && cp ./.env.production ./.env \
-    && npm run build \
-    && cp -R ./build/* /var/www/geocloud2/public/dashboard/ \
-    && cd ~ \
-    && rm -rf /dashboardtmp
 
 # Copy in GC2 custom config
 COPY conf/gc2/App.php /var/www/geocloud2/app/conf/

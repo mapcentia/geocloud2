@@ -54,7 +54,6 @@ apasswords
 /public/apps/widgets/gc2map/config/config.js
 
 # Added for devcontainers
-public/dashboard
 public/css
 public/apps/viewer/css
 public/apps/viewer/js
