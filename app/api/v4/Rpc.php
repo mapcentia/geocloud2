@@ -30,43 +30,42 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 #[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
-    schema: "Sql",
-    required: [],
+    schema: "Rpc",
+    required: ["jsonrpc", "method"],
     properties: [
         new OA\Property(
-            property: "q",
-            title: "Query",
-            description: "SQL statement. SELECT, INSERT, UPDATE or DELETE",
+            property: "jsonrpc",
+            title: "JSON RPC version",
+            description: "The version number of the JSON-RPC protocol. Must be exactly \"2.0\".",
             type: "string",
-            example: "insert into my_table (id,range,point) values(:id, range(:geom)) returning id,geom",
+            example: "2.0",
+        ),
+        new OA\Property(
+            property: "id",
+            title: "Identifier",
+            description: "An identifier established by the Client that MUST contain a string if included",
+            type: "string",
+            example: "1",
+        ),
+        new OA\Property(
+            property: "method",
+            title: "Method name",
+            description: "A String containing the name of the method to be invoked",
+            type: "string",
+            example: "getDataById",
         ),
         new OA\Property(
             property: "params",
             title: "Parameters",
-            description: "Parameters for prepared statements.",
-            type: "array",
-            items: new OA\Items(type: "object"),
-            example: ["id" => 1, "name" => "John"],
-        ),
-        new OA\Property(
-            property: "type_hints",
-            title: "Type hints",
-            description: "For JSON represented parameters which are not of JSON type.",
+            description: "A Structured value that holds the parameter values to be used during the invocation of the method.",
             type: "object",
-            example: ["range" => "numrange", "center" => "point"],
-        ),
-        new OA\Property(
-            property: "id",
-            title: "Store the statement on the server under this identifier",
-            description: "Store the statement on the server, which can be re-run with changed parameters.",
-            type: "string",
-            example: "my_statement",
+            example: ["id" => 1],
         ),
     ],
     type: "object"
 )]
 #[AcceptableMethods(['GET', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
-class Sql extends AbstractApi
+class Rpc extends AbstractApi
 {
     /**
      * @var V2Sql
@@ -78,9 +77,40 @@ class Sql extends AbstractApi
         $this->v2 = new V2Sql();
     }
 
+    /**
+     * @throws GC2Exception
+     */
+    #[OA\Get(path: '/api/v4/rpc/{id}', operationId: 'getRpc', description: "Get RPC methods", tags: ['Rpc'])]
+    #[OA\Parameter(name: 'id', description: 'Identifier of RPC method', in: 'path', required: false, example: 'myMethod')]
+    #[OA\Response(response: 200, description: 'Ok')]
+    #[OA\Response(response: 400, description: 'Not found')]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    #[Override]
     public function get_index(): array
     {
-        // TODO: Implement get_index() method.
+        $name = Route2::getParam('id');;
+        $pres = new PreparedstatementModel();
+        if (!empty($name)) {
+            $q = $pres->getByName($name)['data'];
+            return [
+                'q' => $q['statement'],
+                'uuid' => $q['uuid'],
+                'store' => $name,
+            ];
+        } else {
+            $q = $pres->getAll($name)['data'];
+            $statements = [];
+            foreach ($q as $statement) {
+                $statements[] = [
+                    'q' => $statement['statement'],
+                    'uuid' => $statement['uuid'],
+                    'id' => $statement['id'],
+                ];
+            }
+            return [
+                'statements' => $statements,
+            ];
+        }
     }
 
     /**
@@ -88,10 +118,9 @@ class Sql extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException|GC2Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Post(path: '/api/v4/sql', operationId: 'postSql', description: "Run SQL statements", tags: ['Sql'])]
-    #[OA\RequestBody(description: 'Sql statement to run', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sql"))]
+    #[OA\Post(path: '/api/v4/rpc', operationId: 'postRpc', description: "Execute RPC method", tags: ['Rpc'])]
+    #[OA\RequestBody(description: 'RPC method to execute', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Rpc"))]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\MediaType('application/json'))]
-    #[OA\Response(response: 201, description: 'Insert/update a prepared statement')]
     #[AcceptableContentTypes(['application/json', 'application/json-rpc'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
@@ -164,9 +193,21 @@ class Sql extends AbstractApi
         // TODO: Implement put_index() method.
     }
 
+    /**
+     * @throws GC2Exception
+     * @throws InvalidArgumentException
+     */
+    #[OA\Delete(path: '/api/v4/rpc/{id}', operationId: 'deleteSql', description: "Delete RPC method", tags: ['Rpc'])]
+    #[OA\Parameter(name: 'id', description: 'Name of method', in: 'path', required: true, example: 'myStatement')]
+    #[OA\Response(response: 204, description: "Statement deleted")]
+    #[OA\Response(response: 404, description: 'Not found')]
+    #[Override]
     public function delete_index(): array
     {
-        // TODO: Implement delete_index() method.
+        $name = Route2::getParam('id');;
+        $pres = new PreparedstatementModel();
+        $pres->deletePreparedStatement($name);
+        return ["code" => "204"];
     }
 
     /**
@@ -180,7 +221,7 @@ class Sql extends AbstractApi
 
         // Patch and delete on collection is not allowed
         if (empty($id) && in_array(Input::getMethod(), ['patch', 'delete'])) {
-            throw new GC2Exception("PATCH and DELETE on a sql' collection is not allowed.", 400);
+            throw new GC2Exception("PATCH and DELETE on a RPC collection is not allowed.", 400);
         }
         if (empty($body) && in_array(Input::getMethod(), ['post', 'patch'])) {
             throw new GC2Exception("POST and PATCH without request body is not allowed.", 400);
@@ -207,49 +248,6 @@ class Sql extends AbstractApi
 
     static public function getAssert($decodedBody): Assert\Collection
     {
-        return new Assert\Collection([
-            'q' => new Assert\Required(
-                new Assert\NotBlank(),
-            ),
-            'method' => new Assert\Optional(
-                new Assert\NotBlank(),
-            ),
-            'params' => new Assert\Optional([
-                new Assert\Type('array'),
-                new Assert\Count(['min' => 1]),
-            ]),
-            'type_hints' => new Assert\Optional([
-                new Assert\Type('array'),
-                new Assert\Count(['min' => 1]),
-            ]),
-            'type_formats' => new Assert\Optional([
-                new Assert\Type('array'),
-                new Assert\Count(['min' => 1]),
-            ]),
-            'output_format' => new Assert\Optional(
-                new Assert\NotBlank(),
-            ),
-            'format' => new Assert\Optional(
-                new Assert\NotBlank(),
-            ),
-            'convert_types' => new Assert\Optional([
-                new Assert\Type('boolean'),
-            ]),
-            'base64' => new Assert\Optional([
-                new Assert\Type('boolean'),
-            ]),
-            'lifetime' => new Assert\Optional([
-                new Assert\Type('integer'),
-            ]),
-            'srs' => new Assert\Optional(
-                new Assert\Type('integer'),
-            ),
-            'geo_format' => new Assert\Optional([
-                new Assert\Type('string'),
-                new Assert\NotBlank(),
-                new Assert\Choice(['wkt', 'geojson']),
-
-            ]),
-        ]);
+        return self::getRpcAssert();
     }
 }
