@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED] - 2025-2-6
+### CHANGED
+- Dashboard source code is now included and built in the 'MapServer' stage. So don't clone and build it manuel anymore.
+
 ## [2025.6.0] - 2025-2-6
 ### Added
 - Added logic to set the session.cookie_domain based on the `sessionDomain` parameter in the configuration. This ensures sharing of sessions in multi-domain setups.
