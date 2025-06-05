@@ -51,9 +51,9 @@ class Input
     /**
      * @return string
      */
-    public static function getMethod(): string
+    public static function getMethod(): ?string
     {
-        return strtolower($_SERVER['REQUEST_METHOD']);
+        return isset($_SERVER['REQUEST_METHOD']) ? strtolower($_SERVER['REQUEST_METHOD']) : null;
     }
 
     public static function getAccessControlRequestMethod(): ?string
