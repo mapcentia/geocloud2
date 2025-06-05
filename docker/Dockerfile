@@ -292,6 +292,11 @@ EXPOSE 80 443
 HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=3 \
     CMD curl --fail http://127.0.0.1/fpm-ping || exit 1
 
+# Clone GC2 from GitHub
+RUN mkdir -p /var/www \
+    && cd /var/www \
+    && git clone https://github.com/mapcentia/geocloud2.git
+
 # Set workdir
 WORKDIR /var/www/geocloud2
 
@@ -312,14 +317,11 @@ ENTRYPOINT ["/entrypoint.sh"]
 ###############################################################################
 FROM mapserver AS dev
 
-# Clone GC2 from GitHub
-RUN mkdir -p /var/www \
-    && cd /var/www \
-    && git clone https://github.com/mapcentia/geocloud2.git
+# Get latest source
+RUN git pull
 
 # Build with Node + Grunt
-RUN cd /var/www/geocloud2 \
-    && npm install \
+RUN npm install \
     && grunt production
 
 # Copy in GC2 custom config
