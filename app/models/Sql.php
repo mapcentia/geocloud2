@@ -731,7 +731,17 @@ class Sql extends Model
         } elseif ($type == 'boolean') {
             $nativeValue = $factory->getConverterForTypeSpecification($type)->output($value);
             $paramTmp = $nativeValue;
-        } else {
+        }
+        // In the case of date/time. Else $format will be null
+        elseif ($format) {
+            $dateTime = DateTimeImmutable::createFromFormat($format, $value);
+            if (!$dateTime) {
+                throw new GC2Exception("Could not format value '$value' with '$format'", 406, null, "VALUE_PARSE_ERROR");
+            }
+            $nativeValue = $factory->getConverterForTypeSpecification($nativeType)->output($dateTime);
+            $paramTmp = $nativeValue;
+        }
+        else {
             $paramTmp = $value;
         }
         return $paramTmp;
@@ -755,12 +765,20 @@ class Sql extends Model
     /**
      * @param array $value Array containing 'lower' and 'upper' keys with date and time strings
      * @return Range An instance of the Range class initialized with datetime objects
+     * @throws GC2Exception
      */
     private function convertDateTimeRange(array $value, ?string $format): Range
     {
-        $value['lower'] = DateTimeImmutable::createFromFormat($format, $value['lower']);
-        $value['upper'] = DateTimeImmutable::createFromFormat($format, $value['upper']);
-        return new Range(...$value);
+        $dateTime['lower'] = DateTimeImmutable::createFromFormat($format, $value['lower']);
+        $dateTime['upper'] = DateTimeImmutable::createFromFormat($format, $value['upper']);
+
+        if (!$dateTime['lower']) {
+            throw new GC2Exception("Could not format value '{$value['lower']}' with '$format'", 406, null, "VALUE_PARSE_ERROR");
+        }
+        if (!$dateTime['upper']) {
+            throw new GC2Exception("Could not format value '{$value['upper']}' with '$format'", 406, null, "VALUE_PARSE_ERROR");
+        }
+        return new Range(...$dateTime);
     }
 
     /**
