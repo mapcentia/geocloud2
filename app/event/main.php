@@ -11,16 +11,23 @@ use Amp\Websocket\Server\Websocket;
 use app\conf\App;
 use app\event\sockets\WsBroadcast;
 use Monolog\Logger;
+use Revolt\EventLoop;
 use function Amp\async;
 use function Amp\ByteStream\getStdout;
 use function Amp\delay;
 use function Amp\trapSignal;
 
-require_once __DIR__ . "/../vendor/autoload.php";
+include_once __DIR__ . "/../vendor/autoload.php";
 include_once __DIR__ . "/../conf/App.php";
 include_once __DIR__ . "/../conf/Connection.php";
 include_once __DIR__ . "/../inc/Model.php";
 include_once __DIR__ . "/../models/Database.php";
+
+// Global event loop error handler for uncaught exceptions
+EventLoop::setErrorHandler(function (Throwable $throwable): void {
+    error_log('Uncaught exception in event loop: ' . $throwable->getMessage());
+});
+
 
 new App();
 

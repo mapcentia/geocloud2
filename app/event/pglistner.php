@@ -138,7 +138,6 @@ function preparePayloadWithPDO(array $batchPayload, string $db): Execution
 {
     $task = new PreparePayloadTask($batchPayload, $db);
     $worker = Amp\Parallel\Worker\createWorker();
-
     return $worker->submit($task);
 }
 
@@ -160,18 +159,20 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
         echo "==========================================\n\n";
 
         // Await the asynchronous preparePayload to complete
-        $p = preparePayloadWithPDO($payLoad, $db)->await();
-
-       // print_r($p);
-
+        $preparedPayload = preparePayloadWithPDO($payLoad, $db)->await();
         try {
-            // Send to all connected clients (or your own message bus).
-            // TODO not send to all.
-            //$broadcastHandler->sendToAll(json_encode($p));
             $clients = $broadcastHandler->gateway->getClients();
             foreach ($clients as $client) {
-                echo "Sending to: " . $client->getId() . "\n";
-                $client->sendText(json_encode($p));
+                if ($broadcastHandler->getProperties($client)['db'] !== $db) {
+                    continue;
+                }
+                echo "[INFO] Sending to: " . $client->getId() . "\n";
+                $client->sendText(json_encode([
+                        'type' => 'batch',
+                        'db' => $db,
+                        'batch' => $preparedPayload,
+                    ]
+                ));
             }
         } catch (Throwable $error) {
             echo "[ERROR in flushBatch] " . $error->getMessage() . "\n";
@@ -245,7 +246,7 @@ $startListenerForDb = function (
             // Now attempt to listen on your channel.
             // If DB fails mid-listen, it throws inside consumer loop.
             $listener = $pool->listen($channel);
-            printf("Connected and listening on channel '%s' for DB '%s'\n", $channel, $db);
+            printf("[INFO] Connected and listening on channel '%s' for DB '%s'\n", $channel, $db);
             // Blocking loop: handle incoming notifications for this DB
             $consumer($listener, $db);
             // If the foreach ends, the listener was closed unexpectedly.

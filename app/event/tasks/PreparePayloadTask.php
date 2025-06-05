@@ -24,7 +24,7 @@ class PreparePayloadTask implements Task
 
     public function run(Channel $channel, Cancellation $cancellation): array
     {
-        echo "Worker PID: " . getmypid() . "\n";
+        echo "[INFO] PreparePayloadTask Worker PID: " . getmypid() . "\n";
 
         new App();
         Cache::setInstance();
@@ -59,7 +59,6 @@ class PreparePayloadTask implements Task
                 $grouped[$groupKey]['values'][] = $value;
             }
         }
-
         // Run blocking queries in batch
         foreach ($grouped as $grp) {
             $schemaTable = $grp['schemaTable'];

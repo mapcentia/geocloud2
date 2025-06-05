@@ -29,7 +29,7 @@ class RunQueryTask implements Task
 
     public function run(Channel $channel, Cancellation $cancellation): array
     {
-        echo "Worker PID: " . getmypid() . "\n";
+        echo "[INFO] RunQueryTask Worker PID: " . getmypid() . "\n";
         new App();
         Cache::setInstance();
         Database::setDb($this->db);

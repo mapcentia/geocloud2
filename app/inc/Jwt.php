@@ -35,15 +35,15 @@ abstract class Jwt
      * @return array
      * @throws GC2Exception
      */
-    public static function validate(): array
+    public static function validate(?string $token = null): array
     {
         // If OPTIONS we don't check token og return an empty response
         if (Input::getMethod() == 'options') {
             return ["success" => true];
         }
 
-        // Check if there is a JWT token in header
-        $jwtToken = Input::getJwtToken();
+        // Check if there is a JWT token in the header, or it is passed as a parameter
+        $jwtToken = $token ?? Input::getJwtToken();
         if ($jwtToken) {
             $data = self::parse($jwtToken);
             if ($data['data']['response_type'] != ResponseType::TOKEN->value) {
@@ -74,7 +74,7 @@ abstract class Jwt
         try {
             $decoded = (array)\Firebase\JWT\JWT::decode($token, new Key($secret, 'HS256'));
         } catch (Exception $e) {
-            header("WWW-Authenticate: Bearer error=\"invalid_token\" error_description=\"{$e->getMessage()}\"");
+//            header("WWW-Authenticate: Bearer error=\"invalid_token\" error_description=\"{$e->getMessage()}\"");
             throw new GC2Exception($e->getMessage(), 401, null, "INVALID_TOKEN");
         }
         $response["success"] = true;
@@ -107,7 +107,7 @@ abstract class Jwt
             $exception = true;
         }
         if ($exception) {
-            header("WWW-Authenticate: Bearer error=\"invalid_token\" error_description=\"Could not extract payload from token\"");
+//            header("WWW-Authenticate: Bearer error=\"invalid_token\" error_description=\"Could not extract payload from token\"");
             throw new GC2Exception("Could not extract payload from token", 400, null, "INVALID_TOKEN");
         }
         $response["success"] = true;
