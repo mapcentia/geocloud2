@@ -29,7 +29,8 @@ services:
       - host.docker.internal:host-gateway
 
   event:
-    image: event
+    image: mapcentia/event
+    build: ../app/event/.
     privileged: true
     volumes:
       - ../../geocloud2:/var/www/geocloud2
