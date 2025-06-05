@@ -549,6 +549,9 @@ class Sql extends Model
                 foreach ($parameter as $field => $value) {
                     $nativeType = $typeHints[$field] ?? 'json';
                     $format = $typeFormats[$field] ?? self::getFormat($nativeType);
+                    if (!self::getFormat($nativeType) && !empty($format)) {
+                        throw new GC2Exception("Format is only supported for date/time (range) type. 'type_hints' must be set if 'type_formats' are used for input values.", 400, null, 'BAD_REQUEST');
+                    }
                     $paramTmp[$field] = $this->convertToNative($nativeType, $value, $format);
                 }
                 $convertedParameters[] = $paramTmp;
@@ -736,7 +739,7 @@ class Sql extends Model
         elseif ($format) {
             $dateTime = DateTimeImmutable::createFromFormat($format, $value);
             if (!$dateTime) {
-                throw new GC2Exception("Could not format value '$value' with '$format'", 406, null, "VALUE_PARSE_ERROR");
+                throw new GC2Exception("Could not format date/time value '$value' with '$format'", 406, null, "VALUE_PARSE_ERROR");
             }
             $nativeValue = $factory->getConverterForTypeSpecification($nativeType)->output($dateTime);
             $paramTmp = $nativeValue;
@@ -773,10 +776,10 @@ class Sql extends Model
         $dateTime['upper'] = DateTimeImmutable::createFromFormat($format, $value['upper']);
 
         if (!$dateTime['lower']) {
-            throw new GC2Exception("Could not format value '{$value['lower']}' with '$format'", 406, null, "VALUE_PARSE_ERROR");
+            throw new GC2Exception("Could not format date/time value '{$value['lower']}' with '$format'", 406, null, "VALUE_PARSE_ERROR");
         }
         if (!$dateTime['upper']) {
-            throw new GC2Exception("Could not format value '{$value['upper']}' with '$format'", 406, null, "VALUE_PARSE_ERROR");
+            throw new GC2Exception("Could not format date/time value '{$value['upper']}' with '$format'", 406, null, "VALUE_PARSE_ERROR");
         }
         return new Range(...$dateTime);
     }
