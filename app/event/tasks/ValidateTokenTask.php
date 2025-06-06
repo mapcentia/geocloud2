@@ -13,13 +13,11 @@ use Exception;
 
 error_reporting(E_ERROR | E_PARSE);
 
-class ValidateTokenTask implements Task
+readonly class ValidateTokenTask implements Task
 {
-    private string $token;
 
-    public function __construct(string $token)
+    public function __construct(private string $token)
     {
-        $this->token = $token;
     }
 
     /**
