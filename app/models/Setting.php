@@ -50,21 +50,31 @@ class Setting extends Model
      */
     public function getArray(): stdClass
     {
-        if (App::$param["encryptSettings"]) {
-            $secretKey = file_get_contents(App::$param["path"] . "app/conf/secret.key");
-            $sql = "SELECT pgp_pub_decrypt(settings.viewer.viewer::BYTEA, dearmor('{$secretKey}')) AS viewer FROM settings.viewer";
+        $cacheType = "settings";
+        $cacheId = $this->postgisdb . "_" . $cacheType . "_viewer";
+        $CachedString = Cache::getItem($cacheId);
+        if ($CachedString != null && $CachedString->isHit()) {
+            return $CachedString->get();
         } else {
-            $sql = "SELECT viewer FROM settings.viewer";
+            if (App::$param["encryptSettings"]) {
+                $secretKey = file_get_contents(App::$param["path"] . "app/conf/secret.key");
+                $sql = "SELECT pgp_pub_decrypt(settings.viewer.viewer::BYTEA, dearmor('{$secretKey}')) AS viewer FROM settings.viewer";
+            } else {
+                $sql = "SELECT viewer FROM settings.viewer";
+            }
+            try {
+                $res = $this->execQuery($sql);
+            } catch (PDOException $e) {
+                // Hack. Fall back to unencrypted if error. Preventing fail if changing from unencrypted to encrypted.
+                $sql = "SELECT viewer FROM settings.viewer";
+                $res = $this->execQuery($sql);
+            }
+            $arr = $this->fetchRow($res);
+            $response = json_decode($arr['viewer']) ?? new stdClass();
+            $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);
+            Cache::save($CachedString);
+            return $response;
         }
-        try {
-            $res = $this->execQuery($sql);
-        } catch (PDOException $e) {
-            // Hack. Fall back to unencrypted if error. Preventing fail if changing from unencrypted to encrypted.
-            $sql = "SELECT viewer FROM settings.viewer";
-            $res = $this->execQuery($sql);
-        }
-        $arr = $this->fetchRow($res);
-        return json_decode($arr['viewer']) ?? new stdClass();
     }
 
     /**
@@ -302,7 +312,6 @@ class Setting extends Model
             $response["data"]->userGroups = (object)$userGroups;
             Database::setDb($this->postgisdb);
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-            //  $CachedString->addTags([$cacheType, $this->postgisdb]);
             Cache::save($CachedString);
             $response["cache"]["hit"] = false;
         }
