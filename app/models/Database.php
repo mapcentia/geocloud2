@@ -40,17 +40,7 @@ class Database extends Model
         // Set password
         $sql = "ALTER ROLE \"$name\" PASSWORD '" . Connection::$param['postgispw'] . "'";
         $this->db->query($sql);
-        // Set grants
 
-        // Grant mapcentia role.
-        // This role must have LOGIN to database mapcentia and CRUD to table users
-        // This can only be done by a superuser
-        try {
-            $sql = "GRANT mapcentia TO \"$name\"";
-            $this->db->query($sql);
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
-        }
         if ($db && !$isSuperUser) {
             // We grant the owner to user
             // This can only be done by a superuser
@@ -60,19 +50,13 @@ class Database extends Model
             } catch (PDOException $e) {
                 error_log($e->getMessage());
             }
-            try {
-                $sql = "GRANT mapcentia TO \"$name\"";
-                $this->db->query($sql);
-            } catch (PDOException $e) {
-                error_log($e->getMessage());
-            }
             // And connect
             $sql = "GRANT CONNECT ON DATABASE \"$db\" TO \"$name\"";
             $this->db->query($sql);
         }
         if ($isSuperUser) {
-            // Make the superuser able to create new users
-            $sql = "ALTER ROLE \"$name\" CREATEROLE";
+            $sql = "GRANT \"$name\" to $this->postgisuser";
+            $this->db->query($sql);
             $this->db->query($sql);
         }
     }
@@ -136,9 +120,7 @@ class Database extends Model
         $res = $this->prepare($sql);
         $res->execute(['db' => $screenName]);
         if ($res->rowCount() == 0) {
-//            $sql = "SET ROLE $screenName";
-//            $this->db->query($sql);
-            $sql = "CREATE DATABASE {$screenName} WITH ENCODING='$encoding' TEMPLATE=$template CONNECTION LIMIT=-1 OWNER='$screenName'";
+            $sql = "CREATE DATABASE $screenName WITH ENCODING='$encoding' TEMPLATE=$template CONNECTION LIMIT=-1";
             $this->db->query($sql);
         }
         // We revoke connect from public, so other users can't connect to this database
