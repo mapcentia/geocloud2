@@ -5,23 +5,28 @@ namespace app\event\tasks;
 use Amp\Cancellation;
 use Amp\Parallel\Worker\Task;
 use Amp\Sync\Channel;
+use app\exceptions\GC2Exception;
 use app\inc\Cache;
-use app\inc\Model;
 use app\conf\App;
-use app\models\Database;;
+use app\models\Database;
+use app\models\Sql;
+use PhpOffice\PhpSpreadsheet\Writer\Exception;
 
-
-class PreparePayloadTask implements Task
+readonly class PreparePayloadTask implements Task
 {
-    private array $batchPayload;
-    private string $db;
-
-    public function __construct(array $batchPayload, string $db)
+    public function __construct(
+        private array  $batchPayload,
+        private string $db
+    )
     {
-        $this->batchPayload = $batchPayload;
-        $this->db = $db;
     }
 
+    /**
+     * @throws GC2Exception
+     * @throws Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Reader\Exception
+     * @throws \Exception
+     */
     public function run(Channel $channel, Cancellation $cancellation): array
     {
         echo "[INFO] PreparePayloadTask Worker PID: " . getmypid() . "\n";
@@ -30,7 +35,7 @@ class PreparePayloadTask implements Task
         Cache::setInstance();
 
         Database::setDb($this->db);
-        $api = new \app\models\Sql();
+        $api = new Sql();
         $api->connect();
 
         $results = [];
@@ -69,7 +74,6 @@ class PreparePayloadTask implements Task
             $sql = "SELECT * FROM {$schemaTable} WHERE \"{$key}\" IN ($inList)";
             echo $sql . "\n";
             $response = $api->sql($sql);
-
             if (!isset($results[$this->db][$schemaTable]['full_data'])) {
                 $results[$this->db][$schemaTable]['full_data'] = [];
             }
@@ -78,6 +82,7 @@ class PreparePayloadTask implements Task
                 $response
             );
         }
+        $api->close();
         return $results;
     }
 }
