@@ -23,6 +23,7 @@ use PhpOffice\PhpSpreadsheet\Reader\Exception;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use sad_spirit\pg_wrapper\types\DateTimeRange;
 use sad_spirit\pg_wrapper\types\Range;
+use sad_spirit\pg_wrapper\Connection as WrapperConnection;
 use ZipArchive;
 use sad_spirit\pg_wrapper\converters\DefaultTypeConverterFactory;
 
@@ -45,6 +46,7 @@ class Sql extends Model
     private const string DEFAULT_TIME_FORMAT = 'H:i:s';
     private const string DEFAULT_TIMETZ_FORMAT = 'H:i:s P';
     private const string DEFAULT_DATE_FORMAT = 'Y-m-d';
+    private WrapperConnection|null $connection = null;
 
     /**
      * Sql constructor.
@@ -311,7 +313,6 @@ class Sql extends Model
                 $geometries = null;
             }
             $this->execQuery("CLOSE curs");
-            $this->commit();
             foreach ($columnTypes as $key => $type) {
                 $fieldsForStore[] = array("name" => $key, "type" => $type);
                 $columnsForGrid[] = array("header" => $key, "dataIndex" => $key, "type" => $type, "typeObj" => !empty($value['typeObj']) ? $value['typeObj'] : null);
@@ -366,7 +367,6 @@ class Sql extends Model
                 echo str_pad($json, 4096);
             }
             $this->execQuery("CLOSE curs");
-            $this->commit();
             exit();
 
         } elseif ($format == "ccsv") {
@@ -437,7 +437,6 @@ class Sql extends Model
                 echo $lines . "\n";
             }
             $this->execQuery("CLOSE curs");
-            $this->commit();
             exit();
 
         } elseif ($format == "excel" || $format == "csv") {
@@ -496,7 +495,6 @@ class Sql extends Model
                 $lines[] = implode($separator, $fields);
             }
             $this->execQuery("CLOSE curs");
-            $this->commit();
             $csv = implode("\n", $lines);
 
             if ($format == "csv") {
@@ -596,7 +594,6 @@ class Sql extends Model
                 }
                 $affectedRows += $result->rowCount();
             }
-            $this->commit();
         } else {
             $result->execute();
             foreach (range(0, $result->columnCount() - 1) as $column_index) {
@@ -685,7 +682,8 @@ class Sql extends Model
      */
     private function convertFromNative(string $nativeType, ?string $value, ?string $format): mixed
     {
-        $newValue = (new DefaultTypeConverterFactory())->setConnection($this->getConnection())->getConverterForTypeSpecification($nativeType)->input($value);
+//        $newValue = (new DefaultTypeConverterFactory())->setConnection($this->getConnection())->getConverterForTypeSpecification($nativeType)->input($value);
+        $newValue = (new DefaultTypeConverterFactory())->getConverterForTypeSpecification($nativeType)->input($value);
         if (is_array($newValue)) {
             $newValue = self::processArray($newValue, fn($i, $format) => $this->convertPhpTypes($i, $format), $format);
         } else {
@@ -865,11 +863,14 @@ class Sql extends Model
     /**
      * Establishes and returns a new connection to the PostgreSQL database.
      *
-     * @return \sad_spirit\pg_wrapper\Connection
+     * @return WrapperConnection
      */
-    private function getConnection(): \sad_spirit\pg_wrapper\Connection
+    private function getConnection(): WrapperConnection
     {
-        return new \sad_spirit\pg_wrapper\Connection("host=$this->postgishost user=$this->postgisuser dbname=$this->postgisdb password=$this->postgispw port=$this->postgisport");
+        if (!$this->connection) {
+            $this->connection = new WrapperConnection("host=$this->postgishost user=$this->postgisuser dbname=$this->postgisdb password=$this->postgispw port=$this->postgisport");
+        }
+        return $this->connection;
     }
 }
 
