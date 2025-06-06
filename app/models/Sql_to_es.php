@@ -155,7 +155,9 @@ class Sql_to_es extends Model
                 $geometries = [];
                 foreach ($row as $key => $value) {
                     if ($arrayWithFields[$key]['type'] == "geometry") {
-                        $geometries[] = json_decode($value);
+                        if (!empty($value)) {
+                            $geometries[] = json_decode($value);
+                        }
                     } elseif (!empty($value) & ($arrayWithFields[$key]['type'] == "json" || $arrayWithFields[$key]['type'] == "jsonb")) {
                         $arr = $this->array_push_assoc($arr, $key, json_decode($value));
                     } else {
