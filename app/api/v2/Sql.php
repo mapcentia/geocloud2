@@ -271,7 +271,7 @@ class Sql extends Controller
 
         // Get rules and set them
         $walkerRule = new TableWalkerRule(!empty($response["is_auth"]) ? $this->subUser ?: Connection::$param['postgisdb'] : "*", "sql", strtolower($operation), '');
-        $rules = $rule->get();
+        $rules = $rule->get($this->api);
         $walkerRule->setRules($rules);
         $select->dispatch($walkerRule);
 
