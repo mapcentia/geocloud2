@@ -2,7 +2,6 @@
 
 namespace app\event\sockets;
 
-use Amp\ByteStream\BufferException;
 use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
 use Amp\Parallel\Worker\Execution;
@@ -15,6 +14,7 @@ use app\event\tasks\AuthTask;
 use app\event\tasks\RunQueryTask;
 use app\event\tasks\ValidateTokenTask;
 use SplObjectStorage;
+use Throwable;
 use function Amp\Parallel\Worker\createWorker;
 
 
@@ -25,12 +25,10 @@ readonly class WsBroadcast implements WebsocketClientHandler
     public function __construct(public WebsocketGateway $gateway = new WebsocketClientGateway())
     {
         $this->clientProperties = new SplObjectStorage();
-
     }
 
     /**
      * @throws WebsocketClosedException
-     * @throws BufferException
      */
     public function handleClient(WebsocketClient $client, Request $request, Response $response): void
     {
@@ -70,13 +68,12 @@ readonly class WsBroadcast implements WebsocketClientHandler
                     'user' => $parsed['uid'],
                 ]);
                 echo "[INFO] Client {$client->getId()} connected on $db\n";;
-            } catch (\Throwable $e) {
+            } catch (Throwable) {
                 $errorMsg = [
                     'type' => 'error',
                     'error' => 'invalid_token',
                     'message' => 'JWT token is invalid or expired',
                 ];
-                goto end;
             }
         } else {
             $errorMsg = [
@@ -101,7 +98,7 @@ readonly class WsBroadcast implements WebsocketClientHandler
                 echo "[INFO] message '$payload' from {$client->getId()} on {$props['db']}\n";
                 $r = $this->sql($payload, $props['db']);
                 $this->sendToClient($client, json_encode($r->await()));
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 echo "[ERROR] " . $e->getMessage() . "\n";
             }
         }
