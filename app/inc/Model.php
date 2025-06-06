@@ -10,7 +10,6 @@ declare(strict_types=1);
 
 namespace app\inc;
 
-use app\api\v4\Constraint;
 use app\conf\App;
 use app\conf\Connection;
 use app\exceptions\GC2Exception;
