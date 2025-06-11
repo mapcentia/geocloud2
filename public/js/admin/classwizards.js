@@ -94,8 +94,10 @@ classWizards.init = function (record) {
             forceLayout: true,
             items: [
                 {
-                    id: pre + "_addform",
                     border: false,
+                    xtype: "form",
+                    id: pre + "_addform",
+                    layout: "form",
                     items: [
                         {
                             xtype: 'fieldset',
