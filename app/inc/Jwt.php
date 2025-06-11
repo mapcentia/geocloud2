@@ -74,7 +74,8 @@ abstract class Jwt
         try {
             $decoded = (array)\Firebase\JWT\JWT::decode($token, new Key($secret, 'HS256'));
         } catch (Exception $e) {
-//            header("WWW-Authenticate: Bearer error=\"invalid_token\" error_description=\"{$e->getMessage()}\"");
+            // TODO should also be used without setting headers
+            header("WWW-Authenticate: Bearer error=\"invalid_token\" error_description=\"{$e->getMessage()}\"");
             throw new GC2Exception($e->getMessage(), 401, null, "INVALID_TOKEN");
         }
         $response["success"] = true;
@@ -107,7 +108,8 @@ abstract class Jwt
             $exception = true;
         }
         if ($exception) {
-//            header("WWW-Authenticate: Bearer error=\"invalid_token\" error_description=\"Could not extract payload from token\"");
+            // TODO should also be used without setting headers
+            header("WWW-Authenticate: Bearer error=\"invalid_token\" error_description=\"Could not extract payload from token\"");
             throw new GC2Exception("Could not extract payload from token", 400, null, "INVALID_TOKEN");
         }
         $response["success"] = true;

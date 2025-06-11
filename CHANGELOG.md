@@ -5,9 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED] - 2025-2-6
+## [2025.6.1] - 2025-11-6
+### Added
+- Caching to optimize the fetching of settings viewer data and reduce database queries.
+
 ### CHANGED
 - Dashboard source code is now included and built in the 'MapServer' stage. So don't clone and build it manuel anymore.
+- GC2 source code is now included in the 'MapServer' stage. So don't clone and it manuel anymore.
+
+### Fixed
+- Geometry decoding for empty values in SQL to ES mapping.
+- Fixed Class wizard rendering issues when rendered before the Class wizard is visible. 
 
 ## [2025.6.0] - 2025-2-6
 ### Added
