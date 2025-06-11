@@ -886,7 +886,7 @@ classWizards.init = function (record) {
                 defaults: {
                     border: false
                 },
-                height: 780,
+                height: 810,
                 items: [
                     new Ext.Panel({
                         region: "center",
