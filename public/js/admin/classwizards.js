@@ -66,57 +66,6 @@ classWizards.init = function (record) {
             }
             classStore.loadData({data: myData});
         };
-    classGrid = new Ext.grid.EditorGridPanel({
-        store: classStore,
-        frame: false,
-        border: true,
-        region: "center",
-        viewConfig: {
-            forceFit: true,
-            stripeRows: true
-        },
-        cm: new Ext.grid.ColumnModel({
-            defaults: {
-                editor: {
-                    xtype: "textfield"
-                }
-            },
-            columns: [
-                {
-                    header: __("Title"),
-                    dataIndex: "name",
-                    editable: true,
-                    flex: 1
-                },
-                {
-                    header: __("Color"),
-                    dataIndex: "color",
-                    editable: true,
-                    flex: 1,
-                    editor: new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-                    renderer: function (value, meta) {
-                        meta.style = "background-color:" + value;
-                        return value;
-                    }
-                }
-            ]
-        })
-    });
-
-    legendPanel = new Ext.Panel({
-        region: 'east',
-        border: false,
-        frame: false,
-        width: 250,
-        layout: "border",
-        items: [classGrid, new Ext.Panel({
-            region: 'north',
-            border: false,
-            frame: false,
-            //  height: 100,
-            html: "<div class=\"layer-desc\">Double click on value in the the legend to change it.</div>"
-        })]
-    });
 
     store.load({
         callback: function () {
@@ -128,7 +77,7 @@ classWizards.init = function (record) {
     if (typeof classWizards.setting.custom !== "undefined" && typeof classWizards.setting.custom.pre !== "undefined") {
         customIsSet = true;
     }
-    //console.log(classWizards.setting);
+
     classWizards.getAddvalues = function (pre) {
         var values = Ext.getCmp(pre + '_addform').form.getFieldValues(),
             f = Ext.getCmp(pre + "Form").form.getValues();
@@ -145,9 +94,7 @@ classWizards.init = function (record) {
             forceLayout: true,
             items: [
                 {
-                    xtype: "form",
                     id: pre + "_addform",
-                    layout: "form",
                     border: false,
                     items: [
                         {
@@ -195,7 +142,10 @@ classWizards.init = function (record) {
                                         new Ext.form.TextField({
                                             name: "pattern",
                                             allowBlank: true,
-                                            value: (customIsSet && c) ? classWizards.setting.pattern : ""
+                                            value: (customIsSet && c) ? classWizards.setting.pattern : "",
+                                            style: {
+                                                borderRight: "15px"
+                                            }
                                         }),
                                         new Ext.form.ComboBox({
                                             store: ['round', 'butt', 'square'],
@@ -927,7 +877,6 @@ classWizards.init = function (record) {
         border: false,
         region: 'center',
         split: true,
-        forceLayout: true,
         items: [
             new Ext.Panel({
                 region: 'center',
@@ -935,6 +884,7 @@ classWizards.init = function (record) {
                 defaults: {
                     border: false
                 },
+                height: 780,
                 items: [
                     new Ext.Panel({
                         region: "center",
