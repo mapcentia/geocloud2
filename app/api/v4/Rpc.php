@@ -162,12 +162,12 @@ class Rpc extends AbstractApi
                 $res = $this->v2->get_index($user, $api);
             } catch (Exception $e) {
                 if ($e->getCode() == -32601) {
-                    throw new RPCException("Method not found", -32601, null, $value['id']);
+                    throw new RPCException("Method not found", -32601, null, null, $value['id']);
                 }
-                if ($e->getCode() == 'HY093') {
-                    throw new RPCException("Invalid params", -32602, null, $value['id']);
+                if (in_array($e->getCode(), ['HY093', '406'])) {
+                    throw new RPCException("Invalid params", -32602, null, $e->getMessage(), $value['id']);
                 }
-                throw new RPCException("Internal error", -32603, null, $value['id']);
+                throw new RPCException("Internal error", -32603, null, $e->getMessage(), $value['id']);
             }
             unset($res['success']);
             // unset($res['forStore']);
