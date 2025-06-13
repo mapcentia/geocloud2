@@ -9,12 +9,14 @@
 namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
+use app\exceptions\RPCException;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\api\v2\Sql as V2Sql;
 use app\inc\Route2;
 use app\models\Preparedstatement as PreparedstatementModel;
 use app\models\Setting;
+use Exception;
 use OpenApi\Annotations\OpenApi;
 use OpenApi\Attributes as OA;
 use Psr\Cache\InvalidArgumentException;
@@ -117,6 +119,7 @@ class Rpc extends AbstractApi
      * @return array
      * @throws PhpfastcacheInvalidArgumentException|GC2Exception
      * @throws InvalidArgumentException
+     * @throws RPCException
      */
     #[OA\Post(path: '/api/v4/rpc', operationId: 'postRpc', description: "Execute RPC method", tags: ['Rpc'])]
     #[OA\RequestBody(description: 'RPC method to execute', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Rpc"))]
@@ -155,7 +158,17 @@ class Rpc extends AbstractApi
                     "srs" => $srs,
                 ]
             );
-            $res = $this->v2->get_index($user, $api);
+            try {
+                $res = $this->v2->get_index($user, $api);
+            } catch (Exception $e) {
+                if ($e->getCode() == -32601) {
+                    throw new RPCException("Method not found", -32601, null, $value['id']);
+                }
+                if ($e->getCode() == 'HY093') {
+                    throw new RPCException("Invalid params", -32602, null, $value['id']);
+                }
+                throw new RPCException("Internal error", -32603, null, $value['id']);
+            }
             unset($res['success']);
             // unset($res['forStore']);
             unset($res['forGrid']);
@@ -212,6 +225,7 @@ class Rpc extends AbstractApi
 
     /**
      * @throws GC2Exception
+     * @throws RPCException
      */
     #[Override]
     public function validate(): void
@@ -232,12 +246,16 @@ class Rpc extends AbstractApi
         }
         $decodedBody = json_decode($body);
 
-        if (is_array($decodedBody)) {
-            foreach ($decodedBody as $value) {
-                $this->validateRequest(self::getAssert($value), json_encode($value), 'sql', Input::getMethod());
+        try {
+            if (is_array($decodedBody)) {
+                foreach ($decodedBody as $value) {
+                    $this->validateRequest(self::getAssert($value), json_encode($value), 'sql', Input::getMethod());
+                }
+            } else {
+                $this->validateRequest(self::getAssert($decodedBody), $body, 'sql', Input::getMethod());
             }
-        } else {
-            $this->validateRequest(self::getAssert($decodedBody), $body, 'sql', Input::getMethod());
+        } catch (GC2Exception $e) {
+            throw new RPCException("Invalid Request", -32600, null, $e->getMessage());
         }
     }
 

@@ -31,6 +31,7 @@ use app\conf\Connection;
 use app\controllers\Wms;
 use app\exceptions\GC2Exception;
 use app\exceptions\OwsException;
+use app\exceptions\RPCException;
 use app\exceptions\ServiceException;
 use app\inc\Cache;
 use app\inc\Input;
@@ -658,6 +659,8 @@ try {
     ob_clean();
     header('Content-Type:text/xml; charset=UTF-8', TRUE);
     echo $exception->getReport();
+} catch (RPCException $exception) {
+    echo Response::toJson($exception->getResponse());
 } catch (Throwable $exception) {
     $response["success"] = false;
     $response["message"] = $exception->getMessage();

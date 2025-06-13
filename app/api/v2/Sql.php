@@ -8,7 +8,6 @@
 
 namespace app\api\v2;
 
-use app\conf\App;
 use app\conf\Connection;
 use app\exceptions\GC2Exception;
 use app\inc\Cache;
@@ -60,6 +59,7 @@ class Sql extends Controller
      * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
      * @throws InvalidArgumentException
+     * @throws Exception
      */
     public function get_index(): array
     {
@@ -106,7 +106,11 @@ class Sql extends Controller
                         'name' => $method,
                     ];
                 } else { // Else fetch the query and use it
-                    $preStm = $pres->getByName($method);
+                    try {
+                        $preStm = $pres->getByName($method);
+                    } catch (Exception $e) {
+                        throw new Exception("Method not found", -32601, null);
+                    }
                     $json["q"] = $preStm['data']['statement'];
                     $typeHints = json_decode($preStm['data']['type_hints'], true);
                     $typeFormats = json_decode($preStm['data']['type_formats'], true);
