@@ -243,7 +243,7 @@ abstract class AbstractApi implements ApiInterface
     public function validateRequest(Collection $collection, ?string $data, string $resource, string $method, bool $allowPatchOnCollection = false): void
     {
         if (!empty($data) && !json_validate($data)) {
-            throw new GC2Exception("Invalid request data", 400, null, "INVALID_DATA");
+            throw new GC2Exception("Invalid JSON. Check your request", 400, null, "INVALID_DATA");
         }
 
         $data = $data == null ? null : json_decode($data, true);
