@@ -146,6 +146,7 @@ class Oauth extends AbstractApi
      * @return array<string, array<string, mixed>|bool|string|int>
      * @throws PhpfastcacheInvalidArgumentException
      * @throws InvalidArgumentException
+     * @throws GC2Exception
      */
     #[OA\Post(path: '/api/v4/oauth', operationId: 'postOauth', tags: ['OAuth'])]
     #[OA\RequestBody(description: 'Create token', required: true, content: new OA\JsonContent(ref: "#/components/schemas/OAuth"))]
@@ -166,55 +167,61 @@ class Oauth extends AbstractApi
                 parse_str($body, $data);
             }
         }
-
-
         // Password grant. We don't check clint_id or client_secret
         if ($data['grant_type'] == GrantType::PASSWORD->value) {
-            if (!empty($data["username"]) && !empty($data["password"])) {
-                try {
-                    return $this->session->start($data["username"], $data["password"], "public", $data["database"], true);
-                } catch (GC2Exception) {
-                    return self::error("invalid_grant", "Could not authenticate the user. Check username and password", 400);
+            Database::setDb($data['database']);
+            $client = new \app\models\Client();
+            $clientData = $client->get($data['client_id']);
+            if (!$clientData[0]['public']) {
+                if (empty($data['client_secret'])) {
+                    return self::error("invalid_client", "Client secret is missing. Client is not public", 401);
                 }
-            } else {
-                return self::error("invalid_grant", "Username or password parameter was not provided", 400);
+                try {
+                    $client->verifySecret($data['client_id'], $data['client_secret']);
+                } catch (GC2Exception) {
+                    return self::error("invalid_client", "Client secret is wrong", 401);
+                }
+            }
+
+            try {
+                return $this->session->start($data["username"], $data["password"], "public", $data["database"], true);
+            } catch (GC2Exception) {
+                return self::error("invalid_grant", "Could not authenticate the user. Check username and password", 400);
             }
         }
 
         // Refresh grant
         // If refresh we parse the refresh token and turn it into an access token
         if ($data['grant_type'] == GrantType::REFRESH_TOKEN->value) {
-            if (!empty($data["refresh_token"])) {
-                try {
-                    $parsedToken = Jwt::parse($data["refresh_token"])['data'];
-                } catch (GC2Exception $e) {
-                    return self::error("invalid_request", "Token could not be parsed: {$e->getMessage()}", 400);
-                }
-                if ($parsedToken['response_type'] != 'refresh') {
-                    return self::error("invalid_grant", "Not an refresh token", 400);
-                }
-                try {
-                    (new \app\models\Client())->get($data['client_id']);
-                } catch (GC2Exception) {
-                    return self::error("invalid_client", "Client with identifier '{$data['client_id']}' was not found in the directory", 401);
-                }
-                if (!empty($data['client_secret']))
-                    try {
-                        (new \app\models\Client())->verifySecret($data['client_id'], $data['client_secret']);
-                    } catch (GC2Exception) {
-                        return self::error("invalid_client", "Client secret is wrong", 401);
-                    }
-                $superUserApiKey = (new Setting())->getApiKeyForSuperUser();
-                $accessToken = Jwt::createJWT($superUserApiKey, $parsedToken['database'], $parsedToken['uid'], $parsedToken['superUser'], $parsedToken['userGroup'], true, false, null, null, $parsedToken['properties'], $parsedToken['email']);
-                return [
-                    "access_token" => $accessToken['token'],
-                    "token_type" => "bearer",
-                    "expires_in" => $accessToken["ttl"],
-                    "scope" => "",
-                ];
-            } else {
-                return self::error("invalid_request", "Refresh token was not provided", 400);
+            try {
+                $parsedToken = Jwt::parse($data["refresh_token"])['data'];
+            } catch (GC2Exception $e) {
+                return self::error("invalid_request", "Token could not be parsed: {$e->getMessage()}", 400);
             }
+            if ($parsedToken['response_type'] != 'refresh') {
+                return self::error("invalid_grant", "Not an refresh token", 400);
+            }
+            try {
+                $client = new \app\models\Client();
+                $clientData = $client->get($data['client_id']);
+            } catch (GC2Exception) {
+                return self::error("invalid_client", "Client with identifier '{$data['client_id']}' was not found in the directory", 401);
+            }
+            if (!$clientData[0]['public']) {
+                try {
+                    $client->verifySecret($data['client_id'], $data['client_secret']);
+                } catch (GC2Exception) {
+                    return self::error("invalid_client", "Client secret is wrong", 401);
+                }
+            }
+            $superUserApiKey = (new Setting())->getApiKeyForSuperUser();
+            $accessToken = Jwt::createJWT($superUserApiKey, $parsedToken['database'], $parsedToken['uid'], $parsedToken['superUser'], $parsedToken['userGroup'], true, false, null, null, $parsedToken['properties'], $parsedToken['email']);
+            return [
+                "access_token" => $accessToken['token'],
+                "token_type" => "bearer",
+                "expires_in" => $accessToken["ttl"],
+                "scope" => "",
+            ];
         }
 
         // Code grant
@@ -229,13 +236,13 @@ class Oauth extends AbstractApi
                 return self::error("invalid_grant", "Code doesn't exists, is expired or code challenge failed.", 400);
             }
             try {
-                (new \app\models\Client())->get($data['client_id']);
-            } catch (GC2Exception) {
+                $client = new \app\models\Client();
+                $clientData = $client->get($data['client_id']);            } catch (GC2Exception) {
                 return self::error("invalid_grant", "Client with identifier '{$data['client_id']}' was not found in the directory", 401);
             }
-            if (!empty($data['client_secret'])) {
+            if (!$clientData[0]['public']) {
                 try {
-                    (new \app\models\Client())->verifySecret($data['client_id'], $data['client_secret']);
+                    $client->verifySecret($data['client_id'], $data['client_secret']);
                 } catch (GC2Exception) {
                     return self::error("invalid_client", "Client secret is wrong", 401);
                 }
@@ -260,9 +267,17 @@ class Oauth extends AbstractApi
             }
             Database::setDb($user['parentdb']);
             try {
-                (new \app\models\Client())->get($data['client_id']);
+                $client = new \app\models\Client();
+                $clientData = $client->get($data['client_id']);
             } catch (GC2Exception) {
                 return self::error("invalid_grant", "Client with identifier '{$data['client_id']}' was not found in the directory", 401);
+            }
+            if (!$clientData[0]['public']) {
+                try {
+                    $client->verifySecret($data['client_id'], $data['client_secret']);
+                } catch (GC2Exception) {
+                    return self::error("invalid_client", "Client secret is wrong", 401);
+                }
             }
             $token = (new Session())->createOAuthResponse($user['parentdb'], $user['screen_name'], !$user['subuser'], false, $user['usergroup']);
             Jwt::clearDeviceCode($data['device_code']);
@@ -342,9 +357,10 @@ class Oauth extends AbstractApi
         $collection->fields['client_id'] = new Assert\Required([
             new Assert\NotBlank()
         ]);
-
+        $collection->fields['client_secret'] = new Assert\Optional([
+            new Assert\NotBlank()
+        ]);
         if ($type == 'password') {
-            unset($collection->fields['client_id']);
             $collection->fields['username'] = new Assert\Required([
                 new Assert\NotBlank()
             ]);
@@ -357,9 +373,6 @@ class Oauth extends AbstractApi
 
         } elseif ($type == 'authorization_code') {
             $collection->fields['client_id'] = new Assert\Required([
-                new Assert\NotBlank()
-            ]);
-            $collection->fields['client_secret'] = new Assert\Optional([
                 new Assert\NotBlank()
             ]);
             $collection->fields['code'] = new Assert\Required([
