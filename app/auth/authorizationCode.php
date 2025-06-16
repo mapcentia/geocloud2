@@ -92,7 +92,7 @@ if (Session::isAuth()) {
     $client = $clientData[0]['name'];
     $location =  "$redirectUri$separator$paramsStr";
 
-    if ($client != 'gc2-cli') {
+    if ($clientData[0]['confirm']) {
         echo $twig->render('allow.html.twig', ['name' => $client, 'location' => $location]);
     } else {
         $header = "Location: $redirectUri$separator$paramsStr";

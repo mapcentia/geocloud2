@@ -24,7 +24,7 @@ class Client extends Model
      */
     public function get(?string $id = null): array
     {
-        $sql = 'SELECT id,name,homepage,description,redirect_uri,public FROM settings.clients';
+        $sql = 'SELECT id,name,homepage,description,redirect_uri,public,confirm FROM settings.clients';
         $params = [];
         if ($id != null) {
             $sql .= ' WHERE id = :id';
@@ -127,14 +127,17 @@ class Client extends Model
     /**
      * @throws GC2Exception
      */
-    public function verifySecret(string $id, string $secret): void
+    public function verifySecret(string $id, ?string $secret): void
     {
+        if (empty($secret)) {
+            throw new GC2Exception("Secret can not be empty", 401, null, 'SECRET_NOT_VERIFIED');
+        }
         $sql = 'SELECT secret FROM settings.clients where id=:id';
         $res = $this->prepare($sql);
         $res->execute(['id' => $id]);
         $hash = $this->fetchRow($res, 'assoc')['secret'];
         if (!password_verify($secret, $hash)) {
-            throw new GC2Exception("Secret can not be verified", 404, null, 'SECRET_NOT_VERIFIED');
+            throw new GC2Exception("Secret can not be verified", 401, null, 'SECRET_NOT_VERIFIED');
         }
     }
 }

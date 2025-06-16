@@ -167,7 +167,7 @@ class Oauth extends AbstractApi
                 parse_str($body, $data);
             }
         }
-        // Password grant. We don't check clint_id or client_secret
+        // Password grant.
         if ($data['grant_type'] == GrantType::PASSWORD->value) {
             Database::setDb($data['database']);
             $client = new \app\models\Client();
@@ -237,7 +237,8 @@ class Oauth extends AbstractApi
             }
             try {
                 $client = new \app\models\Client();
-                $clientData = $client->get($data['client_id']);            } catch (GC2Exception) {
+                $clientData = $client->get($data['client_id']);
+            } catch (GC2Exception) {
                 return self::error("invalid_grant", "Client with identifier '{$data['client_id']}' was not found in the directory", 401);
             }
             if (!$clientData[0]['public']) {
