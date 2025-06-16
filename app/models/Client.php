@@ -24,7 +24,7 @@ class Client extends Model
      */
     public function get(?string $id = null): array
     {
-        $sql = 'SELECT id,name,homepage,description,redirect_uri FROM settings.clients';
+        $sql = 'SELECT id,name,homepage,description,redirect_uri,public FROM settings.clients';
         $params = [];
         if ($id != null) {
             $sql .= ' WHERE id = :id';
@@ -46,15 +46,17 @@ class Client extends Model
     /**
      * @throws RandomException
      */
-    public function insert(string $name, string $redirectUri, ?string $homepage, ?string $description): array
+    public function insert(string $name, string $redirectUri, ?string $homepage, ?string $description, bool $public = false, bool $confirm = true): array
     {
-        $sql = 'INSERT INTO settings.clients (id, secret, name, homepage, description, redirect_uri) VALUES (:id, :secret, :name, :homepage, :description, :redirect_uri)';
+        $sql = 'INSERT INTO settings.clients (id, secret, name, homepage, description, redirect_uri, "public", confirm) VALUES (:id, :secret, :name, :homepage, :description, :redirect_uri, :public, :confirm)';
         $id = uniqid();
         $secret = bin2hex(random_bytes(32));
         $secretHash = password_hash($secret, PASSWORD_BCRYPT);
         $homepage = $homepage ?? null;
         $description = $description ?? null;
         $res = $this->prepare($sql);
+        $public = $public ? 't' : 'f';
+        $confirm = $confirm ? 't' : 'f';
         $res->execute([
             'id' => $id,
             'secret' => $secretHash,
@@ -62,6 +64,8 @@ class Client extends Model
             'homepage' => $homepage,
             'description' => $description,
             'redirect_uri' => $redirectUri,
+            'public' => $public,
+            'confirm' => $confirm,
         ]);
         return ['id' => $id, 'secret' => $secret];
     }
@@ -69,7 +73,7 @@ class Client extends Model
     /**
      * @throws GC2Exception
      */
-    public function update(string $id, ?string $name, ?string $redirectUri, ?string $homepage, ?string $description): void
+    public function update(string $id, ?string $name, ?string $redirectUri, ?string $homepage, ?string $description, ?bool $public, ?bool $confirm): void
     {
         $sets = [];
         $values = [];
@@ -89,6 +93,14 @@ class Client extends Model
         if ($description) {
             $sets[] = "description=:description";
             $values['description'] = $description;
+        }
+        if (isset($public)) {
+            $sets[] = "\"public\"=:public";;
+            $values['public'] = $public ? 't' : 'f';
+        }
+        if (isset($confirm)) {
+            $sets[] = "confirm=:confirm";;
+            $values['confirm'] = $confirm ? 't' : 'f';
         }
         $setStr = implode(', ', $sets);
         $sql = "UPDATE settings.clients set $setStr  WHERE id = :id";

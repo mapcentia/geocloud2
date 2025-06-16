@@ -54,6 +54,20 @@ use Symfony\Component\Validator\Constraints as Assert;
             items: new OA\Items(type: "string"),
             example: ["https://my_site1.com", "https://my_site2.com"]
         ),
+        new OA\Property(
+            property: "public",
+            title: "Public",
+            description: "Public clients do not require a secret.",
+            type: "boolean",
+            example: true
+        ),
+        new OA\Property(
+            property: "confirm",
+            title: "Confirm",
+            description: "Users must confirm client access.",
+            type: "boolean",
+            example: true
+        ),
     ],
     type: "object"
 )]
@@ -147,6 +161,8 @@ class Client extends AbstractApi
                 'redirectUri' => $datum['redirect_uri'] ? json_encode($datum['redirect_uri']) : null,
                 'homepage' => $datum['homepage'] ?? null,
                 'description' => $datum['description'] ?? null,
+                'public' => $datum['public'] ?? false,
+                'confirm' => $datum['confirm'] ?? true,
             ];
             $list[] = $model->insert(...$arr);
         }
@@ -184,9 +200,11 @@ class Client extends AbstractApi
             $arr = [
                 'id' => $id,
                 'name' => $data['name'] ?? null,
-                'redirectUri' => json_encode($data['redirect_uri']) ?? null,
+                'redirectUri' => $data['redirect_uri'] ? json_encode($data['redirect_uri']): null,
                 'homepage' => $data['homepage'] ?? null,
                 'description' => $data['description'] ?? null,
+                'public' => $data['public'] ?? null,
+                'confirm' => $data['confirm'] ?? null,
             ];
             $model->update(...$arr);
         }
@@ -246,19 +264,25 @@ class Client extends AbstractApi
     static public function getAssert(): Assert\Collection
     {
         return new Assert\Collection([
-        'name' => new Assert\Length(['min' => 3]),
-        'homepage' => new Assert\Optional(
-            new Assert\Url(['requireTld' => true]),
-        ),
-        'description' => new Assert\Optional([
-            new Assert\Length(['min' => 3])
-        ]),
-        'redirect_uri' => new Assert\Optional([
-            new Assert\Type('array'),
-            new Assert\Count(['min' => 1]),
-            new Assert\NotBlank(),
-        ]),
-    ]);
+            'name' => new Assert\Length(['min' => 3]),
+            'homepage' => new Assert\Optional(
+                new Assert\Url(['requireTld' => true]),
+            ),
+            'description' => new Assert\Optional([
+                new Assert\Length(['min' => 3])
+            ]),
+            'redirect_uri' => new Assert\Optional([
+                new Assert\Type('array'),
+                new Assert\Count(['min' => 1]),
+                new Assert\NotBlank(),
+            ]),
+            'public' => new Assert\Optional([
+                new Assert\Type('boolean'),
+            ]),
+            'confirm' => new Assert\Optional([
+                new Assert\Type('boolean'),
+            ]),
+        ]);
     }
 
     public function put_index(): array
