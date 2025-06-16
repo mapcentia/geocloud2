@@ -12,9 +12,7 @@ use app\conf\App;
 use app\event\sockets\WsBroadcast;
 use Monolog\Logger;
 use Revolt\EventLoop;
-use function Amp\async;
 use function Amp\ByteStream\getStdout;
-use function Amp\delay;
 use function Amp\trapSignal;
 
 include_once __DIR__ . "/../vendor/autoload.php";
@@ -51,12 +49,9 @@ $router->addRoute('GET', '/broadcast', $wsBroadcast);
 
 $server->start($router, $errorHandler);
 
-async(function () use (&$broadcastHandler) {
-    while (true) {
-        //$broadcastHandler->sendToAll(json_encode(["hello" => 1]));
-        delay(3);
-    }
-});
+foreach (glob(dirname(__FILE__) . "/functions/*.php") as $filename) {
+    include_once($filename);
+}
 
 include_once __DIR__ . "/pglistner.php";
 
