@@ -99,6 +99,7 @@ if (!file_exists($lockFile)) {
 
 $getFunction = null;
 $contentIsCsv = false;
+$contentIsJson = false;
 
 // Check if Paging should be used
 if (sizeof(explode("|http", $url)) > 1) {
@@ -112,6 +113,12 @@ if (sizeof(explode("|http", $url)) > 1) {
     }
     $getFunction = "getCmdPaging"; // Paging by grid
 } else {
+    if (strtolower(explode(':', $url)[0]) == 'json') {
+        print "\nInfo: Explicit set to JSON...";
+        $contentIsJson = true;
+        $getFunction = "getCmd";
+        $url = substr($url, 5); // Strip json:
+    }
     $grid = null;
     // Check if Content type is zip
     $headers = get_headers($url);
@@ -212,14 +219,15 @@ function which(): string
  */
 function getCmd(): void
 {
-    global $encoding, $srid, $dir, $tempFile, $type, $db, $workingSchema, $randTableName, $downloadSchema, $url, $report, $out, $err, $contentIsCsv;
+    global $encoding, $srid, $dir, $tempFile, $type, $db, $workingSchema, $randTableName, $downloadSchema, $url, $report, $out, $err, $contentIsCsv, $contentIsJson;
 
     $report[DOWNLOADTYPE] = URL;
+    $tmpFilePath = $dir . "/" . $tempFile;
 
     print "\nInfo: Fetching remote data...";
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
-    $fp = fopen($dir . "/" . $tempFile, 'w+');
+    $fp = fopen($tmpFilePath, 'w+');
     curl_setopt($ch, CURLOPT_FILE, $fp);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -234,8 +242,15 @@ function getCmd(): void
         cleanUp();
     }
 
+    if ($contentIsJson) {
+        print "\nInfo: Converting JSON to CSV...";
+        $csvFile = $dir . "/" . $tempFile . ".csv";
+        Util::json2cvs($tmpFilePath, $csvFile);
+        $tmpFilePath = $csvFile;
+    }
+
     // We test for CSV data, because ogr2ogr can't detect this format
-    $isCsv = $contentIsCsv || isCsv($dir . "/" . $tempFile);
+    $isCsv = $contentIsCsv || isCsv($tmpFilePath);
 
     print "\nInfo: Staring inserting in temp table using ogr2ogr...";
 
@@ -250,7 +265,7 @@ function getCmd(): void
         "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
         ($isCsv ? "-oo X_POSSIBLE_NAMES=lon*,Lon*,x,X -oo Y_POSSIBLE_NAMES=lat*,Lat*,y,Y -oo AUTODETECT_TYPE=YES -oo GEOM_POSSIBLE_NAMES=geometri " : '') .
         ($isCsv ? "'CSV:" : "'") .
-        $dir . "/" . $tempFile . "' " .
+        $tmpFilePath . "' " .
         "-nln " . $workingSchema . "." . $randTableName . " " .
         ($type == "AUTO" ? "" : "-nlt {$type}");
     exec($cmd . ' 2>&1', $out, $err);
