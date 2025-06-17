@@ -14,6 +14,7 @@ use app\inc\Session;
 use app\models\Client;
 use app\models\Database;
 use app\models\Session as SessionModel;
+use Exception;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
@@ -40,48 +41,52 @@ class Auth extends AbstractApi
                     $gotError = true;
                     $error = "invalid_request";
                     $errorDesc = "The request must contain the following parameter '$requiredParam'";
-                    break;
+                    goto error;
                 }
                 if ($requiredParam == 'response_type' && !($_GET[$requiredParam] == 'token' || $_GET[$requiredParam] == 'code')) {
                     $gotError = true;
                     $error = "unsupported_response_type";
                     $errorDesc = "The application requested an unsupported response type '$_GET[$requiredParam]' when requesting a token";
-                    break;
+                    goto error;
                 }
             }
             // Check client id
             try {
                 $clientData = $client->get($_GET['client_id']);
             } catch (Exception) {
-                echo "Client with identifier '{$_GET['client_id']}' was not found in the directory";
-                exit();
+                $gotError = true;
+                $errorDesc = "Client with identifier '{$_GET['client_id']}' was not found in the directory";
+                goto error;
             }
 
             $uris = $clientData[0]['redirect_uri'];
             if ($_GET['redirect_uri'] && !in_array($_GET['redirect_uri'], $uris)) {
-                echo "Client with identifier '{$_GET['client_id']}' is not registered with redirect uri: {$_GET['redirect_uri']} ";
-                exit();
+                $gotError = true;
+                $errorDesc = "Client with identifier '{$_GET['client_id']}' is not registered with redirect uri: {$_GET['redirect_uri']} ";
+                goto error;
             }
             $redirectUri = $_GET['redirect_uri'] ?? $uris[0];
 
             $separator = str_contains($redirectUri, '?') ? '&' : '?';
 
             // Check client secret if is set
-            if (isset($_GET['client_secret'])) {
+            if (!$clientData[0]['public']) {
                 try {
                     $client->verifySecret($_GET['client_id'], $_GET['client_secret']);
-                } catch (Exception $e) {
+                } catch (Exception) {
                     $gotError = true;
                     $error = "invalid_client";
                     $errorDesc = "Client secret doesn't match what was expected";
+                    goto error;
                 }
             }
             // If error we send user back with error parameters
+            error:
             if ($gotError) {
-                $paramsStr = http_build_query(['error' => $error, 'error_description' => $errorDesc]);
-                $header = "Location: $redirectUri$separator$paramsStr";
-                //echo $header;
-                header($header);
+                echo "[$error] $errorDesc";
+//                $paramsStr = http_build_query(['error' => $error, 'error_description' => $errorDesc]);
+//                $header = "Location: $redirectUri$separator$paramsStr";
+//                header($header);
                 exit();
             }
             $code = $_GET['response_type'] == 'code';
@@ -125,9 +130,7 @@ class Auth extends AbstractApi
 
     public function post_index(): never
     {
-        $backend = Route2::getParam('backend');
-        include_once(__DIR__ . "/../backends/" . $backend);
-        exit();
+        // TODO: Implement post_index() method.
     }
 
     public function put_index(): array
