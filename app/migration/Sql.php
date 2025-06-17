@@ -166,7 +166,7 @@ class Sql
                             primary key (id)
                     )";
 
-        $sqls[] = "INSERT INTO settings.clients (id, name, description, redirect_uri) values ('gc2-cli', 'gc2-cli', 'Dp not delete','[\"http://127.0.0.1:5657/auth/callback\"]')";
+        $sqls[] = "INSERT INTO settings.clients (id, name, description, redirect_uri, public, confirm) values ('gc2-cli', 'gc2-cli', 'Client for use in CLI','[\"http://127.0.0.1:5657/auth/callback\"]', true, false)";
         $sqls[] = "create table settings.cost
                     (
                         id        serial,

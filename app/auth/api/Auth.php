@@ -55,6 +55,7 @@ class Auth extends AbstractApi
                 $clientData = $client->get($_GET['client_id']);
             } catch (Exception) {
                 $gotError = true;
+                $error = "invalid_client";
                 $errorDesc = "Client with identifier '{$_GET['client_id']}' was not found in the directory";
                 goto error;
             }
@@ -62,6 +63,7 @@ class Auth extends AbstractApi
             $uris = $clientData[0]['redirect_uri'];
             if ($_GET['redirect_uri'] && !in_array($_GET['redirect_uri'], $uris)) {
                 $gotError = true;
+                $error = "invalid_client";
                 $errorDesc = "Client with identifier '{$_GET['client_id']}' is not registered with redirect uri: {$_GET['redirect_uri']} ";
                 goto error;
             }
