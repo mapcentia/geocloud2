@@ -362,11 +362,9 @@ try {
         default:
             makeExceptionReport("No such operation WFS {$HTTP_FORM_VARS["REQUEST"]}", ["exceptionCode" => "OperationNotSupported", "locator" => $HTTP_FORM_VARS["REQUEST"]]);
     }
-}
-catch (OwsException $e) {
+} catch (OwsException $e) {
     makeExceptionReport($e->getMessage(), $e->getAttributes());
-}
-catch (Exception $e) {
+} catch (Exception $e) {
     makeExceptionReport($e->getMessage());
 }
 
@@ -1119,6 +1117,7 @@ function doQuery(string $queryType)
                 }
                 $primeryKey = $tableObj->getPrimeryKey($postgisschema . "." . $table);
                 $geomField = $tableObj->getGeometryColumns($postgisschema . "." . $table, "f_geometry_column");
+                $geomType = $tableObj->getGeometryColumns($postgisschema . "." . $table, "type");
                 $fieldConfArr = json_decode($geometryColumnsObj->getValueFromKey("{$postgisschema}.{$table}.{$geomField}", "fieldconf"), true);
                 $sql = "SELECT ";
                 $fieldsArr = [];
@@ -1169,8 +1168,21 @@ function doQuery(string $queryType)
                         $gmlVersion = $outputFormat == "GML3" ? "3" : "2";
                         $longCrs = $version == "1.1.0" ? 1 : 0;
                         $flipAxis = $version == "1.1.0" && $srs == "4326" ? 16 : 0; // flip axis if lat/lon
+                        if (str_contains($geomType, "POINT")) {
+                            $type = 1;
+                        } elseif (str_contains($geomType, "LINE")) {
+                            $type = 2;
+                        } elseif (str_contains($geomType, "POLYGON")) {
+                            $type = 3;
+                        } else {
+                            $type = -999;
+                        }
                         $options = (string)($longCrs + $flipAxis + 4);
-                        $sql = str_replace("\"{$key}\"", "ST_AsGml({$gmlVersion},ST_Transform(ST_CollectionExtract(\"{$key}\"),{$srs}),7,{$options}) as \"{$key}\"", $sql);
+                        if ($type == -999) {
+                            $sql = str_replace("\"{$key}\"", "ST_AsGml({$gmlVersion},ST_Transform(\"{$key}\",{$srs}),5,{$options}) as \"{$key}\"", $sql);
+                        } else {
+                            $sql = str_replace("\"{$key}\"", "ST_AsGml({$gmlVersion},ST_Transform(ST_CollectionExtract(\"{$key}\", $type),{$srs}),7,{$options}) as \"{$key}\"", $sql);
+                        }
                         $sql2 = "SELECT ST_Xmin(ST_Extent(ST_Transform(\"" . $key . "\",{$srs}))) AS TXMin,ST_Xmax(ST_Extent(ST_Transform(\"" . $key . "\",{$srs}))) AS TXMax, ST_Ymin(ST_Extent(ST_Transform(\"" . $key . "\",{$srs}))) AS TYMin,ST_Ymax(ST_Extent(ST_Transform(\"" . $key . "\",{$srs}))) AS TYMax ";
                     }
                     if ($arr['type'] == "bytea") {
@@ -1840,7 +1852,7 @@ function doParse(array $arr)
                 $forSql2['tables'][$fid] = $hey['typeName'];
                 $forSql2['fields'] = $fields;
                 $forSql2['values'] = $values;
-                $forSql2['wheres'][$fid] =  WfsFilter::explode($hey['Filter'], null, null, $primeryKey["attname"]);
+                $forSql2['wheres'][$fid] = WfsFilter::explode($hey['Filter'], null, null, $primeryKey["attname"]);
                 $fid++;
 
                 // Start HTTP basic authentication
@@ -1887,7 +1899,7 @@ function doParse(array $arr)
                 }
 
                 $forSql3['tables'][] = $hey['typeName'];
-                $forSql3['wheres'][] =  WfsFilter::explode($hey['Filter'], null, null, $primeryKey["attname"]);
+                $forSql3['wheres'][] = WfsFilter::explode($hey['Filter'], null, null, $primeryKey["attname"]);
                 $roleObj = $layerObj->getRole($postgisschema, $hey['typeName'], $user);
                 $role = $roleObj["data"][$user] ?? "none";
                 $tableObj = new table($postgisschema . "." . $hey["typeName"]);
