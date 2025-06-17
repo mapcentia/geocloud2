@@ -296,6 +296,7 @@ class Import extends AbstractApi
             ($args && property_exists($args, 'x_possible_names') && $args->import === true ? " --x_possible_names " . $args->x_possible_names : "") .
             ($args && property_exists($args, 'y_possible_names') && $args->import === true ? " --y_possible_names " . $args->y_possible_names : "") .
             ($args && property_exists($args, 'import') && $args->import === true ? " --connection $connectionStr" : "") .
+            ($args && property_exists($args, 'table_name') ? " --nln " . $args->table_name : "") .
             " '" . $fileFullPath . "'";
 
         exec($cmd, $out);
@@ -359,6 +360,10 @@ class Import extends AbstractApi
                 new Assert\NotBlank(),
             ]),
             'y_possible_names' => new Assert\Optional([
+                new Assert\Type('string'),
+                new Assert\NotBlank(),
+            ]),
+            'table_name' => new Assert\Optional([
                 new Assert\Type('string'),
                 new Assert\NotBlank(),
             ]),
