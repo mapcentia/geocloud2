@@ -1,7 +1,8 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2024 MapCentia ApS
+ * @copyright  2013-2025 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
@@ -10,14 +11,12 @@ namespace app\auth\api;
 use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableMethods;
 use app\inc\Input;
-use app\inc\Route2;
 use app\inc\Session;
 
 
 #[AcceptableMethods(['GET', 'HEAD', 'OPTIONS'])]
 class Signout extends AbstractApi
 {
-
     public function __construct()
     {
         Session::start();

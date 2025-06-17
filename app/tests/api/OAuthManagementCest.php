@@ -66,6 +66,7 @@ class OAuthManagementCest
             'username' => $this->userId,
             'password' => $this->password,
             'database' => $this->userId,
+            'client_id' => 'gc2-cli',
         ]));
         $I->seeResponseCodeIs(HttpCode::OK);
         $response = json_decode($I->grabResponse());
