@@ -164,7 +164,7 @@ class Admin extends Controller
         $response = [];
         $data = [];
 
-        $arr = [Database::getDb(), "mapcentia", "gc2scheduler"];
+        $arr = [Database::getDb(), "mapcentia", "gc2scheduler", "template_geocloud"];
         foreach ($arr as $db) {
             Database::setDb($db);
             $conn = new Model();
