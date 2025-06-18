@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED] - 2025-16-6
+### Added
+- In Scheduler, it is now possible to prefix the url with `json:` to force JSON to CSV conversion.
+
 ## [2025.6.1] - 2025-11-6
 ### Added
 - Caching to optimize the fetching of settings viewer data and reduce database queries.
