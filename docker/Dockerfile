@@ -303,8 +303,6 @@ WORKDIR /var/www/geocloud2
 # Install dashboard
 RUN cd dashboard \
     && npm install \
-    && cp ./app/config.js.sample ./app/config.js \
-    && cp ./.env.production ./.env \
     && npm run build \
     && ln -s /var/www/geocloud2/dashboard/build/ /var/www/geocloud2/public/dashboard
 
