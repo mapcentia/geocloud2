@@ -300,12 +300,6 @@ RUN mkdir -p /var/www \
 # Set workdir
 WORKDIR /var/www/geocloud2
 
-# Install dashboard
-RUN cd dashboard \
-    && npm install \
-    && npm run build \
-    && ln -s /var/www/geocloud2/dashboard/build/ /var/www/geocloud2/public/dashboard
-
 ADD entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
@@ -325,6 +319,12 @@ RUN npm install \
 # Copy in GC2 custom config
 COPY conf/gc2/App.php /var/www/geocloud2/app/conf/
 COPY conf/gc2/Connection.php /var/www/geocloud2/app/conf/
+
+# Build dashboard
+RUN cd dashboard \
+    && npm install \
+    && npm run build \
+    && ln -s /var/www/geocloud2/dashboard/build/ /var/www/geocloud2/public/dashboard
 
 # VOLUME for geocloud2 if you want persistence
 VOLUME /var/www/geocloud2
