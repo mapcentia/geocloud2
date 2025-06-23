@@ -1,4 +1,5 @@
 #!/bin/bash
+
 set -e
 export PGUSER=$GC2_USER
 
