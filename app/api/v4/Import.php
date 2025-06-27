@@ -189,6 +189,13 @@ class Import extends AbstractApi
                 default: false,
             ),
             new OA\Property(
+                property: "p_multi",
+                title: "Promote to multi",
+                description: "Promote single geometries to multi part.",
+                type: "boolean",
+                default: false,
+            ),
+            new OA\Property(
                 property: "truncate",
                 title: "Truncate",
                 description: "Truncate table before appending. Only have effect if --append is set.",
@@ -288,7 +295,7 @@ class Import extends AbstractApi
             ($args && property_exists($args, 's_srs') ? " --s_srs " . $args->s_srs : "") .
             ($args && property_exists($args, 't_srs') ? " --t_srs " . $args->t_srs : "") .
             ($args && property_exists($args, 'import') && $args->import === true ? " --schema $schema" : "") .
-            ($args && property_exists($args, 'import') && $args->import === true ? " --p_multi" : "") .
+            ($args && property_exists($args, 'p_multi') && $args->import === true ? " --p_multi" : "") .
             ($args && property_exists($args, 'import') && $args->import === true ? " --import" : "") .
             ($args && property_exists($args, 'append') && $args->import === true ? " --append" : "") .
             ($args && property_exists($args, 'truncate') && $args->import === true ? " --truncate" : "") .
@@ -341,6 +348,9 @@ class Import extends AbstractApi
                 new Assert\Type('boolean'),
             ),
             'truncate' => new Assert\Optional(
+                new Assert\Type('boolean'),
+            ),
+            'p_multi' => new Assert\Optional(
                 new Assert\Type('boolean'),
             ),
             't_srs' => new Assert\Optional([
