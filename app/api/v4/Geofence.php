@@ -129,7 +129,10 @@ class Geofence extends AbstractApi
         if (!empty(Route2::getParam("id"))) {
             $ids = explode(',', Route2::getParam("id"));
             foreach ($ids as $id) {
-                $r[] = $geofence->get($id)[0];
+                $t = $geofence->get($id)[0];
+                $t['table'] = $t['layer'];
+                unset($t['layer']);
+                $r[] = $t;
             }
         } else {
             $r = $geofence->get(null);
@@ -167,6 +170,10 @@ class Geofence extends AbstractApi
         $model->connect();
         $model->begin();
         foreach ($data['rules'] as $datum) {
+            if (isset($datum['table'])) {
+                $datum['layer'] = $datum['table'];
+                unset($datum['table']);
+            }
             $list[] = $model->create($datum)['data']['id'];
         }
         $model->commit();
@@ -205,6 +212,10 @@ class Geofence extends AbstractApi
                 throw new GC2Exception("Id is not a integer", 400, null, 'MISSING_ID');
             }
             $data["id"] = $id;
+            if (isset($data['table'])) {
+                $data['layer'] = $data['table'];
+                unset($data['table']);
+            }
             $model->update($data);
         }
         $model->commit();
@@ -275,7 +286,7 @@ class Geofence extends AbstractApi
                 new Assert\Type('string'),
                 new Assert\Choice(['select', 'insert', 'update', 'delete', '*']),
             ]),
-            'layer' => new Assert\Optional([
+            'table' => new Assert\Optional([
                 new Assert\Type('string'),
                 new Assert\NotBlank(),
             ]),
