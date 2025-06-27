@@ -165,7 +165,8 @@ class Sql
                         constraint clients_pk
                             primary key (id)
                     )";
-
+        $sqls[] = "alter table settings.clients add \"public\" boolean default false not null";
+        $sqls[] = "alter table settings.clients add confirm boolean default true not null";
         $sqls[] = "INSERT INTO settings.clients (id, name, description, redirect_uri, public, confirm) values ('gc2-cli', 'gc2-cli', 'Client for use in CLI','[\"http://127.0.0.1:5657/auth/callback\"]', true, false)";
         $sqls[] = "create table settings.cost
                     (
@@ -181,8 +182,6 @@ class Sql
         $sqls[] = "alter table settings.prepared_statements add srs int4";;
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN class_cache jsonb";
         $sqls[] = "alter table settings.geometry_columns_join alter class type jsonb using class::jsonb";
-        $sqls[] = "alter table settings.clients add \"public\" boolean default false not null";
-        $sqls[] = "alter table settings.clients add confirm boolean default true not null";
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
                     SELECT
