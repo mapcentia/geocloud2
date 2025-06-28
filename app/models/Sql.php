@@ -183,6 +183,9 @@ class Sql extends Model
                 $select->execute();
             }
             foreach (range(0, $select->columnCount() - 1) as $column_index) {
+                if ($column_index < 0) {
+                    throw new Exception("No columns returned by query");
+                }
                 $meta = $select->getColumnMeta($column_index);
                 $columnTypes[$meta['name']] = $meta['native_type'];
             }
@@ -564,6 +567,9 @@ class Sql extends Model
                 $result->execute($parameter);
                 if (count($columnTypes) == 0) {
                     foreach (range(0, $result->columnCount() - 1) as $column_index) {
+                        if ($column_index < 0) {
+                            throw new Exception("No columns returned by query");
+                        }
                         $meta = $result->getColumnMeta($column_index);
                         if (!$meta) {
                             break;
@@ -597,6 +603,9 @@ class Sql extends Model
         } else {
             $result->execute();
             foreach (range(0, $result->columnCount() - 1) as $column_index) {
+                if ($column_index < 0) {
+                    throw new Exception("No columns returned by query");
+                }
                 $meta = $result->getColumnMeta($column_index);
                 if (!$meta) {
                     break;
