@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2025.6.3] - 2025-30-6
+### Added
+- Import API has a new `p_multi` property that allows promoting single geometries to multipart within the import process. Before single geometries were always promoted. 
+
 ## [2025.6.2] - 2025-16-6
 ### Added
 - In Scheduler, it is now possible to prefix the url with `json:` to force JSON to CSV conversion.
