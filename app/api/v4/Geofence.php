@@ -130,13 +130,18 @@ class Geofence extends AbstractApi
             $ids = explode(',', Route2::getParam("id"));
             foreach ($ids as $id) {
                 $t = $geofence->get($id)[0];
-                $t['table'] = $t['layer'];
-                unset($t['layer']);
                 $r[] = $t;
             }
         } else {
             $r = $geofence->get(null);
         }
+        // Rename layer to table
+        $r = array_map(function($item) {
+            $item['table'] = $item['layer'];
+            unset($item['layer']);
+            return $item;
+        }, $r);
+
         if (count($r) == 0) {
             throw new GC2Exception("No rules found", 404, null, 'NO_RULES');
         } elseif (count($r) == 1) {
