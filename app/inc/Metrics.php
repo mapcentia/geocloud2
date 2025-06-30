@@ -3,6 +3,8 @@ namespace app\inc;
 
 use Prometheus\CollectorRegistry;
 use Prometheus\Storage\Redis;
+use Prometheus\Storage\InMemory;
+use Prometheus\RenderTextFormat;
 
 /**
  * Class Metrics
@@ -23,13 +25,15 @@ class Metrics
      */
     public static function getRegistry(): CollectorRegistry
     {
+        // Check if the registry is already initialized
         if (self::$registry === null) {
             // Initialize the registry with Redis adapter if configured, otherwise use in-memory adapter
             $redisConfig = \app\conf\App::$param["metricsCache"] ?? null;
             
             if ($redisConfig && $redisConfig["type"] === "redis") {
                 $adapter = new Redis([
-                    'host' => $redisConfig["host"] ?? 'valkey',
+                    'host' => isset($redisConfig["host"]) ? explode(':', $redisConfig["host"])[0] : 'valkey',
+                    'port' => isset($redisConfig["host"]) ? (int)explode(':', $redisConfig["host"])[1] : 6379,
                     'database' => $redisConfig["db"] ?? 3,
                     'timeout' => 0.1, // in seconds
                 ]);
@@ -40,6 +44,7 @@ class Metrics
             }
         }
         
+        // Return the initialized registry
         return self::$registry;
     }
 
@@ -50,4 +55,17 @@ class Metrics
     {
         self::$registry = null;
     }
+
+    /**
+     * Gets the metrics in Prometheus format
+     * @return string
+     */
+    public static function getMetrics(): string
+    {
+        $registry = self::getRegistry();
+        $renderer = new \Prometheus\RenderTextFormat();
+        return $renderer->render($registry->getMetricFamilySamples());
+    }
+
 }
+

@@ -12,6 +12,7 @@ use app\conf\App;
 use app\exceptions\GC2Exception;
 use app\exceptions\ServiceException;
 use app\inc\Controller;
+use app\inc\Metrics;
 use app\inc\Model;
 use app\inc\UserFilter;
 use app\inc\Util;
@@ -22,6 +23,9 @@ use app\models\Rule;
 use Exception;
 use mapObj;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Prometheus\Counter;
+use Prometheus\Gauge;
+use Prometheus\Histogram;
 use SimpleXMLElement;
 
 
@@ -36,6 +40,15 @@ class Wms extends Controller
     private null|string $user;
     private Rule $rules;
 
+    // Prometheus metrics
+    private Counter $requestCounter;
+    private Counter $layerAccessCounter;
+    private Counter $authDecisionCounter;
+    private Histogram $requestDuration;
+    private Histogram $mapfileDuration;
+    private Gauge $concurrentRequests;
+    private Counter $bytesTransferred;
+
     /**
      * Wms constructor.
      * @throws ServiceException
@@ -45,6 +58,67 @@ class Wms extends Controller
     {
         parent::__construct();
         header("Cache-Control: no-store");
+
+        // Initialize Prometheus metrics
+        $registry = Metrics::getRegistry();
+        
+        // 1. Counter for tracking total requests by service type and method
+        $this->requestCounter = $registry->getOrRegisterCounter(
+            'geocloud2',
+            'wms_requests_total',
+            'Total number of WMS/WFS requests',
+            ['service', 'method', 'status']
+        );
+        
+        // 2. Counter for tracking layer access
+        $this->layerAccessCounter = $registry->getOrRegisterCounter(
+            'geocloud2',
+            'wms_layer_requests_total',
+            'Total number of layer requests',
+            ['layer', 'service', 'db', 'schema']
+        );
+        
+        // 3. Counter for tracking authorization decisions
+        $this->authDecisionCounter = $registry->getOrRegisterCounter(
+            'geocloud2',
+            'wms_auth_decisions_total',
+            'Total number of authorization decisions',
+            ['decision', 'user', 'layer']
+        );
+        
+        // 4. Histogram for tracking request duration
+        $this->requestDuration = $registry->getOrRegisterHistogram(
+            'geocloud2',
+            'wms_request_duration_seconds',
+            'WMS/WFS request duration in seconds',
+            ['service', 'method'],
+            [0.01, 0.05, 0.1, 0.5, 1, 2, 5, 10]
+        );
+        
+        // 5. Histogram for tracking mapfile generation time
+        $this->mapfileDuration = $registry->getOrRegisterHistogram(
+            'geocloud2',
+            'wms_mapfile_duration_seconds',
+            'Time taken to generate mapfiles in seconds',
+            ['type'],
+            [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1]
+        );
+        
+        // 6. Gauge for tracking concurrent requests
+        $this->concurrentRequests = $registry->getOrRegisterGauge(
+            'geocloud2',
+            'wms_concurrent_requests',
+            'Number of concurrent WMS/WFS requests',
+            ['service']
+        );
+        
+        // 7. Counter for tracking bytes transferred
+        $this->bytesTransferred = $registry->getOrRegisterCounter(
+            'geocloud2',
+            'wms_bytes_transferred_total',
+            'Total bytes transferred by WMS/WFS services',
+            ['service', 'method']
+        );
 
         $this->rules = new Rule();
         $schema = Input::getPath()->part(3);
@@ -63,6 +137,12 @@ class Wms extends Controller
         }
         // Both WMS and WFS can use GET
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            // Start timer for request duration
+            $startTime = microtime(true);
+            
+            // Increment concurrent requests gauge
+            $this->concurrentRequests->inc(['service' => 'unknown']);
+            
             foreach ($_GET as $k => $v) {
                 // Get the layer names from either WMS (layer) or WFS (typename)
                 if (strtolower($k) == "layers" || strtolower($k) == "layer" || strtolower($k) == "typename" || strtolower($k) == "typenames") {
@@ -71,9 +151,28 @@ class Wms extends Controller
                 // Get the service. wms, wfs or UTFGRID
                 if (strtolower($k) == "service") {
                     $this->service = strtolower($v);
+                    // Update gauge label with specific service
+                    $this->concurrentRequests->dec(['service' => 'unknown']);
+                    $this->concurrentRequests->inc(['service' => $this->service]);
                 } elseif (strtolower($k) == "format" && ($v == "json" || $v == "mvt")) {
                     $this->service = "utfgrid";
+                    // Update gauge label with specific service
+                    $this->concurrentRequests->dec(['service' => 'unknown']);
+                    $this->concurrentRequests->inc(['service' => $this->service]);
                 }
+            }
+            
+            // Increment request counter
+            $this->requestCounter->inc(['service' => $this->service ?? 'unknown', 'method' => 'GET', 'status' => 'started']);
+            
+            // Track layer access
+            foreach ($this->layers as $layer) {
+                $this->layerAccessCounter->inc([
+                    'layer' => $layer,
+                    'service' => $this->service ?? 'unknown',
+                    'db' => $db,
+                    'schema' => $schema
+                ]);
             }
             // If IP not trusted, when check auth on layers
             if (!$trusted) {
@@ -85,15 +184,55 @@ class Wms extends Controller
             }
             try {
                 $this->get($db, $schema);
+                
+                // Record successful request
+                $this->requestCounter->inc(['service' => $this->service ?? 'unknown', 'method' => 'GET', 'status' => 'success']);
+                
+                // Observe request duration
+                $endTime = microtime(true);
+                $this->requestDuration->observe(
+                    $endTime - $startTime,
+                    ['service' => $this->service ?? 'unknown', 'method' => 'GET']
+                );
+                
+                // Decrement concurrent requests gauge on success
+                $this->concurrentRequests->dec(['service' => $this->service ?? 'unknown']);
             } catch (Exception $e) {
+                // Record failed request
+                $this->requestCounter->inc(['service' => $this->service ?? 'unknown', 'method' => 'GET', 'status' => 'error']);
+                
+                // Observe request duration even for errors
+                $endTime = microtime(true);
+                $this->requestDuration->observe(
+                    $endTime - $startTime,
+                    ['service' => $this->service ?? 'unknown', 'method' => 'GET']
+                );
+                
+                // Decrement concurrent requests gauge on error
+                $this->concurrentRequests->dec(['service' => $this->service ?? 'unknown']);
+                
                 throw new ServiceException($e->getMessage());
             }
         }
         // Only WFS uses POST
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Start timer for request duration
+            $startTime = microtime(true);
+            
+            // Increment concurrent requests gauge
+            $this->concurrentRequests->inc(['service' => 'unknown']);
+            
             $request = Input::get(null, true);
             $xml = new SimpleXMLElement($request);
             $this->service = strtolower((string)$xml['service']);
+            
+            // Update gauge label with specific service
+            $this->concurrentRequests->dec(['service' => 'unknown']);
+            $this->concurrentRequests->inc(['service' => $this->service]);
+            
+            // Increment request counter
+            $this->requestCounter->inc(['service' => $this->service, 'method' => 'POST', 'status' => 'started']);
+            
             $namespace = $xml->getNamespaces(true);
             $queries = $xml->children($namespace['wfs'])->Query;
             foreach ($queries as $query) {
@@ -102,6 +241,15 @@ class Wms extends Controller
                     // Strip name space if any
                     $layer = sizeof(explode(":", $typeName)) > 1 ? explode(":", $typeName)[1] : $typeName;
                     $this->layers[] = $layer;
+                    
+                    // Track layer access
+                    $this->layerAccessCounter->inc([
+                        'layer' => $layer,
+                        'service' => $this->service,
+                        'db' => $db,
+                        'schema' => $schema
+                    ]);
+                    
                     // If IP not trusted, when check auth on layer
                     if (!$trusted) {
                         $this->basicHttpAuthLayer($layer, $db);
@@ -113,6 +261,15 @@ class Wms extends Controller
                     foreach ($typeNames as $typeName) {
                         $layer = sizeof(explode(":", $typeName)) > 1 ? explode(":", $typeName)[1] : $typeName;
                         $this->layers[] = $layer;
+                        
+                        // Track layer access
+                        $this->layerAccessCounter->inc([
+                            'layer' => $layer,
+                            'service' => $this->service,
+                            'db' => $db,
+                            'schema' => $schema
+                        ]);
+                        
                         // If IP not trusted, when check auth on layer
                         if (!$trusted) {
                             $this->basicHttpAuthLayer($layer, $db);
@@ -121,11 +278,41 @@ class Wms extends Controller
                 }
             }
             if (count($this->layers) == 0) {
+                // Record failed request
+                $this->requestCounter->inc(['service' => $this->service, 'method' => 'POST', 'status' => 'error']);
+                $this->concurrentRequests->dec(['service' => $this->service]);
+                
                 throw new ServiceException("Could not get the typeName from the requests");
             }
             try {
                 $this->post($db, $schema, $request);
+                
+                // Record successful request
+                $this->requestCounter->inc(['service' => $this->service, 'method' => 'POST', 'status' => 'success']);
+                
+                // Observe request duration
+                $endTime = microtime(true);
+                $this->requestDuration->observe(
+                    $endTime - $startTime,
+                    ['service' => $this->service, 'method' => 'POST']
+                );
+                
+                // Decrement concurrent requests gauge on success
+                $this->concurrentRequests->dec(['service' => $this->service]);
             } catch (Exception $e) {
+                // Record failed request
+                $this->requestCounter->inc(['service' => $this->service, 'method' => 'POST', 'status' => 'error']);
+                
+                // Observe request duration even for errors
+                $endTime = microtime(true);
+                $this->requestDuration->observe(
+                    $endTime - $startTime,
+                    ['service' => $this->service, 'method' => 'POST']
+                );
+                
+                // Decrement concurrent requests gauge on error
+                $this->concurrentRequests->dec(['service' => $this->service]);
+                
                 throw new ServiceException($e->getMessage());
             }
         }
@@ -357,6 +544,13 @@ class Wms extends Controller
         });
         $content = curl_exec($ch);
         curl_close($ch);
+        
+        // Track bytes transferred
+        $this->bytesTransferred->inc(
+            ['service' => $this->service ?? 'unknown', 'method' => 'GET'],
+            strlen($content)
+        );
+        
         echo $content;
         exit();
     }
@@ -407,6 +601,13 @@ class Wms extends Controller
                 'Content-Length: ' . strlen($data))
         );
         $content = curl_exec($ch);
+        
+        // Track bytes transferred
+        $this->bytesTransferred->inc(
+            ['service' => $this->service, 'method' => 'POST'],
+            strlen($content)
+        );
+        
         header("Content-Type: text/xml");
         echo $content;
         exit();
@@ -430,10 +631,29 @@ class Wms extends Controller
             $auth = $geofence->authorize($rules);
             if (isset($auth["access"])) {
                 if ($auth["access"] == "deny") {
+                    // Track authorization decision - deny
+                    $this->authDecisionCounter->inc([
+                        'decision' => 'deny',
+                        'user' => $this->user ?? '*',
+                        'layer' => $layer
+                    ]);
                     throw new ServiceException("DENY");
                 } elseif ($auth["access"] == "limit" && !empty($auth["filters"]["filter"])) {
+                    // Track authorization decision - limit
+                    $this->authDecisionCounter->inc([
+                        'decision' => 'limit',
+                        'user' => $this->user ?? '*',
+                        'layer' => $layer
+                    ]);
                     $filters[$layer][] = "({$auth["filters"]["filter"]})";
                 }
+            } else {
+                // Track authorization decision - allow
+                $this->authDecisionCounter->inc([
+                    'decision' => 'allow',
+                    'user' => $this->user ?? '*',
+                    'layer' => $layer
+                ]);
             }
             $model = new Model();
             $versioning = $model->doesColumnExist($layer, "gc2_version_gid");
@@ -450,6 +670,9 @@ class Wms extends Controller
      */
     private function writeTmpMapFile(string $path): string
     {
+        // Start timer for mapfile generation
+        $startTime = microtime(true);
+        
         // Read the file
         $file = fopen($path, "r");
         $str = fread($file, filesize($path));
@@ -460,6 +683,14 @@ class Wms extends Controller
         $newMapFile = fopen($tmpMapFile, "w");
         fwrite($newMapFile, $str);
         fclose($newMapFile);
+        
+        // Observe mapfile generation duration
+        $endTime = microtime(true);
+        $this->mapfileDuration->observe(
+            $endTime - $startTime,
+            ['type' => 'mapfile']
+        );
+        
         return $tmpMapFile;
     }
 }
