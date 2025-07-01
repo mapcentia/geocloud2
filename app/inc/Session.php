@@ -38,7 +38,7 @@ class Session
      */
     private static function registerMetrics(): void
     {
-        if (!isset(App::$param['enableMetrics']) || !App::$param['enableMetrics']) {
+        if (!Metrics::isEnabled()) {
             return;
         }
 
@@ -92,7 +92,7 @@ class Session
         }
         
         // Record metrics before starting session
-        if (isset(App::$param['enableMetrics']) && App::$param['enableMetrics']) {
+        if (Metrics::isEnabled()) {
             self::registerMetrics();
             self::$sessionStartsCounter->inc(['protocol' => Util::protocol()]);
         }
@@ -107,7 +107,7 @@ class Session
     public static function set(string $key, mixed $value): void
     {
         // Record set operation if metrics are enabled
-        if (isset(App::$param['enableMetrics']) && App::$param['enableMetrics']) {
+        if (Metrics::isEnabled()) {
             self::registerMetrics();
             self::$sessionOperationsCounter->inc(['operation' => 'set']);
         }
@@ -121,7 +121,7 @@ class Session
     public static function getByKey(string $key): mixed
     {
         // Record getByKey operation if metrics are enabled
-        if (isset(App::$param['enableMetrics']) && App::$param['enableMetrics']) {
+        if (Metrics::isEnabled()) {
             self::registerMetrics();
             self::$sessionOperationsCounter->inc(['operation' => 'getByKey']);
         }
@@ -134,7 +134,7 @@ class Session
     public static function get(): array|null
     {
         // Record get operation if metrics are enabled
-        if (isset(App::$param['enableMetrics']) && App::$param['enableMetrics']) {
+        if (Metrics::isEnabled()) {
             self::registerMetrics();
             self::$sessionOperationsCounter->inc(['operation' => 'get']);
         }
@@ -149,14 +149,14 @@ class Session
     {
         if (isset($_SESSION['auth']) && $_SESSION['auth']) {
             // Record successful authentication if metrics are enabled
-            if (isset(App::$param['enableMetrics']) && App::$param['enableMetrics']) {
+            if (Metrics::isEnabled()) {
                 self::registerMetrics();
                 self::$sessionAuthCounter->inc(['result' => 'success']);
             }
             return true;
         } elseif ($redirect) {
             // Record failed authentication if metrics are enabled
-            if (isset(App::$param['enableMetrics']) && App::$param['enableMetrics']) {
+            if (Metrics::isEnabled()) {
                 self::registerMetrics();
                 self::$sessionAuthCounter->inc(['result' => 'failure']);
             }
@@ -164,7 +164,7 @@ class Session
             exit();
         } else {
             // Record failed authentication if metrics are enabled
-            if (isset(App::$param['enableMetrics']) && App::$param['enableMetrics']) {
+            if (Metrics::isEnabled()) {
                 self::registerMetrics();
                 self::$sessionAuthCounter->inc(['result' => 'failure']);
             }
@@ -194,7 +194,7 @@ class Session
     public static function write(): void
     {
         // Record write operation if metrics are enabled
-        if (isset(App::$param['enableMetrics']) && App::$param['enableMetrics']) {
+        if (Metrics::isEnabled()) {
             self::registerMetrics();
             self::$sessionOperationsCounter->inc(['operation' => 'write']);
         }
