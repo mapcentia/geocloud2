@@ -18,6 +18,12 @@ include_once(__DIR__ . '/../inc/Globals.php');
 use app\inc\Metrics;
 use app\conf\App;
 
+// Check if metrics are enabled in configuration
+if (!Metrics::isEnabled()) {
+    echo "Metrics are not enabled in configuration. Exiting...\n";
+    exit(0);
+}
+
 // Configuration
 $metricsPort = App::$param['metricsPort'] ?? 9100; // Default port for metrics server
 $metricsHost = App::$param['metricsHost'] ?? '127.0.0.1'; // Default bind to localhost
@@ -32,6 +38,7 @@ if (!$server) {
 echo "Prometheus metrics server started on $metricsHost:$metricsPort (available at http://$metricsHost:$metricsPort/metrics)\n";
 
 // Main server loop
+
 while ($conn = @stream_socket_accept($server, -1)) {
     // Read the HTTP request and parse the path
     $request = '';
@@ -66,14 +73,6 @@ while ($conn = @stream_socket_accept($server, -1)) {
         $response .= "Content-Length: " . strlen($metrics) . "\r\n";
         $response .= "Connection: close\r\n\r\n";
         $response .= $metrics;
-    } else if ($path === '/' || $path === '') {
-        // For root path, provide information
-        $infoMessage = "GeoCloud2 Metrics Server\n\nMetrics are available at: /metrics\n\nConfigure Prometheus to scrape: http://$metricsHost:$metricsPort/metrics";
-        $response = "HTTP/1.1 200 OK\r\n";
-        $response .= "Content-Type: text/plain\r\n";
-        $response .= "Content-Length: " . strlen($infoMessage) . "\r\n";
-        $response .= "Connection: close\r\n\r\n";
-        $response .= $infoMessage;
     } else {
         // For any other path, return 404 Not Found
         $notFoundMessage = "Not Found. The metrics are available at /metrics";

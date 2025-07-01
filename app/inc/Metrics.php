@@ -6,6 +6,8 @@ use Prometheus\Storage\Redis;
 use Prometheus\Storage\InMemory;
 use Prometheus\RenderTextFormat;
 
+use app\conf\App;
+
 /**
  * Class Metrics
  * 
@@ -28,7 +30,7 @@ class Metrics
         // Check if the registry is already initialized
         if (self::$registry === null) {
             // Initialize the registry with Redis adapter if configured, otherwise use in-memory adapter
-            $redisConfig = \app\conf\App::$param["metricsCache"] ?? null;
+            $redisConfig = App::$param["metricsCache"] ?? null;
             
             if ($redisConfig && $redisConfig["type"] === "redis") {
                 $adapter = new Redis([
@@ -65,6 +67,21 @@ class Metrics
         $registry = self::getRegistry();
         $renderer = new \Prometheus\RenderTextFormat();
         return $renderer->render($registry->getMetricFamilySamples());
+    }
+
+    /**
+     * Returns the enabled status of metrics
+     * @return bool
+     */
+    public static function isEnabled(): bool
+    {
+        // Check if the 'enableMetrics' parameter is set in the App configuration
+        // and return its value, defaulting to false if not set
+        if (!isset(App::$param['enableMetrics'])) {
+            return false; // Default to false if not set
+        }
+
+        return App::$param['enableMetrics'] ?? false;
     }
 
 }
