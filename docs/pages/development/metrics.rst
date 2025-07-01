@@ -41,14 +41,14 @@ Metrics serveren kan startes ved at køre følgende kommando i terminalen:
 
 ```bash
 # Install as a systemd service
-sudo /var/www/geocloud2/app/scripts/manage-metrics-server.sh install
+php /var/www/geocloud2/app/scripts/metrics-server.php
+```
 
-# Start the service
-sudo /var/www/geocloud2/app/scripts/manage-metrics-server.sh start
-
-# Check status
-sudo /var/www/geocloud2/app/scripts/manage-metrics-server.sh status
-
+i docker kan du starte den med:
+```bash
+# Start metrics-service
+RUN cd /var/www/geocloud2/app && php composer.phar require promphp/prometheus_client_php
+RUN php /var/www/geocloud2/app/scripts/metrics-server.php
 ```
 
 Metrikker
