@@ -55,40 +55,52 @@ Metrikker
 --------------------------------------------------------------
 
 Metrics endpointet eksponerer forskellige metrikker om GeoCloud2's ydeevne og brug, herunder:
-- Wms
 
-    - **Anmodningsvolumen-metrikker**
+- Wms.php
+
+    - Anmodningsvolumen-metrikker
         - Samlet antal WMS/WFS-anmodninger: Sporer det samlede antal anmodninger behandlet efter servicetype (WMS, WFS, UTFGRID)
         - Anmodninger efter lag: Tæller anmodninger pr. lag for at identificere de mest hyppigt tilgåede lag
         - Fordeling af anmodningsmetoder: Sporer GET vs POST anmodninger for WFS-tjenester
 
-    - **Ydeevne-metrikker**
+    - Ydeevne-metrikker
         - Anmodningslatens: Måler hvor lang tid det tager at behandle forskellige typer anmodninger
             - Bruger histogrammer med passende intervaller (f.eks. 10ms, 50ms, 100ms, 250ms, 500ms, 1s, 2s, 5s)
             - Mærket efter servicetype (WMS/WFS/UTFGRID)
         - MapServer/QGIS Server behandlingstid: Sporer hvor lang tid den underliggende kortserver bruger på at behandle anmodninger
             - Dette hjælper med at identificere om forsinkelser er i GeoCloud2 eller i den underliggende kortserver
 
-    - **Fejl-metrikker**
+    - Fejl-metrikker
         - Fejlrate efter fejltype: Tæller forskellige typer fejl (autentificeringsfejl, ugyldige anmodninger, serverfejl)
         - HTTP-statuskoder: Tæller svar efter HTTP-statuskode
 
-    - **Ressourceforbrug-metrikker**
+    - Ressourceforbrug-metrikker
         - Filterbrug: Sporer hvor ofte filtre anvendes på anmodninger
         - Oprettelse af midlertidige filer: Tæller midlertidige mapfiler oprettet
         - QGIS vs MapServer brug: Sporer hvilken backend der bruges til anmodninger
 
-    - **Autentificering/Autorisation-metrikker**
+    - Autentificering/Autorisation-metrikker
         - Autentificeringsfejl: Tæller autentificerings/autorisationsfejl efter lag og bruger
         - Regelanvendelse: Sporer hvor ofte regler anvendes for at begrænse adgang
 
-    - **Kardinalitets-metrikker**
+    - Kardinalitets-metrikker
         - Unikke brugere: Tæller unikke brugere der tilgår tjenesten
         - Unikke lag: Tæller unikke lag der tilgås
 
-    - **Størrelsesmetrikker**
+    - Størrelsesmetrikker
         - Svarstørrelse: Sporer størrelsen af svar sendt tilbage til klienter
         - Multi-lag-anmodninger: Sporer hvor mange lag der anmodes om i et enkelt kald
+
+- Tilecache.php
+
+    - Cache-operationer
+        - Cache-operationstæller: Sporer antallet af tile cache-sletningsoperationer efter type og resultat
+        - Cache-operationsvarighed: Måler hvor lang tid cache-sletningsoperationer tager
+        - Filer fjernet: Tæller antallet af filer, der fjernes under sletningsoperationer
+
+    - Cache-størrelse
+        - Tile cache-størrelse: Sporer størrelsen af tile caches før sletning
+        - Cache-type anvendelse: Sporer hvilke cache-typer der bruges (sqlite, disk, bdb)
 
 
 
