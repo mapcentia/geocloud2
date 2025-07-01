@@ -102,6 +102,13 @@ Metrics endpointet eksponerer forskellige metrikker om GeoCloud2's ydeevne og br
         - Tile cache-størrelse: Sporer størrelsen af tile caches før sletning
         - Cache-type anvendelse: Sporer hvilke cache-typer der bruges (sqlite, disk, bdb)
 
+- Session
+
+    - Session-relaterede metrikker
+        - Session start: Tæller antallet af sessioner startet med protokol-label
+        - Autentificeringsforsøg: Tæller autentificeringsforsøg med resultat-label (succes/fejl)
+        - Sessionsoperationer: Sporer forskellige sessionsoperationer (oprettelse, læsning, skrivning)
+
 
 
 Disse og andre metrikker kan bruges til at oprette dashboards og alarmer i Grafana eller andre overvågningsværktøjer.

@@ -9,6 +9,7 @@
 namespace app\inc;
 
 use app\conf\App;
+use app\inc\Metrics;
 
 
 /**
@@ -17,6 +18,61 @@ use app\conf\App;
  */
 class Session
 {
+    /**
+     * @var \Prometheus\Counter|null
+     */
+    private static $sessionStartsCounter = null;
+
+    /**
+     * @var \Prometheus\Counter|null
+     */
+    private static $sessionAuthCounter = null;
+
+    /**
+     * @var \Prometheus\Counter|null
+     */
+    private static $sessionOperationsCounter = null;
+
+    /**
+     * Register metrics if enabled in App config
+     */
+    private static function registerMetrics(): void
+    {
+        if (!isset(App::$param['enableMetrics']) || !App::$param['enableMetrics']) {
+            return;
+        }
+
+        $registry = Metrics::getRegistry();
+
+        // Initialize counters if not already done
+        if (self::$sessionStartsCounter === null) {
+            self::$sessionStartsCounter = $registry->getOrRegisterCounter(
+                'geocloud2',
+                'session_starts_total',
+                'Total number of session starts',
+                ['protocol']
+            );
+        }
+
+        if (self::$sessionAuthCounter === null) {
+            self::$sessionAuthCounter = $registry->getOrRegisterCounter(
+                'geocloud2',
+                'session_authentication_attempts_total',
+                'Total number of session authentication attempts',
+                ['result']
+            );
+        }
+
+        if (self::$sessionOperationsCounter === null) {
+            self::$sessionOperationsCounter = $registry->getOrRegisterCounter(
+                'geocloud2',
+                'session_operations_total',
+                'Total number of session operations',
+                ['operation']
+            );
+        }
+    }
+
     /**
      *
      */
@@ -34,6 +90,13 @@ class Session
             ini_set("session.cookie_samesite", "None");
             ini_set("session.cookie_secure", 'On');
         }
+        
+        // Record metrics before starting session
+        if (isset(App::$param['enableMetrics']) && App::$param['enableMetrics']) {
+            self::registerMetrics();
+            self::$sessionStartsCounter->inc(['protocol' => Util::protocol()]);
+        }
+        
         session_start();
     }
 
@@ -43,6 +106,11 @@ class Session
      */
     public static function set(string $key, mixed $value): void
     {
+        // Record set operation if metrics are enabled
+        if (isset(App::$param['enableMetrics']) && App::$param['enableMetrics']) {
+            self::registerMetrics();
+            self::$sessionOperationsCounter->inc(['operation' => 'set']);
+        }
         $_SESSION[$key] = $value;
     }
 
@@ -52,6 +120,11 @@ class Session
      */
     public static function getByKey(string $key): mixed
     {
+        // Record getByKey operation if metrics are enabled
+        if (isset(App::$param['enableMetrics']) && App::$param['enableMetrics']) {
+            self::registerMetrics();
+            self::$sessionOperationsCounter->inc(['operation' => 'getByKey']);
+        }
         return $_SESSION[$key] ?? null;
     }
 
@@ -60,6 +133,11 @@ class Session
      */
     public static function get(): array|null
     {
+        // Record get operation if metrics are enabled
+        if (isset(App::$param['enableMetrics']) && App::$param['enableMetrics']) {
+            self::registerMetrics();
+            self::$sessionOperationsCounter->inc(['operation' => 'get']);
+        }
         return $_SESSION;
     }
 
@@ -70,11 +148,26 @@ class Session
     public static function authenticate(?string $redirect = " / ")
     {
         if (isset($_SESSION['auth']) && $_SESSION['auth']) {
+            // Record successful authentication if metrics are enabled
+            if (isset(App::$param['enableMetrics']) && App::$param['enableMetrics']) {
+                self::registerMetrics();
+                self::$sessionAuthCounter->inc(['result' => 'success']);
+            }
             return true;
         } elseif ($redirect) {
+            // Record failed authentication if metrics are enabled
+            if (isset(App::$param['enableMetrics']) && App::$param['enableMetrics']) {
+                self::registerMetrics();
+                self::$sessionAuthCounter->inc(['result' => 'failure']);
+            }
             Redirect::to($redirect);
             exit();
         } else {
+            // Record failed authentication if metrics are enabled
+            if (isset(App::$param['enableMetrics']) && App::$param['enableMetrics']) {
+                self::registerMetrics();
+                self::$sessionAuthCounter->inc(['result' => 'failure']);
+            }
             exit();
         }
     }
@@ -100,6 +193,11 @@ class Session
      */
     public static function write(): void
     {
+        // Record write operation if metrics are enabled
+        if (isset(App::$param['enableMetrics']) && App::$param['enableMetrics']) {
+            self::registerMetrics();
+            self::$sessionOperationsCounter->inc(['operation' => 'write']);
+        }
         session_write_close();
     }
 
