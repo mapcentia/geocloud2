@@ -304,6 +304,10 @@ ADD entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
+# Add Metrics server
+RUN cp run-metrics-server.sh /run-metrics-server.sh
+RUN chmod +x /run-metrics-server.sh
+
 ###############################################################################
 # Dev Stage (final)
 ###############################################################################
