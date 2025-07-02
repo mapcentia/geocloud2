@@ -138,6 +138,7 @@ class User extends AbstractApi
         }
         foreach ($data['users'] as $user) {
             $user['parentdb'] = $this->jwt['database'];
+            $user['subuser'] = true;
             // Load pre extensions and run processAddUser
             $this->runPreExtension('processAddUser', $model);
             try {

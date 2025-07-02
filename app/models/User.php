@@ -193,10 +193,10 @@ class User extends Model
         $result = $this->fetchRow($res);
         if ($result['count'] > 0) {
             if (!empty($data['subuser'])) {
-                $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE screenname = '" . $userId . "' AND parentdb = '" . $this->userId . "'");
+                $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE screenname = '" . $userId . "' AND parentdb = '" . $parentDb . "'");
                 $result = $this->fetchRow($res);
                 if ($result['count'] > 0) {
-                    throw new GC2Exception("User identifier $userId already exists for parent database " . $this->userId, 400, null, 'SUB_USER_ALREADY_EXISTS');
+                    throw new GC2Exception("User identifier $userId already exists for parent database " . $parentDb, 400, null, 'SUB_USER_ALREADY_EXISTS');
                 }
                 $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE screenname = '" . $userId . "' AND parentdb ISNULL");
                 $result = $this->fetchRow($res);
@@ -211,11 +211,10 @@ class User extends Model
 
         // Check if such email already exists in the database - there can not be two super-user with the same email,
         // but there can be tow sub-users with the same email in different databases
-        // TODO use parentDb instead of $this->userID if allowUnauthenticatedClientsToCreateSubUsers and no session is started
-        if (empty($this->userId)) {
+        if (empty($parentDb)) {
             $sql = "SELECT COUNT(*) AS count FROM users WHERE email = '$email'";
         } else {
-            $sql = "SELECT COUNT(*) AS count FROM users WHERE email = '$email' AND parentdb = '" . $this->userId . "'";
+            $sql = "SELECT COUNT(*) AS count FROM users WHERE email = '$email' AND parentdb = '" . $parentDb . "'";
         }
 
         $res = $this->execQuery($sql);
