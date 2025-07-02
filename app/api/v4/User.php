@@ -180,7 +180,10 @@ class User extends AbstractApi
                 throw new Exception("Sub-users are not allowed to update other sub users");
             }
             $data["user"] = $requestedUserId;
-            $data["usergroup"] = $data["user_group"];
+            if (array_key_exists("user_group", $data)) {
+                $data["usergroup"] = $data["user_group"];
+                unset($data["user_group"]);
+            }
             if ($currentUserId == $requestedUserId) {
                 if (!$this->jwt['superUser']) {
                     $data['parentdb'] = $this->jwt['database'];

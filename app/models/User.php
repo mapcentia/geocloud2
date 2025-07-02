@@ -332,16 +332,20 @@ class User extends Model
             }
             $password = Setting::encryptPwSecure(Util::format($data["password"]));
         }
-        $userGroup = $data["usergroup"] ?? null;
         $properties = isset($data["properties"]) ? json_encode($data["properties"]) : null;
         $sQuery = "UPDATE users SET screenname=screenname";
         if ($password) $sQuery .= ", pw=:sPassword";
         if ($email) $sQuery .= ", email=:sEmail";
         if ($properties) $sQuery .= ", properties=:sProperties";
-        if (isset($userGroup)) {
+        if (array_key_exists('usergroup', $data)) {
+            $userGroup = $data["usergroup"];
+            if (is_null($userGroup)) {
+                $userGroups[$user] = null;
+            } else {
+                $userGroups = Session::getByKey("usergroups") ?? [];
+                $userGroups[$user] = !empty($userGroup) ? $userGroup : null;
+            }
             $sQuery .= ", usergroup=:sUsergroup";
-            $userGroups = Session::getByKey("usergroups") ?? [];
-            $userGroups[$user] = !empty($userGroup) ? $userGroup : null;
             Session::set("usergroups", $userGroups);
         }
         if (!empty($data["parentdb"])) {
@@ -356,7 +360,7 @@ class User extends Model
         if ($email) {
             $res->bindParam(":sEmail", $email);
         }
-        if (isset($userGroup)) {
+        if (array_key_exists('usergroup', $data)) {
             $str = $userGroup !== "" ? $userGroup : null;
             $res->bindParam(":sUsergroup", $str);
         }
