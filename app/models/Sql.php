@@ -64,7 +64,8 @@ class Sql extends Model
      * @param int|null $srs The spatial reference system identifier to set.
      * @return void
      */
-    public function setSRS(?int $srs): void {
+    public function setSRS(?int $srs): void
+    {
         $this->srs = $srs;;
     }
 
@@ -541,6 +542,12 @@ class Sql extends Model
      */
     public function transaction(string $q, array $parameters = null, array $typeHints = null, bool $convertReturning = true, array $typeFormats = null): array
     {
+
+        // Always wrapped as an array of parameters
+        if (!is_array($parameters) || !isset($parameters[0]) || !is_array($parameters[0])) {
+            $parameters = [$parameters ?? []];
+        }
+
         $columnTypes = [];
         $convertedParameters = [];
         // Convert JSON to native types
@@ -741,8 +748,7 @@ class Sql extends Model
         } elseif ($type == 'boolean') {
             $nativeValue = $factory->getConverterForTypeSpecification($type)->output($value);
             $paramTmp = $nativeValue;
-        }
-        // In the case of date/time. Else $format will be null
+        } // In the case of date/time. Else $format will be null
         elseif ($format) {
             $dateTime = DateTimeImmutable::createFromFormat($format, $value);
             if (!$dateTime) {
@@ -750,8 +756,7 @@ class Sql extends Model
             }
             $nativeValue = $factory->getConverterForTypeSpecification($nativeType)->output($dateTime);
             $paramTmp = $nativeValue;
-        }
-        else {
+        } else {
             $paramTmp = $value;
         }
         return $paramTmp;
