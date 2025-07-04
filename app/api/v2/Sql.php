@@ -149,7 +149,18 @@ class Sql extends Controller
         if (Input::get('base64') === true || Input::get('base64') === "true") {
             $this->q = Util::base64urlDecode(Input::get("q"));
         } else {
-            $this->q = !empty(Input::get('q')) ? urldecode(Input::get('q')) : null;
+            $qInput = Input::get('q');
+            if (!empty($qInput)) {
+                // Only urldecode if it looks URL-encoded (contains percent-escapes)
+                if (preg_match('/%[0-9a-fA-F]{2}/', $qInput)) {
+                    $this->q = urldecode($qInput);
+                } else {
+                    $this->q = $qInput;
+                }
+
+            } else {
+                $this->q = null;
+            }
         }
 
         if (!$this->q) {
