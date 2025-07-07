@@ -18,6 +18,7 @@ use app\models\User as UserModel;
 use Exception;
 use OpenApi\Annotations\OpenApi;
 use OpenApi\Attributes as OA;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
@@ -54,6 +55,13 @@ use Symfony\Component\Validator\Constraints as Assert;
             description: "An object, which can contain any properties and values.",
             type: "object",
             example: ["phone" => "555-1234567", "address" => "123 Main St", "city" => "New York"],
+        ),
+        new OA\Property(
+            property: "default",
+            title: "Is default user",
+            description: "The default user is the user that is used when no token is provided. Use for public applications where users should not be able to access data without a token.",
+            type: "boolean",
+            example: true,
         ),
     ],
     type: "object"
@@ -113,6 +121,7 @@ class User extends AbstractApi
     /**
      * @return array
      * @throws Exception
+     * @throws InvalidArgumentException
      */
     #[OA\Post(path: '/api/v4/users', operationId: 'postUser', description: "New user", tags: ['Users'])]
     #[OA\RequestBody(description: 'New user', required: true, content: new OA\JsonContent(ref: "#/components/schemas/User"))]
@@ -299,6 +308,9 @@ class User extends AbstractApi
             'properties' => new Assert\Optional([
                 new Assert\Type('array'),
                 new Assert\NotBlank(),
+            ]),
+            'default' => new Assert\Optional([
+                new Assert\Type('boolean'),
             ]),
         ]);
     }

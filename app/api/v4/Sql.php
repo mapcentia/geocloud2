@@ -13,8 +13,9 @@ use app\inc\Input;
 use app\inc\Jwt;
 use app\api\v2\Sql as V2Sql;
 use app\inc\Route2;
-use app\models\Preparedstatement as PreparedstatementModel;
+use app\models\Database;
 use app\models\Setting;
+use Exception;
 use OpenApi\Annotations\OpenApi;
 use OpenApi\Attributes as OA;
 use Psr\Cache\InvalidArgumentException;
@@ -38,7 +39,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
             title: "Query",
             description: "SQL statement. SELECT, INSERT, UPDATE or DELETE",
             type: "string",
-            example: "insert into my_table (id,range,point) values(:id, range(:geom)) returning id,geom",
+            example: "SELECT :my_varchar::varchar(48) as my_varchar",
         ),
         new OA\Property(
             property: "params",
@@ -46,7 +47,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
             description: "Parameters for prepared statements.",
             type: "array",
             items: new OA\Items(type: "object"),
-            example: ["id" => 1, "name" => "John"],
+            example: ["my_varchar" => "Mary had a little lamb, little lamb, little lamb"],
         ),
         new OA\Property(
             property: "type_hints",
@@ -54,13 +55,6 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
             description: "For JSON represented parameters which are not of JSON type.",
             type: "object",
             example: ["range" => "numrange", "center" => "point"],
-        ),
-        new OA\Property(
-            property: "id",
-            title: "Store the statement on the server under this identifier",
-            description: "Store the statement on the server, which can be re-run with changed parameters.",
-            type: "string",
-            example: "my_statement",
         ),
     ],
     type: "object"
@@ -91,18 +85,31 @@ class Sql extends AbstractApi
     #[OA\Post(path: '/api/v4/sql', operationId: 'postSql', description: "Run SQL statements", tags: ['Sql'])]
     #[OA\RequestBody(description: 'Sql statement to run', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sql"))]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\MediaType('application/json'))]
-    #[OA\Response(response: 201, description: 'Insert/update a prepared statement')]
-    #[AcceptableContentTypes(['application/json', 'application/json-rpc'])]
+    #[OA\Response(response: 201, description: 'Insert/update a JSON-RPC method')]
+    #[OA\Response(response: 500, description: 'Internal error. Most like an SQL error.')]
+    #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
     public function post_index(): array
     {
-        $jwtData = Jwt::validate()["data"];
-        $isSuperUser = $jwtData["superUser"];
-        $uid = $jwtData["uid"];
-        $user = [
-            "user" => $isSuperUser ? $uid : "$uid@{$jwtData["database"]}"
-        ];
+        // If no token is provided and /api/v4/sql/database/{database} is used,
+        // then check if the default user is set
+        try {
+            $jwtData = Jwt::validate()["data"];
+            $isSuperUser = $jwtData["superUser"];
+            $uid = $jwtData["uid"];
+            $user = [
+                "user" => $isSuperUser ? $uid : "$uid@{$jwtData["database"]}"
+            ];
+        } catch (Exception) {
+            $db = func_get_arg(0);
+            Database::setDb($db);
+            $userObj = new \app\models\User(null, $db);
+            $defaultUser = $userObj->getDefaultUser();
+            $user = [
+                "user" => $defaultUser
+            ];
+        }
         $settingsData = (new Setting())->get()["data"];
         $apiKey = $isSuperUser ? $settingsData->api_key : $settingsData->api_key_subuser->$uid;
         $decodedBody = json_decode(Input::getBody(), true);
@@ -167,6 +174,23 @@ class Sql extends AbstractApi
     public function delete_index(): array
     {
         // TODO: Implement delete_index() method.
+    }
+
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     * @throws InvalidArgumentException
+     */
+    #[OA\Post(path: '/api/v4/sql/database/{database}', operationId: 'postSqlNoToken', description: "Run SQL statements without token", tags: ['Sql'])]
+    #[OA\Parameter(name: 'database', description: 'Database to use', in: 'path', required: false, example: 'mydb')]
+    #[OA\RequestBody(description: 'Sql statement to run', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sql"))]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\MediaType('application/json'))]
+    #[OA\Response(response: 500, description: 'Internal error. Most like an SQL error.')]
+    #[AcceptableContentTypes(['application/json'])]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    public function post_database(): array
+    {
+        return $this->post_index(Route2::getParam('database'));
     }
 
     /**

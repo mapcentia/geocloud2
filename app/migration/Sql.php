@@ -265,8 +265,10 @@ class Sql
                       \"user\" VARCHAR(255) NOT NULL,
                       timestamp TIMESTAMP DEFAULT now() NOT NULL
                     )";
-        $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER meta SET DEFAULT '{}'";
-        $sqls[] = "UPDATE settings.geometry_columns_join SET meta='{}' WHERE meta isnull";
+        $sqls[] = "ALTER TABLE users ADD COLUMN default_user boolean default false not null";
+        $sqls[] = "CREATE UNIQUE INDEX only_one_true_default_useridx
+                        ON users (default_user, parentdb)
+                        WHERE default_user IS TRUE";
         return $sqls;
     }
 

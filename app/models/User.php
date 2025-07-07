@@ -10,6 +10,7 @@ namespace app\models;
 
 use app\conf\App;
 use app\inc\Cache;
+use app\inc\Globals;
 use app\inc\Model;
 use app\inc\Session;
 use app\inc\Util;
@@ -52,6 +53,7 @@ class User extends Model
     {
         $patterns = [
             $this->parentdb . '_settings_*',
+            $this->parentdb . '_default_user',
         ];
         Cache::deleteByPatterns($patterns);
     }
@@ -172,6 +174,7 @@ class User extends Model
         $zone = (empty($data['zone']) ? null : Util::format($data['zone']));
         $parentDb = (empty($data['parentdb']) ? null : Util::format($data['parentdb']));
         $properties = (empty($data['properties']) ? null : $data['properties']);
+        $default = (empty($data['default']) ? false : $data['default']);
         if ($parentDb) {
             $sql = "SELECT 1 from pg_database WHERE datname=:sDatabase";
             $res = $this->prepare($sql);
@@ -244,7 +247,7 @@ class User extends Model
             }
         }
 
-        $sQuery = "INSERT INTO users (screenname,pw,email,parentdb,usergroup,zone,properties) VALUES(:sUserID, :sPassword, :sEmail, :sParentDb, :sUsergroup, :sZone, :sProperties) RETURNING screenname,parentdb,email,usergroup,zone,properties";
+        $sQuery = "INSERT INTO users (screenname,pw,email,parentdb,usergroup,zone,properties, default_user) VALUES(:sUserID, :sPassword, :sEmail, :sParentDb, :sUsergroup, :sZone, :sProperties, :sDefault) RETURNING screenname,parentdb,email,usergroup,zone,properties";
         $res = $this->prepare($sQuery);
         $res->execute(array(
             ":sUserID" => $userId,
@@ -254,8 +257,11 @@ class User extends Model
             ":sUsergroup" => $group,
             ":sZone" => $zone,
             ":sProperties" => $properties,
+            ":sDefault" => $default,
         ));
         $row = $this->fetchRow($res);
+
+        (new Setting())->updateApiKeyForUser($userId, isset($data['subuser']) && $data['subuser'] === false);
 
         // Start email notification
         if (!empty(App::$param["signupNotification"])) {
@@ -333,10 +339,12 @@ class User extends Model
             $password = Setting::encryptPwSecure(Util::format($data["password"]));
         }
         $properties = isset($data["properties"]) ? json_encode($data["properties"]) : null;
+        $default = (isset($data["default"])  && $data['default'] === false) ? 'f' : ((isset($data["default"])  && $data['default'] === true) ? 't': null);
         $sQuery = "UPDATE users SET screenname=screenname";
         if ($password) $sQuery .= ", pw=:sPassword";
         if ($email) $sQuery .= ", email=:sEmail";
         if ($properties) $sQuery .= ", properties=:sProperties";
+        if ($default) $sQuery .= ", default_user=:sDefault";
         if (array_key_exists('usergroup', $data)) {
             $userGroup = $data["usergroup"];
             if (is_null($userGroup)) {
@@ -366,6 +374,9 @@ class User extends Model
         }
         if ($properties) {
             $res->bindParam(":sProperties", $properties);
+        }
+        if ($default) {
+            $res->bindParam(":sDefault", $default);
         }
         $res->bindParam(":sUserID", $user);
         if (!empty($data["parentdb"])) {
@@ -521,5 +532,37 @@ class User extends Model
         $sql = "UPDATE codes set email=:email where code=:code";
         $res = $this->prepare($sql);
         $res->execute([":code" => $code, ":email" => $email]);
+    }
+
+
+    /**
+     * Retrieves the default user screen name for the current parent database.
+     * If the default user is cached, it is returned from the cache.
+     * Otherwise, it retrieves the default user from the database, caches the result, and returns it.
+     *
+     * @return string The screen name of the default user.
+     * @throws GC2Exception If no default user is found for the specified parent database.
+     */
+    public function getDefaultUser(): string
+    {
+        $cacheType = 'default_user';
+        $cacheId = $this->parentdb . "_" . $cacheType;
+
+        $CachedString = Cache::getItem($cacheId);
+
+        if ($CachedString != null && $CachedString->isHit()) {
+            return $CachedString->get();
+        } else {
+            $query = "SELECT screenname FROM users WHERE parentdb=:parentdb AND default_user='t'";
+            $res = $this->prepare($query);
+            $res->execute([':parentdb' => $this->parentdb]);
+            $defaultUser = $res->fetchColumn();
+            if (!$defaultUser) {
+                throw new GC2Exception("No default user found", 404, null, "NO_DEFAULT_USER_FOUND");
+            }
+            $CachedString->set($defaultUser)->expiresAfter(Globals::$cacheTtl);
+            Cache::save($CachedString);
+            return $defaultUser;
+        }
     }
 }

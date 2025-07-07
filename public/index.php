@@ -496,6 +496,8 @@ try {
             }
         });
 
+        Route2::add("api/v4/sql/(database)/{database}", new Sql(), function () {});
+
         Route2::add("api/v4/rpc/[id]", new Rpc(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
