@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2023 MapCentia ApS
+ * @copyright  2013-2025 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -15,6 +15,7 @@ use app\inc\Model;
 use app\inc\Session;
 use app\inc\Util;
 use Exception;
+use PDO;
 use PDOException;
 use Postmark\PostmarkClient;
 use app\exceptions\GC2Exception;
@@ -134,7 +135,7 @@ class User extends Model
      */
     public function getData(): array
     {
-        $query = "SELECT email, parentdb, usergroup, screenname as userid, properties, zone FROM users WHERE (screenname = :sUserID OR email = :sUserID) AND (parentdb = :parentDb OR parentDB IS NULL)";
+        $query = "SELECT email, parentdb, usergroup, screenname as userid, properties, zone, default_user FROM users WHERE (screenname = :sUserID OR email = :sUserID) AND (parentdb = :parentDb OR parentDB IS NULL)";
         $res = $this->prepare($query);
         $res->execute(array(":sUserID" => $this->userId, ":parentDb" => $this->parentdb));
         $row = $this->fetchRow($res);
@@ -174,7 +175,7 @@ class User extends Model
         $zone = (empty($data['zone']) ? null : Util::format($data['zone']));
         $parentDb = (empty($data['parentdb']) ? null : Util::format($data['parentdb']));
         $properties = (empty($data['properties']) ? null : $data['properties']);
-        $default = (empty($data['default']) ? false : $data['default']);
+        $default = (isset($data["default_user"]) && $data['default_user'] === false) ? 'f' : ((isset($data["default_user"]) && $data['default_user'] === true) ? 't' : null);
         if ($parentDb) {
             $sql = "SELECT 1 from pg_database WHERE datname=:sDatabase";
             $res = $this->prepare($sql);
@@ -247,7 +248,7 @@ class User extends Model
             }
         }
 
-        $sQuery = "INSERT INTO users (screenname,pw,email,parentdb,usergroup,zone,properties, default_user) VALUES(:sUserID, :sPassword, :sEmail, :sParentDb, :sUsergroup, :sZone, :sProperties, :sDefault) RETURNING screenname,parentdb,email,usergroup,zone,properties";
+        $sQuery = "INSERT INTO users (screenname, pw, email, parentdb, usergroup, zone, properties, default_user) VALUES(:sUserID, :sPassword, :sEmail, :sParentDb, :sUsergroup, :sZone, :sProperties, :sDefault) RETURNING screenname, parentdb, email, usergroup, zone, properties";
         $res = $this->prepare($sQuery);
         $res->execute(array(
             ":sUserID" => $userId,
@@ -339,7 +340,7 @@ class User extends Model
             $password = Setting::encryptPwSecure(Util::format($data["password"]));
         }
         $properties = isset($data["properties"]) ? json_encode($data["properties"]) : null;
-        $default = (isset($data["default"])  && $data['default'] === false) ? 'f' : ((isset($data["default"])  && $data['default'] === true) ? 't': null);
+        $default = (isset($data["default_user"]) && $data['default_user'] === false) ? 'f' : ((isset($data["default_user"]) && $data['default_user'] === true) ? 't' : null);
         $sQuery = "UPDATE users SET screenname=screenname";
         if ($password) $sQuery .= ", pw=:sPassword";
         if ($email) $sQuery .= ", email=:sEmail";
@@ -433,22 +434,13 @@ class User extends Model
      */
     public function getSubusers(string $userId): array
     {
-        $sQuery = "SELECT * FROM users WHERE parentdb = :sUserID";
+        $sQuery = "SELECT email, parentdb, usergroup, screenname as screenName, properties, zone, default_user FROM users WHERE parentdb = :sUserID";
         $res = $this->prepare($sQuery);
         $res->execute([":sUserID" => $userId]);
-
-        $subusers = [];
-        while ($row = $this->fetchRow($res)) {
-            $row["screenName"] = $row["screenname"];
-            unset($row["screenname"]);
-            unset($row["pw"]);
-            $subusers[] = $row;
-        }
-
+        $subusers = $res->fetchAll(PDO::FETCH_ASSOC);
         $response = [];
         $response['success'] = true;
         $response['data'] = $subusers;
-
         return $response;
     }
 

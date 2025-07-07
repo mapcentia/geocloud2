@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <shumsan1011@gmail.com>
- * @copyright  2013-2024 MapCentia ApS
+ * @copyright  2013-2025 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -57,7 +57,7 @@ use Symfony\Component\Validator\Constraints as Assert;
             example: ["phone" => "555-1234567", "address" => "123 Main St", "city" => "New York"],
         ),
         new OA\Property(
-            property: "default",
+            property: "default_user",
             title: "Is default user",
             description: "The default user is the user that is used when no token is provided. Use for public applications where users should not be able to access data without a token.",
             type: "boolean",
@@ -254,7 +254,7 @@ class User extends AbstractApi
             "user_group" => $user["usergroup"] ?? null,
             "email" => $user["email"] ?? null,
             "properties" => $user["properties"] ?? null,
-            "password" => $user["password"] ?? null,
+            "default_user" => $user["default_user"],
         ];
     }
 
@@ -309,7 +309,7 @@ class User extends AbstractApi
                 new Assert\Type('array'),
                 new Assert\NotBlank(),
             ]),
-            'default' => new Assert\Optional([
+            'default_user' => new Assert\Optional([
                 new Assert\Type('boolean'),
             ]),
         ]);
