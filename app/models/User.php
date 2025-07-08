@@ -434,7 +434,7 @@ class User extends Model
      */
     public function getSubusers(string $userId): array
     {
-        $sQuery = "SELECT email, parentdb, usergroup, screenname as screenName, properties, zone, default_user FROM users WHERE parentdb = :sUserID";
+        $sQuery = "SELECT email, parentdb, usergroup, screenname as \"screenName\", properties, zone, default_user FROM users WHERE parentdb = :sUserID";
         $res = $this->prepare($sQuery);
         $res->execute([":sUserID" => $userId]);
         $subusers = $res->fetchAll(PDO::FETCH_ASSOC);
