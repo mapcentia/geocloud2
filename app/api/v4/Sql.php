@@ -105,10 +105,11 @@ class Sql extends AbstractApi
             $db = func_get_arg(0);
             Database::setDb($db);
             $userObj = new \app\models\User(null, $db);
-            $defaultUser = $userObj->getDefaultUser();
+            $uid = $userObj->getDefaultUser();
             $user = [
-                "user" => $defaultUser
+                "user" => "$uid@$db"
             ];
+            $isSuperUser = false;
         }
         $settingsData = (new Setting())->get()["data"];
         $apiKey = $isSuperUser ? $settingsData->api_key : $settingsData->api_key_subuser->$uid;
