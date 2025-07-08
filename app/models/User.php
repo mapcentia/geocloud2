@@ -175,7 +175,7 @@ class User extends Model
         $zone = (empty($data['zone']) ? null : Util::format($data['zone']));
         $parentDb = (empty($data['parentdb']) ? null : Util::format($data['parentdb']));
         $properties = (empty($data['properties']) ? null : $data['properties']);
-        $default = (isset($data["default_user"]) && $data['default_user'] === false) ? 'f' : ((isset($data["default_user"]) && $data['default_user'] === true) ? 't' : null);
+        $default = (isset($data["default_user"]) && $data['default_user'] === false) ? 'f' : ((isset($data["default_user"]) && $data['default_user'] === true) ? 't' : 'f');
         if ($parentDb) {
             $sql = "SELECT 1 from pg_database WHERE datname=:sDatabase";
             $res = $this->prepare($sql);
@@ -240,9 +240,15 @@ class User extends Model
         if (isset($data['subuser']) && $data['subuser'] === false) {
             $db->postgisdb = $this->postgisdb;
             $db->createdb($userId, App::$param['databaseTemplate']);
+            Database::setDb($userId);
+            (new Setting())->updateApiKeyForUser($userId, true);
+            Database::setDb('mapcentia');
         } else {
             try {
                 $db->createUser($userId, $parentDb);
+                Database::setDb($parentDb);
+                (new Setting())->updateApiKeyForUser($userId, false);
+                Database::setDb('mapcentia');
             } catch (PDOException $e) {
                 throw new GC2Exception($e->getMessage(), 400, null, 'USER_CREATION_FAILED');
             }
@@ -261,8 +267,6 @@ class User extends Model
             ":sDefault" => $default,
         ));
         $row = $this->fetchRow($res);
-
-        (new Setting())->updateApiKeyForUser($userId, isset($data['subuser']) && $data['subuser'] === false);
 
         // Start email notification
         if (!empty(App::$param["signupNotification"])) {
@@ -340,7 +344,7 @@ class User extends Model
             $password = Setting::encryptPwSecure(Util::format($data["password"]));
         }
         $properties = isset($data["properties"]) ? json_encode($data["properties"]) : null;
-        $default = (isset($data["default_user"]) && $data['default_user'] === false) ? 'f' : ((isset($data["default_user"]) && $data['default_user'] === true) ? 't' : null);
+        $default = (isset($data["default_user"]) && $data['default_user'] === false) ? 'f' : ((isset($data["default_user"]) && $data['default_user'] === true) ? 't' : 'f');
         $sQuery = "UPDATE users SET screenname=screenname";
         if ($password) $sQuery .= ", pw=:sPassword";
         if ($email) $sQuery .= ", email=:sEmail";
