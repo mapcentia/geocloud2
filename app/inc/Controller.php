@@ -247,7 +247,7 @@ class Controller
 
                         if ($auth == "Read/write" || ($transaction)) {
                             $response['success'] = false;
-                            $response['message'] = "Not the right key!";
+                            $response['message'] = "Forbidden";;
                             $response['code'] = 403;
                         } else {
                             $response['success'] = true;
@@ -265,7 +265,7 @@ class Controller
                             $response['code'] = 200;
                         } else {
                             $response['success'] = false;
-                            $response['message'] = "Not the right key!";
+                            $response['message'] = "Forbidden";;
                             $response['code'] = 403;
                         }
                     } else {
