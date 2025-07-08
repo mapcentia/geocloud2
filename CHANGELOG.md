@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2025.7.0] - 2025-8-7
+### Added
+- New v4 API `api/v4/sql/database/[database]` which can be used without a token.
+  Database name must be provided in the URI.
+  One sub-user can be set as `default` (using `api/v4/users`), which will be used in the new token-less SQL api.
+  This enables unauthorized access to public datasets.
+  With the default sub-user rules can be applied along with privileges.
+
+### Changed
+- In SQL and RPC APIs, `params` can now be a single object and not only a list of objects.
+  Before a single object should be wrapped in an array: `[{...}]`.
+  This applied only for insert, update and delete, while for select it is always a single object.
+
 ## [2025.6.3] - 2025-30-6
 ### Added
 - Import API has a new `p_multi` property that allows promoting single geometries to multipart within the import process. Before single geometries were always promoted. 
