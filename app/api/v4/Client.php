@@ -200,7 +200,7 @@ class Client extends AbstractApi
             $arr = [
                 'id' => $id,
                 'name' => $data['name'] ?? null,
-                'redirectUri' => $data['redirect_uri'] ? json_encode($data['redirect_uri']): null,
+                'redirectUri' => $data['redirect_uri'] ? json_encode($data['redirect_uri']) : null,
                 'homepage' => $data['homepage'] ?? null,
                 'description' => $data['description'] ?? null,
                 'public' => $data['public'] ?? null,
@@ -256,33 +256,40 @@ class Client extends AbstractApi
         if (Input::getMethod() == 'post' && !empty($id)) {
             $this->postWithResource();
         }
-
         $this->validateRequest(self::getAssert(), $body, 'clients', Input::getMethod());
-
     }
 
     static public function getAssert(): Assert\Collection
     {
-        return new Assert\Collection([
-            'name' => new Assert\Length(['min' => 3]),
-            'homepage' => new Assert\Optional(
-                new Assert\Url(['requireTld' => true]),
-            ),
-            'description' => new Assert\Optional([
+        $collection = new Assert\Collection([]);
+
+        if (Input::getMethod() == 'post') {
+            $collection->fields['name'] = new Assert\Required(
                 new Assert\Length(['min' => 3])
-            ]),
-            'redirect_uri' => new Assert\Optional([
-                new Assert\Type('array'),
-                new Assert\Count(['min' => 1]),
-                new Assert\NotBlank(),
-            ]),
-            'public' => new Assert\Optional([
-                new Assert\Type('boolean'),
-            ]),
-            'confirm' => new Assert\Optional([
-                new Assert\Type('boolean'),
-            ]),
+            );
+        } else {
+            $collection->fields['name'] = new Assert\Optional(
+                new Assert\Length(['min' => 3])
+            );
+        }
+        $collection->fields['homepage'] = new Assert\Optional(
+            new Assert\Url(['requireTld' => true]),
+        );
+        $collection->fields['description'] = new Assert\Optional(
+            new Assert\Length(['min' => 3])
+        );
+        $collection->fields['redirect_uri'] = new Assert\Optional([
+            new Assert\Type('array'),
+            new Assert\Count(['min' => 1]),
+            new Assert\NotBlank(),
         ]);
+        $collection->fields['public'] = new Assert\Optional(
+            new Assert\Type('boolean')
+        );
+        $collection->fields['confirm'] = new Assert\Optional(
+            new Assert\Type('boolean')
+        );
+        return $collection;
     }
 
     public function put_index(): array
