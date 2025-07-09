@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## Unreleased
+### Fixed
+- Added `GC2-API-KEY` to `Access-Control-Allow-Headers` to remove an error when calling feature-api and more from CORS-strict clients such as browsers.
+
 ## [2025.7.0] - 2025-8-7
 ### Added
 - New v4 API `api/v4/sql/database/[database]` which can be used without a token.
