@@ -1,6 +1,7 @@
 <?php
 
 use Amp\Http\Server\DefaultErrorHandler;
+use Amp\Http\Server\RequestHandler\ClosureRequestHandler;
 use Amp\Http\Server\Router;
 use Amp\Http\Server\SocketHttpServer;
 use Amp\Log\ConsoleFormatter;
@@ -8,6 +9,8 @@ use Amp\Log\StreamHandler;
 use Amp\Socket;
 use Amp\Websocket\Server\Rfc6455Acceptor;
 use Amp\Websocket\Server\Websocket;
+use Amp\Http\Server\Response;
+use Amp\Http\HttpStatus;
 use app\conf\App;
 use app\event\sockets\WsBroadcast;
 use Monolog\Logger;
@@ -45,7 +48,15 @@ $wsBroadcast = new Websocket($server, $logger, $acceptor, $broadcastHandler);
 
 $router = new Router($server, $logger, $errorHandler);
 $router->addRoute('GET', '/broadcast', $wsBroadcast);
-//$router->setFallback(new DocumentRoot($server, $errorHandler, '/var/www/geocloud2/public'));
+$router->addRoute('GET', '/ping', new ClosureRequestHandler(
+    function () {
+        return new Response(
+            status: HttpStatus::OK,
+            headers: ['content-type' => 'text/plain'],
+            body: 'pong',
+        );
+    },
+));//$router->setFallback(new DocumentRoot($server, $errorHandler, '/var/www/geocloud2/public'));
 
 $server->start($router, $errorHandler);
 
