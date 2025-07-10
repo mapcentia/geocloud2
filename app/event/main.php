@@ -37,8 +37,8 @@ $logHandler->setFormatter(new ConsoleFormatter());
 $logger = new Logger('server');
 $logger->pushHandler($logHandler);
 $server = SocketHttpServer::createForDirectAccess($logger);
-$server->expose(new Socket\InternetAddress('0.0.0.0', 8080));
-$server->expose(new Socket\InternetAddress('[::1]', 8080));
+$server->expose(new Socket\InternetAddress('0.0.0.0', 80));
+$server->expose(new Socket\InternetAddress('[::1]', 80));
 $errorHandler = new DefaultErrorHandler();
 
 $acceptor = new Rfc6455Acceptor();
