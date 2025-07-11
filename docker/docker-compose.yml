@@ -38,7 +38,7 @@ services:
       - default
       - internal
     ports:
-      - "8088:8080"
+      - "8088:80"
     expose:
       - 9000
     environment:
