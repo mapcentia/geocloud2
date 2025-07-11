@@ -293,7 +293,7 @@ class Model
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function getMetaData(string $table, bool $temp = false, bool $restriction = true, array $restrictions = null, string $cacheKey = null, bool $getEnums = true, bool $lookupForeignTables = true): array
+    public function getMetaData(string $table, bool $temp = false, bool $restriction = true, ?array $restrictions = null, ?string $cacheKey = null, bool $getEnums = true, bool $lookupForeignTables = true): array
     {
         $cacheType = "metadata";
         $cacheRel = $cacheKey ?: $table;
@@ -775,7 +775,7 @@ class Model
      * @param string $table
      * @param string $column
      * @return array<string, int|string|bool>
-     * @throws PhpfastcacheInvalidArgumentException|PDOException
+     * @throws PDOException
      */
     public function doesColumnExist(string $table, string $column): array
     {
@@ -805,7 +805,6 @@ class Model
      * @param string|null $schema
      * @param string $table
      * @return array
-     * @throws PhpfastcacheInvalidArgumentException
      */
     public function getForeignConstrains(string|null $schema, string $table): array
     {
@@ -855,7 +854,6 @@ class Model
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
      */
     public function getConstrains(string|null $schema, string $table, ?string $type = null): array
     {

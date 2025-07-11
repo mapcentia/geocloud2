@@ -14,7 +14,6 @@ use app\inc\Model;
 use app\inc\UserFilter;
 use app\models\User as UserModel;
 use Exception;
-use PDOException;
 use sad_spirit\pg_builder\Statement;
 use sad_spirit\pg_builder\StatementFactory;
 use sad_spirit\pg_wrapper\converters\DefaultTypeConverterFactory;
@@ -47,7 +46,6 @@ class Geofence extends Model
     /**
      * @param array $rules
      * @return array
-     * @throws GC2Exception
      */
     public function authorize(array $rules): array
     {
@@ -84,7 +82,7 @@ class Geofence extends Model
      * @throws GC2Exception
      * @throws Exception
      */
-    public function postProcessQuery(Statement $statement, array $rules, array $params = null, array $typeHints = null): true
+    public function postProcessQuery(Statement $statement, array $rules, ?array $params = null, ?array $typeHints = null): true
     {
         $auth = $this->authorize($rules);
         $filters = $auth["filters"];
@@ -111,7 +109,7 @@ class Geofence extends Model
                         $nativeType = $typeHints[$field] ?? 'json';
                         try {
                             $nativeValue = $typeFactory->getConverterForTypeSpecification($nativeType)->output($value);
-                        } catch (\Exception) {
+                        } catch (Exception) {
                             throw new GC2Exception("The value couldn't be parsed as $nativeType", 406, null, "VALUE_PARSE_ERROR");
                         }
                         $paramTmp[$field] = $nativeValue;
@@ -212,7 +210,7 @@ class Geofence extends Model
 
     /**
      * @param array $data
-     * @return array
+     * @return void
      * @throws GC2Exception
      */
     public function update(array $data): void
@@ -239,7 +237,8 @@ class Geofence extends Model
 
     /**
      * @param int $id
-     * @return array
+     * @return void
+     * @throws GC2Exception
      */
     public function delete(int $id): void
     {
