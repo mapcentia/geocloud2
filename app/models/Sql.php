@@ -203,8 +203,7 @@ class Sql extends Model
                     $fieldsArr[] = "ST_asText(ST_Transform($ST_Force2D(\"$key\"),$this->srs)) as \"$key\"";
                 }
             } elseif ($type == "bytea") {
-                $fieldsArr[] = "encode(\"$key\",'escape') as \"$key\"";
-//                $fieldsArr[] = "'https://' as \"$key\"";
+                $fieldsArr[] = "encode(\"$key\",'base64') as \"$key\"";
             } else {
                 $fieldsArr[] = "\"$key\"";
             }
@@ -748,6 +747,10 @@ class Sql extends Model
         } elseif ($type == 'boolean') {
             $nativeValue = $factory->getConverterForTypeSpecification($type)->output($value);
             $paramTmp = $nativeValue;
+        } elseif ($nativeType == 'bytea') {
+            $value = base64_decode($value);
+            $nativeValue = $factory->getConverterForTypeSpecification('bytea')->output($value);
+            $paramTmp = $nativeValue;
         } // In the case of date/time. Else $format will be null
         elseif ($format) {
             $dateTime = DateTimeImmutable::createFromFormat($format, $value);
@@ -808,12 +811,9 @@ class Sql extends Model
             $value = $value->format($format ?? self::DEFAULT_TIMESTAMPTZ_FORMAT);
         }
         if ($value instanceof DateInterval) {
-            $tmp = [];
-            foreach ($value as $key => $n) {
-                if ($n) {
-                    $tmp[$key] = $n;
-                }
-            }
+            $tmp = array_filter((array)$value, function ($n) {
+                return $n;
+            });
             $value = $tmp;
         }
         if ($value instanceof DateTimeRange) {

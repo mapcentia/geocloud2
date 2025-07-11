@@ -1,4 +1,5 @@
 ARG ECW_VERSION=3
+ARG PHP_VERSION=8.4
 
 ###############################################################################
 # Base image
@@ -8,6 +9,8 @@ LABEL maintainer="Martin Høgh <mh@mapcentia.com>"
 
 # Non-interactive mode for apt
 ENV DEBIAN_FRONTEND=noninteractive
+ARG PHP_VERSION
+ENV PHP_VERSION=${PHP_VERSION}
 
 # 1) Update and install wget + gnupg2 in the same step
 RUN apt-get -y  update && apt-get -y install wget gnupg2 && rm -rf /var/lib/apt/lists/*
@@ -21,9 +24,9 @@ RUN echo "deb https://packages.sury.org/php/ bookworm main" \
     cron vim g++ build-essential git unzip rng-tools \
     apache2-utils postgresql-client supervisor \
     apache2 apache2-dev \
-    php8.3-fpm php8.3-pgsql php8.3-redis php8.3-memcached \
-    php8.3-curl php8.3-sqlite3 php8.3-mbstring php8.3-gd \
-    php8.3-cli php8.3-dev php8.3-zip php8.3-simplexml php8.3-dba \
+    php${PHP_VERSION}-fpm php${PHP_VERSION}-pgsql php${PHP_VERSION}-redis php${PHP_VERSION}-memcached \
+    php${PHP_VERSION}-curl php${PHP_VERSION}-sqlite3 php${PHP_VERSION}-mbstring php${PHP_VERSION}-gd \
+    php${PHP_VERSION}-cli php${PHP_VERSION}-dev php${PHP_VERSION}-zip php${PHP_VERSION}-simplexml php${PHP_VERSION}-dba \
     cmake librsvg2-dev libpng++-dev libjpeg-dev libfreetype6-dev \
     libproj-dev libfribidi-dev libharfbuzz-dev libcairo2-dev libgeos++-dev \
     curl libapache2-mod-fcgid libfcgi-dev xvfb osm2pgsql postgis sudo \
@@ -37,12 +40,12 @@ RUN echo "deb https://packages.sury.org/php/ bookworm main" \
 # PECL modules (pq and uv)
 ###############################################################################
 RUN pecl install raphf \
-    && echo "extension=raphf.so" >> /etc/php/8.3/cli/php.ini \
+    && echo "extension=raphf.so" >> /etc/php/${PHP_VERSION}/cli/php.ini \
     && pecl install pq \
     && pecl config-set preferred_state beta \
     && pecl install uv \
-    && echo "extension=pq.so" >> /etc/php/8.3/cli/php.ini \
-    && echo "extension=uv.so" >> /etc/php/8.3/cli/php.ini
+    && echo "extension=pq.so" >> /etc/php/${PHP_VERSION}/cli/php.ini \
+    && echo "extension=uv.so" >> /etc/php/${PHP_VERSION}/cli/php.ini
 
 ###############################################################################
 # SWIG > 4.0.0 to get PHP8 support
@@ -57,9 +60,9 @@ RUN git clone https://github.com/swig/swig.git \
     && rm -rf swig
 
 ###############################################################################
-# Make php8.3-fpm run in the foreground
+# Make php-fpm run in the foreground
 ###############################################################################
-RUN sed -i 's/;daemonize = yes/daemonize = no/' /etc/php/8.3/fpm/php-fpm.conf
+RUN sed -i 's/;daemonize = yes/daemonize = no/' /etc/php/${PHP_VERSION}/fpm/php-fpm.conf
 
 # Hide server version and OS from Apache
 RUN sed -i '/ServerTokens OS/c\ServerTokens Prod' /etc/apache2/conf-enabled/security.conf \
@@ -91,7 +94,7 @@ RUN a2enmod rewrite headers expires include actions alias fcgid proxy proxy_http
     && a2dismod deflate -f
 
 # Start fpm (so dirs are created)
-RUN service php8.3-fpm start || true
+RUN service php${PHP_VERSION}-fpm start || true
 
 ###############################################################################
 # ecw 3.3 Stage
@@ -177,10 +180,13 @@ RUN wget http://download.osgeo.org/gdal/${GDAL_VERSION}/gdal353.zip \
 ###############################################################################
 FROM gdal${ECW_VERSION} AS mapserver
 
+ARG PHP_VERSION
+ENV PHP_VERSION=${PHP_VERSION}
+
 # Set php session + upload sizes
-RUN sed -i "s/session.gc_maxlifetime = 1440/session.gc_maxlifetime = 86400/g" /etc/php/8.3/fpm/php.ini \
-    && sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 1000M/g" /etc/php/8.3/fpm/php.ini \
-    && sed -i "s/post_max_size = 8M/post_max_size = 1000M/g" /etc/php/8.3/fpm/php.ini
+RUN sed -i "s/session.gc_maxlifetime = 1440/session.gc_maxlifetime = 86400/g" /etc/php/${PHP_VERSION}/fpm/php.ini \
+    && sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 1000M/g" /etc/php/${PHP_VERSION}/fpm/php.ini \
+    && sed -i "s/post_max_size = 8M/post_max_size = 1000M/g" /etc/php/${PHP_VERSION}/fpm/php.ini
 
 # Build MapServer 8.0 from source
 RUN git clone --branch rsvg_fix https://github.com/mapcentia/mapserver.git \
@@ -207,7 +213,7 @@ RUN git clone --branch rsvg_fix https://github.com/mapcentia/mapserver.git \
     && cp mapserv /usr/lib/cgi-bin/mapserv.fcgi
 
 # Enable PHP-MapScript
-RUN echo "extension=php_mapscriptng.so" >> /etc/php/8.3/fpm/php.ini
+RUN echo "extension=php_mapscriptng.so" >> /etc/php/${PHP_VERSION}/fpm/php.ini
 
 # Build MapCache from source
 RUN apt-get update && apt-get install -y --no-install-recommends libapr-memcache-dev \
@@ -243,16 +249,21 @@ RUN mkdir /mapcache \
 # Add Apache, PHP-FPM, Supervisor conf from local context
 ADD conf/apache/000-default.conf /etc/apache2/sites-enabled/000-default.conf
 ADD conf/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-ADD conf/fpm/www.conf /etc/php/8.3/fpm/pool.d/www.conf
+ADD conf/fpm/www.conf /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf
 ADD conf/apache/run-apache.sh /
 RUN chmod +x /run-apache.sh
-ADD conf/fpm/run-fpm.sh /
+
+RUN cat <<'EOF' > /run-fpm.sh
+#!/bin/bash
+rm -f /var/run/php-fpm.sock
+exec /usr/sbin/php-fpm${PHP_VERSION}
+EOF
 RUN chmod +x /run-fpm.sh
 
 RUN a2disconf other-vhosts-access-log
 
 # Opcache config
-COPY conf/fpm/opcache.ini /etc/php/8.3/mods-available/
+COPY conf/fpm/opcache.ini /etc/php/${PHP_VERSION}/mods-available/
 
 ###############################################################################
 # Cron jobs
@@ -300,6 +311,13 @@ RUN mkdir -p /var/www \
 # Set workdir
 WORKDIR /var/www/geocloud2
 
+# Instal composer
+RUN cd app \
+    && php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+    && php -r "if (hash_file('sha384', 'composer-setup.php') === 'dac665fdc30fdd8ec78b38b9800061b4150413ff2e3b6f88543c636f7cd84f6db9189d43a81e5503cda447da73c7e5b6') { echo 'Installer verified'.PHP_EOL; } else { echo 'Installer corrupt'.PHP_EOL; unlink('composer-setup.php'); exit(1); }" \
+    && php composer-setup.php \
+    && php -r "unlink('composer-setup.php');"
+
 ADD entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
@@ -308,6 +326,9 @@ ENTRYPOINT ["/entrypoint.sh"]
 # Dev Stage (final)
 ###############################################################################
 FROM mapserver AS dev
+
+ARG PHP_VERSION
+ENV PHP_VERSION=${PHP_VERSION}
 
 # Get latest source
 RUN git pull
@@ -330,9 +351,9 @@ RUN cd dashboard \
 VOLUME /var/www/geocloud2
 
 # Xdebug (if needed for dev)
-RUN apt-get update && apt-get install -y --no-install-recommends php8.3-xdebug \
+RUN apt-get update && apt-get install -y --no-install-recommends php${PHP_VERSION}-xdebug \
     && rm -rf /var/lib/apt/lists/*
-COPY conf/fpm/xdebug.ini /etc/php/8.3/mods-available/
+COPY conf/fpm/xdebug.ini /etc/php/${PHP_VERSION}/mods-available/
 RUN phpenmod xdebug
 
 # Final CMD
