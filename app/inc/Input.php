@@ -49,7 +49,7 @@ class Input
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public static function getMethod(): ?string
     {
@@ -62,7 +62,7 @@ class Input
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public static function getAccept(): ?string
     {
@@ -70,11 +70,11 @@ class Input
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public static function getContentType(): ?string
     {
-        return $_SERVER["CONTENT_TYPE"];
+        return $_SERVER["CONTENT_TYPE"] ?? null;
     }
 
     /**
@@ -111,7 +111,8 @@ class Input
     }
 
     /**
-     * @return string
+     * @param bool $decode
+     * @return string|null
      */
     public static function getBody(bool $decode = true): ?string
     {
@@ -165,7 +166,7 @@ class Input
      * @param bool $raw
      * @return mixed
      */
-    public static function get(string $key = null, bool $raw = false): mixed
+    public static function get(?string $key = null, bool $raw = false): mixed
     {
 
         if (isset(self::$params)) {
@@ -205,7 +206,7 @@ class Input
     /**
      * @param string $str
      * @param bool $raw
-     * @return array<mixed>
+     * @return array
      */
     private static function parseQueryString(string $str, bool $raw = false): array
     {
