@@ -23,7 +23,7 @@ class RPCException extends Exception
 {
     protected array $response;
 
-    public function __construct($message, $code = 0, Throwable $previous = null, $data = null, $id = null) {
+    public function __construct($message, $code = 0, ?Throwable $previous = null, $data = null, $id = null) {
         $this->response = [
             "jsonrpc" => "2.0",
             "error" => [

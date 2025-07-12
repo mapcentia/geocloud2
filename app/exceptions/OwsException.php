@@ -25,7 +25,7 @@ class OwsException extends Exception
 {
     protected array $attributes;
 
-    public function __construct($message, $code = 0, Throwable $previous = null, array $attributes = [])
+    public function __construct($message, $code = 0, ?Throwable $previous = null, array $attributes = [])
     {
         parent::__construct($message, $code, $previous);
         $this->attributes = $attributes;
