@@ -136,7 +136,7 @@ class Geofence extends AbstractApi
             $r = $geofence->get(null);
         }
         // Rename layer to table
-        $r = array_map(function($item) {
+        $r = array_map(function ($item) {
             $item['table'] = $item['layer'];
             unset($item['layer']);
             return $item;
@@ -285,23 +285,23 @@ class Geofence extends AbstractApi
             ]),
             'service' => new Assert\Optional([
                 new Assert\Type('string'),
-                new Assert\Choice(['sql', 'ows', 'wfst', '*']),
+                new Assert\Choice(choices: ['sql', 'ows', 'wfst', '*']),
             ]),
             'request' => new Assert\Optional([
                 new Assert\Type('string'),
-                new Assert\Choice(['select', 'insert', 'update', 'delete', '*']),
+                new Assert\Choice(choices: ['select', 'insert', 'update', 'delete', '*']),
             ]),
             'table' => new Assert\Optional([
                 new Assert\Type('string'),
                 new Assert\NotBlank(),
             ]),
             'iprange' => new Assert\Optional([
-                new Assert\AtLeastOneOf([
-                    'constraints' => [
+                new Assert\AtLeastOneOf(
+                    constraints: [
                         new Assert\Cidr(),
                         new Assert\EqualTo('*'),
                     ],
-                ])
+                )
             ]),
             'schema' => new Assert\Optional([
                 new Assert\Type('string'),
@@ -309,7 +309,7 @@ class Geofence extends AbstractApi
             ]),
             'access' => new Assert\Optional([
                 new Assert\Type('string'),
-                new Assert\Choice(['allow', 'limit', 'deny']),
+                new Assert\Choice(choices: ['allow', 'limit', 'deny']),
             ]),
             'filter' => new Assert\Optional([
                 new Assert\Type('string'),

@@ -321,7 +321,7 @@ class Constraint extends AbstractApi
             ]),
             'columns' => new Assert\Optional([
                 new Assert\Type('array'),
-                new Assert\Count(['min' => 1]),
+                new Assert\Count(min: 1),
                 new Assert\All([
                     new Assert\NotBlank(),
                     new Assert\Type('string'),
@@ -333,7 +333,7 @@ class Constraint extends AbstractApi
             ]),
             'referenced_columns' => new Assert\Optional([
                 new Assert\Type('array'),
-                new Assert\Count(['min' => 1]),
+                new Assert\Count(min: 1),
                 new Assert\All([
                     new Assert\NotBlank(),
                     new Assert\Type('string'),

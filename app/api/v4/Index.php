@@ -215,7 +215,7 @@ class Index extends AbstractApi
             ]),
             'columns' => new Assert\Required([
                 new Assert\Type('array'),
-                new Assert\Count(['min' => 1]),
+                new Assert\Count(min: 1),
                 new Assert\All([
                     new Assert\NotBlank()
                 ]),

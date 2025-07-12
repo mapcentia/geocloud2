@@ -295,13 +295,13 @@ class User extends AbstractApi
     {
         return new Assert\Collection([
             'name' => new Assert\Optional([
-                new Assert\Length(['min' => 2, 'max' => 40]),
+                new Assert\Length(min : 2, max: 40),
             ]),
             'email' => new Assert\Optional([
                 new Assert\Email(),
             ]),
             'password' => new Assert\Optional([
-                new Assert\PasswordStrength(['minScore' => 1]),
+                //new Assert\PasswordStrength(minScore: 4),
             ]),
             'user_group' => new Assert\Optional([
             ]),

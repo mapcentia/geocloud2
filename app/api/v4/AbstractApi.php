@@ -327,7 +327,7 @@ abstract class AbstractApi implements ApiInterface
         return new Assert\Collection([
             'jsonrpc' => new Assert\Required([
                 new Assert\Type('string'),
-                new Assert\Choice(['2.0']),
+                new Assert\Choice(choices: ['2.0']),
             ]),
             'method' => new Assert\Required(([
                 new Assert\NotBlank(),
@@ -335,7 +335,7 @@ abstract class AbstractApi implements ApiInterface
             ])),
             'params' => new Assert\Optional([
                 new Assert\Type('array'),
-                new Assert\Count(['min' => 1]),
+                new Assert\Count(min: 1),
             ]),
             'id' => new Assert\Optional([
                 new Assert\NotBlank(),

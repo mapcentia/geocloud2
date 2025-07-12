@@ -241,15 +241,15 @@ class Sql extends AbstractApi
             ),
             'params' => new Assert\Optional([
                 new Assert\Type('array'),
-                new Assert\Count(['min' => 1]),
+                new Assert\Count(min: 1),
             ]),
             'type_hints' => new Assert\Optional([
                 new Assert\Type('array'),
-                new Assert\Count(['min' => 1]),
+                new Assert\Count(min: 1),
             ]),
             'type_formats' => new Assert\Optional([
                 new Assert\Type('array'),
-                new Assert\Count(['min' => 1]),
+                new Assert\Count(min: 1),
             ]),
             'output_format' => new Assert\Optional(
                 new Assert\NotBlank(),
@@ -272,7 +272,7 @@ class Sql extends AbstractApi
             'geo_format' => new Assert\Optional([
                 new Assert\Type('string'),
                 new Assert\NotBlank(),
-                new Assert\Choice(['wkt', 'geojson']),
+                new Assert\Choice(choices: ['wkt', 'geojson']),
 
             ]),
         ]);

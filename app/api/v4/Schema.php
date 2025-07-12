@@ -279,7 +279,7 @@ class Schema extends AbstractApi
             ]),
             'tables' => new Assert\Optional([
                 new Assert\Type('array'),
-                new Assert\Count(['min' => 1]),
+                new Assert\Count(min: 1),
                 new Assert\All([
                     new Assert\NotBlank(),
                     Table::getAssert(),

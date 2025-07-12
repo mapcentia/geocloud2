@@ -370,7 +370,7 @@ class Table extends AbstractApi
             ]),
             'columns' => new Assert\Optional([
                 new Assert\Type('array'),
-                new Assert\Count(['min' => 1]),
+                new Assert\Count(min: 1),
                 new Assert\All([
                     new Assert\NotBlank(),
                     Column::getAssert(),
@@ -378,7 +378,7 @@ class Table extends AbstractApi
             ]),
             'indices' => new Assert\Optional([
                 new Assert\Type('array'),
-                new Assert\Count(['min' => 1]),
+                new Assert\Count(min: 1),
                 new Assert\All([
                     new Assert\NotBlank(),
                     Index::getAssert(),
@@ -386,7 +386,7 @@ class Table extends AbstractApi
             ]),
             'constraints' => new Assert\Optional([
                 new Assert\Type('array'),
-                new Assert\Count(['min' => 1]),
+                new Assert\Count(min: 1),
                 new Assert\All([
                     new Assert\NotBlank(),
                     Constraint::getAssert(),
