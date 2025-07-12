@@ -543,8 +543,8 @@ class Sql extends Model
     {
 
         // Always wrapped as an array of parameters
-        if (!is_array($parameters) || !isset($parameters[0]) || !is_array($parameters[0])) {
-            $parameters = [$parameters ?? []];
+        if ($parameters !== null && (!isset($parameters[0]) || !is_array($parameters[0]))) {
+            $parameters = [$parameters];
         }
 
         $columnTypes = [];
