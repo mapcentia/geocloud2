@@ -1,4 +1,4 @@
-<?php  //[STAMP] c2e0e8675bef05b8e85db0d29e809902
+<?php  //[STAMP] 03539915bacf6916d69c4c51b731e88e
 // phpcs:ignoreFile
 namespace _generated;
 
@@ -29,6 +29,7 @@ trait ApiTesterActions
      *     $this->doSomethingBad();
      * });
      * ```
+     *
      * If you want to check message or throwable code, you can pass them with throwable instance:
      * ```php
      * <?php
@@ -37,11 +38,9 @@ trait ApiTesterActions
      *     $this->doSomethingBad();
      * });
      * ```
-     *
-     * @param \Throwable|string $throwable
      * @see \Codeception\Module\Asserts::expectThrowable()
      */
-    public function expectThrowable($throwable, callable $callback): void {
+    public function expectThrowable(\Throwable|string $throwable, callable $callback): void {
         $this->getScenario()->runStep(new \Codeception\Step\Action('expectThrowable', func_get_args()));
     }
 
@@ -347,6 +346,8 @@ trait ApiTesterActions
      * Asserts that a variable is empty.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert empty $actual
      * @see \Codeception\Module\AbstractAsserts::assertEmpty()
      */
     public function assertEmpty($actual, string $message = "") {
@@ -416,6 +417,8 @@ trait ApiTesterActions
      * Asserts that a condition is false.
      *
      * @param mixed $condition
+     *
+     * @phpstan-assert false $condition
      * @see \Codeception\Module\AbstractAsserts::assertFalse()
      */
     public function assertFalse($condition, string $message = "") {
@@ -614,7 +617,12 @@ trait ApiTesterActions
      *
      * Asserts that a variable is of a given type.
      *
+     * @template ExpectedType of object
+     *
      * @param mixed $actual
+     * @param class-string<ExpectedType> $expected
+     *
+     * @phpstan-assert =ExpectedType $actual
      * @see \Codeception\Module\AbstractAsserts::assertInstanceOf()
      */
     public function assertInstanceOf(string $expected, $actual, string $message = "") {
@@ -628,6 +636,8 @@ trait ApiTesterActions
      * Asserts that a variable is of type array.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert array $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsArray()
      */
     public function assertIsArray($actual, string $message = "") {
@@ -641,6 +651,8 @@ trait ApiTesterActions
      * Asserts that a variable is of type bool.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert bool $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsBool()
      */
     public function assertIsBool($actual, string $message = "") {
@@ -654,6 +666,8 @@ trait ApiTesterActions
      * Asserts that a variable is of type callable.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert callable $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsCallable()
      */
     public function assertIsCallable($actual, string $message = "") {
@@ -667,6 +681,8 @@ trait ApiTesterActions
      * Asserts that a variable is of type resource and is closed.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert resource $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsClosedResource()
      */
     public function assertIsClosedResource($actual, string $message = "") {
@@ -680,6 +696,8 @@ trait ApiTesterActions
      * Asserts that a variable is of type float.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert float $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsFloat()
      */
     public function assertIsFloat($actual, string $message = "") {
@@ -693,6 +711,8 @@ trait ApiTesterActions
      * Asserts that a variable is of type int.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert int $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsInt()
      */
     public function assertIsInt($actual, string $message = "") {
@@ -706,6 +726,8 @@ trait ApiTesterActions
      * Asserts that a variable is of type iterable.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert iterable $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsIterable()
      */
     public function assertIsIterable($actual, string $message = "") {
@@ -719,6 +741,8 @@ trait ApiTesterActions
      * Asserts that a variable is not of type array.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert !array $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsNotArray()
      */
     public function assertIsNotArray($actual, string $message = "") {
@@ -732,6 +756,8 @@ trait ApiTesterActions
      * Asserts that a variable is not of type bool.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert !bool $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsNotBool()
      */
     public function assertIsNotBool($actual, string $message = "") {
@@ -745,6 +771,8 @@ trait ApiTesterActions
      * Asserts that a variable is not of type callable.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert !callable $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsNotCallable()
      */
     public function assertIsNotCallable($actual, string $message = "") {
@@ -758,6 +786,8 @@ trait ApiTesterActions
      * Asserts that a variable is not of type resource.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert !resource $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsNotClosedResource()
      */
     public function assertIsNotClosedResource($actual, string $message = "") {
@@ -771,6 +801,8 @@ trait ApiTesterActions
      * Asserts that a variable is not of type float.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert !float $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsNotFloat()
      */
     public function assertIsNotFloat($actual, string $message = "") {
@@ -784,6 +816,8 @@ trait ApiTesterActions
      * Asserts that a variable is not of type int.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert !int $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsNotInt()
      */
     public function assertIsNotInt($actual, string $message = "") {
@@ -797,6 +831,8 @@ trait ApiTesterActions
      * Asserts that a variable is not of type iterable.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert !iterable $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsNotIterable()
      */
     public function assertIsNotIterable($actual, string $message = "") {
@@ -810,6 +846,8 @@ trait ApiTesterActions
      * Asserts that a variable is not of type numeric.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert !numeric $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsNotNumeric()
      */
     public function assertIsNotNumeric($actual, string $message = "") {
@@ -823,6 +861,8 @@ trait ApiTesterActions
      * Asserts that a variable is not of type object.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert !object $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsNotObject()
      */
     public function assertIsNotObject($actual, string $message = "") {
@@ -847,6 +887,8 @@ trait ApiTesterActions
      * Asserts that a variable is not of type resource.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert !resource $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsNotResource()
      */
     public function assertIsNotResource($actual, string $message = "") {
@@ -860,6 +902,8 @@ trait ApiTesterActions
      * Asserts that a variable is not of type scalar.
      *
      * @param mixed $actual
+     *
+     * @psalm-assert !scalar $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsNotScalar()
      */
     public function assertIsNotScalar($actual, string $message = "") {
@@ -873,6 +917,8 @@ trait ApiTesterActions
      * Asserts that a variable is not of type string.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert !string $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsNotString()
      */
     public function assertIsNotString($actual, string $message = "") {
@@ -897,6 +943,8 @@ trait ApiTesterActions
      * Asserts that a variable is of type numeric.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert numeric $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsNumeric()
      */
     public function assertIsNumeric($actual, string $message = "") {
@@ -910,6 +958,8 @@ trait ApiTesterActions
      * Asserts that a variable is of type object.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert object $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsObject()
      */
     public function assertIsObject($actual, string $message = "") {
@@ -934,6 +984,8 @@ trait ApiTesterActions
      * Asserts that a variable is of type resource.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert resource $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsResource()
      */
     public function assertIsResource($actual, string $message = "") {
@@ -947,6 +999,8 @@ trait ApiTesterActions
      * Asserts that a variable is of type scalar.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert scalar $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsScalar()
      */
     public function assertIsScalar($actual, string $message = "") {
@@ -960,6 +1014,8 @@ trait ApiTesterActions
      * Asserts that a variable is of type string.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert string $actual
      * @see \Codeception\Module\AbstractAsserts::assertIsString()
      */
     public function assertIsString($actual, string $message = "") {
@@ -1161,6 +1217,8 @@ trait ApiTesterActions
      * Asserts that a variable is not empty.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert !empty $actual
      * @see \Codeception\Module\AbstractAsserts::assertNotEmpty()
      */
     public function assertNotEmpty($actual, string $message = "") {
@@ -1230,6 +1288,8 @@ trait ApiTesterActions
      * Asserts that a condition is not false.
      *
      * @param mixed $condition
+     *
+     * @phpstan-assert !false $condition
      * @see \Codeception\Module\AbstractAsserts::assertNotFalse()
      */
     public function assertNotFalse($condition, string $message = "") {
@@ -1242,7 +1302,12 @@ trait ApiTesterActions
      *
      * Asserts that a variable is not of a given type.
      *
+     * @template ExpectedType of object
+     *
      * @param mixed $actual
+     * @param class-string<ExpectedType> $expected
+     *
+     * @phpstan-assert !ExpectedType $actual
      * @see \Codeception\Module\AbstractAsserts::assertNotInstanceOf()
      */
     public function assertNotInstanceOf(string $expected, $actual, string $message = "") {
@@ -1256,6 +1321,8 @@ trait ApiTesterActions
      * Asserts that a variable is not null.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert !null $actual
      * @see \Codeception\Module\AbstractAsserts::assertNotNull()
      */
     public function assertNotNull($actual, string $message = "") {
@@ -1297,6 +1364,8 @@ trait ApiTesterActions
      * Asserts that a condition is not true.
      *
      * @param mixed $condition
+     *
+     * @phpstan-assert !true $condition
      * @see \Codeception\Module\AbstractAsserts::assertNotTrue()
      */
     public function assertNotTrue($condition, string $message = "") {
@@ -1310,6 +1379,8 @@ trait ApiTesterActions
      * Asserts that a variable is null.
      *
      * @param mixed $actual
+     *
+     * @phpstan-assert null $actual
      * @see \Codeception\Module\AbstractAsserts::assertNull()
      */
     public function assertNull($actual, string $message = "") {
@@ -1343,9 +1414,15 @@ trait ApiTesterActions
      * [!] Method is generated. Documentation taken from corresponding module.
      *
      * Asserts that two variables have the same type and value.
+     * Used on objects, it asserts that two variables reference
+     * the same object.
      *
-     * @param mixed $expected
+     * @template ExpectedType
+     *
+     * @param ExpectedType $expected
      * @param mixed $actual
+     *
+     * @phpstan-assert =ExpectedType $actual
      * @see \Codeception\Module\AbstractAsserts::assertSame()
      */
     public function assertSame($expected, $actual, string $message = "") {
@@ -1584,6 +1661,8 @@ trait ApiTesterActions
      * Asserts that a condition is true.
      *
      * @param mixed $condition
+     *
+     * @phpstan-assert true $condition
      * @see \Codeception\Module\AbstractAsserts::assertTrue()
      */
     public function assertTrue($condition, string $message = "") {
@@ -1714,7 +1793,7 @@ trait ApiTesterActions
     /**
      * [!] Method is generated. Documentation taken from corresponding module.
      *
-     * Sets a HTTP header to be used for all subsequent requests. Use [`deleteHeader`](#deleteHeader) to unset it.
+     * Sets a HTTP header to be used for all subsequent requests. Use [`unsetHttpHeader`](#unsetHttpHeader) to unset it.
      *
      * ```php
      * <?php
@@ -1734,7 +1813,7 @@ trait ApiTesterActions
     /**
      * [!] Method is generated. Documentation taken from corresponding module.
      *
-     * Deletes a HTTP header (that was originally added by [haveHttpHeader()](#haveHttpHeader)),
+     * Unsets a HTTP header (that was originally added by [haveHttpHeader()](#haveHttpHeader)),
      * so that subsequent requests will not send it anymore.
      *
      * Example:
@@ -1743,13 +1822,24 @@ trait ApiTesterActions
      * $I->haveHttpHeader('X-Requested-With', 'Codeception');
      * $I->sendGet('test-headers.php');
      * // ...
-     * $I->deleteHeader('X-Requested-With');
+     * $I->unsetHttpHeader('X-Requested-With');
      * $I->sendPost('some-other-page.php');
      * ```
      *
-     * @param string $name the name of the header to delete.
+     * @param string $name the name of the header to unset.
      * @part json
      * @part xml
+     * @see \Codeception\Module\REST::unsetHttpHeader()
+     */
+    public function unsetHttpHeader(string $name): void {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('unsetHttpHeader', func_get_args()));
+    }
+
+ 
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @deprecated Use [unsetHttpHeader](#unsetHttpHeader) instead
      * @see \Codeception\Module\REST::deleteHeader()
      */
     public function deleteHeader(string $name): void {
@@ -1931,7 +2021,7 @@ trait ApiTesterActions
      * $I->amNTLMAuthenticated('jon_snow', 'targaryen');
      * ```
      *
-     * @throws ModuleException
+     * @throws \Codeception\Exception\ModuleException
      * @part json
      * @part xml
      * @see \Codeception\Module\REST::amNTLMAuthenticated()
@@ -1963,7 +2053,7 @@ trait ApiTesterActions
      * <?php
      * $I->amAWSAuthenticated();
      * ```
-     * @throws ConfigurationException
+     * @throws \Codeception\Exception\ConfigurationException
      * @see \Codeception\Module\REST::amAWSAuthenticated()
      */
     public function amAWSAuthenticated(array $additionalAWSConfig = []): void {
@@ -2001,7 +2091,7 @@ trait ApiTesterActions
      * ]]);
      * ```
      *
-     * @param array|string|JsonSerializable $params
+     * @param array|string|\JsonSerializable $params
      * @param array $files A list of filenames or "mocks" of $_FILES (each entry being an array with the following
      *                     keys: name, type, error, size, tmp_name (pointing to the real file path). Each key works
      *                     as the "name" attribute of a file input field.
@@ -2077,7 +2167,7 @@ trait ApiTesterActions
      * $response = $I->sendPut('/message/1', ['subject' => 'Read this!']);
      * ```
      *
-     * @param array|string|JsonSerializable $params
+     * @param array|string|\JsonSerializable $params
      * @part json
      * @part xml
      * @see \Codeception\Module\REST::sendPut()
@@ -2097,7 +2187,7 @@ trait ApiTesterActions
      * $response = $I->sendPatch('/message/1', ['subject' => 'Read this!']);
      * ```
      *
-     * @param array|string|JsonSerializable $params
+     * @param array|string|\JsonSerializable $params
      * @part json
      * @part xml
      * @see \Codeception\Module\REST::sendPatch()
@@ -2131,7 +2221,7 @@ trait ApiTesterActions
      *
      * Sends a HTTP request.
      *
-     * @param array|string|JsonSerializable $params
+     * @param array|string|\JsonSerializable $params
      * @part json
      * @part xml
      * @see \Codeception\Module\REST::send()
@@ -2332,10 +2422,10 @@ trait ApiTesterActions
      *
      * // response {"name": "john", "age": 20}
      * $schema = [
-     *  "properties" => [
-     *      "age" => [
-     *          "type" => "integer",
-     *          "minimum" => 18
+     *  'properties' => [
+     *      'age' => [
+     *          'type' => 'integer',
+     *          'minimum' => 18
      *      ]
      *  ]
      * ];
@@ -2365,10 +2455,10 @@ trait ApiTesterActions
      *
      * // response {"name": "john", "age": 20}
      * $schema = [
-     *  "properties" => [
-     *      "age" => [
-     *          "type" => "integer",
-     *          "minimum" => 18
+     *  'properties' => [
+     *      'age' => [
+     *          'type' => 'integer',
+     *          'minimum' => 18
      *      ]
      *  ]
      * ];
@@ -2450,7 +2540,7 @@ trait ApiTesterActions
      * ```
      *
      * @return array Array of matching items
-     * @throws Exception
+     * @throws \Exception
      * @part json
      * @see \Codeception\Module\REST::grabDataFromResponseByJsonPath()
      */
@@ -2880,6 +2970,7 @@ trait ApiTesterActions
      *
      * Here is the list of possible filters:
      *
+     * * `array:empty` - check that value is an empty array
      * * `integer:>{val}` - checks that integer is greater than {val} (works with float and string types too).
      * * `integer:<{val}` - checks that integer is lower than {val} (works with float and string types too).
      * * `string:url` - checks that value is valid url.
@@ -2964,6 +3055,7 @@ trait ApiTesterActions
      *
      * Here is the list of possible filters:
      *
+     * * `array:empty` - check that value is an empty array
      * * `integer:>{val}` - checks that integer is greater than {val} (works with float and string types too).
      * * `integer:<{val}` - checks that integer is lower than {val} (works with float and string types too).
      * * `string:url` - checks that value is valid url.
@@ -3448,7 +3540,7 @@ trait ApiTesterActions
      *
      * ``` php
      * <?php
-     * $I->seeXmlResponseIncludes("<result>1</result>");
+     * $I->seeXmlResponseIncludes('<result>1</result>');
      * ```
      *
      * @param mixed $xml
@@ -3470,7 +3562,7 @@ trait ApiTesterActions
      *
      * ``` php
      * <?php
-     * $I->seeXmlResponseIncludes("<result>1</result>");
+     * $I->seeXmlResponseIncludes('<result>1</result>');
      * ```
      *
      * @param mixed $xml
@@ -3524,14 +3616,14 @@ trait ApiTesterActions
      *
      * ```php
      * <?php
-     * $I->seeBinaryResponseEquals("df589122eac0f6a7bd8795436e692e3675cadc3b");
+     * $I->seeBinaryResponseEquals('df589122eac0f6a7bd8795436e692e3675cadc3b');
      * ```
      *
      * Example: Using sha1 for a file contents
      *
      * ```php
      * <?php
-     * $fileData = file_get_contents("test_file.jpg");
+     * $fileData = file_get_contents('test_file.jpg');
      * $I->seeBinaryResponseEquals(md5($fileData));
      * ```
      * Example: Using sha256 hash
@@ -3539,7 +3631,7 @@ trait ApiTesterActions
      * ```php
      * <?php
      * $fileData = '/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k='; // very small jpeg
-     * $I->seeBinaryResponseEquals(hash("sha256", base64_decode($fileData)), 'sha256');
+     * $I->seeBinaryResponseEquals(hash('sha256', base64_decode($fileData)), 'sha256');
      * ```
      *
      * @param string $hash the hashed data response expected
@@ -3563,14 +3655,14 @@ trait ApiTesterActions
      *
      * ```php
      * <?php
-     * $I->seeBinaryResponseEquals("df589122eac0f6a7bd8795436e692e3675cadc3b");
+     * $I->seeBinaryResponseEquals('df589122eac0f6a7bd8795436e692e3675cadc3b');
      * ```
      *
      * Example: Using sha1 for a file contents
      *
      * ```php
      * <?php
-     * $fileData = file_get_contents("test_file.jpg");
+     * $fileData = file_get_contents('test_file.jpg');
      * $I->seeBinaryResponseEquals(md5($fileData));
      * ```
      * Example: Using sha256 hash
@@ -3578,7 +3670,7 @@ trait ApiTesterActions
      * ```php
      * <?php
      * $fileData = '/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k='; // very small jpeg
-     * $I->seeBinaryResponseEquals(hash("sha256", base64_decode($fileData)), 'sha256');
+     * $I->seeBinaryResponseEquals(hash('sha256', base64_decode($fileData)), 'sha256');
      * ```
      *
      * @param string $hash the hashed data response expected
@@ -3599,7 +3691,7 @@ trait ApiTesterActions
      *
      * ```php
      * <?php
-     * $I->dontSeeBinaryResponseEquals("8c90748342f19b195b9c6b4eff742ded");
+     * $I->dontSeeBinaryResponseEquals('8c90748342f19b195b9c6b4eff742ded');
      * ```
      * Opposite to `seeBinaryResponseEquals`
      *
@@ -3620,7 +3712,7 @@ trait ApiTesterActions
      *
      * ```php
      * <?php
-     * $I->dontSeeBinaryResponseEquals("8c90748342f19b195b9c6b4eff742ded");
+     * $I->dontSeeBinaryResponseEquals('8c90748342f19b195b9c6b4eff742ded');
      * ```
      * Opposite to `seeBinaryResponseEquals`
      *
