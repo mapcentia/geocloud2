@@ -7,7 +7,7 @@
  */
 
 ini_set("display_errors", "no");
-error_reporting(E_ERROR | E_WARNING | E_PARSE);
+error_reporting(E_ERROR | E_WARNING | E_PARSE | E_DEPRECATED | E_USER_DEPRECATED);
 ob_start("ob_gzhandler");
 
 use app\api\v3\Meta;
@@ -98,7 +98,7 @@ register_shutdown_function(function () {
     global $memoryReserve;
     global $executionStartTime;
     $memoryReserve = null; // Free memory reserve
-    if ((!is_null($err = error_get_last())) && (!in_array($err['type'], [E_NOTICE, E_WARNING]))) {
+    if ((!is_null($err = error_get_last())) && (!in_array($err['type'], [E_NOTICE, E_WARNING, E_DEPRECATED, E_USER_DEPRECATED]))) {
         $code = "500";
         $response = new Response();
         $body = [
@@ -112,6 +112,8 @@ register_shutdown_function(function () {
         ];
         header("HTTP/1.0 $code " . Util::httpCodeText($code));
         echo $response->toJson($body);
+    } elseif (!empty($err["message"])) {
+        error_log($err["message"]);
     }
     return false;
 });
@@ -496,7 +498,8 @@ try {
             }
         });
 
-        Route2::add("api/v4/sql/(database)/{database}", new Sql(), function () {});
+        Route2::add("api/v4/sql/(database)/{database}", new Sql(), function () {
+        });
 
         Route2::add("api/v4/rpc/[id]", new Rpc(), function () {
             $jwt = Jwt::validate();
