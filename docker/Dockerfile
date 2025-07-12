@@ -253,7 +253,7 @@ ADD conf/fpm/www.conf /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf
 ADD conf/apache/run-apache.sh /
 RUN chmod +x /run-apache.sh
 
-RUN cat <<'EOF' > /run-fpm.sh
+RUN cat <<EOF > /run-fpm.sh
 #!/bin/bash
 rm -f /var/run/php-fpm.sock
 exec /usr/sbin/php-fpm${PHP_VERSION}
@@ -310,6 +310,9 @@ RUN mkdir -p /var/www \
 
 # Set workdir
 WORKDIR /var/www/geocloud2
+
+RUN rm app/composer.lock
+RUN rm app/composer.phar
 
 # Instal composer
 RUN cd app \
