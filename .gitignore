@@ -12,6 +12,7 @@ app/vendor
 app/libs/vendor
 app/tests/_output
 app/tests/_output/*
+app/composer.phar
 node_modules
 public/backups
 public/logs
