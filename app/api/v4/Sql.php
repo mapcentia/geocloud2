@@ -138,26 +138,11 @@ class Sql extends AbstractApi
             unset($res['success']);
             // unset($res['forStore']);
             unset($res['forGrid']);
-            if (!empty($value['jsonrpc'])) {
-                $jsonrpcResponse = [
-                    'jsonrpc' => $value['jsonrpc'],
-                    'result' => $res,
-                ];
-                if (isset($value['id'])) {
-                    $jsonrpcResponse['id'] = $value['id'];
-                    $result[] = $jsonrpcResponse;
+            $result[] = $res;
 
-                }
-            } else {
-                $result[] = $res;
-            }
         }
         if ($api->db->inTransaction()) {
             $api->commit();
-        }
-
-        if (count($result) == 0 && !empty($value['jsonrpc'])) {
-            return ['code' => '204'];
         }
 
         if (count($result) == 1) {
@@ -230,13 +215,10 @@ class Sql extends AbstractApi
         // TODO: Implement put_index() method.
     }
 
-    static public function getAssert($decodedBody): Assert\Collection
+    static public function getAssert(): Assert\Collection
     {
         return new Assert\Collection([
             'q' => new Assert\Required(
-                new Assert\NotBlank(),
-            ),
-            'method' => new Assert\Optional(
                 new Assert\NotBlank(),
             ),
             'params' => new Assert\Optional([
@@ -273,7 +255,6 @@ class Sql extends AbstractApi
                 new Assert\Type('string'),
                 new Assert\NotBlank(),
                 new Assert\Choice(choices: ['wkt', 'geojson']),
-
             ]),
         ]);
     }

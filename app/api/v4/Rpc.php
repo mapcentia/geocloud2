@@ -266,6 +266,13 @@ class Rpc extends AbstractApi
 
     static public function getAssert($decodedBody): Assert\Collection
     {
+        if (!property_exists($decodedBody, 'jsonrpc')) {
+            $asserts = Sql::getAssert();
+            $asserts->fields['method'] = new Assert\Required(
+                new Assert\Type('string'),
+            );
+            return $asserts;
+        }
         return self::getRpcAssert();
     }
 }
