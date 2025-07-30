@@ -537,7 +537,7 @@ class Sql extends Model
      * @param bool $convertReturning
      * @param array|null $typeFormats
      * @return array
-     * @throws GC2Exception
+     * @throws GC2Exception|Exception
      */
     public function transaction(string $q, ?array $parameters = null, ?array $typeHints = null, bool $convertReturning = true, ?array $typeFormats = null): array
     {
