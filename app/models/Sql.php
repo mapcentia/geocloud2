@@ -87,7 +87,7 @@ class Sql extends Model
      * @throws GC2Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
-    public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, ?string $nlt = null, ?string $nln = null, ?bool $convertTypes = false, array $parameters = null, array $typeHints = null, array $typeFormats = null): array
+    public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, ?string $nlt = null, ?string $nln = null, ?bool $convertTypes = false, ?array $parameters = null, ?array $typeHints = null, ?array $typeFormats = null): array
     {
         // Check params
         if (is_array($parameters) && array_key_exists(0, $parameters) && is_array($parameters[0])) {
@@ -539,7 +539,7 @@ class Sql extends Model
      * @return array
      * @throws GC2Exception
      */
-    public function transaction(string $q, array $parameters = null, array $typeHints = null, bool $convertReturning = true, array $typeFormats = null): array
+    public function transaction(string $q, ?array $parameters = null, ?array $typeHints = null, bool $convertReturning = true, ?array $typeFormats = null): array
     {
 
         // Always wrapped as an array of parameters
