@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED] - 2025-04-8
+### CHANGED
+- Docker images updated to PHP 8.4 (from 8.3). PHP version is now an argument in the Dockerfile.
+- Throughout the code base, implicit marking parameters as null are changed to explicit (implicit is deprecated in PHP 8.4)
+- All Symfony validators are updated so no deprecated notices are thrown.
+
+### Fixed
+- Before a "shut down" exception could be outputted after the actual payload from the APIs (e.g., a deprecated notice). The shutdown will only be output fatal errors, whereas warnings and notices will be outputted to the log. 
+
+## [2025.7.1] - 2025-11-7
+### Fixed
+- Bug in Sql API.
+
 ## [2025.7.0] - 2025-8-7
 ### Added
 - New v4 API `api/v4/sql/database/[database]` which can be used without a token.
