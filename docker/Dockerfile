@@ -250,7 +250,12 @@ RUN mkdir /mapcache \
 ADD conf/apache/000-default.conf /etc/apache2/sites-enabled/000-default.conf
 ADD conf/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 ADD conf/fpm/www.conf /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf
-ADD conf/apache/run-apache.sh /
+
+RUN cat <<EOF > /run-apache.sh
+#!/bin/bash
+rm -rf /var/run/apache2/*
+exec /usr/sbin/apachectl -D FOREGROUND
+EOF
 RUN chmod +x /run-apache.sh
 
 RUN cat <<EOF > /run-fpm.sh
