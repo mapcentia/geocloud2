@@ -312,7 +312,7 @@ HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=3 \
 # Clone GC2 from GitHub
 RUN mkdir -p /var/www \
     && cd /var/www \
-    && git clone https://github.com/mapcentia/geocloud2.git
+    && git clone https://github.com/mapcentia/geocloud2.git --branch master
 
 # Set workdir
 WORKDIR /var/www/geocloud2
