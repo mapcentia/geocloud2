@@ -7,7 +7,7 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNRELEASED] - 2025-04-8
 ### CHANGED
-- Docker images updated to PHP 8.4 (from 8.3). PHP version is now an argument in the Dockerfile.
+- Docker images updated to PHP 8.4 (from 8.3). PHP version is now an argument in the Dockerfile. Code base can still run on PHP 8.3.
 - Throughout the code base, implicit marking parameters as null are changed to explicit (implicit is deprecated in PHP 8.4)
 - All Symfony validators are updated so no deprecated notices are thrown.
 
