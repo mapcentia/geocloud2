@@ -251,6 +251,7 @@ ADD conf/apache/000-default.conf /etc/apache2/sites-enabled/000-default.conf
 ADD conf/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 ADD conf/fpm/www.conf /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf
 
+# Create start scripts for Apache2 and PHP-FPM
 RUN cat <<EOF > /run-apache.sh
 #!/bin/bash
 rm -rf /var/run/apache2/*
@@ -315,9 +316,6 @@ RUN mkdir -p /var/www \
 
 # Set workdir
 WORKDIR /var/www/geocloud2
-
-RUN rm app/composer.lock
-RUN rm app/composer.phar
 
 # Instal composer
 RUN cd app \
