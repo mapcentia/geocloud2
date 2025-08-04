@@ -12,7 +12,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - All Symfony validators are updated so no deprecated notices are thrown.
 
 ### Fixed
-- Before a "shut down" exception could be outputted after the actual payload from the APIs (e.g., a deprecated notice). The shutdown will only be output fatal errors, whereas warnings and notices will be outputted to the log. 
+- Before a "shutdown" exception could be outputted after the actual payload from the APIs (e.g., a deprecated notice). The shutdown will only be output fatal errors, whereas warnings and notices will be outputted to the log. 
 
 ## [2025.7.1] - 2025-11-7
 ### Fixed
