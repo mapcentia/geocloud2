@@ -17,7 +17,6 @@ use Exception;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\Validator\Constraints as Assert;
-use function PHPUnit\Framework\throwException;
 
 
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
