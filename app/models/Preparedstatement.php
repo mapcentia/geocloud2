@@ -135,12 +135,13 @@ class Preparedstatement extends Model
         return $uuid;
     }
 
-    public function updatePreparedStatement(string $name, ?string $statement, ?array $typeHints, ?array $typeFormats, ?string $outputFormat, ?int $srs, string $userName, bool $isSuperUser = false): void
+    public function updatePreparedStatement(string $name, ?string $newName, ?string $statement, ?array $typeHints, ?array $typeFormats, ?string $outputFormat, ?int $srs, string $userName, bool $isSuperUser = false): void
     {
         $this->clearCacheOnSchemaChanges(md5($name));
         $old = $this->getByName($name)['data'];
         $params = [
             'name' => $name,
+            'newName' => $newName ?? $old['name'],
             'statement' => $statement ?? $old['statement'],
             'type_hints' => $typeHints ? json_encode($typeHints) : $old['type_hints'],
             'type_formats' => $typeFormats ? json_encode($typeFormats) : $old['type_formats'],
@@ -148,10 +149,10 @@ class Preparedstatement extends Model
             'srs' => $srs ?? $old['srs'],
         ];
         if ($isSuperUser) {
-            $sql = "UPDATE settings.prepared_statements SET statement=:statement,type_hints=:type_hints,type_formats=:type_formats,output_format=:output_format,srs=:srs where name=:name RETURNING uuid,name";
+            $sql = "UPDATE settings.prepared_statements SET name=:newName, statement=:statement,type_hints=:type_hints,type_formats=:type_formats,output_format=:output_format,srs=:srs where name=:name RETURNING uuid,name";
 
         } else {
-            $sql = "UPDATE settings.prepared_statements SET statement=:statement,type_hints=:type_hints,type_formats=:type_formats,output_format=:output_format,srs=:srs where name=:name and username=:username RETURNING uuid,name";
+            $sql = "UPDATE settings.prepared_statements SET name=:newName, statement=:statement,type_hints=:type_hints,type_formats=:type_formats,output_format=:output_format,srs=:srs where name=:name and username=:username RETURNING uuid,name";
             $params['username'] = $userName;
         }
         $res = $this->prepare($sql);

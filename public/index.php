@@ -19,9 +19,9 @@ use app\api\v4\Commit;
 use app\api\v4\Geofence;
 use app\api\v4\Import;
 use app\api\v4\Index;
+use app\api\v4\Method;
 use app\api\v4\Oauth;
 use app\api\v4\Privilege;
-use app\api\v4\Rpc;
 use app\api\v4\Schema;
 use app\api\v4\Sql;
 use app\api\v4\Stat;
@@ -502,7 +502,7 @@ try {
         Route2::add("api/v4/sql/(database)/{database}", new Sql(), function () {
         });
 
-        Route2::add("api/v4/rpc/[id]", new Rpc(), function () {
+        Route2::add("api/v4/methods/[id]", new Method(), function () {
             $jwt = Jwt::validate();
             if ($jwt["success"]) {
                 Database::setDb($jwt["data"]["database"]);

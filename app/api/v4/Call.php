@@ -84,7 +84,7 @@ class Call extends AbstractApi
      * @throws InvalidArgumentException
      * @throws RPCException
      */
-    #[OA\Post(path: '/api/v4/call', operationId: 'postCall', description: "Execute RPC method", tags: ['Rpc'])]
+    #[OA\Post(path: '/api/v4/call', operationId: 'postCall', description: "Execute RPC method", tags: ['Methods'])]
     #[OA\RequestBody(description: 'RPC method to execute', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Call"))]
     #[OA\Response(response: 200, description: 'OK', content: new OA\MediaType('application/json'))]
     #[OA\Response(response: 400, description: 'Bad request')]

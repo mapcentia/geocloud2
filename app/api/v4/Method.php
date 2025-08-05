@@ -22,13 +22,13 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 
 /**
- * Class Rpc
+ * Class Method
  * @package app\api\v4
  */
 #[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
-    schema: "Rpc",
+    schema: "Method",
     required: [],
     properties: [
         new OA\Property(
@@ -79,7 +79,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
     type: "object"
 )]
 #[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
-class Rpc extends AbstractApi
+class Method extends AbstractApi
 {
     public function __construct()
     {
@@ -88,9 +88,9 @@ class Rpc extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/rpc/{method}', operationId: 'getRpc', description: "Get RPC methods", tags: ['Rpc'])]
+    #[OA\Get(path: '/api/v4/methods/{method}', operationId: 'getRpc', description: "Get RPC methods", tags: ['Methods'])]
     #[OA\Parameter(name: 'method', description: 'Identifier of RPC method', in: 'path', required: false, example: 'myMethod')]
-    #[OA\Response(response: 200, description: 'Ok')]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Method"))]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
@@ -133,8 +133,8 @@ class Rpc extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException|GC2Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Post(path: '/api/v4/rpc', operationId: 'postRpc', description: "Create RPC method", tags: ['Rpc'])]
-    #[OA\RequestBody(description: 'RPC method to create', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Rpc"))]
+    #[OA\Post(path: '/api/v4/methods', operationId: 'postRpc', description: "Create RPC method", tags: ['Methods'])]
+    #[OA\RequestBody(description: 'RPC method to create', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Method"))]
     #[OA\Response(response: 201, description: 'Created', content: new OA\MediaType('application/json'))]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json', 'application/json-rpc'])]
@@ -170,11 +170,12 @@ class Rpc extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Patch(path: '/api/v4/rpc/{method}', operationId: 'patchRpc', description: "Update RPC method", tags: ['Rpc'])]
+    #[OA\Patch(path: '/api/v4/methods/{method}', operationId: 'patchRpc', description: "Update RPC method", tags: ['Methods'])]
     #[OA\Parameter(name: 'method', description: 'Method name', in: 'path', required: true, example: '66f5005bd44c6')]
-    #[OA\RequestBody(description: 'RPC method to execute', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Rpc"))]
-    #[OA\Response(response: 201, description: 'Created', content: new OA\MediaType('application/json'))]
+    #[OA\RequestBody(description: 'RPC method to execute', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Method"))]
+    #[OA\Response(response: 204, description: 'Method updated')]
     #[OA\Response(response: 400, description: 'Bad request')]
+    #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json', 'application/json-rpc'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
@@ -191,7 +192,7 @@ class Rpc extends AbstractApi
         $model->connect();
         $model->begin();
         foreach ($ids as $id) {
-            $model->updatePreparedStatement($id, $body['q'], $body['type_hints'], $body['type_formats'], $body['output_format'], $body['srs'], $uid, $isSuperUser);
+            $model->updatePreparedStatement($id, $body['method'], $body['q'], $body['type_hints'], $body['type_formats'], $body['output_format'], $body['srs'], $uid, $isSuperUser);
         }
         $model->commit();
         header("Location: /api/v4/rpc/" . implode(",", $ids));
@@ -202,9 +203,9 @@ class Rpc extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Delete(path: '/api/v4/rpc/{id}', operationId: 'deleteSql', description: "Delete RPC method", tags: ['Rpc'])]
+    #[OA\Delete(path: '/api/v4/methods/{id}', operationId: 'deleteSql', description: "Delete RPC method", tags: ['Methods'])]
     #[OA\Parameter(name: 'id', description: 'Name of method', in: 'path', required: true, example: 'myStatement')]
-    #[OA\Response(response: 204, description: "Statement deleted")]
+    #[OA\Response(response: 204, description: "Method deleted")]
     #[OA\Response(response: 404, description: 'Not found')]
     #[Override]
     public function delete_index(): array
@@ -268,9 +269,20 @@ class Rpc extends AbstractApi
     {
         $asserts = Sql::getAssert();
         unset($asserts->fields['params']);
-        if (Input::getMethod() != 'patch') {
+        if (Input::getMethod() == 'patch') {
+            $asserts->fields['q'] = new Assert\Optional([
+                    new Assert\Type('string'),
+                    new Assert\NotBlank(),
+                ]
+            );
+            $asserts->fields['method'] = new Assert\Optional([
+                    new Assert\Type('string'),
+                    new Assert\NotBlank(),
+                ]
+            );
+        } else {
             $asserts->fields['method'] = new Assert\Required(
-                new Assert\Type('string'),
+                new Assert\Type('string')
             );
         }
         return $asserts;
