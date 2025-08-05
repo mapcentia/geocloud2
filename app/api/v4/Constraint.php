@@ -89,7 +89,7 @@ class Constraint extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'getConstraint', description: "Get constraints", tags: ['Constraints'])]
+    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'getConstraint', description: "Get constraints", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\Parameter(name: 'constraint', description: 'Constraint name(s)', in: 'path', required: false, example: 'my_constraint')]
@@ -125,7 +125,7 @@ class Constraint extends AbstractApi
      * @return array
      * @throws GC2Exception
      */
-    #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'postConstraint', description: "Get constraints", tags: ['Constraints'])]
+    #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'postConstraint', description: "Get constraints", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\RequestBody(description: 'New constraint', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Constraint"))]
@@ -177,7 +177,7 @@ class Constraint extends AbstractApi
      * @return array
      * @throws GC2Exception
      */
-    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'deleteConstraint', description: "Get constraint", tags: ['Constraints'])]
+    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'deleteConstraint', description: "Get constraint", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\Parameter(name: 'constraint', description: 'Constraint name(s)', in: 'path', required: true, example: 'my_constraint')]
