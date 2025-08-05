@@ -11,6 +11,7 @@ error_reporting(E_ERROR | E_WARNING | E_PARSE | E_DEPRECATED | E_USER_DEPRECATED
 ob_start("ob_gzhandler");
 
 use app\api\v3\Meta;
+use app\api\v4\Call;
 use app\api\v4\Client;
 use app\api\v4\Column;
 use app\api\v4\Constraint;
@@ -511,6 +512,16 @@ try {
             }
         });
 
+        Route2::add("api/v4/call", new Call(), function () {
+            $jwt = Jwt::validate();
+            if ($jwt["success"]) {
+                Database::setDb($jwt["data"]["database"]);
+            } else {
+                echo Response::toJson($jwt);
+                exit();
+            }
+        });
+
         Route2::add("api/v3/meta/[query]", new Meta(), function () {
             $jwt = Jwt::validate();
             Database::setDb($jwt["data"]["database"]);
@@ -666,11 +677,16 @@ try {
     echo $exception->getReport();
 } catch (RPCException $exception) {
     echo Response::toJson($exception->getResponse());
-} catch (Throwable $exception) {
+}catch (PDOException $exception) {
     $response["success"] = false;
     $response["message"] = $exception->getMessage();
-//    $response["file"] = $exception->getFile();
-//    $response["line"] = $exception->getLine();
+    $response["sql_code"] = $exception->getCode();
+    echo Response::toJson($response);} catch (Throwable $exception) {
+    $response["success"] = false;
+    $response["message"] = $exception->getMessage();
+    $response["file"] = $exception->getFile();
+    $response["line"] = $exception->getLine();
+    $response["sql_code"] = $exception->getCode();
 //  $response["trace"] = $exception->getTraceAsString();
     $response["code"] = 500;
     echo Response::toJson($response);
