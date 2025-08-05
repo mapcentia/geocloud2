@@ -39,7 +39,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
             title: "Query",
             description: "SQL statement. SELECT, INSERT, UPDATE or DELETE",
             type: "string",
-            example: "SELECT :my_varchar::varchar(48) as my_varchar",
+            example: "SELECT :my_date::date as my_date",
         ),
         new OA\Property(
             property: "params",
@@ -47,19 +47,42 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
             description: "Parameters for prepared statements.",
             type: "array",
             items: new OA\Items(type: "object"),
-            example: ["my_varchar" => "Mary had a little lamb, little lamb, little lamb"],
+            example: ["my_date" => "2011 04 01"],
         ),
         new OA\Property(
             property: "type_hints",
             title: "Type hints",
             description: "For JSON represented parameters which are not of JSON type.",
             type: "object",
-            example: ["range" => "numrange", "center" => "point"],
+            example: ["my_date" => "date"],
+        ),
+        new OA\Property(
+            property: "type_formats",
+            title: "Type formats",
+            description: "Formats for types (like date formatting)",
+            type: "object",
+            example: ["my_date" => "Y m d"],
+        ),
+        new OA\Property(
+            property: "output_format",
+            title: "Output format",
+            description: "The wanted output format.",
+            type: "string",
+            default: "json",
+            example: "csv",
+        ),
+        new OA\Property(
+            property: "srs",
+            title: "Spatial reference system",
+            description: "The spatial reference system to use for PostGIS geometry columns. EPSG code",
+            type: "integer",
+            default: 4326,
+            example: 25832,
         ),
     ],
     type: "object"
 )]
-#[AcceptableMethods(['GET', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
+#[AcceptableMethods(['POST', 'HEAD', 'OPTIONS'])]
 class Sql extends AbstractApi
 {
     /**
@@ -136,7 +159,6 @@ class Sql extends AbstractApi
             );
             $res = $this->v2->get_index($user, $api);
             unset($res['success']);
-            // unset($res['forStore']);
             unset($res['forGrid']);
             $result[] = $res;
 
