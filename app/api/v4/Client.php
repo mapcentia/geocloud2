@@ -186,10 +186,6 @@ class Client extends AbstractApi
     #[AcceptableContentTypes(['application/json'])]
     public function patch_index(): array
     {
-        $id = Route2::getParam("id");
-        if (empty($id)) {
-            throw new GC2Exception("No client id", 404, null, 'MISSING_ID');
-        }
         $ids = explode(',', Route2::getParam("id"));
         $body = Input::getBody();
         $data = json_decode($body, true);
