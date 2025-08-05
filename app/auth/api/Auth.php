@@ -71,7 +71,7 @@ class Auth extends AbstractApi
 
             $separator = str_contains($redirectUri, '?') ? '&' : '?';
 
-            // Check client secret if is set
+            // Check client secret
             if (!$clientData[0]['public']) {
                 try {
                     $client->verifySecret($_GET['client_id'], $_GET['client_secret']);
