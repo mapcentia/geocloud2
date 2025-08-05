@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2024 MapCentia ApS
+ * @copyright  2013-2025 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -9,14 +9,10 @@
 namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
-use app\exceptions\RPCException;
 use app\inc\Input;
 use app\inc\Jwt;
-use app\api\v2\Sql as V2Sql;
 use app\inc\Route2;
 use app\models\Preparedstatement as PreparedstatementModel;
-use app\models\Setting;
-use Exception;
 use OpenApi\Annotations\OpenApi;
 use OpenApi\Attributes as OA;
 use Psr\Cache\InvalidArgumentException;
@@ -26,92 +22,109 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 
 /**
- * Class Sql
+ * Class Rpc
  * @package app\api\v4
  */
 #[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Rpc",
-    required: ["jsonrpc", "method"],
+    required: [],
     properties: [
-        new OA\Property(
-            property: "jsonrpc",
-            title: "JSON RPC version",
-            description: "The version number of the JSON-RPC protocol. Must be exactly \"2.0\".",
-            type: "string",
-            example: "2.0",
-        ),
-        new OA\Property(
-            property: "id",
-            title: "Identifier",
-            description: "An identifier established by the Client that MUST contain a string if included",
-            type: "string",
-            example: "1",
-        ),
         new OA\Property(
             property: "method",
             title: "Method name",
-            description: "A String containing the name of the method to be invoked",
+            description: "A String containing the name of the method to be created",
             type: "string",
-            example: "getDataById",
+            example: "getDate",
         ),
         new OA\Property(
-            property: "params",
-            title: "Parameters",
-            description: "A Structured value that holds the parameter values to be used during the invocation of the method.",
+            property: "q",
+            title: "Query",
+            description: "SQL statement. SELECT, INSERT, UPDATE or DELETE",
+            type: "string",
+            example: "SELECT :my_date::date as my_date",
+        ),
+        new OA\Property(
+            property: "type_hints",
+            title: "Type hints",
+            description: "For JSON represented parameters which are not of JSON type.",
             type: "object",
-            example: ["id" => 1],
+            example: ["my_date" => "date"],
+        ),
+        new OA\Property(
+            property: "type_formats",
+            title: "Type formats",
+            description: "For JSON represented parameters which are not of JSON type.",
+            type: "object",
+            example: ["my_date" => "Y m d"],
+        ),
+        new OA\Property(
+            property: "output_format",
+            title: "Output format",
+            description: "The wanted output format.",
+            type: "string",
+            default: "json",
+            example: "csv",
+        ),
+        new OA\Property(
+            property: "srs",
+            title: "Spatial reference system",
+            description: "The spatial reference system to use for PostGIS geometry columns. EPSG code",
+            type: "integer",
+            default: 4326,
+            example: 25832,
         ),
     ],
     type: "object"
 )]
-#[AcceptableMethods(['GET', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
+#[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Rpc extends AbstractApi
 {
-    /**
-     * @var V2Sql
-     */
-    private V2Sql $v2;
-
     public function __construct()
     {
-        $this->v2 = new V2Sql();
     }
 
     /**
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/rpc/{id}', operationId: 'getRpc', description: "Get RPC methods", tags: ['Rpc'])]
-    #[OA\Parameter(name: 'id', description: 'Identifier of RPC method', in: 'path', required: false, example: 'myMethod')]
+    #[OA\Get(path: '/api/v4/rpc/{method}', operationId: 'getRpc', description: "Get RPC methods", tags: ['Rpc'])]
+    #[OA\Parameter(name: 'method', description: 'Identifier of RPC method', in: 'path', required: false, example: 'myMethod')]
     #[OA\Response(response: 200, description: 'Ok')]
-    #[OA\Response(response: 400, description: 'Not found')]
+    #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
     public function get_index(): array
     {
-        $name = Route2::getParam('id');;
+        $id = Route2::getParam('id');;
         $pres = new PreparedstatementModel();
-        if (!empty($name)) {
-            $q = $pres->getByName($name)['data'];
+        $q = $pres->getAll()['data'];
+        $methods = [];
+        foreach ($q as $s) {
+            $methods[] = [
+                'q' => $s['statement'],
+                'method' => $s['name'],
+                'type_hints' => json_decode($s['type_hints']),
+                'type_formats' => json_decode($s['type_formats']),
+                'output_format' => $s['output_format'],
+                'srs' => $s['srs'],
+            ];
+        }
+        if (!empty($id)) {
+            $names = explode(',', $id);
+            $methods = array_values(array_filter($methods, function ($m) use ($names) {
+                return in_array($m['method'], $names);
+            }));
+            if (count($methods) !== count($names)) {
+                throw new GC2Exception("Not found", 404);
+            }
+        }
+        if (count($methods) > 1) {
             return [
-                'q' => $q['statement'],
-                'uuid' => $q['uuid'],
-                'store' => $name,
+                'methods' => $methods,
             ];
         } else {
-            $q = $pres->getAll($name)['data'];
-            $statements = [];
-            foreach ($q as $statement) {
-                $statements[] = [
-                    'q' => $statement['statement'],
-                    'uuid' => $statement['uuid'],
-                    'id' => $statement['id'],
-                ];
-            }
-            return [
-                'statements' => $statements,
-            ];
+            return $methods[0];
         }
     }
 
@@ -119,91 +132,70 @@ class Rpc extends AbstractApi
      * @return array
      * @throws PhpfastcacheInvalidArgumentException|GC2Exception
      * @throws InvalidArgumentException
-     * @throws RPCException
      */
-    #[OA\Post(path: '/api/v4/rpc', operationId: 'postRpc', description: "Execute RPC method", tags: ['Rpc'])]
-    #[OA\RequestBody(description: 'RPC method to execute', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Rpc"))]
-    #[OA\Response(response: 200, description: 'Ok', content: new OA\MediaType('application/json'))]
+    #[OA\Post(path: '/api/v4/rpc', operationId: 'postRpc', description: "Create RPC method", tags: ['Rpc'])]
+    #[OA\RequestBody(description: 'RPC method to create', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Rpc"))]
+    #[OA\Response(response: 201, description: 'Created', content: new OA\MediaType('application/json'))]
+    #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json', 'application/json-rpc'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
     public function post_index(): array
     {
         $jwtData = Jwt::validate()["data"];
-        $isSuperUser = $jwtData["superUser"];
         $uid = $jwtData["uid"];
-        $user = [
-            "user" => $isSuperUser ? $uid : "$uid@{$jwtData["database"]}"
-        ];
-        $settingsData = (new Setting())->get()["data"];
-        $apiKey = $isSuperUser ? $settingsData->api_key : $settingsData->api_key_subuser->$uid;
         $decodedBody = json_decode(Input::getBody(), true);
 
-        if (!array_is_list($decodedBody)) {
-            $decodedBody = [$decodedBody];
+        if (!empty($decodedBody['methods'])) {
+            $methods = $decodedBody['methods'];
+        } else {
+            $methods = [$decodedBody];
         }
-        $result = [];
-        $api = new \app\models\Sql();
-        $api->connect();
-        $api->begin();
-        foreach ($decodedBody as $value) {
-            $srs = $value['srs'] ?? 4326;
-            $api->setSRS($srs);
-            Input::setBody(json_encode($value));
-            Input::setParams(
-                [
-                    "key" => $apiKey,
-                    "convert_types" => $value['convert_types'] ?? true,
-                    "format" => "json",
-                    "srs" => $srs,
-                ]
-            );
-            try {
-                $res = $this->v2->get_index($user, $api);
-            } catch (Exception $e) {
-                if ($e->getCode() == -32601) {
-                    throw new RPCException("Method not found", -32601, null, null, $value['id']);
-                }
-                if (in_array($e->getCode(), ['HY093', '406'])) {
-                    throw new RPCException("Invalid params", -32602, null, $e->getMessage(), $value['id']);
-                }
-                throw new RPCException("Internal error", -32603, null, $e->getMessage(), $value['id']);
-            }
-            unset($res['success']);
-            // unset($res['forStore']);
-            unset($res['forGrid']);
-            if (!empty($value['jsonrpc'])) {
-                $jsonrpcResponse = [
-                    'jsonrpc' => $value['jsonrpc'],
-                    'result' => $res,
-                ];
-                if (isset($value['id'])) {
-                    $jsonrpcResponse['id'] = $value['id'];
-                    $result[] = $jsonrpcResponse;
-
-                }
-            } else {
-                $result[] = $res;
-            }
+        $pres = new PreparedstatementModel();
+        $pres->connect();
+        $pres->begin();
+        foreach ($methods as $m) {
+            $q = $m['q'];
+            $method = $m['method'];
+            $typeHints = $m['type_hints'];
+            $typeFormats = $m['type_formats'];
+            $outputFormat = $m['output_format'] ?? 'json';
+            $srs = $m['srs'] ?? 4326;
+            $pres->createPreparedStatement($method, $q, $typeHints, $typeFormats, $outputFormat, $srs, $uid);
         }
-        if ($api->db->inTransaction()) {
-            $api->commit();
-        }
-
-        if (count($result) == 0 && !empty($value['jsonrpc'])) {
-            return ['code' => '204'];
-        }
-
-        if (count($result) == 1) {
-            return $result[0];
-        }
-        return $result;
+        $pres->commit();
+        return ['code' => '201'];
     }
 
+    /**
+     * @throws GC2Exception
+     */
+    #[OA\Patch(path: '/api/v4/rpc/{method}', operationId: 'patchRpc', description: "Update RPC method", tags: ['Rpc'])]
+    #[OA\Parameter(name: 'method', description: 'Method name', in: 'path', required: true, example: '66f5005bd44c6')]
+    #[OA\RequestBody(description: 'RPC method to execute', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Rpc"))]
+    #[OA\Response(response: 201, description: 'Created', content: new OA\MediaType('application/json'))]
+    #[OA\Response(response: 400, description: 'Bad request')]
+    #[AcceptableContentTypes(['application/json', 'application/json-rpc'])]
+    #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
     public function patch_index(): array
     {
-        // TODO: Implement put_index() method.
+        $id = Route2::getParam('id');
+        $jwtData = Jwt::validate()["data"];
+        $uid = $jwtData["uid"];
+        $isSuperUser = $jwtData["superUser"];
+        $model = new PreparedstatementModel();
+        $ids = explode(',', $id);
+        $body = json_decode(Input::getBody(), true);
+
+        $model->connect();
+        $model->begin();
+        foreach ($ids as $id) {
+            $model->updatePreparedStatement($id, $body['q'], $body['type_hints'], $body['type_formats'], $body['output_format'], $body['srs'], $uid, $isSuperUser);
+        }
+        $model->commit();
+        header("Location: /api/v4/rpc/" . implode(",", $ids));
+        return ["code" => "303"];
     }
 
     /**
@@ -217,15 +209,23 @@ class Rpc extends AbstractApi
     #[Override]
     public function delete_index(): array
     {
-        $name = Route2::getParam('id');;
-        $pres = new PreparedstatementModel();
-        $pres->deletePreparedStatement($name);
+        $id = Route2::getParam('id');
+        $jwtData = Jwt::validate()["data"];
+        $uid = $jwtData["uid"];
+        $isSuperUser = $jwtData["superUser"];
+        $model = new PreparedstatementModel();
+        $ids = explode(',', $id);
+        $model->connect();
+        $model->begin();
+        foreach ($ids as $id) {
+            $model->deletePreparedStatement($id, $uid, $isSuperUser);
+        }
+        $model->commit();
         return ["code" => "204"];
     }
 
     /**
      * @throws GC2Exception
-     * @throws RPCException
      */
     #[Override]
     public function validate(): void
@@ -249,13 +249,13 @@ class Rpc extends AbstractApi
         try {
             if (is_array($decodedBody)) {
                 foreach ($decodedBody as $value) {
-                    $this->validateRequest(self::getAssert($value), json_encode($value), 'sql', Input::getMethod());
+                    $this->validateRequest(self::getAssert(), json_encode($value), 'methods', Input::getMethod());
                 }
-            } else {
-                $this->validateRequest(self::getAssert($decodedBody), $body, 'sql', Input::getMethod());
+            } elseif ($decodedBody !== null) {
+                $this->validateRequest(self::getAssert(), $body, 'methods', Input::getMethod());
             }
         } catch (GC2Exception $e) {
-            throw new RPCException("Invalid Request", -32600, null, $e->getMessage());
+            throw new GC2Exception("Invalid Request", -32600, null, $e->getMessage());
         }
     }
 
@@ -264,15 +264,15 @@ class Rpc extends AbstractApi
         // TODO: Implement put_index() method.
     }
 
-    static public function getAssert($decodedBody): Assert\Collection
+    static public function getAssert(): Assert\Collection
     {
-        if (!property_exists($decodedBody, 'jsonrpc')) {
-            $asserts = Sql::getAssert();
+        $asserts = Sql::getAssert();
+        unset($asserts->fields['params']);
+        if (Input::getMethod() != 'patch') {
             $asserts->fields['method'] = new Assert\Required(
                 new Assert\Type('string'),
             );
-            return $asserts;
         }
-        return self::getRpcAssert();
+        return $asserts;
     }
 }

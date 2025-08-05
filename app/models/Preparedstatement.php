@@ -12,6 +12,7 @@ use app\exceptions\GC2Exception;
 use app\inc\Cache;
 use app\inc\Globals;
 use app\inc\Model;
+use PDO;
 use Psr\Cache\InvalidArgumentException;
 
 
@@ -44,7 +45,7 @@ class Preparedstatement extends Model
     public function getByUuid(string $uuid): array
     {
         $cacheType = self::CACHE_TYPE;
-        $cacheId = ($this->postgisdb . '_' . $cacheType . '_' . $uuid);
+        $cacheId = $this->postgisdb . '_' . $cacheType . '_' . $uuid;
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             $row = $CachedString->get();
@@ -75,7 +76,7 @@ class Preparedstatement extends Model
     public function getByName(string $name): array
     {
         $cacheType = self::CACHE_TYPE;
-        $cacheId = ($this->postgisdb . '_' . $cacheType . '_' . md5($name));
+        $cacheId = $this->postgisdb . '_' . $cacheType . '_' . md5($name);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             $row = $CachedString->get();
@@ -84,7 +85,7 @@ class Preparedstatement extends Model
             $res = $this->prepare($sql);
             $res->execute(["name" => $name]);
             if ($res->rowCount() == 0) {
-                throw new GC2Exception("No statements with that name", 404, null, "NO_STATEMENT_ERROR");
+                throw new GC2Exception("No method with that name", 404, null, "NO_METHOD_ERROR");
             }
             $row = $this->fetchRow($res);
             $CachedString->set($row)->expiresAfter(Globals::$cacheTtl);
@@ -125,15 +126,43 @@ class Preparedstatement extends Model
      * @return string The UUID of the created or updated prepared statement.
      * @throws InvalidArgumentException
      */
-    public function createPreparedStatement(string $name, string $statement, array $typeHints, array $typeFormats, string $outputFormat, ?int $srs): string
+    public function createPreparedStatement(string $name, string $statement, ?array $typeHints, ?array $typeFormats, string $outputFormat, ?int $srs, string $userName): string
+    {
+        $sql = "INSERT INTO settings.prepared_statements (name, statement, type_hints, type_formats, output_format, srs, username) VALUES (:name, :statement, :type_hints, :type_formats, :output_format, :srs, :username) returning uuid";
+        $res = $this->prepare($sql);
+        $res->execute(['name' => $name, 'statement' => $statement, 'type_hints' => json_encode($typeHints), 'type_formats' => json_encode($typeFormats), 'output_format' => $outputFormat, 'srs' => $srs, 'username' => $userName]);
+        $uuid = $res->fetchColumn();
+        return $uuid;
+    }
+
+    public function updatePreparedStatement(string $name, ?string $statement, ?array $typeHints, ?array $typeFormats, ?string $outputFormat, ?int $srs, string $userName, bool $isSuperUser = false): void
     {
         $this->clearCacheOnSchemaChanges(md5($name));
-        $sql = "INSERT INTO settings.prepared_statements (name, statement, type_hints, type_formats, output_format, srs) VALUES (:name, :statement, :type_hints, :type_formats, :output_format, :srs) ON CONFLICT ON CONSTRAINT name_unique DO UPDATE SET statement=:statement,type_hints=:type_hints,type_formats=:type_formats,output_format=:output_format,srs=:srs RETURNING uuid";
+        $old = $this->getByName($name)['data'];
+        $params = [
+            'name' => $name,
+            'statement' => $statement ?? $old['statement'],
+            'type_hints' => $typeHints ? json_encode($typeHints) : $old['type_hints'],
+            'type_formats' => $typeFormats ? json_encode($typeFormats) : $old['type_formats'],
+            'output_format' => $outputFormat ?? $old['output_format'],
+            'srs' => $srs ?? $old['srs'],
+        ];
+        if ($isSuperUser) {
+            $sql = "UPDATE settings.prepared_statements SET statement=:statement,type_hints=:type_hints,type_formats=:type_formats,output_format=:output_format,srs=:srs where name=:name RETURNING uuid,name";
+
+        } else {
+            $sql = "UPDATE settings.prepared_statements SET statement=:statement,type_hints=:type_hints,type_formats=:type_formats,output_format=:output_format,srs=:srs where name=:name and username=:username RETURNING uuid,name";
+            $params['username'] = $userName;
+        }
         $res = $this->prepare($sql);
-        $res->execute(['name' => $name, 'statement' => $statement, 'type_hints' => json_encode($typeHints), 'type_formats' => json_encode($typeFormats), 'output_format' => $outputFormat, 'srs' => $srs]);
-        $uuid = $res->fetchColumn();
-        $this->clearCacheOnSchemaChanges($uuid);
-        return $uuid;
+
+        $res->execute($params);
+        $row = $res->fetch(PDO::FETCH_ASSOC);
+        if (!$row) {
+            throw new GC2Exception("Not allowed to patch method", 404, null, "NOT_ALLOWED_ERROR");
+        }
+        $this->clearCacheOnSchemaChanges(md5($row['name']));
+        $this->clearCacheOnSchemaChanges(md5($row['uuid']));
     }
 
     /**
@@ -144,14 +173,23 @@ class Preparedstatement extends Model
      * @throws GC2Exception If no statements are found with the given name.
      * @throws InvalidArgumentException
      */
-    public function deletePreparedStatement(string $name): void
+    public function deletePreparedStatement(string $name, string $userName, bool $isSuperUser = false): void
     {
-        $this->clearCacheOnSchemaChanges(md5($name));
-        $sql = "DELETE FROM settings.prepared_statements WHERE name=:name RETURNING uuid";
-        $res = $this->prepare($sql);
-        $res->execute(['name' => $name]);
-        if ($res->rowCount() === 0) {
-            throw new GC2Exception("No statements", 404, null, "NO_STATEMENT_ERROR");
+        $this->getByName($name);
+        $params = ['name' => $name];
+        if ($isSuperUser) {
+            $sql = "DELETE FROM settings.prepared_statements WHERE name=:name RETURNING uuid,name";
+        } else {
+            $sql = "DELETE FROM settings.prepared_statements WHERE name=:name and username=:username RETURNING uuid,name";
+            $params['username'] = $userName;
         }
+        $res = $this->prepare($sql);
+        $res->execute($params);
+        $row = $res->fetch(PDO::FETCH_ASSOC);
+        if (!$row) {
+            throw new GC2Exception("Not allowed to delete method", 404, null, "NOT_ALLOWED_ERROR");
+        }
+        $this->clearCacheOnSchemaChanges(md5($row['name']));
+        $this->clearCacheOnSchemaChanges(md5($row['uuid']));
     }
 }
