@@ -26,6 +26,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Exception;
 
 use app\inc\Util;
+use Throwable;
 
 /**
  * Class Sql
@@ -68,7 +69,7 @@ class Sql extends Controller
         $r = func_get_arg(0);
         try {
             $this->api = func_get_arg(1);
-        } catch (\Throwable $e) {
+        } catch (Throwable) {
             $srs = is_numeric(Input::get('srs')) ? Input::get('srs') : 3857;
             $this->api = new \app\models\Sql();
             $this->api->connect();
@@ -97,26 +98,16 @@ class Sql extends Controller
             if (!empty($json["method"])) {
                 $method = $json["method"];
                 $pres = new PreparedstatementModel();
-                // Upsert if both query and store
-                if (!empty($json["q"])) {
-                    $uuid = $pres->createPreparedStatement($method, $json["q"], $typeHints, $typeFormats, $outputFormat, $srs);
-                    return [
-                        'code' => 201,
-                        'uuid' => $uuid,
-                        'name' => $method,
-                    ];
-                } else { // Else fetch the query and use it
-                    try {
-                        $preStm = $pres->getByName($method);
-                    } catch (Exception $e) {
-                        throw new Exception("Method not found", -32601, null);
-                    }
-                    $json["q"] = $preStm['data']['statement'];
-                    $typeHints = json_decode($preStm['data']['type_hints'], true);
-                    $typeFormats = json_decode($preStm['data']['type_formats'], true);
-                    $outputFormat = $preStm['data']['output_format'];
-                    $srs = $preStm['data']['srs'];
+                try {
+                    $preStm = $pres->getByName($method);
+                } catch (Exception $e) {
+                    throw new Exception("Method not found", -32601, null);
                 }
+                $json["q"] = $preStm['data']['statement'];
+                $typeHints = json_decode($preStm['data']['type_hints'], true);
+                $typeFormats = json_decode($preStm['data']['type_formats'], true);
+                $outputFormat = $preStm['data']['output_format'];
+                $srs = $preStm['data']['srs'];
             }
 
             // Set input params from JSON
