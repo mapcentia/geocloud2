@@ -1006,9 +1006,9 @@ class Table extends Model
             $sql = "SELECT AddGeometryColumn('" . $this->postgisschema . "','$table','$geomField',$srid,'$type',2);"; // Must use schema prefix cos search path include public
             $res = $this->prepare($sql);
             $res->execute();
-            $key.= $geomField;
+            $key .= $geomField;
         } else {
-            $key.= 'gc2_non_postgis';
+            $key .= 'gc2_non_postgis';
         }
         $this->table = $this->postgisschema . '.' . $table;
         if ($comment) {
@@ -1017,6 +1017,9 @@ class Table extends Model
         $sql = "INSERT into settings.geometry_columns_join (_key_) values (:key) ON CONFLICT DO NOTHING";
         $res = $this->prepare($sql);
         $res->execute(['key' => $key]);
+        $this->schema = $this->postgisschema;
+        $this->table = $this->postgisschema . '.' . $table;
+        $this->tableWithOutSchema = $table;
 
         $response['success'] = true;
         $response['tableName'] = $table;
@@ -1609,5 +1612,29 @@ class Table extends Model
     {
         $comments = $this->getColumnComments($this->schema, $this->tableWithOutSchema);
         return $comments[$column];
+    }
+
+    public function installNotifyTrigger(): void
+    {
+        $con = $this->getConstrains($this->schema, $this->tableWithOutSchema, 'p')['data'];
+        if (count($con) == 0) {
+            throw new GC2Exception("Table must have a primary key for emitting real time events", 401);
+        }
+        if (count($con) > 1) {
+            throw new GC2Exception("Table has primary key with multiple columns", 401);
+        }
+        $sql = "DROP TRIGGER IF EXISTS _gc2_notify_transaction_trigger ON \"$this->schema\".\"$this->tableWithOutSchema\"";
+        $res = $this->prepare($sql);
+        $res->execute();
+        $sql = "CREATE TRIGGER _gc2_notify_transaction_trigger AFTER INSERT OR UPDATE OR DELETE ON \"$this->schema\".\"$this->tableWithOutSchema\" FOR EACH ROW EXECUTE PROCEDURE _gc2_notify_transaction('$this->primaryKey', '$this->schema','$this->tableWithOutSchema')";
+        $res = $this->prepare($sql);
+        $res->execute();
+    }
+
+    public function removeNotifyTrigger(): void
+    {
+        $sql = "DROP TRIGGER IF EXISTS _gc2_notify_transaction_trigger ON \"$this->schema\".\"$this->tableWithOutSchema\"";
+        $res = $this->prepare($sql);
+        $res->execute();
     }
 }

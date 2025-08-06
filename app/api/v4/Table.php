@@ -225,7 +225,18 @@ class Table extends AbstractApi
             }
         }
         $schema = $data->schema ?? $this->schema[0];
+
+        // Emit events
+        $this->table[0]->begin();
+        if (property_exists($data, 'emit_events')) {
+            if ($data->emit_events === true) {
+                $this->table[0]->installNotifyTrigger();
+            } elseif ($data->emit_events === false) {
+                $this->table[0]->removeNotifyTrigger();
+            }
+        }
         $layer->commit();
+        $this->table[0]->commit();
         header("Location: /api/v4/schemas/{$schema}/tables/" . (count($r) > 0 ? implode(',', $r) : implode(',', $this->unQualifiedName)));
         return ["code" => "303"];
     }
@@ -391,6 +402,9 @@ class Table extends AbstractApi
                     new Assert\NotBlank(),
                     Constraint::getAssert(),
                 ]),
+            ]),
+            'emit_events' => new Assert\Optional([
+                new Assert\Type('boolean'),
             ]),
         ]);
     }
