@@ -102,8 +102,8 @@ class Xmlworkspace extends Controller
             if ($include && !in_array($key, $include)) {
                 continue;
             }
-            if ($field["reference"] && !in_array($field["reference"], $alreadyPassedDomains)) {
-                $referenceName = explode(".", $field["reference"])[1];
+            if ($field["reference"][0] && !in_array($field["reference"][0], $alreadyPassedDomains)) {
+                $referenceName = explode(".", $field["reference"][0])[1];
                 echo "        <Domain xsi:type='esri:CodedValueDomain'>";
                 echo "            <DomainName>$referenceName</DomainName>";
                 echo "            <FieldType>esriFieldTypeInteger</FieldType>";
@@ -120,7 +120,7 @@ class Xmlworkspace extends Controller
                 }
                 echo "            </CodedValues>";
                 echo "        </Domain>";
-                $alreadyPassedDomains[] = $field["reference"];
+                $alreadyPassedDomains[] = $field["reference"][0];
             }
         }
         echo "    </Domains>";
@@ -221,8 +221,8 @@ class Xmlworkspace extends Controller
                             </GeometryDef>
                 ";
             }
-            if ($field["reference"]) {
-                $referenceName = explode(".", $field["reference"])[1];
+            if ($field["reference"][0]) {
+                $referenceName = explode(".", $field["reference"][0])[1];
                 echo "        <Domain xsi:type='esri:CodedValueDomain'>";
                 echo "            <DomainName>$referenceName</DomainName>";
                 echo "            <FieldType>esriFieldTypeInteger</FieldType>";
@@ -239,7 +239,7 @@ class Xmlworkspace extends Controller
                 }
                 echo "            </CodedValues>";
                 echo "        </Domain>";
-                $alreadyPassedDomains[] = $field["reference"];
+                $alreadyPassedDomains[] = $field["reference"][0];
             }
             echo "                    </Field>";
         }
