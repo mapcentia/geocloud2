@@ -11,7 +11,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - `call` API for executing JSON-RPC methods.
 
 ### CHANGED
-- Docker images updated to PHP 8.4 (from 8.3). PHP version is now an argument in the Dockerfile. Code base can still run on PHP 8.3. None 8.4 language features are yet used.
+- Docker images updated to PHP 8.4 (from 8.3). PHP version is now an argument in the Dockerfile. **All locked Composer packages can run on PHP 8.4. This is not the case for earlier versions of the code base. If using an earlier version, then you must build your Docker image with PHP 8.3**
 - Throughout the code base, implicit marking parameters as null are changed to explicit (implicit is deprecated in PHP 8.4)
 - All Symfony validators are updated, so no deprecated notices are thrown.
 - composer.phar is no longer tracked in Git, but is added in the Docker images.
