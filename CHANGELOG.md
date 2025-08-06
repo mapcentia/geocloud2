@@ -5,11 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED] - 2025-04-8
+## [2025.8.0] - 2025-6-8
+### Added
+- `method` API for management of JSON-RPC methods, which can wraps SQL statement with optional instructions on how to interpret and format the data types.
+- `call` API for executing JSON-RPC methods.
+
 ### CHANGED
-- Docker images updated to PHP 8.4 (from 8.3). PHP version is now an argument in the Dockerfile. Code base can still run on PHP 8.3.
+- Docker images updated to PHP 8.4 (from 8.3). PHP version is now an argument in the Dockerfile. Code base can still run on PHP 8.3. None 8.4 language features are yet used.
 - Throughout the code base, implicit marking parameters as null are changed to explicit (implicit is deprecated in PHP 8.4)
-- All Symfony validators are updated so no deprecated notices are thrown.
+- All Symfony validators are updated, so no deprecated notices are thrown.
+- composer.phar is no longer tracked in Git, but is added in the Docker images.
 
 ### Fixed
 - Before a "shutdown" exception could be outputted after the actual payload from the APIs (e.g., a deprecated notice). The shutdown will only be output fatal errors, whereas warnings and notices will be outputted to the log. 
