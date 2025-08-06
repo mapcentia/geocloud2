@@ -677,11 +677,12 @@ try {
     echo $exception->getReport();
 } catch (RPCException $exception) {
     echo Response::toJson($exception->getResponse());
-}catch (PDOException $exception) {
+} catch (PDOException $exception) {
     $response["success"] = false;
-    $response["message"] = $exception->getMessage();
-    $response["sql_code"] = $exception->getCode();
-    echo Response::toJson($response);} catch (Throwable $exception) {
+    $response["message"] = $exception->errorInfo[2];
+    $response["code"] = $exception->getCode();
+    echo Response::toJson($response);
+} catch (Throwable $exception) {
     $response["success"] = false;
     $response["message"] = $exception->getMessage();
     $response["file"] = $exception->getFile();
