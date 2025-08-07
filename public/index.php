@@ -622,10 +622,10 @@ $handler = static function () {
             }
         } else {
             foreach (glob(dirname(__FILE__) . "/../app/extensions/**/routes/*.php") as $filename) {
-                include_once($filename);
+                include($filename);
             }
             foreach (glob(dirname(__FILE__) . "/../app/auth/routes/*.php") as $filename) {
-                include_once($filename);
+                include($filename);
             }
             Route::miss();
         }
