@@ -7,7 +7,9 @@
  */
 
 ini_set("display_errors", "no");
+//ini_set("display_errors", "yes");
 error_reporting(E_ERROR | E_WARNING | E_PARSE | E_DEPRECATED | E_USER_DEPRECATED);
+//error_reporting(E_ALL);
 ob_start("ob_gzhandler");
 
 use app\api\v3\Meta;
@@ -127,19 +129,21 @@ App::$param['protocol'] = App::$param['protocol'] ?? Util::protocol();
 App::$param['host'] = App::$param['host'] ?? App::$param['protocol'] . "://" . $_SERVER['SERVER_NAME'] . ($_SERVER['SERVER_PORT'] != "80" && $_SERVER['SERVER_PORT'] != "443" ? ":" . $_SERVER["SERVER_PORT"] : "");
 App::$param['userHostName'] = App::$param['userHostName'] ?? App::$param['host'];
 
-// Write Access-Control-Allow-Origin if origin is white listed
-$http_origin = $_SERVER['HTTP_ORIGIN'] ?? null;
-if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App::$param["AccessControlAllowOrigin"])) {
-    header("Access-Control-Allow-Origin: " . $http_origin);
-} elseif (isset(App::$param["AccessControlAllowOrigin"]) && App::$param["AccessControlAllowOrigin"][0] == "*") {
-    header("Access-Control-Allow-Origin: *");
-}
-header("Access-Control-Allow-Headers: Origin, Content-Type, Authorization, X-Requested-With, Accept, Session, Cache-Control");
-header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Methods: GET, PUT, POST, DELETE, HEAD, OPTIONS");
+
 
 // Start routing
 $handler = static function () {
+    // Write Access-Control-Allow-Origin if origin is white listed
+    $http_origin = $_SERVER['HTTP_ORIGIN'] ?? null;
+    if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App::$param["AccessControlAllowOrigin"])) {
+        header("Access-Control-Allow-Origin: " . $http_origin);
+    } elseif (isset(App::$param["AccessControlAllowOrigin"]) && App::$param["AccessControlAllowOrigin"][0] == "*") {
+        header("Access-Control-Allow-Origin: *");
+    }
+    header("Access-Control-Allow-Headers: Origin, Content-Type, Authorization, X-Requested-With, Accept, Session, Cache-Control");
+    header("Access-Control-Allow-Credentials: true");
+    header("Access-Control-Allow-Methods: GET, PUT, POST, DELETE, HEAD, OPTIONS");
+
     try {
         if (Input::getPath()->part(1) == "api") {
 
