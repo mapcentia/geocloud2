@@ -32,10 +32,7 @@ class GmlParser extends \app\inc\Model
 			//print("Text size     : ".$check->get_xml_text_size());
 		}
 		else {
-			print("GML is not well-formed. ");
-			print($check->get_full_error()."\n");
-			print("Script terminated\n");
-			die();
+			throw new Exception("GML is not well-formed");
 		}
 
 		$this -> gmlSource = $gmlSource;
@@ -52,10 +49,7 @@ class GmlParser extends \app\inc\Model
 		print(date('l jS \of F Y h:i:s A')." GML serialized\n");
 		// Check if XML is a ServiceException
 		if ($unserializer->getRootName()=="ServiceExceptionReport"){
-			print("The server returned an exception:\n");
-			print($this -> gmlSource."\n");
-			print("Script terminated\n");
-			die();
+			throw new Exception("The server returned an exception");
 		}
 	}
 	function unserializeGml()
