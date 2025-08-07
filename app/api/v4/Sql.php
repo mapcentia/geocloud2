@@ -161,7 +161,8 @@ class Sql extends AbstractApi
             unset($res['success']);
             unset($res['forGrid']);
             $result[] = $res;
-
+            Input::setParams(null);
+            Input::setBody(null);
         }
         if ($api->db->inTransaction()) {
             $api->commit();

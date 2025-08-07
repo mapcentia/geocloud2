@@ -18,8 +18,8 @@ class Input
     /**
      * @var array<string>
      */
-    static ?array $params = null;
-    static string $body;
+    static ?array $params;
+    static ?string $body;
     const string TEXT_PLAIN = "text/plain";
     const string APPLICATION_JSON = "application/json";
     const string APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
@@ -29,12 +29,12 @@ class Input
      *
      * @param array<string> $arr
      */
-    public static function setParams(array $arr): void
+    public static function setParams(?array $arr): void
     {
         self::$params = $arr;
     }
 
-    public static function setBody(string $body): void
+    public static function setBody(?string $body): void
     {
         self::$body = $body;
     }
@@ -117,7 +117,7 @@ class Input
     public static function getBody(bool $decode = true): ?string
     {
 
-        if (isset(self::$body)) {
+        if (!empty(self::$body)) {
             return self::$body;
         }
 

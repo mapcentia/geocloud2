@@ -134,6 +134,9 @@ class Call extends AbstractApi
                     throw new RPCException("Invalid params", -32602, null, $e->getMessage(), $value['id']);
                 }
                 throw new RPCException("Internal error", -32603, null, $e->getMessage(), $value['id']);
+            } finally {
+                Input::setParams(null);
+                Input::setBody(null);
             }
             unset($res['success']);
             unset($res['forGrid']);
