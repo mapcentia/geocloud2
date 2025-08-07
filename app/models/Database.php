@@ -88,7 +88,7 @@ class Database extends Model
      * @param Model|null $model
      * @return array<bool|string>
      */
-    public function createSchema(string $name, Model $model = null): array
+    public function createSchema(string $name, ?Model $model = null): array
     {
         $saveName = self::toAscii($name, null, "_");
         $sql = "CREATE SCHEMA \"" . $saveName . "\"";

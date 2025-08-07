@@ -36,7 +36,7 @@ class Route2
      * @param Closure|null $func
      * @throws GC2Exception
      */
-    static public function add(string $uri, ApiInterface $controller, Closure $func = null): void
+    static public function add(string $uri, ApiInterface $controller, ?Closure $func = null): void
     {
         $signatureMatch = true;
         $e = [];

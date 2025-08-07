@@ -22,7 +22,7 @@ class Route
      * @param Closure|null $func
      * @param bool $silent
      */
-    static public function add(string $uri, Closure $func = null, bool $silent = false): void
+    static public function add(string $uri, ?Closure $func = null, bool $silent = false): void
     {
         $signatureMatch = false;
         $e = [];
