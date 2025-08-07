@@ -27,7 +27,7 @@ class Auth extends AbstractApi
         Session::start();
     }
 
-    public function get_index(): never
+    public function get_index(): array
     {
         if (Session::isAuth()) {
             Database::setDb($_SESSION['parentdb']);
@@ -89,7 +89,7 @@ class Auth extends AbstractApi
 //                $paramsStr = http_build_query(['error' => $error, 'error_description' => $errorDesc]);
 //                $header = "Location: $redirectUri$separator$paramsStr";
 //                header($header);
-                exit();
+                goto end;
             }
             $code = $_GET['response_type'] == 'code';
             $codeChallenge = $_GET['code_challenge'];
@@ -117,7 +117,7 @@ class Auth extends AbstractApi
                 $header = "Location: $redirectUri$separator$paramsStr";
                 header($header);
             }
-            exit();
+            goto end;
         }
 
         echo $this->twig->render('header.html.twig');
@@ -127,7 +127,8 @@ class Auth extends AbstractApi
         echo "</main>";
 
         echo $this->twig->render('footer.html.twig');
-        exit();
+        end:
+        return [];
     }
 
     public function post_index(): never

@@ -26,18 +26,18 @@ class Signup extends AbstractApi
         Session::start();
     }
 
-    public function get_index(): never
+    public function get_index(): array
     {
         echo $this->twig->render('header.html.twig');
         echo "<main class='form-signin w-100 m-auto'>";
-        echo "<div hx-trigger='load' hx-target='this'  hx-post='/signup/?db=" . $_GET['db'] ."&r=" . $_GET['redirect_url'] . "'></div>";
+        echo "<div hx-trigger='load' hx-target='this'  hx-post='/signup/?db=" . $_GET['db'] . "&r=" . $_GET['redirect_url'] . "'></div>";
         echo "<div id='alert'></div>";
         echo "</main>";
         echo $this->twig->render('footer.html.twig');
-        exit();
+        return [];
     }
 
-    public function post_index(): never
+    public function post_index(): array
     {
         Database::setDb("mapcentia");
         if ($_POST['name'] && $_POST['email'] && $_POST['password'] && $_POST['code']) {
@@ -61,7 +61,8 @@ class Signup extends AbstractApi
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $e->getMessage()]) . "</div>";
             }
         }
-        echo $this->twig->render('signup.html.twig', [...$_POST, ...$_GET]);        exit();
+        echo $this->twig->render('signup.html.twig', [...$_POST, ...$_GET]);
+        return [];
     }
 
     public function put_index(): array

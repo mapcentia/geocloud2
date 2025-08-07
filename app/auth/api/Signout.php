@@ -22,17 +22,16 @@ class Signout extends AbstractApi
         Session::start();
     }
 
-    public function get_index(): never
+    public function get_index(): array
     {
         (new \app\models\Session())->stop();
-
         $r = null;
         $encoded = Input::get('redirect_url');
         if ($encoded) {
             $r = urldecode(Input::get('redirect_url'));
         }
         header("Location: $r");
-        exit();
+        return [];
     }
 
     public function post_index(): array

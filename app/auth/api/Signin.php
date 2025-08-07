@@ -33,7 +33,7 @@ class Signin extends AbstractApi
 
     }
 
-    public function post_index(): never
+    public function post_index(): array
     {
         Database::setDb("mapcentia");
 
@@ -67,7 +67,7 @@ class Signin extends AbstractApi
         } else {
             echo $this->twig->render('login.html.twig');
         }
-        exit();
+        return [];
     }
 
     public function put_index(): array

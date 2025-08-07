@@ -24,7 +24,7 @@ class Device extends AbstractApi
         Session::start();
     }
 
-    public function get_index(): never
+    public function get_index(): array
     {
         echo $this->twig->render('header.html.twig');
         $backend = Session::isAuth() ? 'device' : 'signin';
@@ -35,10 +35,10 @@ class Device extends AbstractApi
         echo "</main>";
 
         echo $this->twig->render('footer.html.twig');
-        exit();
+        return [];
     }
 
-    public function post_index(): never
+    public function post_index(): array
     {
         $code = $_POST['user-code'];
         $cachedString = Cache::getItem($code);
@@ -49,18 +49,19 @@ class Device extends AbstractApi
                 $cachedString->set($_SESSION)->expiresAfter(Jwt::DEVICE_CODE_TTL);
                 Cache::save($cachedString);
                 echo "<div id='alert' hx-swap-oob='true'>Device code found</div>";
-                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Device code found']) ."</div>";
+                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Device code found']) . "</div>";
             } else {
                 echo $this->twig->render("device.html.twig");
-                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Device code already used']) ."</div>";
+                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Device code already used']) . "</div>";
             }
         } else {
             echo $this->twig->render("device.html.twig");
             if ($code) {
-                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Code doesn\'t exists']) ."</div>";
+                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Code doesn\'t exists']) . "</div>";
 
             }
-        }        exit();
+        }
+        return [];
     }
 
     public function put_index(): array

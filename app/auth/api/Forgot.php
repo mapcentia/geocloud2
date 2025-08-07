@@ -28,7 +28,7 @@ class Forgot extends AbstractApi
         Session::start();
     }
 
-    public function get_index(): never
+    public function get_index(): array
     {
 
         echo $this->twig->render('header.html.twig');
@@ -41,12 +41,12 @@ class Forgot extends AbstractApi
                 if ($val !== $_GET['key']) {
                     echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Wrong key']) . "</div>";
 
-                    exit();
+                    goto end;
                 }
             } else {
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Could not find the key. Maybe it has expired']) . "</div>";
 
-                exit();
+                goto end;
             }
             echo "<form hx-post='/forgot'>";
             echo $this->twig->render("reset.html.twig", $_REQUEST);
@@ -61,10 +61,11 @@ class Forgot extends AbstractApi
         echo "</main>";
 
         echo $this->twig->render('footer.html.twig');
-        exit();
+        end:
+        return [];
     }
 
-    public function post_index(): never
+    public function post_index(): array
     {
         Database::setDb("mapcentia");
 
@@ -75,11 +76,12 @@ class Forgot extends AbstractApi
                 $val = $CachedString->get();
                 if ($val !== $_POST['key']) {
                     echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Wrong key']) . "</div>";
-                    exit();
+                    goto end;
                 }
             } else {
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Could not find the key. Maybe it has expired']) . "</div>";
-                exit();
+                goto end;
+
             }
             $data["user"] = $_POST['userid'];
             $data["password"] = $_POST['password'];
@@ -88,7 +90,7 @@ class Forgot extends AbstractApi
             } catch (Exception $e) {
                 echo $this->twig->render("reset.html.twig", [...$data, 'key' => $_POST['key']]);
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $e->getMessage()]) . "</div>";
-                exit();
+                goto end;
             }
             Cache::deleteItem('__forgot_' . $_POST['userid']);
             echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Password changed']) . "</div>";
@@ -122,10 +124,10 @@ class Forgot extends AbstractApi
                     try {
                         $sendResult = $client->sendEmailBatch([$message]);
                     } catch (Exception $generalException) {
-                        exit(1);
+                        goto end;
                     }
                 } catch (Exception $generalException) {
-                    exit(1);
+                    goto end;
                 }
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'E-mail with reset link is send']) . "</div>";
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $url]) . "</div>";
@@ -140,7 +142,9 @@ class Forgot extends AbstractApi
 
             }
         }
-        exit();
+        end:
+        return [];
+
     }
 
     public function put_index(): array

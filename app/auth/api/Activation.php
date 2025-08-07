@@ -26,7 +26,7 @@ class Activation extends AbstractApi
         Session::start();
     }
 
-    public function get_index(): never
+    public function get_index(): array
     {
         $loader = new FilesystemLoader(__DIR__ . '/templates');
         $twig = new Environment($loader);
@@ -37,10 +37,10 @@ class Activation extends AbstractApi
         echo $twig->render('footer.html.twig');
         echo "<div id='alert'></div>";
         echo "</main>";
-        exit();
+        return [];
     }
 
-    public function post_index(): never
+    public function post_index(): array
     {
         Database::setDb("mapcentia");
         if ($_POST['email']) {
@@ -52,13 +52,15 @@ class Activation extends AbstractApi
             } catch (Error|Exception $e) {
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $e->getMessage()]) . "</div>";
                 echo $this->twig->render('activation.html.twig', ['email' => $_POST['email']]);
-                exit();
+                goto end;
             }
             $model->commit();
             echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'E-mail with activation code is send']) . "</div>";
         } else {
             echo $this->twig->render('activation.html.twig');
-        }        exit();
+        }
+        end:
+        return [];
     }
 
     public function put_index(): array
