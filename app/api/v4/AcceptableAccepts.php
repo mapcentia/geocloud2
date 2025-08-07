@@ -33,10 +33,4 @@ class AcceptableAccepts
     {
         throw new GC2Exception("Accept media type(s) " . implode(',' , $accepts) ." is not acceptable. Must be: " . implode(', ', $this->acceptsAllowed), 406, null, "NOT_ACCEPTABLE");
     }
-
-    public function options(): never
-    {
-        header("HTTP/1.0  204");
-        exit();
-    }
 }

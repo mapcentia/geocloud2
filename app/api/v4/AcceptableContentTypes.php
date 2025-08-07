@@ -33,10 +33,4 @@ class AcceptableContentTypes
     {
         throw new GC2Exception("Content media type $contentType is not acceptable. Must be: " . implode(', ', $this->contentTypesAllowed), 406, null, "NOT_ACCEPTABLE");
     }
-
-    public function options(): never
-    {
-        header("HTTP/1.0  204");
-        exit();
-    }
 }

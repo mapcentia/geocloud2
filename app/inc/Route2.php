@@ -116,6 +116,7 @@ class Route2
                                 }
                             }
                             $listener->options();
+                            goto end;
                         }
                     }
                 }
@@ -152,13 +153,16 @@ class Route2
                 unset($response["code"]);
             }
             header("HTTP/1.0 $code " . Util::httpCodeText($code));
-            if (!array_is_list($response)) {
-                $response["_execution_time"] = round((Util::microtime_float() - $time_start), 3);
+            if (!empty($response)) {
+                header('Content-type: application/json; charset=utf-8');
+                if (!array_is_list($response)) {
+                    $response["_execution_time"] = round((Util::microtime_float() - $time_start), 3);
+                }
+                if (!in_array($code, ['204', '303'])) {
+                    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+                }
             }
-            header('Content-type: application/json; charset=utf-8');
-            if (!in_array($code, ['204', '303'])) {
-                echo json_encode($response, JSON_UNESCAPED_UNICODE);
-            }
+            end:
             flush();
         }
     }

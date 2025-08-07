@@ -34,10 +34,9 @@ class AcceptableMethods
         throw new GC2Exception("Method not acceptable", 406, null, "NOT_ACCEPTABLE");
     }
 
-    public function options(): never
+    public function options(): void
     {
         header("HTTP/1.0  204");
-        exit();
     }
 
     public function setHeaders(): void
