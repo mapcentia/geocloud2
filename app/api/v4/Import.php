@@ -265,7 +265,7 @@ class Import extends AbstractApi
     /**
      * @throws \JsonException
      */
-    protected function import(string $schema, string $fileName, stdClass $args = null): array
+    protected function import(string $schema, string $fileName, ?stdClass $args = null): array
     {
         $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__vectors";
         $safeName = Session::getUser() . "_" . md5(microtime() . rand());
