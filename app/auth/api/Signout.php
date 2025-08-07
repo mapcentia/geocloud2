@@ -31,7 +31,7 @@ class Signout extends AbstractApi
             $r = urldecode(Input::get('redirect_url'));
         }
         header("Location: $r");
-        return [];
+        return ['code' => 302];
     }
 
     public function post_index(): array

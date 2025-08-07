@@ -52,14 +52,13 @@ class Activation extends AbstractApi
             } catch (Error|Exception $e) {
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $e->getMessage()]) . "</div>";
                 echo $this->twig->render('activation.html.twig', ['email' => $_POST['email']]);
-                goto end;
+                return [];
             }
             $model->commit();
             echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'E-mail with activation code is send']) . "</div>";
         } else {
             echo $this->twig->render('activation.html.twig');
         }
-        end:
         return [];
     }
 
