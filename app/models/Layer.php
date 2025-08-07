@@ -1070,7 +1070,6 @@ class Layer extends Table
 
         // Get extent
         $extent = $this->getEstExtentAsGeoJSON($key);
-        //die(print_r($extent, true));
         $extentStr = "";
         if ($extent["success"]) {
             $extentStr = $extent["extent"];
