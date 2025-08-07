@@ -124,7 +124,6 @@ class Preparedstatement extends Model
      * @param string $name The name of the prepared statement.
      * @param string $statement The SQL statement to be prepared.
      * @return string The UUID of the created or updated prepared statement.
-     * @throws InvalidArgumentException
      */
     public function createPreparedStatement(string $name, string $statement, ?array $typeHints, ?array $typeFormats, string $outputFormat, ?int $srs, string $userName): string
     {
