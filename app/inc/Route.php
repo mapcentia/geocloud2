@@ -104,7 +104,7 @@ class Route
                     echo Response::toJson($response);
                 }
             }
-            exit();
+            flush();
         }
     }
 
@@ -113,9 +113,10 @@ class Route
      */
     static public function miss(): void
     {
-        header('HTTP/1.0 404 Not Found');
-        echo "<h1>404 Not Found</h1>";
-        exit();
+        if (!headers_sent()) {
+            header('HTTP/1.0 404 Not Found');
+            echo "<h1>404 Not Found</h1>";
+        }
     }
 
     /**

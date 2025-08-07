@@ -159,18 +159,8 @@ class Route2
             if (!in_array($code, ['204', '303'])) {
                 echo json_encode($response, JSON_UNESCAPED_UNICODE);
             }
-            exit();
+            flush();
         }
-    }
-
-    /**
-     * @return never
-     */
-    static public function miss(): never
-    {
-        header('HTTP/1.0 404 Not Found');
-        echo "<h1>404 Not Found</h1>";
-        exit();
     }
 
     /**

@@ -139,558 +139,538 @@ header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: GET, PUT, POST, DELETE, HEAD, OPTIONS");
 
 // Start routing
-try {
-    if (Input::getPath()->part(1) == "api") {
+$handler = static function () {
+    try {
+        if (Input::getPath()->part(1) == "api") {
 
-        if ($db = Input::getPath()->part(4)) {
-            Database::setDb($db); // Default
-        }
+            if ($db = Input::getPath()->part(4)) {
+                Database::setDb($db); // Default
+            }
 
-        //======================
-        // V1
-        //======================
-        Route::add("api/v1/extent");
-        Route::add("api/v1/schema");
-        Route::add("api/v1/setting");
-        Route::add("api/v1/user");
-        Route::add("api/v1/legend", function () {
-            Session::start();
-            Database::setDb(Input::getPath()->part(5));
-        });
-        Route::add("api/v1/baselayerjs");
-        Route::add("api/v1/staticmap");
-        Route::add("api/v1/getheader");
-        Route::add("api/v1/decodeimg");
-        Route::add("api/v1/loriot");
-        Route::add("api/v1/session/[action]", function () {
-            Session::start();
-            Database::setDb("mapcentia");
-        });
-        Route::add("api/v1/sql", function () {
-            if (empty(Input::get("key"))) {
+            //======================
+            // V1
+            //======================
+            Route::add("api/v1/extent");
+            Route::add("api/v1/schema");
+            Route::add("api/v1/setting");
+            Route::add("api/v1/user");
+            Route::add("api/v1/legend", function () {
                 Session::start();
-            }
-            $db = Input::getPath()->part(4);
-            $dbSplit = explode("@", $db);
-            if (sizeof($dbSplit) == 2) {
-                $db = $dbSplit[1];
-            }
-            Database::setDb($db);
-        });
-        Route::add("api/v1/elasticsearch/{action}/{user}/[indices]/[type]", function () {
-            $r = func_get_arg(0);
-            if ($r["action"] == "river") { // Only start session if no API key is provided
+                Database::setDb(Input::getPath()->part(5));
+            });
+            Route::add("api/v1/baselayerjs");
+            Route::add("api/v1/staticmap");
+            Route::add("api/v1/getheader");
+            Route::add("api/v1/decodeimg");
+            Route::add("api/v1/loriot");
+            Route::add("api/v1/session/[action]", function () {
                 Session::start();
-            }
-            Database::setDb($r["user"]);
-        });
-        Route::add("api/v1/meta/{user}/[query]", function () {
-            Session::start();
-        });
-        Route::add("api/v1/ckan", function () {
-            Session::start();
-        });
-
-        //======================
-        // V2
-        //======================
-        Route::add("api/v2/sql/{user}/[method]", function () {
-            if ((empty(Input::get("key")) || Input::get("key") == "null") && empty(json_decode(Input::getBody() ?? '{}')->key)) { // Only start session if no API key is provided
+                Database::setDb("mapcentia");
+            });
+            Route::add("api/v1/sql", function () {
+                if (empty(Input::get("key"))) {
+                    Session::start();
+                }
+                $db = Input::getPath()->part(4);
+                $dbSplit = explode("@", $db);
+                if (sizeof($dbSplit) == 2) {
+                    $db = $dbSplit[1];
+                }
+                Database::setDb($db);
+            });
+            Route::add("api/v1/elasticsearch/{action}/{user}/[indices]/[type]", function () {
+                $r = func_get_arg(0);
+                if ($r["action"] == "river") { // Only start session if no API key is provided
+                    Session::start();
+                }
+                Database::setDb($r["user"]);
+            });
+            Route::add("api/v1/meta/{user}/[query]", function () {
                 Session::start();
-            }
-            $r = func_get_arg(0);
-            $db = $r["user"];
-            $dbSplit = explode("@", $db);
-            if (sizeof($dbSplit) == 2) {
-                $db = $dbSplit[1];
-            }
-            Database::setDb($db);
-        });
-        Route::add("api/v2/elasticsearch/{action}/{user}/{schema}/[rel]/[id]", function () {
-            if (Route::getParam("action") == "river") {
-                Session::start(); // So we can create a session log from the indexing
-            }
-            Database::setDb(Route::getParam("user"));
-        });
-        Route::add("api/v2/feature/{user}/{layer}/{srid}/[key]", function () {
-            $db = Route::getParam("user");
-            $dbSplit = explode("@", $db);
-            if (sizeof($dbSplit) == 2) {
-                $db = $dbSplit[1];
-            }
-            Database::setDb($db);
-        });
-        Route::add("api/v2/keyvalue/{user}/[key]", function () {
-            $db = Route::getParam("user");
-            $dbSplit = explode("@", $db);
-            if (sizeof($dbSplit) == 2) {
-                $db = $dbSplit[1];
-            }
-            Database::setDb($db);
-        });
-        Route::add("api/v2/preparedstatement/{user}", function () {
-            $db = Route::getParam("user");
-            $dbSplit = explode("@", $db);
-            if (sizeof($dbSplit) == 2) {
-                $db = $dbSplit[1];
-            }
-            Database::setDb($db);
-        });
-        Route::add("api/v2/qgis/{action}/{user}", function () {
-            Database::setDb(Route::getParam("user"));
-        });
-        Route::add("api/v2/mapfile/{action}/{user}/{schema}", function () {
-            Database::setDb(Route::getParam("user"));
-        });
-        Route::add("api/v2/mapcachefile/{action}/{user}", function () {
-            Database::setDb(Route::getParam("user"));
-        });
-        Route::add("api/v2/sqlwrapper/{user}", function () {
-            Database::setDb(Route::getParam("user"));
-        });
-        Route::add("api/v2/session", function () {
-            Session::start();
-            Database::setDb("mapcentia");
-        });
-        Route::add("api/v2/user/[userId]/[action]", function () {
-            Session::start();
-        });
-        Route::add("api/v2/user/[userId]", function () {
-            Session::start();
-        });
-        Route::add("api/v2/user", function () {
-            Session::start();
-        });
-        Route::add("api/v2/database", function () {
-            Session::start();
-        });
-        Route::add("api/v2/configuration/[userId]/[configurationId]", function () {
-            Session::start();
-        });
-        Route::add("api/v2/stat", function () {
-            Session::start();
-        });
+            });
+            Route::add("api/v1/ckan", function () {
+                Session::start();
+            });
 
-        //======================
-        // V3 with OAuth
-        //======================
-        Route::add("api/v3/oauth", function () {
-            Database::setDb("mapcentia");
-        });
-        Route::add("api/v3/admin/{action}/", function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                if (!$jwt["data"]["superUser"]) {
-                    echo Response::toJson(Response::SUPER_USER_ONLY);
-                    exit();
+            //======================
+            // V2
+            //======================
+            Route::add("api/v2/sql/{user}/[method]", function () {
+                if ((empty(Input::get("key")) || Input::get("key") == "null") && empty(json_decode(Input::getBody() ?? '{}')->key)) { // Only start session if no API key is provided
+                    Session::start();
                 }
+                $r = func_get_arg(0);
+                $db = $r["user"];
+                $dbSplit = explode("@", $db);
+                if (sizeof($dbSplit) == 2) {
+                    $db = $dbSplit[1];
+                }
+                Database::setDb($db);
+            });
+            Route::add("api/v2/elasticsearch/{action}/{user}/{schema}/[rel]/[id]", function () {
+                if (Route::getParam("action") == "river") {
+                    Session::start(); // So we can create a session log from the indexing
+                }
+                Database::setDb(Route::getParam("user"));
+            });
+            Route::add("api/v2/feature/{user}/{layer}/{srid}/[key]", function () {
+                $db = Route::getParam("user");
+                $dbSplit = explode("@", $db);
+                if (sizeof($dbSplit) == 2) {
+                    $db = $dbSplit[1];
+                }
+                Database::setDb($db);
+            });
+            Route::add("api/v2/keyvalue/{user}/[key]", function () {
+                $db = Route::getParam("user");
+                $dbSplit = explode("@", $db);
+                if (sizeof($dbSplit) == 2) {
+                    $db = $dbSplit[1];
+                }
+                Database::setDb($db);
+            });
+            Route::add("api/v2/preparedstatement/{user}", function () {
+                $db = Route::getParam("user");
+                $dbSplit = explode("@", $db);
+                if (sizeof($dbSplit) == 2) {
+                    $db = $dbSplit[1];
+                }
+                Database::setDb($db);
+            });
+            Route::add("api/v2/qgis/{action}/{user}", function () {
+                Database::setDb(Route::getParam("user"));
+            });
+            Route::add("api/v2/mapfile/{action}/{user}/{schema}", function () {
+                Database::setDb(Route::getParam("user"));
+            });
+            Route::add("api/v2/mapcachefile/{action}/{user}", function () {
+                Database::setDb(Route::getParam("user"));
+            });
+            Route::add("api/v2/sqlwrapper/{user}", function () {
+                Database::setDb(Route::getParam("user"));
+            });
+            Route::add("api/v2/session", function () {
+                Session::start();
+                Database::setDb("mapcentia");
+            });
+            Route::add("api/v2/user/[userId]/[action]", function () {
+                Session::start();
+            });
+            Route::add("api/v2/user/[userId]", function () {
+                Session::start();
+            });
+            Route::add("api/v2/user", function () {
+                Session::start();
+            });
+            Route::add("api/v2/database", function () {
+                Session::start();
+            });
+            Route::add("api/v2/configuration/[userId]/[configurationId]", function () {
+                Session::start();
+            });
+            Route::add("api/v2/stat", function () {
+                Session::start();
+            });
+
+            //======================
+            // V3 with OAuth
+            //======================
+            Route::add("api/v3/oauth", function () {
+                Database::setDb("mapcentia");
+            });
+            Route::add("api/v3/admin/{action}/", function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    if (!$jwt["data"]["superUser"]) {
+                        echo Response::toJson(Response::SUPER_USER_ONLY);
+                    }
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+            Route::add("api/v3/tileseeder/{action}/{uuid}", function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    if (!$jwt["data"]["superUser"]) {
+                        echo Response::toJson(Response::SUPER_USER_ONLY);
+                    }
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+            Route::add("api/v3/tileseeder/", function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    if (!$jwt["data"]["superUser"]) {
+                        echo Response::toJson(Response::SUPER_USER_ONLY);
+                    }
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+            Route::add("api/v3/scheduler", function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    if (!$jwt["data"]["superUser"]) {
+                        echo Response::toJson(Response::SUPER_USER_ONLY);
+                    }
+                    Database::setDb("gc2scheduler");
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+
+            Route::add("api/v3/grid", function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    if (!$jwt["data"]["superUser"]) {
+                        echo Response::toJson(Response::SUPER_USER_ONLY);
+                    }
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+
+            Route::add("api/v3/sql", function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+
+            Route::add("api/v3/xmlworkspace/[layer]", function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+
+            Route::add("api/v3/view/[schema]", function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    if (!$jwt["data"]["superUser"]) {
+                        echo Response::toJson(Response::SUPER_USER_ONLY);
+                    }
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+            Route::add("api/v3/foreign", function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    if (!$jwt["data"]["superUser"]) {
+                        echo Response::toJson(Response::SUPER_USER_ONLY);
+                    }
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+
+            //==========================
+            // V4 with OAuth and Route2
+            //==========================
+            Route2::add("api/v4/oauth", new Oauth(), function () {
+                Database::setDb("mapcentia");
+            });
+            Route2::add("api/v4/oauth/(action)", new Oauth());
+
+            Route2::add("api/v4/schemas/[schema]", new Schema(), function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    if (!$jwt["data"]["superUser"]) {
+                        echo Response::toJson(Response::SUPER_USER_ONLY);
+                    }
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+
+            Route2::add("api/v4/schemas/{schema}/tables/[table]", new Table(), function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+
+            Route2::add("api/v4/schemas/{schema}/tables/{table}/columns/[column]", new Column(), function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+
+
+            Route2::add("api/v4/schemas/{schema}/tables/{table}/indices/[index]", new Index(), function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+
+
+            Route2::add("api/v4/schemas/{schema}/tables/{table}/constraints/[constraint]", new Constraint(), function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+
+            Route2::add("api/v4/users/[user]", new User(), function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+
+            Route2::add("api/v4/schemas/{schema}/tables/{table}/privileges", new Privilege(), function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+
+            Route2::add("api/v4/rules/[id]", new Geofence(), function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    if (!$jwt["data"]["superUser"]) {
+                        echo Response::toJson(Response::SUPER_USER_ONLY);
+                    }
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+
+            Route2::add("api/v4/sql", new Sql(), function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+
+            Route2::add("api/v4/sql/(database)/{database}", new Sql(), function () {
+            });
+
+            Route2::add("api/v4/methods/[id]", new Method(), function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+
+            Route2::add("api/v4/call", new Call(), function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+
+            Route2::add("api/v3/meta/[query]", new Meta(), function () {
+                $jwt = Jwt::validate();
                 Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-        Route::add("api/v3/tileseeder/{action}/{uuid}", function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                if (!$jwt["data"]["superUser"]) {
-                    echo Response::toJson(Response::SUPER_USER_ONLY);
-                    exit();
+            });
+
+            Route2::add("api/v4/import/{schema}/[file]", new Import(), function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
                 }
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-        Route::add("api/v3/tileseeder/", function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                if (!$jwt["data"]["superUser"]) {
-                    echo Response::toJson(Response::SUPER_USER_ONLY);
-                    exit();
+            });
+
+            Route2::add("api/v4/clients/[id]", new Client(), function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    if (!$jwt["data"]["superUser"]) {
+                        echo Response::toJson(Response::SUPER_USER_ONLY);
+                    }
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
                 }
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-        Route::add("api/v3/scheduler", function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                if (!$jwt["data"]["superUser"]) {
-                    echo Response::toJson(Response::SUPER_USER_ONLY);
-                    exit();
+            });
+
+            Route2::add("api/v4/stats", new Stat(), function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    if (!$jwt["data"]["superUser"]) {
+                        echo Response::toJson(Response::SUPER_USER_ONLY);
+                    }
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
                 }
+            });
+
+            Route2::add("api/v4/commit", new Commit(), function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    if (!$jwt["data"]["superUser"]) {
+                        echo Response::toJson(Response::SUPER_USER_ONLY);
+                    }
+                    Database::setDb($jwt["data"]["database"]);
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
+            Route::miss();
+
+        } elseif (Input::getPath()->part(1) == "admin") {
+            Session::start();
+            Session::authenticate(App::$param['userHostName'] . "/dashboard/");
+            $_SESSION['postgisschema'] = Input::getPath()->part(3) ?: "public";
+            include_once("admin.php");
+        } elseif (Input::getPath()->part(1) == "controllers") {
+            Session::start();
+
+            Route::add("controllers/subuser/[user]");
+
+            Session::authenticate(null);
+
+            Database::setDb($_SESSION['parentdb']);
+            Connection::$param["postgisschema"] = $_SESSION['postgisschema'];
+
+            Route::add("controllers/cfgfile");
+            Route::add("controllers/classification/");
+            Route::add("controllers/database/");
+            Route::add("controllers/layer/");
+            Route::add("controllers/mapfile");
+            Route::add("controllers/tinyowsfile");
+            Route::add("controllers/mapcachefile");
+            Route::add("controllers/setting");
+            Route::add("controllers/table/");
+            Route::add("controllers/tile/");
+            Route::add("controllers/tilecache/");
+            Route::add("controllers/mapcache/");
+            Route::add("controllers/session/");
+            Route::add("controllers/osm/");
+            Route::add("controllers/upload/vector");
+            Route::add("controllers/upload/bitmap");
+            Route::add("controllers/upload/raster");
+            Route::add("controllers/upload/qgis");
+            Route::add("controllers/upload/processvector");
+            Route::add("controllers/upload/processbitmap");
+            Route::add("controllers/upload/processraster");
+            Route::add("controllers/upload/processqgis");
+            Route::add("controllers/logstash");
+            Route::add("controllers/drawing");
+            Route::add("controllers/job", function () {
                 Database::setDb("gc2scheduler");
-            } else {
-                echo Response::toJson($jwt);
-                exit();
+            });
+            Route::add("controllers/workflow");
+            Route::add("controllers/qgis/");
+
+        } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
+            if (!empty(Input::getCookies()["PHPSESSID"])) { // Do not start session if no cookie is set
+                Session::start();
             }
-        });
+            $dbSplit = explode("@", Input::getPath()->part(2));
+            Database::setDb($dbSplit[1] ?? $dbSplit[0]);
+            new Wms();
 
-        Route::add("api/v3/grid", function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                if (!$jwt["data"]["superUser"]) {
-                    echo Response::toJson(Response::SUPER_USER_ONLY);
-                    exit();
-                }
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
+        } elseif (Input::getPath()->part(1) == "wfs") {
+            if (!empty(Input::getCookies()["PHPSESSID"])) {
+                Session::start();
             }
-        });
 
-        Route::add("api/v3/sql", function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
+            // Support of legacy user@database notation in URI. The user part (before @) will be completely ignored
+            $dbSplit = explode("@", Input::getPath()->part(2));
+            // User is either from basic auth, session or URI. The latter is same as database
+            $user = Input::getAuthUser() ?? Session::getUser() ?? $dbSplit[1] ?? $dbSplit[0];
+            $db = $dbSplit[1] ?? $dbSplit[0];
+            // parentUser is superuser
+            $parentUser = $user == $db;
+            Database::setDb($db);
+            Connection::$param["postgisschema"] = Input::getPath()->part(3);
+            include_once("app/wfs/server.php");
+
+        } elseif (!Input::getPath()->part(1)) {
+            if (!empty(App::$param["redirectTo"])) {
+                Redirect::to(App::$param["redirectTo"]);
             } else {
-                echo Response::toJson($jwt);
-                exit();
+                Redirect::to("/dashboard/");
             }
-        });
-
-        Route::add("api/v3/xmlworkspace/[layer]", function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route::add("api/v3/view/[schema]", function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                if (!$jwt["data"]["superUser"]) {
-                    echo Response::toJson(Response::SUPER_USER_ONLY);
-                    exit();
-                }
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-        Route::add("api/v3/foreign", function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                if (!$jwt["data"]["superUser"]) {
-                    echo Response::toJson(Response::SUPER_USER_ONLY);
-                    exit();
-                }
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        //==========================
-        // V4 with OAuth and Route2
-        //==========================
-        Route2::add("api/v4/oauth", new Oauth(), function () {
-            Database::setDb("mapcentia");
-        });
-        Route2::add("api/v4/oauth/(action)", new Oauth());
-
-        Route2::add("api/v4/schemas/[schema]", new Schema(), function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                if (!$jwt["data"]["superUser"]) {
-                    echo Response::toJson(Response::SUPER_USER_ONLY);
-                    exit();
-                }
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route2::add("api/v4/schemas/{schema}/tables/[table]", new Table(), function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route2::add("api/v4/schemas/{schema}/tables/{table}/columns/[column]", new Column(), function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-
-        Route2::add("api/v4/schemas/{schema}/tables/{table}/indices/[index]", new Index(), function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-
-        Route2::add("api/v4/schemas/{schema}/tables/{table}/constraints/[constraint]", new Constraint(), function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route2::add("api/v4/users/[user]", new User(), function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route2::add("api/v4/schemas/{schema}/tables/{table}/privileges", new Privilege(), function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route2::add("api/v4/rules/[id]", new Geofence(), function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                if (!$jwt["data"]["superUser"]) {
-                    echo Response::toJson(Response::SUPER_USER_ONLY);
-                    exit();
-                }
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route2::add("api/v4/sql", new Sql(), function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route2::add("api/v4/sql/(database)/{database}", new Sql(), function () {
-        });
-
-        Route2::add("api/v4/methods/[id]", new Method(), function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route2::add("api/v4/call", new Call(), function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route2::add("api/v3/meta/[query]", new Meta(), function () {
-            $jwt = Jwt::validate();
-            Database::setDb($jwt["data"]["database"]);
-        });
-
-        Route2::add("api/v4/import/{schema}/[file]", new Import(), function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route2::add("api/v4/clients/[id]", new Client(), function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                if (!$jwt["data"]["superUser"]) {
-                    echo Response::toJson(Response::SUPER_USER_ONLY);
-                    exit();
-                }
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route2::add("api/v4/stats", new Stat(), function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                if (!$jwt["data"]["superUser"]) {
-                    echo Response::toJson(Response::SUPER_USER_ONLY);
-                    exit();
-                }
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route2::add("api/v4/commit", new Commit(), function () {
-            $jwt = Jwt::validate();
-            if ($jwt["success"]) {
-                if (!$jwt["data"]["superUser"]) {
-                    echo Response::toJson(Response::SUPER_USER_ONLY);
-                    exit();
-                }
-                Database::setDb($jwt["data"]["database"]);
-            } else {
-                echo Response::toJson($jwt);
-                exit();
-            }
-        });
-
-        Route::miss();
-
-    } elseif (Input::getPath()->part(1) == "admin") {
-        Session::start();
-        Session::authenticate(App::$param['userHostName'] . "/dashboard/");
-        $_SESSION['postgisschema'] = Input::getPath()->part(3) ?: "public";
-        include_once("admin.php");
-    } elseif (Input::getPath()->part(1) == "controllers") {
-        Session::start();
-
-        Route::add("controllers/subuser/[user]");
-
-        Session::authenticate(null);
-
-        Database::setDb($_SESSION['parentdb']);
-        Connection::$param["postgisschema"] = $_SESSION['postgisschema'];
-
-        Route::add("controllers/cfgfile");
-        Route::add("controllers/classification/");
-        Route::add("controllers/database/");
-        Route::add("controllers/layer/");
-        Route::add("controllers/mapfile");
-        Route::add("controllers/tinyowsfile");
-        Route::add("controllers/mapcachefile");
-        Route::add("controllers/setting");
-        Route::add("controllers/table/");
-        Route::add("controllers/tile/");
-        Route::add("controllers/tilecache/");
-        Route::add("controllers/mapcache/");
-        Route::add("controllers/session/");
-        Route::add("controllers/osm/");
-        Route::add("controllers/upload/vector");
-        Route::add("controllers/upload/bitmap");
-        Route::add("controllers/upload/raster");
-        Route::add("controllers/upload/qgis");
-        Route::add("controllers/upload/processvector");
-        Route::add("controllers/upload/processbitmap");
-        Route::add("controllers/upload/processraster");
-        Route::add("controllers/upload/processqgis");
-        Route::add("controllers/logstash");
-        Route::add("controllers/drawing");
-        Route::add("controllers/job", function () {
-            Database::setDb("gc2scheduler");
-        });
-        Route::add("controllers/workflow");
-        Route::add("controllers/qgis/");
-
-    } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
-        if (!empty(Input::getCookies()["PHPSESSID"])) { // Do not start session if no cookie is set
-            Session::start();
-        }
-        $dbSplit = explode("@", Input::getPath()->part(2));
-        Database::setDb($dbSplit[1] ?? $dbSplit[0]);
-        new Wms();
-
-    } elseif (Input::getPath()->part(1) == "wfs") {
-        if (!empty(Input::getCookies()["PHPSESSID"])) {
-            Session::start();
-        }
-
-        // Support of legacy user@database notation in URI. The user part (before @) will be completely ignored
-        $dbSplit = explode("@", Input::getPath()->part(2));
-        // User is either from basic auth, session or URI. The latter is same as database
-        $user = Input::getAuthUser() ?? Session::getUser() ?? $dbSplit[1] ?? $dbSplit[0];
-        $db = $dbSplit[1] ?? $dbSplit[0];
-        // parentUser is superuser
-        $parentUser = $user == $db;
-        Database::setDb($db);
-        Connection::$param["postgisschema"] = Input::getPath()->part(3);
-        include_once("app/wfs/server.php");
-
-    } elseif (!Input::getPath()->part(1)) {
-        if (!empty(App::$param["redirectTo"])) {
-            Redirect::to(App::$param["redirectTo"]);
         } else {
-            Redirect::to("/dashboard/");
+            foreach (glob(dirname(__FILE__) . "/../app/extensions/**/routes/*.php") as $filename) {
+                include_once($filename);
+            }
+            foreach (glob(dirname(__FILE__) . "/../app/auth/routes/*.php") as $filename) {
+                include_once($filename);
+            }
+            Route::miss();
         }
-    } else {
-        foreach (glob(dirname(__FILE__) . "/../app/extensions/**/routes/*.php") as $filename) {
-            include_once($filename);
-        }
-        foreach (glob(dirname(__FILE__) . "/../app/auth/routes/*.php") as $filename) {
-            include_once($filename);
-        }
-        Route::miss();
+    } catch (GC2Exception $exception) {
+        $response["success"] = false;
+        $response["message"] = $exception->getMessage();
+        $response["code"] = $exception->getCode();
+        $response["errorCode"] = $exception->getErrorCode();
+        echo Response::toJson($response);
+    } catch (OwsException|ServiceException $exception) {
+        ob_clean();
+        header('Content-Type:text/xml; charset=UTF-8', TRUE);
+        echo $exception->getReport();
+    } catch (RPCException $exception) {
+        echo Response::toJson($exception->getResponse());
+    } catch (PDOException $exception) {
+        $response["success"] = false;
+        $response["message"] = $exception->errorInfo[2];
+        $response["code"] = $exception->getCode();
+        echo Response::toJson($response);
+    } catch (Throwable $exception) {
+        $response["success"] = false;
+        $response["message"] = $exception->getMessage();
+//        $response["file"] = $exception->getFile();
+//        $response["line"] = $exception->getLine();
+//        $response["sql_code"] = $exception->getCode();
+//        $response["trace"] = $exception->getTraceAsString();
+        $response["code"] = 500;
+        echo Response::toJson($response);
+    } finally {
+        return;
     }
-} catch (GC2Exception $exception) {
-    $response["success"] = false;
-    $response["message"] = $exception->getMessage();
-    $response["code"] = $exception->getCode();
-    $response["errorCode"] = $exception->getErrorCode();
-    echo Response::toJson($response);
-} catch (OwsException|ServiceException $exception) {
-    ob_clean();
-    header('Content-Type:text/xml; charset=UTF-8', TRUE);
-    echo $exception->getReport();
-} catch (RPCException $exception) {
-    echo Response::toJson($exception->getResponse());
-} catch (PDOException $exception) {
-    $response["success"] = false;
-    $response["message"] = $exception->errorInfo[2];
-    $response["code"] = $exception->getCode();
-    echo Response::toJson($response);
-} catch (Throwable $exception) {
-    $response["success"] = false;
-    $response["message"] = $exception->getMessage();
-    $response["file"] = $exception->getFile();
-    $response["line"] = $exception->getLine();
-    $response["sql_code"] = $exception->getCode();
-//  $response["trace"] = $exception->getTraceAsString();
-    $response["code"] = 500;
-    echo Response::toJson($response);
-} finally {
-    exit();
+};
+
+if (function_exists('frankenphp_handle_request')) {
+    ignore_user_abort(true);
+    $maxRequests = (int)($_SERVER['MAX_REQUESTS'] ?? 500);
+    error_log("Starting worker");
+    for ($nbRequests = 0; !$maxRequests || $nbRequests < $maxRequests; ++$nbRequests) {
+        $keepRunning = frankenphp_handle_request($handler);
+        error_log($keepRunning);
+        // Call the garbage collector to reduce the chances of it being triggered in the middle of a page generation
+        gc_collect_cycles();
+        if (!$keepRunning) break;
+    }
+} else {
+    $handler();
 }
