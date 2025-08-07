@@ -329,16 +329,18 @@ class Sql extends Controller
             } else {
                 ob_start();
                 $this->response = $this->api->sql($this->q, $clientEncoding, Input::get('format') ?: "geojson", Input::get('geoformat') ?: null, Input::get('allstr') ?: null, Input::get('alias') ?: null, null, null, Input::get('convert_types') ?: null, Input::get('params') ?: null, $typeHints, $typeFormats);
-                $response["statement"] = $this->q;
-                $this->addAttr($response);
-                echo serialize($this->response);
-                $this->data = ob_get_contents();
-                if ($lifetime > 0 && !empty($CachedString)) {
-                    $CachedString->set($this->data)->expiresAfter($lifetime ?: 1);// Because 0 secs means cache will life for ever, we set cache to one sec
-                    Cache::save($CachedString);
-                    $this->cacheInfo["hit"] = false;
+                if (count($this->response) > 0) {
+                    $response["statement"] = $this->q;
+                    $this->addAttr($response);
+                    echo serialize($this->response);
+                    $this->data = ob_get_contents();
+                    if ($lifetime > 0 && !empty($CachedString)) {
+                        $CachedString->set($this->data)->expiresAfter($lifetime ?: 1);// Because 0 secs means cache will life for ever, we set cache to one sec
+                        Cache::save($CachedString);
+                        $this->cacheInfo["hit"] = false;
+                    }
+                    ob_get_clean();
                 }
-                ob_get_clean();
             }
         } else {
             throw new GC2Exception("Check your SQL. Could not recognise it as either SELECT, INSERT, UPDATE or DELETE ($operation)", 403, null, "SQL_STATEMENT_NOT_RECOGNISED");

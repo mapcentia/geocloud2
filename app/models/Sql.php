@@ -152,7 +152,7 @@ class Sql extends Model
                 header("Content-Disposition: attachment; filename=\"$fileOrFolder.zip\"");
                 readfile($zipPath);
             }
-            exit(0);
+            return [];
         }
 
         $postgisVersion = $this->postgisVersion();
@@ -370,7 +370,7 @@ class Sql extends Model
                 echo str_pad($json, 4096);
             }
             $this->execQuery("CLOSE curs");
-            exit();
+            return [];
 
         } elseif ($format == "ccsv") {
 
@@ -440,7 +440,7 @@ class Sql extends Model
                 echo $lines . "\n";
             }
             $this->execQuery("CLOSE curs");
-            exit();
+            return [];
 
         } elseif ($format == "excel" || $format == "csv") {
 
@@ -506,7 +506,7 @@ class Sql extends Model
                 ob_clean();
                 flush();
                 echo $csv;
-                exit();
+                return [];
             }
 
             // Convert to Excel
@@ -525,7 +525,7 @@ class Sql extends Model
             header('Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             header('Content-Disposition: attachment; filename="file.xlsx"');
             $objWriter->save('php://output');
-            exit();
+            return [];
         }
         throw new GC2Exception("$format is not an acceptable format", 406, null, 'NOT_ACCEPTABLE');
     }
