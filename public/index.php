@@ -648,7 +648,8 @@ $handler = static function () {
     } catch (PDOException $exception) {
         $response["success"] = false;
         $response["message"] = $exception->errorInfo[2];
-        $response["code"] = $exception->getCode();
+        $response["code"] = 500;
+        $response["errorCode"] = $exception->getCode();
         echo Response::toJson($response);
     } catch (Throwable $exception) {
         $response["success"] = false;
