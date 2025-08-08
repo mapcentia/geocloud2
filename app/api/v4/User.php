@@ -84,6 +84,12 @@ class User extends AbstractApi
 
     }
 
+    function __destruct() {
+        if (isset($this->jwt)) {
+            Database::setDb($this->jwt["database"]);
+        }
+    }
+
     /**
      * @return array
      * @throws Exception
@@ -156,9 +162,12 @@ class User extends AbstractApi
             }
             $userName = self::convertUserObject($model->createUser($user)['data'])['name'];
             $list[] = $userName;
-            (new Setting())->updateApiKeyForUser($userName, false);
         }
         $model->commit();
+        Database::setDb($this->jwt["database"]);
+        foreach ($list as $newUser) {
+            (new Setting())->updateApiKeyForUser($newUser, false);
+        }
         header("Location: /api/v4/users/" . implode(",", $list));
         return ["code" => 201];
     }
@@ -202,7 +211,6 @@ class User extends AbstractApi
                 $model->begin();
                 $model->updateUser($data);
                 $model->commit();
-
             } else {
                 $model = new UserModel($requestedUserId, $dataBase);
                 $model->connect();
