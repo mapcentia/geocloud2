@@ -739,7 +739,6 @@ class Table extends Model
         $response = [];
         $this->purgeFieldConf($key);
         $data = $this->makeArray($data);
-        $sql = "";
         $fieldconfArr = $this->geometryColumns["fieldconf"] == null ? [] : (array)json_decode($this->geometryColumns["fieldconf"]);
         foreach ($data as $value) {
             $safeColumn = $value->column;
@@ -768,12 +767,13 @@ class Table extends Model
                 if (in_array($value->id, $this->sysCols)) {
                     throw new GC2Exception("You can't rename a system column", 409, null, "SYSTEM_COLUMN");
                 }
-                $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " RENAME \"$value->id\" TO \"$safeColumn\";";
+                $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " RENAME \"$value->id\" TO \"$safeColumn\";";
+                $res = $this->prepare($sql);
+                $res->execute();
                 $value->column = $safeColumn;
                 unset($fieldconfArr[$value->id]);
                 $response['message'] = "Renamed";
                 $response['name'] = $safeColumn;
-
             } else {
                 $response['message'] = "Updated";
                 $response['name'] = $value->id;
@@ -792,9 +792,6 @@ class Table extends Model
         $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf, JSON_UNESCAPED_UNICODE), true), "_key_");
         if (!$res["success"]) {
             throw new GC2Exception($res["message"], 409, null, "SYSTEM_COLUMN");
-        }
-        if (!empty($sql)) {
-            $this->execQuery($sql, "PDO", "transaction");
         }
         $response['success'] = true;
         return $response;

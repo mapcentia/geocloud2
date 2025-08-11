@@ -178,9 +178,15 @@ class Schema extends AbstractApi
             }
         }
         $this->table[0]->commit();
-        header("Location: /api/v4/schemas/" . implode(",", $list));
+        $baseUri = "/api/v4/schemas/";
+        header("Location: $baseUri" . implode(",", $list));
         $res["code"] = "201";
-        return $res;
+        $res["schemas"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
+        if (count($res["schemas"]) == 1) {
+            return $res["schemas"][0];
+        } else {
+            return $res;
+        }
     }
 
     /**

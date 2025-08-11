@@ -142,6 +142,7 @@ class Method extends AbstractApi
     #[Override]
     public function post_index(): array
     {
+        $list = [];
         $jwtData = Jwt::validate()["data"];
         $uid = $jwtData["uid"];
         $decodedBody = json_decode(Input::getBody(), true);
@@ -161,10 +162,19 @@ class Method extends AbstractApi
             $typeFormats = $m['type_formats'];
             $outputFormat = $m['output_format'] ?? 'json';
             $srs = $m['srs'] ?? 4326;
-            $pres->createPreparedStatement($method, $q, $typeHints, $typeFormats, $outputFormat, $srs, $uid);
+            $list[] = $pres->createPreparedStatement($method, $q, $typeHints, $typeFormats, $outputFormat, $srs, $uid);
         }
         $pres->commit();
-        return ['code' => '201'];
+        $baseUri = "/api/v4/methods/";
+        header("Location: $baseUri" . implode(",", $list));
+        $res["code"] = "201";
+        $res["methods"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
+        if (count($res["methods"]) == 1) {
+            return $res["methods"][0];
+        } else {
+            return $res;
+        }
+
     }
 
     /**
@@ -195,7 +205,7 @@ class Method extends AbstractApi
             $model->updatePreparedStatement($id, $body['method'], $body['q'], $body['type_hints'], $body['type_formats'], $body['output_format'], $body['srs'], $uid, $isSuperUser);
         }
         $model->commit();
-        header("Location: /api/v4/rpc/" . implode(",", $ids));
+        header("Location: /api/v4/methods/" . implode(",", $ids));
         return ["code" => "303"];
     }
 

@@ -182,9 +182,15 @@ class Geofence extends AbstractApi
             $list[] = $model->create($datum)['data']['id'];
         }
         $model->commit();
-        header("Location: /api/v4/rules/" . implode(",", $list));
+        $baseUri = "/api/v4/rules/";
+        header("Location: $baseUri" . implode(",", $list));
         $res["code"] = "201";
-        return $res;
+        $res["rules"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
+        if (count($res["rules"]) == 1) {
+            return $res["rules"][0];
+        } else {
+            return $res;
+        }
     }
 
     /**
@@ -202,11 +208,8 @@ class Geofence extends AbstractApi
     #[Override]
     public function patch_index(): array
     {
-        $id = Route2::getParam("id");
-        if (empty($id)) {
-            throw new GC2Exception("No rule id", 404, null, 'MISSING_ID');
-        }
         $ids = explode(',', Route2::getParam("id"));
+        $list = [];
         $body = Input::getBody();
         $data = json_decode($body, true);
         $model = new GeofenceModel(null);
@@ -216,15 +219,15 @@ class Geofence extends AbstractApi
             if (!is_numeric($id)) {
                 throw new GC2Exception("Id is not a integer", 400, null, 'MISSING_ID');
             }
-            $data["id"] = $id;
+            $data["newId"] = $data['id'] ?? null;;
             if (isset($data['table'])) {
                 $data['layer'] = $data['table'];
                 unset($data['table']);
             }
-            $model->update($data);
+            $list[] = $model->update($id, $data);
         }
         $model->commit();
-        header("Location: /api/v4/rules/" . implode(",", $ids));
+        header("Location: /api/v4/rules/" . implode(",", $list));
         return ["code" => "303"];
     }
 

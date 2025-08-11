@@ -171,9 +171,15 @@ class Table extends AbstractApi
             $list[] = $r['tableName'];
         }
         $this->table[0]->commit();
-        header("Location: /api/v4/schemas/{$this->schema[0]}/tables/" . implode(",", $list));
+        $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/";
+        header("Location: $baseUri" . implode(",", $list));
         $res["code"] = "201";
-        return $res;
+        $res["tables"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
+        if (count($res["tables"]) == 1) {
+            return $res["tables"][0];
+        } else {
+            return $res;
+        }
     }
 
     /**
@@ -240,7 +246,6 @@ class Table extends AbstractApi
         header("Location: /api/v4/schemas/{$schema}/tables/" . (count($r) > 0 ? implode(',', $r) : implode(',', $this->unQualifiedName)));
         return ["code" => "303"];
     }
-
 
     /**
      * @return array
@@ -367,46 +372,59 @@ class Table extends AbstractApi
      */
     static public function getAssert(): Assert\Collection
     {
-        return new Assert\Collection([
-            'name' => new Assert\Optional([
+        $collection = new Assert\Collection([]);
+        if (Input::getMethod() == 'post') {
+            $collection->fields['name'] = new Assert\Required([
+                    new Assert\Type('string'),
+                    new Assert\NotBlank()
+                ]
+            );
+        } else {
+            $collection->fields['name'] = new Assert\Optional([
+                    new Assert\Type('string'),
+                    new Assert\NotBlank(),
+                ]
+            );
+            $collection->fields['emit_events'] = new Assert\Optional(
+                new Assert\Type('boolean')
+            );
+        }
+        $collection->fields['comment'] = new Assert\Optional(
+            new Assert\Type('string'),
+        );
+        $collection->fields['schema'] = new Assert\Optional([
                 new Assert\Type('string'),
-                new Assert\NotBlank(),
-            ]),
-            'comment' => new Assert\Optional([
-                new Assert\Type('string'),
-            ]),
-            'schema' => new Assert\Optional([
-                new Assert\Type('string'),
-                new Assert\NotBlank(),
-            ]),
-            'columns' => new Assert\Optional([
+                new Assert\NotBlank()
+            ]
+        );
+        $collection->fields['columns'] = new Assert\Optional([
                 new Assert\Type('array'),
                 new Assert\Count(min: 1),
                 new Assert\All([
                     new Assert\NotBlank(),
                     Column::getAssert(),
                 ]),
-            ]),
-            'indices' => new Assert\Optional([
+            ]
+        );
+        $collection->fields['indices'] = new Assert\Optional([
                 new Assert\Type('array'),
                 new Assert\Count(min: 1),
                 new Assert\All([
                     new Assert\NotBlank(),
                     Index::getAssert(),
                 ]),
-            ]),
-            'constraints' => new Assert\Optional([
+            ]
+        );
+        $collection->fields['constraints'] = new Assert\Optional([
                 new Assert\Type('array'),
                 new Assert\Count(min: 1),
                 new Assert\All([
                     new Assert\NotBlank(),
                     Constraint::getAssert(),
                 ]),
-            ]),
-            'emit_events' => new Assert\Optional([
-                new Assert\Type('boolean'),
-            ]),
-        ]);
+            ]
+        );
+        return $collection;
     }
 
     public function put_index(): array

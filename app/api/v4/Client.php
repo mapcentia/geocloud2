@@ -24,6 +24,13 @@ use Symfony\Component\Validator\Constraints as Assert;
     required: ["name", "redirect_uri"],
     properties: [
         new OA\Property(
+            property: "id",
+            title: "Id of the client.",
+            description: "Id of client, which identify the client",
+            type: "string",
+            example: "my_client_id",
+        ),
+        new OA\Property(
             property: "name",
             title: "Name of the client.",
             description: "Name of client. Can help identify the client",
@@ -146,7 +153,7 @@ class Client extends AbstractApi
     #[AcceptableAccepts(['application/json'])]
     public function post_index(): array
     {
-        $list = [];
+        $clients = [];
         $model = new ClientModel();
         $body = Input::getBody();
         $data = json_decode($body, true);
@@ -157,6 +164,7 @@ class Client extends AbstractApi
         }
         foreach ($data['clients'] as $datum) {
             $arr = [
+                'id' => $datum['id'],
                 'name' => $datum['name'],
                 'redirectUri' => $datum['redirect_uri'] ? json_encode($datum['redirect_uri']) : null,
                 'homepage' => $datum['homepage'] ?? null,
@@ -164,13 +172,19 @@ class Client extends AbstractApi
                 'public' => $datum['public'] ?? false,
                 'confirm' => $datum['confirm'] ?? true,
             ];
-            $list[] = $model->insert(...$arr);
+            $clients[] = $model->insert(...$arr);
         }
         $model->commit();
-        if (count($list) > 1) {
-            return ["clients" => $list];
+        $list = array_map(fn($c) => $c['id'], $clients);
+        $baseUri = "/api/v4/clients/";
+        header("Location: $baseUri" . implode(",", $list));
+        $res["code"] = "201";
+        $res["clients"] = array_map(fn($l) => [
+            'links' => ['self' => $baseUri . $l['id']], 'secret' => $l['secret']], $clients);
+        if (count($res["clients"]) == 1) {
+            return $res["clients"][0];
         } else {
-            return $list[0];
+            return $res;
         }
     }
 
@@ -186,6 +200,7 @@ class Client extends AbstractApi
     #[AcceptableContentTypes(['application/json'])]
     public function patch_index(): array
     {
+        $list = [];
         $ids = explode(',', Route2::getParam("id"));
         $body = Input::getBody();
         $data = json_decode($body, true);
@@ -195,6 +210,7 @@ class Client extends AbstractApi
         foreach ($ids as $id) {
             $arr = [
                 'id' => $id,
+                'newId' => $data['id'] ?? null,
                 'name' => $data['name'] ?? null,
                 'redirectUri' => $data['redirect_uri'] ? json_encode($data['redirect_uri']) : null,
                 'homepage' => $data['homepage'] ?? null,
@@ -202,10 +218,10 @@ class Client extends AbstractApi
                 'public' => $data['public'] ?? null,
                 'confirm' => $data['confirm'] ?? null,
             ];
-            $model->update(...$arr);
+            $list[] = $model->update(...$arr);
         }
         $model->commit();
-        header("Location: /api/v4/clients/" . implode(",", $ids));
+        header("Location: /api/v4/clients/" . implode(",", $list));
         return ["code" => "303"];
     }
 
@@ -260,10 +276,16 @@ class Client extends AbstractApi
         $collection = new Assert\Collection([]);
 
         if (Input::getMethod() == 'post') {
+            $collection->fields['id'] = new Assert\Required(
+                new Assert\Length(min: 3)
+            );
             $collection->fields['name'] = new Assert\Required(
                 new Assert\Length(min: 3)
             );
         } else {
+            $collection->fields['id'] = new Assert\Optional(
+                new Assert\Length(min: 3)
+            );
             $collection->fields['name'] = new Assert\Optional(
                 new Assert\Length(min: 3)
             );

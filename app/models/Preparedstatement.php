@@ -127,11 +127,10 @@ class Preparedstatement extends Model
      */
     public function createPreparedStatement(string $name, string $statement, ?array $typeHints, ?array $typeFormats, string $outputFormat, ?int $srs, string $userName): string
     {
-        $sql = "INSERT INTO settings.prepared_statements (name, statement, type_hints, type_formats, output_format, srs, username) VALUES (:name, :statement, :type_hints, :type_formats, :output_format, :srs, :username) returning uuid";
+        $sql = "INSERT INTO settings.prepared_statements (name, statement, type_hints, type_formats, output_format, srs, username) VALUES (:name, :statement, :type_hints, :type_formats, :output_format, :srs, :username) returning name";
         $res = $this->prepare($sql);
         $res->execute(['name' => $name, 'statement' => $statement, 'type_hints' => json_encode($typeHints), 'type_formats' => json_encode($typeFormats), 'output_format' => $outputFormat, 'srs' => $srs, 'username' => $userName]);
-        $uuid = $res->fetchColumn();
-        return $uuid;
+        return $res->fetchColumn();
     }
 
     public function updatePreparedStatement(string $name, ?string $newName, ?string $statement, ?array $typeHints, ?array $typeFormats, ?string $outputFormat, ?int $srs, string $userName, bool $isSuperUser = false): void

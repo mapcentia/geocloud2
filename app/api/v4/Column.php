@@ -141,8 +141,15 @@ class Column extends AbstractApi
             $list[] = self::addColumn($this->table[0], $datum->name, $datum->type, $setDefaultValue, $datum->default_value, $datum->is_nullable ?? true, $datum->comment);
         }
         $this->table[0]->commit();
-        header("Location: /api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/columns/" . implode(',', $list));
-        return ["code" => "201"];
+        $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/columns/";
+        header("Location: $baseUri" . implode(",", $list));
+        $res["code"] = "201";
+        $res["columns"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
+        if (count($res["columns"]) == 1) {
+            return $res["columns"][0];
+        } else {
+            return $res;
+        }
     }
 
     /**
@@ -186,6 +193,7 @@ class Column extends AbstractApi
                 }
                 $r = $this->table[0]->updateColumn($obj, $key, true);
                 $list[] = $r['name'];
+
             }
             $newName = $r["name"];
             if (property_exists($data, "is_nullable")) {
@@ -302,23 +310,38 @@ class Column extends AbstractApi
 
     static public function getAssert(): Assert\Collection
     {
-        return new Assert\Collection([
-            'name' => new Assert\Optional([
-                new Assert\Type('string'),
-                new Assert\NotBlank(),
-            ]),
-            'comment' => new Assert\Optional([
-                new Assert\Type('string'),
-            ]),
-            'type' => new Assert\Optional([
-                new Assert\Type('string'),
-                new Assert\NotBlank(),
-            ]),
-            'is_nullable' => new Assert\Optional([
-                new Assert\Type('boolean'),
-            ]),
-            'default_value' => new Assert\Optional([]),
-        ]);
+        $collection = new Assert\Collection([]);
+        if (Input::getMethod() == 'post') {
+            $collection->fields['name'] = new Assert\Required([
+                    new Assert\Type('string'),
+                    new Assert\NotBlank()
+                ]
+            );
+            $collection->fields['type'] = new Assert\Required([
+                    new Assert\Type('string'),
+                    new Assert\NotBlank()
+                ]
+            );
+        } else {
+            $collection->fields['name'] = new Assert\Optional([
+                    new Assert\Type('string'),
+                    new Assert\NotBlank()
+                ]
+            );
+            $collection->fields['type'] = new Assert\Optional([
+                    new Assert\Type('string'),
+                    new Assert\NotBlank()
+                ]
+            );
+        }
+        $collection->fields['comment'] = new Assert\Optional(
+            new Assert\Type('string'),
+        );
+        $collection->fields['is_nullable'] = new Assert\Optional(
+            new Assert\Type('boolean'),
+        );
+        $collection->fields['default_value'] = new Assert\Optional();
+        return $collection;
     }
 
     public function put_index(): array

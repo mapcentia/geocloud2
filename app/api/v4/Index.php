@@ -120,9 +120,15 @@ class Index extends AbstractApi
             $list[] = self::addIndices($this->table[0], $columns, $method, $name);
         }
         $this->table[0]->commit();
-        header("Location: /api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/indices/" . implode(',', $list));
+        $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/indices/";
+        header("Location: $baseUri" . implode(",", $list));
         $res["code"] = "201";
-        return $res;
+        $res["indices"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
+        if (count($res["indices"]) == 1) {
+            return $res["indices"][0];
+        } else {
+            return $res;
+        }
     }
 
 

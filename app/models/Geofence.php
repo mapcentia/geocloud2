@@ -213,26 +213,29 @@ class Geofence extends Model
      * @return void
      * @throws GC2Exception
      */
-    public function update(array $data): void
+    public function update(string $id, array $data): int
     {
         $props = array_keys($data);
-        if (!in_array("id", $props)) {
-            throw new GC2Exception('Id is missing', 400);
-        }
         if (sizeof($props) < 2) {
             throw new GC2Exception('Nothing to be set', 400);
         }
         $sets = [];
         foreach ($props as $prop) {
-            $sets[] = "$prop=:$prop";
+            if ($prop == "id") continue;
+            if ($prop == "newId") {
+                $sets[] = "id=:newId";
+            } else {
+                $sets[] = "$prop=:$prop";
+            }
         }
         $setsStr = implode(",", $sets);
         $sql = "update settings.geofence set $setsStr where id=:id returning *";
         $res = $this->prepare($sql);
-        $res->execute($data);
+        $res->execute([...$data, "id" => $id]);;
         if ($res->rowCount() == 0) {
             throw new GC2Exception("No rule with id", 404, null, 'RULE_NOT_FOUND');
         }
+        return $res->fetchColumn();
     }
 
     /**

@@ -163,13 +163,20 @@ class User extends AbstractApi
             $userName = self::convertUserObject($model->createUser($user)['data'])['name'];
             $list[] = $userName;
         }
-        $model->commit();
+        //$model->commit();
         Database::setDb($this->jwt["database"]);
         foreach ($list as $newUser) {
             (new Setting())->updateApiKeyForUser($newUser, false);
         }
-        header("Location: /api/v4/users/" . implode(",", $list));
-        return ["code" => 201];
+        $baseUri = "/api/v4/users/";
+        header("Location: $baseUri" . implode(",", $list));
+        $res["code"] = "201";
+        $res["users"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
+        if (count($res["users"]) == 1) {
+            return $res["users"][0];
+        } else {
+            return $res;
+        }
     }
 
     /**

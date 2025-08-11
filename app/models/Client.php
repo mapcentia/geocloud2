@@ -46,10 +46,10 @@ class Client extends Model
     /**
      * @throws RandomException
      */
-    public function insert(string $name, string $redirectUri, ?string $homepage, ?string $description, bool $public = false, bool $confirm = true): array
+    public function insert(string $id, string $name, string $redirectUri, ?string $homepage, ?string $description, bool $public = false, bool $confirm = true): array
     {
         $sql = 'INSERT INTO settings.clients (id, secret, name, homepage, description, redirect_uri, "public", confirm) VALUES (:id, :secret, :name, :homepage, :description, :redirect_uri, :public, :confirm)';
-        $id = uniqid();
+        $id = Model::toAscii($id);
         $secret = bin2hex(random_bytes(32));
         $secretHash = password_hash($secret, PASSWORD_BCRYPT);
         $homepage = $homepage ?? null;
@@ -73,11 +73,15 @@ class Client extends Model
     /**
      * @throws GC2Exception
      */
-    public function update(string $id, ?string $name, ?string $redirectUri, ?string $homepage, ?string $description, ?bool $public, ?bool $confirm): void
+    public function update(string $id, ?string $newId, ?string $name, ?string $redirectUri, ?string $homepage, ?string $description, ?bool $public, ?bool $confirm): string
     {
         $sets = [];
         $values = [];
         $values['id'] = $id;
+        if ($newId) {
+            $sets[] = "id=:newId";
+            $values['newId'] = $newId;
+        }
         if ($name) {
             $sets[] = "name=:name";
             $values['name'] = $name;
@@ -103,12 +107,13 @@ class Client extends Model
             $values['confirm'] = $confirm ? 't' : 'f';
         }
         $setStr = implode(', ', $sets);
-        $sql = "UPDATE settings.clients set $setStr  WHERE id = :id";
+        $sql = "UPDATE settings.clients set $setStr  WHERE id = :id RETURNING id";
         $res = $this->prepare($sql);
         $res->execute($values);
         if ($res->rowCount() == 0) {
             throw new GC2Exception("No client with id", 404, null, 'CLIENT_NOT_FOUND');
         }
+        return $res->fetchColumn();
     }
 
     /**
