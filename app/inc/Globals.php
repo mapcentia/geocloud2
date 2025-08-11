@@ -25,7 +25,7 @@ class Globals
     /**
      * @var array[]
      */
-    static public array $metaConfig =[
+    static public array $metaConfig = [
         [
             "fieldsetName" => "CKAN",
             "fields" => [
@@ -58,6 +58,11 @@ class Globals
                     "name" => "sql_conflict",
                     "type" => "textarea",
                     "title" => "Analyse",
+                ],
+                [
+                    "name" => "sql_conflict_header",
+                    "type" => "text",
+                    "title" => "Analyse header",
                 ],
 
             ]
