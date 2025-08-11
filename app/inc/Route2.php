@@ -152,15 +152,17 @@ class Route2
                 $code = $response["code"];
                 unset($response["code"]);
             }
-            header("HTTP/1.0 $code " . Util::httpCodeText($code));
-            header('Content-type: application/json; charset=utf-8');
-            if (!array_is_list($response)) {
-                $response["_execution_time"] = round((Util::microtime_float() - $time_start), 3);
-            }
-            if (!in_array($code, ['204', '303'])) {
-                echo json_encode($response, JSON_UNESCAPED_UNICODE);
-            } else {
-                header_remove('Content-type');;
+            if (count($response) > 0) {
+                header("HTTP/1.0 $code " . Util::httpCodeText($code));
+                header('Content-type: application/json; charset=utf-8');
+                if (!array_is_list($response)) {
+                    $response["_execution_time"] = round((Util::microtime_float() - $time_start), 3);
+                }
+                if (!in_array($code, ['204', '303'])) {
+                    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+                } else {
+                    header_remove('Content-type');;
+                }
             }
             end:
             flush();

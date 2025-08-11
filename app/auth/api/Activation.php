@@ -32,8 +32,8 @@ class Activation extends AbstractApi
         $twig = new Environment($loader);
 
         echo $twig->render('header.html.twig');
-        echo "<main class='form-signin w-100 m-auto'>";
-        echo "<main hx-trigger='load' hx-post='/activation' class='form-signin w-100 m-auto'></main>";
+        echo "<main class='w-100 m-auto'>";
+        echo "<div hx-trigger='load' hx-post='/activation' class='form-signin w-100 m-auto'></div>";
         echo $twig->render('footer.html.twig');
         echo "<div id='alert'></div>";
         echo "</main>";

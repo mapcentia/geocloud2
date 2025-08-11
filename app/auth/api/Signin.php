@@ -27,10 +27,9 @@ class Signin extends AbstractApi
         Session::start();
     }
 
-    public function get_index(): never
+    public function get_index(): array
     {
         // TODO: Implement get_index() method.
-
     }
 
     public function post_index(): array
