@@ -95,8 +95,8 @@ class Route2
 
             if (!method_exists($controller, $action)) {
                 $method = Input::getMethod();
-                $contentType = Input::getContentType() ? trim(explode(';', Input::getContentType())[0]): "application/json";
-                $accepts = Input::getAccept() ? array_map(fn($str) => trim(explode(';',$str)[0]) ,explode(',', Input::getAccept())) : ["*/*"];
+                $contentType = Input::getContentType() ? trim(explode(';', Input::getContentType())[0]) : "application/json";
+                $accepts = Input::getAccept() ? array_map(fn($str) => trim(explode(';', $str)[0]), explode(',', Input::getAccept())) : ["*/*"];
                 $action = $method . "_index";
                 $attributes = $reflectionClass->getAttributes(AcceptableMethods::class);
                 foreach ($attributes as $attribute) {
@@ -153,14 +153,14 @@ class Route2
                 unset($response["code"]);
             }
             header("HTTP/1.0 $code " . Util::httpCodeText($code));
-            if (!empty($response)) {
-                header('Content-type: application/json; charset=utf-8');
-                if (!array_is_list($response)) {
-                    $response["_execution_time"] = round((Util::microtime_float() - $time_start), 3);
-                }
-                if (!in_array($code, ['204', '303'])) {
-                    echo json_encode($response, JSON_UNESCAPED_UNICODE);
-                }
+            header('Content-type: application/json; charset=utf-8');
+            if (!array_is_list($response)) {
+                $response["_execution_time"] = round((Util::microtime_float() - $time_start), 3);
+            }
+            if (!in_array($code, ['204', '303'])) {
+                echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            } else {
+                header_remove('Content-type');;
             }
             end:
             flush();
