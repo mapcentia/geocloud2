@@ -150,12 +150,9 @@ class Route2
             }
             $controller->validate();
             $response = $controller->$action($r);
-            $code = "200";
-            if (isset($response["code"])) {
-                $code = $response["code"];
-                unset($response["code"]);
-            }
+            $code = $response["code"] ?? '200';
             if (count($response) > 0) {
+                unset($response["code"]);
                 header("HTTP/1.0 $code " . Util::httpCodeText($code));
                 header('Content-type: application/json; charset=utf-8');
                 if (!array_is_list($response)) {
