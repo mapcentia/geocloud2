@@ -129,7 +129,36 @@ App::$param['protocol'] = App::$param['protocol'] ?? Util::protocol();
 App::$param['host'] = App::$param['host'] ?? App::$param['protocol'] . "://" . $_SERVER['SERVER_NAME'] . ($_SERVER['SERVER_PORT'] != "80" && $_SERVER['SERVER_PORT'] != "443" ? ":" . $_SERVER["SERVER_PORT"] : "");
 App::$param['userHostName'] = App::$param['userHostName'] ?? App::$param['host'];
 
-
+// Handle OWS outside handler handler function
+try {
+    if (Input::getPath()->part(1) == "wfs") {
+        if (!empty(Input::getCookies()["PHPSESSID"])) {
+            Session::start();
+        }
+        // Support of legacy user@database notation in URI. The user part (before @) will be completely ignored
+        $dbSplit = explode("@", Input::getPath()->part(2));
+        // User is either from basic auth, session or URI. The latter is same as database
+        $user = Input::getAuthUser() ?? Session::getUser() ?? $dbSplit[1] ?? $dbSplit[0];
+        $db = $dbSplit[1] ?? $dbSplit[0];
+        // parentUser is superuser
+        $parentUser = $user == $db;
+        Database::setDb($db);
+        Connection::$param["postgisschema"] = Input::getPath()->part(3);
+        include_once("app/wfs/server.php");
+    } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
+        if (!empty(Input::getCookies()["PHPSESSID"])) { // Do not start session if no cookie is set
+            Session::start();
+        }
+        $dbSplit = explode("@", Input::getPath()->part(2));
+        Database::setDb($dbSplit[1] ?? $dbSplit[0]);
+        new Wms();
+    }
+} catch (OwsException|ServiceException $exception) {
+    ob_clean();
+    header('Content-Type:text/xml; charset=UTF-8', TRUE);
+    echo $exception->getReport();
+    flush();
+}
 
 // Start routing
 $handler = static function () {
@@ -594,30 +623,6 @@ $handler = static function () {
             Route::add("controllers/workflow");
             Route::add("controllers/qgis/");
 
-        } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
-            if (!empty(Input::getCookies()["PHPSESSID"])) { // Do not start session if no cookie is set
-                Session::start();
-            }
-            $dbSplit = explode("@", Input::getPath()->part(2));
-            Database::setDb($dbSplit[1] ?? $dbSplit[0]);
-            new Wms();
-
-        } elseif (Input::getPath()->part(1) == "wfs") {
-            if (!empty(Input::getCookies()["PHPSESSID"])) {
-                Session::start();
-            }
-
-            // Support of legacy user@database notation in URI. The user part (before @) will be completely ignored
-            $dbSplit = explode("@", Input::getPath()->part(2));
-            // User is either from basic auth, session or URI. The latter is same as database
-            $user = Input::getAuthUser() ?? Session::getUser() ?? $dbSplit[1] ?? $dbSplit[0];
-            $db = $dbSplit[1] ?? $dbSplit[0];
-            // parentUser is superuser
-            $parentUser = $user == $db;
-            Database::setDb($db);
-            Connection::$param["postgisschema"] = Input::getPath()->part(3);
-            include_once("app/wfs/server.php");
-
         } elseif (!Input::getPath()->part(1)) {
             if (!empty(App::$param["redirectTo"])) {
                 Redirect::to(App::$param["redirectTo"]);
@@ -639,10 +644,6 @@ $handler = static function () {
         $response["code"] = $exception->getCode();
         $response["errorCode"] = $exception->getErrorCode();
         echo Response::toJson($response);
-    } catch (OwsException|ServiceException $exception) {
-        ob_clean();
-        header('Content-Type:text/xml; charset=UTF-8', TRUE);
-        echo $exception->getReport();
     } catch (RPCException $exception) {
         echo Response::toJson($exception->getResponse());
     } catch (PDOException $exception) {
@@ -654,10 +655,9 @@ $handler = static function () {
     } catch (Throwable $exception) {
         $response["success"] = false;
         $response["message"] = $exception->getMessage();
-//        $response["file"] = $exception->getFile();
-//        $response["line"] = $exception->getLine();
-//        $response["sql_code"] = $exception->getCode();
-//        $response["trace"] = $exception->getTraceAsString();
+        $response["file"] = $exception->getFile();
+        $response["line"] = $exception->getLine();
+        $response["trace"] = $exception->getTraceAsString();
         $response["code"] = 500;
         echo Response::toJson($response);
     } finally {
