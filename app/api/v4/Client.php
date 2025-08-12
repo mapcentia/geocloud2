@@ -179,13 +179,12 @@ class Client extends AbstractApi
         $baseUri = "/api/v4/clients/";
         header("Location: $baseUri" . implode(",", $list));
         $res["code"] = "201";
-        $res["clients"] = array_map(fn($l) => [
-            'links' => ['self' => $baseUri . $l['id']], 'secret' => $l['secret']], $clients);
+        $res["clients"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l['id']], 'secret' => $l['secret']], $clients);
         if (count($res["clients"]) == 1) {
-            return $res["clients"][0];
-        } else {
-            return $res;
+            $res = $res["clients"][0];
         }
+        $res["code"] = "201";
+        return $res;
     }
 
     /**

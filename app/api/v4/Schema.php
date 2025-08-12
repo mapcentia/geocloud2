@@ -180,13 +180,12 @@ class Schema extends AbstractApi
         $this->table[0]->commit();
         $baseUri = "/api/v4/schemas/";
         header("Location: $baseUri" . implode(",", $list));
-        $res["code"] = "201";
         $res["schemas"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
         if (count($res["schemas"]) == 1) {
-            return $res["schemas"][0];
-        } else {
-            return $res;
+            $res = $res["schemas"][0];
         }
+        $res["code"] = "201";
+        return $res;
     }
 
     /**
