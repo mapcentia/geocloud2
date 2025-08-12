@@ -38,6 +38,9 @@ class Route2
      */
     static public function add(string $uri, ApiInterface $controller, ?Closure $func = null): void
     {
+        if (headers_sent()) {
+            goto end;
+        }
         $signatureMatch = true;
         $e = [];
         $r = [];
