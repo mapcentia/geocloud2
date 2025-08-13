@@ -255,7 +255,7 @@ class Session extends Model
             $data = [
                 'name' => $payload->email,
                 'email' => $payload->email,
-                'password' => 'Silke2009!',
+                'password' => 'xxx',
                 'parentdb' => $parentDb,
             ];
             $user->createUser($data);
