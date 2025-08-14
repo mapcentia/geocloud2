@@ -18,7 +18,7 @@ class Input
     /**
      * @var array<string>
      */
-    static ?array $params;
+    static ?array $params = null;
     static ?string $body;
     const string TEXT_PLAIN = "text/plain";
     const string APPLICATION_JSON = "application/json";

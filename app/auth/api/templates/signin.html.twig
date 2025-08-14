@@ -1,0 +1,70 @@
+<form hx-post="/signin">
+    <h1 class="h3 mb-3 fw-normal">Please sign in</h1>
+
+    <div class="input-group">
+        <div class="form-floating">
+            <input class="form-control upper" type="text" name="user" id="user" value="{{ user }}"
+                   placeholder="Username or e-mail" required
+                    {% if databases|length == 0 %} autofocus {% endif %}/>
+            <label class="form-label" for="user">Username or e-mail</label>
+        </div>
+        <button style="border-color: #dee2e6; margin-bottom: -1px; border-bottom-right-radius: 0;"
+                class="btn btn-outline-secondary" type="submit"><i style="color: #dee2e6"
+                                                                   class="bi bi-arrow-right-circle"></i></button>
+    </div>
+
+    {% if parentdb %}
+        <input type="hidden" name="database" value="{{ parentdb }}"/>
+
+    {% elseif databases|length > 1 %}
+
+        <div class="form-floating">
+            <select class="form-select middle" name="database" id="database">
+                {% for db in databases %}
+                    <option {% if database == db.parentdb|e %} selected {% endif %}>{{ db.parentdb|e }}</option>
+                {% endfor %}
+            </select>
+            <label for="database">Database</label>
+        </div>
+
+    {% else %}
+        <input class="form-control" type="hidden" name="database"
+               value="{{ databases|first.parentdb is not null ? databases|first.parentdb : databases|first.screenname }}">
+    {% endif %}
+
+    {% if databases|length > 0 %}
+        <div class="form-floating">
+            <input class="form-control {% if password is null %}lower{% else %} middle{% endif %}" type="password"
+                   name="password" id="password" placeholder="Password" value="{{ password }}"
+                   required {% if password is null %}autofocus{% endif %}/>
+            <label class="form-label" for="password">Password</label>
+        </div>
+
+        {% if password is not null %}
+            <div class="form-floating">
+                <input class="form-control lower" type="text" name="tf_code" id="tf_code" placeholder="Two factor code"
+                       value="{{ tf_code }}" required autofocus/>
+                <label class="form-label" for="user">One-time code from e-mail</label>
+            </div>
+        {% endif %}
+
+        <button class="btn btn-primary w-100 py-2 mt-3" type="submit">Sign in</button>
+    {% else %}
+
+        <div class="form-floating">
+            <input class="form-control lower" type="password" name="password2" id="password2"
+                   {% if password is null %}disabled{% endif %}
+                   placeholder="Password" value="{{ password }}"/>
+            <label class="form-label" for="password2">Password</label>
+        </div>
+        <button type="submit" style="display: none"></button>
+        <button disabled class="btn btn-primary w-100 py-2 mt-3" type="submit">Sign in</button>
+    {% endif %}
+
+    <input type="hidden" name="response_type" value="{{ response_type }}"/>
+    <input type="hidden" name="redirect_uri" value="{{ redirect_uri }}"/>
+
+    {% if state %}
+        <input type="hidden" name="state" value="{{ state }}"/>
+    {% endif %}
+</form>

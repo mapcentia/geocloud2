@@ -9,7 +9,7 @@
 namespace app\auth\api;
 
 use app\api\v4\AbstractApi;
-use app\inc\Session;
+use app\models\User;
 use Exception;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
@@ -25,24 +25,28 @@ class Forgot extends AbstractApi
 
     public function __construct(private $twig = new Environment(new FilesystemLoader(__DIR__ . '/templates')))
     {
-        Session::start();
     }
 
     public function get_index(): array
     {
+        $userObj = new User();
 
         echo $this->twig->render('header.html.twig');
         echo "<main class='form-signin w-100 m-auto'>";
 
         if (isset($_GET["key"]) && isset($_GET["user"])) {
-            $CachedString = Cache::getItem('__forgot_' . $_GET['user']);
-            if ($CachedString != null && $CachedString->isHit()) {
-                $val = $CachedString->get();
-                if ($val !== $_GET['key']) {
+            $key = '__forgot_' . md5($_GET['user']);
+            try {
+                $val = $userObj->getCode($key);
+                if ($val[0] !== $_GET['key']) {
                     echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Wrong key']) . "</div>";
                     return [];
                 }
-            } else {
+                if ($_GET['parentdb'] && $val[1] !== $_GET['parentdb']) {
+                    echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Wrong parentdb']) . "</div>";
+                    return [];
+                }
+            } catch (Exception $e) {
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Could not find the key. Maybe it has expired']) . "</div>";
                 return [];
             }
@@ -51,7 +55,7 @@ class Forgot extends AbstractApi
 
         } else {
             echo "<form hx-post='/forgot'>";
-            echo $this->twig->render("forgot.html.twig");
+            echo $this->twig->render("forgot.html.twig", ['parentdb' => $_GET['parentdb'] ?? '']);
 
         }
         echo "</form>";
@@ -64,54 +68,76 @@ class Forgot extends AbstractApi
 
     public function post_index(): array
     {
+        $userObj = new User();
         Database::setDb("mapcentia");
-
         if (isset($_POST['password']) && isset($_POST['userid']) && isset($_POST['key'])) {
 
-            $CachedString = Cache::getItem('__forgot_' . $_POST['userid']);
-            if ($CachedString != null && $CachedString->isHit()) {
-                $val = $CachedString->get();
-                if ($val !== $_POST['key']) {
+            $key = '__forgot_' . md5($_POST['userid']);
+            try {
+                $val = $userObj->getCode($key);
+                if ($val[0] !== $_POST['key']) {
                     echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Wrong key']) . "</div>";
                     return [];
                 }
-            } else {
+                if ($_POST['parentdb'] && $val[1] !== $_POST['parentdb']) {
+                    echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Wrong parentdb']) . "</div>";
+                    return [];
+                }
+            } catch (Exception $e) {
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Could not find the key. Maybe it has expired']) . "</div>";
                 return [];
             }
+
             $data["user"] = $_POST['userid'];
             $data["password"] = $_POST['password'];
+            if (!empty($_POST['parentdb'])) {
+                $data["parentdb"] = $_POST['parentdb'];
+            }
             try {
-                (new UserModel())->updateUser($data);
+                $userObj->updateUser($data);
             } catch (Exception $e) {
                 echo $this->twig->render("reset.html.twig", [...$data, 'key' => $_POST['key']]);
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $e->getMessage()]) . "</div>";
                 return [];
             }
-            Cache::deleteItem('__forgot_' . $_POST['userid']);
+            Cache::deleteItem($key);
             echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Password changed']) . "</div>";
 
         } elseif (isset($_POST['userid'])) {
-            $user = strrpos($_POST['userid'], '@') === false ? Model::toAscii($_POST['userid'], null, '_') : $_POST['userid'];
-            $res = (new UserModel())->getDatabasesForUser($_POST['userid']);
-            if (sizeof($res['databases']) == 1 && empty($res['databases'][0]['parentdb'])) {
+            try {
+                $res =$userObj->getDatabasesForUser($_POST['userid']);
+            } catch (Exception $e) {
+                echo $this->twig->render("forgot.html.twig", ['parentdb' => $_REQUEST['parentdb'] ?? '']);
+                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $e->getMessage()]) . "</div>";
+                return [];
+            }
+            $user = null;
+            $email = null;
+            $parentdb = null;
+            if ($_POST['parentdb']) {
+                foreach ($res['databases'] as $db) {
+                    if ($db['parentdb'] == $_POST['parentdb']) {
+                        $user = $db['screenname'];
+                        $email = $db['email'];
+                        $parentdb = $db['parentdb'];
+                        break;
+                    }
+                }
+            } elseif (sizeof($res['databases']) == 1 && empty($res['databases'][0]['parentdb'])) {
                 $user = $res['databases'][0]['screenname'];
+                $email = $res['databases'][0]['email'];
+            }
+            if ($user) {
                 echo "<div id='alert' hx-swap-oob='true'></div>";
                 // Create key and send mail
-                $key = uniqid();
-                $CachedString = Cache::getItem('__forgot_' . $user);
-                $CachedString->set($key)->expiresAfter(3600);
-                Cache::save($CachedString);
-                $CachedString = Cache::getItem($key);
-                $CachedString->set(1)->expiresAfter(3600);
-                Cache::save($CachedString);
-
-                $client = new PostmarkClient(App::$param["notification"]["key"]);
-                $url = App::$param["host"] . "/forgot?key=$key&user=$user";
+                $val = uniqid();
+                $key= '__forgot_' . md5($user);
+                $userObj->cacheCode($key, [$val, $parentdb]);
+                $url = App::$param["host"] . "/forgot?key=$val&user=$user&parentdb=$parentdb";;
                 try {
                     $client = new PostmarkClient(App::$param["notification"]["key"]);
                     $message = [
-                        'To' => $res['databases'][0]['email'],
+                        'To' => $email,
                         'From' => App::$param["notification"]["from"],
                         'TrackOpens' => false,
                         'Subject' => "Reset link",
@@ -119,28 +145,23 @@ class Forgot extends AbstractApi
                     ];
                     try {
                         $sendResult = $client->sendEmailBatch([$message]);
-                    } catch (Exception $generalException) {
+                    } catch (Exception) {
                         return [];
                     }
-                } catch (Exception $generalException) {
+                } catch (Exception) {
                     return [];
                 }
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'E-mail with reset link is send']) . "</div>";
-                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $url]) . "</div>";
+                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $email . '   ' . $url]) . "</div>";
 
             } else if (sizeof($res['databases']) > 1 || !empty($res['databases'][0]['parentdb'])) {
-                echo $this->twig->render("forgot.html.twig");
-                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Only super users can reset password']) . "</div>";
-
+                echo $this->twig->render("forgot.html.twig", ['databases' => $res['databases'], ...$_POST]);
             } else {
-                echo $this->twig->render("forgot.html.twig");
+                echo $this->twig->render("forgot.html.twig", ['parentdb' => $_POST['parentdb'] ?? '']);
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'User doesn\'t exists']) . "</div>";
-
             }
         }
-        end:
         return [];
-
     }
 
     public function put_index(): array

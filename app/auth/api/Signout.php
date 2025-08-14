@@ -19,7 +19,7 @@ class Signout extends AbstractApi
 {
     public function __construct()
     {
-        Session::start();
+//        Session::start();
     }
 
     public function get_index(): array

@@ -483,7 +483,7 @@ class User extends Model
         $res = $this->prepare($sql);
         $res->execute([":code" => $code, ":email" => $email]);
         if ($res->rowCount() == 0) {
-            throw new GC2Exception("Invalid code", 404, null, "CODE_DOES_NOT_EXISTS");
+            throw new GC2Exception("Invalid activation code", 404, null, "CODE_DOES_NOT_EXISTS");
         }
         $sql = "UPDATE codes set used=now() where code=:code";
         $res = $this->prepare($sql);
@@ -528,6 +528,21 @@ class User extends Model
         $sql = "UPDATE codes set email=:email where code=:code";
         $res = $this->prepare($sql);
         $res->execute([":code" => $code, ":email" => $email]);
+    }
+
+    public function cacheCode(string $key, mixed $value): void {
+        $CachedString = Cache::getItem($key);
+        $CachedString->set($value)->expiresAfter(3600);
+        Cache::save($CachedString);
+    }
+
+    public function getCode(string $key): mixed {
+        $CachedString = Cache::getItem($key);
+        if ($CachedString != null && $CachedString->isHit()) {
+            return $CachedString->get();
+        } else {
+            throw new GC2Exception("Key doesn't exits", 500, null,"KEY_DOES_NOT_EXISTS");
+        }
     }
 
 

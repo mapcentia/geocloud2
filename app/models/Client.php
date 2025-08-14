@@ -24,7 +24,7 @@ class Client extends Model
      */
     public function get(?string $id = null): array
     {
-        $sql = 'SELECT id,name,homepage,description,redirect_uri,public,confirm FROM settings.clients';
+        $sql = 'SELECT id,name,homepage,description,redirect_uri,public,confirm,twofactor FROM settings.clients';
         $params = [];
         if ($id != null) {
             $sql .= ' WHERE id = :id';

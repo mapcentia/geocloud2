@@ -53,7 +53,7 @@ class Auth extends AbstractApi
             // Check client id
             try {
                 $clientData = $client->get($_GET['client_id']);
-            } catch (Exception) {
+            } catch (Exception $e) {
                 $gotError = true;
                 $error = "invalid_client";
                 $errorDesc = "Client with identifier '{$_GET['client_id']}' was not found in the directory";
@@ -109,7 +109,7 @@ class Auth extends AbstractApi
             $paramsStr = http_build_query($params);
 
             $client = $clientData[0]['name'];
-            $location =  "$redirectUri$separator$paramsStr";
+            $location = "$redirectUri$separator$paramsStr";
 
             if ($clientData[0]['confirm']) {
                 echo $this->twig->render('allow.html.twig', ['name' => $client, 'location' => $location]);
@@ -120,13 +120,22 @@ class Auth extends AbstractApi
             return ['code' => 302];
         }
 
+
+        $vals = [
+            'parentdb' => $_GET['parentdb'] ?? '',
+            'client_id' => $_GET['client_id'],
+        ];
+        $hxVals = htmlspecialchars(json_encode($vals, JSON_UNESCAPED_SLASHES), ENT_QUOTES);
+
         echo $this->twig->render('header.html.twig');
         echo "<main class='form-signin w-100 m-auto'>";
-        echo "<div hx-trigger='load' hx-target='this' hx-target='this' hx-post='/signin'></div>";
+        echo "<div hx-trigger='load' hx-target='this' hx-target='this' hx-post='/signin' hx-vals='{$hxVals}'></div>";
         echo "<div id='alert'></div>";
+        echo "<div id='forgot'></div>";
         echo "</main>";
 
         echo $this->twig->render('footer.html.twig');
+
         return [];
     }
 

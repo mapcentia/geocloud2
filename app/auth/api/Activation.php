@@ -23,7 +23,7 @@ class Activation extends AbstractApi
 
     public function __construct(private $twig = new Environment(new FilesystemLoader(__DIR__ . '/templates')))
     {
-        Session::start();
+//        Session::start();
     }
 
     public function get_index(): array
@@ -32,8 +32,8 @@ class Activation extends AbstractApi
         $twig = new Environment($loader);
 
         echo $twig->render('header.html.twig');
-        echo "<main class='w-100 m-auto'>";
-        echo "<div hx-trigger='load' hx-post='/activation' class='form-signin w-100 m-auto'></div>";
+        echo "<main class='form-signin w-100 m-auto'>";
+        echo "<div hx-trigger='load' hx-post='/activation'></div>";
         echo $twig->render('footer.html.twig');
         echo "<div id='alert'></div>";
         echo "</main>";

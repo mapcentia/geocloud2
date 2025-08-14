@@ -113,7 +113,6 @@ class Session extends Model
             // Login successful.
             $properties = !empty($row["properties"]) ? json_decode($row["properties"]) : null;
             $_SESSION['zone'] = $row['zone'];
-            $_SESSION['auth'] = true;
             $_SESSION['screen_name'] = $row['screenname'];
             $_SESSION['parentdb'] = $row['parentdb'] ?: $row['screenname'];
             $_SESSION["subuser"] = (bool)$row['parentdb'];
@@ -137,6 +136,7 @@ class Session extends Model
 
             if (!$tokenOnly) { //NOT OAuth
                 // Fetch sub-users
+                $_SESSION['auth'] = true;
                 $_SESSION['subusers'] = [];
                 $_SESSION['subuserEmails'] = [];
                 $sQuery = "SELECT * FROM users WHERE parentdb = :sUserID";
@@ -173,7 +173,7 @@ class Session extends Model
                 // We do not stop login in case of error
             }
         } else {
-            throw new GC2Exception("Could not authenticate the user. Check username and password", 401, null, 'INVALID_GRANT');
+            throw new GC2Exception("Could not sign the user in. Check username and password", 401, null, 'INVALID_GRANT');
         }
         return $response; // In case it's NOT OAuth
     }

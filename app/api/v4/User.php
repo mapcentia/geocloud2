@@ -163,7 +163,7 @@ class User extends AbstractApi
             $userName = self::convertUserObject($model->createUser($user)['data'])['name'];
             $list[] = $userName;
         }
-        //$model->commit();
+        $model->commit();
         Database::setDb($this->jwt["database"]);
         foreach ($list as $newUser) {
             (new Setting())->updateApiKeyForUser($newUser, false);

@@ -232,7 +232,7 @@ abstract class Jwt
         Cache::deleteItem($deviceCode);
     }
 
-    private static function generateUserCode(): string
+    public static function generateUserCode(): string
     {
         $characters = 'BCDFGHJKLMNPQRSTVWXZ';
         $randomString = '';

@@ -13,9 +13,7 @@ use app\conf\Connection;
 use app\inc\Cache;
 use app\inc\Globals;
 use app\inc\Model;
-use Error;
 use PDOException;
-use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Phpfastcache\Exceptions\PhpfastcacheLogicException;
 use Psr\Cache\InvalidArgumentException;
 use stdClass;
@@ -58,13 +56,13 @@ class Setting extends Model
         } else {
             if (App::$param["encryptSettings"]) {
                 $secretKey = file_get_contents(App::$param["path"] . "app/conf/secret.key");
-                $sql = "SELECT pgp_pub_decrypt(settings.viewer.viewer::BYTEA, dearmor('{$secretKey}')) AS viewer FROM settings.viewer";
+                $sql = "SELECT pgp_pub_decrypt(settings.viewer.viewer::BYTEA, dearmor('$secretKey')) AS viewer FROM settings.viewer";
             } else {
                 $sql = "SELECT viewer FROM settings.viewer";
             }
             try {
                 $res = $this->execQuery($sql);
-            } catch (PDOException $e) {
+            } catch (PDOException) {
                 // Hack. Fall back to unencrypted if error. Preventing fail if changing from unencrypted to encrypted.
                 $sql = "SELECT viewer FROM settings.viewer";
                 $res = $this->execQuery($sql);
@@ -90,7 +88,6 @@ class Setting extends Model
      */
     public function updateApiKeyForUser(string $userName, bool $isSuperuser): string
     {
-        $this->clearCacheOnSchemaChanges();
         $apiKey = md5(microtime() . rand());
         $arr = $this->getArray();
         if ($isSuperuser) {
@@ -103,11 +100,12 @@ class Setting extends Model
         }
         if (App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(App::$param["path"] . "app/conf/public.key");
-            $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('{$pubKey}'))";
+            $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('$pubKey'))";
         } else {
             $sql = "UPDATE settings.viewer SET viewer='" . json_encode($arr) . "'";
         }
         $this->execQuery($sql, "PDO", "transaction");
+        $this->clearCacheOnSchemaChanges();
         return $apiKey;
     }
 
@@ -121,17 +119,17 @@ class Setting extends Model
     {
         $response['success'] = true;
         $response['message'] = "API key updated";
-        $response['key'] = $this->updateApiKeyForUser($_SESSION["screen_name"], !$_SESSION["subuser"]);;
+        $response['key'] = $this->updateApiKeyForUser($_SESSION["screen_name"], !$_SESSION["subuser"]);
         return $response;
     }
 
     /**
      * @param string $pw
-     * @return array<mixed>
+     * @return array
+     * @throws InvalidArgumentException
      */
     public function updatePw(string $pw): array
     {
-        $this->clearCacheOnSchemaChanges();
         $arr = $this->getArray();
         if (!$_SESSION["subuser"]) {
             $arr->pw = $this->encryptPw($pw);
@@ -143,23 +141,24 @@ class Setting extends Model
         }
         if (App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(App::$param["path"] . "app/conf/public.key");
-            $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('{$pubKey}'))";
+            $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('$pubKey'))";
         } else {
             $sql = "UPDATE settings.viewer SET viewer='" . json_encode($arr) . "'";
         }
         $this->execQuery($sql, "PDO", "transaction");
         $response['success'] = true;
         $response['message'] = "Password saved";
+        $this->clearCacheOnSchemaChanges();
         return $response;
     }
 
     /**
      * @param object $extent
-     * @return array<mixed>
+     * @return array
+     * @throws InvalidArgumentException
      */
     public function updateExtent(object $extent): array
     {
-        $this->clearCacheOnSchemaChanges();
         $arr = $this->getArray();
         $obj = (array)$arr->extents;
         $obj[Connection::$param['postgisschema']] = $extent->extent;
@@ -175,11 +174,12 @@ class Setting extends Model
 
         if (App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(App::$param["path"] . "app/conf/public.key");
-            $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('{$pubKey}'))";
+            $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('$pubKey'))";
         } else {
             $sql = "UPDATE settings.viewer SET viewer='" . json_encode($arr) . "'";
         }
         $this->execQuery($sql, "PDO", "transaction");
+        $this->clearCacheOnSchemaChanges();
         $response['success'] = true;
         $response['message'] = "Extent saved";
         return $response;
@@ -187,11 +187,11 @@ class Setting extends Model
 
     /**
      * @param object $extentrestrict
-     * @return array<mixed>
+     * @return array
+     * @throws InvalidArgumentException
      */
     public function updateExtentRestrict(object $extentrestrict): array
     {
-        $this->clearCacheOnSchemaChanges();
         $response = [];
         try {
             $arr = $this->getArray();
@@ -212,11 +212,12 @@ class Setting extends Model
 
         if (App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(App::$param["path"] . "app/conf/public.key");
-            $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('{$pubKey}'))";
+            $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('$pubKey'))";
         } else {
             $sql = "UPDATE settings.viewer SET viewer='" . json_encode($arr) . "'";
         }
         $this->execQuery($sql, "PDO", "transaction");
+        $this->clearCacheOnSchemaChanges();
         $response['success'] = true;
         $response['message'] = ($extentrestrict->extent) ? "Extent locked" : "Extent unlocked";
         return $response;
@@ -224,21 +225,13 @@ class Setting extends Model
 
     /**
      * @param object $userGroup
-     * @return array<mixed>
+     * @return array
+     * @throws InvalidArgumentException
      */
     public function updateUserGroups(object $userGroup): array
     {
-        $this->clearCacheOnSchemaChanges();
         $response = [];
-        try {
-            $arr = $this->getArray();
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 400;
-            return $response;
-        }
-
+        $arr = $this->getArray();
         $obj = $arr->userGroups;
         foreach ((array)$userGroup as $key => $value) {
             if ($value === "") {
@@ -250,11 +243,12 @@ class Setting extends Model
         $arr->userGroups = $obj;
         if (App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(App::$param["path"] . "app/conf/public.key");
-            $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('{$pubKey}'))";
+            $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('$pubKey'))";
         } else {
             $sql = "UPDATE settings.viewer SET viewer='" . json_encode($arr) . "'";
         }
         $this->execQuery($sql, "PDO", "transaction");
+        $this->clearCacheOnSchemaChanges();
         $response['success'] = true;
         $response['message'] = "Usergroups updated";
         return $response;
@@ -263,6 +257,7 @@ class Setting extends Model
     /**
      * @param bool $unsetPw
      * @return array
+     * @throws InvalidArgumentException
      */
     public function get(bool $unsetPw = false): array
     {
@@ -319,7 +314,7 @@ class Setting extends Model
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      */
     public function getForPublic(): array
     {
@@ -388,7 +383,7 @@ class Setting extends Model
         $pass = str_replace(" ", "", $pass); //remove spaces from password
         $pass = str_replace("%20", "", $pass); //remove escaped spaces from password
         $pass = addslashes($pass); //remove spaces from password
-        $pass = md5($pass); //encrypt password
-        return $pass;
+        //encrypt password
+        return md5($pass);
     }
 }

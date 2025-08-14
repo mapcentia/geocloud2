@@ -21,7 +21,6 @@ class Device extends AbstractApi
 
     public function __construct(private $twig = new Environment(new FilesystemLoader(__DIR__ . '/templates')))
     {
-        Session::start();
     }
 
     public function get_index(): array
