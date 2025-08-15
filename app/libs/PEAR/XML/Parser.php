@@ -283,14 +283,11 @@ class XML_Parser extends PEAR
         switch ($this->mode) {
 
         case 'func':
-            xml_set_object($this->parser, $this->_handlerObj);
-            xml_set_element_handler($this->parser,
-                array($this, 'funcStartHandler'), array($this, 'funcEndHandler'));
+            xml_set_element_handler($this->parser, [$this->_handlerObj, 'funcStartHandler'], [$this->_handlerObj, 'funcEndHandler']);
             break;
 
         case 'event':
-            xml_set_object($this->parser, $this->_handlerObj);
-            xml_set_element_handler($this->parser, 'startHandler', 'endHandler');
+            xml_set_element_handler($this->parser, [$this->_handlerObj, 'startHandler'], [$this->_handlerObj, 'endHandler']);
             break;
         default:
             return $this->raiseError('Unsupported mode given',
@@ -304,7 +301,7 @@ class XML_Parser extends PEAR
         foreach ($this->handler as $xml_func => $method) {
             if (method_exists($this->_handlerObj, $method)) {
                 $xml_func = 'xml_set_' . $xml_func;
-                $xml_func($this->parser, $method);
+                $xml_func($this->parser, [$this->_handlerObj, $method]);
             }
         }
     }
