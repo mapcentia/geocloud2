@@ -171,6 +171,7 @@ class Table extends AbstractApi
             $list[] = $r['tableName'];
         }
         $this->table[0]->commit();
+        (new Layer())->insertDefaultMeta();
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/";
         header("Location: $baseUri" . implode(",", $list));
         $res["code"] = "201";
@@ -388,14 +389,14 @@ class Table extends AbstractApi
             $collection->fields['emit_events'] = new Assert\Optional(
                 new Assert\Type('boolean')
             );
+            $collection->fields['schema'] = new Assert\Optional([
+                    new Assert\Type('string'),
+                    new Assert\NotBlank()
+                ]
+            );
         }
         $collection->fields['comment'] = new Assert\Optional(
             new Assert\Type('string'),
-        );
-        $collection->fields['schema'] = new Assert\Optional([
-                new Assert\Type('string'),
-                new Assert\NotBlank()
-            ]
         );
         $collection->fields['columns'] = new Assert\Optional([
                 new Assert\Type('array'),
