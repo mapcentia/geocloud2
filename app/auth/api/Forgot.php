@@ -47,7 +47,8 @@ class Forgot extends AbstractApi
                     return [];
                 }
             } catch (Exception $e) {
-                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Could not find the key. Maybe it has expired']) . "</div>";
+//                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Could not find the key. Maybe it has expired']) . "</div>";
+                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $e->getMessage()]) . "</div>";
                 return [];
             }
             echo "<form hx-post='/forgot'>";
@@ -133,7 +134,7 @@ class Forgot extends AbstractApi
                 $val = uniqid();
                 $key= '__forgot_' . md5($user);
                 $userObj->cacheCode($key, [$val, $parentdb]);
-                $url = App::$param["host"] . "/forgot?key=$val&user=$user&parentdb=$parentdb";;
+                $url = App::$param["host"] . "/forgot?key=$val&user=$user" . !empty($parentdb) ? "&parentdb=$parentdb" : '';
                 try {
                     $client = new PostmarkClient(App::$param["notification"]["key"]);
                     $message = [
