@@ -1,9 +1,13 @@
-<div class="form-floating mb-3">
-    <input class="form-control" type="password" name="password" id="password" placeholder="New password"/>
-    <label class="form-label" for="password">New password</label>
-</div>
+<form hx-post='/forgot'>
+    <h1 class="h3 mb-3 fw-normal">Reset your password</h1>
 
-<input type="hidden" name="userid" value="{{ user }}"/>
-<input type="hidden" name="key" value="{{ key }}"/>
-<input type="hidden" name="parentdb" value="{{ parentdb }}"/>
-<button class="btn btn-primary w-100 py-2" type="submit">Reset</button>
+    <div class="form-floating mb-3">
+        <input class="form-control" type="password" name="password" id="password" placeholder="New password"/>
+        <label class="form-label" for="password">New password</label>
+    </div>
+
+    <input type="hidden" name="userid" value="{{ user }}"/>
+    <input type="hidden" name="key" value="{{ key }}"/>
+    <input type="hidden" name="parentdb" value="{{ parentdb }}"/>
+    <button class="btn btn-primary w-100 py-2" type="submit">Reset</button>
+</form>

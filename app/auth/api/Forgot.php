@@ -39,7 +39,7 @@ class Forgot extends AbstractApi
             try {
                 $val = $userObj->getCode($key);
                 if ($val[0] !== $_GET['key']) {
-                    echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Wrong key']) . "</div>";
+                    echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Could not find the key.']) . "</div>";
                     return [];
                 }
                 if ($_GET['parentdb'] && $val[1] !== $_GET['parentdb']) {
@@ -47,19 +47,15 @@ class Forgot extends AbstractApi
                     return [];
                 }
             } catch (Exception $e) {
-//                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Could not find the key. Maybe it has expired']) . "</div>";
-                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $e->getMessage()]) . "</div>";
+                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Could not find the key. Maybe it has expired']) . "</div>";
                 return [];
             }
-            echo "<form hx-post='/forgot'>";
-            echo $this->twig->render("reset.html.twig", $_REQUEST);
+            echo $this->twig->render("reset.html.twig", $_GET);
 
         } else {
-            echo "<form hx-post='/forgot'>";
             echo $this->twig->render("forgot.html.twig", ['parentdb' => $_GET['parentdb'] ?? '']);
 
         }
-        echo "</form>";
         echo "<div id='alert'></div>";
         echo "</main>";
 
@@ -108,7 +104,7 @@ class Forgot extends AbstractApi
             try {
                 $res =$userObj->getDatabasesForUser($_POST['userid']);
             } catch (Exception $e) {
-                echo $this->twig->render("forgot.html.twig", ['parentdb' => $_REQUEST['parentdb'] ?? '']);
+                echo $this->twig->render("forgot.html.twig", ['parentdb' => $_POST['parentdb'] ?? '']);
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $e->getMessage()]) . "</div>";
                 return [];
             }
@@ -134,7 +130,7 @@ class Forgot extends AbstractApi
                 $val = uniqid();
                 $key= '__forgot_' . md5($user);
                 $userObj->cacheCode($key, [$val, $parentdb]);
-                $url = App::$param["host"] . "/forgot?key=$val&user=$user" . !empty($parentdb) ? "&parentdb=$parentdb" : '';
+                $url = App::$param["host"] . "/forgot?key=$val&user=$user" . (!empty($parentdb) ? "&parentdb=$parentdb" : '');
                 try {
                     $client = new PostmarkClient(App::$param["notification"]["key"]);
                     $message = [
@@ -152,8 +148,7 @@ class Forgot extends AbstractApi
                 } catch (Exception) {
                     return [];
                 }
-                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'E-mail with reset link is send']) . "</div>";
-                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $email . '   ' . $url]) . "</div>";
+                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'E-mail with reset link is send' .' ' .$url]) . "</div>";
 
             } else if (sizeof($res['databases']) > 1 || !empty($res['databases'][0]['parentdb'])) {
                 echo $this->twig->render("forgot.html.twig", ['databases' => $res['databases'], ...$_POST]);

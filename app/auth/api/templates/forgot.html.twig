@@ -1,25 +1,30 @@
-<div class="input-group">
-    <div class="form-floating">
-        <input class="form-control {% if databases|length > 1 %}upper{% endif %}" type="text" name="userid" id="userid"
-               value="{{ userid }}" placeholder="Username or e-mail" autofocus
-               required/>
-        <label class="form-label" for="userid">Username or e-mail</label>
-    </div>
-</div>
+<form hx-post='/forgot'>
+    <h1 class="h3 mb-3 fw-normal">Reset your password</h1>
 
-{% if databases|length > 1 %}
-    <div class="form-floating">
-        <select class="form-select lower" name="parentdb" id="parentdb">
-            {% for database in databases %}
-                <option>{{ database.parentdb|e }}</option>
-            {% endfor %}
-        </select>
-        <label for="parentdb">Database</label>
+    <div class="input-group">
+        <div class="form-floating">
+            <input class="form-control {% if databases|length > 1 %}upper{% endif %}" type="text" name="userid"
+                   id="userid"
+                   value="{{ userid }}" placeholder="Username or e-mail" autofocus
+                   required/>
+            <label class="form-label" for="userid">Username or e-mail</label>
+        </div>
     </div>
 
-{% else %}
-    <input class="form-control" type="hidden" name="parentdb" value="{{ parentdb }}"/>
-{% endif %}
+    {% if databases|length > 1 %}
+        <div class="form-floating">
+            <select class="form-select lower" name="parentdb" id="parentdb">
+                {% for database in databases %}
+                    <option>{{ database.parentdb|e }}</option>
+                {% endfor %}
+            </select>
+            <label for="parentdb">Database</label>
+        </div>
 
-</div>
-<button class="btn btn-primary w-100 py-2 mt-3" type="submit">Send {{ parentdb }}</button>
+    {% else %}
+        <input class="form-control" type="hidden" name="parentdb" value="{{ parentdb }}"/>
+    {% endif %}
+
+    </div>
+    <button class="btn btn-primary w-100 py-2 mt-3" type="submit">Send {{ parentdb }}</button>
+</form>
