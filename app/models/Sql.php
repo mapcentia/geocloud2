@@ -179,9 +179,9 @@ class Sql extends Model
                     $formatT = $typeFormats[$field] ?? self::getFormat($nativeType);
                     $convertedParameters[$field] = $this->convertToNative($nativeType, $value, $formatT);
                 }
-                $select->execute($convertedParameters);
+                $this->execute($select, $convertedParameters);
             } else {
-                $select->execute();
+                $this->execute($select);;
             }
             foreach (range(0, $select->columnCount() - 1) as $column_index) {
                 if ($column_index < 0) {
@@ -226,17 +226,11 @@ class Sql extends Model
 
         // Insert cost
         if (!empty(App::$param['insertCost'])) {
-            try {
-                $this->insertCost($sql, $this->subUser ?? $this->postgisdb, $convertedParameters);
-            } catch (Exception) {
-                if ($this->db->inTransaction()) {
-                    $this->db->rollBack();
-                }
-
-            }
+            $this->insertCost($sql, $this->subUser ?? $this->postgisdb, $convertedParameters);
         }
 
-        $this->prepare("DECLARE curs CURSOR FOR $sql")->execute($convertedParameters);
+        $this->execute($this->prepare("DECLARE curs CURSOR FOR $sql"), $convertedParameters);
+
         $innerStatement = $this->prepare("FETCH 1 FROM curs");
 
         if ($format == "json") {
@@ -245,7 +239,7 @@ class Sql extends Model
             // ==============
 
             $features = [];
-            while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
+            while ($this->execute($innerStatement) && $row = $this->fetchRow($innerStatement)) {
                 $arr = [];
                 foreach ($row as $key => $rowValue) {
                     $nativeType = $columnTypes[$key];
@@ -288,7 +282,7 @@ class Sql extends Model
             $columnsForGrid = [];
             $features = [];
 
-            while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
+            while ($this->execute($innerStatement) && $row = $this->fetchRow($innerStatement)) {
                 $arr = array();
                 foreach ($row as $key => $rowValue) {
                     $nativeType = $columnTypes[$key];
@@ -337,7 +331,7 @@ class Sql extends Model
             $json = "";
             $bulkSize = 1000;
             $geometries = null;
-            while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
+            while ($this->execute($innerStatement) && $row = $this->fetchRow($innerStatement)) {
                 $arr = [];
                 foreach ($row as $key => $value) {
                     if ($columnTypes[$key] == "geometry" && $value !== null) {
@@ -392,7 +386,7 @@ class Sql extends Model
                     $fieldConf = json_decode($this->getGeometryColumns($aliasesFrom, "fieldconf"));
                 }
             }
-            while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
+            while ($this->execute($innerStatement) && $row = $this->fetchRow($innerStatement)) {
                 $arr = array();
                 $fields = array();
                 foreach ($row as $key => $value) {
@@ -460,7 +454,7 @@ class Sql extends Model
                 }
             }
 
-            while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement)) {
+            while ($this->execute($innerStatement) && $row = $this->fetchRow($innerStatement)) {
                 $arr = [];
                 $fields = [];
                 foreach ($row as $key => $value) {
@@ -570,7 +564,7 @@ class Sql extends Model
         if (sizeof($convertedParameters) > 0) {
             $this->begin();
             foreach ($convertedParameters as $parameter) {
-                $result->execute($parameter);
+                $this->execute($result, $parameter);
                 if (count($columnTypes) == 0) {
                     foreach (range(0, $result->columnCount() - 1) as $column_index) {
                         if ($column_index < 0) {
@@ -594,7 +588,7 @@ class Sql extends Model
                     } catch (\Exception) {
                         if ($columnTypes[$field] == 'geometry') {
                             $resultGeom = $this->prepare("select ST_AsGeoJSON(:v) as json");
-                            $resultGeom->execute(["v" => $value]);
+                            $this->execute($resultGeom, ["v" => $value]);
                             $json = $this->fetchRow($resultGeom)['json'];
                             $value = !empty($json) ? json_decode($json) : null;
                         }
@@ -607,7 +601,7 @@ class Sql extends Model
                 $affectedRows += $result->rowCount();
             }
         } else {
-            $result->execute();
+            $this->execute($result);
             foreach (range(0, $result->columnCount() - 1) as $column_index) {
                 if ($column_index < 0) {
                     throw new Exception("No columns returned by query");
@@ -632,7 +626,7 @@ class Sql extends Model
                         } catch (\Exception) {
                             if ($columnTypes[$field] == 'geometry') {
                                 $resultGeom = $this->prepare("select ST_AsGeoJSON(:v) as json");
-                                $resultGeom->execute(["v" => $value]);
+                                $this->execute($resultGeom, ["v" => $value]);
                                 $json = $this->fetchRow($resultGeom)['json'];
                                 $value = !empty($json) ? json_decode($json) : null;
                             }
@@ -675,7 +669,7 @@ class Sql extends Model
         $cost = 0;
         $ex = "EXPLAIN (format json) $q";
         $res = $this->prepare($ex);
-        $res->execute($convertedParameters);
+        $this->execute($res, $convertedParameters);;
         $plan = $res->fetchAll();
         if (isset($plan[0]['QUERY PLAN'])) {
             $cost = json_decode($plan[0]['QUERY PLAN'], true)[0]['Plan']['Total Cost'];
@@ -683,7 +677,7 @@ class Sql extends Model
         $ex = "INSERT INTO settings.cost (username, statement, cost) VALUES (:username, :statement, :cost)";
         $res = $this->prepare($ex);
         $q = str_replace("\n", " ", $q);
-        $res->execute(['username' => $username, 'statement' => $q, 'cost' => $cost]);
+        $this->execute($res, ['username' => $username, 'statement' => $q, 'cost' => $cost]);
     }
 
 
