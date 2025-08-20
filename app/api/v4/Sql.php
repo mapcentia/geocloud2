@@ -157,7 +157,12 @@ class Sql extends AbstractApi
                     "srs" => $srs,
                 ]
             );
-            $res = $this->v2->get_index($user, $api);
+            try {
+                $res = $this->v2->get_index($user, $api);
+            } finally {
+                Input::setParams(null);
+                Input::setBody(null);
+            }
             unset($res['success']);
             unset($res['forGrid']);
             $result[] = $res;
