@@ -234,9 +234,6 @@ class Client extends AbstractApi
     public function delete_index(): array
     {
         $id = Route2::getParam("id");
-        if (empty($id)) {
-            throw new GC2Exception("No client id", 404, null, 'MISSING_ID');
-        }
         $ids = explode(',', $id);
         $model = new ClientModel();
         $model->connect();
