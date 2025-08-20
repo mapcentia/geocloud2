@@ -173,7 +173,9 @@ class Model
     }
 
     /**
+     * Begins a database transaction if not already in progress.
      *
+     * @return void
      */
     public function begin(): void
     {
@@ -183,7 +185,32 @@ class Model
     }
 
     /**
+     * Executes a prepared PDO statement with the given parameters.
      *
+     * @param PDOStatement $statement The prepared PDO statement to be executed.
+     * @param array $params An optional array of parameters to bind to the statement during execution.
+     *
+     * @return bool Always returns true if the statement executes successfully.
+     * @throws PDOException If the statement execution fails, the exception is thrown and the transaction (if active) is rolled back.
+     *
+     */
+    public function execute(PDOStatement $statement, array $params = []): true
+    {
+        try {
+            $statement->execute($params);
+        } catch (PDOException $e) {
+            if ($this->db->inTransaction()) {
+                $this->rollback();
+            }
+            throw $e;
+        }
+        return true;
+    }
+
+    /**
+     * Commits the current database transaction.
+     *
+     * @return void
      */
     public function commit(): void
     {
@@ -191,7 +218,9 @@ class Model
     }
 
     /**
+     * Rolls back the current database transaction.
      *
+     * @return void
      */
     public function rollback(): void
     {
@@ -199,9 +228,12 @@ class Model
     }
 
     /**
-     * @param string $sql
-     * @return PDOStatement
-     * @throws PDOException
+     * Prepares an SQL statement for execution.
+     *
+     * @param string $sql The SQL query to prepare.
+     *
+     * @return PDOStatement The prepared PDO statement.
+     * @throws PDOException If an error occurs while preparing the statement.
      */
     public function prepare(string $sql): PDOStatement
     {
@@ -209,15 +241,26 @@ class Model
             $this->connect();
         }
         $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        return $this->db->prepare($sql);
+        try {
+            return $this->db->prepare($sql);
+        } catch (PDOException $e) {
+            if ($this->db->inTransaction()) {
+                $this->rollback();
+            }
+            throw $e;
+        }
     }
 
     /**
-     * @param string $query
-     * @param string $conn
-     * @param string $queryType
-     * @return null|integer|PDOStatement|resource
-     * @throws PDOException
+     * Executes the provided query using the specified connection type and query type.
+     *
+     * @param string $query The SQL query to be executed.
+     * @param string $conn The database connection type to use. Defaults to "PDO". Supported values are "PDO" and "PG".
+     * @param string $queryType The type of SQL query to be executed. Defaults to "select". Supported values are "select" and "transaction".
+     *
+     * @return mixed The result of the query execution. Returns a PDOStatement object for "select" queries using "PDO", an integer for "transaction" queries using "PDO", or the result resource for "PG". Returns null if no result is available.
+     *
+     * @throws PDOException If a PDO query execution fails during a "transaction" type and the exception handling process is triggered.
      */
     public function execQuery(string $query, string $conn = "PDO", string $queryType = "select"): mixed
     {
@@ -243,8 +286,19 @@ class Model
                         $result = $this->db->query($query);
                         break;
                     case "transaction" :
-                        // Return interger
-                        $result = $this->db->exec($query);
+                        // Return integer
+                        try {
+                            $result = $this->db->exec($query);
+                        } catch (PDOException $e) {
+                            if ($this->db->inTransaction()) {
+                                $this->db->rollBack();
+                            }
+                            throw $e;
+                        } finally {
+                            if ($this->db->inTransaction()) {
+                                $this->db->rollBack();
+                            }
+                        }
                 }
                 break;
         }
