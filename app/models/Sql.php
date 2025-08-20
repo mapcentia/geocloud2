@@ -215,10 +215,10 @@ class Sql extends Model
         if (!empty(App::$param["SqlApiSettings"]["work_mem"])) {
             $this->execQuery("SET work_mem TO '" . App::$param["SqlApiSettings"]["work_mem"] . "'");
         }
-        if (!empty(App::$param["SqlApiSettings"]["statement_timeout"])) {
-            $this->execQuery("SET LOCAL statement_timeout = " . App::$param["SqlApiSettings"]["statement_timeout"]);
-        } else {
-            $this->execQuery("SET LOCAL statement_timeout = 60000");
+        $this->execQuery("SET LOCAL statement_timeout = " . App::$param["SqlApiSettings"]["statement_timeout"] ?? "60000");
+        $this->execQuery("SET LOCAL idle_in_transaction_session_timeout = 300000");
+        if ($clientEncoding) {
+            $this->execQuery("set client_encoding='$clientEncoding'");
         }
         if ($clientEncoding) {
             $this->execQuery("set client_encoding='$clientEncoding'");
