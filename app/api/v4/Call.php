@@ -96,8 +96,9 @@ class Call extends AbstractApi
         $jwtData = Jwt::validate()["data"];
         $isSuperUser = $jwtData["superUser"];
         $uid = $jwtData["uid"];
+        $database = $jwtData["database"];
         $user = [
-            "user" => $isSuperUser ? $uid : "$uid@{$jwtData["database"]}"
+            "user" => $isSuperUser ? $uid : "$uid@$database"
         ];
         $settingsData = (new Setting())->get()["data"];
         $apiKey = $isSuperUser ? $settingsData->api_key : $settingsData->api_key_subuser->$uid;
@@ -149,9 +150,7 @@ class Call extends AbstractApi
                 $result[] = $jsonrpcResponse;
             }
         }
-        if ($api->db->inTransaction()) {
-            $api->commit();
-        }
+        $api->commit();
         if (count($result) == 0) {
             return ['code' => '204'];
         }

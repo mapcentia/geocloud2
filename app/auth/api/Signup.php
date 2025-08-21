@@ -46,25 +46,8 @@ class Signup extends AbstractApi
         $userObj = new User();
 
         if ($_POST['name'] && $_POST['email'] && $_POST['password'] && $_POST['code'] && !$_POST['tf_code']) {
-            $userObj->connect();
-            $userObj->begin();
-            try {
-                $userObj->checkCode($_POST['code'], $_POST['email']);
-                $userObj->createUser([
-                    'name' => $_POST['name'],
-                    'email' => $_POST['email'],
-                    'password' => $_POST['password'],
-                    'subuser' => !empty($_POST['parentdb']),
-                    'parentdb' => $_POST['parentdb']
-                ]);
-            } catch (Exception $e) {
-                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $e->getMessage()]) . "</div>";
-                unset($_POST['password']);
-                echo $this->twig->render('signup.html.twig', $_POST);
-                return [];
-            } finally {
-                $userObj->rollback();
-            }
+
+            // TODO Check if user exists
 
             try {
                 // Create key/value

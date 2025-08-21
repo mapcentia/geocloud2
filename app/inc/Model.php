@@ -21,6 +21,7 @@ use Exception;
 use PDO;
 use PDOException;
 use PDOStatement;
+use PgSql\Result;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use TypeError;
 
@@ -31,6 +32,10 @@ use TypeError;
  */
 class Model
 {
+    /**
+     * @var PDO[] $testDb >
+     */
+    public static array $testDb = [];
     public string $postgishost;
     public string $postgisport;
     public string $postgisuser;
@@ -179,8 +184,8 @@ class Model
      */
     public function begin(): void
     {
-        if (!$this->db->inTransaction()) {
-            $this->db->beginTransaction();
+        if (!self::$testDb[$this->postgisdb]->inTransaction()) {
+            self::$testDb[$this->postgisdb]->beginTransaction();
         }
     }
 
@@ -199,9 +204,7 @@ class Model
         try {
             $statement->execute($params);
         } catch (PDOException $e) {
-            if ($this->db->inTransaction()) {
-                $this->rollback();
-            }
+            $this->rollback();
             throw $e;
         }
         return true;
@@ -214,7 +217,9 @@ class Model
      */
     public function commit(): void
     {
-        $this->db->commit();
+        if (self::$testDb[$this->postgisdb]->inTransaction()) {
+            self::$testDb[$this->postgisdb]->commit();
+        }
     }
 
     /**
@@ -224,7 +229,9 @@ class Model
      */
     public function rollback(): void
     {
-        $this->db->rollback();
+        if (self::$testDb[$this->postgisdb]->inTransaction()) {
+            self::$testDb[$this->postgisdb]->rollBack();
+        }
     }
 
     /**
@@ -237,16 +244,14 @@ class Model
      */
     public function prepare(string $sql): PDOStatement
     {
-        if (!$this->db) {
-            $this->connect();
-        }
-        $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->connect();
+
+        self::$testDb[$this->postgisdb]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         try {
-            return $this->db->prepare($sql);
+            return self::$testDb[$this->postgisdb]->prepare($sql);
         } catch (PDOException $e) {
-            if ($this->db->inTransaction()) {
-                $this->rollback();
-            }
+            $this->rollback();
+
             throw $e;
         }
     }
@@ -258,46 +263,37 @@ class Model
      * @param string $conn The database connection type to use. Defaults to "PDO". Supported values are "PDO" and "PG".
      * @param string $queryType The type of SQL query to be executed. Defaults to "select". Supported values are "select" and "transaction".
      *
-     * @return mixed The result of the query execution. Returns a PDOStatement object for "select" queries using "PDO", an integer for "transaction" queries using "PDO", or the result resource for "PG". Returns null if no result is available.
+     * @return PDOStatement|int|Result|null The result of the query execution. Returns a PDOStatement object for "select" queries using "PDO", an integer for "transaction" queries using "PDO", or the result resource for "PG". Returns null if no result is available.
      *
      * @throws PDOException If a PDO query execution fails during a "transaction" type and the exception handling process is triggered.
      */
-    public function execQuery(string $query, string $conn = "PDO", string $queryType = "select"): mixed
+    public function execQuery(string $query, string $conn = "PDO", string $queryType = "select"): PDOStatement|int|null|Result
     {
         $result = null;
         switch ($conn) {
             case "PG" :
-                if (!$this->db) {
-                    $this->connect("PG");
-                }
+                $this->connect("PG");
                 $result = pg_query($this->db, $query);
                 break;
             case "PDO" :
-                if (!$this->db) {
-                    $this->connect();
-                }
+                $this->connect();
                 if ($this->connectionFailed) {
                     $result = false;
                 }
-                $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                self::$testDb[$this->postgisdb]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 switch ($queryType) {
                     case "select" :
                         // Return PDOStatement object
-                        $result = $this->db->query($query);
+                        $result = self::$testDb[$this->postgisdb]->query($query);
                         break;
                     case "transaction" :
                         // Return integer
                         try {
-                            $result = $this->db->exec($query);
+                            $result = self::$testDb[$this->postgisdb]->exec($query);
                         } catch (PDOException $e) {
-                            if ($this->db->inTransaction()) {
-                                $this->db->rollBack();
-                            }
+                            self::$testDb[$this->postgisdb]->rollBack();
+
                             throw $e;
-                        } finally {
-                            if ($this->db->inTransaction()) {
-                                $this->db->rollBack();
-                            }
                         }
                 }
                 break;
@@ -563,14 +559,19 @@ class Model
      */
     function connect(string $type = "PDO"): void
     {
+
         switch ($type) {
             case "PG" :
                 $c = pg_connect($this->connectString());
                 $this->db = $c ?: null;
                 break;
             case "PDO" :
-                $this->db = new PDO("pgsql:dbname=$this->postgisdb;host=$this->postgishost;" . (($this->postgisport) ? "port=$this->postgisport" : ""), "$this->postgisuser", "$this->postgispw", [PDO::ATTR_EMULATE_PREPARES => true]);
-                $this->execQuery("set client_encoding='UTF8'");
+                if (!self::$testDb[$this->postgisdb]) {
+                    error_log("Connecting to " . $this->postgisdb . " on " . $this->postgishost . " as " . $this->postgisuser);
+                    $this->db = new PDO("pgsql:dbname=$this->postgisdb;host=$this->postgishost;" . (($this->postgisport) ? "port=$this->postgisport" : ""), "$this->postgisuser", "$this->postgispw", [PDO::ATTR_EMULATE_PREPARES => true]);
+                    self::$testDb[$this->postgisdb] = $this->db;
+                    $this->execQuery("set client_encoding='UTF8'");
+                }
                 break;
         }
     }
@@ -580,7 +581,7 @@ class Model
      */
     function close(): void
     {
-        $this->db = null;
+        self::$testDb[$this->postgisdb] = null;
     }
 
     /**
@@ -589,10 +590,8 @@ class Model
      */
     function quote(string $str): string
     {
-        if (!$this->db) {
-            $this->connect();
-        }
-        $str = $this->db->quote($str);
+        $this->connect();
+        $str = self::$testDb[$this->postgisdb]->quote($str);
         return ($str);
     }
 

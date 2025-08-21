@@ -40,7 +40,7 @@ class Sql extends Controller
 
     private string $apiKey;
 
-    private string $data;
+    private ?string $data;
 
     private ?string $subUser;
 
@@ -163,13 +163,12 @@ class Sql extends Controller
         $this->apiKey = $res['data']->api_key;
 
         $serializedResponse = $this->transaction(Input::get('client_encoding'), Input::get('type_hints'), true, Input::get('type_formats'));
-
-
         // Check if $this->data is set in SELECT section
-        if (!isset($this->data)) {
+        if (empty($this->data)) {
             $this->data = $serializedResponse;
         }
         $response = unserialize($this->data);
+        $this->data = null;
         if (!empty($this->cacheInfo)) {
             $response["cache"] = $this->cacheInfo;
         }

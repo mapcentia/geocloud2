@@ -295,10 +295,9 @@ class Setting extends Model
             Database::setDb("mapcentia");
             $users = new Model();
             $sQuery = "SELECT * FROM users WHERE parentdb = :parentDb";
+            $users->connect();
             $res = $users->prepare($sQuery);
-            $res->execute([
-                ":parentDb" => $this->postgisdb
-            ]);
+            $this->execute($res, [":parentDb" => $this->postgisdb]);
             $rows = $this->fetchAll($res);
             $userGroups = [];
             foreach ($rows as $row) {

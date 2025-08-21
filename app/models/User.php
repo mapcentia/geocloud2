@@ -91,7 +91,7 @@ class User extends Model
     {
         $query = "SELECT * FROM users WHERE screenname=:userId";
         $res = $this->prepare($query);
-        $res->execute(array(":userId" => $this->userId));
+        $this->execute($res, [":userId" => $this->userId]);
         if ($res->rowCount() == 0) {
             throw new GC2Exception("User identifier {$this->userId} does not exists", 404, null, 'USER_DOES_NOT_EXISTS');
         }
@@ -110,12 +110,12 @@ class User extends Model
             $userName = Model::toAscii($userIdentifier, NULL, "_");
             $query = "SELECT screenname, email, parentdb FROM users WHERE screenname = :sUserID";
             $res = $this->prepare($query);
-            $res->execute(array(":sUserID" => $userName));
+            $this->execute($res, [":sUserID" => $userName]);
 
         } else {
             $query = "SELECT screenname, email, parentdb FROM users WHERE email = :sUserEmail";
             $res = $this->prepare($query);
-            $res->execute(array(":sUserEmail" => $userIdentifier));
+            $this->execute($res, [":sUserEmail" => $userIdentifier]);
 
         }
         while ($row = $this->fetchRow($res)) {
@@ -137,7 +137,7 @@ class User extends Model
     {
         $query = "SELECT email, parentdb, usergroup, screenname as userid, properties, zone, default_user FROM users WHERE (screenname = :sUserID OR email = :sUserID) AND (parentdb = :parentDb OR parentDB IS NULL)";
         $res = $this->prepare($query);
-        $res->execute(array(":sUserID" => $this->userId, ":parentDb" => $this->parentdb));
+        $this->execute($res, array(":sUserID" => $this->userId, ":parentDb" => $this->parentdb));
         $row = $this->fetchRow($res);
         if (!$row['userid']) {
             throw new GC2Exception("User identifier $this->userId was not found (parent database: " . ($this->parentdb ?: 'null') . ")", 404, null, 'USER_NOT_FOUND');
@@ -179,7 +179,7 @@ class User extends Model
         if ($parentDb) {
             $sql = "SELECT 1 from pg_database WHERE datname=:sDatabase";
             $res = $this->prepare($sql);
-            $res->execute([":sDatabase" => $parentDb]);
+            $this->execute($res, [":sDatabase" => $parentDb]);
             $row = $this->fetchRow($res);
             if (!$row) {
                 throw new GC2Exception("Database '$parentDb' doesn't exist", 400, null, "PARENT_DATABASE_NOT_FOUND");
@@ -239,6 +239,7 @@ class User extends Model
         $db = new Database();
         if (isset($data['subuser']) && $data['subuser'] === false) {
             $db->postgisdb = $this->postgisdb;
+            $db->createUser($userId, null, true);
             $db->createdb($userId, App::$param['databaseTemplate']);
             Database::setDb($userId);
             (new Setting())->updateApiKeyForUser($userId, true);
@@ -256,7 +257,7 @@ class User extends Model
 
         $sQuery = "INSERT INTO users (screenname, pw, email, parentdb, usergroup, zone, properties, default_user) VALUES(:sUserID, :sPassword, :sEmail, :sParentDb, :sUsergroup, :sZone, :sProperties, :sDefault) RETURNING screenname, parentdb, email, usergroup, zone, properties";
         $res = $this->prepare($sQuery);
-        $res->execute(array(
+        $this->execute($res, array(
             ":sUserID" => $userId,
             ":sPassword" => $encryptedPassword,
             ":sEmail" => $email,
@@ -387,7 +388,7 @@ class User extends Model
         if (!empty($data["parentdb"])) {
             $res->bindParam(":sParentDb", $data["parentdb"]);
         }
-        $res->execute();
+        $this->execute($res);
         $row = $this->fetchRow($res);
         $row["properties"] = !empty($row["properties"]) ? json_decode($row["properties"]) : null;
         $response['success'] = true;
@@ -409,7 +410,7 @@ class User extends Model
         $user = $userName ? Model::toAscii($userName, NULL, "_") : null;
         $sQuery = "DELETE FROM users WHERE screenname=:sUserID AND parentdb=:parentDb";
         $res = $this->prepare($sQuery);
-        $res->execute([":sUserID" => $user, ":parentDb" => $this->userId]);
+        $this->execute($res, [":sUserID" => $user, ":parentDb" => $this->userId]);
         if ($res->rowCount() == 0) {
             throw new GC2Exception("User doesn't exists", 404, null, "USER_DOES_NOT_EXISTS");
         }
@@ -440,7 +441,7 @@ class User extends Model
     {
         $sQuery = "SELECT email, parentdb, usergroup, screenname as \"screenName\", properties, zone, default_user FROM users WHERE parentdb = :sUserID";
         $res = $this->prepare($sQuery);
-        $res->execute([":sUserID" => $userId]);
+        $this->execute($res, [":sUserID" => $userId]);
         $subusers = $res->fetchAll(PDO::FETCH_ASSOC);
         $response = [];
         $response['success'] = true;
@@ -457,7 +458,7 @@ class User extends Model
     {
         $sQuery = "SELECT pw FROM users WHERE screenname = :sUserID";
         $res = $this->prepare($sQuery);
-        $res->execute([":sUserID" => $userId]);
+        $this->execute($res, [":sUserID" => $userId]);
         $row = $this->fetchRow($res);
         $pwd = Util::format($checkedPassword);
         $hasPassword = false;
@@ -481,13 +482,13 @@ class User extends Model
     {
         $sql = "SELECT * FROM codes WHERE code=:code AND email=:email AND used is null";
         $res = $this->prepare($sql);
-        $res->execute([":code" => $code, ":email" => $email]);
+        $this->execute($res, [":code" => $code, ":email" => $email]);
         if ($res->rowCount() == 0) {
             throw new GC2Exception("Invalid activation code", 404, null, "CODE_DOES_NOT_EXISTS");
         }
         $sql = "UPDATE codes set used=now() where code=:code";
         $res = $this->prepare($sql);
-        $res->execute([":code" => $code]);
+        $this->execute($res, [":code" => $code]);
     }
 
     /**
@@ -501,13 +502,13 @@ class User extends Model
     {
         $sql = "SELECT * FROM codes WHERE email=:email";
         $res = $this->prepare($sql);
-        $res->execute([":email" => $email]);
+        $this->execute($res, [":email" => $email]);
         if ($res->rowCount() > 0) {
             throw new GC2Exception("E-mail already used", 404, null, "CODE_DOES_NOT_EXISTS");
         }
         $sql = "SELECT code FROM codes WHERE email isnull and used isnull limit 1";
         $res = $this->prepare($sql);
-        $res->execute();
+        $this->execute($res);
         if ($res->rowCount() == 0) {
             throw new GC2Exception("No more available activation codes. We'll release more, so try again later", 404, null, "CODE_DOES_NOT_EXISTS");
         }
@@ -527,21 +528,23 @@ class User extends Model
         }
         $sql = "UPDATE codes set email=:email where code=:code";
         $res = $this->prepare($sql);
-        $res->execute([":code" => $code, ":email" => $email]);
+        $this->execute($res, [":code" => $code, ":email" => $email]);
     }
 
-    public function cacheCode(string $key, mixed $value): void {
+    public function cacheCode(string $key, mixed $value): void
+    {
         $CachedString = Cache::getItem($key);
         $CachedString->set($value)->expiresAfter(3600);
         Cache::save($CachedString);
     }
 
-    public function getCode(string $key): mixed {
+    public function getCode(string $key): mixed
+    {
         $CachedString = Cache::getItem($key);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
         } else {
-            throw new GC2Exception("Key doesn't exits", 500, null,"KEY_DOES_NOT_EXISTS");
+            throw new GC2Exception("Key doesn't exits", 500, null, "KEY_DOES_NOT_EXISTS");
         }
     }
 
@@ -566,7 +569,7 @@ class User extends Model
         } else {
             $query = "SELECT screenname FROM users WHERE parentdb=:parentdb AND default_user='t'";
             $res = $this->prepare($query);
-            $res->execute([':parentdb' => $this->parentdb]);
+            $this->execute($res, [':parentdb' => $this->parentdb]);
             $defaultUser = $res->fetchColumn();
             if (!$defaultUser) {
                 throw new GC2Exception("No default user found", 404, null, "NO_DEFAULT_USER_FOUND");

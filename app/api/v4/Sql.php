@@ -121,16 +121,17 @@ class Sql extends AbstractApi
             $jwtData = Jwt::validate()["data"];
             $isSuperUser = $jwtData["superUser"];
             $uid = $jwtData["uid"];
+            $database = $jwtData["database"];
             $user = [
-                "user" => $isSuperUser ? $uid : "$uid@{$jwtData["database"]}"
+                "user" => $isSuperUser ? $uid : "$uid@$database"
             ];
         } catch (Exception) {
-            $db = func_get_arg(0);
-            Database::setDb($db);
-            $userObj = new \app\models\User(null, $db);
+            $database = func_get_arg(0);
+            Database::setDb($database);
+            $userObj = new \app\models\User(null, $database);
             $uid = $userObj->getDefaultUser();
             $user = [
-                "user" => "$uid@$db"
+                "user" => "$uid@$database"
             ];
             $isSuperUser = false;
         }
@@ -169,10 +170,7 @@ class Sql extends AbstractApi
             Input::setParams(null);
             Input::setBody(null);
         }
-        if ($api->db->inTransaction()) {
-            $api->commit();
-        }
-
+        $api->commit();
         if (count($result) == 1) {
             return $result[0];
         }

@@ -1,15 +1,8 @@
 <?php
 /**
- * Long description for file
- *
- * Long description for file (if any)...
- *
- * @category   API
- * @package    app\api\v1
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2025 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- * @since      File available since Release 2013.1
  *
  */
 
@@ -27,18 +20,18 @@ class Schema extends Controller
     /**
      * Schema constructor.
      */
-    function __construct()
+    function __construct(public $database = new Database())
     {
         parent::__construct();
-
-        $this->db = new Database();
     }
 
     /**
-     * @return mixed
+     * Retrieves a list of all schemas from the database.
+     *
+     * @return array The list of all database schemas.
      */
-    public function get_index()
+    public function get_index(): array
     {
-        return $this->db->listAllSchemas();
+        return $this->database->listAllSchemas();
     }
 }

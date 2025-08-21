@@ -19,7 +19,7 @@ class Input
      * @var array<string>
      */
     static ?array $params = null;
-    static ?string $body;
+    static ?string $body = null;
     const string TEXT_PLAIN = "text/plain";
     const string APPLICATION_JSON = "application/json";
     const string APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
