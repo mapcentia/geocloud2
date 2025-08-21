@@ -27,7 +27,7 @@ class Session extends Model
 {
     function __construct()
     {
-        parent::__construct();
+        parent::__construct('mapcentia');
     }
 
     /**
@@ -72,7 +72,7 @@ class Session extends Model
         $pw = Util::format($pw);
 
         $isAuthenticated = false;
-        $setting = new Setting();
+        $setting = new Setting($parentdb);
         $sPassword = $setting->encryptPw($pw);
 
         $sUserIDNotConverted = $sUserID;
