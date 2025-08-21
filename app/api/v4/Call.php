@@ -114,19 +114,14 @@ class Call extends AbstractApi
         }
         $result = [];
         foreach ($decodedBody as $value) {
-            $srs = $value['srs'] ?? 4326;
+            $srs = $body['srs'] ?? 4326;
             $api->setSRS($srs);
-            Input::setBody(json_encode($value));
-            Input::setParams(
-                [
-                    "key" => $apiKey,
-                    "convert_types" => $value['convert_types'] ?? true,
-                    "format" => "json",
-                    "srs" => $srs,
-                ]
-            );
+            $body['key'] = $apiKey;
+            $body['convert_types'] = $value['convert_types'] ?? true;
+            $body['format'] = 'json';
+            $body['srs'] = $srs;
             try {
-                $res = $this->v2->get_index($user, $api);
+                $res = $this->v2->get_index($user, $api, $body, $database);
             } catch (Exception $e) {
                 if ($e->getCode() == -32601) {
                     throw new RPCException("Method not found", -32601, null, null, $value['id']);
@@ -135,9 +130,6 @@ class Call extends AbstractApi
                     throw new RPCException("Invalid params", -32602, null, $e->getMessage(), $value['id']);
                 }
                 throw new RPCException("Internal error", -32603, null, $e->getMessage(), $value['id']);
-            } finally {
-                Input::setParams(null);
-                Input::setBody(null);
             }
             unset($res['success']);
             unset($res['forGrid']);

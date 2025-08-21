@@ -147,24 +147,14 @@ class Sql extends AbstractApi
         foreach ($decodedBody as $body) {
             $srs = $body['srs'] ?? 4326;
             $api->setSRS($srs);
-            $params =
-                [
-                    "key" => $apiKey,
-                    "convert_types" => $value['convert_types'] ?? true,
-                    "format" => "json",
-                    "srs" => $srs,
-                ];
-            try {
-                $res = $this->v2->get_index($user, $api, $body, $params, $database);
-            } finally {
-                Input::setParams(null);
-                Input::setBody(null);
-            }
+            $body['key'] = $apiKey;
+            $body['convert_types'] = $value['convert_types'] ?? true;
+            $body['format'] = 'json';
+            $body['srs'] = $srs;
+            $res = $this->v2->get_index($user, $api, $body, $database);
             unset($res['success']);
             unset($res['forGrid']);
             $result[] = $res;
-            Input::setParams(null);
-            Input::setBody(null);
         }
         $api->commit();
         if (count($result) == 1) {

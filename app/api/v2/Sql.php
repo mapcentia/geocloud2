@@ -50,6 +50,8 @@ class Sql extends Controller
 
     private array $cacheInfo;
 
+    private array $params;
+
     function __construct()
     {
         parent::__construct();
@@ -62,7 +64,7 @@ class Sql extends Controller
      * @throws InvalidArgumentException
      * @throws Exception
      */
-    public function get_index(?array $user = null, ?\app\models\Sql $api = null, ?array $body = null, ?array $params = null, ?string $database = null): array
+    public function get_index(?array $user = null, ?\app\models\Sql $api = null, ?array $body = null, ?string $database = null): array
     {
         // Get the URI params from request
         // /{user}
@@ -112,7 +114,7 @@ class Sql extends Controller
 
             // Set input params from JSON
             // ==========================
-            Input::setParams(
+            $this->params =
                 [
                     "q" => !empty($json["q"]) ? $json["q"] : null,
                     "client_encoding" => !empty($json["client_encoding"]) ? $json["client_encoding"] : null,
@@ -129,18 +131,17 @@ class Sql extends Controller
                     "type_formats" => $typeFormats,
                     "format" => $outputFormat,
                     "srs" => $srs,
-                ]
-            );
+                ];
         }
 
         if (!empty($srs)) {
             $this->api->setSRS($srs);
         }
 
-        if (!empty($params['base64']) || Input::get('base64') === true || Input::get('base64') === "true") {
-            $this->q = Util::base64urlDecode($params['q'] ?? Input::get("q"));
+        if ($this->params['base64'] === true || $this->params['base64'] === "true") {
+            $this->q = Util::base64urlDecode($this->params['q']);
         } else {
-            $qInput = Input::get('q');
+            $qInput = $this->params['q'];
             if (!empty($qInput)) {
                 // Only urldecode if it looks URL-encoded (contains percent-escapes)
                 if (preg_match('/%[0-9a-fA-F]{2}/', $qInput)) {
@@ -162,7 +163,7 @@ class Sql extends Controller
         $res = $settings->get();
         $this->apiKey = $res['data']->api_key;
 
-        $serializedResponse = $this->transaction(Input::get('client_encoding'), Input::get('type_hints'), true, Input::get('type_formats'));
+        $serializedResponse = $this->transaction($this->params['client_encoding'], $this->params['type_hints'], true, $this->params['type_formats']);
         // Check if $this->data is set in SELECT section
         if (empty($this->data)) {
             $this->data = $serializedResponse;
@@ -246,7 +247,7 @@ class Sql extends Controller
      * @throws PhpfastcacheInvalidArgumentException
      * @throws Exception
      */
-    private function transaction(?string $clientEncoding = null, ?array $typeHints = null, bool $convertReturning = true, ?array $typeFormats = null): string
+    private function transaction(?string $clientEncoding = null, ?array $typeHints = null, bool $convertReturning = true, ?array $typeFormats = null, ?array $params = null): string
     {
         $response = [];
         $rule = new Rule();
@@ -268,7 +269,7 @@ class Sql extends Controller
             }
         }
         foreach ($usedRelationsWithType as $rel => $type) {
-            $response = $this->ApiKeyAuthLayer($rel, $type == "t", $usedRelationsWithType, $this->subUser, Input::get('key'));
+            $response = $this->ApiKeyAuthLayer($rel, $type == "t", $usedRelationsWithType, $this->subUser, $this->params['key']);
             if (!$response["success"]) {
                 return serialize($response);
             }
@@ -293,7 +294,7 @@ class Sql extends Controller
             $finaleStatement = $factory->createFromAST($select, true)->getSql();
             if ($auth["access"] == Geofence::LIMIT_ACCESS) {
                 try {
-                    $geofence->postProcessQuery($select, $rules, Input::get('params'), $typeHints);
+                    $geofence->postProcessQuery($select, $rules, $this->params['params'], $typeHints);
                 } catch (Exception $e) {
                     $response = [];
                     $response["code"] = 401;
@@ -304,13 +305,13 @@ class Sql extends Controller
                     return serialize($response);
                 }
             }
-            $this->response = $this->api->transaction($finaleStatement, Input::get('params') ?: null, Input::get('type_hints') ?: null, $convertReturning, Input::get('type_formats') ?: null);
+            $this->response = $this->api->transaction($finaleStatement, $this->params['params'], $this->params['type_hints'], $convertReturning, $this->params['type_formats']);
             $response["filters"] = $auth["filters"];
             $response["statement"] = $finaleStatement;
             $this->addAttr($response);
         } elseif ($operation == "Select" || $operation == "SetOpSelect") {
             $this->q = $factory->createFromAST($select, true)->getSql();
-            $lifetime = (Input::get('lifetime')) ?: 0;
+            $lifetime = $this->params['lifetime'] ?: 0;
             $key = md5(Connection::$param["postgisdb"] . "_" . $this->q . "_" . $lifetime);
             if ($lifetime > 0) {
                 $CachedString = Cache::getItem($key);
@@ -327,7 +328,7 @@ class Sql extends Controller
                 $this->cacheInfo["signature"] = md5(serialize($this->data));
             } else {
                 ob_start();
-                $this->response = $this->api->sql($this->q, $clientEncoding, Input::get('format') ?: "geojson", Input::get('geoformat') ?: null, Input::get('allstr') ?: null, Input::get('alias') ?: null, null, null, Input::get('convert_types') ?: null, Input::get('params') ?: null, $typeHints, $typeFormats);
+                $this->response = $this->api->sql($this->q, $clientEncoding, $this->params['format'] ?: "geojson", $this->params['geoformat'], $this->params['allstr'], $this->params['alias'], null, null, $this->params['convert_types'], $this->params['params'], $typeHints, $typeFormats);
                 if (count($this->response) > 0) {
                     $response["statement"] = $this->q;
                     $this->addAttr($response);

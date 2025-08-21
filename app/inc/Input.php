@@ -34,11 +34,6 @@ class Input
         self::$params = $arr;
     }
 
-    public static function setBody(?string $body): void
-    {
-        self::$body = $body;
-    }
-
     /**
      * @return GetPart
      */
@@ -116,11 +111,6 @@ class Input
      */
     public static function getBody(bool $decode = true): ?string
     {
-
-        if (!empty(self::$body)) {
-            return self::$body;
-        }
-
         $content = file_get_contents('php://input');
         if (empty($content)) {
             return null;

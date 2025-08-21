@@ -40,19 +40,15 @@ readonly class RunQueryTask implements Task
         echo "[INFO] RunQueryTask Worker PID: " . getmypid() . "\n";
         new App();
         Cache::setInstance();
-        Input::setParams(
-            [
-                "q" => $this->sql,
-                "key" => "dsd",
-                "srs" => "4326",
-                "convert_types" =>  true,
-                "format" => "json",
-            ]
-        );
+        $body['q'] = $this->sql;
+        $body['key'] = "dsd";
+        $body['convert_types'] = true;
+        $body['format'] = 'json';
+        $body['srs'] = "4326";
         try {
             $sql = new \app\models\Sql(database: $this->db);
             $sql->connect();
-            $res = (new Sql)->get_index(["user" => $this->db], $sql);
+            $res = (new Sql)->get_index(["user" => $this->db], $sql, $body, $this->db);
             $sql->close();
         } catch (Error $e) {
             $res = [
