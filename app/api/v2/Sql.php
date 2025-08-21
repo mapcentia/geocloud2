@@ -62,14 +62,14 @@ class Sql extends Controller
      * @throws InvalidArgumentException
      * @throws Exception
      */
-    public function get_index(): array
+    public function get_index(?array $user = null, ?\app\models\Sql $api = null, ?array $body = null, ?array $params = null, ?string $database = null): array
     {
         // Get the URI params from request
         // /{user}
         $r = func_get_arg(0);
-        try {
-            $this->api = func_get_arg(1);
-        } catch (Throwable) {
+        if ($api) {
+            $this->api = $api;
+        } else {
             $srs = is_numeric(Input::get('srs')) ? Input::get('srs') : 3857;
             $this->api = new \app\models\Sql();
             $this->api->connect();
@@ -84,7 +84,7 @@ class Sql extends Controller
         // Check if body is JSON
         // Supports both GET and POST
         // ==========================
-        $json = Input::getBody() ? json_decode(Input::getBody(), true) : null;
+        $json = $body ?? Input::getBody() ?? json_decode(Input::getBody(), true) ?? null;
 
         // If JSON body when set GET input params
         // ======================================
@@ -137,8 +137,8 @@ class Sql extends Controller
             $this->api->setSRS($srs);
         }
 
-        if (Input::get('base64') === true || Input::get('base64') === "true") {
-            $this->q = Util::base64urlDecode(Input::get("q"));
+        if (!empty($params['base64']) || Input::get('base64') === true || Input::get('base64') === "true") {
+            $this->q = Util::base64urlDecode($params['q'] ?? Input::get("q"));
         } else {
             $qInput = Input::get('q');
             if (!empty($qInput)) {
@@ -158,7 +158,7 @@ class Sql extends Controller
             throw new GC2Exception("Query is missing (the 'q' parameter)", 403, null, "MISSING_PARAMETER");
         }
 
-        $settings = new Setting();
+        $settings = new Setting($database);
         $res = $settings->get();
         $this->apiKey = $res['data']->api_key;
 

@@ -69,8 +69,7 @@ abstract class Jwt
             return $arr;
         }
         // Get superuser key, which are used for secret
-        Database::setDb($arr["data"]["database"]);
-        $secret = (new Setting())->getApiKeyForSuperUser();
+        $secret = (new Setting($arr["data"]["database"]))->getApiKeyForSuperUser();
         try {
             $decoded = (array)\Firebase\JWT\JWT::decode($token, new Key($secret, 'HS256'));
         } catch (Exception $e) {

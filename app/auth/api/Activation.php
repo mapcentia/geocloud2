@@ -9,7 +9,6 @@
 namespace app\auth\api;
 
 use app\api\v4\AbstractApi;
-use app\inc\Session;
 use app\models\User as UserModel;
 use Error;
 use Exception;
@@ -42,7 +41,6 @@ class Activation extends AbstractApi
 
     public function post_index(): array
     {
-        Database::setDb("mapcentia");
         if ($_POST['email']) {
             $model = new UserModel();
             $model->connect();

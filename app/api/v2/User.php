@@ -115,8 +115,7 @@ class User extends Controller
             }
 
             if (Session::isAuth()) {
-                Database::setDb(Session::getUser());
-                $database = new Database();
+                $database = new Database(Session::getUser());
                 try {
                     $database->createSchema($response['data']['screenname']);
                 } catch (PDOException) {

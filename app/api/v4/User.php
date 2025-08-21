@@ -86,7 +86,7 @@ class User extends AbstractApi
 
     function __destruct() {
         if (isset($this->jwt)) {
-            Database::setDb($this->jwt["database"]);
+//            Database::setDb($this->jwt["database"]);
         }
     }
 
@@ -164,9 +164,8 @@ class User extends AbstractApi
             $list[] = $userName;
         }
         $model->commit();
-        Database::setDb($this->jwt["database"]);
         foreach ($list as $newUser) {
-            (new Setting())->updateApiKeyForUser($newUser, false);
+            (new Setting($this->jwt["database"]))->updateApiKeyForUser($newUser, false);
         }
         $baseUri = "/api/v4/users/";
         header("Location: $baseUri" . implode(",", $list));

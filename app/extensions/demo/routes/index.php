@@ -22,8 +22,8 @@ Accept: application/json; charset=utf-8
   "bar": "a"
 }
 */
-Route2::add("my_api/demo", new DemoRest());
+//Route2::add("my_api/demo", new DemoRest());
 
 // GET /my_api/demo/my_resource/name/martin/message/hello
 // () = action, / = separator, {} = required, [] = optional
-Route2::add("my_api/demo/(action)/name/{name}/message/[message]", new DemoRest());
+//Route2::add("my_api/demo/(action)/name/{name}/message/[message]", new DemoRest());

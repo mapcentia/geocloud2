@@ -169,8 +169,7 @@ class Oauth extends AbstractApi
         }
         // Password grant.
         if ($data['grant_type'] == GrantType::PASSWORD->value) {
-            Database::setDb($data['database']);
-            $client = new \app\models\Client();
+            $client = new \app\models\Client($data['database']);
             $clientData = $client->get($data['client_id']);
             if (!$clientData[0]['public']) {
                 if (empty($data['client_secret'])) {
@@ -230,13 +229,13 @@ class Oauth extends AbstractApi
                 $token = Jwt::changeCodeForAccessToken($data['code'], $data['code_verifier']);
                 $tokenData = Jwt::parse($token)['data'];
                 // Create a refresh token from the access token
-                $superUserApiKey = (new Setting())->getApiKeyForSuperUser();
+                $superUserApiKey = (new Setting($tokenData['database']))->getApiKeyForSuperUser();
                 $refreshToken = Jwt::createJWT($superUserApiKey, $tokenData['database'], $tokenData['uid'], $tokenData['superUser'], $tokenData['userGroup'], false);
             } catch (GC2Exception) {
                 return self::error("invalid_grant", "Code doesn't exists, is expired or code challenge failed.", 400);
             }
             try {
-                $client = new \app\models\Client();
+                $client = new \app\models\Client($tokenData['database']);
                 $clientData = $client->get($data['client_id']);
             } catch (GC2Exception) {
                 return self::error("invalid_grant", "Client with identifier '{$data['client_id']}' was not found in the directory", 401);
@@ -266,9 +265,8 @@ class Oauth extends AbstractApi
                 else
                     return self::error("invalid_request", $e->getMessage(), 400);
             }
-            Database::setDb($user['parentdb']);
             try {
-                $client = new \app\models\Client();
+                $client = new \app\models\Client($user['parentdb']);
                 $clientData = $client->get($data['client_id']);
             } catch (GC2Exception) {
                 return self::error("invalid_grant", "Client with identifier '{$data['client_id']}' was not found in the directory", 401);

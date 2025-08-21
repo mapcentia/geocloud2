@@ -17,10 +17,12 @@ use app\inc\Route2;
 use app\auth\api\Auth;
 use app\auth\api\Activation;
 
-Route2::add("auth", new Auth());
-Route2::add("device", new Device());
-Route2::add("signin", new Signin());
-Route2::add("signup", new Signup());
-Route2::add("signout", new Signout());
-Route2::add("activation", new Activation());
-Route2::add("forgot", new Forgot());
+$route2 = new Route2();
+
+$route2->add("auth", new Auth());
+$route2->add("device", new Device());
+$route2->add("signin", new Signin());
+$route2->add("signup", new Signup());
+$route2->add("signout", new Signout());
+$route2->add("activation", new Activation());
+$route2->add("forgot", new Forgot());

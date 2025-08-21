@@ -13,7 +13,6 @@ use app\inc\Input;
 use app\inc\Jwt;
 use app\api\v2\Sql as V2Sql;
 use app\inc\Route2;
-use app\models\Database;
 use app\models\Setting;
 use Exception;
 use OpenApi\Annotations\OpenApi;
@@ -90,7 +89,7 @@ class Sql extends AbstractApi
      */
     private V2Sql $v2;
 
-    public function __construct()
+    public function __construct(private readonly Route2 $route, private readonly string $database)
     {
         $this->v2 = new V2Sql();
     }
@@ -127,7 +126,6 @@ class Sql extends AbstractApi
             ];
         } catch (Exception) {
             $database = func_get_arg(0);
-            Database::setDb($database);
             $userObj = new \app\models\User(null, $database);
             $uid = $userObj->getDefaultUser();
             $user = [
@@ -135,7 +133,7 @@ class Sql extends AbstractApi
             ];
             $isSuperUser = false;
         }
-        $settingsData = (new Setting())->get()["data"];
+        $settingsData = (new Setting($database))->get()["data"];
         $apiKey = $isSuperUser ? $settingsData->api_key : $settingsData->api_key_subuser->$uid;
         $decodedBody = json_decode(Input::getBody(), true);
 
@@ -143,23 +141,21 @@ class Sql extends AbstractApi
             $decodedBody = [$decodedBody];
         }
         $result = [];
-        $api = new \app\models\Sql();
+        $api = new \app\models\Sql(database: $database);
         $api->connect();
         $api->begin();
-        foreach ($decodedBody as $value) {
-            $srs = $value['srs'] ?? 4326;
+        foreach ($decodedBody as $body) {
+            $srs = $body['srs'] ?? 4326;
             $api->setSRS($srs);
-            Input::setBody(json_encode($value));
-            Input::setParams(
+            $params =
                 [
                     "key" => $apiKey,
                     "convert_types" => $value['convert_types'] ?? true,
                     "format" => "json",
                     "srs" => $srs,
-                ]
-            );
+                ];
             try {
-                $res = $this->v2->get_index($user, $api);
+                $res = $this->v2->get_index($user, $api, $body, $params, $database);
             } finally {
                 Input::setParams(null);
                 Input::setBody(null);
@@ -202,7 +198,7 @@ class Sql extends AbstractApi
     #[AcceptableAccepts(['application/json', '*/*'])]
     public function post_database(): array
     {
-        return $this->post_index(Route2::getParam('database'));
+        return $this->post_index($this->route->getParam('database'));
     }
 
     /**
@@ -211,7 +207,7 @@ class Sql extends AbstractApi
     #[Override]
     public function validate(): void
     {
-        $id = Route2::getParam("id");
+        $id = $this->route->getParam("id");
         $body = Input::getBody();
 
         // Patch and delete on collection is not allowed

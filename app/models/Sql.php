@@ -52,9 +52,9 @@ class Sql extends Model
      * Sql constructor.
      * @param string $srs
      */
-    function __construct(string $srs = "3857")
+    function __construct(string $srs = "3857", ?string $database = null)
     {
-        parent::__construct();
+        parent::__construct($database);
 
         $this->model = $this;
         $this->srs = $srs;

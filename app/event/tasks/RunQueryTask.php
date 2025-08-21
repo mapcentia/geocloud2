@@ -40,8 +40,6 @@ readonly class RunQueryTask implements Task
         echo "[INFO] RunQueryTask Worker PID: " . getmypid() . "\n";
         new App();
         Cache::setInstance();
-        Database::setDb($this->db);
-
         Input::setParams(
             [
                 "q" => $this->sql,
@@ -52,7 +50,7 @@ readonly class RunQueryTask implements Task
             ]
         );
         try {
-            $sql = new \app\models\Sql();
+            $sql = new \app\models\Sql(database: $this->db);
             $sql->connect();
             $res = (new Sql)->get_index(["user" => $this->db], $sql);
             $sql->close();
@@ -63,7 +61,6 @@ readonly class RunQueryTask implements Task
                 'line' => $e->getLine(),
             ];
         }
-
         return $res;
     }
 }

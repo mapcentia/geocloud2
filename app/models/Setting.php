@@ -25,9 +25,9 @@ use stdClass;
  */
 class Setting extends Model
 {
-    function __construct()
+    function __construct(?string $database = null)
     {
-        parent::__construct();
+        parent::__construct($database);
     }
 
     /**
@@ -292,8 +292,7 @@ class Setting extends Model
             $response['data'] = $arr;
 
             // Get userGroups from mapcentia database
-            Database::setDb("mapcentia");
-            $users = new Model();
+            $users = new Model("mapcentia");
             $sQuery = "SELECT * FROM users WHERE parentdb = :parentDb";
             $users->connect();
             $res = $users->prepare($sQuery);

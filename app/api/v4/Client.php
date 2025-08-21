@@ -82,8 +82,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[AcceptableMethods(['POST', 'PATCH', 'DELETE', 'GET', 'HEAD', 'OPTIONS'])]
 class Client extends AbstractApi
 {
-    public function __construct()
+    private readonly ClientModel $client;
+    public function __construct(private readonly Route2 $route, private readonly string $database)
     {
+        $this->client = new ClientModel($this->database);
     }
 
     /**
@@ -107,14 +109,13 @@ class Client extends AbstractApi
     public function get_index(): array
     {
         $r = [];
-        $client = new ClientModel();
-        if (!empty(Route2::getParam("id"))) {
-            $ids = explode(',', Route2::getParam("id"));
+        if (!empty($this->route->getParam("id"))) {
+            $ids = explode(',', $this->route->getParam("id"));
             foreach ($ids as $id) {
-                $r[] = $client->get($id)[0];
+                $r[] = $this->client->get($id)[0];
             }
         } else {
-            $r = $client->get();
+            $r = $this->client->get();
         }
         if (count($r) == 0) {
             throw new GC2Exception("No clients found", 404, null, 'NO_CLIENTS');
@@ -154,11 +155,10 @@ class Client extends AbstractApi
     public function post_index(): array
     {
         $clients = [];
-        $model = new ClientModel();
         $body = Input::getBody();
         $data = json_decode($body, true);
-        $model->connect();
-        $model->begin();
+        $this->client->connect();
+        $this->client->begin();
         if (!isset($data['clients'])) {
             $data['clients'] = [$data];
         }
@@ -172,9 +172,9 @@ class Client extends AbstractApi
                 'public' => $datum['public'] ?? false,
                 'confirm' => $datum['confirm'] ?? true,
             ];
-            $clients[] = $model->insert(...$arr);
+            $clients[] = $this->client->insert(...$arr);
         }
-        $model->commit();
+        $this->client->commit();
         $list = array_map(fn($c) => $c['id'], $clients);
         $baseUri = "/api/v4/clients/";
         header("Location: $baseUri" . implode(",", $list));
@@ -200,12 +200,11 @@ class Client extends AbstractApi
     public function patch_index(): array
     {
         $list = [];
-        $ids = explode(',', Route2::getParam("id"));
+        $ids = explode(',', $this->route->getParam("id"));
         $body = Input::getBody();
         $data = json_decode($body, true);
-        $model = new ClientModel();
-        $model->connect();
-        $model->begin();
+        $this->client->connect();
+        $this->client->begin();
         foreach ($ids as $id) {
             $arr = [
                 'id' => $id,
@@ -217,9 +216,9 @@ class Client extends AbstractApi
                 'public' => $data['public'] ?? null,
                 'confirm' => $data['confirm'] ?? null,
             ];
-            $list[] = $model->update(...$arr);
+            $list[] = $this->client->update(...$arr);
         }
-        $model->commit();
+        $this->client->commit();
         header("Location: /api/v4/clients/" . implode(",", $list));
         return ["code" => "303"];
     }
@@ -233,15 +232,14 @@ class Client extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     public function delete_index(): array
     {
-        $id = Route2::getParam("id");
+        $id = $this->route->getParam("id");
         $ids = explode(',', $id);
-        $model = new ClientModel();
-        $model->connect();
-        $model->begin();
+        $this->client->connect();
+        $this->client->begin();
         foreach ($ids as $id) {
-            $model->delete($id);
+            $this->client->delete($id);
         }
-        $model->commit();
+        $this->client->commit();
         return ["code" => "204"];
     }
 
@@ -250,7 +248,7 @@ class Client extends AbstractApi
      */
     public function validate(): void
     {
-        $id = Route2::getParam("id");
+        $id = $this->route->getParam("id");
         $body = Input::getBody();
 
         // Patch and delete on collection is not allowed

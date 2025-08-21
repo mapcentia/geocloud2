@@ -28,7 +28,7 @@ class Route2
     /**
      * @var array
      */
-    static array $params;
+    public array $params;
 
     /**
      * @param string $uri
@@ -36,7 +36,7 @@ class Route2
      * @param Closure|null $func
      * @throws GC2Exception
      */
-    static public function add(string $uri, ApiInterface $controller, ?Closure $func = null): void
+    public function add(string $uri, ApiInterface $controller, ?Closure $func = null): void
     {
         if (headers_sent()) {
             goto end;
@@ -87,7 +87,7 @@ class Route2
         }
 
         if ($signatureMatch) {
-            self::$params = $r;
+            $this->params = $r;
             if ($func) {
                 $func($r);
             }
@@ -161,7 +161,7 @@ class Route2
                 if (!in_array($code, ['204', '303'])) {
                     echo json_encode($response, JSON_UNESCAPED_UNICODE);
                 } else {
-                    header_remove('Content-type');;
+                    header_remove('Content-type');
                 }
             }
             end:
@@ -173,10 +173,10 @@ class Route2
      * @param string $parameter
      * @return string|null
      */
-    static public function getParam(string $parameter): ?string
+    public function getParam(string $parameter): ?string
     {
-        if (isset(self::$params[$parameter])) {
-            return urldecode(self::$params[$parameter]);
+        if (isset($this->params[$parameter])) {
+            return urldecode($this->params[$parameter]);
         } else {
             return null;
         }

@@ -66,7 +66,6 @@ class Forgot extends AbstractApi
     public function post_index(): array
     {
         $userObj = new User();
-        Database::setDb("mapcentia");
         if (isset($_POST['password']) && isset($_POST['userid']) && isset($_POST['key'])) {
 
             $key = '__forgot_' . md5($_POST['userid']);

@@ -39,7 +39,7 @@ class Model
     public string $postgishost;
     public string $postgisport;
     public string $postgisuser;
-    public string $postgisdb;
+
     public string $postgispw;
     public ?string $postgisschema;
     public null|PDO|\PgSql\Connection $db = null;
@@ -47,7 +47,7 @@ class Model
     public ?string $theGeometry;
 
     // If Connection::$params are not set, then set them from environment variables
-    function __construct()
+    function __construct(public ?string $postgisdb = null)
     {
         $this->connectionFailed = false;
 
@@ -62,7 +62,7 @@ class Model
         $this->postgishost = Connection::$param['postgishost'];
         $this->postgisport = Connection::$param['postgisport'];
         $this->postgisuser = Connection::$param['postgisuser'];
-        $this->postgisdb = Connection::$param['postgisdb'];
+        $this->postgisdb = $this->postgisdb ?? Connection::$param['postgisdb'];
         $this->postgispw = Connection::$param['postgispw'];
         $this->postgisschema = Connection::$param['postgisschema'] ?? null;
     }
@@ -565,15 +565,28 @@ class Model
                 $this->db = $c ?: null;
                 break;
             case "PDO" :
-                if (!isset(self::$testDb[$this->postgisdb])) {
+                if (!isset(self::$testDb[$this->postgisdb]) || !$this->isPdoConnected()) {
+
                     error_log("Connecting to " . $this->postgisdb . " on " . $this->postgishost . " as " . $this->postgisuser);
-                    $this->db = new PDO("pgsql:dbname=$this->postgisdb;host=$this->postgishost;" . (($this->postgisport) ? "port=$this->postgisport" : ""), "$this->postgisuser", "$this->postgispw", [PDO::ATTR_EMULATE_PREPARES => true]);
+                    $this->db = new PDO("pgsql:dbname=$this->postgisdb;host=$this->postgishost;" . (($this->postgisport) ? "port=$this->postgisport" : ""), "$this->postgisuser", "$this->postgispw",
+                        [PDO::ATTR_EMULATE_PREPARES => true]);
                     self::$testDb[$this->postgisdb] = $this->db;
                     $this->execQuery("set client_encoding='UTF8'");
                 }
                 break;
         }
     }
+
+    private function isPdoConnected(): bool {
+        try {
+            // Lightweight no-op query
+            self::$testDb[$this->postgisdb]->query('SELECT 1');
+            return true;
+        } catch (PDOException) {
+            return false;
+        }
+    }
+
 
     /**
      *

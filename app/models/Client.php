@@ -19,6 +19,10 @@ use Random\RandomException;
  */
 class Client extends Model
 {
+    public function __construct(?string $database = null)
+    {
+        parent::__construct($database);
+    }
     /**
      * @throws GC2Exception
      */
