@@ -65,7 +65,7 @@ class Layer extends Table
     {
         $sql = "select f_geometry_column from settings.geometry_columns_view where f_table_name=:table and f_table_schema=:schema";
         $res = $this->prepare($sql);
-        $res->execute(['table' => $table, 'schema' => $schema]);
+        $this->execute($res, ['table' => $table, 'schema' => $schema]);
         return $res->fetchAll(PDO::FETCH_COLUMN);
     }
 
@@ -78,7 +78,7 @@ class Layer extends Table
     {
         $sql = "select distinct privileges from settings.geometry_columns_view where f_table_name=:table and f_table_schema=:schema";
         $res = $this->prepare($sql);
-        $res->execute(['table' => $table, 'schema' => $schema]);
+        $this->execute($res, ['table' => $table, 'schema' => $schema]);
         $privileges = $res->fetchAll(PDO::FETCH_COLUMN);
         $response = [];
         foreach ($privileges as $privilege) {
@@ -99,7 +99,7 @@ class Layer extends Table
     {
         $sql = "select $column from $this->table where _key_=:key";
         $res = $this->prepare($sql);
-        $res->execute(['key' => $_key_]);
+        $this->execute($res, ['key' => $_key_]);
         $row = $this->fetchRow($res);
         return $row[$column];
     }
@@ -194,7 +194,7 @@ class Layer extends Table
             $sql = implode(" UNION ALL ", $sqls);
 
             $res = $this->prepare($sql);
-            $res->execute();
+            $this->execute($res);
 
             // Check if Es is online
             // =====================
@@ -574,7 +574,7 @@ class Layer extends Table
         $query = "SELECT * FROM settings.getColumns('$whereClauseG','$whereClauseR') ORDER BY sort_id";
         $res = $this->prepare($query);
         try {
-            $res->execute();
+            $this->execute($res);
             while ($row = $this->fetchRow($res)) {
                 $query = "UPDATE settings.geometry_columns_join SET _key_ = '{$row['f_table_schema']}.$newName.{$row['f_geometry_column']}' WHERE _key_ ='{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}'";
                 $resUpdate = $this->prepare($query);
@@ -587,7 +587,7 @@ class Layer extends Table
             $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($tableName) . " RENAME TO $newName";
             $res = $this->prepare($sql);
             try {
-                $res->execute();
+                $this->execute($res);
             } catch (PDOException $e) {
                 throw new GC2Exception($e->getMessage(), 400, null);
             }
@@ -615,7 +615,7 @@ class Layer extends Table
             $whereClauseR = "r_table_schema=''$bits[0]'' AND r_table_name=''$bits[1]''";
             $query = "SELECT * FROM settings.getColumns('$whereClauseG','$whereClauseR') ORDER BY sort_id";
             $res = $this->prepare($query);
-            $res->execute();
+            $this->execute($res);
             while ($row = $this->fetchRow($res)) {
                 // First delete keys from destination schema if they exists
                 $query = "DELETE FROM settings.geometry_columns_join WHERE _key_ = '$schema.$bits[1].{$row['f_geometry_column']}'";
@@ -627,7 +627,7 @@ class Layer extends Table
             }
             $query = "ALTER TABLE " . $this->doubleQuoteQualifiedName($table) . " SET SCHEMA $schema";
             $res = $this->prepare($query);
-            $res->execute();
+            $this->execute($res);
         }
         $response['success'] = true;
         $response['message'] = sizeof($tables) . " tables moved to $schema";
@@ -656,7 +656,7 @@ class Layer extends Table
                 $ckanRes = $this->deleteCkan($uuid["uuid"]);
                 $response['ckan_delete'] = $ckanRes["success"];
             }
-            $res->execute();
+            $this->execute($res);
         }
         $this->commit();
         $response['success'] = true;
@@ -879,7 +879,7 @@ class Layer extends Table
         $this->clearCacheOnSchemaChanges();
         $query = "SELECT * FROM settings.geometry_columns_join WHERE _key_ =:from";
         $res = $this->prepare($query);
-        $res->execute(array("from" => $from));
+        $this->execute($res, array("from" => $from));
         $row = $this->fetchRow($res);
         foreach ($data->keys as $to) {
             $booleanFields = array("editable", "baselayer", "tilecache", "not_querable", "single_tile", "enablesqlfilter", "skipconflict", "enableows");
@@ -935,7 +935,7 @@ class Layer extends Table
 
         $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ =:key";
         $res = $this->prepare($sql);
-        $res->execute(array("key" => $key));
+        $this->execute($res, array("key" => $key));
         $row = $this->fetchRow($res);
         $id = $row["uuid"];
         // Check if dataset already exists
@@ -1176,7 +1176,7 @@ class Layer extends Table
     {
         $sql = "SELECT tags FROM settings.geometry_columns_join WHERE tags NOTNULL AND tags <> 'null' AND tags <> '\"null\"'";
         $res = $this->prepare($sql);
-        $res->execute();
+        $this->execute($res);
 
         $arr = array();
         while ($row = $this->fetchRow($res)) {
@@ -1203,7 +1203,7 @@ class Layer extends Table
         $arr = [];
         $sql = "SELECT $field AS $field FROM settings.geometry_columns_join WHERE $field IS NOT NULL GROUP BY $field";
         $res = $this->prepare($sql);
-        $res->execute();
+        $this->execute($res);
 
         while ($row = $this->fetchRow($res)) {
             $arr[] = array("group" => $row[$field]);
@@ -1222,7 +1222,7 @@ class Layer extends Table
                 insert into settings.geometry_columns_join(_key_) select * from t where left(key, 1) != '_'";
 
         $res = $this->prepare($sql);
-        $res->execute();
+        $this->execute($res);
         $response['success'] = true;
         $response['count'] = $res->rowCount();
         return $response;

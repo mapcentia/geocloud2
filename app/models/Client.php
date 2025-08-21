@@ -31,7 +31,7 @@ class Client extends Model
             $params[':id'] = $id;
         }
         $res = $this->prepare($sql);
-        $res->execute($params);
+        $this->execute($res, $params);
         $data = $this->fetchAll($res, 'assoc');
         $data = array_map(function ($datum) {
             $datum['redirect_uri'] = json_decode($datum['redirect_uri']);
@@ -57,7 +57,7 @@ class Client extends Model
         $res = $this->prepare($sql);
         $public = $public ? 't' : 'f';
         $confirm = $confirm ? 't' : 'f';
-        $res->execute([
+        $this->execute($res, [
             'id' => $id,
             'secret' => $secretHash,
             'name' => $name,
@@ -109,7 +109,7 @@ class Client extends Model
         $setStr = implode(', ', $sets);
         $sql = "UPDATE settings.clients set $setStr  WHERE id = :id RETURNING id";
         $res = $this->prepare($sql);
-        $res->execute($values);
+        $this->execute($res, $values);
         if ($res->rowCount() == 0) {
             throw new GC2Exception("No client with id", 404, null, 'CLIENT_NOT_FOUND');
         }
@@ -123,7 +123,7 @@ class Client extends Model
     {
         $sql = 'DELETE FROM settings.clients WHERE id = :id';
         $res = $this->prepare($sql);
-        $res->execute(['id' => $id]);
+        $this->execute($res, ['id' => $id]);
         if ($res->rowCount() == 0) {
             throw new GC2Exception("No client with id", 404, null, 'CLIENT_NOT_FOUND');
         }
@@ -139,7 +139,7 @@ class Client extends Model
         }
         $sql = 'SELECT secret FROM settings.clients where id=:id';
         $res = $this->prepare($sql);
-        $res->execute(['id' => $id]);
+        $this->execute($res, ['id' => $id]);
         $hash = $this->fetchRow($res, 'assoc')['secret'];
         if (!password_verify($secret, $hash)) {
             throw new GC2Exception("Secret can not be verified", 401, null, 'SECRET_NOT_VERIFIED');

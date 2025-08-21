@@ -280,21 +280,20 @@ class Model
                 if ($this->connectionFailed) {
                     $result = false;
                 }
-                self::$testDb[$this->postgisdb]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-                switch ($queryType) {
-                    case "select" :
-                        // Return PDOStatement object
-                        $result = self::$testDb[$this->postgisdb]->query($query);
-                        break;
-                    case "transaction" :
-                        // Return integer
-                        try {
+                try {
+                    self::$testDb[$this->postgisdb]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                    switch ($queryType) {
+                        case "select" :
+                            // Return PDOStatement object
+                            $result = self::$testDb[$this->postgisdb]->query($query);
+                            break;
+                        case "transaction" :
+                            // Return integer
                             $result = self::$testDb[$this->postgisdb]->exec($query);
-                        } catch (PDOException $e) {
-                            self::$testDb[$this->postgisdb]->rollBack();
-
-                            throw $e;
-                        }
+                    }
+                } catch (PDOException $e) {
+                    self::$testDb[$this->postgisdb]->rollBack();
+                    throw $e;
                 }
                 break;
         }
@@ -421,9 +420,9 @@ class Model
                         AND NOT attisdropped";
             $res = $this->prepare($sql);
             if ($temp) {
-                $res->execute(array("table" => "\"" . $table . "\""));
+                $this->execute($res, array("table" => "\"" . $table . "\""));
             } else {
-                $res->execute(array("table" => "\"" . $_schema . "\".\"" . $_table . "\""));
+                $this->execute($res, array("table" => "\"" . $_schema . "\".\"" . $_table . "\""));
             }
             $index = $this->getIndexes($_schema, $_table);
             $comments = $this->getColumnComments($_schema, $_table);
@@ -746,7 +745,7 @@ class Model
             // Check if table
             $sql = "SELECT count(*) AS count FROM pg_tables WHERE schemaname = '$bits[0]' AND tablename='$bits[1]'";
             $res = $this->prepare($sql);
-            $res->execute();
+            $this->execute($res);
             $row = $this->fetchRow($res);
             if ($row["count"] > 0) {
                 $response['data'] = "TABLE";
@@ -759,7 +758,7 @@ class Model
             // Check if view
             $sql = "SELECT count(*) AS count FROM pg_views WHERE schemaname = '$bits[0]' AND viewname='$bits[1]'";
             $res = $this->prepare($sql);
-            $res->execute();
+            $this->execute($res);
             $row = $this->fetchRow($res);
             if ($row["count"] > 0) {
                 $response['data'] = "VIEW";
@@ -771,7 +770,7 @@ class Model
             // Check if materialized view
             $sql = "SELECT count(*) AS count FROM pg_matviews WHERE schemaname = '$bits[0]' AND matviewname='$bits[1]'";
             $res = $this->prepare($sql);
-            $res->execute();
+            $this->execute($res);
             $row = $this->fetchRow($res);
             if ($row["count"] > 0) {
                 $response['data'] = "MATERIALIZED VIEW";
@@ -783,7 +782,7 @@ class Model
             // Check if FOREIGN TABLE
             $sql = "SELECT COUNT(*) FROM pg_catalog.pg_foreign_table ft JOIN pg_catalog.pg_class c ON ft.ftrelid = c.oid JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid WHERE n.nspname = '$bits[0]' AND c.relname = '$bits[1]'";
             $res = $this->prepare($sql);
-            $res->execute();
+            $this->execute($res);
             $row = $this->fetchRow($res);
             if ($row["count"] > 0) {
                 $response['data'] = "FOREIGN TABLE";
@@ -810,7 +809,7 @@ class Model
             $response = [];
             $sql = "SELECT PostGIS_Lib_Version()";
             $res = $this->prepare($sql);
-            $res->execute();
+            $this->execute($res);
             $row = $this->fetchRow($res);
             $response['success'] = true;
             $response['version'] = $row["postgis_lib_version"];
@@ -843,7 +842,7 @@ class Model
             $bits = explode(".", $table);
             $sql = "SELECT true AS exists FROM pg_attribute WHERE attrelid = '\"$bits[0]\".\"$bits[1]\"'::regclass AND attname = '$column' AND NOT attisdropped";
             $res = $this->prepare($sql);
-            $res->execute();
+            $this->execute($res);
             $row = $this->fetchRow($res);
             $response['success'] = true;
             $response['exists'] = isset($row["exists"]);
@@ -896,7 +895,7 @@ class Model
                         JOIN  pg_namespace ns on cl.relnamespace = ns.oid";
 
             $res = $this->prepare($sql);
-            $res->execute(["table" => $table, "schema" => $schema]);
+            $this->execute($res, ["table" => $table, "schema" => $schema]);
             $rows = $this->fetchAll($res, 'assoc');
             $response['success'] = true;
             $response['data'] = $rows;
@@ -942,7 +941,7 @@ class Model
                     att.attrelid = con.conrelid AND att.attnum = con.key";
 
             $res = $this->prepare($sql);
-            $res->execute($params);
+            $this->execute($res, $params);
             $rows = $this->fetchAll($res, 'assoc');
 
             $response['success'] = true;
@@ -990,7 +989,7 @@ class Model
                    ";
 
             $res = $this->prepare($sql);
-            $res->execute(["table" => $table, "schema" => $schema]);
+            $this->execute($res, ["table" => $table, "schema" => $schema]);
 
             while ($row = $this->fetchRow($res)) {
                 $response['data'][] = [
@@ -1022,7 +1021,7 @@ class Model
         } else {
             $sql = "SELECT * FROM settings.getColumns('f_table_schema = ''$schema'' AND f_table_name = ''$table''','raster_columns.r_table_schema = ''$schema'' AND raster_columns.r_table_name = ''$table''')";
             $res = $this->prepare($sql);
-            $res->execute();
+            $this->execute($res);
             $rows = $this->fetchAll($res);
             $CachedString->set($rows)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
             //   $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
@@ -1044,7 +1043,7 @@ class Model
         $sql = "SELECT count(*) AS count FROM " . $this->doubleQuoteQualifiedName($schema . "." . $table);
         $res = $this->prepare($sql);
         try {
-            $res->execute();
+            $this->execute($res);
             $row = $this->fetchRow($res);
         } catch (Exception $e) {
             $response['success'] = false;
@@ -1115,7 +1114,7 @@ class Model
                 AND t.relname = :table
                 ORDER BY 1, 2, 3, 4";
         $res = $this->prepare($sql);
-        $res->execute(["schema" => $schema, "table" => $table]);
+        $this->execute($res, ["schema" => $schema, "table" => $table]);
         while ($row = $this->fetchRow($res)) {
             $response["index_method"][$row["column_name"]][] = $row["index_method"];
             $response["is_primary"][$row["column_name"]] = !empty($response["is_primary"][$row["column_name"]]) ? $response["is_primary"][$row["column_name"]] : $row["is_primary"];
@@ -1130,7 +1129,7 @@ class Model
     {
         $sql = "CREATE VIEW " . $name . " AS " . $statement;
         $res = $this->prepare($sql);
-        $res->execute();
+        $this->execute($res);
     }
 
     public function createMatView(string $statement, string $name, bool $withNoData = false): void
@@ -1140,7 +1139,7 @@ class Model
             $sql .= " WITH NO DATA";
         }
         $res = $this->prepare($sql);
-        $res->execute();
+        $this->execute($res);
     }
 
     public function getTablesFromSchema(string $schema): array
@@ -1148,7 +1147,7 @@ class Model
         $response = [];
         $sql = "SELECT tablename as name FROM pg_tables WHERE schemaname = :schema";
         $res = $this->prepare($sql);
-        $res->execute(["schema" => $schema]);
+        $this->execute($res, ["schema" => $schema]);
         while ($row = $this->fetchRow($res)) {
             $response[] = $row["name"];
         }
@@ -1161,7 +1160,7 @@ class Model
         $sql = "SELECT viewname as name, schemaname, viewowner as owner,definition, 'f' as ismat FROM pg_views WHERE schemaname = :schema union ";
         $sql .= "SELECT matviewname as name, schemaname, matviewowner as owner, definition, 't' as ismat FROM pg_matviews WHERE schemaname = :schema";
         $res = $this->prepare($sql);
-        $res->execute(['schema' => $schema]);
+        $this->execute($res, ['schema' => $schema]);
         while ($row = $this->fetchRow($res)) {
             $tmp = [];
             $tmp['name'] = $row['name'];
@@ -1183,7 +1182,7 @@ class Model
                              JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
                     WHERE n.nspname = :schema";
         $res = $this->prepare($sql);
-        $res->execute(["schema" => $schema]);
+        $this->execute($res, ["schema" => $schema]);
         while ($row = $this->fetchRow($res)) {
             $response[] = $row["name"];
         }
@@ -1489,7 +1488,7 @@ class Model
                   AND i.schemaname NOT LIKE 'pg_%' and i.relname != 'spatial_ref_sys'";
 
         $res = $this->prepare($sql);
-        $res->execute();
+        $this->execute($res);
         $totalSize = 0;
         $tables = [];
         foreach ($this->fetchAll($res, 'assoc') as $table) {
@@ -1498,7 +1497,7 @@ class Model
         }
         $sql = "select pg_size_pretty($totalSize::bigint) as p";
         $res = $this->prepare($sql);
-        $res->execute();
+        $this->execute($res);
         $row = $res->fetchAll();
         try {
             $cost = (new Cost())->getCost();
@@ -1531,7 +1530,7 @@ class Model
                   and tablename != 'spatial_ref_sys'";
 
         $res = $this->prepare($sql);
-        $res->execute();
+        $this->execute($res);
         return $res->fetchColumn();
     }
 
@@ -1583,7 +1582,7 @@ class Model
                 ORDER BY a.attnum";
 
             $res = $this->prepare($sql);
-            $res->execute(['table' => $table, 'schema' => $schema]);
+            $this->execute($res, ['table' => $table, 'schema' => $schema]);
             $comments = [];
             foreach ($res->fetchAll(PDO::FETCH_ASSOC) as $row) {
                 $comments[$row['column_name']] = $row['column_comment'];
@@ -1618,7 +1617,7 @@ class Model
                   AND c.relname = :table";
 
             $res = $this->prepare($sql);
-            $res->execute(['table' => $table, 'schema' => $schema]);
+            $this->execute($res, ['table' => $table, 'schema' => $schema]);
             $comment = $res->fetchColumn();
             $CachedString->set($comment)->expiresAfter(Globals::$cacheTtl);
             Cache::save($CachedString);

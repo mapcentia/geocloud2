@@ -135,13 +135,13 @@ class Geofence extends Model
             }
         } else {
             $result = $model->prepare($str);
-            $result->execute();
+            $this->execute($result);
             $rowCount += $result->rowCount();
         }
 
         $select = "select count(*) from foo where {$filters['filter']}";
         $res = $model->prepare($select);
-        $res->execute();
+        $this->execute($res);
         $row = $res->fetch();
 
         if ($rowCount == 0) {
@@ -169,8 +169,7 @@ class Geofence extends Model
         }
         $sql .= ' order by priority';
         $res = $this->prepare($sql);
-
-        $res->execute($params);
+        $this->execute($res, $params);
         $data = $this->fetchAll($res, "assoc");
         if (sizeof($data) == 0) {
             throw new GC2Exception("No rules", 404, null, 'RULE_NOT_FOUND');
@@ -202,7 +201,7 @@ class Geofence extends Model
             $sql = "insert into settings.geofence (id $fields) values (default $values) returning *";
         }
         $res = $this->prepare($sql);
-        $res->execute($data);
+        $this->execute($res, $data);
         $response['success'] = true;
         $response['data'] = $this->fetchRow($res);
         return $response;
@@ -231,7 +230,7 @@ class Geofence extends Model
         $setsStr = implode(",", $sets);
         $sql = "update settings.geofence set $setsStr where id=:id returning *";
         $res = $this->prepare($sql);
-        $res->execute([...$data, "id" => $id]);;
+        $this->execute($res, [...$data, "id" => $id]);;
         if ($res->rowCount() == 0) {
             throw new GC2Exception("No rule with id", 404, null, 'RULE_NOT_FOUND');
         }
@@ -247,7 +246,7 @@ class Geofence extends Model
     {
         $sql = "delete from settings.geofence where id=:id returning id";
         $res = $this->prepare($sql);
-        $res->execute(["id" => $id]);
+        $this->execute($res, ["id" => $id]);
         if ($res->rowCount() == 0) {
             throw new GC2Exception("No rule with id", 404, null, 'RULE_NOT_FOUND');
         }
