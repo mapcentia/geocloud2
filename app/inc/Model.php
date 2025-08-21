@@ -202,7 +202,7 @@ class Model
     public function execute(PDOStatement $statement, array $params = []): true
     {
         try {
-            $statement->execute($params);
+            $statement->execute(empty($params) ? null : $params);
         } catch (PDOException $e) {
             $this->rollback();
             throw $e;
@@ -565,7 +565,7 @@ class Model
                 $this->db = $c ?: null;
                 break;
             case "PDO" :
-                if (!self::$testDb[$this->postgisdb]) {
+                if (!isset(self::$testDb[$this->postgisdb])) {
                     error_log("Connecting to " . $this->postgisdb . " on " . $this->postgishost . " as " . $this->postgisuser);
                     $this->db = new PDO("pgsql:dbname=$this->postgisdb;host=$this->postgishost;" . (($this->postgisport) ? "port=$this->postgisport" : ""), "$this->postgisuser", "$this->postgispw", [PDO::ATTR_EMULATE_PREPARES => true]);
                     self::$testDb[$this->postgisdb] = $this->db;
