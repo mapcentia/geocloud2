@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2024 MapCentia ApS
+ * @copyright  2013-2025 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -9,10 +9,11 @@
 namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
+use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Jwt;
-use app\api\v2\Sql as V2Sql;
 use app\inc\Route2;
+use app\inc\Transaction;
 use app\models\Setting;
 use Exception;
 use OpenApi\Annotations\OpenApi;
@@ -84,14 +85,8 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 #[AcceptableMethods(['POST', 'HEAD', 'OPTIONS'])]
 class Sql extends AbstractApi
 {
-    /**
-     * @var V2Sql
-     */
-    private V2Sql $v2;
-
     public function __construct(private readonly Route2 $route, private readonly string $database)
     {
-        $this->v2 = new V2Sql();
     }
 
     public function get_index(): array
@@ -121,19 +116,15 @@ class Sql extends AbstractApi
             $isSuperUser = $jwtData["superUser"];
             $uid = $jwtData["uid"];
             $database = $jwtData["database"];
-            $user = [
-                "user" => $isSuperUser ? $uid : "$uid@$database"
-            ];
         } catch (Exception) {
             $database = func_get_arg(0);
             $userObj = new \app\models\User(null, $database);
             $uid = $userObj->getDefaultUser();
-            $user = [
-                "user" => "$uid@$database"
-            ];
             $isSuperUser = false;
         }
-        $settingsData = (new Setting($database))->get()["data"];
+        $conn = new Connection(database: $database);
+        $transaction = new Transaction(true, connection: $conn);
+        $settingsData = (new Setting($conn))->get()["data"];
         $apiKey = $isSuperUser ? $settingsData->api_key : $settingsData->api_key_subuser->$uid;
         $decodedBody = json_decode(Input::getBody(), true);
 
@@ -141,7 +132,7 @@ class Sql extends AbstractApi
             $decodedBody = [$decodedBody];
         }
         $result = [];
-        $api = new \app\models\Sql(database: $database);
+        $api = new \app\models\Sql(connection: $conn);
         $api->connect();
         $api->begin();
         foreach ($decodedBody as $body) {
@@ -151,7 +142,7 @@ class Sql extends AbstractApi
             $body['convert_types'] = $value['convert_types'] ?? true;
             $body['format'] = 'json';
             $body['srs'] = $srs;
-            $res = $this->v2->get_index($user, $api, $body, $database);
+            $res = $transaction->run($uid, $api, $body, !$isSuperUser);
             unset($res['success']);
             unset($res['forGrid']);
             $result[] = $res;
@@ -215,10 +206,10 @@ class Sql extends AbstractApi
 
         if (is_array($decodedBody)) {
             foreach ($decodedBody as $value) {
-                $this->validateRequest(self::getAssert($value), json_encode($value), 'sql', Input::getMethod());
+                $this->validateRequest(self::getAssert(), json_encode($value), 'sql', Input::getMethod());
             }
         } else {
-            $this->validateRequest(self::getAssert($decodedBody), $body, 'sql', Input::getMethod());
+            $this->validateRequest(self::getAssert(), $body, 'sql', Input::getMethod());
         }
     }
 

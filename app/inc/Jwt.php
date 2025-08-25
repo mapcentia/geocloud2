@@ -11,7 +11,6 @@ namespace app\inc;
 use app\auth\types\ResponseType;
 use app\conf\App;
 use app\exceptions\GC2Exception;
-use app\models\Database;
 use app\models\Setting;
 use Exception;
 use Firebase\JWT\Key;
@@ -69,7 +68,7 @@ abstract class Jwt
             return $arr;
         }
         // Get superuser key, which are used for secret
-        $secret = (new Setting($arr["data"]["database"]))->getApiKeyForSuperUser();
+        $secret = (new Setting(new Connection(database: $arr["data"]["database"])))->getApiKeyForSuperUser();
         try {
             $decoded = (array)\Firebase\JWT\JWT::decode($token, new Key($secret, 'HS256'));
         } catch (Exception $e) {

@@ -9,9 +9,9 @@
 namespace app\models;
 
 use app\conf\App;
-use app\conf\Connection;
 use app\exceptions\GC2Exception;
 use app\inc\Cache;
+use app\inc\Connection;
 use app\inc\Globals;
 use app\inc\Model;
 use DateInterval;
@@ -46,15 +46,15 @@ class Sql extends Model
     private const string DEFAULT_TIME_FORMAT = 'H:i:s';
     private const string DEFAULT_TIMETZ_FORMAT = 'H:i:s P';
     private const string DEFAULT_DATE_FORMAT = 'Y-m-d';
-    private WrapperConnection|null $connection = null;
+    private WrapperConnection|null $wrapperConnection = null;
 
     /**
      * Sql constructor.
      * @param string $srs
      */
-    function __construct(string $srs = "3857", ?string $database = null)
+    function __construct(string $srs = "3857", ?Connection $connection = null)
     {
-        parent::__construct($database);
+        parent::__construct(connection: $connection);;
 
         $this->model = $this;
         $this->srs = $srs;
@@ -875,10 +875,10 @@ class Sql extends Model
      */
     private function getConnection(): WrapperConnection
     {
-        if (!$this->connection) {
-            $this->connection = new WrapperConnection("host=$this->postgishost user=$this->postgisuser dbname=$this->postgisdb password=$this->postgispw port=$this->postgisport");
+        if (!$this->wrapperConnection) {
+            $this->wrapperConnection = new WrapperConnection("host=$this->postgishost user=$this->postgisuser dbname=$this->postgisdb password=$this->postgispw port=$this->postgisport");
         }
-        return $this->connection;
+        return $this->wrapperConnection;
     }
 }
 

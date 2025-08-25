@@ -47,7 +47,7 @@ class Model
     public ?string $theGeometry;
 
     // If Connection::$params are not set, then set them from environment variables
-    function __construct(public ?string $postgisdb = null)
+    function __construct(public ?\app\inc\Connection $connection = null)
     {
         $this->connectionFailed = false;
 
@@ -59,12 +59,12 @@ class Model
         Connection::$param['postgispw'] = Connection::$param['postgispw'] ?? getenv('POSTGIS_PW');
         Connection::$param['pgbouncer'] = Connection::$param['pgbouncer'] ?? getenv('POSTGIS_PGBOUNCER') === "true";
 
-        $this->postgishost = Connection::$param['postgishost'];
-        $this->postgisport = Connection::$param['postgisport'];
-        $this->postgisuser = Connection::$param['postgisuser'];
-        $this->postgisdb = $this->postgisdb ?? Connection::$param['postgisdb'];
-        $this->postgispw = Connection::$param['postgispw'];
-        $this->postgisschema = Connection::$param['postgisschema'] ?? null;
+        $this->postgishost = $connection->host ?? Connection::$param['postgishost'];
+        $this->postgisport = $connection->port ??Connection::$param['postgisport'];
+        $this->postgisuser = $connection->user ?? Connection::$param['postgisuser'];
+        $this->postgisdb = $connection->database ?? Connection::$param['postgisdb'];
+        $this->postgispw = $connection->password ?? Connection::$param['postgispw'];
+        $this->postgisschema = $connection->schema ?? Connection::$param['postgisschema'] ?? null;
     }
 
     /**
@@ -577,7 +577,8 @@ class Model
         }
     }
 
-    private function isPdoConnected(): bool {
+    private function isPdoConnected(): bool
+    {
         try {
             // Lightweight no-op query
             self::$testDb[$this->postgisdb]->query('SELECT 1');
