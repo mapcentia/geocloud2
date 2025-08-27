@@ -5,6 +5,7 @@ namespace app\event\tasks;
 use Amp\Cancellation;
 use Amp\Parallel\Worker\Task;
 use Amp\Sync\Channel;
+use app\inc\Connection;
 use app\models\Database;
 use app\models\Setting;
 use app\inc\Controller;
@@ -28,13 +29,14 @@ readonly class AuthTask implements Task
     public function run(Channel $channel, Cancellation $cancellation): bool
     {
         echo "[INFO] AuthTask Worker PID: " . getmypid() . "\n";
-        Database::setDb($this->jwtData["database"]);;
+        Database::setDb($this->jwtData["database"]);
+        $conn = new Connection(database: $this->jwtData["database"]);
         $isSuperUser = $this->jwtData["superUser"];
         $uid = $this->jwtData["uid"];
-        $settingsData = (new Setting())->get()["data"];
+        $settingsData = (new Setting(connection: $conn))->get()["data"];
         $apiKey = $isSuperUser ? $settingsData->api_key : $settingsData->api_key_subuser->$uid;
         $rels = [];
-        $res = (new Controller())->ApiKeyAuthLayer($this->rel, false, $rels, $isSuperUser ? null : $uid, $apiKey);
+        $res = (new Controller(connection: $conn))->ApiKeyAuthLayer($this->rel, false, $rels, $isSuperUser ? null : $uid, $apiKey);
         return $res['success'];
     }
 }

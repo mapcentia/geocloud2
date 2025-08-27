@@ -39,7 +39,7 @@ class Controller
     /**
      * Controller constructor.
      */
-    function __construct(private readonly ?\app\inc\Connection $connection = null)
+    function __construct(public ?\app\inc\Connection $connection = null)
     {
         $this->response = [];
     }
@@ -169,9 +169,9 @@ class Controller
 
         $check = false;
         if (!empty($_SESSION["auth"])) {
-            if ($subUser && $subUser == $_SESSION["screen_name"] && $_SESSION["parentdb"] == Connection::$param["postgisdb"]) {
+            if ($subUser && $subUser == $_SESSION["screen_name"] && $_SESSION["parentdb"] == $this->connection->database) {
                 $check = true;
-            } elseif (!$subUser && $_SESSION["screen_name"] == Connection::$param["postgisdb"]) {
+            } elseif (!$subUser && $_SESSION["screen_name"] == $this->connection->database) {
                 $check = true;
             }
         }

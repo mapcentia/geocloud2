@@ -8,6 +8,7 @@ use Amp\Sync\Channel;
 use app\exceptions\GC2Exception;
 use app\inc\Cache;
 use app\conf\App;
+use app\inc\Connection;
 use app\models\Database;
 use app\models\Sql;
 use PhpOffice\PhpSpreadsheet\Writer\Exception;
@@ -33,9 +34,7 @@ readonly class PreparePayloadTask implements Task
 
         new App();
         Cache::setInstance();
-
-        Database::setDb($this->db);
-        $api = new Sql();
+        $api = new Sql(connection: new Connection(database: $this->db));
         $api->connect();
 
         $results = [];

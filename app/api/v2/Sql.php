@@ -77,9 +77,12 @@ class Sql extends Controller
         $dbSplit = explode("@", $r["user"]);
         if (sizeof($dbSplit) == 2) {
             $this->subUser = $dbSplit[0];
+            $database = $dbSplit[1];
         } else {
             $this->subUser = null;
+            $database = $dbSplit[0];
         }
+        $this->connection = new \app\inc\Connection(database: $database);
 
         // Check if body is JSON
         // Supports both GET and POST
@@ -196,7 +199,6 @@ class Sql extends Controller
             } else {
                 $this->subUser = null;
             }
-
             // Set API key from headers
             Input::setParams(
                 [
