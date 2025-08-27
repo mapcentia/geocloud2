@@ -129,7 +129,6 @@ class Sql extends AbstractApi
             $decodedBody = [$decodedBody];
         }
         $result = [];
-        $this->sqlApi->connect();
         $this->sqlApi->begin();
         foreach ($decodedBody as $query) {
             $srs = $query['srs'] ?? 4326;
