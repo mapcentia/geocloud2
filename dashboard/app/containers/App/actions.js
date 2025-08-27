@@ -14,6 +14,8 @@ import { SIGN_IN_REQUEST, SIGN_IN_SUCCESS, SIGN_IN_FAILURE, SIGN_OUT,
     DELETE_CONFIGURATION_REQUEST, DELETE_CONFIGURATION_SUCCESS, DELETE_CONFIGURATION_FAILURE,
     CREATE_UPDATE_USER_RESET, GET_GC2_CONFIGURATION_REQUEST, GET_GC2_CONFIGURATION_SUCCESS} from 'containers/App/constants';
 
+import codeFlow from '../../utils/codeFlow'
+
 const cookies = new Cookies();
 
 const normalizeUser = (userData) => {
@@ -98,6 +100,7 @@ export function signInFailure() {
 // Sign out
 export function signOut() {
     cookies.remove('PHPSESSID', {path: `/`});
+    codeFlow.signOut();
     return { type: SIGN_OUT };
 }
 

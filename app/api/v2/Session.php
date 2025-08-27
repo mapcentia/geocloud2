@@ -169,4 +169,16 @@ class Session extends Controller
     {
         return $this->session->stop();
     }
+
+    function post_token()
+    {
+        $data = json_decode(Input::getBody(), true);
+        return $this->session->startWithToken($data['token']);
+    }
+
+    public function get_nonce()
+    {
+        return $this->session->setOauth2Nonce();
+
+    }
 }
