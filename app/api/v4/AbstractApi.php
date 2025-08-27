@@ -9,6 +9,7 @@
 namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
+use app\inc\Connection;
 use app\inc\Model;
 use app\models\Database;
 use app\models\Table as TableModel;
@@ -24,6 +25,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 abstract class AbstractApi implements ApiInterface
 {
+
     public array $table;
     public ?array $schema;
     public ?array $qualifiedName;
@@ -35,6 +37,9 @@ abstract class AbstractApi implements ApiInterface
     private const array PRIVATE_PROPERTIES = ['num', 'typname', 'full_type', 'character_maximum_length',
         'numeric_precision', 'numeric_scale', 'max_bytes', 'reference', 'restriction', 'is_primary', 'is_unique',
         'index_method', 'checks', 'geom_type', 'srid', 'is_array', 'udt_name'];
+
+
+    public function __construct(public readonly Connection $connection) {}
 
     /**
      * @param string|null $schema
@@ -49,7 +54,7 @@ abstract class AbstractApi implements ApiInterface
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function initiate(?string $schema, ?string $relation, ?string $key, ?string $column, ?string $index, ?string $constraint, string $userName, bool $superUser): void
+    public function initiate(string $userName, bool $superUser, ?string $schema = null, ?string $relation = null, ?string $key = null, ?string $column = null, ?string $index = null, ?string $constraint = null): void
     {
         $this->schema = $schema ? explode(',', $schema) : null;
         $this->unQualifiedName = $relation ? explode(',', $relation) : null;
@@ -66,7 +71,7 @@ abstract class AbstractApi implements ApiInterface
         }
         if ($this->qualifiedName) {
             $this->doesTableExist();
-            $this->table = array_map(fn($n) => new TableModel($n, false, false, false), $this->qualifiedName);
+            $this->table = array_map(fn($n) => new TableModel(table: $n, lookupForeignTables: false, connection: $this->connection), $this->qualifiedName);
         }
         if (!empty($this->column)) {
             $this->doesColumnExist();
@@ -84,7 +89,7 @@ abstract class AbstractApi implements ApiInterface
      */
     public function doesSchemaExist(): void
     {
-        $db = new Database();
+        $db = new Database($this->connection);
         foreach ($this->schema as $name) {
             if (!$db->doesSchemaExist($name)) {
                 throw new GC2Exception("Schema not found", 404, null, "SCHEMA_NOT_FOUND");
@@ -97,7 +102,7 @@ abstract class AbstractApi implements ApiInterface
      */
     public function doesTableExist(): void
     {
-        $db = new Database();
+        $db = new Database($this->connection);
         foreach ($this->qualifiedName as $name) {
             if (!$db->doesRelationExist($name)) {
                 throw new GC2Exception("Table not found", 404, null, "TABLE_NOT_FOUND");

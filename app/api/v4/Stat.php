@@ -8,7 +8,9 @@
 
 namespace app\api\v4;
 
+use app\inc\Connection;
 use app\inc\Model;
+use app\inc\Route2;
 use Exception;
 use OpenApi\Annotations\OpenApi;
 use OpenApi\Attributes as OA;
@@ -133,12 +135,9 @@ use OpenApi\Attributes as OA;
 class Stat extends AbstractApi
 {
 
-    /**
-     * @throws Exception
-     */
-    public function __construct()
+    public function __construct(private readonly Route2 $route, Connection $connection)
     {
-
+        parent::__construct($connection);
     }
 
     #[OA\Get(path: '/api/v4/stats', operationId: 'getStats', description: "Get statistics", tags: ['Stats'])]
@@ -148,7 +147,7 @@ class Stat extends AbstractApi
     #[Override]
     public function get_index(): array
     {
-        return (new Model())->getStats();
+        return (new Model(connection: $this->connection))->getStats();
     }
 
     public function post_index(): array

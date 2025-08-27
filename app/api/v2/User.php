@@ -10,6 +10,7 @@ namespace app\api\v2;
 
 use app\conf\App;
 use app\exceptions\GC2Exception;
+use app\inc\Connection;
 use app\inc\Route;
 use app\inc\Input;
 use app\inc\Controller;
@@ -115,7 +116,7 @@ class User extends Controller
             }
 
             if (Session::isAuth()) {
-                $database = new Database(Session::getUser());
+                $database = new Database(connection: new Connection(database: Session::getUser()));
                 try {
                     $database->createSchema($response['data']['screenname']);
                 } catch (PDOException) {

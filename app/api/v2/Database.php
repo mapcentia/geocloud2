@@ -9,6 +9,7 @@
 namespace app\api\v2;
 
 use app\exceptions\GC2Exception;
+use app\inc\Connection;
 use app\inc\Controller;
 use app\models\User as UserModel;
 use app\models\Database as DatabaseModel;
@@ -48,8 +49,7 @@ class Database extends Controller
     function get_schemas(): array
     {
         if (Session::isAuth()) {
-            DatabaseModel::setDb(Session::getDatabase());
-            $database = new DatabaseModel();
+            $database = new DatabaseModel(connection: new Connection(database: Session::getDatabase()));
             return $database->listAllSchemas();
         } else {
             return [

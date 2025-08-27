@@ -9,6 +9,7 @@
 namespace app\models;
 
 use app\exceptions\GC2Exception;
+use app\inc\Connection;
 use app\inc\Model;
 use Random\RandomException;
 
@@ -19,9 +20,9 @@ use Random\RandomException;
  */
 class Client extends Model
 {
-    public function __construct(?string $database = null)
+    public function __construct(?Connection $connection = null)
     {
-        parent::__construct($database);
+        parent::__construct($connection);
     }
     /**
      * @throws GC2Exception

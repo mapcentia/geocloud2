@@ -8,6 +8,7 @@
 
 namespace app\api\v4;
 
+use app\inc\Connection;
 use app\models\Database;
 use app\exceptions\GC2Exception;
 use app\inc\Jwt;
@@ -75,19 +76,9 @@ class User extends AbstractApi
      */
     private UserModel $user;
 
-    /**
-     * User constructor.
-     * @throws Exception
-     */
-    function __construct()
+    public function __construct(private readonly Route2 $route, Connection $connection)
     {
-
-    }
-
-    function __destruct() {
-        if (isset($this->jwt)) {
-//            Database::setDb($this->jwt["database"]);
-        }
+        parent::__construct($connection);
     }
 
     /**
@@ -103,7 +94,7 @@ class User extends AbstractApi
     public function get_index(): array
     {
         $r = [];
-        $requestedUser = Route2::getParam("user");
+        $requestedUser = $this->route->getParam("user");
         if (!$requestedUser) {
             return $this->getAll();
         }
@@ -165,7 +156,7 @@ class User extends AbstractApi
         }
         $model->commit();
         foreach ($list as $newUser) {
-            (new Setting($this->jwt["database"]))->updateApiKeyForUser($newUser, false);
+            (new Setting(connection: $this->connection))->updateApiKeyForUser($newUser, false);
         }
         $baseUri = "/api/v4/users/";
         header("Location: $baseUri" . implode(",", $list));
@@ -193,7 +184,7 @@ class User extends AbstractApi
     #[Override]
     public function patch_index(): array
     {
-        $requestedUsers = explode(',', Route2::getParam("user"));
+        $requestedUsers = explode(',', $this->route->getParam("user"));
 
         $data = json_decode(Input::getBody(), true) ?: [];
         $currentUserId = $this->jwt["uid"];
@@ -248,7 +239,7 @@ class User extends AbstractApi
         if (!$this->jwt["superUser"]) {
             throw new Exception("Sub-users are not allowed to delete sub users");
         }
-        $requestedUsers = explode(',', Route2::getParam("user"));
+        $requestedUsers = explode(',', $this->route->getParam("user"));
         $model = new UserModel($this->jwt['uid']);
 
         $model->connect();
@@ -290,7 +281,7 @@ class User extends AbstractApi
     public function validate(): void
     {
         $this->jwt = Jwt::validate()["data"];
-        $user = Route2::getParam("user");
+        $user = $this->route->getParam("user");
         $body = Input::getBody();
         // Patch and delete on collection is not allowed
         if (empty($user) && in_array(Input::getMethod(), ['patch', 'delete'])) {

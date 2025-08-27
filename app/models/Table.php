@@ -9,9 +9,9 @@
 namespace app\models;
 
 use app\exceptions\GC2Exception;
+use app\inc\Connection;
 use app\inc\Globals;
 use app\inc\Model;
-use app\conf\Connection;
 use app\conf\App;
 use app\inc\Geometrycolums;
 use app\inc\Cache;
@@ -43,22 +43,20 @@ class Table extends Model
      * @param string|null $table
      * @param bool $temp
      * @param bool $getEnums
-     * @throws PhpfastcacheInvalidArgumentException
+     * @param bool $lookupForeignTables
+     * @param Connection|null $connection
      * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
      */
-    function __construct(?string $table, bool $temp = false, bool $getEnums = true, bool $lookupForeignTables = true)
+    function __construct(?string $table, bool $temp = false, bool $getEnums = true, bool $lookupForeignTables = true, ?Connection $connection = null)
     {
-        parent::__construct();
-        // Make sure db connection is init
-        if (!$this->db) {
-            $this->connect();
-        }
+        parent::__construct(connection: $connection);
         $_schema = $this->explodeTableName($table)["schema"];
         $_table = $this->explodeTableName($table)["table"];
         if (!$_schema) {
             // If temp, then don't prefix with schema. Used when table/view is temporary
             if (!$temp) {
-                $_schema = Connection::$param['postgisschema'] ?? null;
+                $_schema = $this->postgisschema ?? null;
                 $table = $_schema . "." . $table;
             }
         } else {
@@ -243,7 +241,7 @@ class Table extends Model
         if (!empty($schema)) {
             $whereClause = $schema;
         } else {
-            $whereClause = Connection::$param["postgisschema"];
+            $whereClause = $this->postgisschema;
         }
 
         if ($whereClause) {
@@ -308,7 +306,7 @@ class Table extends Model
             $privileges = !empty($row["privileges"]) ? json_decode($row["privileges"]) : null;
             $arr = [];
             $prop = !empty($_SESSION['usergroup']) ? $_SESSION['usergroup'] : $_SESSION['screen_name'];
-            if (empty($_SESSION["subuser"]) || ($prop == Connection::$param['postgisschema'])
+            if (empty($_SESSION["subuser"]) || ($prop == $this->postgisschema)
                 || (!empty($privileges->$prop) && $privileges->$prop != "none")) {
                 $relType = "t"; // Default
                 foreach ($row as $key => $value) {
@@ -429,7 +427,9 @@ class Table extends Model
     }
 
     /**
+     * @param string|null $name
      * @return array
+     * @throws InvalidArgumentException
      */
     public function destroy(string $name = null): array
     {
@@ -439,11 +439,11 @@ class Table extends Model
         $sql = "DROP TABLE {$this->doubleQuoteQualifiedName($table)} CASCADE;";
         $res = $this->prepare($sql);
         try {
-            $res->execute();
+            $this->execute($res);
         } catch (PDOException) {
             $sql = "DROP VIEW {$this->doubleQuoteQualifiedName($table)} CASCADE;";
             $res = $this->prepare($sql);
-            $res->execute();
+            $this->execute($res);
         }
         $response['success'] = true;
         return $response;
@@ -472,6 +472,7 @@ class Table extends Model
      * @param bool $append
      * @return array<bool|string|int>
      * @throws PDOException|InvalidArgumentException
+     * @throws GC2Exception
      */
     public function updateRecord(array $data, string $keyName, bool $raw = false, bool $append = false): array
     {
@@ -540,7 +541,7 @@ class Table extends Model
                         }
                         if ($key == "f_table_abstract") {
                             $keySplit = explode(".", $data[0]['_key_']);
-                            (new Table($keySplit[0] . '.' . $keySplit[1]))->setTableComment($value);
+                            (new Table($keySplit[0] . '.' . $keySplit[1], connection: $this->connection))->setTableComment($value);
                         }
                     }
                 }
@@ -552,8 +553,8 @@ class Table extends Model
 
             $sql = "INSERT INTO " . $this->doubleQuoteQualifiedName($this->table) . " (" . implode(",", $keyArr) . ") VALUES(" . implode(",", $keyArr2) . ")" .
                 " ON CONFLICT ($keyName) DO UPDATE SET " . implode(",", $pairArr);
-            $result = $this->prepare($sql);
-            $result->execute($valueArr);
+            $res = $this->prepare($sql);
+            $this->execute($res, $valueArr);
 
             $response['success'] = true;
             $response['message'] = "Row updated";
@@ -581,7 +582,7 @@ class Table extends Model
         $fieldconfArr = !empty($this->geometryColumns["fieldconf"]) ? (array)json_decode($this->geometryColumns["fieldconf"]) : null;
         foreach ($fieldconfArr as $key => $value) {
             if ($value->properties == "*") {
-                $table = new Table($this->table);
+                $table = new Table($this->table, connection: $this->connection);;
                 $distinctValues = $table->getGroupByAsArray($key);
                 $value->properties = json_encode($distinctValues["data"], JSON_NUMERIC_CHECK, JSON_UNESCAPED_UNICODE);
             }
@@ -720,7 +721,7 @@ class Table extends Model
         }
         $conf['fieldconf'] = json_encode($fieldconfArr, JSON_UNESCAPED_UNICODE);
         $conf['_key_'] = $_key_;
-        $geometryColumnsObj = new Table("settings.geometry_columns_join");
+        $geometryColumnsObj = new Table("settings.geometry_columns_join", connection: $this->connection);;
         return $geometryColumnsObj->updateRecord($conf, "_key_");
     }
 
@@ -787,7 +788,7 @@ class Table extends Model
         $conf['fieldconf'] = json_encode($fieldconfArr, JSON_UNESCAPED_UNICODE);
         $conf['_key_'] = $key;
 
-        $geometryColumnsObj = new Table("settings.geometry_columns_join");
+        $geometryColumnsObj = new Table("settings.geometry_columns_join", connection: $this->connection);;
 
         $res = $geometryColumnsObj->updateRecord(json_decode(json_encode($conf, JSON_UNESCAPED_UNICODE), true), "_key_");
         if (!$res["success"]) {

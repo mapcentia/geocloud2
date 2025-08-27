@@ -9,7 +9,8 @@
 namespace app\models;
 
 use app\conf\App;
-use app\conf\Connection;
+use app\inc\Connection;
+use app\conf\Connection as StaticConnection;
 use app\inc\Model;
 use PDOException;
 
@@ -20,6 +21,11 @@ use PDOException;
  */
 class Database extends Model
 {
+    function __construct(?Connection $connection = null)
+    {
+        parent::__construct($connection);
+    }
+
     /**
      * Creates a user in the database and assigns roles, privileges, or connections depending on the parameters.
      *
@@ -39,7 +45,7 @@ class Database extends Model
             $this->execQuery($sql);
         }
         // Set password
-        $sql = "ALTER ROLE \"$name\" PASSWORD '" . Connection::$param['postgispw'] . "'";
+        $sql = "ALTER ROLE \"$name\" PASSWORD '" . $this->postgispw . "'";
         $this->execQuery($sql);
         if ($db && !$isSuperUser) {
             // We grant the owner to user
@@ -269,7 +275,7 @@ class Database extends Model
      */
     static function setDb(?string $db): void
     {
-        Connection::$param["postgisdb"] = $db;
+        StaticConnection::$param["postgisdb"] = $db;
     }
 
     /**
@@ -282,8 +288,8 @@ class Database extends Model
     {
         $data = $jwt['data'];
         // Set connection params
-        Connection::$param["postgisdb"] = $data['database'];
-        Connection::$param["postgisuser"] = $data['uid'];
+        StaticConnection::$param["postgisdb"] = $data['database'];
+        StaticConnection::$param["postgisuser"] = $data['uid'];
     }
 
     /**
@@ -291,7 +297,7 @@ class Database extends Model
      */
     static function getDb(): string
     {
-        return Connection::$param["postgisdb"];
+        return StaticConnection::$param["postgisdb"];
     }
 
     /**
@@ -326,7 +332,7 @@ class Database extends Model
         $query = "ALTER SCHEMA $schema RENAME TO $newName";
         $res = $this->prepare($query);
         $this->execute($res);
-        $setObj = new Setting();
+        $setObj = new Setting(connection: $this->connection);
         $settings = $setObj->getArray();
         $extents = $settings->extents->$schema;
         $center = $settings->center->$schema;

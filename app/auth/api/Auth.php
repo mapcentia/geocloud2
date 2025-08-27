@@ -9,6 +9,7 @@
 namespace app\auth\api;
 
 use app\api\v4\AbstractApi;
+use app\inc\Connection;
 use app\inc\Route2;
 use app\inc\Session;
 use app\models\Client;
@@ -24,14 +25,14 @@ class Auth extends AbstractApi
 
     public function __construct(private $twig = new Environment(new FilesystemLoader(__DIR__ . '/templates')))
     {
+        parent::__construct(connection: new Connection());
         Session::start();
     }
 
     public function get_index(): array
     {
         if (Session::isAuth()) {
-            Database::setDb($_SESSION['parentdb']);
-            $client = new Client();
+            $client = new Client(connection: new Connection(database: $_SESSION['parentdb']));
             $requiredParams = ['response_type', 'client_id'];
             $gotError = false;
             $error = "";

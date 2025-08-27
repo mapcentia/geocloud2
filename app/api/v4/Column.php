@@ -9,6 +9,7 @@
 namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
+use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Route2;
@@ -68,8 +69,9 @@ class Column extends AbstractApi
     /**
      * @throws Exception
      */
-    public function __construct()
+    public function __construct(private readonly Route2 $route, Connection $connection)
     {
+        parent::__construct($connection);
     }
 
     /**
@@ -133,6 +135,7 @@ class Column extends AbstractApi
             $setDefaultValue = true;
         }
         $list = [];
+        $this->table[0]->connect();
         $this->table[0]->begin();
         if (!isset($data->columns)) {
             $data->columns = [$data];
@@ -173,7 +176,7 @@ class Column extends AbstractApi
         $body = Input::getBody();
         $data = json_decode($body);
 
-        $layer = new Layer();
+        $layer = new Layer(connection: $this->connection);
         $geomFields = $layer->getGeometryColumnsFromTable($this->schema[0], $this->unQualifiedName[0]);
 
         $this->table[0]->begin();
@@ -234,7 +237,7 @@ class Column extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     public function delete_index(): array
     {
-        $this->table[0] = new TableModel($this->qualifiedName[0]);
+        $this->table[0] = new TableModel($this->qualifiedName[0], connection: $this->connection);
         $this->table[0]->begin();
         foreach ($this->column as $column) {
             $this->table[0]->deleteColumn([$column], "");
@@ -245,6 +248,7 @@ class Column extends AbstractApi
 
     /**
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws GC2Exception
      */
     public static function getColumns(TableModel $table): array
     {
@@ -288,24 +292,24 @@ class Column extends AbstractApi
      */
     public function validate(): void
     {
-        $table = Route2::getParam("table");
-        $schema = Route2::getParam("schema");
-        $column = Route2::getParam("column");
+        $table = $this->route->getParam("table");
+        $schema = $this->route->getParam("schema");
+        $column = $this->route->getParam("column");
         $body = Input::getBody();
 
         // Patch and delete on collection is not allowed
         if (empty($column) && in_array(Input::getMethod(), ['patch', 'delete'])) {
-            throw new GC2Exception("fgfg", 406);
+            throw new GC2Exception("PATCH and DELETE on a column collection is not allowed.", 406);
         }
+
         // Throw exception if tried with resource id
         if (Input::getMethod() == 'post' && $column) {
             $this->postWithResource();
         }
-
         $this->validateRequest(self::getAssert(), $body, 'columns', Input::getMethod());
 
         $this->jwt = Jwt::validate()["data"];
-        $this->initiate($schema, $table, null, $column, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
+        $this->initiate(userName: $this->jwt["uid"], superUser: $this->jwt["superUser"], schema: $schema, relation: $table, column: $column);
     }
 
     static public function getAssert(): Assert\Collection

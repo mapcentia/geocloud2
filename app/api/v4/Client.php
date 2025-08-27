@@ -9,6 +9,7 @@
 namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
+use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Route2;
 use app\models\Client as ClientModel;
@@ -83,9 +84,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Client extends AbstractApi
 {
     private readonly ClientModel $client;
-    public function __construct(private readonly Route2 $route, private readonly string $database)
+    public function __construct(private readonly Route2 $route, Connection $connection)
     {
-        $this->client = new ClientModel($this->database);
+        parent::__construct($connection);
+        $this->client = new ClientModel($connection);
     }
 
     /**

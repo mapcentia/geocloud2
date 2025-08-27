@@ -8,6 +8,7 @@
 
 namespace app\models;
 
+use app\inc\Connection;
 use app\inc\Model;
 use Exception;
 use PDOException;
@@ -19,9 +20,9 @@ use PDOException;
  */
 class Keyvalue extends Model
 {
-    function __construct()
+    function __construct(?Connection $connection = null)
     {
-        parent::__construct();
+        parent::__construct(connection: $connection);
     }
 
     /**

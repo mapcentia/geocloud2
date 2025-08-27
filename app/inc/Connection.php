@@ -19,5 +19,11 @@ final class Connection
                                 public ?string $schema = null,
     )
     {
+        $this->host = $host ?? \app\conf\Connection::$param['postgishost'];
+        $this->port = $port ?? \app\conf\Connection::$param['postgisport'];
+        $this->user = $user ?? \app\conf\Connection::$param['postgisuser'];
+        $this->database = $database ?? \app\conf\Connection::$param['postgisdb'];
+        $this->password = $password ?? \app\conf\Connection::$param['postgispw'];
+        $this->schema = $schema ?? \app\conf\Connection::$param['postgisschema'] ?? null;
     }
 }

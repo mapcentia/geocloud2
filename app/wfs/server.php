@@ -1315,7 +1315,7 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
     global $user;
     ob_start();
 
-    if (!$postgisObject->db) {
+    if (!$postgisObject->PgConnection) {
         $postgisObject->connect();
     }
     // Start rules

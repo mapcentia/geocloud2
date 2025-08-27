@@ -9,6 +9,7 @@
 namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
+use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Route2;
@@ -51,6 +52,12 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[AcceptableMethods(['GET', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Index extends AbstractApi
 {
+
+    public function __construct(private readonly Route2 $route, Connection $connection)
+    {
+        parent::__construct($connection);
+    }
+
     /**
      * @throws GC2Exception
      */
@@ -190,9 +197,9 @@ class Index extends AbstractApi
      */
     public function validate(): void
     {
-        $table = Route2::getParam("table");
-        $schema = Route2::getParam("schema");
-        $id = Route2::getParam("index");
+        $table = $this->route->getParam("table");
+        $schema = $this->route->getParam("schema");
+        $id = $this->route->getParam("index");
         $body = Input::getBody();
 
         // Patch and delete on collection is not allowed
@@ -210,7 +217,7 @@ class Index extends AbstractApi
         $this->validateRequest($collection, $body, 'indices', Input::getMethod());
 
         $this->jwt = Jwt::validate()["data"];
-        $this->initiate($schema, $table, null, null, $id, null, $this->jwt["uid"], $this->jwt["superUser"]);
+        $this->initiate(userName: $this->jwt["uid"], superUser: $this->jwt["superUser"], schema: $schema, relation: $table, index: $id);
     }
 
     static public function getAssert(): Assert\Collection

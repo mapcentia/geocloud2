@@ -9,13 +9,13 @@
 namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
+use app\inc\Connection;
 use app\inc\Model;
 use app\models\Layer;
 use app\models\Table as TableModel;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Route2;
-use Exception;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
 use stdClass;
@@ -60,12 +60,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Table extends AbstractApi
 {
-    /**
-     * @throws Exception
-     */
-    public function __construct()
+    public function __construct(private readonly Route2 $route, Connection $connection)
     {
-
+        parent::__construct($connection);
     }
 
     /**
@@ -156,7 +153,7 @@ class Table extends AbstractApi
     {
         $body = Input::getBody();
         $data = json_decode($body);
-        $this->table[0] = new TableModel(null);
+        $this->table[0] = new TableModel(table: null, connection: $this->connection);
         $this->table[0]->postgisschema = $this->schema[0];
         $this->table[0]->begin();
         $list = [];
@@ -171,7 +168,7 @@ class Table extends AbstractApi
             $list[] = $r['tableName'];
         }
         $this->table[0]->commit();
-        (new Layer())->insertDefaultMeta();
+        (new Layer(connection: $this->connection))->insertDefaultMeta();
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/";
         header("Location: $baseUri" . implode(",", $list));
         $res["code"] = "201";
@@ -208,7 +205,7 @@ class Table extends AbstractApi
     #[Override]
     public function patch_index(): array
     {
-        $layer = new Layer();
+        $layer = new Layer(connection: $this->connection);
         $layer->begin();
         $body = Input::getBody();
         $data = json_decode($body);
@@ -337,9 +334,9 @@ class Table extends AbstractApi
     public static function getTables(string $schema, ApiInterface $self): array
     {
         $tables = [];
-        foreach ((new Model())->getTablesFromSchema($schema) as $name) {
+        foreach ((new Model(connection: $self->connection))->getTablesFromSchema($schema) as $name) {
             $tableName = $schema . "." . $name;
-            $tables[] = Input::get('namesOnly') !== null ? ['name' => $tableName] : self::getTable(new TableModel($tableName, false, true, false), $self);
+            $tables[] = Input::get('namesOnly') !== null ? ['name' => $tableName] : self::getTable(new TableModel(table: $tableName, lookupForeignTables:  false, connection: $self->connection), $self);
         }
         return $tables;
     }
@@ -350,8 +347,8 @@ class Table extends AbstractApi
      */
     public function validate(): void
     {
-        $table = Route2::getParam("table");
-        $schema = Route2::getParam("schema");
+        $table = $this->route->getParam("table");
+        $schema = $this->route->getParam("schema");
         $body = Input::getBody();
         // Patch and delete on collection is not allowed
         if (empty($table) && in_array(Input::getMethod(), ['patch', 'delete'])) {
@@ -365,7 +362,7 @@ class Table extends AbstractApi
         $this->validateRequest($collection, $body, 'tables', Input::getMethod());
 
         $this->jwt = Jwt::validate()["data"];
-        $this->initiate($schema, $table, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
+        $this->initiate(userName: $this->jwt["uid"], superUser: $this->jwt["superUser"], schema: $schema, relation: $table);
     }
 
     /**

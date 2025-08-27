@@ -182,7 +182,7 @@ class Admin extends Controller
                     $data[$db] .= "-";
                 }
             }
-            $conn->db = NULL;
+            $conn->PgConnection = NULL;
             $conn = NULL;
         }
         $response["success"] = true;

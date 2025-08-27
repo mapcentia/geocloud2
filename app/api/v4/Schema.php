@@ -9,6 +9,7 @@
 namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
+use app\inc\Connection;
 use app\models\Database;
 use app\inc\Input;
 use app\inc\Jwt;
@@ -18,7 +19,6 @@ use Exception;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
 use OpenApi\Attributes as OA;
-use sad_spirit\pg_builder\converters\TypeNameNodeHandler;
 use Symfony\Component\Validator\Constraints as Assert;
 
 
@@ -53,9 +53,9 @@ class Schema extends AbstractApi
     /**
      * @throws Exception
      */
-    public function __construct()
+    public function __construct(private readonly Route2 $route, Connection $connection)
     {
-
+        parent::__construct($connection);
     }
 
     /**
@@ -144,13 +144,10 @@ class Schema extends AbstractApi
         if (!$this->jwt['superUser']) {
             throw new GC2Exception("", 403);
         }
-        // Throw exception if tried with schema resource
-        if (!empty(Route2::getParam("schema"))) {
-            $this->postWithResource();
-        }
+
         $body = Input::getBody();
         $data = json_decode($body);
-        $this->table[0] = new TableModel(null);
+        $this->table[0] = new TableModel(null, connection: $this->connection);
         $this->table[0]->begin();
         $list = [];
 
@@ -253,7 +250,7 @@ class Schema extends AbstractApi
      */
     public function validate(): void
     {
-        $schema = Route2::getParam("schema");
+        $schema = $this->route->getParam("schema");
         $body = Input::getBody();
 
         // Patch and delete on schema collection is not allowed
@@ -271,8 +268,8 @@ class Schema extends AbstractApi
         $this->validateRequest($collection, $body, 'schemas', Input::getMethod());
 
         $this->jwt = Jwt::validate()["data"];
-        $this->initiate($schema, null, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
-        $this->schemaObj = new Database();
+        $this->initiate(userName: $this->jwt["uid"], superUser: $this->jwt["superUser"], schema: $schema);
+        $this->schemaObj = new Database(connection: $this->connection);
     }
 
     static public function getAssert(): Assert\Collection

@@ -11,11 +11,13 @@ namespace app\models;
 use app\auth\types\GrantType;
 use app\conf\App;
 use app\exceptions\GC2Exception;
+use app\inc\Connection;
 use app\inc\Jwt;
 use app\inc\Model;
 use app\inc\Util;
 use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Psr\Cache\InvalidArgumentException;
 use stdClass;
 
 
@@ -27,7 +29,7 @@ class Session extends Model
 {
     function __construct()
     {
-        parent::__construct('mapcentia');
+        parent::__construct(new Connection(database: 'mapcentia'));
     }
 
     /**
@@ -65,14 +67,15 @@ class Session extends Model
      * @return array<string, array<string, mixed>|bool|string|int>
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function start(string $sUserID, string $pw, string|null $schema = "public", string|null $parentdb = null, bool $tokenOnly = false, GrantType $grantType = GrantType::PASSWORD): array
     {
         $response = [];
         $pw = Util::format($pw);
-
         $isAuthenticated = false;
-        $setting = new Setting($parentdb);
+        $conn = new Connection(database: $parentdb);
+        $setting = new Setting($conn);
         $sPassword = $setting->encryptPw($pw);
 
         $sUserIDNotConverted = $sUserID;
@@ -156,8 +159,7 @@ class Session extends Model
                     $response['data']['passwordExpired'] = true;
                     $_SESSION['passwordExpired'] = true;
                 }
-                Database::setDb($response['data']['parentdb']);
-                $response['data']['api_key'] = (new Setting())->get()['data']->api_key;
+                $response['data']['api_key'] = (new Setting(new Connection(database: $response['data']['parentdb'])))->get()['data']->api_key;
             } else {
                 return $this->createOAuthResponse($response['data']['parentdb'], $response['data']['screen_name'], !$response['data']['subuser'], $grantType == GrantType::AUTHORIZATION_CODE, $response['data']['usergroup']);
             }
@@ -192,8 +194,7 @@ class Session extends Model
 
     public function createOAuthResponse(string $db, string $user, bool $isSuperUser, bool $code, ?string $userGroup, ?string $codeChallenge = null, ?string $codeChallengeMethod = null, ?stdClass $properties = null, ?string $email = null): array
     {
-        Database::setDb($db);
-        $superUserApiKey = (new Setting())->getApiKeyForSuperUser();
+        $superUserApiKey = (new Setting(new Connection(database: $db)))->getApiKeyForSuperUser();
         if (!$code) {
             $accessToken = Jwt::createJWT($superUserApiKey, $db, $user, $isSuperUser, $userGroup, true, false, null, null, $properties, $email);
             $refreshToken = Jwt::createJWT($superUserApiKey, $db, $user, $isSuperUser, $userGroup, false, false, null, null, $properties, $email);

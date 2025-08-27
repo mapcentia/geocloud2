@@ -33,25 +33,24 @@ use TypeError;
 class Model
 {
     /**
-     * @var PDO[] $testDb >
+     * @var PDO[] $PdoConnections
      */
-    public static array $testDb = [];
+    public static array $PdoConnections = [];
+    public null|\PgSql\Connection $PgConnection = null;
     public string $postgishost;
     public string $postgisport;
     public string $postgisuser;
-
     public string $postgispw;
+    public string $postgisdb;
     public ?string $postgisschema;
-    public null|PDO|\PgSql\Connection $db = null;
     public bool $connectionFailed;
     public ?string $theGeometry;
 
-    // If Connection::$params are not set, then set them from environment variables
     function __construct(public ?\app\inc\Connection $connection = null)
     {
         $this->connectionFailed = false;
 
-        // If Connection::$params are not set, when set them from environment variables
+        // If Connection is not injected, when set it from environment variables
         Connection::$param['postgishost'] = Connection::$param['postgishost'] ?? getenv('POSTGIS_HOST');
         Connection::$param['postgisport'] = Connection::$param['postgisport'] ?? getenv('POSTGIS_PORT');
         Connection::$param['postgisuser'] = Connection::$param['postgisuser'] ?? getenv('POSTGIS_USER');
@@ -184,8 +183,9 @@ class Model
      */
     public function begin(): void
     {
-        if (!self::$testDb[$this->postgisdb]->inTransaction()) {
-            self::$testDb[$this->postgisdb]->beginTransaction();
+        $this->connect();
+        if (!self::$PdoConnections[$this->postgisdb]->inTransaction()) {
+            self::$PdoConnections[$this->postgisdb]->beginTransaction();
         }
     }
 
@@ -217,8 +217,8 @@ class Model
      */
     public function commit(): void
     {
-        if (self::$testDb[$this->postgisdb]->inTransaction()) {
-            self::$testDb[$this->postgisdb]->commit();
+        if (self::$PdoConnections[$this->postgisdb]->inTransaction()) {
+            self::$PdoConnections[$this->postgisdb]->commit();
         }
     }
 
@@ -229,8 +229,8 @@ class Model
      */
     public function rollback(): void
     {
-        if (self::$testDb[$this->postgisdb]->inTransaction()) {
-            self::$testDb[$this->postgisdb]->rollBack();
+        if (self::$PdoConnections[$this->postgisdb]->inTransaction()) {
+            self::$PdoConnections[$this->postgisdb]->rollBack();
         }
     }
 
@@ -245,13 +245,11 @@ class Model
     public function prepare(string $sql): PDOStatement
     {
         $this->connect();
-
-        self::$testDb[$this->postgisdb]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        self::$PdoConnections[$this->postgisdb]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         try {
-            return self::$testDb[$this->postgisdb]->prepare($sql);
+            return self::$PdoConnections[$this->postgisdb]->prepare($sql);
         } catch (PDOException $e) {
             $this->rollback();
-
             throw $e;
         }
     }
@@ -273,7 +271,7 @@ class Model
         switch ($conn) {
             case "PG" :
                 $this->connect("PG");
-                $result = pg_query($this->db, $query);
+                $result = pg_query($this->PgConnection, $query);
                 break;
             case "PDO" :
                 $this->connect();
@@ -281,18 +279,18 @@ class Model
                     $result = false;
                 }
                 try {
-                    self::$testDb[$this->postgisdb]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                    self::$PdoConnections[$this->postgisdb]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                     switch ($queryType) {
                         case "select" :
                             // Return PDOStatement object
-                            $result = self::$testDb[$this->postgisdb]->query($query);
+                            $result = self::$PdoConnections[$this->postgisdb]->query($query);
                             break;
                         case "transaction" :
                             // Return integer
-                            $result = self::$testDb[$this->postgisdb]->exec($query);
+                            $result = self::$PdoConnections[$this->postgisdb]->exec($query);
                     }
                 } catch (PDOException $e) {
-                    self::$testDb[$this->postgisdb]->rollBack();
+                    self::$PdoConnections[$this->postgisdb]->rollBack();
                     throw $e;
                 }
                 break;
@@ -562,15 +560,13 @@ class Model
         switch ($type) {
             case "PG" :
                 $c = pg_connect($this->connectString());
-                $this->db = $c ?: null;
+                $this->PgConnection = $c ?: null;
                 break;
             case "PDO" :
-                if (!isset(self::$testDb[$this->postgisdb]) || !$this->isPdoConnected()) {
-
+                if (!isset(self::$PdoConnections[$this->postgisdb]) || !$this->isPdoConnected()) {
                     error_log("Connecting to " . $this->postgisdb . " on " . $this->postgishost . " as " . $this->postgisuser);
-                    $this->db = new PDO("pgsql:dbname=$this->postgisdb;host=$this->postgishost;" . (($this->postgisport) ? "port=$this->postgisport" : ""), "$this->postgisuser", "$this->postgispw",
+                    self::$PdoConnections[$this->postgisdb]  = new PDO("pgsql:dbname=$this->postgisdb;host=$this->postgishost;" . (($this->postgisport) ? "port=$this->postgisport" : ""), "$this->postgisuser", "$this->postgispw",
                         [PDO::ATTR_EMULATE_PREPARES => true]);
-                    self::$testDb[$this->postgisdb] = $this->db;
                     $this->execQuery("set client_encoding='UTF8'");
                 }
                 break;
@@ -581,7 +577,7 @@ class Model
     {
         try {
             // Lightweight no-op query
-            self::$testDb[$this->postgisdb]->query('SELECT 1');
+            self::$PdoConnections[$this->postgisdb]->query('SELECT 1');
             return true;
         } catch (PDOException) {
             return false;
@@ -594,7 +590,7 @@ class Model
      */
     function close(): void
     {
-        self::$testDb[$this->postgisdb] = null;
+        self::$PdoConnections[$this->postgisdb] = null;
     }
 
     /**
@@ -604,7 +600,7 @@ class Model
     function quote(string $str): string
     {
         $this->connect();
-        $str = self::$testDb[$this->postgisdb]->quote($str);
+        $str = self::$PdoConnections[$this->postgisdb]->quote($str);
         return ($str);
     }
 
@@ -1214,8 +1210,7 @@ class Model
      */
     public function storeViewsFromSchema(array $schemas): int
     {
-        $db = new Database();
-        $this->connect();
+        $db = new Database(connection: $this->connection);
         $this->begin();
         $count = 0;
         foreach ($schemas as $schema) {
@@ -1284,8 +1279,7 @@ class Model
             $targetSchemas = $schemas;
         }
         $count = 0;
-        $db = new Database();
-        $this->connect();
+        $db = new Database(connection: $this->connection);;
         $this->begin();
         for ($i = 0; $i < sizeof($schemas); $i++) {
             $schema = $schemas[$i];
@@ -1337,8 +1331,7 @@ class Model
             $targetSchemas = $schemas;
         }
 
-        $db = new Database();
-        $this->connect();
+        $db = new Database(connection: $this->connection);;
         $this->begin();
         for ($i = 0; $i < sizeof($schemas); $i++) {
             $schema = $schemas[$i];
@@ -1376,8 +1369,7 @@ class Model
             $targetSchemas = $schemas;
         }
 
-        $db = new Database();
-        $this->connect();
+        $db = new Database(connection: $this->connection);
         $this->begin();
         $count = 0;
         for ($i = 0; $i < sizeof($schemas); $i++) {
@@ -1447,8 +1439,7 @@ class Model
      */
     public function deleteForeignTables(array $schemas, ?array $include = null): int
     {
-        $db = new Database();
-        $this->connect();
+        $db = new Database(connection: $this->connection);
         $this->begin();
         $count = 0;
         foreach ($schemas as $schema) {

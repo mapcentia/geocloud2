@@ -9,6 +9,7 @@
 namespace app\models;
 
 use app\exceptions\GC2Exception;
+use app\inc\Connection;
 use app\inc\Util;
 use app\inc\Model;
 use app\inc\UserFilter;
@@ -25,7 +26,6 @@ use sad_spirit\pg_wrapper\converters\DefaultTypeConverterFactory;
  */
 class Geofence extends Model
 {
-    private UserFilter $userFilter;
     public const string ALLOW_ACCESS = "allow";
     public const string DENY_ACCESS = "deny";
     public const string LIMIT_ACCESS = "limit";
@@ -34,11 +34,10 @@ class Geofence extends Model
      * Geofencing constructor.
      * @param UserFilter|null $userFilter
      */
-    public function __construct(UserFilter|null $userFilter)
+    public function __construct(private readonly ?UserFilter $userFilter = null, Connection $connection = null)
     {
-        parent::__construct();
-        if ($userFilter) {
-            $this->userFilter = $userFilter;
+        parent::__construct(connection: $connection);
+        if ($this->userFilter) {
             $this->userFilter->ipAddress = Util::clientIp();
         }
     }
@@ -215,7 +214,7 @@ class Geofence extends Model
     public function update(string $id, array $data): int
     {
         $props = array_keys($data);
-        if (sizeof($props) < 2) {
+        if (sizeof($props) < 1) {
             throw new GC2Exception('Nothing to be set', 400);
         }
         $sets = [];

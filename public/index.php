@@ -414,9 +414,9 @@ $handler = static function () {
             //==========================
             $Route2 = new Route2();
 
-            $Route2->add("api/v4/oauth", new Oauth());
+            $Route2->add("api/v4/oauth", new Oauth($Route2, new \app\inc\Connection()));
 
-            $Route2->add("api/v4/oauth/(action)", new Oauth());
+            $Route2->add("api/v4/oauth/(action)", new Oauth($Route2, new \app\inc\Connection()));
 
             if (headers_sent()) {
                 return;
@@ -427,145 +427,70 @@ $handler = static function () {
                 echo Response::toJson($jwt);
             }
 
+            $conn = new \app\inc\Connection(database: $jwt["data"]["database"]);
 
-            $Route2->add("api/v4/schemas/[schema]", new Schema(), function () {
-                $jwt = Jwt::validate();
+
+            $Route2->add("api/v4/schemas/[schema]", new Schema($Route2, $conn), function () use ($jwt) {
                 if ($jwt["success"]) {
                     if (!$jwt["data"]["superUser"]) {
                         echo Response::toJson(Response::SUPER_USER_ONLY);
                     }
-                    Database::setDb($jwt["data"]["database"]);
                 } else {
                     echo Response::toJson($jwt);
                 }
             });
 
-            $Route2->add("api/v4/schemas/{schema}/tables/[table]", new Table(), function () {
-                $jwt = Jwt::validate();
-                if ($jwt["success"]) {
-                    Database::setDb($jwt["data"]["database"]);
-                } else {
-                    echo Response::toJson($jwt);
-                }
-            });
+            $Route2->add("api/v4/schemas/{schema}/tables/[table]", new Table($Route2, $conn));
 
-            $Route2->add("api/v4/schemas/{schema}/tables/{table}/columns/[column]", new Column(), function () {
-                $jwt = Jwt::validate();
-                if ($jwt["success"]) {
-                    Database::setDb($jwt["data"]["database"]);
-                } else {
-                    echo Response::toJson($jwt);
-                }
-            });
+            $Route2->add("api/v4/schemas/{schema}/tables/{table}/columns/[column]", new Column($Route2, $conn));
 
+            $Route2->add("api/v4/schemas/{schema}/tables/{table}/indices/[index]", new Index($Route2, $conn));
 
-            $Route2->add("api/v4/schemas/{schema}/tables/{table}/indices/[index]", new Index(), function () {
-                $jwt = Jwt::validate();
-                if ($jwt["success"]) {
-                    Database::setDb($jwt["data"]["database"]);
-                } else {
-                    echo Response::toJson($jwt);
-                }
-            });
+            $Route2->add("api/v4/schemas/{schema}/tables/{table}/constraints/[constraint]", new Constraint($Route2, $conn));
 
+            $Route2->add("api/v4/users/[user]", new User($Route2, $conn));
 
-            $Route2->add("api/v4/schemas/{schema}/tables/{table}/constraints/[constraint]", new Constraint(), function () {
-                $jwt = Jwt::validate();
-                if ($jwt["success"]) {
-                    Database::setDb($jwt["data"]["database"]);
-                } else {
-                    echo Response::toJson($jwt);
-                }
-            });
+            $Route2->add("api/v4/schemas/{schema}/tables/{table}/privileges", new Privilege($Route2, $conn));
 
-            $Route2->add("api/v4/users/[user]", new User(), function () {
-                $jwt = Jwt::validate();
-                if ($jwt["success"]) {
-                    Database::setDb($jwt["data"]["database"]);
-                } else {
-                    echo Response::toJson($jwt);
-                }
-            });
-
-            $Route2->add("api/v4/schemas/{schema}/tables/{table}/privileges", new Privilege(), function () {
-                $jwt = Jwt::validate();
-                if ($jwt["success"]) {
-                    Database::setDb($jwt["data"]["database"]);
-                } else {
-                    echo Response::toJson($jwt);
-                }
-            });
-
-            $Route2->add("api/v4/rules/[id]", new Geofence(), function () {
-                $jwt = Jwt::validate();
+            $Route2->add("api/v4/rules/[id]", new Geofence($Route2, $conn), function () use ($jwt) {
                 if ($jwt["success"]) {
                     if (!$jwt["data"]["superUser"]) {
                         echo Response::toJson(Response::SUPER_USER_ONLY);
                     }
-                    Database::setDb($jwt["data"]["database"]);
                 } else {
                     echo Response::toJson($jwt);
                 }
             });
 
-            $Route2->add("api/v4/sql", new Sql($Route2, $jwt["data"]["database"]));
+            $Route2->add("api/v4/sql", new Sql($Route2, $conn));
 
-            $Route2->add("api/v4/sql/(database)/{database}", new Sql($Route2,  $jwt["data"]["database"]));
+            $Route2->add("api/v4/sql/(database)/{database}", new Sql($Route2, $conn));
 
-            $Route2->add("api/v4/methods/[id]", new Method(), function () {
-                $jwt = Jwt::validate();
-                if ($jwt["success"]) {
-                    Database::setDb($jwt["data"]["database"]);
-                } else {
-                    echo Response::toJson($jwt);
-                }
-            });
+            $Route2->add("api/v4/methods/[id]", new Method($Route2, $conn));
 
-            $Route2->add("api/v4/call", new Call(), function () {
-                $jwt = Jwt::validate();
-                if ($jwt["success"]) {
-                    Database::setDb($jwt["data"]["database"]);
-                } else {
-                    echo Response::toJson($jwt);
-                }
-            });
+            $Route2->add("api/v4/call", new Call($Route2, $conn));
 
-            $Route2->add("api/v3/meta/[query]", new Meta(), function () {
-                $jwt = Jwt::validate();
-                Database::setDb($jwt["data"]["database"]);
-            });
+            $Route2->add("api/v3/meta/[query]", new Meta($Route2, $conn));
 
-            $Route2->add("api/v4/import/{schema}/[file]", new Import(), function () {
-                $jwt = Jwt::validate();
-                if ($jwt["success"]) {
-                    Database::setDb($jwt["data"]["database"]);
-                } else {
-                    echo Response::toJson($jwt);
-                }
-            });
+            $Route2->add("api/v4/import/{schema}/[file]", new Import($Route2, $conn));
 
-            $Route2->add("api/v4/clients/[id]", new Client($Route2, $jwt["data"]["database"]));
+            $Route2->add("api/v4/clients/[id]", new Client($Route2, $conn));
 
-
-            $Route2->add("api/v4/stats", new Stat(), function () {
-                $jwt = Jwt::validate();
+            $Route2->add("api/v4/stats", new Stat($Route2, $conn), function () use ($jwt) {
                 if ($jwt["success"]) {
                     if (!$jwt["data"]["superUser"]) {
                         echo Response::toJson(Response::SUPER_USER_ONLY);
                     }
-                    Database::setDb($jwt["data"]["database"]);
                 } else {
                     echo Response::toJson($jwt);
                 }
             });
 
-            $Route2->add("api/v4/commit", new Commit(), function () {
-                $jwt = Jwt::validate();
+            $Route2->add("api/v4/commit", new Commit($Route2, $conn), function () use ($jwt) {
                 if ($jwt["success"]) {
                     if (!$jwt["data"]["superUser"]) {
                         echo Response::toJson(Response::SUPER_USER_ONLY);
                     }
-                    Database::setDb($jwt["data"]["database"]);
                 } else {
                     echo Response::toJson($jwt);
                 }
@@ -647,6 +572,8 @@ $handler = static function () {
         $response["errorCode"] = $exception->getCode();
         $response["file"] = $exception->getFile();
         $response["line"] = $exception->getLine();
+        $response["trace"] = $exception->getTraceAsString();
+
         echo Response::toJson($response);
     } catch (Throwable $exception) {
         $response["success"] = false;

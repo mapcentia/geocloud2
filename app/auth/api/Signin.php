@@ -11,6 +11,7 @@ namespace app\auth\api;
 use app\api\v4\AbstractApi;
 use app\conf\App;
 use app\inc\Cache;
+use app\inc\Connection;
 use app\inc\Jwt;
 use app\inc\Session;
 use app\models\Client;
@@ -38,20 +39,16 @@ class Signin extends AbstractApi
 
     public function post_index(): array
     {
-        Database::setDb("mapcentia");
         $userObj = new User();
-
         if ($_POST['database'] && $_POST['user'] && $_POST['password'] && !$_POST['tf_code']) {
             try {
                 $res = $userObj->getDatabasesForUser($_POST['user']);
                 // Check if user/password is correct
                 (new SessionModel())->start($_POST['user'], $_POST['password'], "public", $_POST['database'], true);
                 // Check if client has two factor enabled
-                Database::setDb($_POST['database']);
-                $client = new Client();
+                $client = new Client(connection: new Connection(database: $_POST['database']));
                 $clientData = $client->get($_POST['client_id']);
                 if (!$clientData[0]['twofactor']) {
-                    Database::setDb("mapcentia");
                     Session::start();
                     (new SessionModel())->start($_POST['user'], $_POST['password'], "public", $_POST['database']);
                     header('HX-Refresh: true');

@@ -12,9 +12,11 @@ namespace app\api\v4;
 use app\api\v3\Meta;
 use app\conf\App;
 use app\exceptions\GC2Exception;
+use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Model;
+use app\inc\Route2;
 use app\models\Layer;
 use app\models\Table as TableModel;
 use CzProject\GitPhp\Git;
@@ -64,6 +66,11 @@ class Commit extends AbstractApi
 {
 
     protected const string PATH = 'app/tmp/';
+
+    public function __construct(private readonly Route2 $route, Connection $connection)
+    {
+        parent::__construct($connection);
+    }
 
     /**
      * @throws PhpfastcacheInvalidArgumentException
@@ -120,13 +127,13 @@ class Commit extends AbstractApi
         @mkdir($repo->getRepositoryPath() . '/pages', 0777, true);
 
         foreach ((new Model())->getTablesFromSchema($schema) as $name) {
-            $table = Table::getTable(new TableModel($schema . "." . $name, false, true, false), $this);
+            $table = Table::getTable(new TableModel($schema . "." . $name, false, true, false, connection: $this->connection), $this);
             $file = $baseDir . "/$schema/tables/" . $name . '.json';
             file_put_contents($file, json_encode($table, JSON_PRETTY_PRINT));
         }
 
         if ($metaQuery) {
-            $layers = new Layer();
+            $layers = new Layer(connection: $this->connection);
             $jwt = Jwt::validate()["data"];
             $auth = $jwt['superUser'];
             $res = $layers->getAll($jwt["database"], $auth, $metaQuery, false, true, false, false);

@@ -9,6 +9,7 @@
 namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
+use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Route2;
@@ -81,8 +82,9 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 #[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Method extends AbstractApi
 {
-    public function __construct()
+    public function __construct(private readonly Route2 $route, Connection $connection)
     {
+        parent::__construct($connection);
     }
 
     /**
@@ -96,7 +98,7 @@ class Method extends AbstractApi
     #[Override]
     public function get_index(): array
     {
-        $id = Route2::getParam('id');;
+        $id = $this->route->getParam('id');;
         $pres = new PreparedstatementModel();
         $q = $pres->getAll()['data'];
         $methods = [];
@@ -152,7 +154,7 @@ class Method extends AbstractApi
         } else {
             $methods = [$decodedBody];
         }
-        $pres = new PreparedstatementModel();
+        $pres = new PreparedstatementModel(connection: $this->connection,);
         $pres->connect();
         $pres->begin();
         foreach ($methods as $m) {
@@ -191,7 +193,7 @@ class Method extends AbstractApi
     #[Override]
     public function patch_index(): array
     {
-        $id = Route2::getParam('id');
+        $id = $this->route->getParam('id');
         $jwtData = Jwt::validate()["data"];
         $uid = $jwtData["uid"];
         $isSuperUser = $jwtData["superUser"];
@@ -220,7 +222,7 @@ class Method extends AbstractApi
     #[Override]
     public function delete_index(): array
     {
-        $id = Route2::getParam('id');
+        $id = $this->route->getParam('id');
         $jwtData = Jwt::validate()["data"];
         $uid = $jwtData["uid"];
         $isSuperUser = $jwtData["superUser"];
@@ -241,33 +243,21 @@ class Method extends AbstractApi
     #[Override]
     public function validate(): void
     {
-        $id = Route2::getParam("id");
+        $id = $this->route->getParam("id");
         $body = Input::getBody();
 
         // Patch and delete on collection is not allowed
         if (empty($id) && in_array(Input::getMethod(), ['patch', 'delete'])) {
-            throw new GC2Exception("PATCH and DELETE on a RPC collection is not allowed.", 400);
+            throw new GC2Exception("PATCH and DELETE on a Method collection is not allowed.", 400);
         }
         if (empty($body) && in_array(Input::getMethod(), ['post', 'patch'])) {
             throw new GC2Exception("POST and PATCH without request body is not allowed.", 400);
         }
-        // Throw exception if tried with table resource
+        // Throw exception if tried with method resource
         if (Input::getMethod() == 'post' && !empty($id)) {
             $this->postWithResource();
         }
-        $decodedBody = json_decode($body);
-
-        try {
-            if (is_array($decodedBody)) {
-                foreach ($decodedBody as $value) {
-                    $this->validateRequest(self::getAssert(), json_encode($value), 'methods', Input::getMethod());
-                }
-            } elseif ($decodedBody !== null) {
-                $this->validateRequest(self::getAssert(), $body, 'methods', Input::getMethod());
-            }
-        } catch (GC2Exception $e) {
-            throw new GC2Exception("Invalid Request", -32600, null, $e->getMessage());
-        }
+        $this->validateRequest(self::getAssert(), $body, 'methods', Input::getMethod());
     }
 
     public function put_index(): array

@@ -8,6 +8,7 @@
 
 namespace app\api\v2;
 
+use app\inc\Connection;
 use app\inc\Route;
 use app\inc\Input;
 use app\inc\Controller;
@@ -24,17 +25,15 @@ class Configuration extends Controller
 {
 
     private Keyvalue $keyvalue;
-    private string $postgisdb;
     private string $keyValuePrefix;
 
     /**
      * Configuration constructor.
      */
-    function __construct()
+    public function __construct()
     {
         parent::__construct();
         $this->keyvalue = new Keyvalue();
-        $this->postgisdb = "mapcentia";
         $this->keyValuePrefix = "configuration_";
     }
 

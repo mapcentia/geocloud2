@@ -9,9 +9,9 @@
 namespace app\models;
 
 use app\conf\App;
-use app\conf\Connection;
 use app\exceptions\GC2Exception;
 use app\inc\Cache;
+use app\inc\Connection;
 use app\inc\Globals;
 use app\inc\Session;
 use PDO;
@@ -27,9 +27,9 @@ use Psr\Cache\InvalidArgumentException;
  */
 class Layer extends Table
 {
-    function __construct()
+    function __construct(public ?Connection $connection = null)
     {
-        parent::__construct("settings.geometry_columns_view");
+        parent::__construct(table: "settings.geometry_columns_view", connection: $this->connection);;
     }
 
     /**
@@ -685,7 +685,7 @@ class Layer extends Table
         }
         foreach ($arr as $subuser) {
             $privileges->$subuser = $privileges->$subuser ?? "none";
-            if ($subuser != Connection::$param['postgisschema']) {
+            if ($subuser != $this->schema) {
                 $response['data'][] = array("subuser" => $subuser, "privileges" => $privileges->$subuser, "group" => Session::getByKey("usergroups")[$subuser]);
             }
         }
@@ -765,7 +765,7 @@ class Layer extends Table
         $roles = json_decode($this->getValueFromKey($_key_, "roles") ?: "{}");
         foreach ($_SESSION['subusers'] as $subuser) {
             $roles->$subuser = $roles->$subuser ?? "none";
-            if ($subuser != Connection::$param['postgisschema']) {
+            if ($subuser != $this->schema) {
                 $response['data'][] = array("subuser" => $subuser, "roles" => $roles->$subuser);
             }
         }

@@ -9,6 +9,7 @@
 namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
+use app\inc\Connection;
 use app\inc\Route2;
 use app\inc\Input;
 use app\models\Geofence as GeofenceModel;
@@ -106,10 +107,9 @@ class Geofence extends AbstractApi
 {
     public GeofenceModel $geofence;
 
-    public function __construct()
+    public function __construct(private readonly Route2 $route, Connection $connection)
     {
-
-
+        parent::__construct($connection);
     }
 
     /**
@@ -125,9 +125,9 @@ class Geofence extends AbstractApi
     public function get_index(): array
     {
         $r = [];
-        $geofence = new GeofenceModel(null);
-        if (!empty(Route2::getParam("id"))) {
-            $ids = explode(',', Route2::getParam("id"));
+        $geofence = new GeofenceModel(null, connection: $this->connection);
+        if (!empty($this->route->getParam("id"))) {
+            $ids = explode(',', $this->route->getParam("id"));
             foreach ($ids as $id) {
                 $t = $geofence->get($id)[0];
                 $r[] = $t;
@@ -166,7 +166,7 @@ class Geofence extends AbstractApi
     public function post_index(): array
     {
         $list = [];
-        $model = new GeofenceModel(null);
+        $model = new GeofenceModel(null, connection: $this->connection);;
         $body = Input::getBody();
         $data = json_decode($body, true);
         if (!isset($data['rules'])) {
@@ -208,18 +208,20 @@ class Geofence extends AbstractApi
     #[Override]
     public function patch_index(): array
     {
-        $ids = explode(',', Route2::getParam("id"));
+        $ids = explode(',', $this->route->getParam("id"));
         $list = [];
         $body = Input::getBody();
         $data = json_decode($body, true);
-        $model = new GeofenceModel(null);
+        $model = new GeofenceModel(null, connection: $this->connection);;
         $model->connect();
         $model->begin();
         foreach ($ids as $id) {
             if (!is_numeric($id)) {
                 throw new GC2Exception("Id is not a integer", 400, null, 'MISSING_ID');
             }
-            $data["newId"] = $data['id'] ?? null;;
+            if (!empty($data['id'])) {
+                $data["newId"] = $data['id'];
+            }
             if (isset($data['table'])) {
                 $data['layer'] = $data['table'];
                 unset($data['table']);
@@ -241,8 +243,8 @@ class Geofence extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     public function delete_index(): array
     {
-        $ids = explode(',', Route2::getParam("id"));
-        $model = new GeofenceModel(null);
+        $ids = explode(',', $this->route->getParam("id"));
+        $model = new GeofenceModel(null, connection: $this->connection);;;
         $model->connect();
         $model->begin();
         foreach ($ids as $id) {
@@ -260,7 +262,7 @@ class Geofence extends AbstractApi
      */
     #[Override] public function validate(): void
     {
-        $id = Route2::getParam("id");
+        $id = $this->route->getParam("id");
         $body = Input::getBody();
 
         // Patch and delete on collection is not allowed
@@ -319,7 +321,6 @@ class Geofence extends AbstractApi
             ]),
         ]);
         $this->validateRequest($collection, $body, 'rules', Input::getMethod());
-
     }
 
     public function put_index(): array

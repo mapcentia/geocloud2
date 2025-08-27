@@ -17,7 +17,6 @@ use Exception;
 use Postmark\PostmarkClient;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
-use app\models\Database;
 use app\models\Session as SessionModel;
 
 
@@ -42,9 +41,7 @@ class Signup extends AbstractApi
 
     public function post_index(): array
     {
-        Database::setDb("mapcentia");
         $userObj = new User();
-
         if ($_POST['name'] && $_POST['email'] && $_POST['password'] && $_POST['code'] && !$_POST['tf_code']) {
 
             // TODO Check if user exists

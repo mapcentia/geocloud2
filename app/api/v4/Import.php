@@ -9,8 +9,8 @@
 namespace app\api\v4;
 
 use app\conf\App;
-use app\conf\Connection;
 use app\exceptions\GC2Exception;
+use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Model;
@@ -36,6 +36,11 @@ use Override;
 #[AcceptableMethods(['PATCH', 'POST', 'HEAD', 'OPTIONS'])]
 class Import extends AbstractApi
 {
+
+    public function __construct(private readonly Route2 $route, Connection $connection)
+    {
+        parent::__construct($connection);
+    }
 
     /**
      * @return array
@@ -233,8 +238,8 @@ class Import extends AbstractApi
     #[AcceptableAccepts(['application/json', '*/*'])]
     public function patch_index(): array
     {
-        $schema = Route2::getParam("schema");
-        $fileName = Route2::getParam("file");
+        $schema = $this->route->getParam("schema");
+        $fileName = $this->route->getParam("file");
         $body = Input::getBody();
         $data = json_decode($body);
         // Make dry run to check how many tables would be created
@@ -245,11 +250,11 @@ class Import extends AbstractApi
                 $result = $this->import($schema, $fileName, $data);
 
                 $result['schema'] = $schema;
-                $this->runPreExtension('processImport', (new Model()), $result);
+                $this->runPreExtension('processImport', (new Model(connection: $this->connection)), $result);
                 $data->import = true;
             }
             $result = $this->import($schema, $fileName, $data);
-            (new Layer())->insertDefaultMeta();
+            (new Layer(connection: $this->connection))->insertDefaultMeta();
 
             $response['cmd'] = $result['cmd'];
             $response['data'] = $result['data'];
@@ -267,7 +272,7 @@ class Import extends AbstractApi
      */
     protected function import(string $schema, string $fileName, ?stdClass $args = null): array
     {
-        $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__vectors";
+        $dir = App::$param['path'] . "app/tmp/" . $this->connection->database . "/__vectors";
         $safeName = Session::getUser() . "_" . md5(microtime() . rand());
         if (is_numeric($safeName[0])) {
             $safeName = "_" . $safeName;
@@ -289,7 +294,7 @@ class Import extends AbstractApi
             $fileFullPath = $dir . "/" . $safeName;
         }
         $connectionStr =
-            "\"PG:host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "\"";
+            "\"PG:host=" . $this->connection->host . " port=" . $this->connection->port . " user=" . $this->connection->user . " password=" .$this->connection->password . " dbname=" . $this->connection->database . "\"";
         $cmd = "ogr2postgis" .
             " --json" .
             ($args && property_exists($args, 's_srs') ? " --s_srs " . $args->s_srs : "") .
@@ -331,8 +336,8 @@ class Import extends AbstractApi
      */
     #[Override] public function validate(): void
     {
-        $file = Route2::getParam("file");
-        $schema = Route2::getParam("schema");
+        $file = $this->route->getParam("file");
+        $schema = $this->route->getParam("schema");
         $body = Input::getBody();
 
         // Throw exception if tried with resource id
@@ -382,7 +387,7 @@ class Import extends AbstractApi
         $this->validateRequest($collection, $body, '', Input::getMethod());
 
         $this->jwt = Jwt::validate()["data"];
-        $this->initiate($schema, null, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
+        $this->initiate(userName: $this->jwt["uid"], superUser: $this->jwt["superUser"], schema: $schema);
     }
 
     public function put_index(): array

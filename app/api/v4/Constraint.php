@@ -9,11 +9,11 @@
 namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
+use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Route2;
 use app\models\Table as TableModel;
-use Exception;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use OpenApi\Attributes as OA;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -76,12 +76,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Constraint extends AbstractApi
 {
 
-    /**
-     * @throws Exception
-     */
-    public function __construct()
+    public function __construct(private readonly Route2 $route, Connection $connection)
     {
-
+        parent::__construct($connection);
     }
 
     /**
@@ -293,9 +290,9 @@ class Constraint extends AbstractApi
      */
     public function validate(): void
     {
-        $table = Route2::getParam("table");
-        $schema = Route2::getParam("schema");
-        $constraint = Route2::getParam("constraint");
+        $table = $this->route->getParam("table");
+        $schema = $this->route->getParam("schema");
+        $constraint = $this->route->getParam("constraint");
         $body = Input::getBody();
         // Patch and delete on collection is not allowed
         if (empty($constraint) && in_array(Input::getMethod(), ['patch', 'delete'])) {
@@ -309,7 +306,7 @@ class Constraint extends AbstractApi
         $this->validateRequest($collection, $body, 'constraints', Input::getMethod());
 
         $this->jwt = Jwt::validate()["data"];
-        $this->initiate($schema, $table, null, null, null, $constraint, $this->jwt["uid"], $this->jwt["superUser"]);
+        $this->initiate(userName: $this->jwt["uid"], superUser: $this->jwt["superUser"], schema: $schema, relation: $table, constraint: $constraint);
     }
 
     static public function getAssert(): Assert\Collection

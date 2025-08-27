@@ -85,8 +85,11 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 #[AcceptableMethods(['POST', 'HEAD', 'OPTIONS'])]
 class Sql extends AbstractApi
 {
-    public function __construct(private readonly Route2 $route, private readonly string $database)
+    private \app\models\Sql $sqlApi;
+    public function __construct(private readonly Route2 $route, Connection $connection)
     {
+        parent::__construct(connection: $connection);
+        $this->sqlApi = new \app\models\Sql(connection: $connection);
     }
 
     public function get_index(): array
@@ -115,42 +118,49 @@ class Sql extends AbstractApi
             $jwtData = Jwt::validate()["data"];
             $isSuperUser = $jwtData["superUser"];
             $uid = $jwtData["uid"];
-            $database = $jwtData["database"];
         } catch (Exception) {
             $database = func_get_arg(0);
             $userObj = new \app\models\User(null, $database);
             $uid = $userObj->getDefaultUser();
             $isSuperUser = false;
         }
-        $conn = new Connection(database: $database);
-        $transaction = new Transaction(true, connection: $conn);
-        $settingsData = (new Setting($conn))->get()["data"];
-        $apiKey = $isSuperUser ? $settingsData->api_key : $settingsData->api_key_subuser->$uid;
         $decodedBody = json_decode(Input::getBody(), true);
-
         if (!array_is_list($decodedBody)) {
             $decodedBody = [$decodedBody];
         }
         $result = [];
-        $api = new \app\models\Sql(connection: $conn);
-        $api->connect();
-        $api->begin();
-        foreach ($decodedBody as $body) {
-            $srs = $body['srs'] ?? 4326;
-            $api->setSRS($srs);
-            $body['key'] = $apiKey;
-            $body['convert_types'] = $value['convert_types'] ?? true;
-            $body['format'] = 'json';
-            $body['srs'] = $srs;
-            $res = $transaction->run($uid, $api, $body, !$isSuperUser);
-            unset($res['success']);
-            unset($res['forGrid']);
-            $result[] = $res;
+        $this->sqlApi->connect();
+        $this->sqlApi->begin();
+        foreach ($decodedBody as $query) {
+            $srs = $query['srs'] ?? 4326;
+            $this->sqlApi->setSRS($srs);
+            $query['srs'] = $srs;
+            $result[] = $this->runStatement($query, $uid, $isSuperUser);
         }
-        $api->commit();
+        $this->sqlApi->commit();
         if (count($result) == 1) {
             return $result[0];
         }
+        return $result;
+    }
+
+    /**
+     * @throws GC2Exception
+     * @throws InvalidArgumentException
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Reader\Exception
+     */
+    public function runStatement(array $query, string $uid, bool $isSuperUser): array
+    {
+        $transaction = new Transaction(true, connection: $this->connection);
+        $settingsData = (new Setting(connection: $this->connection))->get()["data"];
+        $apiKey = $isSuperUser ? $settingsData->api_key : $settingsData->api_key_subuser->$uid;
+        $query['key'] = $apiKey;
+        $query['convert_types'] = $value['convert_types'] ?? true;
+        $query['format'] = $body['output_format'] ?? 'json';
+        $result = $transaction->run($uid, $this->sqlApi, $query, !$isSuperUser);
+        unset($result['success']);
+        unset($result['forGrid']);
         return $result;
     }
 
@@ -188,20 +198,12 @@ class Sql extends AbstractApi
     #[Override]
     public function validate(): void
     {
-        $id = $this->route->getParam("id");
         $body = Input::getBody();
 
-        // Patch and delete on collection is not allowed
-        if (empty($id) && in_array(Input::getMethod(), ['patch', 'delete'])) {
-            throw new GC2Exception("PATCH and DELETE on a sql' collection is not allowed.", 400);
-        }
         if (empty($body) && in_array(Input::getMethod(), ['post', 'patch'])) {
-            throw new GC2Exception("POST and PATCH without request body is not allowed.", 400);
+            throw new GC2Exception("POST without request body is not allowed.", 400);
         }
-        // Throw exception if tried with table resource
-        if (Input::getMethod() == 'post' && !empty($id)) {
-            $this->postWithResource();
-        }
+
         $decodedBody = json_decode($body);
 
         if (is_array($decodedBody)) {

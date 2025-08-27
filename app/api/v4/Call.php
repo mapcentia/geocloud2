@@ -10,10 +10,12 @@ namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
 use app\exceptions\RPCException;
+use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\api\v2\Sql as V2Sql;
-use app\models\Setting;
+use app\inc\Route2;
+use app\models\Preparedstatement as PreparedstatementModel;
 use Exception;
 use OpenApi\Annotations\OpenApi;
 use OpenApi\Attributes as OA;
@@ -73,9 +75,9 @@ class Call extends AbstractApi
      */
     private V2Sql $v2;
 
-    public function __construct()
+    public function __construct(private readonly Route2 $route, Connection $connection)
     {
-        $this->v2 = new V2Sql();
+        parent::__construct($connection);
     }
 
     /**
@@ -83,6 +85,7 @@ class Call extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException|GC2Exception
      * @throws InvalidArgumentException
      * @throws RPCException
+     * @throws Exception
      */
     #[OA\Post(path: '/api/v4/call', operationId: 'postCall', description: "Execute RPC method", tags: ['Methods'])]
     #[OA\RequestBody(description: 'RPC method to execute', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Call"))]
@@ -96,53 +99,41 @@ class Call extends AbstractApi
         $jwtData = Jwt::validate()["data"];
         $isSuperUser = $jwtData["superUser"];
         $uid = $jwtData["uid"];
-        $database = $jwtData["database"];
-        $user = [
-            "user" => $isSuperUser ? $uid : "$uid@$database"
-        ];
-        $settingsData = (new Setting())->get()["data"];
-        $apiKey = $isSuperUser ? $settingsData->api_key : $settingsData->api_key_subuser->$uid;
         $decodedBody = json_decode(Input::getBody(), true);
-
-        $api = new \app\models\Sql();
-        $api->connect();
-        $api->begin();
-
-        // Start of RPC response
         if (!array_is_list($decodedBody)) {
             $decodedBody = [$decodedBody];
         }
+        $pres = new PreparedstatementModel(connection: $this->connection);;
         $result = [];
-        foreach ($decodedBody as $value) {
-            $srs = $body['srs'] ?? 4326;
-            $api->setSRS($srs);
-            $body['key'] = $apiKey;
-            $body['convert_types'] = $value['convert_types'] ?? true;
-            $body['format'] = 'json';
-            $body['srs'] = $srs;
+        foreach ($decodedBody as $query) {
             try {
-                $res = $this->v2->get_index($user, $api, $body, $database);
-            } catch (Exception $e) {
-                if ($e->getCode() == -32601) {
-                    throw new RPCException("Method not found", -32601, null, null, $value['id']);
-                }
-                if (in_array($e->getCode(), ['HY093', '406'])) {
-                    throw new RPCException("Invalid params", -32602, null, $e->getMessage(), $value['id']);
-                }
-                throw new RPCException("Internal error", -32603, null, $e->getMessage(), $value['id']);
+                $preStm = $pres->getByName($query['method']);
+            } catch (Exception) {
+                throw new RPCException("Method not found", -32601, null);
             }
-            unset($res['success']);
-            unset($res['forGrid']);
-            $jsonrpcResponse = [
-                'jsonrpc' => $value['jsonrpc'],
+            $query['q'] = $preStm['data']['statement'];
+            $query['type_hints'] = json_decode($preStm['data']['type_hints'], true);
+            $query['type_formats'] = json_decode($preStm['data']['type_formats'], true);
+            $query['output_format'] = $preStm['data']['output_format'];
+            $query['srs'] = $preStm['data']['srs'];
+            $query['params'] = $body['params'] ?? null;
+            try {
+                $res = (new Sql($this->route, connection: $this->connection))->runStatement($query, $uid, $isSuperUser);
+            } catch (Exception $e) {
+                if (in_array($e->getCode(), ['HY093', '406'])) {
+                    throw new RPCException("Invalid params", -32602, null, $e->getMessage(), $query['id']);
+                }
+                throw new RPCException("Internal error", -32603, null, $e->getMessage(), $query['id']);
+            }
+            $jsonRpcResponse = [
+                'jsonrpc' => $query['jsonrpc'],
                 'result' => $res,
             ];
-            if (isset($value['id'])) {
-                $jsonrpcResponse['id'] = $value['id'];
-                $result[] = $jsonrpcResponse;
+            if (isset($query['id'])) {
+                $jsonRpcResponse['id'] = $query['id'];
+                $result[] = $jsonRpcResponse;
             }
         }
-        $api->commit();
         if (count($result) == 0) {
             return ['code' => '204'];
         }
@@ -168,10 +159,10 @@ class Call extends AbstractApi
         try {
             if (is_array($decodedBody)) {
                 foreach ($decodedBody as $value) {
-                    $this->validateRequest(self::getAssert($value), json_encode($value), 'methods', Input::getMethod());
+                    $this->validateRequest(self::getAssert(), json_encode($value), 'methods', Input::getMethod());
                 }
             } elseif ($decodedBody !== null) {
-                $this->validateRequest(self::getAssert($decodedBody), $body, 'methods', Input::getMethod());
+                $this->validateRequest(self::getAssert(), $body, 'methods', Input::getMethod());
             }
         } catch (GC2Exception $e) {
             throw new RPCException("Invalid Request", -32600, null, $e->getMessage());

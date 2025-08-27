@@ -12,6 +12,7 @@ use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableMethods;
 use app\exceptions\GC2Exception;
+use app\inc\Connection;
 use app\inc\Jwt;
 use app\inc\Route2;
 use app\models\Layer;
@@ -29,8 +30,9 @@ class Meta extends AbstractApi
     /**
      * Meta constructor.
      */
-    function __construct()
+    public function __construct(private readonly Route2 $route, Connection $connection)
     {
+        parent::__construct($connection);
     }
 
 

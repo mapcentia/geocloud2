@@ -10,6 +10,7 @@ namespace app\models;
 
 use app\conf\App;
 use app\inc\Cache;
+use app\inc\Connection;
 use app\inc\Globals;
 use app\inc\Model;
 use app\inc\Session;
@@ -40,10 +41,9 @@ class User extends Model
 
     function __construct(?string $userId = null, ?string $parentdb = null)
     {
-        parent::__construct();
+        parent::__construct(new Connection(database: 'mapcentia'));
         $this->userId = $userId;
         $this->parentdb = $parentdb;
-        $this->postgisdb = "mapcentia";
     }
 
     /**
@@ -236,20 +236,16 @@ class User extends Model
         $encryptedPassword = Setting::encryptPwSecure($password);
 
         // Create new database
-        $db = new Database();
+        $db = new Database(connection: $this->connection);
         if (isset($data['subuser']) && $data['subuser'] === false) {
             $db->postgisdb = $this->postgisdb;
             $db->createUser($userId, null, true);
             $db->createdb($userId, App::$param['databaseTemplate']);
-            Database::setDb($userId);
-            (new Setting())->updateApiKeyForUser($userId, true);
-            Database::setDb('mapcentia');
+            (new Setting(connection: new Connection(database: $userId)))->updateApiKeyForUser($userId, true);
         } else {
             try {
                 $db->createUser($userId, $parentDb);
-                Database::setDb($parentDb);
-                (new Setting())->updateApiKeyForUser($userId, false);
-                Database::setDb('mapcentia');
+                (new Setting(connection: new Connection(database: $parentDb)))->updateApiKeyForUser($userId, false);
             } catch (PDOException $e) {
                 throw new GC2Exception($e->getMessage(), 400, null, 'USER_CREATION_FAILED');
             }
@@ -423,7 +419,7 @@ class User extends Model
             Session::set("subuserEmails", $subuserEmails);
         }
         try {
-            (new Database())->dropUser($userName);
+            (new Database(connection: $this->connection))->dropUser($userName);
         } catch (PDOException $e) {
             error_log("Could not drop user: " . $e->getMessage());
         }

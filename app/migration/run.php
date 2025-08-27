@@ -34,7 +34,7 @@ foreach ($arr['data'] as $db) {
                 }
             }
             echo " {$db}\n";
-            $conn->db = NULL;
+            $conn->PgConnection = NULL;
             $conn = NULL;
         }
     }

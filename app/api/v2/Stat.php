@@ -1,16 +1,16 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2024 MapCentia ApS
+ * @copyright  2013-2025 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\api\v2;
 
+use app\inc\Connection;
 use app\inc\Controller;
 use app\inc\Model;
-use app\models\Database;
 
 class Stat extends Controller
 {
@@ -20,7 +20,6 @@ class Stat extends Controller
     function __construct()
     {
         parent::__construct();
-
     }
 
     /**
@@ -28,7 +27,6 @@ class Stat extends Controller
      */
     public function get_index(): array
     {
-        Database::setDb(\app\inc\Session::get()['parentdb']);
-        return (new Model())->getStats();
+        return (new Model(connection: new Connection(database: \app\inc\Session::get()['parentdb'])))->getStats();
     }
 }

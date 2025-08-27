@@ -9,6 +9,7 @@
 namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
+use app\inc\Connection;
 use app\inc\Jwt;
 use app\inc\Input;
 use app\inc\Route2;
@@ -48,6 +49,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[AcceptableMethods(['GET', 'PATCH', 'HEAD', 'OPTIONS'])]
 class Privilege extends AbstractApi
 {
+    public function __construct(private readonly Route2 $route, Connection $connection)
+    {
+        parent::__construct($connection);
+    }
+
     /**
      * @return array
      */
@@ -60,7 +66,7 @@ class Privilege extends AbstractApi
     #[Override]
     public function get_index(): array
     {
-        $layer = new Layer();
+        $layer = new Layer(connection: $this->connection);
         $split = explode('.', $this->qualifiedName[0]);
         $res = $layer->getPrivilegesAsArray($split[0], $split[1]);
         return ["privileges" => $res];
@@ -88,14 +94,15 @@ class Privilege extends AbstractApi
     #[Override]
     public function patch_index(): array
     {
-        $layer = new Layer();
+        $layer = new Layer(connection: $this->connection);
         $body = Input::getBody();
         $data = json_decode($body, true);
 
         if (!isset($data['privileges'])) {
             $data['privileges'] = [$data];
         }
-        $table = new Table("settings.geometry_columns_join");
+        $table = new Table(table: "settings.geometry_columns_join", connection: $this->connection);
+        $table->connect();
         $table->begin();
         foreach ($data['privileges'] as $datum) {
 
@@ -122,8 +129,8 @@ class Privilege extends AbstractApi
      */
     #[Override] public function validate(): void
     {
-        $table = Route2::getParam("table");
-        $schema = Route2::getParam("schema");
+        $table = $this->route->getParam("table");
+        $schema = $this->route->getParam("schema");
         $body = Input::getBody();
 
         $this->jwt = Jwt::validate()["data"];
@@ -149,8 +156,7 @@ class Privilege extends AbstractApi
             ]),
         ]);
         $this->validateRequest($collection, $body, 'privileges', Input::getMethod(), true);
-
-        $this->initiate($schema, $table, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
+        $this->initiate(userName: $this->jwt["uid"], superUser: $this->jwt["superUser"], schema: $schema, relation: $table);
     }
 
     public function put_index(): array

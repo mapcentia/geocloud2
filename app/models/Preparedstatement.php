@@ -10,6 +10,7 @@ namespace app\models;
 
 use app\exceptions\GC2Exception;
 use app\inc\Cache;
+use app\inc\Connection;
 use app\inc\Globals;
 use app\inc\Model;
 use PDO;
@@ -25,6 +26,11 @@ class Preparedstatement extends Model
 {
 
     const string CACHE_TYPE = 'prepared_statement';
+
+    public function __construct(?Connection $connection = null)
+    {
+        parent::__construct(connection: $connection);
+    }
 
     /**
      * @throws InvalidArgumentException
