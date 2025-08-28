@@ -14,14 +14,13 @@ use app\models\Geofence;
 use app\models\Rule;
 use app\models\Sql;
 use Exception;
-use Psr\Cache\InvalidArgumentException;
 use sad_spirit\pg_builder\StatementFactory;
 
-class Transaction
+class Statement
 {
     private string|null $q;
     private ?string $subUser;
-    private Sql $api;
+    private Sql $sql;
     private array $cacheInfo;
     private array $params;
 
@@ -36,7 +35,7 @@ class Transaction
      */
     public function run(string $user, Sql $api, $json, bool $subuser = false): array
     {
-        $this->api = $api;
+        $this->sql = $api;
         if ($subuser) {
             $this->subUser = $user;
         } else {
@@ -58,7 +57,7 @@ class Transaction
                 $this->q = null;
             }
         }
-        $response = $this->transaction($this->params['client_encoding'], $this->params['type_hints'], $this->params['type_formats']);
+        $response = $this->process($this->params['client_encoding'], $this->params['type_hints'], $this->params['type_formats']);
         if (!empty($this->cacheInfo)) {
             $response["cache"] = $this->cacheInfo;
         }
@@ -71,7 +70,7 @@ class Transaction
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Reader\Exception
      */
-    private function transaction(?string $clientEncoding = null, ?array $typeHints = null, ?array $typeFormats = null): array
+    private function process(?string $clientEncoding = null, ?array $typeHints = null, ?array $typeFormats = null): array
     {
         $response = [];
         $authResponse = [];
@@ -102,7 +101,7 @@ class Transaction
 
         // Get rules and set them
         $walkerRule = new TableWalkerRule(!empty($authResponse["is_auth"]) ? $this->subUser ?: $this->connection->database : "*", "sql", strtolower($operation), '');
-        $rules = $rule->get($this->api);
+        $rules = $rule->get($this->sql);
         $walkerRule->setRules($rules);
         $select->dispatch($walkerRule);
 
@@ -129,7 +128,7 @@ class Transaction
                     return $response;
                 }
             }
-            $response = $this->api->transaction($finaleStatement, $this->params['params'], $this->params['type_hints'], $this->convertReturning, $this->params['type_formats']);
+            $response = $this->sql->transaction($finaleStatement, $this->params['params'], $this->params['type_hints'], $this->convertReturning, $this->params['type_formats']);
             $response["filters"] = $auth["filters"];
             $response["statement"] = $finaleStatement;
         } elseif ($operation == "Select" || $operation == "SetOpSelect") {
@@ -151,7 +150,7 @@ class Transaction
                 $this->cacheInfo["signature"] = md5(serialize($response));
             } else {
                 ob_start();
-                $response = $this->api->sql($this->q, $clientEncoding, $this->params['format'] ?: "geojson", $this->params['geoformat'], $this->params['allstr'], $this->params['alias'], null, null, $this->params['convert_types'], $this->params['params'], $typeHints, $typeFormats);
+                $response = $this->sql->sql($this->q, $clientEncoding, $this->params['format'] ?: "geojson", $this->params['geoformat'], $this->params['allstr'], $this->params['alias'], null, null, $this->params['convert_types'], $this->params['params'], $typeHints, $typeFormats);
                 if (count($response) > 0) {
                     $response["statement"] = $this->q;
                     if ($lifetime > 0 && !empty($CachedString)) {

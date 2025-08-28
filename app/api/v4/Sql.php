@@ -13,7 +13,7 @@ use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Route2;
-use app\inc\Transaction;
+use app\inc\Statement;
 use app\models\Setting;
 use Exception;
 use OpenApi\Annotations\OpenApi;
@@ -151,13 +151,13 @@ class Sql extends AbstractApi
      */
     public function runStatement(array $query, string $uid, bool $isSuperUser): array
     {
-        $transaction = new Transaction(true, connection: $this->connection);
+        $statement = new Statement(true, connection: $this->connection);
         $settingsData = (new Setting(connection: $this->connection))->get()["data"];
         $apiKey = $isSuperUser ? $settingsData->api_key : $settingsData->api_key_subuser->$uid;
         $query['key'] = $apiKey;
         $query['convert_types'] = $value['convert_types'] ?? true;
         $query['format'] = $body['output_format'] ?? 'json';
-        $result = $transaction->run($uid, $this->sqlApi, $query, !$isSuperUser);
+        $result = $statement->run($uid, $this->sqlApi, $query, !$isSuperUser);
         unset($result['success']);
         unset($result['forGrid']);
         return $result;
