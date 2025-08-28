@@ -146,8 +146,6 @@ class Sql extends AbstractApi
     /**
      * @throws GC2Exception
      * @throws InvalidArgumentException
-     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
-     * @throws \PhpOffice\PhpSpreadsheet\Reader\Exception
      */
     public function runStatement(array $query, string $uid, bool $isSuperUser): array
     {

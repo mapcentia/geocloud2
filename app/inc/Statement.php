@@ -29,9 +29,14 @@ class Statement
     }
 
     /**
+     * Executes the run method, initializing parameters and processing the input data.
+     *
+     * @param string $user The user identifier.
+     * @param Sql $api An instance of the Sql class for database interactions.
+     * @param mixed $json The input parameters, typically in JSON format.
+     * @param bool $subuser Optional. Indicates whether the user is a subuser. Defaults to false.
+     * @return array The processed response, including additional metadata such as cache information and memory usage.
      * @throws GC2Exception
-     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
-     * @throws \PhpOffice\PhpSpreadsheet\Reader\Exception
      */
     public function run(string $user, Sql $api, $json, bool $subuser = false): array
     {
@@ -66,9 +71,17 @@ class Statement
     }
 
     /**
-     * @throws GC2Exception
-     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
-     * @throws \PhpOffice\PhpSpreadsheet\Reader\Exception
+     * Processes the given SQL query and executes it based on its type (SELECT, INSERT, UPDATE, DELETE).
+     * Performs authorization checks, applies rules, handles caching, and executes the SQL operation
+     * with the provided configurations and parameters.
+     *
+     * @param string|null $clientEncoding The character set for the SQL query execution.
+     * @param array|null $typeHints Optional type hints for parameter bindings in the query.
+     * @param array|null $typeFormats Optional type formats for parameter processing in the query.
+     * @return array The processed and executed SQL result, including metadata and potential filters.
+     *
+     * @throws Exception If there is an error during the authorization, rule application, or query execution.
+     * @throws GC2Exception If the SQL statement type is not recognized.
      */
     private function process(?string $clientEncoding = null, ?array $typeHints = null, ?array $typeFormats = null): array
     {
