@@ -65,6 +65,7 @@ class Baselayerjs extends Controller
         $settingsRawJSON .= "\"loginLogo\": " . (!empty(App::$param['loginLogo']) ? json_encode(App::$param['loginLogo'], JSON_UNESCAPED_SLASHES) : "null") . ",\n";
         $settingsRawJSON .= "\"subDomainsForTiles\": " . (!empty(App::$param['subDomainsForTiles']) ? json_encode(App::$param['subDomainsForTiles']) : "null") . ",\n";
         $settingsRawJSON .= "\"colorPalette\": " . (!empty(App::$param['colorPalette']) ? json_encode(App::$param['colorPalette']) : "null") . ",\n";
+        $settingsRawJSON .= "\"openId\": " . (!empty(App::$param['openId']) ? json_encode(App::$param['openId']) : "null") . ",\n";
         if ($settings = @file_get_contents(App::$param["path"] . "/app/conf/elasticsearch_settings.json")) {
             $settingsRawJSON .= "\"es_settings\": " . $settings . ",\n";
         }
