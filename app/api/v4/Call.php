@@ -116,7 +116,7 @@ class Call extends AbstractApi
             $query['type_formats'] = json_decode($preStm['data']['type_formats'], true);
             $query['output_format'] = $preStm['data']['output_format'];
             $query['srs'] = $preStm['data']['srs'];
-            $query['params'] = $body['params'] ?? null;
+            $query['params'] = $query['params'] ?? null;
             try {
                 $res = (new Sql($this->route, connection: $this->connection))->runStatement($query, $uid, $isSuperUser);
             } catch (Exception $e) {
