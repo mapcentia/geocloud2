@@ -11,7 +11,6 @@ declare(strict_types=1);
 namespace app\inc;
 
 use app\conf\App;
-use app\conf\Connection;
 use app\exceptions\GC2Exception;
 use app\models\Cost;
 use app\models\Database;
@@ -32,9 +31,6 @@ use TypeError;
  */
 class Model
 {
-    /**
-     * @var PDO[] $PdoConnections
-     */
     public static array $PdoConnections = [];
     public null|\PgSql\Connection $PgConnection = null;
     public string $postgishost;
@@ -43,34 +39,63 @@ class Model
     public string $postgispw;
     public string $postgisdb;
     public ?string $postgisschema;
-    public bool $connectionFailed;
     public ?string $theGeometry;
 
-    function __construct(public ?\app\inc\Connection $connection = null)
+    function __construct(public ?Connection $connection = null)
     {
-        $this->connectionFailed = false;
-
-        // If Connection is not injected, when set it from environment variables
-        Connection::$param['postgishost'] = Connection::$param['postgishost'] ?? getenv('POSTGIS_HOST');
-        Connection::$param['postgisport'] = Connection::$param['postgisport'] ?? getenv('POSTGIS_PORT');
-        Connection::$param['postgisuser'] = Connection::$param['postgisuser'] ?? getenv('POSTGIS_USER');
-        Connection::$param['postgisdb'] = Connection::$param['postgisdb'] ?? getenv('POSTGIS_DB');
-        Connection::$param['postgispw'] = Connection::$param['postgispw'] ?? getenv('POSTGIS_PW');
-        Connection::$param['pgbouncer'] = Connection::$param['pgbouncer'] ?? getenv('POSTGIS_PGBOUNCER') === "true";
-
-        $this->postgishost = $connection->host ?? Connection::$param['postgishost'];
-        $this->postgisport = $connection->port ??Connection::$param['postgisport'];
-        $this->postgisuser = $connection->user ?? Connection::$param['postgisuser'];
-        $this->postgisdb = $connection->database ?? Connection::$param['postgisdb'];
-        $this->postgispw = $connection->password ?? Connection::$param['postgispw'];
-        $this->postgisschema = $connection->schema ?? Connection::$param['postgisschema'] ?? null;
+        if ($this->connection == null) {
+            $this->connection = new Connection();
+        }
+        $this->postgishost = $this->connection->host;
+        $this->postgisport = $this->connection->port;
+        $this->postgisuser = $this->connection->user;
+        $this->postgisdb = $this->connection->database;
+        $this->postgispw = $this->connection->password;
+        $this->postgisschema = $this->connection->schema;
     }
 
     /**
-     * @param PDOStatement $result
-     * @param string $result_type
-     * @return array|null
-     * @throws PDOException
+     * Retrieves the PDO connection for the current database.
+     *
+     * @return PDO|null The PDO connection if it exists, or null if no connection is available for the current database.
+     */
+    public function getPdoConnection(): ?PDO
+    {
+        if (empty(self::$PdoConnections[$this->connection->database])) {
+            return null;
+        }
+        return self::$PdoConnections[$this->connection->database];
+    }
+
+    /**
+     * Sets the PDO connection for the current database.
+     *
+     * @param PDO $conn The PDO connection instance to associate with the current database.
+     *
+     * @return void
+     */
+    public function setPdoConnection(PDO $conn): void
+    {
+        self::$PdoConnections[$this->connection->database] = $conn;
+    }
+
+    /**
+     * Unsets the PDO connection for the current database.
+     *
+     * @return void
+     */
+    public function unsetPdoConnection(): void
+    {
+        unset(self::$PdoConnections[$this->connection->database]);
+    }
+
+    /**
+     * Fetches a single row from the given PDO statement result based on the specified result type.
+     *
+     * @param PDOStatement $result The PDOStatement object containing the result set to fetch from.
+     * @param string $result_type The type of result to fetch. Supported values are 'assoc' (fetch an associative array) and 'both' (both associative and numeric keys). Default is 'assoc'.
+     *
+     * @return array|null The fetched row as an associative or both associative and numeric array, or null if no row is available.
      */
     public function fetchRow(PDOStatement $result, string $result_type = "assoc"): ?array
     {
@@ -86,10 +111,13 @@ class Model
     }
 
     /**
-     * @param PDOStatement $result
-     * @param string $result_type
-     * @return array
-     * @throws PDOException
+     * Fetches all rows from a PDO statement into an array.
+     *
+     * @param PDOStatement $result The PDOStatement object containing the executed query results.
+     * @param string $result_type The fetch style for the results. Supported values are "assoc" for associative arrays,
+     * and "both" for both associative and indexed arrays. Defaults to "both".
+     *
+     * @return array The resulting array of rows fetched according to the specified fetch style.
      */
     public function fetchAll(PDOStatement $result, string $result_type = "both"): array
     {
@@ -134,7 +162,7 @@ class Model
     {
         $cacheType = "prikey";
         $cacheRel = $table;
-        $cacheId = $this->postgisdb . "_" . $cacheRel . "_" . $cacheType;
+        $cacheId = $this->connection->database . "_" . $cacheRel . "_" . $cacheType;
         if (!empty(App::$param["defaultPrimaryKey"])) {
             return ["attname" => App::$param["defaultPrimaryKey"]];
         }
@@ -154,7 +182,6 @@ class Model
                 return null;
             }
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);
-            // $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $response;
         }
@@ -184,8 +211,8 @@ class Model
     public function begin(): void
     {
         $this->connect();
-        if (!self::$PdoConnections[$this->postgisdb]->inTransaction()) {
-            self::$PdoConnections[$this->postgisdb]->beginTransaction();
+        if (!$this->getPdoConnection()->inTransaction()) {
+            $this->getPdoConnection()->beginTransaction();
         }
     }
 
@@ -217,8 +244,8 @@ class Model
      */
     public function commit(): void
     {
-        if (self::$PdoConnections[$this->postgisdb]->inTransaction()) {
-            self::$PdoConnections[$this->postgisdb]->commit();
+        if ($this->getPdoConnection()->inTransaction()) {
+            $this->getPdoConnection()->commit();
         }
     }
 
@@ -229,8 +256,8 @@ class Model
      */
     public function rollback(): void
     {
-        if (self::$PdoConnections[$this->postgisdb]->inTransaction()) {
-            self::$PdoConnections[$this->postgisdb]->rollBack();
+        if ($this->getPdoConnection()->inTransaction()) {
+            $this->getPdoConnection()->rollBack();
         }
     }
 
@@ -245,9 +272,9 @@ class Model
     public function prepare(string $sql): PDOStatement
     {
         $this->connect();
-        self::$PdoConnections[$this->postgisdb]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->getPdoConnection()->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         try {
-            return self::$PdoConnections[$this->postgisdb]->prepare($sql);
+            return $this->getPdoConnection()->prepare($sql);
         } catch (PDOException $e) {
             $this->rollback();
             throw $e;
@@ -275,22 +302,19 @@ class Model
                 break;
             case "PDO" :
                 $this->connect();
-                if ($this->connectionFailed) {
-                    $result = false;
-                }
                 try {
-                    self::$PdoConnections[$this->postgisdb]->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                    $this->getPdoConnection()->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                     switch ($queryType) {
                         case "select" :
                             // Return PDOStatement object
-                            $result = self::$PdoConnections[$this->postgisdb]->query($query);
+                            $result = $this->getPdoConnection()->query($query);
                             break;
                         case "transaction" :
                             // Return integer
-                            $result = self::$PdoConnections[$this->postgisdb]->exec($query);
+                            $result = $this->getPdoConnection()->exec($query);
                     }
                 } catch (PDOException $e) {
-                    self::$PdoConnections[$this->postgisdb]->rollBack();
+                    $this->getPdoConnection()->rollBack();
                     throw $e;
                 }
                 break;
@@ -344,7 +368,7 @@ class Model
     {
         $cacheType = "metadata";
         $cacheRel = $cacheKey ?: $table;
-        $cacheId = $this->postgisdb . "_" . $cacheRel . "_" . $cacheType . "_" . ($temp ? 'temp' : 'notTemp') . "_" . ($restriction ? 'restriction' : 'notRestriction') . "_" . ($getEnums ? 'enums' : 'notEnums') . "_" . ($restrictions ? 'restrictions_' . md5(serialize($restrictions)) : 'noRestrictions');
+        $cacheId = $this->connection->database . "_" . $cacheRel . "_" . $cacheType . "_" . ($temp ? 'temp' : 'notTemp') . "_" . ($restriction ? 'restriction' : 'notRestriction') . "_" . ($getEnums ? 'enums' : 'notEnums') . "_" . ($restrictions ? 'restrictions_' . md5(serialize($restrictions)) : 'noRestrictions');
         $CachedString = Cache::getItem($cacheId);
 
         if ($CachedString != null && $CachedString->isHit()) {
@@ -532,52 +556,56 @@ class Model
     }
 
     /**
-     * @return string
+     * Builds and returns a connection string based on the current connection properties.
+     *
+     * @return string The complete connection string containing host, port, user, password, and database name.
      */
     public function connectString(): string
     {
-        $connectString = "";
-        if ($this->postgishost != "")
-            $connectString = "host=" . $this->postgishost;
-        if ($this->postgisport != "")
-            $connectString = $connectString . " port=" . $this->postgisport;
-        if ($this->postgisuser != "")
-            $connectString = $connectString . " user=" . $this->postgisuser;
-        if ($this->postgispw != "")
-            $connectString = $connectString . " password=" . $this->postgispw;
-        if ($this->postgisdb != "")
-            $connectString = $connectString . " dbname=" . $this->postgisdb;
-        return ($connectString);
+        $connectString = "host=" . $this->connection->host;
+        $connectString .= " port=" . $this->connection->port;
+        $connectString .= " user=" . $this->connection->user;
+        $connectString .= " password=" . $this->connection->password;
+        $connectString .= " dbname=" . $this->connection->database;
+        return $connectString;
     }
 
     /**
-     * @param string $type
-     * @throws PDOException
+     * Establishes a database connection based on the specified connection type.
+     *
+     * @param string $type The type of connection to establish. Defaults to "PDO". Supported types are:
+     *                     - "PDO": Connect using a PDO instance.
+     *                     - "PG": Connect using the native pg_connect function.
+     *
+     * @return void
      */
     function connect(string $type = "PDO"): void
     {
-
         switch ($type) {
             case "PG" :
                 $c = pg_connect($this->connectString());
                 $this->PgConnection = $c ?: null;
                 break;
             case "PDO" :
-                if (!isset(self::$PdoConnections[$this->postgisdb]) || !$this->isPdoConnected()) {
-                    error_log("Connecting to " . $this->postgisdb . " on " . $this->postgishost . " as " . $this->postgisuser);
-                    self::$PdoConnections[$this->postgisdb]  = new PDO("pgsql:dbname=$this->postgisdb;host=$this->postgishost;" . (($this->postgisport) ? "port=$this->postgisport" : ""), "$this->postgisuser", "$this->postgispw",
-                        [PDO::ATTR_EMULATE_PREPARES => true]);
+                if (empty($this->getPdoConnection()) || !$this->isPdoConnected()) {
+                    error_log("Connecting to " . $this->connection->database . " on " . $this->connection->host . " as " . $this->connection->user);
+                    $this->setPdoConnection(new PDO(dsn: "pgsql:dbname={$this->connection->database};host={$this->connection->host};port={$this->connection->port}", username: $this->connection->user, password: $this->connection->password, options: [PDO::ATTR_EMULATE_PREPARES => true]));
                     $this->execQuery("set client_encoding='UTF8'");
                 }
                 break;
         }
     }
 
+    /**
+     * Checks if the PDO connection is successfully established.
+     *
+     * @return bool Returns true if the PDO connection is active and responsive, otherwise false.
+     */
     private function isPdoConnected(): bool
     {
         try {
             // Lightweight no-op query
-            self::$PdoConnections[$this->postgisdb]->query('SELECT 1');
+            $this->getPdoConnection()->query('SELECT 1');
             return true;
         } catch (PDOException) {
             return false;
@@ -586,21 +614,26 @@ class Model
 
 
     /**
+     * Closes the current database connection by unsetting the PDO instance.
      *
+     * @return void
      */
     function close(): void
     {
-        self::$PdoConnections[$this->postgisdb] = null;
+        $this->unsetPdoConnection();;
     }
 
     /**
-     * @param string $str
-     * @return string
+     * Quotes a string for use in a database query.
+     *
+     * @param string $str The string to be quoted.
+     *
+     * @return string The quoted string, safe for use in database queries.
      */
     function quote(string $str): string
     {
         $this->connect();
-        $str = self::$PdoConnections[$this->postgisdb]->quote($str);
+        $str = $this->getPdoConnection()->quote($str);
         return ($str);
     }
 
@@ -675,17 +708,19 @@ class Model
     }
 
     /**
-     * @param string $str
-     * @param array<string>|null $replace
-     * @param string $delimiter
-     * @return string
+     * Converts a given string to its ASCII representation, replacing specified substrings and normalizing it with a delimiter.
+     *
+     * @param string $str The input string to be converted to ASCII.
+     * @param array|null $replace An optional array of substrings to be replaced with spaces before conversion.
+     * @param string $delimiter The delimiter used to replace spaces and other non-alphanumeric characters after conversion.
+     *
+     * @return string The ASCII representation of the input string, normalized and formatted with the specified delimiter.
      */
     public static function toAscii(string $str, ?array $replace = [], string $delimiter = '-'): string
     {
         if (!empty($replace)) {
             $str = str_replace($replace, ' ', $str);
         }
-
         $clean = iconv('UTF-8', 'ASCII//TRANSLIT', $str);
         $clean = preg_replace("/[^a-zA-Z0-9\/_|+ -]/", '', $clean);
         $clean = strtolower(trim($clean, '-'));
@@ -746,7 +781,7 @@ class Model
     {
         $cacheType = "isTableOrView";
         $cacheRel = $table;
-        $cacheId = $this->postgisdb . "_" . $cacheRel . "_" . $cacheType;
+        $cacheId = $this->connection->database . "_" . $cacheRel . "_" . $cacheType;
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
@@ -843,7 +878,7 @@ class Model
     {
         $cacheType = "columnExist";
         $cacheRel = $table;
-        $cacheId = $this->postgisdb . "_" . $cacheRel . "_" . $column . "_" . $cacheType;
+        $cacheId = $this->connection->database . "_" . $cacheRel . "_" . $column . "_" . $cacheType;
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
@@ -857,7 +892,6 @@ class Model
             $response['success'] = true;
             $response['exists'] = isset($row["exists"]);
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-            //$CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $response;
         }
@@ -872,7 +906,7 @@ class Model
     {
         $cacheType = "foreignConstrain";
         $cacheRel = ($schema . "." . $table);
-        $cacheId = ($this->postgisdb . "_" . $cacheRel . "_" . $cacheType);
+        $cacheId = ($this->connection->database . "_" . $cacheRel . "_" . $cacheType);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
@@ -921,7 +955,7 @@ class Model
     {
         $cacheType = "checkConstrain";
         $cacheRel = ($schema . "." . $table);
-        $cacheId = ($this->postgisdb . "_" . $cacheRel . "_" . $type . "_" . $cacheType);
+        $cacheId = ($this->connection->database . "_" . $cacheRel . "_" . $type . "_" . $cacheType);
         $CachedString = Cache::getItem($cacheId);
         $where = '';
         $params = ["table" => $table, "schema" => $schema];
@@ -958,7 +992,6 @@ class Model
             $response['data'] = $rows;
 
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-            //$CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $response;
         }
@@ -973,7 +1006,7 @@ class Model
     {
         $cacheType = "childTables";
         $cacheRel = ($schema . "." . $table);
-        $cacheId = ($this->postgisdb . "_" . $cacheRel . "_" . $cacheType);
+        $cacheId = ($this->connection->database . "_" . $cacheRel . "_" . $cacheType);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
@@ -1024,7 +1057,7 @@ class Model
     {
         $cacheType = "columns";
         $cacheRel = ($schema . "." . $table);
-        $cacheId = ($this->postgisdb . "_" . $cacheRel . "_" . $cacheType);
+        $cacheId = ($this->connection->database . "_" . $cacheRel . "_" . $cacheType);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
@@ -1034,7 +1067,6 @@ class Model
             $this->execute($res);
             $rows = $this->fetchAll($res);
             $CachedString->set($rows)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-            //   $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $rows;
         }
@@ -1565,7 +1597,7 @@ class Model
     {
         $cacheType = 'colComments';
         $cacheRel = $schema . '.' . $table;
-        $cacheId = $this->postgisdb . '_' . $cacheRel . '_' . $cacheType;
+        $cacheId = $this->connection->database . '_' . $cacheRel . '_' . $cacheType;
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
@@ -1608,7 +1640,7 @@ class Model
     {
         $cacheType = 'tableComment';
         $cacheRel = $schema . '.' . $table;
-        $cacheId = $this->postgisdb . '_' . $cacheRel . '_' . $cacheType;
+        $cacheId = $this->connection->database . '_' . $cacheRel . '_' . $cacheType;
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();

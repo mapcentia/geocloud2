@@ -12,6 +12,7 @@ namespace app\inc;
 use app\exceptions\ServiceException;
 use app\models\Setting;
 use PDOException;
+use Psr\Cache\InvalidArgumentException;
 
 final class BasicAuth
 {
@@ -19,8 +20,11 @@ final class BasicAuth
     private bool $isSession;
     private bool $isSubuser = false;
 
-    function __construct()
+    function __construct(public ?Connection $connection = null)
     {
+        if ($this->connection == null) {
+            $this->connection = new Connection();
+        }
         $this->isSession = Session::isAuth();
         if ($this->isSession) {
             $this->user = Session::getUser();
@@ -35,11 +39,11 @@ final class BasicAuth
      * @param string $layerName The name of the layer to be accessed. It is used to determine the schema and check user privileges.
      * @param bool $isTransaction
      * @return void
-     * @throws ServiceException
+     * @throws ServiceException|InvalidArgumentException
      */
     public function authenticate(string $layerName, bool $isTransaction): void
     {
-        $setting = new Setting();
+        $setting = new Setting(connection: $this->connection);
         $settings = $setting->get();
         if (!$this->isSession || $_SESSION['parentdb'] != $setting->postgisdb) {
             if (!empty(Input::getAuthUser())) {
@@ -60,10 +64,10 @@ final class BasicAuth
         $schema = explode('.', $layerName)[0];
         if ($this->isSubuser && $this->user != $schema) {
             $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ LIKE :schema";
-            $postgisObject = new Model();
+            $postgisObject = new Model(connection: $this->connection);
             $res = $postgisObject->prepare($sql);
             try {
-                $res->execute(array("schema" => $layerName . ".%"));
+                $postgisObject->execute($res, array("schema" => $layerName . ".%"));
             } catch (PDOException $e) {
                 throw new ServiceException($e->getMessage());
             }

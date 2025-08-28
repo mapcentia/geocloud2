@@ -8,15 +8,12 @@
 
 namespace app\inc;
 
-use app\api\v2\Sql;
 use app\conf\App;
-use app\conf\Connection;
 use app\exceptions\GC2Exception;
 use app\exceptions\ServiceException;
-use app\models\Database;
 use app\models\Layer;
 use app\models\Setting;
-use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Psr\Cache\InvalidArgumentException;
 
 /**
  * Class Controller
@@ -39,7 +36,7 @@ class Controller
     /**
      * Controller constructor.
      */
-    function __construct(public ?\app\inc\Connection $connection = null)
+    function __construct(public Connection $connection = new Connection())
     {
         $this->response = [];
     }
@@ -70,7 +67,7 @@ class Controller
     {
         $response = [];
         $prop = $_SESSION['usergroup'] ?: $_SESSION['screen_name'];
-        if (($_SESSION["subuser"] && $prop == Connection::$param['postgisschema']) && !$neverAllowSubUser) {
+        if (($_SESSION["subuser"] && $prop == $this->connection->schema) && !$neverAllowSubUser) {
             $response['success'] = true;
         } elseif ($_SESSION["subuser"]) {
             $text = "You don't have privileges to do this. Please contact the database owner, who can grant you privileges.";
@@ -127,11 +124,10 @@ class Controller
      */
     public function basicHttpAuthLayer(string $layer, string $db): void
     {
-        Database::setDb($db);
         $postgisObject = new Model(connection: $this->connection);
         $auth = $postgisObject->getGeometryColumns($layer, "authentication");
         if ($auth == "Read/write" || !empty(Input::getAuthUser())) {
-            (new BasicAuth())->authenticate($layer, false);
+            (new BasicAuth(connection: $this->connection))->authenticate($layer, false);
         }
     }
 
@@ -142,6 +138,7 @@ class Controller
      * @param string|null $subUser
      * @param string|null $inputApiKey
      * @return array|null
+     * @throws InvalidArgumentException
      */
     public function ApiKeyAuthLayer(string $layer, bool $transaction, array $rels, ?string $subUser = null, ?string $inputApiKey = null): ?array
     {
