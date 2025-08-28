@@ -9,10 +9,12 @@
 namespace app\inc;
 ;
 use app\exceptions\GC2Exception;
+use app\models\Authorization;
 use app\models\Geofence;
 use app\models\Rule;
 use app\models\Sql;
 use Exception;
+use Psr\Cache\InvalidArgumentException;
 use sad_spirit\pg_builder\StatementFactory;
 
 class Transaction
@@ -92,7 +94,7 @@ class Transaction
             }
         }
         foreach ($usedRelationsWithType as $rel => $type) {
-            $authResponse = (new Controller(connection: $this->connection))->ApiKeyAuthLayer($rel, $type == "t", $usedRelationsWithType, $this->subUser, $this->params['key']);
+            $authResponse = (new Authorization(connection: $this->connection))->ApiKeyAuthLayer(relName: $rel, transaction: $type == "t", rels: $usedRelationsWithType, isAuth: true, subUser: $this->subUser);
             if (!$authResponse["success"]) {
                 return $authResponse;
             }
