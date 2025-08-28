@@ -94,7 +94,7 @@ class Transaction
             }
         }
         foreach ($usedRelationsWithType as $rel => $type) {
-            $authResponse = (new Authorization(connection: $this->connection))->ApiKeyAuthLayer(relName: $rel, transaction: $type == "t", rels: $usedRelationsWithType, isAuth: true, subUser: $this->subUser);
+            $authResponse = (new Authorization(connection: $this->connection))->check(relName: $rel, transaction: $type == "t", rels: $usedRelationsWithType, isAuth: true, subUser: $this->subUser);
             if (!$authResponse["success"]) {
                 return $authResponse;
             }

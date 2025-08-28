@@ -28,7 +28,7 @@ class Authorization extends Model
      * @return array                   Structured response with success, code, and details
      * @throws GC2Exception            On forbidden or insufficient privileges
      */
-    public function ApiKeyAuthLayer(string $relName, bool $transaction, array $rels, bool $isAuth, ?string $subUser = null, ?string $userGroup = null): array
+    public function check(string $relName, bool $transaction, array $rels, bool $isAuth, ?string $subUser = null, ?string $userGroup = null): array
     {
         // Ensure the relation is schema-qualified (default to public)
         $bits = explode('.', $relName);
@@ -68,10 +68,10 @@ class Authorization extends Model
                         self::USED_RELS_KEY => $rels,
                     ];
 
+                    $response['privileges'] = $privileges[$userGroup] ?? $privileges[$subUser] ?? null;
                     if ($isAuth) {
-                        $response['privileges'] = $privileges[$userGroup] ?? $privileges[$subUser] ?? null;
+                        $key = $userGroup ?: $subUser;
                         if (!$transaction) {
-                            $key = $userGroup ?: $subUser;
                             $hasNoneOrEmpty = (empty($privileges[$key]) || $privileges[$key] === "none");
                             $isOwner = ($subUser === $schema || $userGroup === $schema);
                             // Always let subusers read from layers open to all
@@ -79,23 +79,21 @@ class Authorization extends Model
                                 if ($auth === "Write") {
                                     return $this->success($response);
                                 }
-                                throw new GC2Exception("You don't have privileges to see '$qualifiedName'. Please contact the database owner, which can grant you privileges.", 403);
+                                throw new GC2Exception("Insufficient privileges to select: $qualifiedName", 403, null, "INSUFFICIENT_PRIVILEGES");
                             }
                             return $this->success($response);
                         }
 
                         // transaction = write/edit
-                        $key = $userGroup ?: $subUser;
                         $insufficient = (!($privileges[$key] ?? null) || $privileges[$key] === "none" || $privileges[$key] === "read");
                         $isOwner = ($subUser === $schema || $userGroup === $schema);
                         if ($insufficient && !$isOwner) {
-                            throw new GC2Exception("You don't have privileges to edit '$qualifiedName'. Please contact the database owner, which can grant you privileges.", 403);
+                            throw new GC2Exception("Insufficient privileges to insert/update/delete: $qualifiedName", 403, null, "INSUFFICIENT_PRIVILEGES");
                         }
                         return $this->success($response);
                     }
 
                     // Not authenticated
-                    $response['privileges'] = $privileges[$userGroup] ?? $privileges[$subUser] ?? null;
                     if ($auth === "Read/write" || $transaction) {
                         throw new GC2Exception("Forbidden", 403);
                     }
