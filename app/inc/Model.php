@@ -728,13 +728,13 @@ class Model
     }
 
     /**
-     * Does NOT work with period in schema name.
+     * Does NOT work with a period in the schema name.
      * @param string|null $table
      * @return array<string,string|null>
      */
-    public static function explodeTableName(?string $table): array
+    public static function explodeTableName(string $table): array
     {
-        if (!$table || !isset(explode(".", $table)[1])) {
+        if (!isset(explode(".", $table)[1])) {
             return ["schema" => null, "table" => $table];
         }
         preg_match("/[^.]*/", $table, $matches);
