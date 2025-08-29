@@ -212,9 +212,7 @@ class Table extends AbstractApi
         $r = [];
         for ($i = 0; sizeof($this->unQualifiedName) > $i; $i++) {
             if (isset($data->name) && $data->name != $this->unQualifiedName[$i]) {
-                $arg = new stdClass();
-                $arg->name = $data->name;
-                $r[] = $layer->rename($this->qualifiedName[$i], $arg)['name'];
+                $r[] = $layer->rename($this->qualifiedName[$i], $data->name)['name'];
             }
             if (isset($data->schema) && $data->schema != $this->schema[0]) {
                 if (!$this->jwt['superUser']) {
@@ -227,20 +225,17 @@ class Table extends AbstractApi
                 $layer->table = $this->qualifiedName[$i];
                 $layer->setTableComment($data->comment);
             }
-        }
-        $schema = $data->schema ?? $this->schema[0];
-
-        // Emit events
-        $this->table[0]->begin();
-        if (property_exists($data, 'emit_events')) {
-            if ($data->emit_events === true) {
-                $this->table[0]->installNotifyTrigger();
-            } elseif ($data->emit_events === false) {
-                $this->table[0]->removeNotifyTrigger();
+            // Emit events
+            if (property_exists($data, 'emit_events')) {
+                if ($data->emit_events === true) {
+                    $layer->installNotifyTrigger($this->qualifiedName[$i]);
+                } elseif ($data->emit_events === false) {
+                    $layer->removeNotifyTrigger($this->qualifiedName[$i]);
+                }
             }
         }
+        $schema = $data->schema ?? $this->schema[0];
         $layer->commit();
-        $this->table[0]->commit();
         header("Location: /api/v4/schemas/{$schema}/tables/" . (count($r) > 0 ? implode(',', $r) : implode(',', $this->unQualifiedName)));
         return ["code" => "303"];
     }

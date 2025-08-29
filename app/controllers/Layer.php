@@ -147,7 +147,7 @@ class Layer extends Controller
     {
         $response = $this->auth(null, array());
         $this->table->begin();
-        $res = !$response['success'] ? $response : $this->table->rename(urldecode(Input::getPath()->part(4)), json_decode(Input::get())->data);
+        $res = !$response['success'] ? $response : $this->table->rename(urldecode(Input::getPath()->part(4)), json_decode(Input::get(), true)['data']['name']);
         $this->table->commit();
         return $res;
     }

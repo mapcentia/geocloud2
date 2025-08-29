@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2024 MapCentia ApS
+ * @copyright  2013-2025 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -237,7 +237,7 @@ class Layer extends Table
                     $srsTmp = "3857";
                     $sqls = "SELECT ST_Xmin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS xmin,ST_Xmax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS xmax, ST_Ymin(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS ymin,ST_Ymax(ST_Extent(public.ST_Transform(\"" . $row['f_geometry_column'] . "\",$srsTmp))) AS ymax  FROM {$row['f_table_schema']}.{$row['f_table_name']}";
                     $resExtent = $this->prepare($sqls);
-                    $resExtent->execute();
+                    $this->execute($resExtent);
                     $extent = $this->fetchRow($resExtent);
                 }
                 $restrictions = [];
@@ -459,24 +459,6 @@ class Layer extends Table
     }
 
     /**
-     * Secure. Using now user input.
-     * @return array
-     */
-    public function getSchemas(): array
-    {
-        $response = [];
-        $arr = [];
-        $sql = "SELECT f_table_schema AS schemas FROM settings.geometry_columns_view WHERE f_table_schema IS NOT NULL AND f_table_schema!='sqlapi' GROUP BY f_table_schema";
-        $result = $this->execQuery($sql);
-        while ($row = $this->fetchRow($result)) {
-            $arr[] = array("schema" => $row["schemas"], "desc" => null);
-        }
-        $response['success'] = true;
-        $response['data'] = $arr;
-        return $response;
-    }
-
-    /**
      * @param string $_key_
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
@@ -556,16 +538,18 @@ class Layer extends Table
     }
 
     /**
-     * @param $tableName
-     * @param $data
-     * @return array
-     * @throws GC2Exception|InvalidArgumentException
+     * Renames a database table to a new specified name.
+     *
+     * @param string $tableName The current name of the table, including the schema (e.g., "schema.table").
+     * @param string $newTableName The desired new name of the table.
+     * @return array<string, mixed> Returns an array containing the success status, a message, and the new table name.
+     * @throws GC2Exception|InvalidArgumentException If the rename operation or any related query execution fails due to a database error.
      */
-    public function rename($tableName, $data): array
+    public function rename(string $tableName, string $newTableName): array
     {
         $this->clearCacheOnSchemaChanges();
         $split = explode(".", $tableName);
-        $newName = self::toAscii($data->name, array(), "_");
+        $newName = self::toAscii($newTableName, [], "_");
         if (is_numeric(mb_substr($newName, 0, 1, 'utf-8'))) {
             $newName = "_" . $newName;
         }
@@ -579,7 +563,7 @@ class Layer extends Table
                 $query = "UPDATE settings.geometry_columns_join SET _key_ = '{$row['f_table_schema']}.$newName.{$row['f_geometry_column']}' WHERE _key_ ='{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}'";
                 $resUpdate = $this->prepare($query);
                 try {
-                    $resUpdate->execute();
+                    $this->execute($resUpdate);
                 } catch (PDOException $e) {
                     throw new GC2Exception($e->getMessage(), 400, null);
                 }
@@ -601,12 +585,14 @@ class Layer extends Table
     }
 
     /**
-     * @param $tables
-     * @param $schema
-     * @return array
-     * @throws InvalidArgumentException
+     * Updates the schema of the specified tables and performs necessary data migrations.
+     *
+     * @param array<string> $tables List of fully qualified table names to move, in the format "schema.table".
+     * @param string $schema The target schema to which the tables should be moved.
+     * @return array<string, mixed> An array containing the success status and a message.
+     * @throws PhpfastcacheInvalidArgumentException
      */
-    public function setSchema($tables, $schema): array
+    public function setSchema(array $tables, string $schema): array
     {
         $this->clearCacheOnSchemaChanges();
         foreach ($tables as $table) {
@@ -617,13 +603,13 @@ class Layer extends Table
             $res = $this->prepare($query);
             $this->execute($res);
             while ($row = $this->fetchRow($res)) {
-                // First delete keys from destination schema if they exists
+                // First, delete keys from destination schema if they exist
                 $query = "DELETE FROM settings.geometry_columns_join WHERE _key_ = '$schema.$bits[1].{$row['f_geometry_column']}'";
                 $resDelete = $this->prepare($query);
-                $resDelete->execute();
+                $this->execute($resDelete);
                 $query = "UPDATE settings.geometry_columns_join SET _key_ = '$schema.$bits[1].{$row['f_geometry_column']}' WHERE _key_ ='$bits[0].$bits[1].{$row['f_geometry_column']}'";
                 $resUpdate = $this->prepare($query);
-                $resUpdate->execute();
+                $this->execute($resUpdate);
             }
             $query = "ALTER TABLE " . $this->doubleQuoteQualifiedName($table) . " SET SCHEMA $schema";
             $res = $this->prepare($query);
@@ -635,10 +621,11 @@ class Layer extends Table
     }
 
     /**
-     * @param array $tables
-     * @return array
-     * @throws InvalidArgumentException
-     * @throws GC2Exception
+     * Deletes the specified tables or views from the schema.
+     *
+     * @param array<string> $tables An array of table or view names to be deleted.
+     * @return array<string, mixed> An associative array containing the success status and a message.
+     * @throws GC2Exception|InvalidArgumentException
      */
     public function delete(array $tables): array
     {
@@ -659,8 +646,9 @@ class Layer extends Table
     }
 
     /**
-     * @param string $_key_
-     * @return array
+     * @param string $_key_ The key used to fetch privileges, potentially modified based on configuration settings.
+     * @return array<string, mixed> An associative array containing success flag, privileges data, and optional message.
+     * @throws PhpfastcacheInvalidArgumentException
      */
     public function getPrivileges(string $_key_): array
     {
@@ -737,8 +725,8 @@ class Layer extends Table
         $date = date('Y-m-d H:i:s');
         $sql = "UPDATE settings.geometry_columns_join set lastmodified=:date WHERE _key_=:key";
         try {
-            $result = $this->prepare($sql);
-            $result->execute(["date" => $date, "key" => $key]);
+            $res = $this->prepare($sql);
+            $this->execute($res, ["date" => $date, "key" => $key]);
             $response['success'] = true;
             $response['message'] = "Last modified value updated";
         } catch (PDOException $e) {
@@ -751,8 +739,8 @@ class Layer extends Table
     }
 
     /**
-     * @param string $_key_
-     * @return array<array|bool|string>
+     * @param string $_key_ The key used to retrieve roles from the storage.
+     * @return array<string, mixed> An array containing the success status, message, and a list of subuser roles.
      */
     public function getRoles(string $_key_): array
     {
@@ -772,9 +760,12 @@ class Layer extends Table
     }
 
     /**
-     * @param object $data
-     * @return array<bool|string|int>
-     * @throws PhpfastcacheInvalidArgumentException|InvalidArgumentException
+     * Updates roles for a given key and subuser.
+     *
+     * @param object $data Data object containing the key, subuser, and roles to update.
+     * @return array<string, mixed> Response array with success status and message.
+     * @throws InvalidArgumentException
+     * @throws GC2Exception
      */
     public function updateRoles(object $data): array
     {
@@ -791,24 +782,6 @@ class Layer extends Table
     }
 
     /**
-     * @param string $_key_
-     * @param string $srs
-     * @return array
-     */
-    public function getExtent(string $_key_, string $srs = "4326"): array
-    {
-        $split = explode(".", $_key_);
-        $srsTmp = $srs;
-        $sql = "SELECT ST_Xmin(ST_Extent(public.ST_Transform(\"" . $split[2] . "\",$srsTmp))) AS xmin,ST_Xmax(ST_Extent(public.ST_Transform(\"" . $split[2] . "\",$srsTmp))) AS xmax, ST_Ymin(ST_Extent(public.ST_Transform(\"" . $split[2] . "\",$srsTmp))) AS ymin,ST_Ymax(ST_Extent(public.ST_Transform(\"" . $split[2] . "\",$srsTmp))) AS ymax  FROM $split[0].$split[1]";
-        $resExtent = $this->prepare($sql);
-        $resExtent->execute();
-        $extent = $this->fetchRow($resExtent);
-        $response['success'] = true;
-        $response['extent'] = $extent;
-        return $response;
-    }
-
-    /**
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function getEstExtent($_key_, $srs = "4326"): array
@@ -817,9 +790,9 @@ class Layer extends Table
         $nativeSrs = $this->getGeometryColumns($split[0] . "." . $split[1], "srid");
         $sql = "WITH bb AS (SELECT ST_astext(ST_Transform(ST_setsrid(ST_EstimatedExtent('" . $split[0] . "', '" . $split[1] . "', '" . $split[2] . "')," . $nativeSrs . ")," . $srs . ")) as geom) ";
         $sql .= "SELECT ST_Xmin(ST_Extent(geom)) AS TXMin,ST_Xmax(ST_Extent(geom)) AS TXMax, ST_Ymin(ST_Extent(geom)) AS TYMin,ST_Ymax(ST_Extent(geom)) AS TYMax  FROM bb";
-        $result = $this->prepare($sql);
-        $result->execute();
-        $row = $this->fetchRow($result);
+        $res = $this->prepare($sql);
+        $this->execute($res);
+        $row = $this->fetchRow($res);
         $extent = array("xmin" => $row['txmin'], "ymin" => $row['tymin'], "xmax" => $row['txmax'], "ymax" => $row['tymax']);
         $response['success'] = true;
         $response['extent'] = $extent;
@@ -827,35 +800,16 @@ class Layer extends Table
     }
 
     /**
-     * @param string $_key_
-     * @param string $srs
-     * @return array
-     */
-    public function getEstExtentAsGeoJSON(string $_key_, string $srs = "4326"): array
-    {
-        $split = explode(".", $_key_);
-        $nativeSrs = $this->getGeometryColumns($split[0] . "." . $split[1], "srid");
-        $sql = "SELECT ST_asGeojson(ST_Transform(ST_setsrid(ST_EstimatedExtent('" . $split[0] . "', '" . $split[1] . "', '" . $split[2] . "')," . $nativeSrs . ")," . $srs . ")) as geojson";
-        $result = $this->prepare($sql);
-        $result->execute();
-        $row = $this->fetchRow($result);
-        $extent = $row["geojson"];
-        $response['success'] = true;
-        $response['extent'] = $extent;
-        return $response;
-    }
-
-    /**
-     * @param string $_key_
-     * @return array
+     * @param string $_key_ The key used to determine the table and schema in the format "schema.table".
+     * @return array<string, mixed> An associative array containing a success flag and the count of records from the specified table.
      */
     public function getCount(string $_key_): array
     {
         $split = explode(".", $_key_);
         $sql = "SELECT count(*) AS count FROM " . $split[0] . "." . $split[1];
-        $result = $this->prepare($sql);
-        $result->execute();
-        $row = $this->fetchRow($result);
+        $res = $this->prepare($sql);
+        $this->execute($res);
+        $row = $this->fetchRow($res);
         $count = $row['count'];
         $response['success'] = true;
         $response['count'] = $count;
@@ -863,10 +817,14 @@ class Layer extends Table
     }
 
     /**
-     * @param string $to
-     * @param string $from
-     * @return array
-     * @throws InvalidArgumentException
+     * Copies metadata from a specified source key to multiple target keys in the database.
+     *
+     * @param string $from The source key from which metadata will be copied.
+     * @param object $data An object containing metadata fields and target keys.
+     *                     The `fields` property is an array specifying which fields to copy,
+     *                     and the `keys` property is an array of target keys.
+     * @return array<bool|string> Returns an array indicating success with a boolean value.
+     *                            If the operation fails, it includes an error message and a status code.
      */
     public function copyMeta(string $from, object $data): array
     {
@@ -923,7 +881,6 @@ class Layer extends Table
         $sql = "SELECT tags FROM settings.geometry_columns_join WHERE tags NOTNULL AND tags <> 'null' AND tags <> '\"null\"'";
         $res = $this->prepare($sql);
         $this->execute($res);
-
         $arr = array();
         while ($row = $this->fetchRow($res)) {
             if (isset($row["tags"]) && json_decode($row["tags"])) {
@@ -941,8 +898,9 @@ class Layer extends Table
     }
 
     /**
-     * @param string $field
-     * @return array
+     * @param string $field The database field used for grouping the results.
+     * @return array<bool|array<array<string, mixed>>> An array containing the success status and the grouped data retrieved from the database.
+     * @throws DatabaseException If there is an error executing the database query.
      */
     public function getGroups(string $field): array
     {
@@ -950,16 +908,25 @@ class Layer extends Table
         $sql = "SELECT $field AS $field FROM settings.geometry_columns_join WHERE $field IS NOT NULL GROUP BY $field";
         $res = $this->prepare($sql);
         $this->execute($res);
-
         while ($row = $this->fetchRow($res)) {
             $arr[] = array("group" => $row[$field]);
         }
         $response['success'] = true;
         $response['data'] = $arr;
-
         return $response;
     }
 
+    /**
+     * Inserts default metadata into the `settings.geometry_columns_join` table for rows
+     * in the `settings.geometry_columns_view` where the `_key_` field is null and the key
+     * does not begin with an underscore.
+     *
+     * This method prepares and executes an SQL statement to perform the insertion operation
+     * and returns the operation's success status and the number of affected rows.
+     *
+     * @return array<string, mixed> Associative array containing the success status as a boolean
+     *                              and the count of rows affected by the insertion.
+     */
     public function insertDefaultMeta(): array
     {
         $sql = "with t as (select f_table_schema || '.' || f_table_name || '.' || f_geometry_column as key
@@ -972,5 +939,44 @@ class Layer extends Table
         $response['success'] = true;
         $response['count'] = $res->rowCount();
         return $response;
+    }
+
+    /**
+     * Installs or replaces a database trigger to emit real-time notifications for a specified table.
+     *
+     * @param string $_key_ The full identifier of the table in the format "schema.table".
+     * @return void
+     * @throws GC2Exception If the table does not have a primary key or has a primary key with multiple columns.
+     */
+    public function installNotifyTrigger(string $_key_): void
+    {
+        $explodedKey =  self::explodeTableName($_key_);
+        $con = $this->getConstrains($explodedKey['schema'], $explodedKey['table'], 'p')['data'];
+        if (count($con) == 0) {
+            throw new GC2Exception("Table must have a primary key for emitting real time events", 401);
+        }
+        if (count($con) > 1) {
+            throw new GC2Exception("Table has primary key with multiple columns", 401);
+        }
+        $sql = "DROP TRIGGER IF EXISTS _gc2_notify_transaction_trigger ON \"{$explodedKey['schema']}\".\"{$explodedKey['table']}\"";
+        $res = $this->prepare($sql);
+        $this->execute($res);
+        $sql = "CREATE TRIGGER _gc2_notify_transaction_trigger AFTER INSERT OR UPDATE OR DELETE ON \"{$explodedKey['schema']}\".\"{$explodedKey['table']}\" FOR EACH ROW EXECUTE PROCEDURE _gc2_notify_transaction('$this->primaryKey', '$this->schema','$this->tableWithOutSchema')";
+        $res = $this->prepare($sql);
+        $this->execute($res);
+    }
+
+    /**
+     * Removes a notification trigger from the specified table in a schema.
+     *
+     * @param string $_key_ The composite key in the format "schema.table" used to identify the schema and table.
+     * @return void
+     */
+    public function removeNotifyTrigger(string $_key_): void
+    {
+        $explodedKey =  self::explodeTableName($_key_);
+        $sql = "DROP TRIGGER IF EXISTS _gc2_notify_transaction_trigger ON \"{$explodedKey['schema']}\".\"{$explodedKey['table']}\"";
+        $res = $this->prepare($sql);
+        $this->execute($res);
     }
 }
