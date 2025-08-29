@@ -39,7 +39,7 @@ abstract class AbstractApi implements ApiInterface
         'index_method', 'checks', 'geom_type', 'srid', 'is_array', 'udt_name'];
 
 
-    public function __construct(public readonly Connection $connection) {}
+    public function __construct(protected readonly Connection $connection) {}
 
     /**
      * @param string|null $schema

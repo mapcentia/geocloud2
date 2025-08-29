@@ -139,7 +139,25 @@ class Preparedstatement extends Model
         return $res->fetchColumn();
     }
 
-    public function updatePreparedStatement(string $name, ?string $newName, ?string $statement, ?array $typeHints, ?array $typeFormats, ?string $outputFormat, ?int $srs, string $userName, bool $isSuperUser = false): void
+    /**
+     * Updates an existing prepared statement in the settings.prepared_statements table.
+     *
+     * @param string $name The current name of the prepared statement.
+     * @param string|null $newName The new name for the prepared statement. If null, the current name is retained.
+     * @param string|null $statement The new SQL statement. If null, the current statement is retained.
+     * @param array|null $typeHints An array of type hints for parameters. If null, the current type hints are retained.
+     * @param array|null $typeFormats An array of type formats for parameters. If null, the current type formats are retained.
+     * @param string|null $outputFormat The new output format for the result set. If null, the current output format is retained.
+     * @param int|null $srs The Spatial Reference System identifier (SRS). If null, the current value is retained.
+     * @param string $userName The username of the user attempting the update.
+     * @param bool $isSuperUser Indicates if the user has superuser privileges. Default is false.
+     *
+     * @return array An associative array containing the updated record's UUID and name.
+     *
+     * @throws GC2Exception If the user is not authorized to update the prepared statement.
+     * @throws InvalidArgumentException
+     */
+    public function updatePreparedStatement(string $name, ?string $newName, ?string $statement, ?array $typeHints, ?array $typeFormats, ?string $outputFormat, ?int $srs, string $userName, bool $isSuperUser = false): array
     {
         $this->clearCacheOnSchemaChanges(md5($name));
         $old = $this->getByName($name)['data'];
@@ -153,8 +171,7 @@ class Preparedstatement extends Model
             'srs' => $srs ?? $old['srs'],
         ];
         if ($isSuperUser) {
-            $sql = "UPDATE settings.prepared_statements SET name=:newName, statement=:statement,type_hints=:type_hints,type_formats=:type_formats,output_format=:output_format,srs=:srs where name=:name RETURNING uuid,name";
-
+            $sql = "UPDATE settings.prepared_statements SET name=:newName, statement=:statement,type_hints=:type_hints,type_formats=:type_formats,output_format=:output_format,srs=:srs where name=:name RETURNING uuid,name";;
         } else {
             $sql = "UPDATE settings.prepared_statements SET name=:newName, statement=:statement,type_hints=:type_hints,type_formats=:type_formats,output_format=:output_format,srs=:srs where name=:name and username=:username RETURNING uuid,name";
             $params['username'] = $userName;
@@ -168,12 +185,15 @@ class Preparedstatement extends Model
         }
         $this->clearCacheOnSchemaChanges(md5($row['name']));
         $this->clearCacheOnSchemaChanges(md5($row['uuid']));
+        return $row;
     }
 
     /**
      * Deletes a prepared statement with the given name from the settings.prepared_statements table.
      *
      * @param string $name The name of the prepared statement to be deleted.
+     * @param string $userName
+     * @param bool $isSuperUser
      * @return void
      * @throws GC2Exception If no statements are found with the given name.
      * @throws InvalidArgumentException

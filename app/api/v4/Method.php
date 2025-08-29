@@ -82,9 +82,11 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 #[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
 class Method extends AbstractApi
 {
+    private PreparedstatementModel $pres;
     public function __construct(private readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
+        $this->pres = new PreparedstatementModel($connection);
     }
 
     /**
@@ -99,8 +101,7 @@ class Method extends AbstractApi
     public function get_index(): array
     {
         $id = $this->route->getParam('id');;
-        $pres = new PreparedstatementModel();
-        $q = $pres->getAll()['data'];
+        $q = $this->pres->getAll()['data'];
         $methods = [];
         foreach ($q as $s) {
             $methods[] = [
@@ -132,8 +133,7 @@ class Method extends AbstractApi
 
     /**
      * @return array
-     * @throws PhpfastcacheInvalidArgumentException|GC2Exception
-     * @throws InvalidArgumentException
+     * @throws GC2Exception
      */
     #[OA\Post(path: '/api/v4/methods', operationId: 'postRpc', description: "Create RPC method", tags: ['Methods'])]
     #[OA\RequestBody(description: 'RPC method to create', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Method"))]
@@ -154,9 +154,7 @@ class Method extends AbstractApi
         } else {
             $methods = [$decodedBody];
         }
-        $pres = new PreparedstatementModel(connection: $this->connection,);
-        $pres->connect();
-        $pres->begin();
+        $this->pres->begin();
         foreach ($methods as $m) {
             $q = $m['q'];
             $method = $m['method'];
@@ -164,9 +162,9 @@ class Method extends AbstractApi
             $typeFormats = $m['type_formats'];
             $outputFormat = $m['output_format'] ?? 'json';
             $srs = $m['srs'] ?? 4326;
-            $list[] = $pres->createPreparedStatement($method, $q, $typeHints, $typeFormats, $outputFormat, $srs, $uid);
+            $list[] = $this->pres->createPreparedStatement($method, $q, $typeHints, $typeFormats, $outputFormat, $srs, $uid);
         }
-        $pres->commit();
+        $this->pres->commit();
         $baseUri = "/api/v4/methods/";
         header("Location: $baseUri" . implode(",", $list));
         $res["code"] = "201";
@@ -181,6 +179,7 @@ class Method extends AbstractApi
 
     /**
      * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     #[OA\Patch(path: '/api/v4/methods/{method}', operationId: 'patchRpc', description: "Update RPC method", tags: ['Methods'])]
     #[OA\Parameter(name: 'method', description: 'Method name', in: 'path', required: true, example: '66f5005bd44c6')]
@@ -197,17 +196,17 @@ class Method extends AbstractApi
         $jwtData = Jwt::validate()["data"];
         $uid = $jwtData["uid"];
         $isSuperUser = $jwtData["superUser"];
-        $model = new PreparedstatementModel();
         $ids = explode(',', $id);
         $body = json_decode(Input::getBody(), true);
 
-        $model->connect();
-        $model->begin();
+        $this->pres->connect();
+        $this->pres->begin();
+        $names = [];
         foreach ($ids as $id) {
-            $model->updatePreparedStatement($id, $body['method'], $body['q'], $body['type_hints'], $body['type_formats'], $body['output_format'], $body['srs'], $uid, $isSuperUser);
+            $names[] = $this->pres->updatePreparedStatement($id, $body['method'], $body['q'], $body['type_hints'], $body['type_formats'], $body['output_format'], $body['srs'], $uid, $isSuperUser);
         }
-        $model->commit();
-        header("Location: /api/v4/methods/" . implode(",", $ids));
+        $this->pres->commit();
+        header("Location: /api/v4/methods/" . implode(",", array_map(fn($c) => $c['name'], $names)));
         return ["code" => "303"];
     }
 
@@ -226,14 +225,12 @@ class Method extends AbstractApi
         $jwtData = Jwt::validate()["data"];
         $uid = $jwtData["uid"];
         $isSuperUser = $jwtData["superUser"];
-        $model = new PreparedstatementModel();
         $ids = explode(',', $id);
-        $model->connect();
-        $model->begin();
+        $this->pres->begin();
         foreach ($ids as $id) {
-            $model->deletePreparedStatement($id, $uid, $isSuperUser);
+            $this->pres->deletePreparedStatement($id, $uid, $isSuperUser);
         }
-        $model->commit();
+        $this->pres->commit();
         return ["code" => "204"];
     }
 
