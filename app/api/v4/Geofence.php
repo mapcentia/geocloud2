@@ -110,6 +110,7 @@ class Geofence extends AbstractApi
     public function __construct(private readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
+        $this->geofence = new GeofenceModel(connection: $connection);
     }
 
     /**
@@ -125,15 +126,14 @@ class Geofence extends AbstractApi
     public function get_index(): array
     {
         $r = [];
-        $geofence = new GeofenceModel(null, connection: $this->connection);
         if (!empty($this->route->getParam("id"))) {
             $ids = explode(',', $this->route->getParam("id"));
             foreach ($ids as $id) {
-                $t = $geofence->get($id)[0];
+                $t = $this->geofence->get($id)[0];
                 $r[] = $t;
             }
         } else {
-            $r = $geofence->get(null);
+            $r = $this->geofence->get(null);
         }
         // Rename layer to table
         $r = array_map(function ($item) {
@@ -166,22 +166,20 @@ class Geofence extends AbstractApi
     public function post_index(): array
     {
         $list = [];
-        $model = new GeofenceModel(null, connection: $this->connection);;
         $body = Input::getBody();
         $data = json_decode($body, true);
         if (!isset($data['rules'])) {
             $data['rules'] = [$data];
         }
-        $model->connect();
-        $model->begin();
+        $this->geofence->begin();
         foreach ($data['rules'] as $datum) {
             if (isset($datum['table'])) {
                 $datum['layer'] = $datum['table'];
                 unset($datum['table']);
             }
-            $list[] = $model->create($datum)['data']['id'];
+            $list[] = $this->geofence->create($datum)['data']['id'];
         }
-        $model->commit();
+        $this->geofence->commit();
         $baseUri = "/api/v4/rules/";
         header("Location: $baseUri" . implode(",", $list));
         $res["code"] = "201";
@@ -212,9 +210,7 @@ class Geofence extends AbstractApi
         $list = [];
         $body = Input::getBody();
         $data = json_decode($body, true);
-        $model = new GeofenceModel(null, connection: $this->connection);;
-        $model->connect();
-        $model->begin();
+        $this->geofence->begin();
         foreach ($ids as $id) {
             if (!is_numeric($id)) {
                 throw new GC2Exception("Id is not a integer", 400, null, 'MISSING_ID');
@@ -226,9 +222,9 @@ class Geofence extends AbstractApi
                 $data['layer'] = $data['table'];
                 unset($data['table']);
             }
-            $list[] = $model->update($id, $data);
+            $list[] = $this->geofence->update($id, $data);
         }
-        $model->commit();
+        $this->geofence->commit();
         header("Location: /api/v4/rules/" . implode(",", $list));
         return ["code" => "303"];
     }
@@ -244,16 +240,14 @@ class Geofence extends AbstractApi
     public function delete_index(): array
     {
         $ids = explode(',', $this->route->getParam("id"));
-        $model = new GeofenceModel(null, connection: $this->connection);;;
-        $model->connect();
-        $model->begin();
+        $this->geofence->begin();
         foreach ($ids as $id) {
             if (!is_numeric($id)) {
                 throw new GC2Exception("Id is not a integer", 400, null, 'MISSING_ID');
             }
-            $model->delete((int)$id);
+            $this->geofence->delete((int)$id);
         }
-        $model->commit();
+        $this->geofence->commit();
         return ["code" => "204"];
     }
 
