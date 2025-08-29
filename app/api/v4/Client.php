@@ -159,7 +159,6 @@ class Client extends AbstractApi
         $clients = [];
         $body = Input::getBody();
         $data = json_decode($body, true);
-        $this->client->connect();
         $this->client->begin();
         if (!isset($data['clients'])) {
             $data['clients'] = [$data];
@@ -177,9 +176,8 @@ class Client extends AbstractApi
             $clients[] = $this->client->insert(...$arr);
         }
         $this->client->commit();
-        $list = array_map(fn($c) => $c['id'], $clients);
         $baseUri = "/api/v4/clients/";
-        header("Location: $baseUri" . implode(",", $list));
+        header("Location: $baseUri" . implode(",", array_map(fn($c) => $c['id'], $clients)));
         $res["code"] = "201";
         $res["clients"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l['id']], 'secret' => $l['secret']], $clients);
         if (count($res["clients"]) == 1) {
