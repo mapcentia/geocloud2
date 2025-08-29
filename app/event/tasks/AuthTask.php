@@ -29,7 +29,6 @@ readonly class AuthTask implements Task
     public function run(Channel $channel, Cancellation $cancellation): bool
     {
         echo "[INFO] AuthTask Worker PID: " . getmypid() . "\n";
-        Database::setDb($this->jwtData["database"]);
         $conn = new Connection(database: $this->jwtData["database"]);
         $isSuperUser = $this->jwtData["superUser"];
         $uid = $this->jwtData["uid"];
