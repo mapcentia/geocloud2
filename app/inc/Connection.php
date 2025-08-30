@@ -39,6 +39,6 @@ final class Connection
         $this->database = $database ?? \app\conf\Connection::$param['postgisdb'];
         $this->password = $password ?? \app\conf\Connection::$param['postgispw'];
         $this->pgbouncer = $pgbouncer ?? \app\conf\Connection::$param['pgbouncer'];
-        $this->schema = $schema ?? \app\conf\Connection::$param['postgisschema'];
+        $this->schema = $schema ?? \app\conf\Connection::$param['postgisschema'] ?? 'public';
     }
 }

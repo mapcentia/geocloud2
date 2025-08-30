@@ -34,7 +34,7 @@ class Geofence extends Model
      * Geofencing constructor.
      * @param UserFilter|null $userFilter
      */
-    public function __construct(private readonly ?UserFilter $userFilter = null, Connection $connection = null)
+    public function __construct(private readonly ?UserFilter $userFilter = null, ?Connection $connection = null)
     {
         parent::__construct(connection: $connection);
         if ($this->userFilter) {

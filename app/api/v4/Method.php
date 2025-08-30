@@ -203,7 +203,7 @@ class Method extends AbstractApi
         $this->pres->begin();
         $names = [];
         foreach ($ids as $id) {
-            $names[] = $this->pres->updatePreparedStatement($id, $body['method'], $body['q'], $body['type_hints'], $body['type_formats'], $body['output_format'], $body['srs'], $uid, $isSuperUser);
+            $names[] = $this->pres->updatePreparedStatement($id, $body['method'] ?? null, $body['q'] ?? null, $body['type_hints'] ?? null, $body['type_formats'] ?? null, $body['output_format'] ?? null, $body['srs'] ?? null, $uid, $isSuperUser);
         }
         $this->pres->commit();
         header("Location: /api/v4/methods/" . implode(",", array_map(fn($c) => $c['name'], $names)));
