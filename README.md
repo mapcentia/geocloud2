@@ -57,6 +57,29 @@ It's recommended to go through [this workshop](https://mapcentia.github.io/GC2-V
 > It will expose GC2 on port 8080 and Vidi on 3000
 > PostgreSQL password is set to 1234
 
+## Dev Container (PhpStorm and VS Code)
+A ready-to-use Dev Container is provided in the .devcontainer folder. It uses the docker/docker-compose.yml to start the main gc2core service along with Redis and PostGIS.
+
+Quick start with PhpStorm (JetBrains):
+- Install PhpStorm 2023.3+ and the Dev Containers plugin (Settings > Plugins > Marketplace: search for "Dev Containers").
+- Open this repository in PhpStorm.
+- From the Welcome screen or IDE main menu, choose: File > Open in Dev Container (or use the Dev Containers tool window) and select this project. PhpStorm will build/start the container and attach automatically.
+- PhpStorm will use the container as the execution environment (PHP CLI/interpreter and Composer inside container). The workspace inside the container is /var/www/geocloud2.
+
+Quick start with VS Code:
+- Install VS Code and the Dev Containers extension
+- Open this repository in VS Code
+- Run: Dev Containers: Reopen in Container
+
+When opened in a Dev Container (PhpStorm or VS Code), the supporting services are started automatically:
+- postgis (PostgreSQL + PostGIS) on port 5432
+- redis on port 6379
+
+The web app ports are forwarded to your host:
+- 8080 (GC2 Admin)
+- 8081
+- 8088 (event service)
+
 ## Who is MapCentia?
 MapCentia believes getting easy access to standard based open source software matters. As the company behind the open source project GC2 — a complete platform for managing geospatial data, making map visualisations and creating applications, MapCentia is helping teams to get the most out of their data. From local governments to world leading consulting firms, our product is extending what's possible with open source software and data.
 
