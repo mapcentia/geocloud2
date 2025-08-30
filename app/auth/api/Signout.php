@@ -26,9 +26,9 @@ class Signout extends AbstractApi
     {
         (new \app\models\Session())->stop();
         $r = null;
-        $encoded = Input::get('redirect_url');
+        $encoded = Input::get('redirect_uri');
         if ($encoded) {
-            $r = urldecode(Input::get('redirect_url'));
+            $r = urldecode(Input::get('redirect_uri'));
         }
         header("Location: $r");
         return ['code' => 302];
