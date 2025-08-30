@@ -37,13 +37,13 @@ class User extends Model
     /**
      * @var string|null
      */
-    public ?string $parentdb;
+    public ?string $parentDb;
 
-    function __construct(?string $userId = null, ?string $parentdb = null)
+    function __construct(?string $userId = null, ?string $parentDb = null)
     {
         parent::__construct(new Connection(database: 'mapcentia'));
         $this->userId = $userId;
-        $this->parentdb = $parentdb;
+        $this->parentDb = $parentDb;
     }
 
     /**
@@ -53,8 +53,8 @@ class User extends Model
     private function clearCacheOnSchemaChanges(): void
     {
         $patterns = [
-            $this->parentdb . '_settings_*',
-            $this->parentdb . '_default_user',
+            $this->parentDb . '_settings_*',
+            $this->parentDb . '_default_user',
         ];
         Cache::deleteByPatterns($patterns);
     }
@@ -135,12 +135,12 @@ class User extends Model
      */
     public function getData(): array
     {
-        $query = "SELECT email, parentdb, usergroup, screenname as userid, properties, zone, default_user FROM users WHERE (screenname = :sUserID OR email = :sUserID) AND (parentdb = :parentDb OR parentDB IS NULL)";
+        $query = "SELECT email, parentdb, usergroup, screenname as userid, properties, zone, default_user FROM users WHERE (screenname = :sUserID OR email = :sUserID) AND (parentdb = :parentDb OR parentdb IS NULL)";
         $res = $this->prepare($query);
-        $this->execute($res, array(":sUserID" => $this->userId, ":parentDb" => $this->parentdb));
+        $this->execute($res, array(":sUserID" => $this->userId, ":parentDb" => $this->parentDb));
         $row = $this->fetchRow($res);
         if (!$row['userid']) {
-            throw new GC2Exception("User identifier $this->userId was not found (parent database: " . ($this->parentdb ?: 'null') . ")", 404, null, 'USER_NOT_FOUND');
+            throw new GC2Exception("User identifier $this->userId was not found (parent database: " . ($this->parentDb ?: 'null') . ")", 404, null, 'USER_NOT_FOUND');
         }
         if (!empty($row['properties'])) {
             $row['properties'] = json_decode($row['properties']);
@@ -232,12 +232,12 @@ class User extends Model
         if (sizeof($passwordCheckResults) > 0) {
             throw new GC2Exception('Password does not meet following requirements: ' . implode(', ', $passwordCheckResults), 400, null, 'WEAK_PASSWORD');
         }
-
         $encryptedPassword = Setting::encryptPwSecure($password);
 
-        // Create new database
         $db = new Database(connection: $this->connection);
+        // Check for superuser context
         if (isset($data['subuser']) && $data['subuser'] === false) {
+            // Create a new database
             $db->postgisdb = $this->postgisdb;
             $db->createUser($userId, null, true);
             $db->createdb($userId, App::$param['databaseTemplate']);
@@ -320,7 +320,7 @@ class User extends Model
     {
         $this->clearCacheOnSchemaChanges();
         $user = isset($data["user"]) ? Model::toAscii($data["user"], NULL, "_") : null;
-        // Check if such email already exists
+        // Check if such an email already exists
         $email = null;
         if (isset($data["email"])) {
             $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE email = '" . $data["email"] . "' AND screenname <> '" . $user . "'");
@@ -346,7 +346,7 @@ class User extends Model
         if ($password) $sQuery .= ", pw=:sPassword";
         if ($email) $sQuery .= ", email=:sEmail";
         if ($properties) $sQuery .= ", properties=:sProperties";
-        if ($default) $sQuery .= ", default_user=:sDefault";
+        $sQuery .= ", default_user=:sDefault";
         if (array_key_exists('usergroup', $data)) {
             $userGroup = $data["usergroup"];
             if (is_null($userGroup)) {
@@ -556,7 +556,7 @@ class User extends Model
     public function getDefaultUser(): string
     {
         $cacheType = 'default_user';
-        $cacheId = $this->parentdb . "_" . $cacheType;
+        $cacheId = $this->parentDb . "_" . $cacheType;
 
         $CachedString = Cache::getItem($cacheId);
 
@@ -565,7 +565,7 @@ class User extends Model
         } else {
             $query = "SELECT screenname FROM users WHERE parentdb=:parentdb AND default_user='t'";
             $res = $this->prepare($query);
-            $this->execute($res, [':parentdb' => $this->parentdb]);
+            $this->execute($res, [':parentdb' => $this->parentDb]);
             $defaultUser = $res->fetchColumn();
             if (!$defaultUser) {
                 throw new GC2Exception("No default user found", 404, null, "NO_DEFAULT_USER_FOUND");
