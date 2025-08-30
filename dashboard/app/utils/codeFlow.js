@@ -1,5 +1,5 @@
-import { CodeFlow } from "@mapcentia/gc2-js-client";
-import { getGC2ConfigurationCall } from "../api";
+import {CodeFlow} from "@mapcentia/gc2-js-client";
+import {getGC2ConfigurationCall} from "../api";
 
 // Fallback defaults to preserve existing behavior if remote config is missing
 const DEFAULTS = {
@@ -11,14 +11,15 @@ const DEFAULTS = {
 
 // Attempt to extract OIDC settings from a variety of likely shapes
 function extractOidcConfig(raw) {
-    const oidc = raw.gc2Options.openId;
+    const oidc = raw.gc2Options.openIdConfig;
     const redirectUri = oidc.redirectUri || DEFAULTS.redirectUri;
-    const clientId = oidc.clientId ||  DEFAULTS.clientId;
+    const clientId = oidc.clientId || DEFAULTS.clientId;
     const host = oidc.host || DEFAULTS.host;
-    const tokenUri = oidc.tokenUri || oidc.token_endpoint || undefined;
-    const authUri = oidc.authUri || oidc.authorization_endpoint || undefined;
+    const tokenUri = oidc.tokenUri || undefined;
+    const authUri = oidc.authUri || undefined;
+    const logoutUri = oidc.logoutUri || undefined;
     const scope = oidc.scope || DEFAULTS.scope;
-    return { redirectUri, clientId, host, tokenUri, authUri, scope };
+    return {redirectUri, clientId, host, tokenUri, authUri, scope, logoutUri};
 }
 
 // Create the CodeFlow instance once configuration is available.
@@ -39,7 +40,8 @@ function ensureInstance() {
 const codeFlow = {
     signIn: () => ensureInstance().then(cf => cf.signIn()),
     redirectHandle: () => ensureInstance().then(cf => cf.redirectHandle()),
-    signOut: () => ensureInstance().then(cf => cf.signiOut()),
+    signOut: () => ensureInstance().then(cf => cf.signOut()),
+    clear: () => ensureInstance().then(cf => cf.clear()),
 };
 
 export default codeFlow;

@@ -93,6 +93,19 @@ services:
       retries: 2
       start_period: 10s
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3.3
+    command:
+      - "start-dev"
+    networks:
+      - default
+      - internal
+    ports:
+      - "8083:8080"
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+
 #  limesurvey:
 #    image: acspri/limesurvey
 #    ports:
