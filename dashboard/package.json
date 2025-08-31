@@ -46,7 +46,7 @@
     },
     "dependencies": {
         "@babel/polyfill": "^7.6.0",
-        "@mapcentia/gc2-js-client": "0.0.19",
+        "@mapcentia/gc2-js-client": "0.0.21",
         "@material-ui/core": "^3.9.2",
         "@material-ui/icons": "^3.0.2",
         "axios": "^0.18.0",

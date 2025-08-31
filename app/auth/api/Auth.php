@@ -31,45 +31,38 @@ class Auth extends AbstractApi
 
     public function get_index(): array
     {
+        $requiredParams = ['response_type', 'client_id'];
+        foreach ($requiredParams as $requiredParam) {
+            if (!array_key_exists($requiredParam, $_GET)) {
+                $error = "invalid_request";
+                $errorDesc = "The request must contain the following parameter '$requiredParam'";
+                return $this->error($error, $errorDesc);
+            }
+            if ($requiredParam == 'response_type' && !($_GET[$requiredParam] == 'token' || $_GET[$requiredParam] == 'code')) {
+                $error = "unsupported_response_type";
+                $errorDesc = "The application requested an unsupported response type '$_GET[$requiredParam]' when requesting a token";
+                return $this->error($error, $errorDesc);
+            }
+        }
+
         if (Session::isAuth()) {
             $client = new Client(connection: new Connection(database: $_SESSION['parentdb']));
-            $requiredParams = ['response_type', 'client_id'];
-            $gotError = false;
-            $error = "";
-            $errorDesc = "";
-            foreach ($requiredParams as $requiredParam) {
-                if (!array_key_exists($requiredParam, $_GET)) {
-                    $gotError = true;
-                    $error = "invalid_request";
-                    $errorDesc = "The request must contain the following parameter '$requiredParam'";
-                    goto error;
-                }
-                if ($requiredParam == 'response_type' && !($_GET[$requiredParam] == 'token' || $_GET[$requiredParam] == 'code')) {
-                    $gotError = true;
-                    $error = "unsupported_response_type";
-                    $errorDesc = "The application requested an unsupported response type '$_GET[$requiredParam]' when requesting a token";
-                    goto error;
-                }
-            }
             // Check client id
             try {
                 $clientData = $client->get($_GET['client_id']);
             } catch (Exception $e) {
-                $gotError = true;
                 $error = "invalid_client";
                 $errorDesc = "Client with identifier '{$_GET['client_id']}' was not found in the directory";
-                goto error;
+                return $this->error($error, $errorDesc);
             }
 
             $uris = $clientData[0]['redirect_uri'];
             if ($_GET['redirect_uri'] && !in_array($_GET['redirect_uri'], $uris)) {
-                $gotError = true;
                 $error = "invalid_client";
                 $errorDesc = "Client with identifier '{$_GET['client_id']}' is not registered with redirect uri: {$_GET['redirect_uri']} ";
-                goto error;
+                return $this->error($error, $errorDesc);
             }
             $redirectUri = $_GET['redirect_uri'] ?? $uris[0];
-
             $separator = str_contains($redirectUri, '?') ? '&' : '?';
 
             // Check client secret
@@ -77,20 +70,10 @@ class Auth extends AbstractApi
                 try {
                     $client->verifySecret($_GET['client_id'], $_GET['client_secret']);
                 } catch (Exception) {
-                    $gotError = true;
                     $error = "invalid_client";
                     $errorDesc = "Client secret doesn't match what was expected";
-                    goto error;
+                    return $this->error($error, $errorDesc);
                 }
-            }
-            // If error we send user back with error parameters
-            error:
-            if ($gotError) {
-                echo "[$error] $errorDesc";
-//                $paramsStr = http_build_query(['error' => $error, 'error_description' => $errorDesc]);
-//                $header = "Location: $redirectUri$separator$paramsStr";
-//                header($header);
-                return [];
             }
             $code = $_GET['response_type'] == 'code';
             $codeChallenge = $_GET['code_challenge'];
@@ -140,7 +123,16 @@ class Auth extends AbstractApi
         return [];
     }
 
-    public function post_index(): never
+    private function error(string $error, string $errorDesc): array {
+            echo "[$error] $errorDesc";
+//                $paramsStr = http_build_query(['error' => $error, 'error_description' => $errorDesc]);
+//                $header = "Location: $redirectUri$separator$paramsStr";
+//                header($header);
+            return [];
+
+    }
+
+    public function post_index(): array
     {
         // TODO: Implement post_index() method.
     }
