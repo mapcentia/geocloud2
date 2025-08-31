@@ -271,6 +271,8 @@ class Sql
         $sqls[] = "CREATE UNIQUE INDEX only_one_true_default_useridx
                         ON users (default_user, parentdb)
                         WHERE default_user IS TRUE";
+        $sqls[] = "ALTER TABLE users ADD CONSTRAINT email_unique_for_parent UNIQUE  (parentdb, email)";
+        $sqls[] = "alter table public.users alter column email set not null";
         return $sqls;
     }
 

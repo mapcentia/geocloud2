@@ -6,8 +6,7 @@
   "service": "gc2core",
   "runServices": [
     "postgis",
-    "redis",
-    "gc2core"
+    "redis"
   ],
   "workspaceFolder": "/var/www/geocloud2",
   "overrideCommand": false,
