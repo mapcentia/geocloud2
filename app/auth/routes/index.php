@@ -16,6 +16,7 @@ use app\auth\api\Signout;
 use app\inc\Route2;
 use app\auth\api\Auth;
 use app\auth\api\Activation;
+use app\auth\api\Github;
 
 $route2 = new Route2();
 
@@ -26,3 +27,5 @@ $route2->add("signup", new Signup());
 $route2->add("signout", new Signout());
 $route2->add("activation", new Activation());
 $route2->add("forgot", new Forgot());
+$route2->add("github/(start)", new Github());
+$route2->add("github/(callback)", new Github());

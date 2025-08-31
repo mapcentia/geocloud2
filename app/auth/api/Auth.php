@@ -108,6 +108,11 @@ class Auth extends AbstractApi
         $vals = [
             'parentdb' => $_GET['parentdb'] ?? '',
             'client_id' => $_GET['client_id'],
+            'response_type' => $_GET['response_type'] ?? null,
+            'redirect_uri' => $_GET['redirect_uri'] ?? null,
+            'state' => $_GET['state'] ?? null,
+            'code_challenge' => $_GET['code_challenge'] ?? null,
+            'code_challenge_method' => $_GET['code_challenge_method'] ?? null,
         ];
         $hxVals = htmlspecialchars(json_encode($vals, JSON_UNESCAPED_SLASHES), ENT_QUOTES);
 
@@ -134,26 +139,26 @@ class Auth extends AbstractApi
 
     public function post_index(): array
     {
-        // TODO: Implement post_index() method.
+        return [];
     }
 
     public function put_index(): array
     {
-        // TODO: Implement put_index() method.
+        return [];
     }
 
     public function delete_index(): array
     {
-        // TODO: Implement delete_index() method.
+        return [];
     }
 
     public function validate(): void
     {
-        // TODO: Implement validate() method.
+        // no-op
     }
 
     public function patch_index(): array
     {
-        // TODO: Implement patch_index() method.
+        return [];
     }
 }
