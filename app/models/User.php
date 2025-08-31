@@ -213,12 +213,12 @@ class User extends Model
             }
         }
 
-        // Check if such email already exists in the database - there can not be two super-user with the same email,
+        // Check if such email already exists in the database - there cannot be two super-user with the same email,
         // but there can be tow sub-users with the same email in different databases
         if (empty($parentDb)) {
             $sql = "SELECT COUNT(*) AS count FROM users WHERE email = '$email'";
         } else {
-            $sql = "SELECT COUNT(*) AS count FROM users WHERE email = '$email' AND parentdb = '" . $parentDb . "'";
+            $sql = "SELECT COUNT(*) AS count FROM users WHERE (email = '$email' AND parentdb = '$parentDb') OR (email = '$email' AND parentdb ISNULL)";
         }
 
         $res = $this->execQuery($sql);
