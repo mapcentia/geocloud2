@@ -435,7 +435,6 @@ $handler = static function () {
                 if (!$jwt["data"]["superUser"]) {
                     throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 400);
                 }
-
             });
             $Route2->add("api/v4/sql", new Sql($Route2, $conn));
             $Route2->add("api/v4/sql/(database)/{database}", new Sql($Route2, $conn));
@@ -453,7 +452,6 @@ $handler = static function () {
                 if (!$jwt["data"]["superUser"]) {
                     throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 400);
                 }
-
             });
             Route::miss();
 
