@@ -12,7 +12,7 @@ const DEFAULTS = {
 // Attempt to extract OIDC settings from a variety of likely shapes
 function extractOidcConfig(raw) {
     const oidc = raw.gc2Options.openIdConfig;
-    const redirectUri = oidc.redirectUri || DEFAULTS.redirectUri;
+    const redirectUri = oidc.redirectUris.gc2 || DEFAULTS.redirectUri;
     const clientId = oidc.clientId || DEFAULTS.clientId;
     const host = oidc.host || DEFAULTS.host;
     const tokenUri = oidc.tokenUri || undefined;

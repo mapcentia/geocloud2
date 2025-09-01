@@ -17,7 +17,7 @@ function OpenId() {
                 body: JSON.stringify({nonce, token}),
             }).then(res => res.json()).then(data => {
                 codeFlow.clear()
-                //window.location.href = '/dashboard/'
+                window.location.href = '/dashboard/'
             })
         } else {
             // If nonce is not set, get it from the server, so it can be used in the sign-in request
