@@ -10,6 +10,7 @@ namespace app\auth\api;
 use app\api\v4\AbstractApi;
 use app\conf\App;
 use app\inc\Connection;
+use app\inc\Session;
 use app\inc\Session as HttpSession;
 use app\models\User as UserModel;
 use Exception;
@@ -220,11 +221,11 @@ class Github extends AbstractApi
         if ($parentDb) {
             $sql = 'SELECT * FROM users WHERE email = :email AND parentdb = :parentdb LIMIT 1';
             $stmt = $userModel->prepare($sql);
-            $stmt->execute([':email' => $email, ':parentdb' => $parentDb]);
+            $userModel->execute($stmt,[':email' => $email, ':parentdb' => $parentDb]);
         } else {
             $sql = 'SELECT * FROM users WHERE email = :email AND parentdb IS NULL LIMIT 1';
             $stmt = $userModel->prepare($sql);
-            $stmt->execute([':email' => $email]);
+            $userModel->execute($stmt,[':email' => $email]);
         }
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ?: null;
