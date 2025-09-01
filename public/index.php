@@ -315,7 +315,7 @@ $handler = static function () {
                 $jwt = Jwt::validate();
                 if ($jwt["success"]) {
                     if (!$jwt["data"]["superUser"]) {
-                        echo Response::toJson(Response::SUPER_USER_ONLY);
+                        throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 400);
                     }
                     Database::setDb($jwt["data"]["database"]);
                 } else {
@@ -326,7 +326,7 @@ $handler = static function () {
                 $jwt = Jwt::validate();
                 if ($jwt["success"]) {
                     if (!$jwt["data"]["superUser"]) {
-                        echo Response::toJson(Response::SUPER_USER_ONLY);
+                        throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 400);
                     }
                     Database::setDb($jwt["data"]["database"]);
                 } else {
@@ -337,7 +337,7 @@ $handler = static function () {
                 $jwt = Jwt::validate();
                 if ($jwt["success"]) {
                     if (!$jwt["data"]["superUser"]) {
-                        echo Response::toJson(Response::SUPER_USER_ONLY);
+                        throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 400);
                     }
                     Database::setDb($jwt["data"]["database"]);
                 } else {
@@ -348,7 +348,7 @@ $handler = static function () {
                 $jwt = Jwt::validate();
                 if ($jwt["success"]) {
                     if (!$jwt["data"]["superUser"]) {
-                        echo Response::toJson(Response::SUPER_USER_ONLY);
+                        throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 400);
                     }
                     Database::setDb("gc2scheduler");
                 } else {
@@ -360,7 +360,7 @@ $handler = static function () {
                 $jwt = Jwt::validate();
                 if ($jwt["success"]) {
                     if (!$jwt["data"]["superUser"]) {
-                        echo Response::toJson(Response::SUPER_USER_ONLY);
+                        throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 400);
                     }
                     Database::setDb($jwt["data"]["database"]);
                 } else {
@@ -390,7 +390,7 @@ $handler = static function () {
                 $jwt = Jwt::validate();
                 if ($jwt["success"]) {
                     if (!$jwt["data"]["superUser"]) {
-                        echo Response::toJson(Response::SUPER_USER_ONLY);
+                        throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 400);
                     }
                     Database::setDb($jwt["data"]["database"]);
                 } else {
@@ -401,7 +401,7 @@ $handler = static function () {
                 $jwt = Jwt::validate();
                 if ($jwt["success"]) {
                     if (!$jwt["data"]["superUser"]) {
-                        echo Response::toJson(Response::SUPER_USER_ONLY);
+                        throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 400);
                     }
                     Database::setDb($jwt["data"]["database"]);
                 } else {
@@ -413,87 +413,47 @@ $handler = static function () {
             // V4 with OAuth and Route2
             //==========================
             $Route2 = new Route2();
-
             $Route2->add("api/v4/oauth", new Oauth($Route2, new \app\inc\Connection()));
-
             $Route2->add("api/v4/oauth/(action)", new Oauth($Route2, new \app\inc\Connection()));
-
             if (headers_sent()) {
                 return;
             }
-
             $jwt = Jwt::validate();
-            if (!$jwt["success"]) {
-                echo Response::toJson($jwt);
-            }
-
             $conn = new \app\inc\Connection(database: $jwt["data"]["database"]);
-
-
             $Route2->add("api/v4/schemas/[schema]", new Schema($Route2, $conn), function () use ($jwt) {
-                if ($jwt["success"]) {
-                    if (!$jwt["data"]["superUser"]) {
-                        echo Response::toJson(Response::SUPER_USER_ONLY);
-                    }
-                } else {
-                    echo Response::toJson($jwt);
+                if (!$jwt["data"]["superUser"]) {
+                    throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 400);
                 }
             });
-
             $Route2->add("api/v4/schemas/{schema}/tables/[table]", new Table($Route2, $conn));
-
             $Route2->add("api/v4/schemas/{schema}/tables/{table}/columns/[column]", new Column($Route2, $conn));
-
             $Route2->add("api/v4/schemas/{schema}/tables/{table}/indices/[index]", new Index($Route2, $conn));
-
             $Route2->add("api/v4/schemas/{schema}/tables/{table}/constraints/[constraint]", new Constraint($Route2, $conn));
-
             $Route2->add("api/v4/users/[user]", new User($Route2, $conn));
-
             $Route2->add("api/v4/schemas/{schema}/tables/{table}/privileges", new Privilege($Route2, $conn));
-
             $Route2->add("api/v4/rules/[id]", new Geofence($Route2, $conn), function () use ($jwt) {
-                if ($jwt["success"]) {
-                    if (!$jwt["data"]["superUser"]) {
-                        echo Response::toJson(Response::SUPER_USER_ONLY);
-                    }
-                } else {
-                    echo Response::toJson($jwt);
+                if (!$jwt["data"]["superUser"]) {
+                    throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 400);
                 }
-            });
 
+            });
             $Route2->add("api/v4/sql", new Sql($Route2, $conn));
-
             $Route2->add("api/v4/sql/(database)/{database}", new Sql($Route2, $conn));
-
             $Route2->add("api/v4/methods/[id]", new Method($Route2, $conn));
-
             $Route2->add("api/v4/call", new Call($Route2, $conn));
-
             $Route2->add("api/v3/meta/[query]", new Meta($Route2, $conn));
-
             $Route2->add("api/v4/import/{schema}/[file]", new Import($Route2, $conn));
-
             $Route2->add("api/v4/clients/[id]", new Client($Route2, $conn));
-
             $Route2->add("api/v4/stats", new Stat($Route2, $conn), function () use ($jwt) {
-                if ($jwt["success"]) {
-                    if (!$jwt["data"]["superUser"]) {
-                        echo Response::toJson(Response::SUPER_USER_ONLY);
-                    }
-                } else {
-                    echo Response::toJson($jwt);
+                if (!$jwt["data"]["superUser"]) {
+                    throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 400);
                 }
             });
-
             $Route2->add("api/v4/commit", new Commit($Route2, $conn), function () use ($jwt) {
-                if ($jwt["success"]) {
-                    if (!$jwt["data"]["superUser"]) {
-                        echo Response::toJson(Response::SUPER_USER_ONLY);
-                    }
-                } else {
-                    echo Response::toJson($jwt);
+                if (!$jwt["data"]["superUser"]) {
+                    throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 400);
                 }
+
             });
             Route::miss();
 
