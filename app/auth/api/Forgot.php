@@ -147,7 +147,7 @@ class Forgot extends AbstractApi
                 } catch (Exception) {
                     return [];
                 }
-                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'E-mail with reset link is send' .' ' .$url]) . "</div>";
+                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'E-mail with reset link is send.']) . "</div>";
 
             } else if (sizeof($res['databases']) > 1 || !empty($res['databases'][0]['parentdb'])) {
                 echo $this->twig->render("forgot.html.twig", ['databases' => $res['databases'], ...$_POST]);

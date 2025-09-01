@@ -61,7 +61,7 @@ class Signup extends AbstractApi
                     'HtmlBody' => "<div>$val</div>",
                 ];
                 $client->sendEmailBatch([$message]);
-                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => "E-mail with one-time code is send [$val]"]) . "</div>";
+                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => "E-mail with one-time code is send."]) . "</div>";
             } catch (Exception $e) {
                 unset($_POST['password']);
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $e->getMessage()]) . "</div>";
@@ -73,7 +73,7 @@ class Signup extends AbstractApi
             try {
                 $userObj->connect();
                 $userObj->begin();
-               // $userObj->checkCode($_POST['code'], $_POST['email']);
+                $userObj->checkCode($_POST['code'], $_POST['email']);
                 // Check if two factor key is correct
                 $key = '__twofactor_' . md5($_POST['name']) . '_' . $_POST['parentdb'];
                 try {
