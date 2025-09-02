@@ -163,13 +163,12 @@ class Constraint extends AbstractApi
         $this->table[0]->commit();
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/constraints/";
         header("Location: $baseUri" . implode(",", $list));
-        $res["code"] = "201";
         $res["constraints"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
         if (count($res["constraints"]) == 1) {
-            return $res["constraints"][0];
-        } else {
-            return $res;
+            $res = $res["constraints"][0];
         }
+        $res["code"] = "201";
+        return $res;
     }
 
     public function patch_index(): array

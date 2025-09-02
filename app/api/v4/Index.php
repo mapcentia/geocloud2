@@ -122,13 +122,12 @@ class Index extends AbstractApi
         $this->table[0]->commit();
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/indices/";
         header("Location: $baseUri" . implode(",", $list));
-        $res["code"] = "201";
         $res["indices"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
         if (count($res["indices"]) == 1) {
-            return $res["indices"][0];
-        } else {
-            return $res;
+            $res = $res["indices"][0];
         }
+        $res["code"] = "201";
+        return $res;
     }
 
 

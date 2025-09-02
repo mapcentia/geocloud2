@@ -170,13 +170,12 @@ class User extends AbstractApi
         }
         $baseUri = "/api/v4/users/";
         header("Location: $baseUri" . implode(",", $list));
-        $res["code"] = "201";
         $res["users"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
         if (count($res["users"]) == 1) {
-            return $res["users"][0];
-        } else {
-            return $res;
+            $res = $res["users"][0];
         }
+        $res["code"] = "201";
+        return $res;
     }
 
     /**

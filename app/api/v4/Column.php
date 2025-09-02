@@ -143,13 +143,12 @@ class Column extends AbstractApi
         $this->table[0]->commit();
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/columns/";
         header("Location: $baseUri" . implode(",", $list));
-        $res["code"] = "201";
         $res["columns"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
         if (count($res["columns"]) == 1) {
-            return $res["columns"][0];
-        } else {
-            return $res;
+            $res = $res["columns"][0];
         }
+        $res["code"] = "201";
+        return $res;
     }
 
     /**

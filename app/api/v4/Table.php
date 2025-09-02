@@ -174,13 +174,12 @@ class Table extends AbstractApi
         (new Layer())->insertDefaultMeta();
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/";
         header("Location: $baseUri" . implode(",", $list));
-        $res["code"] = "201";
         $res["tables"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
         if (count($res["tables"]) == 1) {
-            return $res["tables"][0];
-        } else {
-            return $res;
+            $res = $res["tables"][0];
         }
+        $res["code"] = "201";
+        return $res;
     }
 
     /**
