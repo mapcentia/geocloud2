@@ -159,10 +159,10 @@ class Call extends AbstractApi
         try {
             if (is_array($decodedBody)) {
                 foreach ($decodedBody as $value) {
-                    $this->validateRequest(self::getAssert(), json_encode($value), 'methods', Input::getMethod());
+                    $this->validateRequest(self::getAssert(), json_encode($value), Input::getMethod());
                 }
             } elseif ($decodedBody !== null) {
-                $this->validateRequest(self::getAssert(), $body, 'methods', Input::getMethod());
+                $this->validateRequest(self::getAssert(), $body, Input::getMethod());
             }
         } catch (GC2Exception $e) {
             throw new RPCException("Invalid Request", -32600, null, $e->getMessage());

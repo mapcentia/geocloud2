@@ -79,6 +79,7 @@ class Constraint extends AbstractApi
     public function __construct(private readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
+        $this->resource = 'constraints';
     }
 
     /**
@@ -109,13 +110,7 @@ class Constraint extends AbstractApi
         } else {
             $r = $res;
         }
-        if (count($r) == 0) {
-            throw new GC2Exception("No constraints found for table", 404, null, 'NO_CONSTRAINTS');
-        } elseif (count($r) == 1) {
-            return $r[0];
-        } else {
-            return ["constraints" => $r];
-        }
+        return $this->getResponse($r);
     }
 
     /**
@@ -159,13 +154,7 @@ class Constraint extends AbstractApi
         }
         $this->table[0]->commit();
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/constraints/";
-        header("Location: $baseUri" . implode(",", $list));
-        $res["constraints"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
-        if (count($res["constraints"]) == 1) {
-            $res = $res["constraints"][0];
-        }
-        $res["code"] = "201";
-        return $res;
+        return $this->postResponse($baseUri, $list);
     }
 
     public function patch_index(): array
@@ -191,8 +180,7 @@ class Constraint extends AbstractApi
             $this->table[0]->dropConstraint($constraint);
         }
         $this->table[0]->commit();
-        $res["code"] = "204";
-        return $res;
+        return $this->deleteResponse();
     }
 
     public static function addConstraint(TableModel $table, string $type, ?array $columns = null, ?string $check = null, ?string $name = null, ?string $referencedTable = null, ?array $referencedColumns = null): string
@@ -302,7 +290,7 @@ class Constraint extends AbstractApi
             $this->postWithResource();
         }
         $collection = self::getAssert();
-        $this->validateRequest($collection, $body, 'constraints', Input::getMethod());
+        $this->validateRequest($collection, $body, Input::getMethod());
 
         $this->jwt = Jwt::validate()["data"];
         $this->initiate(userName: $this->jwt["uid"], superUser: $this->jwt["superUser"], schema: $schema, relation: $table, constraint: $constraint);

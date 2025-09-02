@@ -83,10 +83,12 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 class Method extends AbstractApi
 {
     private PreparedstatementModel $pres;
+
     public function __construct(private readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
         $this->pres = new PreparedstatementModel($connection);
+        $this->resource = 'methods';
     }
 
     /**
@@ -102,9 +104,9 @@ class Method extends AbstractApi
     {
         $id = $this->route->getParam('id');;
         $q = $this->pres->getAll()['data'];
-        $methods = [];
+        $r = [];
         foreach ($q as $s) {
-            $methods[] = [
+            $r[] = [
                 'q' => $s['statement'],
                 'method' => $s['name'],
                 'type_hints' => json_decode($s['type_hints']),
@@ -115,20 +117,15 @@ class Method extends AbstractApi
         }
         if (!empty($id)) {
             $names = explode(',', $id);
-            $methods = array_values(array_filter($methods, function ($m) use ($names) {
+            $r = array_values(array_filter($r, function ($m) use ($names) {
                 return in_array($m['method'], $names);
             }));
-            if (count($methods) !== count($names)) {
+            if (count($r) !== count($names)) {
                 throw new GC2Exception("Not found", 404);
             }
         }
-        if (count($methods) > 1) {
-            return [
-                'methods' => $methods,
-            ];
-        } else {
-            return $methods[0];
-        }
+        return $this->getResponse($r);
+
     }
 
     /**
@@ -165,15 +162,7 @@ class Method extends AbstractApi
             $list[] = $this->pres->createPreparedStatement($method, $q, $typeHints, $typeFormats, $outputFormat, $srs, $uid);
         }
         $this->pres->commit();
-        $baseUri = "/api/v4/methods/";
-        header("Location: $baseUri" . implode(",", $list));
-        $res["methods"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
-        if (count($res["methods"]) == 1) {
-            $res = $res["methods"][0];
-        }
-        $res["code"] = "201";
-        return $res;
-
+        return $this->postResponse("/api/v4/methods/", $list);
     }
 
     /**
@@ -205,8 +194,7 @@ class Method extends AbstractApi
             $names[] = $this->pres->updatePreparedStatement($id, $body['method'] ?? null, $body['q'] ?? null, $body['type_hints'] ?? null, $body['type_formats'] ?? null, $body['output_format'] ?? null, $body['srs'] ?? null, $uid, $isSuperUser);
         }
         $this->pres->commit();
-        header("Location: /api/v4/methods/" . implode(",", array_map(fn($c) => $c['name'], $names)));
-        return ["code" => "303"];
+        return $this->patchResponse('/api/v4/methods/', array_map(fn($c) => $c['name'], $names));
     }
 
     /**
@@ -230,7 +218,7 @@ class Method extends AbstractApi
             $this->pres->deletePreparedStatement($id, $uid, $isSuperUser);
         }
         $this->pres->commit();
-        return ["code" => "204"];
+        return $this->deleteResponse();
     }
 
     /**
@@ -253,7 +241,7 @@ class Method extends AbstractApi
         if (Input::getMethod() == 'post' && !empty($id)) {
             $this->postWithResource();
         }
-        $this->validateRequest(self::getAssert(), $body, 'methods', Input::getMethod());
+        $this->validateRequest(self::getAssert(), $body, Input::getMethod());
     }
 
     public function put_index(): array

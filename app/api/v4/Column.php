@@ -72,6 +72,7 @@ class Column extends AbstractApi
     public function __construct(private readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
+        $this->resource = 'columns';
     }
 
     /**
@@ -102,13 +103,7 @@ class Column extends AbstractApi
         } else {
             $r = $res;
         }
-        if (count($r) == 0) {
-            throw new GC2Exception("No columns found in table", 404, null, 'NO_COLUMNS');
-        } elseif (count($r) == 1) {
-            return $r[0];
-        } else {
-            return ["columns" => $r];
-        }
+        return $this->getResponse($r);
     }
 
     /**
@@ -145,13 +140,7 @@ class Column extends AbstractApi
         }
         $this->table[0]->commit();
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/columns/";
-        header("Location: $baseUri" . implode(",", $list));
-        $res["columns"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
-        if (count($res["columns"]) == 1) {
-            $res = $res["columns"][0];
-        }
-        $res["code"] = "201";
-        return $res;
+        return $this->postResponse($baseUri, $list);
     }
 
     /**
@@ -217,9 +206,8 @@ class Column extends AbstractApi
             }
         }
         $this->table[0]->commit();
-
-        header("Location: /api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/columns/" . implode(',', $list));
-        return ["code" => "303"];
+        $baseUri="/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/columns/";
+        return $this->patchResponse($baseUri, $list);
     }
 
     /**
@@ -242,7 +230,7 @@ class Column extends AbstractApi
             $this->table[0]->deleteColumn([$column], "");
         }
         $this->table[0]->commit();
-        return ["code" => "204"];
+        return $this->deleteResponse();
     }
 
     /**
@@ -305,7 +293,7 @@ class Column extends AbstractApi
         if (Input::getMethod() == 'post' && $column) {
             $this->postWithResource();
         }
-        $this->validateRequest(self::getAssert(), $body, 'columns', Input::getMethod());
+        $this->validateRequest(self::getAssert(), $body, Input::getMethod());
 
         $this->jwt = Jwt::validate()["data"];
         $this->initiate(userName: $this->jwt["uid"], superUser: $this->jwt["superUser"], schema: $schema, relation: $table, column: $column);

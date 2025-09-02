@@ -63,6 +63,7 @@ class Table extends AbstractApi
     public function __construct(private readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
+        $this->resource = 'tables';
     }
 
     /**
@@ -126,13 +127,7 @@ class Table extends AbstractApi
         } else {
             $r = self::getTables($this->schema[0], $this);
         }
-        if (count($r) == 0) {
-            throw new GC2Exception("No tables found in schema", 404, null, 'NO_TABLES');
-        } elseif (count($r) == 1) {
-            return $r[0];
-        } else {
-            return ["tables" => $r];
-        }
+        return $this->getResponse($r);
     }
 
     /**
@@ -170,13 +165,7 @@ class Table extends AbstractApi
         $this->table[0]->commit();
         (new Layer(connection: $this->connection))->insertDefaultMeta();
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/";
-        header("Location: $baseUri" . implode(",", $list));
-        $res["tables"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
-        if (count($res["tables"]) == 1) {
-            $res = $res["tables"][0];
-        }
-        $res["code"] = "201";
-        return $res;
+        return $this->postResponse($baseUri, $list);
     }
 
     /**
@@ -235,8 +224,9 @@ class Table extends AbstractApi
         }
         $schema = $data->schema ?? $this->schema[0];
         $layer->commit();
-        header("Location: /api/v4/schemas/{$schema}/tables/" . (count($r) > 0 ? implode(',', $r) : implode(',', $this->unQualifiedName)));
-        return ["code" => "303"];
+        $baseUrl = "Location: /api/v4/schemas/{$schema}/tables/";
+        $list =  count($r) > 0 ?  $r : $this->unQualifiedName;
+        return $this->patchResponse($baseUrl, $list);
     }
 
     /**
@@ -256,7 +246,7 @@ class Table extends AbstractApi
             $t->destroy();
         }
         $this->table[0]->commit();
-        return ["code" => "204"];
+        return $this->deleteResponse();
     }
 
     /**
@@ -353,7 +343,7 @@ class Table extends AbstractApi
             $this->postWithResource();
         }
         $collection = self::getAssert();
-        $this->validateRequest($collection, $body, 'tables', Input::getMethod());
+        $this->validateRequest($collection, $body, Input::getMethod());
 
         $this->jwt = Jwt::validate()["data"];
         $this->initiate(userName: $this->jwt["uid"], superUser: $this->jwt["superUser"], schema: $schema, relation: $table);

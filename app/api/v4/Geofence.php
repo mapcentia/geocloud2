@@ -111,6 +111,7 @@ class Geofence extends AbstractApi
     {
         parent::__construct($connection);
         $this->geofence = new GeofenceModel(connection: $connection);
+        $this->resource = 'rules';
     }
 
     /**
@@ -141,14 +142,7 @@ class Geofence extends AbstractApi
             unset($item['layer']);
             return $item;
         }, $r);
-
-        if (count($r) == 0) {
-            throw new GC2Exception("No rules found", 404, null, 'NO_RULES');
-        } elseif (count($r) == 1) {
-            return $r[0];
-        } else {
-            return ["rules" => $r];
-        }
+        return $this->getResponse($r);
     }
 
     /**
@@ -180,14 +174,7 @@ class Geofence extends AbstractApi
             $list[] = $this->geofence->create($datum)['data']['id'];
         }
         $this->geofence->commit();
-        $baseUri = "/api/v4/rules/";
-        header("Location: $baseUri" . implode(",", $list));
-        $res["rules"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
-        if (count($res["rules"]) == 1) {
-            $res = $res["rules"][0];
-        }
-        $res["code"] = "201";
-        return $res;
+        return $this->postResponse("/api/v4/rules/", $list);
     }
 
     /**
@@ -224,8 +211,7 @@ class Geofence extends AbstractApi
             $list[] = $this->geofence->update($id, $data);
         }
         $this->geofence->commit();
-        header("Location: /api/v4/rules/" . implode(",", $list));
-        return ["code" => "303"];
+        return $this->patchResponse('/api/v4/rules/', $list);
     }
 
     /**
@@ -247,7 +233,7 @@ class Geofence extends AbstractApi
             $this->geofence->delete((int)$id);
         }
         $this->geofence->commit();
-        return ["code" => "204"];
+        return $this->deleteResponse();
     }
 
     /**
@@ -313,7 +299,7 @@ class Geofence extends AbstractApi
                 new Assert\Type('string'),
             ]),
         ]);
-        $this->validateRequest($collection, $body, 'rules', Input::getMethod());
+        $this->validateRequest($collection, $body, Input::getMethod());
     }
 
     public function put_index(): array

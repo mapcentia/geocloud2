@@ -88,6 +88,7 @@ class Client extends AbstractApi
     {
         parent::__construct($connection);
         $this->client = new ClientModel($connection);
+        $this->resource = 'clients';
     }
 
     /**
@@ -119,13 +120,7 @@ class Client extends AbstractApi
         } else {
             $r = $this->client->get();
         }
-        if (count($r) == 0) {
-            throw new GC2Exception("No clients found", 404, null, 'NO_CLIENTS');
-        } elseif (count($r) == 1) {
-            return $r[0];
-        } else {
-            return ["clients" => $r];
-        }
+        return $this->getResponse($r);
     }
 
     /**
@@ -156,7 +151,7 @@ class Client extends AbstractApi
     #[AcceptableAccepts(['application/json'])]
     public function post_index(): array
     {
-        $clients = [];
+        $list = [];
         $body = Input::getBody();
         $data = json_decode($body, true);
         $this->client->begin();
@@ -173,17 +168,16 @@ class Client extends AbstractApi
                 'public' => $datum['public'] ?? false,
                 'confirm' => $datum['confirm'] ?? true,
             ];
-            $clients[] = $this->client->insert(...$arr);
+            $list[] = $this->client->insert(...$arr);
         }
         $this->client->commit();
         $baseUri = "/api/v4/clients/";
-        header("Location: $baseUri" . implode(",", array_map(fn($c) => $c['id'], $clients)));
-        $res["code"] = "201";
-        $res["clients"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l['id']], 'secret' => $l['secret']], $clients);
-        if (count($res["clients"]) == 1) {
-            $res = $res["clients"][0];
+        header("Location: $baseUri" . implode(",", array_map(fn($c) => $c['id'], $list)));
+        $res[$this->resource] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l['id']], 'secret' => $l['secret']], $list);
+        if (count($res[$this->resource]) == 1) {
+            $res = $res[$this->resource][0];
         }
-        $res["code"] = "201";
+        $res['code'] = "201";
         return $res;
     }
 
@@ -219,8 +213,7 @@ class Client extends AbstractApi
             $list[] = $this->client->update(...$arr);
         }
         $this->client->commit();
-        header("Location: /api/v4/clients/" . implode(",", $list));
-        return ["code" => "303"];
+        return $this->patchResponse('/api/v4/clients/', $list);
     }
 
     /**
@@ -240,7 +233,7 @@ class Client extends AbstractApi
             $this->client->delete($id);
         }
         $this->client->commit();
-        return ["code" => "204"];
+        return $this->deleteResponse();
     }
 
     /**
@@ -262,7 +255,7 @@ class Client extends AbstractApi
         if (Input::getMethod() == 'post' && !empty($id)) {
             $this->postWithResource();
         }
-        $this->validateRequest(self::getAssert(), $body, 'clients', Input::getMethod());
+        $this->validateRequest(self::getAssert(), $body, Input::getMethod());
     }
 
     static public function getAssert(): Assert\Collection

@@ -56,6 +56,7 @@ class Index extends AbstractApi
     public function __construct(private readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
+        $this->resource = 'indices';
     }
 
     /**
@@ -92,13 +93,7 @@ class Index extends AbstractApi
         } else {
             $r = $res;
         }
-        if (count($r) == 0) {
-            throw new GC2Exception("No indices found for table", 404, null, 'NO_INDICES');
-        } elseif (count($r) == 1) {
-            return $r[0];
-        } else {
-            return ["indices" => $r];
-        }
+        return $this->getResponse($r);
     }
 
     /**
@@ -128,13 +123,7 @@ class Index extends AbstractApi
         }
         $this->table[0]->commit();
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/indices/";
-        header("Location: $baseUri" . implode(",", $list));
-        $res["indices"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
-        if (count($res["indices"]) == 1) {
-            $res = $res["indices"][0];
-        }
-        $res["code"] = "201";
-        return $res;
+        return $this->postResponse($baseUri, $list);
     }
 
 
@@ -187,7 +176,7 @@ class Index extends AbstractApi
             $this->table[0]->dropIndex($index);
         }
         $this->table[0]->commit();
-        return ["code" => "204"];
+        return $this->deleteResponse();
     }
 
     /**
@@ -213,7 +202,7 @@ class Index extends AbstractApi
             $this->postWithResource();
         }
         $collection = self::getAssert();
-        $this->validateRequest($collection, $body, 'indices', Input::getMethod());
+        $this->validateRequest($collection, $body, Input::getMethod());
 
         $this->jwt = Jwt::validate()["data"];
         $this->initiate(userName: $this->jwt["uid"], superUser: $this->jwt["superUser"], schema: $schema, relation: $table, index: $id);

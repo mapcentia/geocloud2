@@ -384,7 +384,7 @@ class Import extends AbstractApi
             ]),
         ]);
 
-        $this->validateRequest($collection, $body, '', Input::getMethod());
+        $this->validateRequest($collection, $body, Input::getMethod());
 
         $this->jwt = Jwt::validate()["data"];
         $this->initiate(userName: $this->jwt["uid"], superUser: $this->jwt["superUser"], schema: $schema);

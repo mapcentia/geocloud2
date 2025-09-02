@@ -190,7 +190,7 @@ class Commit extends AbstractApi
         $body = Input::getBody();
         $data = json_decode($body);
         $collection = self::getAssert();
-        $this->validateRequest($collection, $body, 'commit', Input::getMethod());
+        $this->validateRequest($collection, $body, Input::getMethod());
         $this->jwt = Jwt::validate()["data"];
         $this->initiate($data->schema, null, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
     }

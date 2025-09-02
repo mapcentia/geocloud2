@@ -205,10 +205,10 @@ class Sql extends AbstractApi
 
         if (is_array($decodedBody)) {
             foreach ($decodedBody as $value) {
-                $this->validateRequest(self::getAssert(), json_encode($value), 'sql', Input::getMethod());
+                $this->validateRequest(self::getAssert(), json_encode($value), Input::getMethod());
             }
         } else {
-            $this->validateRequest(self::getAssert(), $body, 'sql', Input::getMethod());
+            $this->validateRequest(self::getAssert(), $body, Input::getMethod());
         }
     }
 

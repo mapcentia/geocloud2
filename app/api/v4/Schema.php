@@ -56,6 +56,7 @@ class Schema extends AbstractApi
     public function __construct(private readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
+        $this->resource = 'schemas';
     }
 
     /**
@@ -98,7 +99,7 @@ class Schema extends AbstractApi
                     $t['tables'] = Table::getTables($name, $this);
                 }
                 $t['links'] = $links;
-                $response["schemas"][] = $t;
+                $response[$this->resource][] = $t;
             }
             return $response;
         } else {
@@ -116,13 +117,7 @@ class Schema extends AbstractApi
                 $t['links'] = $links;
                 $r[] = $t;
             }
-            if (count($r) == 0) {
-                throw new GC2Exception("No schemas found", 404, null, 'NO_SCHEMAS');
-            } elseif (count($r) == 1) {
-                return $r[0];
-            } else {
-                return ["schemas" => $r];
-            }
+            return $this->getResponse($r);
         }
     }
 
@@ -176,13 +171,7 @@ class Schema extends AbstractApi
         }
         $this->table[0]->commit();
         $baseUri = "/api/v4/schemas/";
-        header("Location: $baseUri" . implode(",", $list));
-        $res["schemas"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
-        if (count($res["schemas"]) == 1) {
-            $res = $res["schemas"][0];
-        }
-        $res["code"] = "201";
-        return $res;
+        return $this->postResponse($baseUri, $list);
     }
 
     /**
@@ -215,9 +204,7 @@ class Schema extends AbstractApi
         $body = Input::getBody();
         $data = json_decode($body);
         $r = $this->schemaObj->renameSchema($this->schema[0], $data->name);
-        header("Location: /api/v4/schemas/{$r['data']['name']}");
-        $res["code"] = "303";
-        return $res;
+        return $this->patchResponse('/api/v4/schemas/', [$r['data']['name']]);
     }
 
     /**
@@ -241,8 +228,7 @@ class Schema extends AbstractApi
             $this->schemaObj->deleteSchema($schema, false);
         }
         $this->schemaObj->commit();
-        $res["code"] = "204";
-        return $res;
+        return $this->deleteResponse();
     }
 
     /**
@@ -265,7 +251,7 @@ class Schema extends AbstractApi
             $this->postWithResource();
         }
         $collection = self::getAssert();
-        $this->validateRequest($collection, $body, 'schemas', Input::getMethod());
+        $this->validateRequest($collection, $body, Input::getMethod());
 
         $this->jwt = Jwt::validate()["data"];
         $this->initiate(userName: $this->jwt["uid"], superUser: $this->jwt["superUser"], schema: $schema);

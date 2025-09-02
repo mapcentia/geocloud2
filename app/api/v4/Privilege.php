@@ -52,6 +52,7 @@ class Privilege extends AbstractApi
     public function __construct(private readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
+        $this->resource = 'privileges';
     }
 
     /**
@@ -69,7 +70,7 @@ class Privilege extends AbstractApi
         $layer = new Layer(connection: $this->connection);
         $split = explode('.', $this->qualifiedName[0]);
         $res = $layer->getPrivilegesAsArray($split[0], $split[1]);
-        return ["privileges" => $res];
+        return [$this->resource => $res];
     }
 
     #[Override]
@@ -113,8 +114,8 @@ class Privilege extends AbstractApi
             $layer->updatePrivileges($obj, $table);
         }
         $table->commit();
-        header("Location: /api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/privileges/");
-        return ["code" => "303"];
+        $baseUri = "Location: /api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/privileges/";
+        return $this->patchResponse($baseUri);
     }
 
     #[Override] public function delete_index(): array
@@ -155,7 +156,7 @@ class Privilege extends AbstractApi
 
             ]),
         ]);
-        $this->validateRequest($collection, $body, 'privileges', Input::getMethod(), true);
+        $this->validateRequest($collection, $body, Input::getMethod(), true);
         $this->initiate(userName: $this->jwt["uid"], superUser: $this->jwt["superUser"], schema: $schema, relation: $table);
     }
 

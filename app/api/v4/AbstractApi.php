@@ -34,6 +34,7 @@ abstract class AbstractApi implements ApiInterface
     public ?array $index;
     public ?array $constraint;
     public array $jwt;
+    public ?string $resource;
     private const array PRIVATE_PROPERTIES = ['num', 'typname', 'full_type', 'character_maximum_length',
         'numeric_precision', 'numeric_scale', 'max_bytes', 'reference', 'restriction', 'is_primary', 'is_unique',
         'index_method', 'checks', 'geom_type', 'srid', 'is_array', 'udt_name'];
@@ -236,7 +237,6 @@ abstract class AbstractApi implements ApiInterface
      *
      * @param Collection $collection The validation rules or constraints to be applied to the data.
      * @param string|null $data The JSON-encoded payload of the request, or null if no data is provided.
-     * @param string $resource The resource being validated within the request.
      * @param string $method The HTTP method used in the request (e.g., GET, POST, PATCH, DELETE).
      * @param bool $allowPatchOnCollection Whether patching on a collection of resources is allowed.
      *
@@ -245,7 +245,7 @@ abstract class AbstractApi implements ApiInterface
      * @throws GC2Exception If the data is invalid, contains a payload in disallowed methods,
      *                      or violates the provided constraints.
      */
-    public function validateRequest(Collection $collection, ?string $data, string $resource, string $method, bool $allowPatchOnCollection = false): void
+    public function validateRequest(Collection $collection, ?string $data, string $method, bool $allowPatchOnCollection = false): void
     {
         if (!empty($data) && !json_validate($data)) {
             throw new GC2Exception("Invalid JSON. Check your request", 400, null, "INVALID_DATA");
@@ -259,14 +259,14 @@ abstract class AbstractApi implements ApiInterface
             throw new GC2Exception("You can't use a payload in DELETE or GET", 400, null, "INVALID_DATA");
         }
 
-        if (!$allowPatchOnCollection && $method == 'patch' && isset($data[$resource])) {
-            throw new GC2Exception("You can't PATCH with a collection of $resource", 400, null, "INVALID_DATA");
+        if (!$allowPatchOnCollection && $method == 'patch' && isset($data[$this->resource])) {
+            throw new GC2Exception("You can't PATCH with a collection of $this->resource", 400, null, "INVALID_DATA");
         }
 
         $validator = Validation::createValidator();
 
-        if (isset($data[$resource]) && is_array($data[$resource])) {
-            foreach ($data[$resource] as $datum) {
+        if (isset($data[$this->resource]) && is_array($data[$this->resource])) {
+            foreach ($data[$this->resource] as $datum) {
                 $violations = $validator->validate($datum, $collection);
                 $this->checkViolations($violations);
             }
@@ -304,14 +304,41 @@ abstract class AbstractApi implements ApiInterface
         }
     }
 
-    protected function getCreatedResponse(array $res): array
+    /**
+     * @throws GC2Exception
+     */
+    protected function getResponse(array $res): array
     {
-        if (count($res["tables"]) == 1) {
-            $res = $res["tables"][0];
+        if (count($res) == 0) {
+            throw new GC2Exception("No $this->resource found", 404, null, 'NO_RESOURCE');
+        } elseif (count($res) == 1) {
+            return $res[0];
+        } else {
+            return [$this->resource => $res];
         }
-        $res["code"] = "201";
+    }
+
+    protected function postResponse(string $baseUri, array $list): array
+    {
+        header("Location: $baseUri" . implode(",", $list));
+        $res[$this->resource] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
+        if (count($res[$this->resource]) == 1) {
+            $res = $res[$this->resource][0];
+        }
+        $res['code'] = "201";
         return $res;
 
+    }
+
+    protected function patchResponse(string $baseUri, array $list = []): array
+    {
+        header("Location: $baseUri" . implode(",", $list));
+        return ['code' => '303'];
+    }
+
+    protected function deleteResponse(): array
+    {
+        return ['code' => '204'];
     }
 
     /**

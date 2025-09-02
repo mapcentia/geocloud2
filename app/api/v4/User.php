@@ -71,14 +71,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[AcceptableMethods(['POST', 'PATCH', 'DELETE', 'GET', 'HEAD', 'OPTIONS'])]
 class User extends AbstractApi
 {
-    /**
-     * @var UserModel
-     */
-    private UserModel $user;
-
     public function __construct(private readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
+        $this->resource = 'users';
     }
 
     /**
@@ -106,13 +102,7 @@ class User extends AbstractApi
             $userModelLocal = new UserModel($user, $this->jwt["database"]);
             $r[] = self::convertUserObject($userModelLocal->getData()["data"]);
         }
-        if (count($r) == 0) {
-            throw new GC2Exception("No users found", 404, null, 'NO_USERS');
-        } elseif (count($r) == 1) {
-            return $r[0];
-        } else {
-            return ["users" => $r];
-        }
+        return $this->getResponse($r);
     }
 
     /**
@@ -137,7 +127,6 @@ class User extends AbstractApi
         $model = new UserModel();
         $data = json_decode(Input::getBody(), true) ?: [];
         $data["usergroup"] = $data["user_group"] ?? null;
-        $model->connect();
         $model->begin();
         if (!isset($data['users'])) {
             $data['users'] = [$data];
@@ -158,14 +147,7 @@ class User extends AbstractApi
         foreach ($list as $newUser) {
             (new Setting(connection: $this->connection))->updateApiKeyForUser($newUser, false);
         }
-        $baseUri = "/api/v4/users/";
-        header("Location: $baseUri" . implode(",", $list));
-        $res["users"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
-        if (count($res["users"]) == 1) {
-            $res = $res["users"][0];
-        }
-        $res["code"] = "201";
-        return $res;
+        return $this->postResponse("/api/v4/users/", $list);
     }
 
     /**
@@ -221,8 +203,7 @@ class User extends AbstractApi
                 $model->commit();
             }
         }
-        header("Location: /api/v4/users/" . implode(",", $requestedUsers));
-        return ["code" => "303"];
+        return $this->patchResponse('/api/v4/users/', $requestedUsers);
     }
 
     /**
@@ -245,10 +226,9 @@ class User extends AbstractApi
         $model->begin();
         foreach ($requestedUsers as $requestedUser) {
             $model->deleteUser($requestedUser);
-
         }
         $model->commit();
-        return ["code" => "204"];
+        return $this->deleteResponse();
     }
 
     private static function convertUserObject(array $user): array
@@ -291,8 +271,7 @@ class User extends AbstractApi
             $this->postWithResource();
         }
         $collection = self::getAssert();
-        $this->validateRequest($collection, $body, 'users', Input::getMethod());
-
+        $this->validateRequest($collection, $body, Input::getMethod());
     }
 
     static public function getAssert(): Assert\Collection
