@@ -167,13 +167,12 @@ class Method extends AbstractApi
         $this->pres->commit();
         $baseUri = "/api/v4/methods/";
         header("Location: $baseUri" . implode(",", $list));
-        $res["code"] = "201";
         $res["methods"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
         if (count($res["methods"]) == 1) {
-            return $res["methods"][0];
-        } else {
-            return $res;
+            $res = $res["methods"][0];
         }
+        $res["code"] = "201";
+        return $res;
 
     }
 

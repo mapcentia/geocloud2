@@ -304,6 +304,16 @@ abstract class AbstractApi implements ApiInterface
         }
     }
 
+    protected function getCreatedResponse(array $res): array
+    {
+        if (count($res["tables"]) == 1) {
+            $res = $res["tables"][0];
+        }
+        $res["code"] = "201";
+        return $res;
+
+    }
+
     /**
      * Adjusts the given array of properties by prefixing private property keys with an underscore.
      *

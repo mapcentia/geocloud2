@@ -182,13 +182,12 @@ class Geofence extends AbstractApi
         $this->geofence->commit();
         $baseUri = "/api/v4/rules/";
         header("Location: $baseUri" . implode(",", $list));
-        $res["code"] = "201";
         $res["rules"] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
         if (count($res["rules"]) == 1) {
-            return $res["rules"][0];
-        } else {
-            return $res;
+            $res = $res["rules"][0];
         }
+        $res["code"] = "201";
+        return $res;
     }
 
     /**
