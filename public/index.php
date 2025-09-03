@@ -39,6 +39,7 @@ use app\exceptions\ServiceException;
 use app\inc\Cache;
 use app\inc\Input;
 use app\inc\Jwt;
+use app\inc\RateLimiter;
 use app\inc\Redirect;
 use app\inc\Response;
 use app\inc\Route;
@@ -419,6 +420,8 @@ $handler = static function () {
                 return;
             }
             $jwt = Jwt::validate();
+            // Rate limit per JWT token for all API v4 routes
+            RateLimiter::consumeForJwt(Input::getJwtToken(), App::$param['apiV4']['rateLimitPerMinute'] ?? 120);
             $conn = new \app\inc\Connection(database: $jwt["data"]["database"]);
             $Route2->add("api/v4/schemas/[schema]", new Schema($Route2, $conn), function () use ($jwt) {
                 if (!$jwt["data"]["superUser"]) {
@@ -432,7 +435,7 @@ $handler = static function () {
             $Route2->add("api/v4/users/[user]", new User($Route2, $conn));
             $Route2->add("api/v4/schemas/{schema}/tables/{table}/privileges", new Privilege($Route2, $conn));
             $Route2->add("api/v4/rules/[id]", new Geofence($Route2, $conn), function () use ($jwt) {
-                if (!$jwt["data"]["superUser"]) {
+                if (!$jwt["data"]["superUser"] && !Input::getMethod() == 'options') {
                     throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 400);
                 }
             });
@@ -444,12 +447,12 @@ $handler = static function () {
             $Route2->add("api/v4/import/{schema}/[file]", new Import($Route2, $conn));
             $Route2->add("api/v4/clients/[id]", new Client($Route2, $conn));
             $Route2->add("api/v4/stats", new Stat($Route2, $conn), function () use ($jwt) {
-                if (!$jwt["data"]["superUser"]) {
+                if (!$jwt["data"]["superUser"] && !Input::getMethod() == 'options') {
                     throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 400);
                 }
             });
             $Route2->add("api/v4/commit", new Commit($Route2, $conn), function () use ($jwt) {
-                if (!$jwt["data"]["superUser"]) {
+                if (!$jwt["data"]["superUser"] && !Input::getMethod() == 'options') {
                     throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 400);
                 }
             });
