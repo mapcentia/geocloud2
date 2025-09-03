@@ -14,10 +14,11 @@ ob_start("ob_gzhandler");
 
 use app\api\v3\Meta;
 use app\api\v4\Call;
-use app\api\v4\Client;
 use app\api\v4\Column;
-use app\api\v4\Constraint;
 use app\api\v4\Commit;
+use app\api\v4\Controllers\Client;
+use app\api\v4\Controllers\Constraint;
+use app\api\v4\Controllers\User;
 use app\api\v4\Geofence;
 use app\api\v4\Import;
 use app\api\v4\Index;
@@ -26,9 +27,7 @@ use app\api\v4\Oauth;
 use app\api\v4\Privilege;
 use app\api\v4\Schema;
 use app\api\v4\Sql;
-use app\api\v4\Stat;
 use app\api\v4\Table;
-use app\api\v4\User;
 use app\conf\App;
 use app\conf\Connection;
 use app\controllers\Wms;
@@ -410,19 +409,50 @@ $handler = static function () {
                 }
             });
 
-            //==========================
-            // V4 with OAuth and Route2
-            //==========================
-            $Route2 = new Route2();
-            $Route2->add("api/v4/oauth", new Oauth($Route2, new \app\inc\Connection()));
-            $Route2->add("api/v4/oauth/(action)", new Oauth($Route2, new \app\inc\Connection()));
             if (headers_sent()) {
                 return;
             }
+            //==========================
+            // V4 with OAuth and Route2
+            //==========================
+
             $jwt = Jwt::validate();
             // Rate limit per JWT token for all API v4 routes
             RateLimiter::consumeForJwt(Input::getJwtToken(), App::$param['apiV4']['rateLimitPerMinute'] ?? 120);
+
+            // Start routing by attributes
+            $routes = [];
+            foreach (glob(dirname(__FILE__) . "/../app/api/v4/controllers/*.php") as $filename) {
+                $className = 'app\\api\\v4\\controllers\\' . basename($filename, '.php');
+                try {
+                    $rc = new ReflectionClass($className);
+                    $classAttrs = $rc->getAttributes();
+                    foreach ($classAttrs as $attribute) {
+                        $listener = $attribute->newInstance();
+                        if ($listener::class == \app\api\v4\Route::class) {
+                            $routes[$className] = $listener->getRoute();
+                        }
+                        if ($listener::class == \app\api\v4\Scope::class) {
+                            $listener->check($jwt);
+                        }
+                    }
+                } catch (ReflectionException) {
+                    // We skip not class files
+                }
+            }
+
+            $Route2 = new Route2();
             $conn = new \app\inc\Connection(database: $jwt["data"]["database"]);
+
+            foreach ($routes as $c => $r) {
+                $Route2->add($r, new $c($Route2, $conn));
+            }
+            // End routing by attributes
+            /*
+
+            $Route2->add("api/v4/oauth", new Oauth($Route2, new \app\inc\Connection()));
+            $Route2->add("api/v4/oauth/(action)", new Oauth($Route2, new \app\inc\Connection()));
+
             $Route2->add("api/v4/schemas/[schema]", new Schema($Route2, $conn), function () use ($jwt) {
                 if (!$jwt["data"]["superUser"]) {
                     throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 400);
@@ -446,17 +476,14 @@ $handler = static function () {
             $Route2->add("api/v3/meta/[query]", new Meta($Route2, $conn));
             $Route2->add("api/v4/import/{schema}/[file]", new Import($Route2, $conn));
             $Route2->add("api/v4/clients/[id]", new Client($Route2, $conn));
-            $Route2->add("api/v4/stats", new Stat($Route2, $conn), function () use ($jwt) {
-                if (!$jwt["data"]["superUser"] && !Input::getMethod() == 'options') {
-                    throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 400);
-                }
-            });
+
             $Route2->add("api/v4/commit", new Commit($Route2, $conn), function () use ($jwt) {
                 if (!$jwt["data"]["superUser"] && !Input::getMethod() == 'options') {
                     throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 400);
                 }
             });
-            Route::miss();
+            */
+            $Route2->miss();
 
         } elseif (Input::getPath()->part(1) == "admin") {
             Session::start();

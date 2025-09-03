@@ -29,6 +29,7 @@ class Route2
      * @var array
      */
     public array $params;
+    private bool $isMatched = false;
 
     /**
      * @param string $uri
@@ -38,8 +39,8 @@ class Route2
      */
     public function add(string $uri, ApiInterface $controller, ?Closure $func = null): void
     {
-        if (headers_sent()) {
-            goto end;
+        if ($this->isMatched) {
+            return;
         }
         $signatureMatch = true;
         $e = [];
@@ -87,6 +88,7 @@ class Route2
         }
 
         if ($signatureMatch) {
+            $this->isMatched = true;
             $this->params = $r;
             if ($func) {
                 $func($r);
@@ -119,7 +121,7 @@ class Route2
                                 }
                             }
                             $listener->options();
-                            goto end;
+                            return;
                         }
                     }
                 }
@@ -164,8 +166,6 @@ class Route2
                     header_remove('Content-type');
                 }
             }
-            end:
-            flush();
         }
     }
 
@@ -179,6 +179,14 @@ class Route2
             return urldecode($this->params[$parameter]);
         } else {
             return null;
+        }
+    }
+
+    public function miss(): void
+    {
+        if (!$this->isMatched) {
+            header('HTTP/1.0 404 Not Found');
+            echo "<h1>404 Not Found</h1>";
         }
     }
 }

@@ -6,8 +6,13 @@
  *
  */
 
-namespace app\api\v4;
+namespace app\api\v4\controllers;
 
+use app\api\v4\AbstractApi;
+use app\api\v4\AcceptableAccepts;
+use app\api\v4\AcceptableContentTypes;
+use app\api\v4\AcceptableMethods;
+use app\api\v4\Route;
 use app\exceptions\GC2Exception;
 use app\exceptions\RPCException;
 use app\inc\Connection;
@@ -68,6 +73,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
     type: "object"
 )]
 #[AcceptableMethods(['POST', 'HEAD', 'OPTIONS'])]
+#[Route('api/v4/call')]
 class Call extends AbstractApi
 {
     /**

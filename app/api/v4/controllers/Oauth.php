@@ -6,8 +6,12 @@
  *
  */
 
-namespace app\api\v4;
+namespace app\api\v4\controllers;
 
+use app\api\v4\AbstractApi;
+use app\api\v4\AcceptableContentTypes;
+use app\api\v4\AcceptableMethods;
+use app\api\v4\Route;
 use app\auth\types\GrantType;
 use app\conf\App;
 use app\exceptions\GC2Exception;
@@ -155,6 +159,7 @@ class Oauth extends AbstractApi
     #[OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(ref: "#/components/schemas/OAuthGrant"))]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json', 'application/x-www-form-urlencoded'])]
+    #[Route('api/v4/oauth/(action)')]
     public function post_index(): array
     {
         $this->session = new Session();

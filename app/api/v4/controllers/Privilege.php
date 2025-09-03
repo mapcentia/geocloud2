@@ -6,8 +6,11 @@
  *
  */
 
-namespace app\api\v4;
+namespace app\api\v4\controllers;
 
+use app\api\v4\AbstractApi;
+use app\api\v4\AcceptableAccepts;
+use app\api\v4\AcceptableMethods;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Jwt;

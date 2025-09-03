@@ -6,8 +6,13 @@
  *
  */
 
-namespace app\api\v4;
+namespace app\api\v4\controllers;
 
+use app\api\v4\AbstractApi;
+use app\api\v4\AcceptableAccepts;
+use app\api\v4\AcceptableMethods;
+use app\api\v4\Route;
+use app\api\v4\Scope;
 use app\inc\Connection;
 use app\inc\Model;
 use app\inc\Route2;
@@ -132,9 +137,10 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['GET', 'HEAD', 'OPTIONS'])]
+#[Route('api/v4/stats')]
+#[Scope(['admin'])]
 class Stat extends AbstractApi
 {
-
     public function __construct(private readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);

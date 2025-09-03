@@ -6,8 +6,13 @@
  *
  */
 
-namespace app\api\v4;
+namespace app\api\v4\controllers;
 
+use app\api\v4\AbstractApi;
+use app\api\v4\AcceptableAccepts;
+use app\api\v4\AcceptableContentTypes;
+use app\api\v4\AcceptableMethods;
+use app\api\v4\Route;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\models\Database;
@@ -16,6 +21,7 @@ use app\inc\Jwt;
 use app\inc\Route2;
 use app\models\Table as TableModel;
 use Exception;
+use Override;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
 use OpenApi\Attributes as OA;
@@ -45,6 +51,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
+#[Route('api/v4/schemas/[schema]')]
 class Schema extends AbstractApi
 {
 
