@@ -61,7 +61,7 @@ class Classification extends Model
         $arrNew = array();
         $response['success'] = true;
         $row = $this->fetchRow($result);
-        $arr = $arr2 = !empty($row['class']) ? json_decode($row['class'], true) : [];
+        $arr = $arr2 = !empty($row['class']) && is_array(json_decode($row['class'], true)) ? json_decode($row['class'], true) : [];
         for ($i = 0; $i < sizeof($arr); $i++) {
             $last = 10000;
             foreach ($arr2 as $key => $value) {
