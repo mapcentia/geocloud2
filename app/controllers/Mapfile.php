@@ -362,7 +362,7 @@ class Mapfile extends Controller
                 if (!empty($row["data"])) {
                     $q = $row["data"];
                 } else {
-                    $q = "select * from $rel";
+                    $q = "select * from {$postgisObject->doubleQuoteQualifiedName($rel)}";
                 }
                 $select = $postgisObject->prepare("select * from ($q) as foo LIMIT 0");
                 $select->execute();
@@ -637,8 +637,12 @@ class Mapfile extends Controller
                         #ANGLE
                         <?php
                         if (!empty($class['angle'])) {
-                            if (is_numeric($class['angle']) || strtolower($class['angle']) == "auto")
+                            if (is_numeric($class['angle']) && (int)$class['angle'] > 360 || (int)$class['angle'] < -360) {
+                                $class['angle'] = '0';
+                            }
+                            if (is_numeric($class['angle']) || strtolower($class['angle']) == "auto") {
                                 echo "ANGLE " . $class['angle'];
+                            }
                             else
                                 echo "ANGLE [{$class['angle']}]";
                         }
@@ -733,6 +737,9 @@ class Mapfile extends Controller
                         #ANGLE
                         <?php
                         if (!empty($class['overlayangle'])) {
+                            if (is_numeric($class['overlayangle']) && (int)$class['overlayangle'] > 360 || (int)$class['overlayangle'] < -360) {
+                                $class['overlayangle'] = '0';
+                            }
                             if (is_numeric($class['overlayangle']) || strtolower($class['overlayangle']) == "auto")
                                 echo "ANGLE " . $class['overlayangle'];
                             else
@@ -823,6 +830,9 @@ class Mapfile extends Controller
                             #ANGLE
                             <?php
                             if (!empty($class['label_angle'])) {
+                                if (is_numeric($class['label_angle']) && (int)$class['label_angle'] > 360 || (int)$class['label_angle'] < -360) {
+                                    $class['label_angle'] = '0';
+                                }
                                 if (is_numeric($class['label_angle']) or $class['label_angle'] == 'auto' or $class['label_angle'] == 'auto2'
                                     or $class['label_angle'] == 'follow'
                                 )
@@ -905,6 +915,9 @@ class Mapfile extends Controller
                             #ANGLE
                             <?php
                             if (!empty($class['label2_angle'])) {
+                                if (is_numeric($class['label2_angle']) && (int)$class['label2_angle'] > 360 || (int)$class['label2_angle'] < -360) {
+                                    $class['label2_angle'] = '0';
+                                }
                                 if (is_numeric($class['label2_angle']) or $class['label2_angle'] == 'auto' or $class['label2_angle'] == 'auto2'
                                     or $class['label2_angle'] == 'follow'
                                 )
@@ -1397,7 +1410,7 @@ class Mapfile extends Controller
                 if (!empty($row["data"])) {
                     $q = $row["data"];
                 } else {
-                    $q = "select * from $rel";
+                    $q = "select * from {$postgisObject->doubleQuoteQualifiedName($rel)}";
                 }
                 $select = $postgisObject->prepare("select * from ($q) as foo LIMIT 0");
                 $select->execute();
@@ -1598,8 +1611,12 @@ class Mapfile extends Controller
                         #ANGLE
                         <?php
                         if (!empty($class['angle'])) {
-                            if (is_numeric($class['angle']) || strtolower($class['angle']) == "auto")
+                            if (is_numeric($class['angle']) && (int)$class['angle'] > 360 || (int)$class['angle'] < -360) {
+                                $class['angle'] = '0';
+                            }
+                            if (is_numeric($class['angle']) || strtolower($class['angle']) == "auto") {
                                 echo "ANGLE " . $class['angle'];
+                            }
                             else
                                 echo "ANGLE [{$class['angle']}]";
                         }
@@ -1688,6 +1705,9 @@ class Mapfile extends Controller
                         #ANGLE
                         <?php
                         if (!empty($class['overlayangle'])) {
+                            if (is_numeric($class['overlayangle']) && (int)$class['overlayangle'] > 360 || (int)$class['overlayangle'] < -360) {
+                                $class['overlayangle'] = '0';
+                            }
                             if (is_numeric($class['overlayangle']) || strtolower($class['overlayangle']) == "auto")
                                 echo "ANGLE " . $class['overlayangle'];
                             else
@@ -1778,6 +1798,9 @@ class Mapfile extends Controller
                             #ANGLE
                             <?php
                             if (!empty($class['label_angle'])) {
+                                if (is_numeric($class['label_angle']) && (int)$class['label_angle'] > 360 || (int)$class['label_angle'] < -360) {
+                                    $class['label_angle'] = '0';
+                                }
                                 if (is_numeric($class['label_angle']) or $class['label_angle'] == 'auto' or $class['label_angle'] == 'auto2'
                                     or $class['label_angle'] == 'follow'
                                 )
@@ -1860,6 +1883,9 @@ class Mapfile extends Controller
                             #ANGLE
                             <?php
                             if (!empty($class['label2_angle'])) {
+                                if (is_numeric($class['label2_angle']) && (int)$class['label2_angle'] > 360 || (int)$class['label2_angle'] < -360) {
+                                    $class['label2_angle'] = '0';
+                                }
                                 if (is_numeric($class['label2_angle']) or $class['label2_angle'] == 'auto' or $class['label2_angle'] == 'auto2'
                                     or $class['label2_angle'] == 'follow'
                                 )
