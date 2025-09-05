@@ -16,7 +16,6 @@ use app\api\v4\Scope;
 use app\inc\Connection;
 use app\inc\Model;
 use app\inc\Route2;
-use Exception;
 use OpenApi\Annotations\OpenApi;
 use OpenApi\Attributes as OA;
 

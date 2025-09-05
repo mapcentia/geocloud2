@@ -12,10 +12,10 @@ use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
+use app\api\v4\Route;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
-use app\inc\Jwt;
 use app\inc\Route2;
 use app\inc\Statement;
 use app\models\Setting;
@@ -87,6 +87,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
     type: "object"
 )]
 #[AcceptableMethods(['POST', 'HEAD', 'OPTIONS'])]
+#[Route('api/v4/sql/(database)/{database}')]
 class Sql extends AbstractApi
 {
     private \app\models\Sql $sqlApi;
@@ -119,9 +120,8 @@ class Sql extends AbstractApi
         // If no token is provided and /api/v4/sql/database/{database} is used,
         // then check if the default user is set
         try {
-            $jwtData = Jwt::validate()["data"];
-            $isSuperUser = $jwtData["superUser"];
-            $uid = $jwtData["uid"];
+            $isSuperUser = $this->route->jwt["superUser"];
+            $uid =  $this->route->jwt["uid"];
         } catch (Exception) {
             $database = func_get_arg(0);
             $userObj = new \app\models\User(null, $database);
@@ -200,13 +200,10 @@ class Sql extends AbstractApi
     public function validate(): void
     {
         $body = Input::getBody();
-
         if (empty($body) && in_array(Input::getMethod(), ['post', 'patch'])) {
             throw new GC2Exception("POST without request body is not allowed.", 400);
         }
-
         $decodedBody = json_decode($body);
-
         if (is_array($decodedBody)) {
             foreach ($decodedBody as $value) {
                 $this->validateRequest(self::getAssert(), json_encode($value), Input::getMethod());

@@ -12,10 +12,10 @@ use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
+use app\api\v4\Route;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
-use app\inc\Jwt;
 use app\inc\Route2;
 use app\models\Layer;
 use app\models\Table as TableModel;
@@ -67,13 +67,14 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
+#[Route('api/v4/schemas/{schema}/tables/{table}/columns/[column]')]
 class Column extends AbstractApi
 {
 
     /**
      * @throws Exception
      */
-    public function __construct(private readonly Route2 $route, Connection $connection)
+    public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
         $this->resource = 'columns';
@@ -299,8 +300,7 @@ class Column extends AbstractApi
         }
         $this->validateRequest(self::getAssert(), $body, Input::getMethod());
 
-        $this->jwt = Jwt::validate()["data"];
-        $this->initiate(userName: $this->jwt["uid"], superUser: $this->jwt["superUser"], schema: $schema, relation: $table, column: $column);
+        $this->initiate(schema: $schema, relation: $table, key: $column, column: $column);
     }
 
     static public function getAssert(): Assert\Collection

@@ -13,11 +13,11 @@ use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
 use app\api\v4\Route;
+use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\models\Database;
 use app\inc\Input;
-use app\inc\Jwt;
 use app\inc\Route2;
 use app\models\Table as TableModel;
 use Exception;
@@ -52,6 +52,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
 #[Route('api/v4/schemas/[schema]')]
+#[Scope(['admin'])]
 class Schema extends AbstractApi
 {
 
@@ -93,7 +94,7 @@ class Schema extends AbstractApi
         $schemas = $this->schemaObj->listAllSchemas()["data"];
         $response = [];
 
-        if ($this->jwt['superUser'] && empty($this->schema)) {
+        if ($this->route->jwt['superUser'] && empty($this->schema)) {
             foreach ($schemas as $schema) {
                 $name = $schema["schema"];
                 $links = [
@@ -143,7 +144,7 @@ class Schema extends AbstractApi
     #[Override]
     public function post_index(): array
     {
-        if (!$this->jwt['superUser']) {
+        if (!$this->route->jwt['superUser']) {
             throw new GC2Exception("", 403);
         }
 
@@ -205,7 +206,7 @@ class Schema extends AbstractApi
     #[Override]
     public function patch_index(): array
     {
-        if (!$this->jwt['superUser']) {
+        if (!$this->route->jwt['superUser']) {
             throw new GC2Exception("", 403);
         }
         $body = Input::getBody();
@@ -226,7 +227,7 @@ class Schema extends AbstractApi
     #[Override]
     public function delete_index(): array
     {
-        if (!$this->jwt['superUser']) {
+        if (!$this->route->jwt['superUser']) {
             throw new GC2Exception("", 403);
         }
         $this->schemaObj->connect();
@@ -260,8 +261,7 @@ class Schema extends AbstractApi
         $collection = self::getAssert();
         $this->validateRequest($collection, $body, Input::getMethod());
 
-        $this->jwt = Jwt::validate()["data"];
-        $this->initiate(userName: $this->jwt["uid"], superUser: $this->jwt["superUser"], schema: $schema);
+        $this->initiate(schema: $schema);
         $this->schemaObj = new Database(connection: $this->connection);
     }
 

@@ -19,7 +19,6 @@ use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Route2;
-use app\models\Database;
 use app\models\Session;
 use app\models\Setting;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
@@ -146,6 +145,7 @@ class Oauth extends AbstractApi
     public function __construct(private readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
+        $this->resource = 'oauth';
     }
 
     /**
@@ -334,6 +334,11 @@ class Oauth extends AbstractApi
         return [];
     }
 
+    public function put_index(): array
+    {
+        // TODO: Implement put_index() method.
+    }
+
     /**
      * @throws GC2Exception
      */
@@ -346,11 +351,6 @@ class Oauth extends AbstractApi
             $collection = self::getAssert(json_decode($body)->grant_type);
             $this->validateRequest($collection, $body, Input::getMethod());
         }
-    }
-
-    public function put_index(): array
-    {
-        // TODO: Implement put_index() method.
     }
 
     static public function getAssert($type = null): Assert\Collection

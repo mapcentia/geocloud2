@@ -17,7 +17,6 @@ use app\exceptions\GC2Exception;
 use app\exceptions\RPCException;
 use app\inc\Connection;
 use app\inc\Input;
-use app\inc\Jwt;
 use app\api\v2\Sql as V2Sql;
 use app\inc\Route2;
 use app\models\Preparedstatement as PreparedstatementModel;
@@ -76,14 +75,11 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 #[Route('api/v4/call')]
 class Call extends AbstractApi
 {
-    /**
-     * @var V2Sql
-     */
-    private V2Sql $v2;
 
     public function __construct(private readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
+        $this->resource = 'call';
     }
 
     /**
@@ -102,9 +98,6 @@ class Call extends AbstractApi
     #[Override]
     public function post_index(): array
     {
-        $jwtData = Jwt::validate()["data"];
-        $isSuperUser = $jwtData["superUser"];
-        $uid = $jwtData["uid"];
         $decodedBody = json_decode(Input::getBody(), true);
         if (!array_is_list($decodedBody)) {
             $decodedBody = [$decodedBody];
@@ -124,7 +117,7 @@ class Call extends AbstractApi
             $query['srs'] = $preStm['data']['srs'];
             $query['params'] = $query['params'] ?? null;
             try {
-                $res = (new Sql($this->route, connection: $this->connection))->runStatement($query, $uid, $isSuperUser);
+                $res = (new Sql($this->route, connection: $this->connection))->runStatement($query, $this->route->jwt["data"]["uid"], $this->route->jwt["data"]["superUser"]);
             } catch (Exception $e) {
                 if (in_array($e->getCode(), ['HY093', '406'])) {
                     throw new RPCException("Invalid params", -32602, null, $e->getMessage(), $query['id']);

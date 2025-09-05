@@ -12,11 +12,11 @@ use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
+use app\api\v4\Route;
 use app\conf\App;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
-use app\inc\Jwt;
 use app\inc\Model;
 use app\inc\Route2;
 use app\inc\Session;
@@ -38,6 +38,7 @@ use Override;
 #[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[AcceptableMethods(['PATCH', 'POST', 'HEAD', 'OPTIONS'])]
+#[Route('api/v4/import/{schema}/[file]')]
 class Import extends AbstractApi
 {
 
@@ -68,9 +69,8 @@ class Import extends AbstractApi
     #[AcceptableAccepts(['application/json', '*/*'])]
     public function post_index(): array
     {
-        $jwt = Jwt::validate()["data"];
         @set_time_limit(5 * 60);
-        $mainDir = App::$param['path'] . "/app/tmp/" . $jwt["database"];
+        $mainDir = App::$param['path'] . "/app/tmp/" . $this->route->jwt["data"]["database"];
         $targetDir = $mainDir . "/__vectors";
         $maxFileAge = 5 * 3600;
 
@@ -389,9 +389,7 @@ class Import extends AbstractApi
         ]);
 
         $this->validateRequest($collection, $body, Input::getMethod());
-
-        $this->jwt = Jwt::validate()["data"];
-        $this->initiate(userName: $this->jwt["uid"], superUser: $this->jwt["superUser"], schema: $schema);
+        $this->initiate(schema: $schema);
     }
 
     public function put_index(): array

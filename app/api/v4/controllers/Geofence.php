@@ -12,6 +12,8 @@ use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
+use app\api\v4\Route;
+use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Route2;
@@ -107,6 +109,8 @@ use Symfony\Component\Validator\Constraints as Assert;
     type: "object"
 )]
 #[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
+#[Route('api/v4/rules/[id]')]
+#[Scope(['admin'])]
 class Geofence extends AbstractApi
 {
     public GeofenceModel $geofence;

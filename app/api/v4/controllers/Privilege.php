@@ -11,12 +11,11 @@ namespace app\api\v4\controllers;
 use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableMethods;
+use app\api\v4\Route;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
-use app\inc\Jwt;
 use app\inc\Input;
 use app\inc\Route2;
-use app\models\Client as ClientModel;
 use app\models\Layer;
 use app\models\Table;
 use Override;
@@ -50,6 +49,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['GET', 'PATCH', 'HEAD', 'OPTIONS'])]
+#[Route('api/v4/schemas/{schema}/tables/{table}/privileges')]
 class Privilege extends AbstractApi
 {
     public function __construct(private readonly Route2 $route, Connection $connection)
@@ -137,7 +137,6 @@ class Privilege extends AbstractApi
         $schema = $this->route->getParam("schema");
         $body = Input::getBody();
 
-        $this->jwt = Jwt::validate()["data"];
         // Patch and delete on collection is not allowed
         if (empty($table) && in_array(Input::getMethod(), ['patch', 'delete'])) {
             throw new GC2Exception("", 406);
@@ -160,7 +159,7 @@ class Privilege extends AbstractApi
             ]),
         ]);
         $this->validateRequest($collection, $body, Input::getMethod(), true);
-        $this->initiate(userName: $this->jwt["uid"], superUser: $this->jwt["superUser"], schema: $schema, relation: $table);
+        $this->initiate(schema: $schema, relation: $table);
     }
 
     public function put_index(): array

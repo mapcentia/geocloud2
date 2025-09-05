@@ -30,6 +30,7 @@ class Route2
      */
     public array $params;
     private bool $isMatched = false;
+    public ?array $jwt;
 
     /**
      * @param string $uri

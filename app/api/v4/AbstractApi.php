@@ -33,7 +33,6 @@ abstract class AbstractApi implements ApiInterface
     public ?array $column;
     public ?array $index;
     public ?array $constraint;
-    public array $jwt;
     public ?string $resource;
     private const array PRIVATE_PROPERTIES = ['num', 'typname', 'full_type', 'character_maximum_length',
         'numeric_precision', 'numeric_scale', 'max_bytes', 'reference', 'restriction', 'is_primary', 'is_unique',
@@ -49,14 +48,15 @@ abstract class AbstractApi implements ApiInterface
      * @param string|null $column
      * @param string|null $index
      * @param string|null $constraint
-     * @param string $userName
-     * @param bool $superUser
      * @return void
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function initiate(string $userName, bool $superUser, ?string $schema = null, ?string $relation = null, ?string $key = null, ?string $column = null, ?string $index = null, ?string $constraint = null): void
+    public function initiate(?string $schema = null, ?string $relation = null, ?string $key = null, ?string $column = null, ?string $index = null, ?string $constraint = null): void
     {
+        $userName = $this->route->jwt["data"]["uid"];
+        $superUser = $this->route->jwt["data"]["superUser"];
+
         $this->schema = $schema ? explode(',', $schema) : null;
         $this->unQualifiedName = $relation ? explode(',', $relation) : null;
         $this->column = $column ? explode(',', $column) : null;
@@ -213,7 +213,7 @@ abstract class AbstractApi implements ApiInterface
         foreach (glob(dirname(__FILE__) . "/processors/*/classes/pre/*.php") as $filename) {
             $class = "app\\api\\v4\\processors\\" . array_reverse(explode("/", $filename))[3] .
                 "\\classes\\pre\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
-            $preProcessor = new $class($this->jwt);
+            $preProcessor = new $class($this->route->jwt);
             $data = $preProcessor->{$method}($model, $data);
         }
         return $data;
@@ -224,7 +224,7 @@ abstract class AbstractApi implements ApiInterface
         foreach (glob(dirname(__FILE__) . "/processors/*/classes/post/*.php") as $filename) {
             $class = "app\\api\\v4\\processors\\" . array_reverse(explode("/", $filename))[3] .
                 "\\classes\\post\\" . explode(".", array_reverse(explode("/", $filename))[0])[0];
-            $postProcessor = new $class($this->jwt);
+            $postProcessor = new $class($this->route->jwt);
             $data = $postProcessor->{$method}($model, $data);
         }
         return $data;

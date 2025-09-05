@@ -12,10 +12,10 @@ use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
+use app\api\v4\Route;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
-use app\inc\Jwt;
 use app\inc\Route2;
 use app\models\Table as TableModel;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
@@ -110,6 +110,7 @@ class Index extends AbstractApi
     #[OA\Response(response: 201, description: 'Created', links: [new OA\Link('', null, null, 'getIndex')])]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json'])]
+    #[Route('api/v4/schemas/{schema}/tables/{table}/indices/[index]')]
     public function post_index(): array
     {
         $body = Input::getBody();
@@ -207,9 +208,7 @@ class Index extends AbstractApi
         }
         $collection = self::getAssert();
         $this->validateRequest($collection, $body, Input::getMethod());
-
-        $this->jwt = Jwt::validate()["data"];
-        $this->initiate(userName: $this->jwt["uid"], superUser: $this->jwt["superUser"], schema: $schema, relation: $table, index: $id);
+        $this->initiate(schema: $schema, relation: $table, key: $id, index: $id);
     }
 
     static public function getAssert(): Assert\Collection

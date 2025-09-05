@@ -12,10 +12,10 @@ use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
+use app\api\v4\Route;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
-use app\inc\Jwt;
 use app\inc\Route2;
 use app\models\Preparedstatement as PreparedstatementModel;
 use OpenApi\Annotations\OpenApi;
@@ -23,7 +23,6 @@ use OpenApi\Attributes as OA;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Validator\Constraints as Assert;
 use Override;
-use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 
 /**
@@ -84,6 +83,8 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
     type: "object"
 )]
 #[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
+#[Route('api/v4/methods/[id]')]
+#[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 class Method extends AbstractApi
 {
     private PreparedstatementModel $pres;
@@ -146,8 +147,7 @@ class Method extends AbstractApi
     public function post_index(): array
     {
         $list = [];
-        $jwtData = Jwt::validate()["data"];
-        $uid = $jwtData["uid"];
+        $uid = $this->route->jwt["data"]["uid"];
         $decodedBody = json_decode(Input::getBody(), true);
 
         if (!empty($decodedBody['methods'])) {
@@ -185,9 +185,8 @@ class Method extends AbstractApi
     public function patch_index(): array
     {
         $id = $this->route->getParam('id');
-        $jwtData = Jwt::validate()["data"];
-        $uid = $jwtData["uid"];
-        $isSuperUser = $jwtData["superUser"];
+        $uid = $this->route->jwt["data"]["uid"];
+        $isSuperUser = $this->route->jwt["data"]["superUser"];
         $ids = explode(',', $id);
         $body = json_decode(Input::getBody(), true);
 
@@ -213,9 +212,8 @@ class Method extends AbstractApi
     public function delete_index(): array
     {
         $id = $this->route->getParam('id');
-        $jwtData = Jwt::validate()["data"];
-        $uid = $jwtData["uid"];
-        $isSuperUser = $jwtData["superUser"];
+        $uid = $this->route->jwt["data"]["uid"];
+        $isSuperUser = $this->route->jwt["data"]["superUser"];
         $ids = explode(',', $id);
         $this->pres->begin();
         foreach ($ids as $id) {

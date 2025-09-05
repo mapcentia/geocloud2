@@ -13,11 +13,12 @@ use app\api\v3\Meta;
 use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
+use app\api\v4\Route;
+use app\api\v4\Scope;
 use app\conf\App;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
-use app\inc\Jwt;
 use app\inc\Model;
 use app\inc\Route2;
 use app\models\Layer;
@@ -65,6 +66,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['POST', 'HEAD', 'OPTIONS'])]
+#[Route('api/v4/commit')]
+#[Scope(['admin'])]
 class Commit extends AbstractApi
 {
 
@@ -95,7 +98,7 @@ class Commit extends AbstractApi
         $repoStr = $data->repo;
         $metaQuery = $data->meta_query;
         $response = [];
-        $targetDir = App::$param['path'] . self::PATH . Jwt::validate()['data']['uid'] . '/__git/';
+        $targetDir = App::$param['path'] . self::PATH . $this->route->jwt["data"]['uid'] . '/__git/';
 
         function destroy($dir): void
         {
@@ -137,9 +140,8 @@ class Commit extends AbstractApi
 
         if ($metaQuery) {
             $layers = new Layer(connection: $this->connection);
-            $jwt = Jwt::validate()["data"];
-            $auth = $jwt['superUser'];
-            $res = $layers->getAll($jwt["database"], $auth, $metaQuery, false, true, false, false);
+            $auth = $this->route->jwt["data"]['superUser'];
+            $res = $layers->getAll($this->route->jwt["data"]["database"], $auth, $metaQuery, false, true, false, false);
             $rows = $res["data"];
             $out = Meta::processRows($rows);
             foreach ($out as $item) {
@@ -191,11 +193,9 @@ class Commit extends AbstractApi
     public function validate(): void
     {
         $body = Input::getBody();
-        $data = json_decode($body);
         $collection = self::getAssert();
         $this->validateRequest($collection, $body, Input::getMethod());
-        $this->jwt = Jwt::validate()["data"];
-        $this->initiate($data->schema, null, null, null, null, null, $this->jwt["uid"], $this->jwt["superUser"]);
+        $this->initiate();
     }
 
     static public function getAssert(): Assert\Collection

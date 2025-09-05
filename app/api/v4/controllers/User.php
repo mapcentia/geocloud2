@@ -12,11 +12,10 @@ use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
-use app\api\v4\Override;
+use app\api\v4\Route;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
-use app\inc\Jwt;
 use app\inc\Route2;
 use app\models\Database;
 use app\models\Setting;
@@ -74,6 +73,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['POST', 'PATCH', 'DELETE', 'GET', 'HEAD', 'OPTIONS'])]
+#[Route('api/v4/users/[user]')]
 class User extends AbstractApi
 {
     public function __construct(private readonly Route2 $route, Connection $connection)
@@ -101,10 +101,10 @@ class User extends AbstractApi
         }
         $users = explode(',', $requestedUser);
         foreach ($users as $user) {
-            if (!$this->jwt["superUser"] && $this->jwt["uid"] != $user) {
+            if (!$this->route->jwt["superUser"] && $this->route->jwt["uid"] != $user) {
                 throw new Exception("Sub-users are not allowed to get information about other sub users");
             }
-            $userModelLocal = new UserModel($user, $this->jwt["database"]);
+            $userModelLocal = new UserModel($user, $this->route->jwt["database"]);
             $r[] = self::convertUserObject($userModelLocal->getData()["data"]);
         }
         return $this->getResponse($r);
@@ -125,7 +125,7 @@ class User extends AbstractApi
     #[Override]
     public function post_index(): array
     {
-        if (!$this->jwt["superUser"]) {
+        if (!$this->route->jwt["superUser"]) {
             throw new Exception("Sub-users are not allowed to create other sub users");
         }
         $list = [];
@@ -137,7 +137,7 @@ class User extends AbstractApi
             $data['users'] = [$data];
         }
         foreach ($data['users'] as $user) {
-            $user['parentdb'] = $this->jwt['database'];
+            $user['parentdb'] = $this->route->jwt['database'];
             $user['subuser'] = true;
             // Load pre extensions and run processAddUser
             $this->runPreExtension('processAddUser', $model);
@@ -173,11 +173,11 @@ class User extends AbstractApi
         $requestedUsers = explode(',', $this->route->getParam("user"));
 
         $data = json_decode(Input::getBody(), true) ?: [];
-        $currentUserId = $this->jwt["uid"];
-        $dataBase = $this->jwt["database"];
+        $currentUserId = $this->route->jwt["uid"];
+        $dataBase = $this->route->jwt["database"];
 
         foreach ($requestedUsers as $requestedUserId) {
-            if (!$this->jwt["superUser"] && $this->jwt["uid"] != $requestedUserId) {
+            if (!$this->route->jwt["superUser"] && $this->route->jwt["uid"] != $requestedUserId) {
                 throw new Exception("Sub-users are not allowed to update other sub users");
             }
             $data["user"] = $requestedUserId;
@@ -186,8 +186,8 @@ class User extends AbstractApi
                 unset($data["user_group"]);
             }
             if ($currentUserId == $requestedUserId) {
-                if (!$this->jwt['superUser']) {
-                    $data['parentdb'] = $this->jwt['database'];
+                if (!$this->route->jwt['superUser']) {
+                    $data['parentdb'] = $this->route->jwt['database'];
                 }
                 $model = new UserModel();
                 $model->connect();
@@ -221,11 +221,11 @@ class User extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     public function delete_index(): array
     {
-        if (!$this->jwt["superUser"]) {
+        if (!$this->route->jwt["superUser"]) {
             throw new Exception("Sub-users are not allowed to delete sub users");
         }
         $requestedUsers = explode(',', $this->route->getParam("user"));
-        $model = new UserModel($this->jwt['uid']);
+        $model = new UserModel($this->route->jwt['uid']);
 
         $model->connect();
         $model->begin();
@@ -253,7 +253,7 @@ class User extends AbstractApi
      */
     public function getAll(): array
     {
-        $currentUserId = $this->jwt["database"];
+        $currentUserId = $this->route->jwt["database"];
         $usersData = (new UserModel())->getSubusers($currentUserId)['data'];
         return ['users' => array_map([$this, 'convertUserObject'], $usersData)];
     }
@@ -264,7 +264,6 @@ class User extends AbstractApi
      */
     public function validate(): void
     {
-        $this->jwt = Jwt::validate()["data"];
         $user = $this->route->getParam("user");
         $body = Input::getBody();
         // Patch and delete on collection is not allowed

@@ -13,11 +13,10 @@ use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
 use app\api\v4\ApiInterface;
-use app\api\v4\Controllers\Constraint;
+use app\api\v4\Route;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
-use app\inc\Jwt;
 use app\inc\Model;
 use app\inc\Route2;
 use app\models\Layer;
@@ -65,6 +64,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
+#[Route('api/v4/schemas/{schema}/tables/[table]')]
 class Table extends AbstractApi
 {
     public function __construct(private readonly Route2 $route, Connection $connection)
@@ -210,7 +210,7 @@ class Table extends AbstractApi
                 $r[] = $layer->rename($this->qualifiedName[$i], $data->name)['name'];
             }
             if (isset($data->schema) && $data->schema != $this->schema[0]) {
-                if (!$this->jwt['superUser']) {
+                if (!$this->route->jwt['superUser']) {
                     throw new GC2Exception('Only super user can move tables between schemas');
                 }
                 $layer->setSchema([(isset($r[$i]) ? ($this->schema[0] . '.' . $r[$i]) : $this->qualifiedName[$i])], $data->schema);
@@ -351,9 +351,7 @@ class Table extends AbstractApi
         }
         $collection = self::getAssert();
         $this->validateRequest($collection, $body, Input::getMethod());
-
-        $this->jwt = Jwt::validate()["data"];
-        $this->initiate(userName: $this->jwt["uid"], superUser: $this->jwt["superUser"], schema: $schema, relation: $table);
+        $this->initiate(schema: $schema, relation: $table);
     }
 
     /**
