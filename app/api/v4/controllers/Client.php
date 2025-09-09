@@ -212,7 +212,7 @@ class Client extends AbstractApi
                 'id' => $id,
                 'newId' => $data['id'] ?? null,
                 'name' => $data['name'] ?? null,
-                'redirectUri' => $data['redirect_uri'] ? json_encode($data['redirect_uri']) : null,
+                'redirectUri' => isset($data['redirect_uri']) ? json_encode($data['redirect_uri']) : null,
                 'homepage' => $data['homepage'] ?? null,
                 'description' => $data['description'] ?? null,
                 'public' => $data['public'] ?? null,
