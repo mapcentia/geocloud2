@@ -13,7 +13,9 @@ use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
 use app\api\v4\Override;
-use app\api\v4\Route;
+use app\api\v4\Controller;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
@@ -78,18 +80,18 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['GET', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
-#[Route('api/v4/schemas/{schema}/tables/{table}/constraints/[constraint]')]
+#[Controller(route: 'api/v4/schemas/{schema}/tables/{table}/constraints/[constraint]', scope: Scope::SUB_USER_ALLOWED)]
 class Constraint extends AbstractApi
 {
 
-    public function __construct(private readonly Route2 $route, Connection $connection)
+    public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
         $this->resource = 'constraints';
     }
 
     /**
-     * @return array
+     * @return Response
      * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
      */
@@ -101,7 +103,7 @@ class Constraint extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
-    public function get_index(): array
+    public function get_index(): Response
     {
         $r = [];
         $res = self::getConstraints($this->table[0]);
@@ -120,7 +122,7 @@ class Constraint extends AbstractApi
     }
 
     /**
-     * @return array
+     * @return Response
      * @throws GC2Exception
      */
     #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'postConstraint', description: "Get constraints", tags: ['Schema'])]
@@ -130,7 +132,7 @@ class Constraint extends AbstractApi
     #[OA\Response(response: 201, description: 'Created')]
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
-    public function post_index(): array
+    public function post_index(): Response
     {
         $body = Input::getBody();
         $data = json_decode($body);
@@ -163,14 +165,14 @@ class Constraint extends AbstractApi
         return $this->postResponse($baseUri, $list);
     }
 
-    public function patch_index(): array
+    public function patch_index(): Response
     {
         // TODO: Implement patch_index() method.
         return [];
     }
 
     /**
-     * @return array
+     * @return Response
      * @throws GC2Exception
      */
     #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'deleteConstraint', description: "Get constraint", tags: ['Schema'])]
@@ -179,7 +181,7 @@ class Constraint extends AbstractApi
     #[OA\Parameter(name: 'constraint', description: 'Constraint name(s)', in: 'path', required: true, example: 'my_constraint')]
     #[OA\Response(response: 204, description: 'Column deleted')]
     #[OA\Response(response: 404, description: 'Not found')]
-    public function delete_index(): array
+    public function delete_index(): Response
     {
         $this->table[0]->begin();
         foreach ($this->constraint as $constraint) {
@@ -338,7 +340,7 @@ class Constraint extends AbstractApi
         ]);
     }
 
-    public function put_index(): array
+    public function put_index(): Response
     {
         // TODO: Implement put_index() method.
     }

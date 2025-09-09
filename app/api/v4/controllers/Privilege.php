@@ -11,7 +11,9 @@ namespace app\api\v4\controllers;
 use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableMethods;
-use app\api\v4\Route;
+use app\api\v4\Controller;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
@@ -49,17 +51,17 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['GET', 'PATCH', 'HEAD', 'OPTIONS'])]
-#[Route('api/v4/schemas/{schema}/tables/{table}/privileges')]
+#[Controller(route: 'api/v4/schemas/{schema}/tables/{table}/privileges', scope: Scope::SUB_USER_ALLOWED)]
 class Privilege extends AbstractApi
 {
-    public function __construct(private readonly Route2 $route, Connection $connection)
+    public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
         $this->resource = 'privileges';
     }
 
     /**
-     * @return array
+     * @return Response
      */
     #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/privileges', operationId: 'getPrivileges', description: "Get privileges", tags: ['Privileges'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
@@ -68,7 +70,7 @@ class Privilege extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
-    public function get_index(): array
+    public function get_index(): Response
     {
         $layer = new Layer(connection: $this->connection);
         $split = explode('.', $this->qualifiedName[0]);
@@ -77,7 +79,7 @@ class Privilege extends AbstractApi
     }
 
     #[Override]
-    public function post_index(): array
+    public function post_index(): Response
     {
         // TODO: Implement post_index() method.
         return [];
@@ -96,7 +98,7 @@ class Privilege extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]
     #[Override]
-    public function patch_index(): array
+    public function patch_index(): Response
     {
         $layer = new Layer(connection: $this->connection);
         $body = Input::getBody();
@@ -121,7 +123,7 @@ class Privilege extends AbstractApi
         return $this->patchResponse($baseUri);
     }
 
-    #[Override] public function delete_index(): array
+    #[Override] public function delete_index(): Response
     {
         // TODO: Implement delete_index() method.
         return [];
@@ -162,7 +164,7 @@ class Privilege extends AbstractApi
         $this->initiate(schema: $schema, relation: $table);
     }
 
-    public function put_index(): array
+    public function put_index(): Response
     {
         // TODO: Implement put_index() method.
     }

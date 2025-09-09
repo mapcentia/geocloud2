@@ -12,7 +12,8 @@ use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
-use app\api\v4\Route;
+use app\api\v4\Controller;
+use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
@@ -51,8 +52,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
-#[Route('api/v4/schemas/[schema]')]
-#[Scope(['admin'])]
+#[Controller(route: 'api/v4/schemas/[schema]', scope: Scope::SUPER_USER_ONLY)]
 class Schema extends AbstractApi
 {
 
@@ -61,14 +61,14 @@ class Schema extends AbstractApi
     /**
      * @throws Exception
      */
-    public function __construct(private readonly Route2 $route, Connection $connection)
+    public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
         $this->resource = 'schemas';
     }
 
     /**
-     * @return array
+     * @return Response
      * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
      */
@@ -89,12 +89,12 @@ class Schema extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
-    public function get_index(): array
+    public function get_index(): Response
     {
         $schemas = $this->schemaObj->listAllSchemas()["data"];
         $response = [];
 
-        if ($this->route->jwt['superUser'] && empty($this->schema)) {
+        if ($this->route->jwt['data']['superUser'] && empty($this->schema)) {
             foreach ($schemas as $schema) {
                 $name = $schema["schema"];
                 $links = [
@@ -106,10 +106,10 @@ class Schema extends AbstractApi
                 if (Input::get('namesOnly') === null) {
                     $t['tables'] = Table::getTables($name, $this);
                 }
-                $t['links'] = $links;
-                $response[$this->resource][] = $t;
+                $t['_links'] = $links;
+                $response[] = $t;
             }
-            return $response;
+            return $this->getResponse(data: $response);
         } else {
             $r = [];
             foreach ($this->schema as $schema) {
@@ -122,7 +122,7 @@ class Schema extends AbstractApi
                 if (Input::get('namesOnly') === null) {
                     $t['tables'] = Table::getTables($schema, $this);
                 }
-                $t['links'] = $links;
+                $t['_links'] = $links;
                 $r[] = $t;
             }
             return $this->getResponse($r);
@@ -130,7 +130,7 @@ class Schema extends AbstractApi
     }
 
     /**
-     * @return array
+     * @return Response
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
@@ -142,10 +142,10 @@ class Schema extends AbstractApi
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
-    public function post_index(): array
+    public function post_index(): Response
     {
-        if (!$this->route->jwt['superUser']) {
-            throw new GC2Exception("", 403);
+        if (!$this->route->jwt['data']['superUser']) {
+            throw new GC2Exception("Only superusers can create schemas", 403);
         }
 
         $body = Input::getBody();
@@ -183,7 +183,7 @@ class Schema extends AbstractApi
     }
 
     /**
-     * @return array
+     * @return Response
      * @throws GC2Exception
      */
     #[OA\Patch(path: '/api/v4/schemas/{schema}', operationId: 'patchSchema', description: "Rename schema", tags: ['Schema'])]
@@ -204,9 +204,9 @@ class Schema extends AbstractApi
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
-    public function patch_index(): array
+    public function patch_index(): Response
     {
-        if (!$this->route->jwt['superUser']) {
+        if (!$this->route->jwt['data']['superUser']) {
             throw new GC2Exception("", 403);
         }
         $body = Input::getBody();
@@ -216,7 +216,7 @@ class Schema extends AbstractApi
     }
 
     /**
-     * @return array
+     * @return Response
      * @throws GC2Exception
      */
     #[OA\Delete(path: '/api/v4/schemas/{schema}', operationId: 'deleteSchema', description: "Delete schema", tags: ['Schema'])]
@@ -225,9 +225,9 @@ class Schema extends AbstractApi
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[Override]
-    public function delete_index(): array
+    public function delete_index(): Response
     {
-        if (!$this->route->jwt['superUser']) {
+        if (!$this->route->jwt['data']['superUser']) {
             throw new GC2Exception("", 403);
         }
         $this->schemaObj->connect();
@@ -283,7 +283,7 @@ class Schema extends AbstractApi
         ]);
     }
 
-    public function put_index(): array
+    public function put_index(): Response
     {
         // TODO: Implement put_index() method.
     }

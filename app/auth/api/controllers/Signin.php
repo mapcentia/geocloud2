@@ -6,38 +6,43 @@
  *
  */
 
-namespace app\auth\api;
+namespace app\auth\api\controllers;
 
 use app\api\v4\AbstractApi;
+use app\api\v4\AcceptableMethods;
+use app\api\v4\Controller;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
 use app\conf\App;
 use app\inc\Cache;
 use app\inc\Connection;
 use app\inc\Jwt;
+use app\inc\Route2;
 use app\inc\Session;
 use app\models\Client;
+use app\models\Session as SessionModel;
 use app\models\User;
 use Exception;
 use Postmark\PostmarkClient;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
-use app\models\Database;
-use app\models\Session as SessionModel;
 
-
+#[Controller(route: 'signin', scope: Scope::PUBLIC)]
 class Signin extends AbstractApi
 {
 
-    public function __construct(private $twig = new Environment(new FilesystemLoader(__DIR__ . '/templates')))
+    public function __construct(private readonly Route2 $route, Connection $connection, private $twig = new Environment(new FilesystemLoader(__DIR__ . '/../templates')))
     {
+        parent::__construct($connection);
         Session::start();
     }
 
-    public function get_index(): array
+    public function get_index(): Response
     {
         // TODO: Implement get_index() method.
     }
 
-    public function post_index(): array
+    public function post_index(): Response
     {
         $userObj = new User();
         if ($_POST['database'] && $_POST['user'] && $_POST['password'] && !$_POST['tf_code']) {
@@ -52,7 +57,7 @@ class Signin extends AbstractApi
                     Session::start();
                     (new SessionModel())->start($_POST['user'], $_POST['password'], "public", $_POST['database']);
                     header('HX-Refresh: true');
-                    return [];
+                    return $this->emptyResponse();
                 }
                 // Get email from database
                 $email = null;
@@ -70,7 +75,7 @@ class Signin extends AbstractApi
                 $client = new PostmarkClient(App::$param["notification"]["key"]);
                 if (empty($email)) {
                     echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Could not find E-mail']) . "</div>";
-                    return [];
+                    return $this->emptyResponse();
                 }
                 $message = [
                     'To' => $email,
@@ -87,7 +92,7 @@ class Signin extends AbstractApi
                 echo "<div id='forgot' hx-swap-oob='true'><a href='/forgot?parentdb={$_POST['parentdb']}'>Forgot the password?</a></div>";
             }
             echo $this->twig->render('signin.html.twig', [...$res ?? [], ...$_POST]);
-            return [];
+            return $this->emptyResponse();
 
         } elseif ($_POST['database'] && $_POST['user'] && $_POST['password'] && $_POST['tf_code']) {
             $res = $userObj->getDatabasesForUser($_POST['user']);
@@ -98,12 +103,12 @@ class Signin extends AbstractApi
                 if ($val !== $_POST['tf_code']) {
                     echo $this->twig->render('signin.html.twig', [...$res, ...$_POST]);
                     echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'One-time code is wrong']) . "</div>";
-                    return [];
+                    return $this->emptyResponse();
                 }
             } catch (Exception $e) {
                 echo $this->twig->render('signin.html.twig', [...$res, ...$_POST]);
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Could not find the one-time code. Maybe it has expired or already used']) . "</div>";
-                return [];
+                return $this->emptyResponse();
             }
             // Delete key
             Cache::deleteItem($key);
@@ -116,7 +121,7 @@ class Signin extends AbstractApi
                 echo $this->twig->render('signin.html.twig', [...$res, ...$_POST]);
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Wrong password']) . "</div>";
             }
-            return [];
+            return $this->emptyResponse();
 
         } elseif ($_POST['user']) {
             // Get database for user
@@ -131,7 +136,7 @@ class Signin extends AbstractApi
                 if (!$check) {
                     echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'User doesn\'t exists']) . "</div>";
                     echo $this->twig->render('signin.html.twig', [...$_POST]);
-                    return [];
+                    return $this->emptyResponse();
                 }
                 echo $this->twig->render('signin.html.twig', [...$res, ...$_POST]);
             } catch (Exception $e) {
@@ -141,15 +146,15 @@ class Signin extends AbstractApi
         } else {
             echo $this->twig->render('signin.html.twig', [...$_POST]);
         }
-        return [];
+        return $this->emptyResponse();
     }
 
-    public function put_index(): array
+    public function put_index(): Response
     {
         // TODO: Implement put_index() method.
     }
 
-    public function delete_index(): array
+    public function delete_index(): Response
     {
         // TODO: Implement delete_index() method.
     }
@@ -159,7 +164,7 @@ class Signin extends AbstractApi
         // TODO: Implement validate() method.
     }
 
-    public function patch_index(): array
+    public function patch_index(): Response
     {
         // TODO: Implement patch_index() method.
     }

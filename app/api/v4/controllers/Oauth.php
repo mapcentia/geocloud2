@@ -11,7 +11,12 @@ namespace app\api\v4\controllers;
 use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
-use app\api\v4\Route;
+use app\api\v4\Controller;
+use app\api\v4\Responses\ErrorResponse;
+use app\api\v4\Responses\GetResponse;
+use app\api\v4\Responses\PostResponse;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
 use app\auth\types\GrantType;
 use app\conf\App;
 use app\exceptions\GC2Exception;
@@ -138,18 +143,19 @@ use Symfony\Component\Validator\Constraints as Assert;
     type: "object"
 )]
 #[AcceptableMethods(['POST', 'HEAD', 'OPTIONS'])]
+#[Controller(route: 'api/v4/oauth', scope: Scope::PUBLIC)]
 class Oauth extends AbstractApi
 {
     public Session $session;
 
-    public function __construct(private readonly Route2 $route, Connection $connection)
+    public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
         $this->resource = 'oauth';
     }
 
     /**
-     * @return array<string, array<string, mixed>|bool|string|int>
+     * @return Response
      * @throws PhpfastcacheInvalidArgumentException
      * @throws InvalidArgumentException
      * @throws GC2Exception
@@ -159,8 +165,7 @@ class Oauth extends AbstractApi
     #[OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(ref: "#/components/schemas/OAuthGrant"))]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json', 'application/x-www-form-urlencoded'])]
-    #[Route('api/v4/oauth/(action)')]
-    public function post_index(): array
+    public function post_index(): Response
     {
         $this->session = new Session();
 
@@ -188,9 +193,9 @@ class Oauth extends AbstractApi
                     return self::error("invalid_client", "Client secret is wrong", 401);
                 }
             }
-
             try {
-                return $this->session->start($data["username"], $data["password"], "public", $data["database"], true);
+                $data = $this->session->start($data["username"], $data["password"], "public", $data["database"], true);
+                return new PostResponse($data);
             } catch (GC2Exception) {
                 return self::error("invalid_grant", "Could not authenticate the user. Check username and password", 400);
             }
@@ -222,14 +227,14 @@ class Oauth extends AbstractApi
             }
             $superUserApiKey = (new Setting(connection: new Connection(database: $parsedToken['database'])))->getApiKeyForSuperUser();
             $accessToken = Jwt::createJWT($superUserApiKey, $parsedToken['database'], $parsedToken['uid'], $parsedToken['superUser'], $parsedToken['userGroup'], true, false, null, null, $parsedToken['properties'], $parsedToken['email']);
-            return [
+            $data = [
                 "access_token" => $accessToken['token'],
                 "token_type" => "bearer",
                 "expires_in" => $accessToken["ttl"],
                 "scope" => "",
             ];
+            return new PostResponse($data);
         }
-
         // Code grant
         if ($data['grant_type'] == GrantType::AUTHORIZATION_CODE->value) {
             try {
@@ -254,13 +259,15 @@ class Oauth extends AbstractApi
                     return self::error("invalid_client", "Client secret is wrong", 401);
                 }
             }
-            return [
+            $data = [
                 "access_token" => $token,
                 "refresh_token" => $refreshToken['token'],
                 "token_type" => "bearer",
                 "expires_in" => Jwt::ACCESS_TOKEN_TTL,
                 "scope" => "",
             ];
+            return new PostResponse($data);
+
         }
         // Device code grant
         if ($data['grant_type'] == GrantType::DEVICE_CODE->value) {
@@ -287,54 +294,52 @@ class Oauth extends AbstractApi
             }
             $token = (new Session())->createOAuthResponse($user['parentdb'], $user['screen_name'], !$user['subuser'], false, $user['usergroup']);
             Jwt::clearDeviceCode($data['device_code']);
-            return $token;
+            return new PostResponse($token);
         }
         return self::error("unsupported_grant_type", "grant_type must be either password, refresh_token or authorization_code", 401);
     }
 
-    public function post_device(): array
+    public function post_device(): PostResponse
     {
         $codes = Jwt::createDeviceAndUserCode();
-        return [
+        $data = [
             "device_code" => $codes['device_code'],
             "user_code" => $codes['user_code'],
             "verification_uri" => App::$param['host'] . '/device',
             "interval" => 5,
             "expires_in" => Jwt::DEVICE_CODE_TTL,
         ];
+        return new PostResponse($data);
     }
 
-    private static function error(string $err, string $message, int $code): array
+    private static function error(string $err, string $message, int $code): ErrorResponse
     {
-        return [
+        $res = [
             "error" => $err,
             "error_description" => $message,
-            "code" => $code,
         ];
+        return new ErrorResponse($res, $code);
     }
 
     /**
      */
-    public function get_index(): array
+    public function get_index(): Response
     {
-        return [];
     }
 
     /**
      */
-    public function patch_index(): array
+    public function patch_index(): Response
     {
-        return [];
     }
 
     /**
      */
-    public function delete_index(): array
+    public function delete_index(): Response
     {
-        return [];
     }
 
-    public function put_index(): array
+    public function put_index(): Response
     {
         // TODO: Implement put_index() method.
     }
@@ -407,7 +412,6 @@ class Oauth extends AbstractApi
                 new Assert\NotBlank()
             ]);
         }
-
         return $collection;
     }
 }

@@ -12,7 +12,8 @@ use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
-use app\api\v4\Route;
+use app\api\v4\Controller;
+use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
@@ -109,13 +110,12 @@ use Symfony\Component\Validator\Constraints as Assert;
     type: "object"
 )]
 #[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
-#[Route('api/v4/rules/[id]')]
-#[Scope(['admin'])]
+#[Controller(route: 'api/v4/rules/[id]', scope: Scope::SUPER_USER_ONLY)]
 class Geofence extends AbstractApi
 {
     public GeofenceModel $geofence;
 
-    public function __construct(private readonly Route2 $route, Connection $connection)
+    public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
         $this->geofence = new GeofenceModel(connection: $connection);
@@ -123,7 +123,7 @@ class Geofence extends AbstractApi
     }
 
     /**
-     * @return array
+     * @return Response
      * @throws GC2Exception
      */
     #[OA\Get(path: '/api/v4/rules/{id}', operationId: 'getRule', description: "Get rules", tags: ['Rules'])]
@@ -132,7 +132,7 @@ class Geofence extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
-    public function get_index(): array
+    public function get_index(): Response
     {
         $r = [];
         if (!empty($this->route->getParam("id"))) {
@@ -154,7 +154,7 @@ class Geofence extends AbstractApi
     }
 
     /**
-     * @return array
+     * @return Response
      *
      */
     #[OA\Post(path: '/api/v4/rules', operationId: 'postRule', description: "New rules", tags: ['Rules'])]
@@ -165,7 +165,7 @@ class Geofence extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
-    public function post_index(): array
+    public function post_index(): Response
     {
         $list = [];
         $body = Input::getBody();
@@ -186,7 +186,7 @@ class Geofence extends AbstractApi
     }
 
     /**
-     * @return array
+     * @return Response
      * @throws GC2Exception
      */
 
@@ -198,7 +198,7 @@ class Geofence extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]
     #[Override]
-    public function patch_index(): array
+    public function patch_index(): Response
     {
         $ids = explode(',', $this->route->getParam("id"));
         $list = [];
@@ -223,14 +223,14 @@ class Geofence extends AbstractApi
     }
 
     /**
-     * @return array
+     * @return Response
      * @throws GC2Exception
      */
     #[OA\Delete(path: '/api/v4/rules/{id}', operationId: 'deleteRule', description: "Delete rule", tags: ['Rules'])]
     #[OA\Parameter(name: 'id', description: 'Id of rule', in: 'path', required: true, example: '2')]
     #[OA\Response(response: 204, description: "Rule deleted")]
     #[OA\Response(response: 404, description: 'Not found')]
-    public function delete_index(): array
+    public function delete_index(): Response
     {
         $ids = explode(',', $this->route->getParam("id"));
         $this->geofence->begin();
@@ -310,7 +310,7 @@ class Geofence extends AbstractApi
         $this->validateRequest($collection, $body, Input::getMethod());
     }
 
-    public function put_index(): array
+    public function put_index(): Response
     {
         // TODO: Implement put_index() method.
     }

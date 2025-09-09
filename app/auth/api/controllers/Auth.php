@@ -6,30 +6,32 @@
  *
  */
 
-namespace app\auth\api;
+namespace app\auth\api\controllers;
 
 use app\api\v4\AbstractApi;
+use app\api\v4\Controller;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
 use app\inc\Connection;
 use app\inc\Route2;
 use app\inc\Session;
 use app\models\Client;
-use app\models\Database;
 use app\models\Session as SessionModel;
 use Exception;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
-
+#[Controller(route: 'auth', scope: Scope::PUBLIC)]
 class Auth extends AbstractApi
 {
 
-    public function __construct(private $twig = new Environment(new FilesystemLoader(__DIR__ . '/templates')))
+    public function __construct(private readonly Route2 $route, Connection $connection, private $twig = new Environment(new FilesystemLoader(__DIR__ . '/../templates')))
     {
-        parent::__construct(connection: new Connection());
+        parent::__construct($connection);
         Session::start();
     }
 
-    public function get_index(): array
+    public function get_index(): Response
     {
         $requiredParams = ['response_type', 'client_id'];
         foreach ($requiredParams as $requiredParam) {
@@ -97,11 +99,11 @@ class Auth extends AbstractApi
 
             if ($clientData[0]['confirm']) {
                 echo $this->twig->render('allow.html.twig', ['name' => $client, 'location' => $location]);
+                return $this->emptyResponse();
             } else {
-                $header = "Location: $redirectUri$separator$paramsStr";
-                header($header);
+                return $this->redirectResponse("$redirectUri$separator$paramsStr");
+
             }
-            return ['code' => 302];
         }
 
 
@@ -124,30 +126,32 @@ class Auth extends AbstractApi
         echo "</main>";
 
         echo $this->twig->render('footer.html.twig');
-
-        return [];
+        flush();
+        return $this->emptyResponse();
     }
 
-    private function error(string $error, string $errorDesc): array {
+    private function error(string $error, string $errorDesc): Response
+    {
             echo "[$error] $errorDesc";
 //                $paramsStr = http_build_query(['error' => $error, 'error_description' => $errorDesc]);
 //                $header = "Location: $redirectUri$separator$paramsStr";
 //                header($header);
-            return [];
+        return $this->emptyResponse();
+
 
     }
 
-    public function post_index(): array
+    public function post_index(): Response
     {
         return [];
     }
 
-    public function put_index(): array
+    public function put_index(): Response
     {
         return [];
     }
 
-    public function delete_index(): array
+    public function delete_index(): Response
     {
         return [];
     }
@@ -157,7 +161,7 @@ class Auth extends AbstractApi
         // no-op
     }
 
-    public function patch_index(): array
+    public function patch_index(): Response
     {
         return [];
     }

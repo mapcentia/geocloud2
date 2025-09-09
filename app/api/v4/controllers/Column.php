@@ -12,7 +12,13 @@ use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
-use app\api\v4\Route;
+use app\api\v4\Controller;
+use app\api\v4\Responses\GetResponse;
+use app\api\v4\Responses\NoContentResponse;
+use app\api\v4\Responses\PatchResponse;
+use app\api\v4\Responses\PostResponse;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
@@ -67,7 +73,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
-#[Route('api/v4/schemas/{schema}/tables/{table}/columns/[column]')]
+#[Controller(route: 'api/v4/schemas/{schema}/tables/{table}/columns/[column]', scope: Scope::SUB_USER_ALLOWED)]
 class Column extends AbstractApi
 {
 
@@ -93,7 +99,7 @@ class Column extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
-    public function get_index(): array
+    public function get_index(): GetResponse
     {
         $r = [];
         $res = self::getColumns($this->table[0]);
@@ -126,7 +132,7 @@ class Column extends AbstractApi
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
-    public function post_index(): array
+    public function post_index(): PostResponse
     {
         $body = Input::getBody();
         $data = json_decode($body);
@@ -138,9 +144,11 @@ class Column extends AbstractApi
         $this->table[0]->connect();
         $this->table[0]->begin();
         if (!isset($data->columns)) {
-            $data->columns = [$data];
+            $columns = [$data];
+        } else {
+            $columns = $data->columns;
         }
-        foreach ($data->columns as $datum) {
+        foreach ($columns as $datum) {
             $list[] = self::addColumn($this->table[0], $datum->name, $datum->type, $setDefaultValue, $datum->default_value, $datum->is_nullable ?? true, $datum->comment);
         }
         $this->table[0]->commit();
@@ -164,7 +172,7 @@ class Column extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]
     #[Override]
-    public function patch_index(): array
+    public function patch_index(): PatchResponse
     {
         $body = Input::getBody();
         $data = json_decode($body);
@@ -227,7 +235,7 @@ class Column extends AbstractApi
     #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: true, example: 'my_columns')]
     #[OA\Response(response: 204, description: 'Column deleted')]
     #[OA\Response(response: 404, description: 'Not found')]
-    public function delete_index(): array
+    public function delete_index(): NoContentResponse
     {
         $this->table[0] = new TableModel($this->qualifiedName[0], connection: $this->connection);
         $this->table[0]->begin();
@@ -339,7 +347,7 @@ class Column extends AbstractApi
         return $collection;
     }
 
-    public function put_index(): array
+    public function put_index(): Response
     {
         // TODO: Implement put_index() method.
     }

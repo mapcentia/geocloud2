@@ -6,23 +6,31 @@
  *
  */
 
-namespace app\auth\api;
+namespace app\auth\api\controllers;
 
 use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableMethods;
+use app\api\v4\Controller;
+use app\api\v4\Responses\RedirectResponse;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
+use app\inc\Connection;
 use app\inc\Input;
-use app\inc\Session;
+use app\inc\Route2;
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
 
 
 #[AcceptableMethods(['GET', 'HEAD', 'OPTIONS'])]
+#[Controller(route: 'signout', scope: Scope::PUBLIC)]
 class Signout extends AbstractApi
 {
-    public function __construct()
+    public function __construct(private readonly Route2 $route, Connection $connection, private $twig = new Environment(new FilesystemLoader(__DIR__ . '/../templates')))
     {
-//        Session::start();
+        parent::__construct($connection);
     }
 
-    public function get_index(): array
+    public function get_index(): Response
     {
         (new \app\models\Session())->stop();
         $r = null;
@@ -30,21 +38,20 @@ class Signout extends AbstractApi
         if ($encoded) {
             $r = urldecode(Input::get('redirect_uri'));
         }
-        header("Location: $r");
-        return ['code' => 302];
+        return $this->redirectResponse(location: $r);
     }
 
-    public function post_index(): array
+    public function post_index(): Response
     {
         // TODO: Implement get_index() method.
     }
 
-    public function put_index(): array
+    public function put_index(): Response
     {
         // TODO: Implement put_index() method.
     }
 
-    public function delete_index(): array
+    public function delete_index(): Response
     {
         // TODO: Implement delete_index() method.
     }
@@ -54,7 +61,7 @@ class Signout extends AbstractApi
         // TODO: Implement validate() method.
     }
 
-    public function patch_index(): array
+    public function patch_index(): Response
     {
         // TODO: Implement patch_index() method.
     }

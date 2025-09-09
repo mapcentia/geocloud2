@@ -5,42 +5,54 @@
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  */
 
-namespace app\auth\api;
+namespace app\auth\api\controllers;
 
 use app\api\v4\AbstractApi;
+use app\api\v4\Controller;
+use app\api\v4\Responses\RedirectResponse;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
 use app\conf\App;
 use app\inc\Connection;
-use app\inc\Session;
+use app\inc\Route2;
 use app\inc\Session as HttpSession;
 use app\models\User as UserModel;
 use Exception;
 use GuzzleHttp\Client;
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
 
+#[Controller(route: 'github/(start)|(callback)', scope: Scope::PUBLIC)]
 class Github extends AbstractApi
 {
-    public function __construct()
+    public function __construct(private readonly Route2 $route, Connection $connection, private $twig = new Environment(new FilesystemLoader(__DIR__ . '/../templates')))
     {
-        parent::__construct(connection: new Connection());
+        parent::__construct($connection);
         HttpSession::start();
     }
 
-    public function get_index(): array { return []; }
-    public function post_index(): array { return []; }
-    public function put_index(): array { return []; }
-    public function delete_index(): array { return []; }
-    public function patch_index(): array { return []; }
+    public function get_index(): Response
+    { return []; }
+    public function post_index(): Response
+    { return []; }
+    public function put_index(): Response
+    { return []; }
+    public function delete_index(): Response
+    { return []; }
+    public function patch_index(): Response
+    { return []; }
     public function validate(): void { /* no-op */ }
 
     /**
      * Initiates the GitHub OAuth flow
      * Keeps original OAuth client params to return to /auth after login
      */
-    public function get_start(): array
+    public function get_start(): Response
     {
         $cfg = App::$param['github'] ?? null;
         if (!$cfg || empty($cfg['clientId']) || empty($cfg['clientSecret'])) {
             echo 'GitHub OAuth is not configured on the server';
-            return [];
+            return $this->emptyResponse();
         }
 
         // Preserve original params to return to /auth after login
@@ -67,21 +79,21 @@ class Github extends AbstractApi
     /**
      * GitHub callback: exchange code -> token, fetch user + email, ensure local user, set session, redirect to /auth
      */
-    public function get_callback(): array
+    public function get_callback(): Response
     {
         $cfg = App::$param['github'] ?? null;
         if (!$cfg || empty($cfg['clientId']) || empty($cfg['clientSecret'])) {
             echo 'GitHub OAuth is not configured on the server';
-            return [];
+            return $this->emptyResponse();
         }
         $expectedState = $_SESSION['github_oauth_state'] ?? null;
         if (!$expectedState || !isset($_GET['state']) || !hash_equals($expectedState, (string)$_GET['state'])) {
             echo 'Invalid OAuth state';
-            return [];
+            return $this->emptyResponse();
         }
         if (empty($_GET['code'])) {
             echo 'Missing authorization code';
-            return [];
+            return $this->emptyResponse();
         }
 
         $client = new Client(['timeout' => 10, 'headers' => ['Accept' => 'application/json', 'User-Agent' => 'gc2-app']]);
@@ -101,7 +113,7 @@ class Github extends AbstractApi
             $tokenBody = json_decode((string)$res->getBody(), true);
             if (empty($tokenBody['access_token'])) {
                 echo 'Could not obtain access token from GitHub';
-                return [];
+                return $this->emptyResponse();
             }
             $accessToken = $tokenBody['access_token'];
 
@@ -131,7 +143,7 @@ class Github extends AbstractApi
             }
             if (!$email) {
                 echo 'Could not determine your email from GitHub account';
-                return [];
+                return $this->emptyResponse();
             }
 
             // 4) Determine parentdb from preserved query
@@ -191,7 +203,7 @@ class Github extends AbstractApi
 
             if (!$row) {
                 echo 'Failed to create or find user for GitHub login';
-                return [];
+                return $this->emptyResponse();
             }
 
             // 6) Set session vars (mirrors app\models\Session::setSessionVars)
@@ -208,11 +220,10 @@ class Github extends AbstractApi
 
             // 7) Redirect back to /auth with original query
             $redirect = '/auth' . ($returnQuery ? ('?' . $returnQuery) : '');
-            header('Location: ' . $redirect);
-            return ['code' => 302];
+            return $this->redirectResponse(location: $redirect);
         } catch (Exception $e) {
             echo 'GitHub login failed: ' . htmlspecialchars($e->getMessage());
-            return [];
+            return $this->emptyResponse();
         }
     }
 

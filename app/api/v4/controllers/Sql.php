@@ -12,7 +12,9 @@ use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
-use app\api\v4\Route;
+use app\api\v4\Controller;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
@@ -87,23 +89,23 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
     type: "object"
 )]
 #[AcceptableMethods(['POST', 'HEAD', 'OPTIONS'])]
-#[Route('api/v4/sql/(database)/{database}')]
+#[Controller(route: 'api/v4/sql/(database)/{database}', scope: Scope::SUB_USER_ALLOWED)]
 class Sql extends AbstractApi
 {
     private \app\models\Sql $sqlApi;
-    public function __construct(private readonly Route2 $route, Connection $connection)
+    public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct(connection: $connection);
         $this->sqlApi = new \app\models\Sql(connection: $connection);
     }
 
-    public function get_index(): array
+    public function get_index(): Response
     {
         // TODO: Implement get_index() method.
     }
 
     /**
-     * @return array
+     * @return Response
      * @throws PhpfastcacheInvalidArgumentException|GC2Exception
      * @throws InvalidArgumentException
      */
@@ -115,13 +117,13 @@ class Sql extends AbstractApi
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
-    public function post_index(): array
+    public function post_index(): Response
     {
         // If no token is provided and /api/v4/sql/database/{database} is used,
         // then check if the default user is set
         try {
-            $isSuperUser = $this->route->jwt["superUser"];
-            $uid =  $this->route->jwt["uid"];
+            $isSuperUser = $this->route->jwt["data"]["superUser"];
+            $uid =  $this->route->jwt["data"]["uid"];
         } catch (Exception) {
             $database = func_get_arg(0);
             $userObj = new \app\models\User(null, $database);
@@ -144,7 +146,7 @@ class Sql extends AbstractApi
         if (count($result) == 1) {
             return $result[0];
         }
-        return $result;
+        return $this->postResponse(null, $result);
     }
 
     /**
@@ -166,12 +168,12 @@ class Sql extends AbstractApi
     }
 
     #[Override]
-    public function patch_index(): array
+    public function patch_index(): Response
     {
         // TODO: Implement put_index() method.
     }
 
-    public function delete_index(): array
+    public function delete_index(): Response
     {
         // TODO: Implement delete_index() method.
     }
@@ -188,7 +190,7 @@ class Sql extends AbstractApi
     #[OA\Response(response: 500, description: 'Internal error. Most like an SQL error.')]
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
-    public function post_database(): array
+    public function post_database(): Response
     {
         return $this->post_index($this->route->getParam('database'));
     }
@@ -213,7 +215,7 @@ class Sql extends AbstractApi
         }
     }
 
-    public function put_index(): array
+    public function put_index(): Response
     {
         // TODO: Implement put_index() method.
     }

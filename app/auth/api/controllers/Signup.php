@@ -6,29 +6,34 @@
  *
  */
 
-namespace app\auth\api;
+namespace app\auth\api\controllers;
 
 use app\api\v4\AbstractApi;
+use app\api\v4\Controller;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
 use app\conf\App;
 use app\inc\Cache;
+use app\inc\Connection;
 use app\inc\Jwt;
+use app\inc\Route2;
+use app\models\Session as SessionModel;
 use app\models\User;
 use Exception;
 use Postmark\PostmarkClient;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
-use app\models\Session as SessionModel;
 
-
+#[Controller(route: 'signup', scope: Scope::PUBLIC)]
 class Signup extends AbstractApi
 {
 
-    public function __construct(private $twig = new Environment(new FilesystemLoader(__DIR__ . '/templates')))
+    public function __construct(private readonly Route2 $route, Connection $connection, private $twig = new Environment(new FilesystemLoader(__DIR__ . '/../templates')))
     {
-//        Session::start();
+        parent::__construct($connection);
     }
 
-    public function get_index(): array
+    public function get_index(): Response
     {
         echo $this->twig->render('header.html.twig');
         echo "<main class='form-signin w-100 m-auto'>";
@@ -36,10 +41,10 @@ class Signup extends AbstractApi
         echo "<div id='alert'></div>";
         echo "</main>";
         echo $this->twig->render('footer.html.twig');
-        return [];
+        return $this->emptyResponse();
     }
 
-    public function post_index(): array
+    public function post_index(): Response
     {
         $userObj = new User();
         if ($_POST['name'] && $_POST['email'] && $_POST['password'] && $_POST['code'] && !$_POST['tf_code']) {
@@ -67,7 +72,7 @@ class Signup extends AbstractApi
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $e->getMessage()]) . "</div>";
             }
             echo $this->twig->render('signup.html.twig', [...$_POST, ...$_GET]);
-            return [];
+            return $this->emptyResponse();
 
         } elseif ($_POST['name'] && $_POST['email'] && $_POST['password'] && $_POST['code'] && $_POST['tf_code']) {
             try {
@@ -81,12 +86,12 @@ class Signup extends AbstractApi
                     if ($val !== $_POST['tf_code']) {
                         echo $this->twig->render('signup.html.twig', [...$_POST, ...$_GET]);
                         echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Wrong one-time code']) . "</div>";
-                        return [];
+                        return $this->emptyResponse();
                     }
                 } catch (Exception) {
                     echo $this->twig->render('signup.html.twig', [...$_POST, ...$_GET]);
                     echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Could not find the key. Maybe it has expired']) . "</div>";
-                    return [];
+                    return $this->emptyResponse();
                 }
                 // Create user
                 $res = $userObj->createUser([
@@ -108,15 +113,15 @@ class Signup extends AbstractApi
             }
         }
         echo $this->twig->render('signup.html.twig', [...$_POST, ...$_GET]);
-        return [];
+        return $this->emptyResponse();
     }
 
-    public function put_index(): array
+    public function put_index(): Response
     {
         // TODO: Implement put_index() method.
     }
 
-    public function delete_index(): array
+    public function delete_index(): Response
     {
         // TODO: Implement delete_index() method.
     }
@@ -126,7 +131,7 @@ class Signup extends AbstractApi
         // TODO: Implement validate() method.
     }
 
-    public function patch_index(): array
+    public function patch_index(): Response
     {
         // TODO: Implement patch_index() method.
     }

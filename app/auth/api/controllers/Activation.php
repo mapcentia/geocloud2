@@ -6,17 +6,20 @@
  *
  */
 
-namespace app\auth\api;
+namespace app\auth\api\controllers;
 
 use app\api\v4\AbstractApi;
+use app\api\v4\Controller;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
 use app\models\User as UserModel;
 use Error;
 use Exception;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
-use app\models\Database;
 
 
+#[Controller(route: 'activation', scope: Scope::PUBLIC)]
 class Activation extends AbstractApi
 {
 
@@ -25,7 +28,7 @@ class Activation extends AbstractApi
 //        Session::start();
     }
 
-    public function get_index(): array
+    public function get_index(): Response
     {
         $loader = new FilesystemLoader(__DIR__ . '/templates');
         $twig = new Environment($loader);
@@ -36,10 +39,10 @@ class Activation extends AbstractApi
         echo $twig->render('footer.html.twig');
         echo "<div id='alert'></div>";
         echo "</main>";
-        return [];
+        return $this->emptyResponse();
     }
 
-    public function post_index(): array
+    public function post_index(): Response
     {
         if ($_POST['email']) {
             $model = new UserModel();
@@ -50,22 +53,22 @@ class Activation extends AbstractApi
             } catch (Error|Exception $e) {
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $e->getMessage()]) . "</div>";
                 echo $this->twig->render('activation.html.twig', ['email' => $_POST['email']]);
-                return [];
+                return $this->emptyResponse();
             }
             $model->commit();
             echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'E-mail with activation code is send.']) . "</div>";
         } else {
             echo $this->twig->render('activation.html.twig');
         }
-        return [];
+        return $this->emptyResponse();
     }
 
-    public function put_index(): array
+    public function put_index(): Response
     {
         // TODO: Implement put_index() method.
     }
 
-    public function delete_index(): array
+    public function delete_index(): Response
     {
         // TODO: Implement delete_index() method.
     }
@@ -75,7 +78,7 @@ class Activation extends AbstractApi
         // TODO: Implement validate() method.
     }
 
-    public function patch_index(): array
+    public function patch_index(): Response
     {
         // TODO: Implement patch_index() method.
     }

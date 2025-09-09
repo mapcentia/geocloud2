@@ -40,7 +40,6 @@ abstract class Jwt
         if (Input::getMethod() == 'options') {
             return ["success" => true];
         }
-
         // Check if there is a JWT token in the header, or it is passed as a parameter
         $jwtToken = $token ?? Input::getJwtToken();
         if ($jwtToken) {
@@ -64,17 +63,12 @@ abstract class Jwt
         $response = [];
         // Try to extract the database from token
         $arr = self::extractPayload($token);
-        if (!$arr["success"]) {
-            return $arr;
-        }
         // Get superuser key, which are used for secret
         $secret = (new Setting(new Connection(database: $arr["data"]["database"])))->getApiKeyForSuperUser();
         try {
             $decoded = (array)\Firebase\JWT\JWT::decode($token, new Key($secret, 'HS256'));
         } catch (Exception $e) {
-            // TODO should also be used without setting headers
-            header("WWW-Authenticate: Bearer error=\"invalid_token\" error_description=\"{$e->getMessage()}\"");
-            throw new GC2Exception($e->getMessage(), 401, null, "INVALID_TOKEN");
+            self::exception($e->getMessage());
         }
         $response["success"] = true;
         $response["data"] = $decoded;
@@ -90,29 +84,29 @@ abstract class Jwt
     {
         $response = [];
         $arr = null;
-        $exception = false;
         // Try to extract the database from token
         if (!isset(explode(".", $token)[1])) {
-            $exception = true;
+            self::exception();
         }
-        if (!$exception) {
-            try {
-                $arr = json_decode(base64_decode(explode(".", $token)[1]), true);
-            } catch (Exception) {
-                $exception = true;
-            }
+        try {
+            $arr = json_decode(base64_decode(explode(".", $token)[1]), true);
+        } catch (Exception) {
+            self::exception();
+
         }
         if (!$arr) {
-            $exception = true;
-        }
-        if ($exception) {
-            // TODO should also be used without setting headers
-            header("WWW-Authenticate: Bearer error=\"invalid_token\" error_description=\"Could not extract payload from token\"");
-            throw new GC2Exception("Could not extract payload from token", 400, null, "INVALID_TOKEN");
+            self::exception();
         }
         $response["success"] = true;
         $response["data"] = $arr;
         return $response;
+    }
+
+
+    private static function exception(string $message = 'Could not extract payload from token'): void
+    {
+        header("WWW-Authenticate: Bearer error=\"invalid_token\" error_description=\"$message\"");
+        throw new GC2Exception($message, 400, null, "INVALID_TOKEN");
     }
 
     /**

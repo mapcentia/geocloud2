@@ -12,7 +12,10 @@ use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
-use app\api\v4\Route;
+use app\api\v4\Controller;
+use app\api\v4\Responses\PostResponse;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
 use app\conf\App;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
@@ -27,6 +30,7 @@ use OpenApi\Attributes as OA;
 use Symfony\Component\Validator\Constraints as Assert;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use stdClass;
+use Throwable;
 use ZipArchive;
 use Override;
 
@@ -38,17 +42,18 @@ use Override;
 #[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[AcceptableMethods(['PATCH', 'POST', 'HEAD', 'OPTIONS'])]
-#[Route('api/v4/import/{schema}/[file]')]
+#[Controller(route: 'api/v4/import/{schema}/[file]', scope: Scope::SUB_USER_ALLOWED)]
 class Import extends AbstractApi
 {
 
-    public function __construct(private readonly Route2 $route, Connection $connection)
+    public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
+        $this->resource = 'import';
     }
 
     /**
-     * @return array
+     * @return Response
      * @throws GC2Exception
      */
     #[OA\Post(path: '/api/v4/import/{schema}', operationId: 'postImport', description: 'Upload files', tags: ['Import'])]
@@ -67,7 +72,7 @@ class Import extends AbstractApi
     #[OA\Response(response: 201, description: 'Created')]
     #[AcceptableContentTypes(['multipart/form-data'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
-    public function post_index(): array
+    public function post_index(): Response
     {
         @set_time_limit(5 * 60);
         $mainDir = App::$param['path'] . "/app/tmp/" . $this->route->jwt["data"]["database"];
@@ -87,11 +92,7 @@ class Import extends AbstractApi
         $chunk = isset($_REQUEST["chunk"]) ? intval($_REQUEST["chunk"]) : 0;
         $chunks = isset($_REQUEST["chunks"]) ? intval($_REQUEST["chunks"]) : 0;
         if (!is_dir($targetDir) || !$dir = opendir($targetDir)) {
-            return [
-                "success" => false,
-                "code" => "400",
-                "message" => "Failed to open temp directory.",
-            ];
+            throw new GC2Exception("Failed to open temp directory.", 400, null, "FILE_IMPORT_ERROR");
         }
         while (($file = readdir($dir)) !== false) {
             $tmpFilePath = $targetDir . DIRECTORY_SEPARATOR . $file;
@@ -109,43 +110,23 @@ class Import extends AbstractApi
         closedir($dir);
         // Open temp file
         if (!$out = @fopen("$filePath.part", $chunks ? "ab" : "wb")) {
-            return [
-                "success" => false,
-                "code" => "400",
-                "message" => "Failed to open output stream.",
-            ];
+            throw new GC2Exception("Failed to open output stream.", 400, null, "FILE_IMPORT_ERROR");
         }
         if (!empty($_FILES)) {
             if (!isset($_FILES["filename"]["tmp_name"])) {
-                return [
-                    "success" => false,
-                    "code" => "400",
-                    "message" => "Failed to move uploaded file.",
-                ];
+                throw new GC2Exception("Failed to move uploaded file.", 400, null, "FILE_IMPORT_ERROR");
             }
             if ($_FILES["filename"]["error"] || !is_uploaded_file($_FILES["filename"]["tmp_name"])) {
-                return [
-                    "success" => false,
-                    "code" => "400",
-                    "message" => "Failed to move uploaded file.",
-                ];
+                throw new GC2Exception("Failed to move uploaded file.", 400, null, "FILE_IMPORT_ERROR");
             }
 
             // Read binary input stream and append it to temp file
             if (!$in = @fopen($_FILES["filename"]["tmp_name"], "rb")) {
-                return [
-                    "success" => false,
-                    "code" => "400",
-                    "message" => "Failed to open input stream.",
-                ];
+                throw new GC2Exception("Failed to move uploaded file.", 400, null, "FILE_IMPORT_ERROR");
             }
         } else {
             if (!$in = @fopen("php://input", "rb")) {
-                return [
-                    "success" => false,
-                    "code" => "400",
-                    "message" => "Failed to open input stream.",
-                ];
+                throw new GC2Exception("Failed to open input stream.", 400, null, "FILE_IMPORT_ERROR");
             }
         }
         while ($buff = fread($in, 4096)) {
@@ -158,11 +139,13 @@ class Import extends AbstractApi
             // Strip the temp .part suffix off
             rename("$filePath.part", $filePath);
         }
-        return ["code" => 201, "success" => true, "chunk" => $chunk];
+//        return ["code" => 201, "success" => true, "chunk" => $chunk];
+        $data =  ["success" => true, "chunk" => $chunk];
+        return new PostResponse(data: $data);
     }
 
     /**
-     * @return array
+     * @return Response
      * @throws Exception
      */
     #[OA\Patch(path: '/api/v4/import/{schema}/{file}', operationId: 'patchImport', description: 'Import files', tags: ['Import'])]
@@ -240,7 +223,7 @@ class Import extends AbstractApi
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
-    public function patch_index(): array
+    public function patch_index(): Response
     {
         $schema = $this->route->getParam("schema");
         $fileName = $this->route->getParam("file");
@@ -263,9 +246,8 @@ class Import extends AbstractApi
             $response['cmd'] = $result['cmd'];
             $response['data'] = $result['data'];
             $response["success"] = true;
-            $response["code"] = 201;
-            return $response;
-        } catch (\Throwable $e) {
+            return new PostResponse(data: $response);
+        } catch (Throwable) {
             throw new GC2Exception("Could not read data from file", 400, null, "FILE_IMPORT_ERROR");
 
         }
@@ -324,12 +306,12 @@ class Import extends AbstractApi
         ];
     }
 
-    #[Override] public function get_index(): array
+    #[Override] public function get_index(): Response
     {
         // TODO: Implement put_index() method.
     }
 
-    #[Override] public function delete_index(): array
+    #[Override] public function delete_index(): Response
     {
         // TODO: Implement delete_index() method.
     }
@@ -392,7 +374,7 @@ class Import extends AbstractApi
         $this->initiate(schema: $schema);
     }
 
-    public function put_index(): array
+    public function put_index(): Response
     {
         // TODO: Implement patch_index() method.
     }

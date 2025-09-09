@@ -13,7 +13,8 @@ use app\api\v3\Meta;
 use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
-use app\api\v4\Route;
+use app\api\v4\Controller;
+use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
 use app\conf\App;
 use app\exceptions\GC2Exception;
@@ -66,14 +67,13 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['POST', 'HEAD', 'OPTIONS'])]
-#[Route('api/v4/commit')]
-#[Scope(['admin'])]
+#[Controller(route: 'api/v4/commit', scope: Scope::SUPER_USER_ONLY)]
 class Commit extends AbstractApi
 {
 
     protected const string PATH = 'app/tmp/';
 
-    public function __construct(private readonly Route2 $route, Connection $connection)
+    public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
     }
@@ -88,7 +88,7 @@ class Commit extends AbstractApi
     #[OA\Response(response: 200, description: 'Committed')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json'])]
-    public function post_index(): array
+    public function post_index(): Response
     {
         $body = Input::getBody();
         $data = json_decode($body);
@@ -163,25 +163,25 @@ class Commit extends AbstractApi
             $repo->push(null, ['--repo' => $repoStr]);
             $response['changes'] = true;
         }
-        return $response;
+        return $this->postResponse('/api/v4/commit/', $response);
     }
 
-    public function get_index(): array
+    public function get_index(): Response
     {
         // TODO: Implement post_index() method.
     }
 
-    public function put_index(): array
+    public function put_index(): Response
     {
         // TODO: Implement put_index() method.
     }
 
-    public function patch_index(): array
+    public function patch_index(): Response
     {
         // TODO: Implement patch_index() method.
     }
 
-    public function delete_index(): array
+    public function delete_index(): Response
     {
         // TODO: Implement delete_index() method.
     }

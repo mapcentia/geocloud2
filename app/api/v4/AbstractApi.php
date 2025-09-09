@@ -1,13 +1,18 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2024 MapCentia ApS
+ * @copyright  2013-2025 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\api\v4;
 
+use app\api\v4\Responses\GetResponse;
+use app\api\v4\Responses\NoContentResponse;
+use app\api\v4\Responses\PatchResponse;
+use app\api\v4\Responses\PostResponse;
+use app\api\v4\Responses\RedirectResponse;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Model;
@@ -39,7 +44,9 @@ abstract class AbstractApi implements ApiInterface
         'index_method', 'checks', 'geom_type', 'srid', 'is_array', 'udt_name'];
 
 
-    public function __construct(protected readonly Connection $connection) {}
+    public function __construct(protected readonly Connection $connection)
+    {
+    }
 
     /**
      * @param string|null $schema
@@ -276,7 +283,8 @@ abstract class AbstractApi implements ApiInterface
         }
     }
 
-    static private function removeUnderscoreKeys(array $array): array {
+    static private function removeUnderscoreKeys(array $array): array
+    {
         $filteredArray = [];
         foreach ($array as $key => $value) {
             if (!is_string($key) || !str_starts_with($key, '_')) {
@@ -304,51 +312,52 @@ abstract class AbstractApi implements ApiInterface
         }
     }
 
-    protected function getCreatedResponse(array $res): array
-    {
-        if (count($res["tables"]) == 1) {
-            $res = $res["tables"][0];
-        }
-        $res["code"] = "201";
-        return $res;
-
-    }
-
     /**
      * @throws GC2Exception
      */
-    protected function getResponse(array $res): array
+    protected function getResponse(array $data): GetResponse
     {
-        if (count($res) == 0) {
+        if (count($data) == 0) {
             throw new GC2Exception("No $this->resource found", 404, null, 'NO_RESOURCE');
-        } elseif (count($res) == 1) {
-            return $res[0];
+        } elseif (count($data) == 1) {
+            $data = $data[0];
         } else {
-            return [$this->resource => $res];
+            $data = [$this->resource => $data];
         }
+        return new GetResponse(data: $data);
     }
 
-    protected function postResponse(string $baseUri, array $list): array
+    protected function postResponse(string $baseUri, array $list): PostResponse
     {
-        header("Location: $baseUri" . implode(",", $list));
-        $res[$this->resource] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l]], $list);
+        $location = $baseUri . implode(",", $list);
+        $res[$this->resource] = array_map(fn($l) => ['_links' => ['self' => $baseUri . $l]], $list);
         if (count($res[$this->resource]) == 1) {
             $res = $res[$this->resource][0];
         }
-        $res['code'] = "201";
-        return $res;
-
+        return new PostResponse(data: $res, location: $location);
     }
 
-    protected function patchResponse(string $baseUri, array $list = []): array
+    protected function patchResponse(string $baseUri, array $list = []): PatchResponse
     {
-        header("Location: $baseUri" . implode(",", $list));
-        return ['code' => '303'];
+        $location = $baseUri . implode(",", $list);
+        return new PatchResponse(data: null, location: $location);
     }
 
-    protected function deleteResponse(): array
+    protected function deleteResponse(): NoContentResponse
     {
-        return ['code' => '204'];
+        return new NoContentResponse();
+    }
+
+    protected function emptyResponse(): NoContentResponse
+    {
+        // We flush the output buffer to ensure that the response is sent immediately
+        flush();
+        return new NoContentResponse();
+    }
+
+    protected function redirectResponse(string $location): RedirectResponse
+    {
+        return new RedirectResponse(location: $location);
     }
 
     /**

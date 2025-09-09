@@ -12,7 +12,9 @@ use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
-use app\api\v4\Route;
+use app\api\v4\Controller;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
@@ -54,10 +56,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['GET', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
+#[Controller(route: '/api/v4/schemas/{schema}/tables/{table}/indices/[index]', scope: Scope::SUB_USER_ALLOWED)]
 class Index extends AbstractApi
 {
 
-    public function __construct(private readonly Route2 $route, Connection $connection)
+    public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
         $this->resource = 'indices';
@@ -82,7 +85,7 @@ class Index extends AbstractApi
     ))]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
-    public function get_index(): array
+    public function get_index(): Response
     {
         $r = [];
         $res = self::getIndices($this->table[0]);
@@ -101,7 +104,7 @@ class Index extends AbstractApi
     }
 
     /**
-     * @return array
+     * @return Response
      */
     #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/indices', operationId: 'postIndex', tags: ['Schema'],)]
     #[OA\Parameter(name: 'schema', description: 'Name of schema', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
@@ -110,8 +113,7 @@ class Index extends AbstractApi
     #[OA\Response(response: 201, description: 'Created', links: [new OA\Link('', null, null, 'getIndex')])]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json'])]
-    #[Route('api/v4/schemas/{schema}/tables/{table}/indices/[index]')]
-    public function post_index(): array
+    public function post_index(): Response
     {
         $body = Input::getBody();
         $data = json_decode($body);
@@ -163,7 +165,7 @@ class Index extends AbstractApi
         return $table->addIndex($columns, $method, $name);
     }
 
-    public function patch_index(): array
+    public function patch_index(): Response
     {
         // TODO: Implement put_index() method.
     }
@@ -174,7 +176,7 @@ class Index extends AbstractApi
     #[OA\Parameter(name: 'index', description: 'Index name(s)', in: 'path', required: true, example: 'my_index')]
     #[OA\Response(response: 204, description: "Index deleted")]
     #[OA\Response(response: 404, description: 'Not found')]
-    public function delete_index(): array
+    public function delete_index(): Response
     {
         $this->table[0]->begin();
         foreach ($this->index as $index) {
@@ -234,7 +236,7 @@ class Index extends AbstractApi
         ]);
     }
 
-    public function put_index(): array
+    public function put_index(): Response
     {
         // TODO: Implement put_index() method.
     }

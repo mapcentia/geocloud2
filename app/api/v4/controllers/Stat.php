@@ -11,8 +11,10 @@ namespace app\api\v4\controllers;
 use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableMethods;
-use app\api\v4\Route;
+use app\api\v4\Controller;
+use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
+use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Model;
 use app\inc\Route2;
@@ -136,36 +138,38 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['GET', 'HEAD', 'OPTIONS'])]
-#[Route('api/v4/stats')]
-#[Scope(['admin'])]
+#[Controller(route: 'api/v4/stats', scope: Scope::SUPER_USER_ONLY)]
 class Stat extends AbstractApi
 {
-    public function __construct(private readonly Route2 $route, Connection $connection)
+    public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
     }
 
+    /**
+     * @throws GC2Exception
+     */
     #[OA\Get(path: '/api/v4/stats', operationId: 'getStats', description: "Get statistics", tags: ['Stats'])]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Stats"))]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
-    public function get_index(): array
+    public function get_index(): Response
     {
-        return (new Model(connection: $this->connection))->getStats();
+        return $this->getResponse(data: (new Model(connection: $this->connection))->getStats());
     }
 
-    public function post_index(): array
-    {
-
-    }
-
-    public function put_index(): array
+    public function post_index(): Response
     {
 
     }
 
-    public function delete_index(): array
+    public function put_index(): Response
+    {
+
+    }
+
+    public function delete_index(): Response
     {
 
     }
@@ -175,7 +179,7 @@ class Stat extends AbstractApi
 
     }
 
-    public function patch_index(): array
+    public function patch_index(): Response
     {
         // TODO: Implement patch_index() method.
     }

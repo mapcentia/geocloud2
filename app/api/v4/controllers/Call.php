@@ -12,7 +12,11 @@ use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
-use app\api\v4\Route;
+use app\api\v4\Controller;
+use app\api\v4\Responses\NoContentResponse;
+use app\api\v4\Responses\PostResponse;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\exceptions\RPCException;
 use app\inc\Connection;
@@ -72,11 +76,11 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
     type: "object"
 )]
 #[AcceptableMethods(['POST', 'HEAD', 'OPTIONS'])]
-#[Route('api/v4/call')]
+#[Controller(route: 'api/v4/call', scope: Scope::SUB_USER_ALLOWED)]
 class Call extends AbstractApi
 {
 
-    public function __construct(private readonly Route2 $route, Connection $connection)
+    public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
         $this->resource = 'call';
@@ -96,7 +100,7 @@ class Call extends AbstractApi
     #[AcceptableContentTypes(['application/json', 'application/json-rpc'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
-    public function post_index(): array
+    public function post_index(): Response
     {
         $decodedBody = json_decode(Input::getBody(), true);
         if (!array_is_list($decodedBody)) {
@@ -134,12 +138,12 @@ class Call extends AbstractApi
             }
         }
         if (count($result) == 0) {
-            return ['code' => '204'];
+            return new NoContentResponse();
         }
         if (count($result) == 1) {
-            return $result[0];
+            return new PostResponse(data: $result[0]);
         }
-        return $result;
+        return new PostResponse(data: $result);
     }
 
     /**
@@ -173,22 +177,22 @@ class Call extends AbstractApi
         return self::getRpcAssert();
     }
 
-    public function get_index(): array
+    public function get_index(): Response
     {
         // TODO: Implement get_index() method.
     }
 
-    public function put_index(): array
+    public function put_index(): Response
     {
         // TODO: Implement put_index() method.
     }
 
-    public function patch_index(): array
+    public function patch_index(): Response
     {
         // TODO: Implement patch_index() method.
     }
 
-    public function delete_index(): array
+    public function delete_index(): Response
     {
         // TODO: Implement delete_index() method.
     }

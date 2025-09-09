@@ -29,7 +29,7 @@ class Route2
      * @var array
      */
     public array $params;
-    private bool $isMatched = false;
+    public bool $isMatched = false;
     public ?array $jwt;
 
     /**
@@ -153,16 +153,16 @@ class Route2
             }
             $controller->validate();
             $response = $controller->$action($r);
-            $code = $response["code"] ?? '200';
-            if (count($response) > 0) {
-                unset($response["code"]);
-                header("HTTP/1.0 $code " . Util::httpCodeText($code));
+            $data = $response->getData();
+            $status = $response->getStatus();
+            header("HTTP/1.0 $status " . Util::httpCodeText($status));
+            if ($data) {
                 header('Content-type: application/json; charset=utf-8');
-                if (!array_is_list($response)) {
-                    $response["_execution_time"] = round((Util::microtime_float() - $time_start), 3);
+                if (!array_is_list($data)) {
+                    $data["_execution_time"] = round((Util::microtime_float() - $time_start), 3);
                 }
-                if (!in_array($code, ['204', '303'])) {
-                    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+                if (!in_array($status, [204, 303])) {
+                    echo json_encode($data, JSON_UNESCAPED_UNICODE);
                 } else {
                     header_remove('Content-type');
                 }

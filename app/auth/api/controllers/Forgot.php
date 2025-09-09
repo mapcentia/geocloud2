@@ -6,28 +6,32 @@
  *
  */
 
-namespace app\auth\api;
+namespace app\auth\api\controllers;
 
 use app\api\v4\AbstractApi;
+use app\api\v4\Controller;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
+use app\conf\App;
+use app\inc\Cache;
+use app\inc\Connection;
+use app\inc\Route2;
 use app\models\User;
 use Exception;
+use Postmark\PostmarkClient;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
-use app\inc\Cache;
-use app\inc\Model;
-use app\models\Database;
-use app\models\User as UserModel;
-use app\conf\App;
-use Postmark\PostmarkClient;
 
+#[Controller(route: 'forgot', scope: Scope::PUBLIC)]
 class Forgot extends AbstractApi
 {
 
-    public function __construct(private $twig = new Environment(new FilesystemLoader(__DIR__ . '/templates')))
+    public function __construct(private readonly Route2 $route, Connection $connection, private $twig = new Environment(new FilesystemLoader(__DIR__ . '/../templates')))
     {
+        parent::__construct($connection);
     }
 
-    public function get_index(): array
+    public function get_index(): Response
     {
         $userObj = new User();
 
@@ -40,15 +44,15 @@ class Forgot extends AbstractApi
                 $val = $userObj->getCode($key);
                 if ($val[0] !== $_GET['key']) {
                     echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Could not find the key.']) . "</div>";
-                    return [];
+                    return $this->emptyResponse();
                 }
                 if ($_GET['parentdb'] && $val[1] !== $_GET['parentdb']) {
                     echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Wrong parentdb']) . "</div>";
-                    return [];
+                    return $this->emptyResponse();
                 }
             } catch (Exception $e) {
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Could not find the key. Maybe it has expired']) . "</div>";
-                return [];
+                return $this->emptyResponse();
             }
             echo $this->twig->render("reset.html.twig", $_GET);
 
@@ -60,10 +64,10 @@ class Forgot extends AbstractApi
         echo "</main>";
 
         echo $this->twig->render('footer.html.twig');
-        return [];
+        return $this->emptyResponse();
     }
 
-    public function post_index(): array
+    public function post_index(): Response
     {
         $userObj = new User();
         if (isset($_POST['password']) && isset($_POST['userid']) && isset($_POST['key'])) {
@@ -73,15 +77,15 @@ class Forgot extends AbstractApi
                 $val = $userObj->getCode($key);
                 if ($val[0] !== $_POST['key']) {
                     echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Wrong key']) . "</div>";
-                    return [];
+                    return $this->emptyResponse();
                 }
                 if ($_POST['parentdb'] && $val[1] !== $_POST['parentdb']) {
                     echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Wrong parentdb']) . "</div>";
-                    return [];
+                    return $this->emptyResponse();
                 }
             } catch (Exception $e) {
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Could not find the key. Maybe it has expired']) . "</div>";
-                return [];
+                return $this->emptyResponse();
             }
 
             $data["user"] = $_POST['userid'];
@@ -94,7 +98,7 @@ class Forgot extends AbstractApi
             } catch (Exception $e) {
                 echo $this->twig->render("reset.html.twig", [...$data, 'key' => $_POST['key']]);
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $e->getMessage()]) . "</div>";
-                return [];
+                return $this->emptyResponse();
             }
             Cache::deleteItem($key);
             echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Password changed']) . "</div>";
@@ -105,7 +109,7 @@ class Forgot extends AbstractApi
             } catch (Exception $e) {
                 echo $this->twig->render("forgot.html.twig", ['parentdb' => $_POST['parentdb'] ?? '']);
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $e->getMessage()]) . "</div>";
-                return [];
+                return $this->emptyResponse();
             }
             $user = null;
             $email = null;
@@ -142,10 +146,10 @@ class Forgot extends AbstractApi
                     try {
                         $sendResult = $client->sendEmailBatch([$message]);
                     } catch (Exception) {
-                        return [];
+                        return $this->emptyResponse();
                     }
                 } catch (Exception) {
-                    return [];
+                    return $this->emptyResponse();
                 }
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'E-mail with reset link is send.']) . "</div>";
 
@@ -159,12 +163,12 @@ class Forgot extends AbstractApi
         return [];
     }
 
-    public function put_index(): array
+    public function put_index(): Response
     {
         // TODO: Implement put_index() method.
     }
 
-    public function delete_index(): array
+    public function delete_index(): Response
     {
         // TODO: Implement delete_index() method.
     }
@@ -174,7 +178,7 @@ class Forgot extends AbstractApi
         // TODO: Implement validate() method.
     }
 
-    public function patch_index(): array
+    public function patch_index(): Response
     {
         // TODO: Implement patch_index() method.
     }

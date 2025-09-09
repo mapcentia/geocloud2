@@ -6,24 +6,31 @@
  *
  */
 
-namespace app\auth\api;
+namespace app\auth\api\controllers;
 
 use app\api\v4\AbstractApi;
+use app\api\v4\Controller;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
+use app\inc\Cache;
+use app\inc\Connection;
+use app\inc\Jwt;
+use app\inc\Route2;
 use app\inc\Session;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
-use app\inc\Cache;
-use app\inc\Jwt;
 
 
+#[Controller(route: 'device', scope: Scope::PUBLIC)]
 class Device extends AbstractApi
 {
 
-    public function __construct(private $twig = new Environment(new FilesystemLoader(__DIR__ . '/templates')))
+    public function __construct(private readonly Route2 $route, Connection $connection, private $twig = new Environment(new FilesystemLoader(__DIR__ . '/../templates')))
     {
+        parent::__construct($connection);
     }
 
-    public function get_index(): array
+    public function get_index(): Response
     {
         echo $this->twig->render('header.html.twig');
         $backend = Session::isAuth() ? 'device' : 'signin';
@@ -34,10 +41,10 @@ class Device extends AbstractApi
         echo "</main>";
 
         echo $this->twig->render('footer.html.twig');
-        return [];
+        return $this->emptyResponse();
     }
 
-    public function post_index(): array
+    public function post_index(): Response
     {
         $code = $_POST['user-code'];
         $cachedString = Cache::getItem($code);
@@ -60,15 +67,15 @@ class Device extends AbstractApi
 
             }
         }
-        return [];
+        return $this->emptyResponse();
     }
 
-    public function put_index(): array
+    public function put_index(): Response
     {
         // TODO: Implement put_index() method.
     }
 
-    public function delete_index(): array
+    public function delete_index(): Response
     {
         // TODO: Implement delete_index() method.
     }
@@ -78,7 +85,7 @@ class Device extends AbstractApi
         // TODO: Implement validate() method.
     }
 
-    public function patch_index(): array
+    public function patch_index(): Response
     {
         // TODO: Implement patch_index() method.
     }

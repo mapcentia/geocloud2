@@ -12,7 +12,8 @@ error_reporting(E_ERROR | E_WARNING | E_PARSE | E_DEPRECATED | E_USER_DEPRECATED
 //error_reporting(E_ALL);
 ob_start("ob_gzhandler");
 
-use app\api\v4\controllers\Oauth;
+use app\api\v4\Controller;
+use app\api\v4\Scope;
 use app\conf\App;
 use app\conf\Connection;
 use app\controllers\Wms;
@@ -114,7 +115,7 @@ App::$param['protocol'] = App::$param['protocol'] ?? Util::protocol();
 App::$param['host'] = App::$param['host'] ?? App::$param['protocol'] . "://" . $_SERVER['SERVER_NAME'] . ($_SERVER['SERVER_PORT'] != "80" && $_SERVER['SERVER_PORT'] != "443" ? ":" . $_SERVER["SERVER_PORT"] : "");
 App::$param['userHostName'] = App::$param['userHostName'] ?? App::$param['host'];
 
-// Handle OWS outside handler handler function
+// Handle OWS outside handler function
 try {
     if (Input::getPath()->part(1) == "wfs") {
         if (!empty(Input::getCookies()["PHPSESSID"])) {
@@ -145,8 +146,43 @@ try {
     flush();
 }
 
+// Collect all Route2 routes
+$routes = [];
+foreach (glob(dirname(__FILE__) . "/../app/auth/api/controllers/*.php") as $filename) {
+    $className = 'app\\auth\\api\\controllers\\' . basename($filename, '.php');
+    try {
+        $rc = new ReflectionClass($className);
+        $classAttrs = $rc->getAttributes();
+        foreach ($classAttrs as $attribute) {
+            $listener = $attribute->newInstance();
+            if ($listener::class == Controller::class) {
+                $routes[$className] = $listener;
+            }
+
+        }
+    } catch (ReflectionException) {
+        // We skip not class files
+    }
+}
+foreach (glob(dirname(__FILE__) . "/../app/api/v4/controllers/*.php") as $filename) {
+    $className = 'app\\api\\v4\\controllers\\' . basename($filename, '.php');
+    try {
+        $rc = new ReflectionClass($className);
+        $classAttrs = $rc->getAttributes();
+        foreach ($classAttrs as $attribute) {
+            $listener = $attribute->newInstance();
+            if ($listener::class == Controller::class) {
+                $routes[$className] = $listener;
+            }
+
+        }
+    } catch (ReflectionException) {
+        // We skip not class files
+    }
+}
+
 // Start routing
-$handler = static function () {
+$handler = static function () use ($routes) {
     // Write Access-Control-Allow-Origin if origin is white listed
     $http_origin = $_SERVER['HTTP_ORIGIN'] ?? null;
     if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App::$param["AccessControlAllowOrigin"])) {
@@ -159,7 +195,7 @@ $handler = static function () {
     header("Access-Control-Allow-Methods: GET, PUT, POST, DELETE, HEAD, OPTIONS");
 
     try {
-        if (Input::getPath()->part(1) == "api") {
+        if (in_array(Input::getPath()->part(1), ['api', 'auth', 'signin', 'signup', 'signout', 'forgot', 'activation', 'device', 'github'])) {
 
             if ($db = Input::getPath()->part(4)) {
                 Database::setDb($db); // Default
@@ -400,44 +436,29 @@ $handler = static function () {
             //==========================
             // V4 with OAuth and Route2
             //==========================
-
             $Route2 = new Route2();
-
-            $Route2->add("api/v4/oauth", new Oauth($Route2, new \app\inc\Connection()));
-            $Route2->add("api/v4/oauth/(action)", new Oauth($Route2, new \app\inc\Connection()));
-
-            $jwt = Jwt::validate();
-            $Route2->jwt = $jwt;
-
             // Rate limit per JWT token for all API v4 routes
             RateLimiter::consumeForJwt(Input::getJwtToken(), App::$param['apiV4']['rateLimitPerMinute'] ?? 120);
-
-            // Start routing by attributes
-            $routes = [];
-            foreach (glob(dirname(__FILE__) . "/../app/api/v4/controllers/*.php") as $filename) {
-                $className = 'app\\api\\v4\\controllers\\' . basename($filename, '.php');
-                try {
-                    $rc = new ReflectionClass($className);
-                    $classAttrs = $rc->getAttributes();
-                    foreach ($classAttrs as $attribute) {
-                        $listener = $attribute->newInstance();
-                        if ($listener::class == \app\api\v4\Route::class) {
-                            $routes[$className] = $listener->getRoute();
-                        }
-                        if ($listener::class == \app\api\v4\Scope::class) {
-                            $listener->check($jwt);
-                        }
-                    }
-                } catch (ReflectionException) {
-                    // We skip not class files
+            // First, go through PUBLIC routes before validating the token
+            foreach ($routes as $c => $r) {
+                if ($r->getScope() == Scope::PUBLIC) {
+                    $Route2->add($r->getRoute(), new $c($Route2, new \app\inc\Connection()));
                 }
             }
-            $conn = new \app\inc\Connection(database: $jwt["data"]["database"]);
-            foreach ($routes as $c => $r) {
-                $Route2->add($r, new $c($Route2, $conn));
+            // Then go through non-PUBLIC routes
+            if (!$Route2->isMatched) {
+                $jwt = Jwt::validate();
+                $Route2->jwt = $jwt;
+                $conn = new \app\inc\Connection(database: $jwt["data"]["database"]);
+                foreach ($routes as $c => $r) {
+                    if ($r->getScope() != Scope::PUBLIC) {
+                        $Route2->add($r->getRoute(), new $c($Route2, $conn));
+                    }
+                }
             }
-           // $Route2->miss();
-            // End routing by attributes
+            if ($Route2->isMatched) {
+                return;
+            }
 
         } elseif (Input::getPath()->part(1) == "admin") {
             Session::start();
@@ -497,13 +518,16 @@ $handler = static function () {
             foreach (glob(dirname(__FILE__) . "/../app/auth/routes/*.php") as $filename) {
                 include($filename);
             }
-          //  Route::miss();
+            Route::miss();
         }
     } catch (GC2Exception $exception) {
         $response["success"] = false;
         $response["message"] = $exception->getMessage();
         $response["code"] = $exception->getCode();
         $response["errorCode"] = $exception->getErrorCode();
+        $response["file"] = $exception->getFile();
+        $response["line"] = $exception->getLine();
+        $response["trace"] = $exception->getTraceAsString();
         echo Response::toJson($response);
     } catch (RPCException $exception) {
         echo Response::toJson($exception->getResponse());
@@ -515,7 +539,6 @@ $handler = static function () {
         $response["file"] = $exception->getFile();
         $response["line"] = $exception->getLine();
         $response["trace"] = $exception->getTraceAsString();
-
         echo Response::toJson($response);
     } catch (Throwable $exception) {
         $response["success"] = false;

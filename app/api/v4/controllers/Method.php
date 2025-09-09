@@ -12,7 +12,9 @@ use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
-use app\api\v4\Route;
+use app\api\v4\Controller;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
@@ -83,13 +85,13 @@ use Override;
     type: "object"
 )]
 #[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
-#[Route('api/v4/methods/[id]')]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
+#[Controller(route: 'api/v4/methods/[id]', scope: Scope::SUB_USER_ALLOWED)]
 class Method extends AbstractApi
 {
     private PreparedstatementModel $pres;
 
-    public function __construct(private readonly Route2 $route, Connection $connection)
+    public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
         $this->pres = new PreparedstatementModel($connection);
@@ -105,7 +107,7 @@ class Method extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
-    public function get_index(): array
+    public function get_index(): Response
     {
         $id = $this->route->getParam('id');;
         $q = $this->pres->getAll()['data'];
@@ -134,7 +136,7 @@ class Method extends AbstractApi
     }
 
     /**
-     * @return array
+     * @return Response
      * @throws GC2Exception
      */
     #[OA\Post(path: '/api/v4/methods', operationId: 'postRpc', description: "Create RPC method", tags: ['Methods'])]
@@ -144,7 +146,7 @@ class Method extends AbstractApi
     #[AcceptableContentTypes(['application/json', 'application/json-rpc'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
-    public function post_index(): array
+    public function post_index(): Response
     {
         $list = [];
         $uid = $this->route->jwt["data"]["uid"];
@@ -182,7 +184,7 @@ class Method extends AbstractApi
     #[AcceptableContentTypes(['application/json', 'application/json-rpc'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
-    public function patch_index(): array
+    public function patch_index(): Response
     {
         $id = $this->route->getParam('id');
         $uid = $this->route->jwt["data"]["uid"];
@@ -209,7 +211,7 @@ class Method extends AbstractApi
     #[OA\Response(response: 204, description: "Method deleted")]
     #[OA\Response(response: 404, description: 'Not found')]
     #[Override]
-    public function delete_index(): array
+    public function delete_index(): Response
     {
         $id = $this->route->getParam('id');
         $uid = $this->route->jwt["data"]["uid"];
@@ -246,7 +248,7 @@ class Method extends AbstractApi
         $this->validateRequest(self::getAssert(), $body, Input::getMethod());
     }
 
-    public function put_index(): array
+    public function put_index(): Response
     {
         // TODO: Implement put_index() method.
     }

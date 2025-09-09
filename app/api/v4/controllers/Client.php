@@ -12,7 +12,10 @@ use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
-use app\api\v4\Route;
+use app\api\v4\Controller;
+use app\api\v4\Responses\PostResponse;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
@@ -86,7 +89,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['POST', 'PATCH', 'DELETE', 'GET', 'HEAD', 'OPTIONS'])]
-#[Route('api/v4/clients/[id]')]
+#[Controller(route: 'api/v4/clients/[id]', scope: Scope::SUB_USER_ALLOWED)]
 class Client extends AbstractApi
 {
     private readonly ClientModel $client;
@@ -115,7 +118,7 @@ class Client extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
-    public function get_index(): array
+    public function get_index(): Response
     {
         $r = [];
         if (!empty($this->route->getParam("id"))) {
@@ -155,7 +158,7 @@ class Client extends AbstractApi
     #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json'])]
-    public function post_index(): array
+    public function post_index(): Response
     {
         $list = [];
         $body = Input::getBody();
@@ -179,12 +182,11 @@ class Client extends AbstractApi
         $this->client->commit();
         $baseUri = "/api/v4/clients/";
         header("Location: $baseUri" . implode(",", array_map(fn($c) => $c['id'], $list)));
-        $res[$this->resource] = array_map(fn($l) => ['links' => ['self' => $baseUri . $l['id']], 'secret' => $l['secret']], $list);
+        $res[$this->resource] = array_map(fn($l) => ['_links' => ['self' => $baseUri . $l['id']], 'secret' => $l['secret']], $list);
         if (count($res[$this->resource]) == 1) {
             $res = $res[$this->resource][0];
         }
-        $res['code'] = "201";
-        return $res;
+        return new PostResponse(data: $res);
     }
 
     /**
@@ -197,7 +199,7 @@ class Client extends AbstractApi
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]
-    public function patch_index(): array
+    public function patch_index(): Response
     {
         $list = [];
         $ids = explode(',', $this->route->getParam("id"));
@@ -229,7 +231,7 @@ class Client extends AbstractApi
     #[OA\Parameter(name: 'id', description: 'Id of client', in: 'path', required: true, example: '66f5005bd44c6')]
     #[OA\Response(response: 204, description: "Client deleted")]
     #[OA\Response(response: 404, description: 'Not found')]
-    public function delete_index(): array
+    public function delete_index(): Response
     {
         $id = $this->route->getParam("id");
         $ids = explode(',', $id);
@@ -303,7 +305,7 @@ class Client extends AbstractApi
         return $collection;
     }
 
-    public function put_index(): array
+    public function put_index(): Response
     {
         // TODO: Implement put_index() method.
     }
