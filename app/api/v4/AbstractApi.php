@@ -327,20 +327,20 @@ abstract class AbstractApi implements ApiInterface
         return new GetResponse(data: $data);
     }
 
+    /**
+     * @throws GC2Exception
+     */
     protected function postResponse(string $baseUri, array $list): PostResponse
     {
-        $location = $baseUri . implode(",", $list);
-        $res[$this->resource] = array_map(fn($l) => ['_links' => ['self' => $baseUri . $l]], $list);
-        if (count($res[$this->resource]) == 1) {
-            $res = $res[$this->resource][0];
-        }
-        return new PostResponse(data: $res, location: $location);
+        return $this->prepareResponse('post', $baseUri, $list);
     }
 
+    /**
+     * @throws GC2Exception
+     */
     protected function patchResponse(string $baseUri, array $list = []): PatchResponse
     {
-        $location = $baseUri . implode(",", $list);
-        return new PatchResponse(data: null, location: $location);
+        return $this->prepareResponse('patch', $baseUri, $list);
     }
 
     protected function deleteResponse(): NoContentResponse
@@ -358,6 +358,24 @@ abstract class AbstractApi implements ApiInterface
     protected function redirectResponse(string $location): RedirectResponse
     {
         return new RedirectResponse(location: $location);
+    }
+
+    /**
+     * @throws GC2Exception
+     */
+    private function prepareResponse(string $method, string $baseUri, array $list = []): PostResponse|PatchResponse
+    {
+        $location = $baseUri . implode(",", $list);
+        $res[$this->resource] = array_map(fn($l) => ['_links' => ['self' => $baseUri . $l]], $list);
+        if (count($res[$this->resource]) == 1) {
+            $res = $res[$this->resource][0];
+        }
+        if ($method == 'patch') {
+            return new PatchResponse(data: $res, location: $location);
+        } elseif ($method == 'post') {
+            return new PostResponse(data: $res, location: $location);
+        }
+        throw new GC2Exception("Method not allowed", 405, null, "METHOD_NOT_ALLOWED");
     }
 
     /**
