@@ -98,21 +98,6 @@ class Sql extends Controller
             $srs = $json["srs"] ?? Input::$params["srs"] ?? $srs ?? null;
             $outputFormat = !empty($json["format"]) ? $json["format"] : (!empty($json["output_format"]) ? $json["output_format"] : Input::$params["format"] ?? Input::$params["output_format"]);
 
-            if (!empty($json["method"])) {
-                $method = $json["method"];
-                $pres = new PreparedstatementModel();
-                try {
-                    $preStm = $pres->getByName($method);
-                } catch (Exception $e) {
-                    throw new Exception("Method not found", -32601, null);
-                }
-                $json["q"] = $preStm['data']['statement'];
-                $typeHints = json_decode($preStm['data']['type_hints'], true);
-                $typeFormats = json_decode($preStm['data']['type_formats'], true);
-                $outputFormat = $preStm['data']['output_format'];
-                $srs = $preStm['data']['srs'];
-            }
-
             // Set input params from JSON
             // ==========================
             Input::setParams(
