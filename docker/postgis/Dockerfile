@@ -18,10 +18,12 @@ RUN apt-get -y install vim git php8.3-pgsql php8.3-cli curl \
     pgbouncer locales-all osm2pgsql supervisor \
     osm2pgsql unixodbc
 
-# Install msodbcsql17
-RUN wget https://packages.microsoft.com/debian/10/prod/pool/main/m/msodbcsql17/msodbcsql17_17.4.2.1-1_amd64.deb && \
-    export ACCEPT_EULA=Y && \
-    dpkg -i msodbcsql17_17.4.2.1-1_amd64.deb
+# Install msodbcsql17 and msodbcsql18
+RUN curl -sSL -O https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb \
+    && dpkg -i packages-microsoft-prod.deb \
+    && rm packages-microsoft-prod.deb \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql17 msodbcsql18
 
 # Set MinProtocol to TLSv1.0 because some SQL Server doesn't support 1.2
 RUN sed -i "s#MinProtocol = TLSv1.2#MinProtocol = TLSv1.0#g" /etc/ssl/openssl.cnf
