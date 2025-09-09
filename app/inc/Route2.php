@@ -156,16 +156,19 @@ class Route2
             $data = $response->getData();
             $status = $response->getStatus();
             header("HTTP/1.0 $status " . Util::httpCodeText($status));
+
+            // Ensure no Content-Type (or body) is sent for 204/303
+            if ($status == 204) {
+                header_remove('Content-Type');
+                header_remove('Content-Length');
+                return;
+            }
+            header('Content-type: application/json; charset=utf-8');
             if ($data) {
-                header('Content-type: application/json; charset=utf-8');
                 if (!array_is_list($data)) {
                     $data["_execution_time"] = round((Util::microtime_float() - $time_start), 3);
                 }
-                if (!in_array($status, [204, 303])) {
-                    echo json_encode($data, JSON_UNESCAPED_UNICODE);
-                } else {
-                    header_remove('Content-type');
-                }
+                echo json_encode($data, JSON_UNESCAPED_UNICODE);
             }
         }
     }
