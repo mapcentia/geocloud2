@@ -144,6 +144,7 @@ class Stat extends AbstractApi
     public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
+        $this->resource = 'stat';
     }
 
     /**

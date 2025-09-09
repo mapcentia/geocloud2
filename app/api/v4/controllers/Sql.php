@@ -13,6 +13,7 @@ use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
 use app\api\v4\Controller;
+use app\api\v4\Responses\GetResponse;
 use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
@@ -89,13 +90,14 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
     type: "object"
 )]
 #[AcceptableMethods(['POST', 'HEAD', 'OPTIONS'])]
-#[Controller(route: 'api/v4/sql/(database)/{database}', scope: Scope::SUB_USER_ALLOWED)]
+#[Controller(route: 'api/v4/sql', scope: Scope::SUB_USER_ALLOWED)]
 class Sql extends AbstractApi
 {
     private \app\models\Sql $sqlApi;
     public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct(connection: $connection);
+        $this->resource = 'sql';
         $this->sqlApi = new \app\models\Sql(connection: $connection);
     }
 
@@ -144,9 +146,9 @@ class Sql extends AbstractApi
         }
         $this->sqlApi->commit();
         if (count($result) == 1) {
-            return $result[0];
+            $result = $result[0];
         }
-        return $this->postResponse(null, $result);
+        return new GetResponse(data: $result);
     }
 
     /**
