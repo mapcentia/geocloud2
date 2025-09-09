@@ -140,6 +140,66 @@ class OAuthManagementCest
         $I->seeResponseIsJson();
     }
 
+    // Tests for app/api/v4/controllers/Call.php
+    public function shouldReturnInvalidRequestOnMissingMethodInRpc(ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Accept', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
+        $payload = json_encode([
+            'jsonrpc' => '2.0',
+            'id' => '1',
+            // 'method' omitted on purpose
+        ]);
+        $I->sendPOST('/api/v4/call', $payload);
+        // JSON-RPC errors are returned with 200 in this app
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'jsonrpc' => '2.0',
+            'error' => [
+                'code' => -32600,
+                'message' => 'Invalid Request',
+            ],
+            'id' => '1',
+        ]);
+    }
+
+    public function shouldReturnMethodNotFoundForUnknownMethod(ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Accept', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
+        $payload = json_encode([
+            'jsonrpc' => '2.0',
+            'method' => 'nonExistingPreparedStatementMethodName',
+            'params' => ['foo' => 'bar'],
+            'id' => '99',
+        ]);
+        $I->sendPOST('/api/v4/call', $payload);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'jsonrpc' => '2.0',
+            'error' => [
+                'code' => -32601,
+                'message' => 'Method not found',
+            ],
+            'id' => '99',
+        ]);
+    }
+
+    public function shouldReturnNoContentForEmptyBatch(ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Accept', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
+        $payload = json_encode([]); // Valid empty batch per our controller logic
+        $I->sendPOST('/api/v4/call', $payload);
+        $I->seeResponseCodeIs(HttpCode::NO_CONTENT);
+        // 204 should yield no body and no content-type
+    }
+
     public function shouldManageOAuthClients(ApiTester $I)
     {
         // Create client
@@ -191,5 +251,74 @@ class OAuthManagementCest
         // We don't know exact behavior; assert not 200
         $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
 
+    }
+
+    // Tests for app/api/v4/controllers/Table.php
+    public function shouldCreateTable(ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Accept', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
+        $payload = json_encode([
+            'name' => $this->tableName3,
+        ]);
+        $I->sendPOST('/api/v4/schemas/' . $this->schemaName . '/tables', $payload);
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $location = $I->grabHttpHeader('Location');
+        $I->assertStringContainsString('/api/v4/schemas/' . $this->schemaName . '/tables/' . $this->tableName3, $location);
+    }
+
+    public function shouldGetTable(ApiTester $I)
+    {
+        $I->haveHttpHeader('Accept', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
+        $I->sendGET('/api/v4/schemas/' . $this->schemaName . '/tables/' . $this->tableName3);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'name' => $this->tableName3,
+        ]);
+    }
+
+    public function shouldListTablesNamesOnly(ApiTester $I)
+    {
+        $I->haveHttpHeader('Accept', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
+        $I->sendGET('/api/v4/schemas/' . $this->schemaName . '/tables?namesOnly=1');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson([
+            'name' => $this->schemaName . '.' . $this->tableName3,
+        ]);
+    }
+
+    public function shouldPatchRenameTableAndSetComment(ApiTester $I)
+    {
+        $I->stopFollowingRedirects();
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
+        $payload = json_encode([
+            'name' => $this->tableName4,
+            'comment' => 'Renamed by test',
+        ]);
+        $I->sendPatch('/api/v4/schemas/' . $this->schemaName . '/tables/' . $this->tableName3, $payload);
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $location = $I->grabHttpHeader('Location');
+        $I->assertStringContainsString('/api/v4/schemas/' . $this->schemaName . '/tables/' . $this->tableName4, $location);
+
+        // Verify GET on new name
+        $I->haveHttpHeader('Accept', 'application/json');
+        $I->sendGET('/api/v4/schemas/' . $this->schemaName . '/tables/' . $this->tableName4);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseContainsJson([
+            'name' => $this->tableName4,
+        ]);
+    }
+
+    public function shouldDeleteTable(ApiTester $I)
+    {
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
+        $I->sendDELETE('/api/v4/schemas/' . $this->schemaName . '/tables/' . $this->tableName4);
+        $I->seeResponseCodeIs(HttpCode::NO_CONTENT);
     }
 }
