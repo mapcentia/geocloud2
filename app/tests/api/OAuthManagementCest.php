@@ -73,9 +73,10 @@ class OAuthManagementCest
         $this->userAccessToken = $response->access_token;
     }
 
-    public function shouldCreateSchema(ApiTester $I)
+    public function shouldManageSchema(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Accept', 'application/json');
         $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
         $payload = json_encode([
             'name' => $this->schemaName,
@@ -88,24 +89,15 @@ class OAuthManagementCest
         $I->seeResponseCodeIs(HttpCode::CREATED);
         $location = $I->grabHttpHeader('Location');
         $this->schemaUri = $location;
-    }
 
-    public function shouldGetSchema(ApiTester $I)
-    {
-        $I->haveHttpHeader('Content-Type', 'application/json');
-        $I->haveHttpHeader('Accept', 'application/json');
-        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
         $I->sendGET($this->schemaUri);
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
         $I->seeResponseContains($this->schemaName);
         $I->seeResponseContains($this->tableName1);
         $I->seeResponseContains($this->tableName2);
-    }
-    public function shouldRenameSchema(ApiTester $I) {
+
         $newName = 'new_schema_name';
-        $I->haveHttpHeader('Content-Type', 'application/json');
-        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
         $payload = json_encode([
             'name' => 'new_schema_name',
         ]);
@@ -124,5 +116,80 @@ class OAuthManagementCest
         $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
         $location = $I->grabHttpHeader('Location');
         $this->schemaUri = $location;
+    }
+
+    public function shouldRunSql(ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Accept', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
+        $payload = json_encode([
+            'q' => 'SELECT 1 as n'
+        ]);
+        $I->sendPOST('/api/v4/sql', $payload);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseIsJson();
+    }
+
+    public function shouldGetStats(ApiTester $I)
+    {
+        $I->haveHttpHeader('Accept', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
+        $I->sendGET('/api/v4/stats');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseIsJson();
+    }
+
+    public function shouldManageOAuthClients(ApiTester $I)
+    {
+        // Create client
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Accept', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
+        $clientId = 'cli-' . $this->date->getTimestamp();
+        $payload = json_encode([
+            'id' => $clientId,
+            'name' => 'Test Client',
+            'homepage' => 'https://example.com',
+            'description' => 'A test client',
+            'redirect_uri' => ['https://example.com/callback'],
+            'public' => true,
+            'confirm' => true,
+        ]);
+        $I->sendPOST('/api/v4/clients', $payload);
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $I->seeResponseIsJson();
+        $location = $I->grabHttpHeader('Location');
+        // Response can be object or wrapped; we rely on Location for id(s)
+        $I->assertStringContainsString('/api/v4/clients/', $location);
+
+        // Get client
+        $I->sendGET('/api/v4/clients/' . $clientId);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContains($clientId);
+        $I->seeResponseContains('Test Client');
+
+        // Update client name
+        $updatePayload = json_encode([
+            'name' => 'Updated Test Client'
+        ]);
+        $I->sendPatch('/api/v4/clients/' . $clientId, $updatePayload);
+        $I->seeResponseCodeIs(HttpCode::OK);
+
+        // Verify update
+        $I->sendGET('/api/v4/clients/' . $clientId);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseContains('Updated Test Client');
+
+        // Delete client
+        $I->sendDELETE('/api/v4/clients/' . $clientId);
+        $I->seeResponseCodeIs(HttpCode::NO_CONTENT);
+
+        // Verify deletion (expect 404 or empty)
+        $I->sendGET('/api/v4/clients/' . $clientId);
+        // We don't know exact behavior; assert not 200
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+
     }
 }
