@@ -211,15 +211,17 @@ class Table extends AbstractApi
             if (isset($data->name) && $data->name != $this->unQualifiedName[$i]) {
                 $r[] = $layer->rename($this->qualifiedName[$i], $data->name)['name'];
             }
+            $relName = $r[$i] ?? $this->unQualifiedName[$i];
             if (isset($data->schema) && $data->schema != $this->schema[0]) {
                 if (!$this->route->jwt["data"]['superUser']) {
                     throw new GC2Exception('Only super user can move tables between schemas');
                 }
-                $layer->setSchema([(isset($r[$i]) ? ($this->schema[0] . '.' . $r[$i]) : $this->qualifiedName[$i])], $data->schema);
+                $layer->setSchema([$relName], $data->schema);
             }
+            $schemaName = $data->schema ?? $this->schema[0];
             // Set comment
             if (property_exists($data, 'comment')) {
-                $layer->table = $this->qualifiedName[$i];
+                $layer->table = $schemaName . "." .$relName;
                 $layer->setTableComment($data->comment);
             }
             // Emit events
@@ -233,7 +235,7 @@ class Table extends AbstractApi
         }
         $schema = $data->schema ?? $this->schema[0];
         $layer->commit();
-        $baseUrl = "Location: /api/v4/schemas/$schema/tables/";
+        $baseUrl = "/api/v4/schemas/$schema/tables/";
         $list =  count($r) > 0 ?  $r : $this->unQualifiedName;
         return $this->patchResponse($baseUrl, $list);
     }
