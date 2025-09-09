@@ -21,7 +21,6 @@ use app\exceptions\GC2Exception;
 use app\exceptions\RPCException;
 use app\inc\Connection;
 use app\inc\Input;
-use app\api\v2\Sql as V2Sql;
 use app\inc\Route2;
 use app\models\Preparedstatement as PreparedstatementModel;
 use Exception;
@@ -112,7 +111,7 @@ class Call extends AbstractApi
             try {
                 $preStm = $pres->getByName($query['method']);
             } catch (Exception) {
-                throw new RPCException("Method not found", -32601, null);
+                throw new RPCException("Method not found", -32601, null, id: $query['id']);
             }
             $query['q'] = $preStm['data']['statement'];
             $query['type_hints'] = json_decode($preStm['data']['type_hints'], true);
@@ -168,7 +167,7 @@ class Call extends AbstractApi
                 $this->validateRequest(self::getAssert(), $body, Input::getMethod());
             }
         } catch (GC2Exception $e) {
-            throw new RPCException("Invalid Request", -32600, null, $e->getMessage());
+            throw new RPCException("Invalid Request", -32600, null, $e->getMessage(), $decodedBody->id ?? null);
         }
     }
 
