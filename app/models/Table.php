@@ -1014,7 +1014,7 @@ class Table extends Model
         }
         $sql = "INSERT into settings.geometry_columns_join (_key_) values (:key) ON CONFLICT DO NOTHING";
         $res = $this->prepare($sql);
-        $res->execute(['key' => $key]);
+        $this->execute($res, ['key' => $key]);
         $this->schema = $this->postgisschema;
         $this->table = $this->postgisschema . '.' . $table;
         $this->tableWithOutSchema = $table;
