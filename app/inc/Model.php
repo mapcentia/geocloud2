@@ -716,7 +716,7 @@ class Model
      *
      * @return string The ASCII representation of the input string, normalized and formatted with the specified delimiter.
      */
-    public static function toAscii(string $str, ?array $replace = [], string $delimiter = '-'): string
+    public static function toAscii(string $str, ?array $replace = [], string $delimiter = '-', string $delimiterRegex = "/[\/_|+ -]+/"): string
     {
         if (!empty($replace)) {
             $str = str_replace($replace, ' ', $str);
@@ -724,7 +724,8 @@ class Model
         $clean = iconv('UTF-8', 'ASCII//TRANSLIT', $str);
         $clean = preg_replace("/[^a-zA-Z0-9\/_|+ -]/", '', $clean);
         $clean = strtolower(trim($clean, '-'));
-        return preg_replace("/[\/_|+ -]+/", $delimiter, $clean);
+        $clean = preg_replace($delimiterRegex, $delimiter, $clean);
+        return $clean;
     }
 
     /**
