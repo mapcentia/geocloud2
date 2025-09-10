@@ -241,9 +241,82 @@ async(function () use (
     }
 });
 
-// --- Supervisor loop (Never exits, always restarts listeners) ---
-async(function () use (&$dbs, &$worker) {
-    $dbs = $worker->submit(new DatabaseTask())->await();
-    delay(10);
+// --- Dynamic DB discovery loop: periodically fetch DBs and start listeners for new ones ---
+async(function () use (&$dbs, &$batchState, &$futures, &$worker, $consumer, $flushBatch, $batchSize, $reconnectDelay, $startListenerForDb) {
+    // Initial fetch to seed $dbs
+    $current = [];
+    try {
+        $current = $worker->submit(new DatabaseTask())->await();
+    } catch (Throwable $e) {
+        echo "[ERROR] Initial DB discovery failed: " . $e->getMessage() . "\n";
+    }
+    if (!is_array($current)) {
+        $current = [];
+    }
+    $dbs = $current;
+
+    // Ensure listeners started for initial set
+    foreach ($dbs as $db) {
+        if (!isset($futures[$db])) {
+            // Initialize batch state for this DB
+            $batchState[$db] = [
+                'count' => 0,
+                'startTime' => time(),
+                'payLoad' => []
+            ];
+            $futures[$db] = async(function () use ($db, &$batchState, $consumer, $flushBatch, $batchSize, $reconnectDelay, $startListenerForDb) {
+                while (true) {
+                    try {
+                        $startListenerForDb($db, $batchState, $consumer, $flushBatch, $batchSize, $reconnectDelay);
+                    } catch (Throwable $e) {
+                        echo "[CRITICAL] Listener crashed for DB '{$db}': " . $e->getMessage() . "\n";
+                        echo "[INFO] Restarting listener for DB '{$db}' in {$reconnectDelay}s...\n";
+                        delay($reconnectDelay);
+                    }
+                }
+            });
+        }
+    }
+
+    while (true) {
+        delay(10);
+        $discovered = [];
+        try {
+            $discovered = $worker->submit(new DatabaseTask())->await();
+        } catch (Throwable $e) {
+            echo "[ERROR] DB discovery failed: " . $e->getMessage() . "\n";
+            continue;
+        }
+        if (!is_array($discovered)) {
+            $discovered = [];
+        }
+        // Find new DBs not yet in $futures
+        foreach ($discovered as $db) {
+            if (!isset($futures[$db])) {
+                echo "[INFO] New DB discovered: {$db}. Starting listener...\n";
+                // Add to public list and start listener
+                if (!in_array($db, $dbs, true)) {
+                    $dbs[] = $db;
+                }
+                $batchState[$db] = [
+                    'count' => 0,
+                    'startTime' => time(),
+                    'payLoad' => []
+                ];
+                $futures[$db] = async(function () use ($db, &$batchState, $consumer, $flushBatch, $batchSize, $reconnectDelay, $startListenerForDb) {
+                    while (true) {
+                        try {
+                            $startListenerForDb($db, $batchState, $consumer, $flushBatch, $batchSize, $reconnectDelay);
+                        } catch (Throwable $e) {
+                            echo "[CRITICAL] Listener crashed for DB '{$db}': " . $e->getMessage() . "\n";
+                            echo "[INFO] Restarting listener for DB '{$db}' in {$reconnectDelay}s...\n";
+                            delay($reconnectDelay);
+                        }
+                    }
+                });
+            }
+        }
+        // Optionally: we could handle removed DBs here by checking $futures keys not in discovered
+    }
 });
 
