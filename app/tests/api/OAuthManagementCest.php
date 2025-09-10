@@ -321,4 +321,172 @@ class OAuthManagementCest
         $I->sendDELETE('/api/v4/schemas/' . $this->schemaName . '/tables/' . $this->tableName4);
         $I->seeResponseCodeIs(HttpCode::NO_CONTENT);
     }
+
+    // Tests for app/api/v4/controllers/Column.php
+    public function shouldCreateAndManageColumns(ApiTester $I)
+    {
+        // Create a new table to work with columns
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Accept', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
+        $table = 'col_table_' . $this->date->getTimestamp();
+        $I->sendPOST('/api/v4/schemas/' . $this->schemaName . '/tables', json_encode(['name' => $table]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+
+        // Add single column
+        $payload = json_encode([
+            'name' => 'col_a',
+            'type' => 'int4',
+            'is_nullable' => false,
+            'default_value' => 7,
+            'comment' => 'A int column',
+        ]);
+        $I->sendPOST('/api/v4/schemas/' . $this->schemaName . '/tables/' . $table . '/columns', $payload);
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $location = $I->grabHttpHeader('Location');
+        $I->assertStringContainsString('/api/v4/schemas/' . $this->schemaName . '/tables/' . $table . '/columns/col_a', $location);
+
+        // Add multiple columns in one request
+        $payload = json_encode([
+            'columns' => [
+                ['name' => 'col_b', 'type' => 'text', 'is_nullable' => true],
+                ['name' => 'col_c', 'type' => 'int4', 'default_value' => 1],
+            ]
+        ]);
+        $I->sendPOST('/api/v4/schemas/' . $this->schemaName . '/tables/' . $table . '/columns', $payload);
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+
+        // Get all columns and verify presence
+        $I->haveHttpHeader('Accept', 'application/json');
+        $I->sendGET('/api/v4/schemas/' . $this->schemaName . '/tables/' . $table . '/columns');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson(['name' => 'col_a']);
+        $I->seeResponseContainsJson(['name' => 'col_b']);
+        $I->seeResponseContainsJson(['name' => 'col_c']);
+
+        // Patch a column: rename, change type, toggle nullability, change default and comment
+        $I->stopFollowingRedirects();
+        $patch = json_encode([
+            'name' => 'col_a_new',
+            'type' => 'text',
+            'is_nullable' => true,
+            'default_value' => null,
+            'comment' => 'Updated by test',
+        ]);
+        $I->sendPatch('/api/v4/schemas/' . $this->schemaName . '/tables/' . $table . '/columns/col_a', $patch);
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $location = $I->grabHttpHeader('Location');
+        $I->assertStringContainsString('/api/v4/schemas/' . $this->schemaName . '/tables/' . $table . '/columns/col_a_new', $location);
+
+        // Verify GET specific column returns only that column
+        $I->haveHttpHeader('Accept', 'application/json');
+        $I->sendGET('/api/v4/schemas/' . $this->schemaName . '/tables/' . $table . '/columns/col_a_new');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseContainsJson(['name' => 'col_a_new']);
+
+        // Delete two columns
+        $I->sendDELETE('/api/v4/schemas/' . $this->schemaName . '/tables/' . $table . '/columns/col_b,col_c');
+        $I->seeResponseCodeIs(HttpCode::NO_CONTENT);
+
+        // Cleanup: delete table
+        $I->sendDELETE('/api/v4/schemas/' . $this->schemaName . '/tables/' . $table);
+        $I->seeResponseCodeIs(HttpCode::NO_CONTENT);
+    }
+
+    // Tests for app/api/v4/controllers/Constraint.php
+    public function shouldCreateListAndDeleteConstraints(ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Accept', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->userAccessToken);
+
+        // Create two tables with necessary columns
+        $t1 = 'con_table_a_' . $this->date->getTimestamp();
+        $t2 = 'con_table_b_' . $this->date->getTimestamp();
+        $I->sendPOST('/api/v4/schemas/' . $this->schemaName . '/tables', json_encode([
+            'name' => $t1,
+            'columns' => [
+                ['name' => 'id', 'type' => 'int4'],
+                ['name' => 'val', 'type' => 'int4']
+            ]
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $I->sendPOST('/api/v4/schemas/' . $this->schemaName . '/tables', json_encode([
+            'name' => $t2,
+            'columns' => [
+                ['name' => 'id', 'type' => 'int4']
+            ]
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+
+        // Add primary key on t2(id) for foreign key target
+        $I->sendPOST('/api/v4/schemas/' . $this->schemaName . '/tables/' . $t2 . '/constraints', json_encode([
+            'name' => 'pk_' . $t2,
+            'constraint' => 'primary',
+            'columns' => ['id']
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+
+        // Add various constraints on t1
+        // Primary key on t1(id)
+        $I->sendPOST('/api/v4/schemas/' . $this->schemaName . '/tables/' . $t1 . '/constraints', json_encode([
+            'name' => 'pk_' . $t1,
+            'constraint' => 'primary',
+            'columns' => ['id']
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $location = $I->grabHttpHeader('Location');
+        $I->assertStringContainsString('/api/v4/schemas/' . $this->schemaName . '/tables/' . $t1 . '/constraints/pk_' . $t1, $location);
+
+        // Unique on t1(val)
+        $I->sendPOST('/api/v4/schemas/' . $this->schemaName . '/tables/' . $t1 . '/constraints', json_encode([
+            'name' => 'uq_' . $t1 . '_val',
+            'constraint' => 'unique',
+            'columns' => ['val']
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+
+        // Check on t1(val > 0)
+        $I->sendPOST('/api/v4/schemas/' . $this->schemaName . '/tables/' . $t1 . '/constraints', json_encode([
+            'name' => 'chk_' . $t1 . '_val_pos',
+            'constraint' => 'check',
+            'check' => 'val > 0'
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+
+        // Foreign key t1(val) -> t2(id)
+        $I->sendPOST('/api/v4/schemas/' . $this->schemaName . '/tables/' . $t1 . '/constraints', json_encode([
+            'name' => 'fk_' . $t1 . '_' . $t2,
+            'constraint' => 'foreign',
+            'columns' => ['val'],
+            'referenced_table' => $this->schemaName . '.' . $t2,
+            'referenced_columns' => ['id']
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+
+        // List all constraints on t1 and check presence
+        $I->sendGET('/api/v4/schemas/' . $this->schemaName . '/tables/' . $t1 . '/constraints');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseIsJson();
+        $I->seeResponseContainsJson(['name' => 'pk_' . $t1, 'constraint' => 'primary']);
+        $I->seeResponseContainsJson(['name' => 'uq_' . $t1 . '_val', 'constraint' => 'unique']);
+        $I->seeResponseContainsJson(['name' => 'chk_' . $t1 . '_val_pos', 'constraint' => 'check']);
+        $I->seeResponseContainsJson(['name' => 'fk_' . $t1 . '_' . $t2, 'constraint' => 'foreign']);
+
+        // Get specific foreign key constraint
+        $I->sendGET('/api/v4/schemas/' . $this->schemaName . '/tables/' . $t1 . '/constraints/' . 'fk_' . $t1 . '_' . $t2);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseContainsJson(['name' => 'fk_' . $t1 . '_' . $t2, 'constraint' => 'foreign']);
+
+        // Delete two constraints in a single call
+        $I->sendDELETE('/api/v4/schemas/' . $this->schemaName . '/tables/' . $t1 . '/constraints/' . 'uq_' . $t1 . '_val,chk_' . $t1 . '_val_pos');
+        $I->seeResponseCodeIs(HttpCode::NO_CONTENT);
+
+        // Cleanup: delete tables
+        $I->sendDELETE('/api/v4/schemas/' . $this->schemaName . '/tables/' . $t1);
+        $I->seeResponseCodeIs(HttpCode::NO_CONTENT);
+        $I->sendDELETE('/api/v4/schemas/' . $this->schemaName . '/tables/' . $t2);
+        $I->seeResponseCodeIs(HttpCode::NO_CONTENT);
+    }
 }
