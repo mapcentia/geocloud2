@@ -1408,11 +1408,12 @@ class Table extends Model
      * @param array $columns
      * @param string|null $name
      * @return string
+     * @throws InvalidArgumentException
      */
     public function addPrimaryKeyConstraint(array $columns, ?string $name = null): string
     {
         $this->clearCacheOnSchemaChanges();
-        $name = $name ? self::toAscii($name) : $this->tableWithOutSchema . "_primary";
+        $name = $name ? self::toAscii(str: $name, delimiterRegex: "/[\/|+ -]+/") : $this->tableWithOutSchema . "_primary";
         $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD CONSTRAINT \"$name\" PRIMARY KEY (";
         foreach ($columns as $column) {
             $sql .= "\"$column\",";
@@ -1427,12 +1428,13 @@ class Table extends Model
     /**
      * @param array $columns
      * @param string|null $name
-     * @return void
+     * @return string
+     * @throws InvalidArgumentException
      */
     public function addUniqueConstraint(array $columns, ?string $name = null): string
     {
         $this->clearCacheOnSchemaChanges();
-        $name = $name ? self::toAscii($name) : $this->tableWithOutSchema . "_unique";
+        $name = $name ? self::toAscii(str: $name, delimiterRegex: "/[\/|+ -]+/") : $this->tableWithOutSchema . "_unique";
         $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD CONSTRAINT \"$name\" UNIQUE (";
         foreach ($columns as $column) {
             $sql .= "\"$column\",";
@@ -1449,12 +1451,13 @@ class Table extends Model
      * @param string $referencedTable
      * @param array|null $referencedColumns
      * @param string|null $name
-     * @return void
+     * @return string
+     * @throws InvalidArgumentException
      */
     public function addForeignConstraint(array $columns, string $referencedTable, ?array $referencedColumns = null, ?string $name = null): string
     {
         $this->clearCacheOnSchemaChanges();
-        $name = $name ? self::toAscii($name) : $this->tableWithOutSchema . "_foreign";
+        $name = $name ? self::toAscii(str: $name, delimiterRegex: "/[\/|+ -]+/") : $this->tableWithOutSchema . "_foreign";
         $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD CONSTRAINT \"$name\" FOREIGN KEY (";
         foreach ($columns as $column) {
             $sql .= "\"$column\",";
@@ -1478,12 +1481,13 @@ class Table extends Model
     /**
      * @param string $check
      * @param string|null $name
-     * @return void
+     * @return string
+     * @throws InvalidArgumentException
      */
     public function addCheckConstraint(string $check, ?string $name = null): string
     {
         $this->clearCacheOnSchemaChanges();
-        $name = $name ? self::toAscii($name) : $this->tableWithOutSchema . "_check";
+        $name = $name ? self::toAscii(str: $name, delimiterRegex: "/[\/|+ -]+/") : $this->tableWithOutSchema . "_check";
         $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD CONSTRAINT \"$name\" CHECK ($check)";
         $res = $this->prepare($sql);
         $res->execute();
@@ -1493,6 +1497,7 @@ class Table extends Model
     /**
      * @param string $name
      * @return void
+     * @throws InvalidArgumentException
      */
     public function dropConstraint(string $name): void
     {
