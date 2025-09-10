@@ -68,7 +68,7 @@ class Authorization extends Model
                 }
 
                 if ($subUser) {
-                    $privileges = (array) json_decode($row["privileges"], true);
+                    $privileges = !empty($row["privileges"]) ? json_decode($row["privileges"], true) : [];
                     $response = [
                         'auth_level' => $auth,
                         self::USED_RELS_KEY => $rels,
