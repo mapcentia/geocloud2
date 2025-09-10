@@ -7,8 +7,8 @@ use Amp\Postgres\PostgresConnectionPool;
 use Amp\Postgres\PostgresListener;
 use app\conf\App;
 use app\conf\Connection;
+use app\event\tasks\DatabaseTask;
 use app\event\tasks\PreparePayloadTask;
-use app\models\Database;
 use function Amp\async;
 use function Amp\delay;
 
@@ -29,39 +29,28 @@ include_once __DIR__ . "/../models/Database.php";
 
 new App();
 
-$database = new Database();
 Connection::$param["postgisschema"] = "public";
+$worker = Amp\Parallel\Worker\createWorker();
 
-$dbs = ['mydb'];
-try {
-    $dbs = $database->listAllDbs()['data'];
-} catch (PDOException $e) {
+$dbs = [];
 
-}
-
-// Filter out any DB names you want to skip
-$skipList = [
-    'rdsadmin', 'template1', 'template0', 'postgres',
-    'gc2scheduler', 'template_geocloud', 'mapcentia'
-];
 // Per-DB “batch state”: count, startTime, and payload array
 $batchState = [];
 
 // Keep track of async futures for concurrency
 $futures = [];
 
-function preparePayloadWithPDO(array $batchPayload, string $db): Execution
+$preparePayloadWithPDO = function (array $batchPayload, string $db) use ($worker): Execution
 {
     $task = new PreparePayloadTask($batchPayload, $db);
-    $worker = Amp\Parallel\Worker\createWorker();
     return $worker->submit($task);
-}
+};
 
 /**
  * Flush batch for a specific DB asynchronously.
  */
-$flushBatch = function (string $db, string $channelName = '') use (&$batchState, &$broadcastHandler) {
-    return async(function () use ($db, $channelName, &$batchState, &$broadcastHandler) {
+$flushBatch = function (string $db, string $channelName = '') use (&$batchState, &$broadcastHandler, $preparePayloadWithPDO) {
+    return async(function () use ($db, $channelName, &$batchState, &$broadcastHandler, $preparePayloadWithPDO) {
         $count = $batchState[$db]['count'];
         $payLoad = $batchState[$db]['payLoad'];
         $startTime = $batchState[$db]['startTime'];
@@ -75,7 +64,7 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
         echo "==========================================\n\n";
 
         // Await the asynchronous preparePayload to complete
-        $preparedPayload = preparePayloadWithPDO($payLoad, $db)->await();
+        $preparedPayload = $preparePayloadWithPDO($payLoad, $db)->await();
         try {
             $clients = $broadcastHandler->gateway->getClients();
             foreach ($clients as $client) {
@@ -208,16 +197,13 @@ async(function () use (
 
 // --- Supervisor loop (Never exits, always restarts listeners) ---
 async(function () use (
-    $dbs, $skipList, &$batchState, $consumer,
+    &$dbs, &$batchState, $consumer,
     $flushBatch, $batchSize, $reconnectDelay, $startListenerForDb
 ) {
     while (true) {
         $futures = [];
 
         foreach ($dbs as $db) {
-            if (in_array($db, $skipList, true) || str_contains($db, 'test')) {
-                continue;
-            }
             $batchState[$db] = [
                 'count' => 0,
                 'startTime' => time(),
@@ -253,5 +239,11 @@ async(function () use (
         delay($reconnectDelay);
         echo "[INFO] Supervisor restarting listeners...\n";
     }
+});
+
+// --- Supervisor loop (Never exits, always restarts listeners) ---
+async(function () use (&$dbs, &$worker) {
+    $dbs = $worker->submit(new DatabaseTask())->await();
+    delay(10);
 });
 

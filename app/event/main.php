@@ -61,7 +61,7 @@ $router->addRoute('GET', '/ping', new ClosureRequestHandler(
 $server->start($router, $errorHandler);
 
 foreach (glob(dirname(__FILE__) . "/functions/*.php") as $filename) {
-    include_once($filename);
+   include_once($filename);
 }
 
 include_once __DIR__ . "/pglistner.php";

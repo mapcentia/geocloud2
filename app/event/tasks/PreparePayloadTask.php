@@ -9,7 +9,6 @@ use app\exceptions\GC2Exception;
 use app\inc\Cache;
 use app\conf\App;
 use app\inc\Connection;
-use app\models\Database;
 use app\models\Sql;
 use PhpOffice\PhpSpreadsheet\Writer\Exception;
 
@@ -31,11 +30,9 @@ readonly class PreparePayloadTask implements Task
     public function run(Channel $channel, Cancellation $cancellation): array
     {
         echo "[INFO] PreparePayloadTask Worker PID: " . getmypid() . "\n";
-
         new App();
         Cache::setInstance();
         $api = new Sql(connection: new Connection(database: $this->db));
-        $api->connect();
 
         $results = [];
         $grouped = [];
@@ -72,13 +69,13 @@ readonly class PreparePayloadTask implements Task
             $inList = implode(',', $uniqueVals);
             $sql = "SELECT * FROM {$schemaTable} WHERE \"{$key}\" IN ($inList)";
             echo $sql . "\n";
-            $response = $api->sql($sql);
+            $response = $api->sql(q: $sql, format: 'json', convertTypes: true);
             if (!isset($results[$this->db][$schemaTable]['full_data'])) {
                 $results[$this->db][$schemaTable]['full_data'] = [];
             }
             $results[$this->db][$schemaTable]['full_data'] = array_merge(
                 $results[$this->db][$schemaTable]['full_data'],
-                $response
+                $response['data']
             );
         }
         $api->close();
