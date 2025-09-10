@@ -270,16 +270,18 @@ abstract class AbstractApi implements ApiInterface
             throw new GC2Exception("You can't PATCH with a collection of $this->resource", 400, null, "INVALID_DATA");
         }
 
-        $validator = Validation::createValidator();
-
-        if (isset($data[$this->resource]) && is_array($data[$this->resource])) {
-            foreach ($data[$this->resource] as $datum) {
-                $violations = $validator->validate($datum, $collection);
+        // Validate the payload if the method is POST or PATCH
+        if (in_array($method, ['post', 'patch'])) {
+            $validator = Validation::createValidator();
+            if (isset($data[$this->resource]) && is_array($data[$this->resource])) {
+                foreach ($data[$this->resource] as $datum) {
+                    $violations = $validator->validate($datum, $collection);
+                    $this->checkViolations($violations);
+                }
+            } else {
+                $violations = $validator->validate($data, $collection);
                 $this->checkViolations($violations);
             }
-        } else {
-            $violations = $validator->validate($data, $collection);
-            $this->checkViolations($violations);
         }
     }
 
