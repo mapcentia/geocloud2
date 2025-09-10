@@ -5,19 +5,16 @@ namespace app\event\tasks;
 use Amp\Cancellation;
 use Amp\Parallel\Worker\Task;
 use Amp\Sync\Channel;
-use app\api\v2\Sql;
 use app\exceptions\GC2Exception;
 use app\inc\Cache;
 use app\conf\App;
-use app\inc\Input;
-use app\models\Database;
+use app\inc\Connection;
+use app\inc\Statement;
 use Error;
 use Exception;
-use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
-use Psr\Cache\InvalidArgumentException;
+
 
 error_reporting(E_ERROR | E_PARSE);
-
 
 
 readonly class RunQueryTask implements Task
@@ -27,12 +24,11 @@ readonly class RunQueryTask implements Task
         private string $sql,
         private string $db,
     )
-    {}
+    {
+    }
 
     /**
      * @throws GC2Exception
-     * @throws PhpfastcacheInvalidArgumentException
-     * @throws InvalidArgumentException
      * @throws Exception
      */
     public function run(Channel $channel, Cancellation $cancellation): array
@@ -46,10 +42,10 @@ readonly class RunQueryTask implements Task
         $body['format'] = 'json';
         $body['srs'] = "4326";
         try {
-            $sql = new \app\models\Sql(database: $this->db);
-            $sql->connect();
-            $res = (new Sql)->get_index(["user" => $this->db], $sql, $body, $this->db);
-            $sql->close();
+            $connection = new Connection(database: $this->db);
+            $statement = new Statement(true, connection: $connection);
+            $sqlApi = new \app\models\Sql(connection: $connection);
+            $res = $statement->run($this->db, $sqlApi, $body, false);
         } catch (Error $e) {
             $res = [
                 'message' => $e->getMessage(),

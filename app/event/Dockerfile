@@ -15,4 +15,17 @@ RUN install-php-extensions \
     pcntl \
     xdebug
 
-CMD ["/usr/local/bin/php", "-f", "/var/www/geocloud2/app/event/main.php"]
+# Install watchexec for hot-reload (fallback to inotify-tools if needed)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl gnupg \
+    && curl -Ls https://github.com/watchexec/watchexec/releases/latest/download/watchexec-cli-x86_64-unknown-linux-gnu.tar.xz -o /tmp/watchexec.tar.xz \
+    && mkdir -p /tmp/watchexec \
+    && tar -xf /tmp/watchexec.tar.xz -C /tmp/watchexec \
+    && mv /tmp/watchexec/watchexec-*/watchexec /usr/local/bin/watchexec \
+    || (apt-get install -y --no-install-recommends inotify-tools && true) \
+    && rm -rf /var/lib/apt/lists/* /tmp/watchexec /tmp/watchexec.tar.xz
+
+COPY dev-entrypoint.sh /usr/local/bin/dev-entrypoint.sh
+RUN chmod +x /usr/local/bin/dev-entrypoint.sh
+
+CMD ["/usr/local/bin/dev-entrypoint.sh"]

@@ -11,8 +11,10 @@ use Amp\Websocket\Server\WebsocketGateway;
 use Amp\Websocket\WebsocketClient;
 use Amp\Websocket\WebsocketClosedException;
 use app\event\tasks\AuthTask;
+use app\event\tasks\ConnectTask;
 use app\event\tasks\RunQueryTask;
 use app\event\tasks\ValidateTokenTask;
+use app\inc\Connection;
 use SplObjectStorage;
 use Throwable;
 use function Amp\Parallel\Worker\createWorker;
@@ -35,12 +37,17 @@ readonly class WsBroadcast implements WebsocketClientHandler
         $query = $request->getUri()->getQuery();
         parse_str($query, $params);
         $errorMsg = null;
+        $worker = createWorker();
+
         if (isset($params['token'])) {
             $token = $params['token'];
+
             try {
-                $worker = createWorker();
+                // Validate token and parsed data
                 $task = new ValidateTokenTask($token);
                 $parsed = $worker->submit($task)->await()['data'];
+                // Connection to the database
+                $connection = new Connection(database: $parsed["database"]);;
                 if (!$parsed['superUser']) {
                     if (!isset($params['rel'])) {
                         $errorMsg = [
@@ -50,15 +57,18 @@ readonly class WsBroadcast implements WebsocketClientHandler
                         ];
                         goto end;
                     }
-                    $task = new AuthTask($parsed, $params['rel']);
-                    if (!$worker->submit($task)->await()) {
-                        $errorMsg = [
-                            'type' => 'error',
-                            'error' => 'not_allowed',
-                            'message' => "Not allowed to access this resource: {$params['rel']}",
-                        ];
-                        goto end;
+                    foreach (explode(',', $params['rel']) as $rel) {
+                        $task = new AuthTask($parsed, $rel, $connection);
+                        if (!$worker->submit($task)->await()) {
+                            $errorMsg = [
+                                'type' => 'error',
+                                'error' => 'not_allowed',
+                                'message' => "Not allowed to access this resource: $rel",
+                            ];
+                            goto end;
+                        }
                     }
+
                 }
                 $this->gateway->addClient($client);
                 $db = $parsed['database'];
@@ -68,11 +78,11 @@ readonly class WsBroadcast implements WebsocketClientHandler
                     'user' => $parsed['uid'],
                 ]);
                 echo "[INFO] Client {$client->getId()} connected on $db\n";;
-            } catch (Throwable) {
+            } catch (Throwable $e) {
                 $errorMsg = [
                     'type' => 'error',
                     'error' => 'invalid_token',
-                    'message' => 'JWT token is invalid or expired',
+                    'message' => $e->getMessage(),
                 ];
             }
         } else {
