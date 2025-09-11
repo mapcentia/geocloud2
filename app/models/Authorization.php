@@ -26,15 +26,15 @@ class Authorization extends Model
      *
      * @param string      $relName     Relation name (optionally qualified with schema)
      * @param bool        $transaction Whether this is a write/edit transaction
-     * @param array       $rels        Relations checked along the way
      * @param bool        $isAuth      Whether the request is authenticated
      * @param string|null $subUser     Subuser identifier
      * @param string|null $userGroup   User group identifier
+     * @param array       $rels        Relations checked along the way
      *
      * @return array                   Structured response with success, code, and details
      * @throws GC2Exception            On forbidden or insufficient privileges
      */
-    public function check(string $relName, bool $transaction, array $rels, bool $isAuth, ?string $subUser = null, ?string $userGroup = null): array
+    public function check(string $relName, bool $transaction, bool $isAuth, ?string $subUser = null, ?string $userGroup = null, array $rels = []): array
     {
         // Ensure the relation is schema-qualified (default to public)
         $bits = explode('.', $relName);

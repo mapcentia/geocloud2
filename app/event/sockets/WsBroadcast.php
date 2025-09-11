@@ -47,8 +47,9 @@ readonly class WsBroadcast implements WebsocketClientHandler
                 // Validate token and parsed data
                 $task = new ValidateTokenTask($token);
                 $parsed = $this->worker->submit($task)->await()['data'];
+                print_r($parsed);
                 // Connection to the database
-                $connection = new Connection(database: $parsed["database"]);;
+                $connection = new Connection(database: $parsed["database"]);
                 if (!$parsed['superUser']) {
                     if (!isset($params['rel'])) {
                         $errorMsg = [
@@ -77,6 +78,8 @@ readonly class WsBroadcast implements WebsocketClientHandler
                     'joinedAt' => time(),
                     'db' => $parsed['database'],
                     'user' => $parsed['uid'],
+                    'superUser' => $parsed['superUser'],
+                    'userGroup' => $parsed['userGroup'] ?? null,
                 ]);
                 echo "[INFO] Client {$client->getId()} connected on $db\n";;
             } catch (Throwable $e) {
@@ -107,7 +110,7 @@ readonly class WsBroadcast implements WebsocketClientHandler
                 $payload = $message->buffer();
                 $props = $this->clientProperties[$client];
                 echo "[INFO] message '$payload' from {$client->getId()} on {$props['db']}\n";
-                $r = $this->sql($payload, $props['db']);
+                $r = $this->sql($payload, $props);
                 $this->sendToClient($client, json_encode($r->await()));
             } catch (Throwable $e) {
                 echo "[ERROR] " . $e->getMessage() . "\n";
@@ -130,9 +133,9 @@ readonly class WsBroadcast implements WebsocketClientHandler
 
     }
 
-    private function sql(string $sql, string $db): Execution
+    private function sql(string $sql, ?array $props): Execution
     {
-        $task = new RunQueryTask($sql, $db);
+        $task = new RunQueryTask($sql, $props);
         return $this->worker->submit($task);
     }
 

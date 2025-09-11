@@ -553,7 +553,7 @@ class User extends Model
      * @return string The screen name of the default user.
      * @throws GC2Exception If no default user is found for the specified parent database.
      */
-    public function getDefaultUser(): string
+    public function getDefaultUser(): array
     {
         $cacheType = 'default_user';
         $cacheId = $this->parentDb . "_" . $cacheType;
@@ -563,10 +563,10 @@ class User extends Model
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
         } else {
-            $query = "SELECT screenname FROM users WHERE parentdb=:parentdb AND default_user='t'";
+            $query = "SELECT screenname, usergroup FROM users WHERE parentdb=:parentdb AND default_user='t'";
             $res = $this->prepare($query);
             $this->execute($res, [':parentdb' => $this->parentDb]);
-            $defaultUser = $res->fetchColumn();
+            $defaultUser = $this->fetchRow($res);
             if (!$defaultUser) {
                 throw new GC2Exception("No default user found", 404, null, "NO_DEFAULT_USER_FOUND");
             }

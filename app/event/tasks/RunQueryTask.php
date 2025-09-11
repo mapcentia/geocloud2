@@ -23,7 +23,7 @@ readonly class RunQueryTask implements Task
 
     public function __construct(
         private string $sql,
-        private string $db,
+        private ?array $props,
     )
     {
     }
@@ -43,11 +43,11 @@ readonly class RunQueryTask implements Task
         $body['format'] = 'json';
         $body['srs'] = "4326";
         try {
-            $connection = new Connection(database: $this->db);
+            $connection = new Connection(database: $this->props['db']);
             $statement = new Statement(connection: $connection, convertReturning: true);
             $sqlApi = new Sql(connection: $connection);
-            $res = $statement->run($this->db, $sqlApi, $body, false);
-        } catch (Error $e) {
+            $res = $statement->run(user: $this->props['user'], api: $sqlApi,json:  $body, subuser: !$this->props['superUser'], userGroup: $this->props['userGroup']);
+        } catch (GC2Exception $e) {
             $res = [
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),

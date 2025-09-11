@@ -20,6 +20,7 @@ class Statement
 {
     private string|null $q;
     private ?string $subUser;
+    private ?string $userGroup;
     private Sql $sql;
     private array $cacheInfo;
     private array $params;
@@ -38,13 +39,15 @@ class Statement
      * @return array The processed response, including additional metadata such as cache information and memory usage.
      * @throws GC2Exception
      */
-    public function run(string $user, Sql $api, $json, bool $subuser = false): array
+    public function run(string $user, Sql $api, array $json, bool $subuser, ?string $userGroup): array
     {
         $this->sql = $api;
         if ($subuser) {
             $this->subUser = $user;
+            $this->userGroup = $userGroup;
         } else {
             $this->subUser = null;
+            $this->userGroup = null;
         }
         $this->params = $json;
         if (!empty($this->params['base64'])) {
@@ -106,7 +109,7 @@ class Statement
             }
         }
         foreach ($usedRelationsWithType as $rel => $type) {
-            $authResponse = (new Authorization(connection: $this->connection))->check(relName: $rel, transaction: $type == "t", rels: $usedRelationsWithType, isAuth: true, subUser: $this->subUser);
+            $authResponse = (new Authorization(connection: $this->connection))->check(relName: $rel, transaction: $type == "t", isAuth: true, subUser: $this->subUser, userGroup: $this->userGroup, rels: $usedRelationsWithType);
             if (!$authResponse["success"]) {
                 return $authResponse;
             }
@@ -163,7 +166,7 @@ class Statement
                 $this->cacheInfo["signature"] = md5(serialize($response));
             } else {
                 ob_start();
-                $response = $this->sql->sql($this->q, $clientEncoding, $this->params['format'] ?: "geojson", $this->params['geoformat'], $this->params['allstr'], $this->params['alias'], null, null, $this->params['convert_types'], $this->params['params'], $typeHints, $typeFormats);
+                $response = $this->sql->sql($this->q, $clientEncoding, $this->params['format'] ?: "geojson", $this->params['geoformat'] ?? null, $this->params['allstr'] ?? null, $this->params['alias'] ?? null, null, null, $this->params['convert_types'], $this->params['params'] ?? null, $typeHints, $typeFormats);
                 if (count($response) > 0) {
                     $response["statement"] = $this->q;
                     if ($lifetime > 0 && !empty($CachedString)) {

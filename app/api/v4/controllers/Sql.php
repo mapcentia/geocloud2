@@ -125,11 +125,14 @@ class Sql extends AbstractApi
         // then check if the default user is set
         try {
             $isSuperUser = $this->route->jwt["data"]["superUser"];
-            $uid =  $this->route->jwt["data"]["uid"];
+            $user =  $this->route->jwt["data"]["uid"];
+            $userGroup =  $this->route->jwt["data"]["userGroup"];
         } catch (Exception) {
             $database = func_get_arg(0);
             $userObj = new \app\models\User(null, $database);
-            $uid = $userObj->getDefaultUser();
+            $defaultUser = $userObj->getDefaultUser();
+            $user = $defaultUser['screenname'];
+            $userGroup = $defaultUser['usergroup'];;
             $isSuperUser = false;
         }
         $decodedBody = json_decode(Input::getBody(), true);
@@ -142,7 +145,7 @@ class Sql extends AbstractApi
             $srs = $query['srs'] ?? 4326;
             $this->sqlApi->setSRS($srs);
             $query['srs'] = $srs;
-            $result[] = $this->runStatement($query, $uid, $isSuperUser);
+            $result[] = $this->runStatement($query, $user, $isSuperUser, $userGroup);
         }
         $this->sqlApi->commit();
         if (count($result) == 1) {
@@ -155,15 +158,15 @@ class Sql extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    public function runStatement(array $query, string $uid, bool $isSuperUser): array
+    public function runStatement(array $query, string $user, bool $isSuperUser, ?string $userGroup): array
     {
         $statement = new Statement(connection: $this->connection, convertReturning: true);
         $settingsData = (new Setting(connection: $this->connection))->get()["data"];
-        $apiKey = $isSuperUser ? $settingsData->api_key : $settingsData->api_key_subuser->$uid;
+        $apiKey = $isSuperUser ? $settingsData->api_key : $settingsData->api_key_subuser->$user;
         $query['key'] = $apiKey;
         $query['convert_types'] = $value['convert_types'] ?? true;
         $query['format'] = $body['output_format'] ?? 'json';
-        $result = $statement->run($uid, $this->sqlApi, $query, !$isSuperUser);
+        $result = $statement->run(user: $user, api: $this->sqlApi, json: $query, subuser:  !$isSuperUser, userGroup: $userGroup);
         unset($result['success']);
         unset($result['forGrid']);
         return $result;
