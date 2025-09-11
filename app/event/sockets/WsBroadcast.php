@@ -51,14 +51,6 @@ readonly class WsBroadcast implements WebsocketClientHandler
                 // Connection to the database
                 $connection = new Connection(database: $parsed["database"]);
                 if (!$parsed['superUser']) {
-                    if (!isset($params['rel'])) {
-                        $errorMsg = [
-                            'type' => 'error',
-                            'error' => 'missing_rel',
-                            'message' => 'Sub-users must specify a rel parameter',
-                        ];
-                        goto end;
-                    }
                     foreach (explode(',', $params['rel']) as $rel) {
                         $task = new AuthTask($parsed, $rel, $connection);
                         if (!$this->worker->submit($task)->await()) {
@@ -80,6 +72,7 @@ readonly class WsBroadcast implements WebsocketClientHandler
                     'user' => $parsed['uid'],
                     'superUser' => $parsed['superUser'],
                     'userGroup' => $parsed['userGroup'] ?? null,
+                    'rels' => !empty($params['rel']) ? explode(',', $params['rel']) : null,
                 ]);
                 echo "[INFO] Client {$client->getId()} connected on $db\n";;
             } catch (Throwable $e) {

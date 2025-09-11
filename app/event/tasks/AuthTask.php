@@ -30,9 +30,10 @@ readonly class AuthTask implements Task
         echo "[INFO] AuthTask Worker PID: " . getmypid() . "\n";
         $isSuperUser = $this->jwtData["superUser"];
         $subUser = $isSuperUser ? null : $this->jwtData["uid"];
+        $userGroup = $isSuperUser ? null : $this->jwtData["userGroup"];
         $auth = new Authorization(connection: $this->connection);
         try {
-            $res = $auth->check(relName: $this->rel, transaction: false, isAuth: true, subUser: $subUser);
+            $res = $auth->check(relName: $this->rel, transaction: false, isAuth: true, subUser: $subUser, userGroup: $userGroup);
         } catch (Exception) {
             return false;
         }

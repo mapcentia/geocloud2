@@ -66,16 +66,32 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
         try {
             $clients = $broadcastHandler->gateway->getClients();
             foreach ($clients as $client) {
-                if ($broadcastHandler->getProperties($client)['db'] !== $db) {
+                $props = $broadcastHandler->getProperties($client);
+                if ($props['db'] !== $db) {
+                    continue;
+                }
+                // Filter payload per client relations (if specified)
+                $batchForClient = [];
+                $allowedRels = $props['rels'] ?? null;
+                if (is_array($allowedRels) && !empty($allowedRels) && is_array($preparedPayload)) {
+                    foreach ($preparedPayload[$db] as $key => $value) {
+                        if (in_array($key, $allowedRels)) {
+                            $batchForClient[$db][$key] = $value;;
+                        }
+                    }
+                }
+                if (empty($batchForClient)) {
+                    // Nothing to send to this client after filtering
                     continue;
                 }
                 echo "[INFO] Sending to: " . $client->getId() . "\n";
                 $client->sendText(json_encode([
                         'type' => 'batch',
                         'db' => $db,
-                        'batch' => $preparedPayload,
+                        'batch' => $batchForClient,
                     ]
                 ));
+
             }
         } catch (Throwable $error) {
             echo "[ERROR in flushBatch] " . $error->getMessage() . "\n";

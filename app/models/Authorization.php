@@ -34,7 +34,7 @@ class Authorization extends Model
      * @return array                   Structured response with success, code, and details
      * @throws GC2Exception            On forbidden or insufficient privileges
      */
-    public function check(string $relName, bool $transaction, bool $isAuth, ?string $subUser = null, ?string $userGroup = null, array $rels = []): array
+    public function check(string $relName, bool $transaction, bool $isAuth, ?string $subUser, ?string $userGroup, array $rels = []): array
     {
         // Ensure the relation is schema-qualified (default to public)
         $bits = explode('.', $relName);
