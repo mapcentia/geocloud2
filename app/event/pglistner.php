@@ -1,6 +1,5 @@
 <?php
 
-use Amp\Future;
 use Amp\Parallel\Worker\Execution;
 use Amp\Postgres\PostgresConfig;
 use Amp\Postgres\PostgresConnectionPool;
@@ -40,8 +39,7 @@ $batchState = [];
 // Keep track of async futures for concurrency
 $futures = [];
 
-$preparePayloadWithPDO = function (array $batchPayload, string $db) use ($worker): Execution
-{
+$preparePayloadWithPDO = function (array $batchPayload, string $db) use ($worker): Execution {
     $task = new PreparePayloadTask($batchPayload, $db);
     return $worker->submit($task);
 };
@@ -195,52 +193,6 @@ async(function () use (
     }
 });
 
-// --- Supervisor loop (Never exits, always restarts listeners) ---
-async(function () use (
-    &$dbs, &$batchState, $consumer,
-    $flushBatch, $batchSize, $reconnectDelay, $startListenerForDb
-) {
-    while (true) {
-        $futures = [];
-
-        foreach ($dbs as $db) {
-            $batchState[$db] = [
-                'count' => 0,
-                'startTime' => time(),
-                'payLoad' => []
-            ];
-            $futures[$db] = async(function () use (
-                $db, &$batchState, $consumer, $flushBatch,
-                $batchSize, $reconnectDelay, $startListenerForDb
-            ) {
-                while (true) {
-                    try {
-                        $startListenerForDb(
-                            $db, $batchState, $consumer, $flushBatch,
-                            $batchSize, $reconnectDelay
-                        );
-                    } catch (Throwable $e) {
-                        echo "[CRITICAL] Listener crashed for DB '{$db}': " . $e->getMessage() . "\n";
-                        echo "[INFO] Restarting listener for DB '{$db}' in {$reconnectDelay}s...\n";
-                        delay($reconnectDelay);
-                    }
-                }
-            });
-        }
-        // Wait until ANY of the futures complete or fail unexpectedly
-        try {
-            Future\await(array_values($futures));
-            echo "[WARNING] All listeners unexpectedly completed. Restarting immediately...\n";
-        } catch (Throwable $e) {
-            echo "[CRITICAL] One or more listeners failed unexpectedly: " . $e->getMessage() . "\n";
-        }
-        // If you reach this point, something caused your listener tasks to finish/crash.
-        // Sleep briefly to avoid rapid looping on permanent errors.
-        delay($reconnectDelay);
-        echo "[INFO] Supervisor restarting listeners...\n";
-    }
-});
-
 // --- Dynamic DB discovery loop: periodically fetch DBs and start listeners for new ones ---
 async(function () use (&$dbs, &$batchState, &$futures, &$worker, $consumer, $flushBatch, $batchSize, $reconnectDelay, $startListenerForDb) {
     // Initial fetch to seed $dbs
@@ -280,7 +232,6 @@ async(function () use (&$dbs, &$batchState, &$futures, &$worker, $consumer, $flu
 
     while (true) {
         delay(10);
-        $discovered = [];
         try {
             $discovered = $worker->submit(new DatabaseTask())->await();
         } catch (Throwable $e) {
