@@ -25,19 +25,18 @@ readonly class AuthTask implements Task
     /**
      * @throws Exception
      */
-    public function run(Channel $channel, Cancellation $cancellation): bool
+    public function run(Channel $channel, Cancellation $cancellation): array|false
     {
         echo "[INFO] AuthTask Worker PID: " . getmypid() . "\n";
         $isSuperUser = $this->jwtData["superUser"];
         $subUser = $isSuperUser ? null : $this->jwtData["uid"];
-        $rels = [];
         $auth = new Authorization(connection: $this->connection);
         try {
-            $auth->check(relName: $this->rel, transaction: false, rels: $rels, isAuth: true, subUser: $subUser);
-        } catch (Exception $e) {
+            $res = $auth->check(relName: $this->rel, transaction: false, isAuth: true, subUser: $subUser);
+        } catch (Exception) {
             return false;
         }
         $auth->close();
-        return true;
+        return $res;
     }
 }
