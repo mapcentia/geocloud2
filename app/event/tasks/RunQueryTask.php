@@ -10,6 +10,7 @@ use app\inc\Cache;
 use app\conf\App;
 use app\inc\Connection;
 use app\inc\Statement;
+use app\models\Sql;
 use Error;
 use Exception;
 
@@ -43,8 +44,8 @@ readonly class RunQueryTask implements Task
         $body['srs'] = "4326";
         try {
             $connection = new Connection(database: $this->db);
-            $statement = new Statement(true, connection: $connection);
-            $sqlApi = new \app\models\Sql(connection: $connection);
+            $statement = new Statement(connection: $connection, convertReturning: true);
+            $sqlApi = new Sql(connection: $connection);
             $res = $statement->run($this->db, $sqlApi, $body, false);
         } catch (Error $e) {
             $res = [

@@ -5,13 +5,13 @@ namespace app\event\sockets;
 use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
 use Amp\Parallel\Worker\Execution;
+use Amp\Parallel\Worker\Worker;
 use Amp\Websocket\Server\WebsocketClientGateway;
 use Amp\Websocket\Server\WebsocketClientHandler;
 use Amp\Websocket\Server\WebsocketGateway;
 use Amp\Websocket\WebsocketClient;
 use Amp\Websocket\WebsocketClosedException;
 use app\event\tasks\AuthTask;
-use app\event\tasks\ConnectTask;
 use app\event\tasks\RunQueryTask;
 use app\event\tasks\ValidateTokenTask;
 use app\inc\Connection;
@@ -23,10 +23,12 @@ use function Amp\Parallel\Worker\createWorker;
 readonly class WsBroadcast implements WebsocketClientHandler
 {
     private SplObjectStorage $clientProperties;
+    public Worker $worker;
 
     public function __construct(public WebsocketGateway $gateway = new WebsocketClientGateway())
     {
         $this->clientProperties = new SplObjectStorage();
+        $this->worker = createWorker();
     }
 
     /**
@@ -37,7 +39,6 @@ readonly class WsBroadcast implements WebsocketClientHandler
         $query = $request->getUri()->getQuery();
         parse_str($query, $params);
         $errorMsg = null;
-        $worker = createWorker();
 
         if (isset($params['token'])) {
             $token = $params['token'];
@@ -45,7 +46,7 @@ readonly class WsBroadcast implements WebsocketClientHandler
             try {
                 // Validate token and parsed data
                 $task = new ValidateTokenTask($token);
-                $parsed = $worker->submit($task)->await()['data'];
+                $parsed = $this->worker->submit($task)->await()['data'];
                 // Connection to the database
                 $connection = new Connection(database: $parsed["database"]);;
                 if (!$parsed['superUser']) {
@@ -59,7 +60,7 @@ readonly class WsBroadcast implements WebsocketClientHandler
                     }
                     foreach (explode(',', $params['rel']) as $rel) {
                         $task = new AuthTask($parsed, $rel, $connection);
-                        if (!$worker->submit($task)->await()) {
+                        if (!$this->worker->submit($task)->await()) {
                             $errorMsg = [
                                 'type' => 'error',
                                 'error' => 'not_allowed',
@@ -132,8 +133,7 @@ readonly class WsBroadcast implements WebsocketClientHandler
     private function sql(string $sql, string $db): Execution
     {
         $task = new RunQueryTask($sql, $db);
-        $worker = createWorker();
-        return $worker->submit($task);
+        return $this->worker->submit($task);
     }
 
     public function getProperties(WebsocketClient $client): array

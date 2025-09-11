@@ -24,7 +24,7 @@ class Statement
     private array $cacheInfo;
     private array $params;
 
-    function __construct(private readonly bool $convertReturning = true, private readonly Connection $connection) {
+    function __construct(private readonly Connection $connection, private readonly bool $convertReturning = true) {
 
     }
 
@@ -47,7 +47,7 @@ class Statement
             $this->subUser = null;
         }
         $this->params = $json;
-        if ($this->params['base64']) {
+        if (!empty($this->params['base64'])) {
             $this->q = Util::base64urlDecode($this->params['q']);
         } else {
             $qInput = $this->params['q'];
@@ -62,7 +62,7 @@ class Statement
                 $this->q = null;
             }
         }
-        $response = $this->process($this->params['client_encoding'], $this->params['type_hints'], $this->params['type_formats']);
+        $response = $this->process($this->params['client_encoding'] ?? null, $this->params['type_hints'] ?? null, $this->params['type_formats'] ?? null);
         if (!empty($this->cacheInfo)) {
             $response["cache"] = $this->cacheInfo;
         }
@@ -146,7 +146,7 @@ class Statement
             $response["statement"] = $finaleStatement;
         } elseif ($operation == "Select" || $operation == "SetOpSelect") {
             $this->q = $factory->createFromAST($select, true)->getSql();
-            $lifetime = $this->params['lifetime'] ?: 0;
+            $lifetime = $this->params['lifetime'] ?? 0;
             $key = md5($this->connection->database . "_" . $this->q . "_" . $lifetime);
             if ($lifetime > 0) {
                 $CachedString = Cache::getItem($key);

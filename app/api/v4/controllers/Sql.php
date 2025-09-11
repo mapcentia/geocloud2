@@ -157,7 +157,7 @@ class Sql extends AbstractApi
      */
     public function runStatement(array $query, string $uid, bool $isSuperUser): array
     {
-        $statement = new Statement(true, connection: $this->connection);
+        $statement = new Statement(connection: $this->connection, convertReturning: true);
         $settingsData = (new Setting(connection: $this->connection))->get()["data"];
         $apiKey = $isSuperUser ? $settingsData->api_key : $settingsData->api_key_subuser->$uid;
         $query['key'] = $apiKey;
