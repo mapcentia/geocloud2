@@ -17,7 +17,6 @@ use app\inc\TableWalkerRelation;
 use app\inc\TableWalkerRule;
 use app\inc\UserFilter;
 use app\models\Geofence;
-use app\models\Preparedstatement as PreparedstatementModel;
 use app\models\Rule;
 use app\models\Setting;
 use Psr\Cache\InvalidArgumentException;
