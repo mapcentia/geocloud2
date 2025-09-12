@@ -64,7 +64,7 @@ abstract class Jwt
         // Try to extract the database from token
         $arr = self::extractPayload($token);
         // Get superuser key, which are used for secret
-        $secret = (new Setting(new Connection(database: $arr["data"]["database"])))->getApiKeyForSuperUser();
+        $secret = (new Setting(new Connection(user: $arr["data"]["uid"], database: $arr["data"]["database"])))->getApiKeyForSuperUser();
         try {
             $decoded = (array)\Firebase\JWT\JWT::decode($token, new Key($secret, 'HS256'));
         } catch (Exception $e) {
