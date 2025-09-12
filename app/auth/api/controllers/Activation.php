@@ -12,10 +12,15 @@ use app\api\v4\AbstractApi;
 use app\api\v4\Controller;
 use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
+use app\inc\Connection;
+use app\inc\Route2;
 use app\models\User as UserModel;
 use Error;
 use Exception;
 use Twig\Environment;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 use Twig\Loader\FilesystemLoader;
 
 
@@ -23,20 +28,22 @@ use Twig\Loader\FilesystemLoader;
 class Activation extends AbstractApi
 {
 
-    public function __construct(private $twig = new Environment(new FilesystemLoader(__DIR__ . '/templates')))
+    public function __construct(private readonly Route2 $route, Connection $connection, private $twig = new Environment(new FilesystemLoader(__DIR__ . '/../templates')))
     {
 //        Session::start();
     }
 
+    /**
+     * @throws SyntaxError
+     * @throws RuntimeError
+     * @throws LoaderError
+     */
     public function get_index(): Response
     {
-        $loader = new FilesystemLoader(__DIR__ . '/templates');
-        $twig = new Environment($loader);
-
-        echo $twig->render('header.html.twig');
+        echo $this->twig->render('header.html.twig');
         echo "<main class='form-signin w-100 m-auto'>";
         echo "<div hx-trigger='load' hx-post='/activation'></div>";
-        echo $twig->render('footer.html.twig');
+        echo $this->twig->render('footer.html.twig');
         echo "<div id='alert'></div>";
         echo "</main>";
         return $this->emptyResponse();
