@@ -144,7 +144,7 @@ class User extends AbstractApi
             // Load pre extensions and run processAddUser
             $this->runPreExtension('processAddUser', $model);
             try {
-                (new Database())->createSchema($user['name']);
+                (new Database(connection: $this->connection))->createSchema($user['name']);
             } catch (Exception) {
             }
             $userName = self::convertUserObject($model->createUser($user)['data'])['name'];
