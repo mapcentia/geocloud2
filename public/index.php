@@ -449,7 +449,7 @@ $handler = static function () use ($routes) {
             if (!$Route2->isMatched) {
                 $jwt = Jwt::validate();
                 $Route2->jwt = $jwt;
-                $conn = new \app\inc\Connection(database: $jwt["data"]["database"]);
+                $conn = new \app\inc\Connection(user: $jwt["data"]["uid"], database: $jwt["data"]["database"]);
                 foreach ($routes as $c => $r) {
                     if ($r->getScope() != Scope::PUBLIC) {
                         $Route2->add($r->getRoute(), new $c($Route2, $conn));
@@ -459,6 +459,7 @@ $handler = static function () use ($routes) {
             if ($Route2->isMatched) {
                 return;
             }
+            $Route2->miss();
 
         } elseif (Input::getPath()->part(1) == "admin") {
             Session::start();

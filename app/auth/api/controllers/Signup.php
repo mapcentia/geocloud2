@@ -79,7 +79,7 @@ class Signup extends AbstractApi
             try {
                 $userObj->connect();
                 $userObj->begin();
-                // $userObj->checkCode($_POST['code'], $_POST['email']);
+                $userObj->checkCode($_POST['code'], $_POST['email']);
                 // Check if two factor key is correct
                 $key = '__twofactor_' . md5($_POST['name']) . '_' . $_POST['parentdb'];
                 try {
