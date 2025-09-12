@@ -998,12 +998,12 @@ class Table extends Model
             $sql = "CREATE TABLE \"$this->postgisschema\".\"$table\" (gid SERIAL PRIMARY KEY,id INT);";
         }
         $res = $this->prepare($sql);
-        $res->execute();
+        $this->execute($res);
         if ($type && $srid) {
             $geomField = 'the_geom';
             $sql = "SELECT AddGeometryColumn('" . $this->postgisschema . "','$table','$geomField',$srid,'$type',2);"; // Must use schema prefix cos search path include public
             $res = $this->prepare($sql);
-            $res->execute();
+            $this->execute($res);
             $key .= $geomField;
         } else {
             $key .= 'gc2_non_postgis';
