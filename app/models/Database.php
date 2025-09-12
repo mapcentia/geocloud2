@@ -30,13 +30,13 @@ class Database extends Model
      * Creates a user in the database and assigns roles, privileges, or connections depending on the parameters.
      *
      * @param string $name The name of the user to be created.
-     * @param mixed $db The database name for which the user will be granted privileges (optional).
+     * @param string|null $db The database name for which the user will be granted privileges (optional).
      * @param bool $isSuperUser Flag indicating if the created user should have superuser privileges (default is false).
      * @return void
      */
-    public function createUser(string $name, $db = null, bool $isSuperUser = false): void
+    public function createUser(string $name, ?string $db = null, bool $isSuperUser = false): void
     {
-        // First try to create user if not exists
+        // First, try to create the user if not exists
         $sql = "select usename from pg_user where usename=:name";
         $res = $this->prepare($sql);
         $this->execute($res, ['name' => $name]);
