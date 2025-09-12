@@ -63,7 +63,6 @@ class Database extends Model
         if ($isSuperUser) {
             $sql = "GRANT \"$name\" to $this->postgisuser";
             $this->execQuery($sql);
-            $this->execQuery($sql);
         }
     }
 
@@ -134,8 +133,6 @@ class Database extends Model
         // We revoke connect from public, so other users can't connect to this database
         $sql = "REVOKE connect ON DATABASE $screenName FROM PUBLIC";
         $this->execQuery($sql);
-        // Change ownership on all objects in the database
-        $this->changeOwner($screenName, $screenName);
     }
 
     /**
@@ -216,55 +213,53 @@ class Database extends Model
      */
     public function changeOwner(string $db, string $newOwner): void
     {
-//        $this->postgisdb = $db;
-//
-//        $this->connect();
-//        $this->begin();
+        $model = new Model(connection: new Connection(database: $db));
+        $model->begin();
 
         //Database
         $sql = "ALTER DATABASE $db OWNER TO $newOwner";
-        $this->execQuery($sql);
+        $model->execQuery($sql);
 
         // Schema
         $sql = "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name<>'information_schema'";
-        $res = $this->execQuery($sql);
-        $rows1 = $this->fetchAll($res);
+        $res = $model->execQuery($sql);
+        $rows1 = $model->fetchAll($res);
 
         // tables
         $sql = "SELECT '\"'||schemaname||'\".\"'||tablename||'\"' AS \"table\" FROM pg_tables WHERE schemaname NOT LIKE 'pg_%' AND schemaname<>'information_schema'";
-        $this->execQuery($sql);
-        $res = $this->execQuery($sql);
-        $rows2 = $this->fetchAll($res);
+        $model->execQuery($sql);
+        $res = $model->execQuery($sql);
+        $rows2 = $model->fetchAll($res);
 
         $sql = "SELECT '\"'||table_schema||'\".\"'||table_name||'\"' AS \"table\" FROM information_schema.views WHERE table_schema NOT LIKE 'pg_%' AND table_schema<>'information_schema'";
-        $res = $this->execQuery($sql);
-        $rows3 = $this->fetchAll($res);
+        $res = $model->execQuery($sql);
+        $rows3 = $model->fetchAll($res);
 
         $sql = "SELECT '\"'||sequence_schema||'\".\"'||sequence_name||'\"' AS \"table\" FROM information_schema.sequences WHERE sequence_schema NOT LIKE 'pg_%' AND sequence_schema<>'information_schema'";
-        $res = $this->execQuery($sql);
-        $rows4 = $this->fetchAll($res);
+        $res = $model->execQuery($sql);
+        $rows4 = $model->fetchAll($res);
 
         foreach ($rows1 as $row) {
             $sql = "ALTER SCHEMA {$row["schema_name"]} OWNER TO $newOwner";
-            $this->execQuery($sql);
+            $model->execQuery($sql);
         }
         foreach ($rows1 as $row) {
             $sql = "GRANT USAGE ON SCHEMA {$row["schema_name"]} TO $newOwner";
-            $this->execQuery($sql);
+            $model->execQuery($sql);
         }
         foreach ($rows2 as $row) {
             $sql = "ALTER TABLE {$row["table"]} OWNER TO $newOwner";
-            $this->execQuery($sql);
+            $model->execQuery($sql);
         }
         foreach ($rows3 as $row) {
             $sql = "ALTER TABLE {$row["table"]} OWNER TO $newOwner";
-            $this->execQuery($sql);
+            $model->execQuery($sql);
         }
         foreach ($rows4 as $row) {
-            $this->execQuery($sql);
+            $model->execQuery($sql);
             $sql = "ALTER TABLE {$row["table"]} OWNER TO $newOwner";
         }
-        $this->commit();
+        $model->commit();
     }
 
     /**

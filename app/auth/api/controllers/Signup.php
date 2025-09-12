@@ -17,6 +17,7 @@ use app\inc\Cache;
 use app\inc\Connection;
 use app\inc\Jwt;
 use app\inc\Route2;
+use app\models\Database;
 use app\models\Session as SessionModel;
 use app\models\User;
 use Exception;
@@ -66,7 +67,7 @@ class Signup extends AbstractApi
                     'HtmlBody' => "<div>$val</div>",
                 ];
                 $client->sendEmailBatch([$message]);
-                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => "E-mail with one-time code is send."]) . "</div>";
+                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => "E-mail with one-time code is send. $val"]) . "</div>";
             } catch (Exception $e) {
                 unset($_POST['password']);
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $e->getMessage()]) . "</div>";
@@ -78,7 +79,7 @@ class Signup extends AbstractApi
             try {
                 $userObj->connect();
                 $userObj->begin();
-                $userObj->checkCode($_POST['code'], $_POST['email']);
+                // $userObj->checkCode($_POST['code'], $_POST['email']);
                 // Check if two factor key is correct
                 $key = '__twofactor_' . md5($_POST['name']) . '_' . $_POST['parentdb'];
                 try {
@@ -102,6 +103,12 @@ class Signup extends AbstractApi
                     'parentdb' => $_POST['parentdb']
                 ]);
                 $userObj->commit();
+
+                // Change ownership on all objects in the database
+                if (empty($_POST['parentdb'])) {
+                    (new Database())->changeOwner($res['data']['screenname'], $res['data']['screenname']);
+                }
+
                 // Delete key
                 Cache::deleteItem($key);
                 (new SessionModel())->start($res['data']['screenname'], $_POST['password'], "public", $res['data']['parentdb']);
