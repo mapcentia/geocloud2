@@ -1,4 +1,10 @@
 <?php
+/**
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2025 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ *
+ */
 
 namespace app\event\tasks;
 
@@ -6,11 +12,10 @@ use Amp\Cancellation;
 use Amp\Parallel\Worker\Task;
 use Amp\Sync\Channel;
 use app\exceptions\GC2Exception;
-use app\inc\Cache;
-use app\conf\App;
 use app\inc\Connection;
 use app\models\Sql;
 use PhpOffice\PhpSpreadsheet\Writer\Exception;
+
 
 readonly class PreparePayloadTask implements Task
 {
@@ -30,8 +35,6 @@ readonly class PreparePayloadTask implements Task
     public function run(Channel $channel, Cancellation $cancellation): array
     {
         echo "[INFO] PreparePayloadTask Worker PID: " . getmypid() . "\n";
-        new App();
-        Cache::setInstance();
         $api = new Sql(connection: new Connection(database: $this->db));
 
         $results = [];

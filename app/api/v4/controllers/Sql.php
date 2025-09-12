@@ -140,6 +140,7 @@ class Sql extends AbstractApi
             $decodedBody = [$decodedBody];
         }
         $result = [];
+        // Execute SQL statements
         $this->sqlApi->begin();
         foreach ($decodedBody as $query) {
             $srs = $query['srs'] ?? 4326;
@@ -147,6 +148,7 @@ class Sql extends AbstractApi
             $query['srs'] = $srs;
             $result[] = $this->runStatement($query, $user, $isSuperUser, $userGroup);
         }
+        // Return response
         $this->sqlApi->commit();
         if (count($result) == 1) {
             $result = $result[0];
@@ -161,12 +163,12 @@ class Sql extends AbstractApi
     public function runStatement(array $query, string $user, bool $isSuperUser, ?string $userGroup): array
     {
         $statement = new Statement(connection: $this->connection, convertReturning: true);
-        $settingsData = (new Setting(connection: $this->connection))->get()["data"];
-        $apiKey = $isSuperUser ? $settingsData->api_key : $settingsData->api_key_subuser->$user;
-        $query['key'] = $apiKey;
         $query['convert_types'] = $value['convert_types'] ?? true;
         $query['format'] = $body['output_format'] ?? 'json';
         $result = $statement->run(user: $user, api: $this->sqlApi, json: $query, subuser:  !$isSuperUser, userGroup: $userGroup);
+        if (isset($query['id'])) {
+            $result['id'] = $query['id'];
+        }
         unset($result['success']);
         unset($result['forGrid']);
         return $result;
@@ -265,6 +267,9 @@ class Sql extends AbstractApi
                 new Assert\Type('string'),
                 new Assert\NotBlank(),
                 new Assert\Choice(choices: ['wkt', 'geojson']),
+            ]),
+            'id' => new Assert\Optional([
+                new Assert\NotBlank(),
             ]),
         ]);
     }

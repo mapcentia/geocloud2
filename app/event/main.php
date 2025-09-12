@@ -1,4 +1,10 @@
 <?php
+/**
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2025 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ *
+ */
 
 use Amp\Http\Server\DefaultErrorHandler;
 use Amp\Http\Server\RequestHandler\ClosureRequestHandler;
@@ -47,7 +53,7 @@ $broadcastHandler = new WsBroadcast();
 $wsBroadcast = new Websocket($server, $logger, $acceptor, $broadcastHandler);
 
 $router = new Router($server, $logger, $errorHandler);
-$router->addRoute('GET', '/broadcast', $wsBroadcast);
+$router->addRoute('GET', '/', $wsBroadcast);
 $router->addRoute('GET', '/ping', new ClosureRequestHandler(
     function () {
         return new Response(

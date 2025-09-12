@@ -11,9 +11,9 @@ namespace app\event\tasks;
 use Amp\Cancellation;
 use Amp\Parallel\Worker\Task;
 use Amp\Sync\Channel;
-use app\exceptions\GC2Exception;
+use app\exceptions\RPCException;
 use app\inc\Connection;
-use app\inc\Statement;
+use app\inc\Rpc;
 use app\models\Sql;
 use Exception;
 
@@ -21,7 +21,7 @@ use Exception;
 error_reporting(E_ERROR | E_PARSE);
 
 
-class RunQueryTask implements Task
+class RunRpcTask implements Task
 {
 
     public function __construct(
@@ -39,20 +39,19 @@ class RunQueryTask implements Task
      */
     public function run(Channel $channel, Cancellation $cancellation): array
     {
-        echo "[INFO] RunQueryTask Worker PID: " . getmypid() . "\n";
+        echo "[INFO] RunRpcTask Worker PID: " . getmypid() . "\n";
         $res = [];
         $connection = new Connection(database: $this->props['db']);
-        $statement = new Statement(connection: $connection, convertReturning: true);
+        $rpc = new Rpc(connection: $connection);
         $sqlApi = new Sql(connection: $connection);
         $sqlApi->begin();
         try {
             foreach ($this->query as $q) {
-                $q['format'] = $q['output_format'] ?? 'json';
-                $res[] = $statement->run(user: $this->props['user'], api: $sqlApi, json: $q, subuser: !$this->props['superUser'], userGroup: $this->props['userGroup']);
+                $res[] = $rpc->run(user: $this->props['user'], api: $sqlApi, json: $q, subuser: !$this->props['superUser'], userGroup: $this->props['userGroup']);
             }
-        } catch (GC2Exception $e) {
+        } catch (RPCException $e) {
             $sqlApi->rollback();
-            return ['message' => $e->getMessage()];
+            return $e->getResponse();
         }
         $sqlApi->commit();
         return $res;

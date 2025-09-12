@@ -13,8 +13,8 @@ use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
 use app\api\v4\Controller;
+use app\api\v4\Responses\GetResponse;
 use app\api\v4\Responses\NoContentResponse;
-use app\api\v4\Responses\PostResponse;
 use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
@@ -22,7 +22,7 @@ use app\exceptions\RPCException;
 use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Route2;
-use app\models\Preparedstatement as PreparedstatementModel;
+use app\inc\Rpc;
 use Exception;
 use OpenApi\Annotations\OpenApi;
 use OpenApi\Attributes as OA;
@@ -101,48 +101,32 @@ class Call extends AbstractApi
     #[Override]
     public function post_index(): Response
     {
+        // Set user and user group
+        $isSuperUser = $this->route->jwt["data"]["superUser"];
+        $user = $this->route->jwt["data"]["uid"];
+        $userGroup = $this->route->jwt["data"]["userGroup"];
         $decodedBody = json_decode(Input::getBody(), true);
+        // If the request body is not an array, wrap it in an array
         if (!array_is_list($decodedBody)) {
             $decodedBody = [$decodedBody];
         }
-        $pres = new PreparedstatementModel(connection: $this->connection);;
+        // Execute RPC methods
+        $rpc = new Rpc($this->connection);
+        $api = new \app\models\Sql(connection: $this->connection);
         $result = [];
+        $api->begin();
         foreach ($decodedBody as $query) {
-            try {
-                $preStm = $pres->getByName($query['method']);
-            } catch (Exception) {
-                throw new RPCException("Method not found", -32601, null, id: $query['id']);
-            }
-            $query['q'] = $preStm['data']['statement'];
-            $query['type_hints'] = json_decode($preStm['data']['type_hints'], true);
-            $query['type_formats'] = json_decode($preStm['data']['type_formats'], true);
-            $query['output_format'] = $preStm['data']['output_format'];
-            $query['srs'] = $preStm['data']['srs'];
-            $query['params'] = $query['params'] ?? null;
-            try {
-                $res = (new Sql($this->route, connection: $this->connection))->runStatement($query, $this->route->jwt["data"]["uid"], $this->route->jwt["data"]["superUser"]);
-            } catch (Exception $e) {
-                if (in_array($e->getCode(), ['HY093', '406'])) {
-                    throw new RPCException("Invalid params", -32602, null, $e->getMessage(), $query['id']);
-                }
-                throw new RPCException("Internal error", -32603, null, $e->getMessage(), $query['id']);
-            }
-            $jsonRpcResponse = [
-                'jsonrpc' => $query['jsonrpc'],
-                'result' => $res,
-            ];
-            if (isset($query['id'])) {
-                $jsonRpcResponse['id'] = $query['id'];
-                $result[] = $jsonRpcResponse;
-            }
+            $result[] = $rpc->run($user, $api, $query, !$isSuperUser, $userGroup);
         }
+        $api->commit();
+        // Return response
         if (count($result) == 0) {
             return new NoContentResponse();
         }
         if (count($result) == 1) {
-            return new PostResponse(data: $result[0]);
+            return new GetResponse(data: $result[0]);
         }
-        return new PostResponse(data: $result);
+        return new GetResponse(data: $result);
     }
 
     /**

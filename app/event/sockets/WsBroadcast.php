@@ -1,4 +1,10 @@
 <?php
+/**
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2025 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ *
+ */
 
 namespace app\event\sockets;
 
@@ -13,6 +19,7 @@ use Amp\Websocket\WebsocketClient;
 use Amp\Websocket\WebsocketClosedException;
 use app\event\tasks\AuthTask;
 use app\event\tasks\RunQueryTask;
+use app\event\tasks\RunRpcTask;
 use app\event\tasks\ValidateTokenTask;
 use app\inc\Connection;
 use SplObjectStorage;
@@ -102,8 +109,24 @@ readonly class WsBroadcast implements WebsocketClientHandler
             try {
                 $payload = $message->buffer();
                 $props = $this->clientProperties[$client];
-                echo "[INFO] message '$payload' from {$client->getId()} on {$props['db']}\n";
-                $r = $this->sql($payload, $props);
+                echo "[INFO] message payload from {$client->getId()} on {$props['db']}\n";
+                $parsed = json_decode($payload, true);
+                if (!$parsed) {
+                    $errorMsg = [
+                        'type' => 'error',
+                        'error' => 'INVALID_JSON',
+                        'message' => "Invalid JSON payload: $payload",
+                    ];
+                    $this->sendToClient($client, json_encode($errorMsg));
+                    throw new \Exception("Invalid JSON payload: $payload");
+                }
+                // Handle the message. Check the type and call the appropriate method.
+                if (isset($parsed['q']) || isset($parsed[0]['q'])) {
+                    $r = $this->sql($parsed, $props);
+                }
+                if (isset($parsed['jsonrpc']) || isset($parsed[0]['jsonrpc'])) {
+                    $r = $this->rpc($parsed, $props);
+                }
                 $this->sendToClient($client, json_encode($r->await()));
             } catch (Throwable $e) {
                 echo "[ERROR] " . $e->getMessage() . "\n";
@@ -126,9 +149,15 @@ readonly class WsBroadcast implements WebsocketClientHandler
 
     }
 
-    private function sql(string $sql, ?array $props): Execution
+    private function sql(array $query, ?array $props): Execution
     {
-        $task = new RunQueryTask($sql, $props);
+        $task = new RunQueryTask($query, $props);
+        return $this->worker->submit($task);
+    }
+
+    private function rpc(array $query, ?array $props): Execution
+    {
+        $task = new RunRpcTask($query, $props);
         return $this->worker->submit($task);
     }
 
