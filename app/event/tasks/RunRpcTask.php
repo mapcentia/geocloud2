@@ -21,17 +21,14 @@ use Exception;
 error_reporting(E_ERROR | E_PARSE);
 
 
-class RunRpcTask implements Task
+readonly final class RunRpcTask implements Task
 {
 
     public function __construct(
-        private array           $query,
-        private readonly ?array $props,
+        private array  $query,
+        private ?array $props,
     )
     {
-        if (!array_is_list($this->query)) {
-            $this->query = [$this->query];
-        }
     }
 
     /**

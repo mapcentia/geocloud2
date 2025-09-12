@@ -121,10 +121,13 @@ readonly class WsBroadcast implements WebsocketClientHandler
                     throw new \Exception("Invalid JSON payload: $payload");
                 }
                 // Handle the message. Check the type and call the appropriate method.
-                if (isset($parsed['q']) || isset($parsed[0]['q'])) {
+                if (!array_is_list($parsed)) {
+                    $parsed = [$parsed];
+                }
+                if (isset($parsed[0]['q'])) {
                     $r = $this->sql($parsed, $props);
                 }
-                if (isset($parsed['jsonrpc']) || isset($parsed[0]['jsonrpc'])) {
+                if (isset($parsed[0]['jsonrpc'])) {
                     $r = $this->rpc($parsed, $props);
                 }
                 $this->sendToClient($client, json_encode($r->await()));

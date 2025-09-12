@@ -17,7 +17,7 @@ use Exception;
 error_reporting(E_ERROR | E_PARSE);
 
 
-readonly class DatabaseTask implements Task
+final readonly class DatabaseTask implements Task
 {
 
     public function __construct()

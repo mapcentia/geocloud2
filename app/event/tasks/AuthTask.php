@@ -18,7 +18,7 @@ use Exception;
 error_reporting(E_ERROR | E_PARSE);
 
 
-readonly class AuthTask implements Task
+final readonly class AuthTask implements Task
 {
 
     public function __construct(

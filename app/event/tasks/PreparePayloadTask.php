@@ -19,7 +19,7 @@ use app\models\Sql;
 use PhpOffice\PhpSpreadsheet\Writer\Exception;
 
 
-readonly class PreparePayloadTask implements Task
+final readonly class PreparePayloadTask implements Task
 {
     public function __construct(
         private array  $batchPayload,

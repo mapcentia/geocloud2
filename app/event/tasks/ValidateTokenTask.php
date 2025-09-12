@@ -20,7 +20,7 @@ use Exception;
 error_reporting(E_ERROR | E_PARSE);
 
 
-readonly class ValidateTokenTask implements Task
+final readonly class ValidateTokenTask implements Task
 {
 
     public function __construct(private string $token)
