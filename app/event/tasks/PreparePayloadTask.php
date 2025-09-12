@@ -11,7 +11,9 @@ namespace app\event\tasks;
 use Amp\Cancellation;
 use Amp\Parallel\Worker\Task;
 use Amp\Sync\Channel;
+use app\conf\App;
 use app\exceptions\GC2Exception;
+use app\inc\Cache;
 use app\inc\Connection;
 use app\models\Sql;
 use PhpOffice\PhpSpreadsheet\Writer\Exception;
@@ -35,6 +37,8 @@ readonly class PreparePayloadTask implements Task
     public function run(Channel $channel, Cancellation $cancellation): array
     {
         echo "[INFO] PreparePayloadTask Worker PID: " . getmypid() . "\n";
+        new App();
+        Cache::setInstance();
         $api = new Sql(connection: new Connection(database: $this->db));
 
         $results = [];
