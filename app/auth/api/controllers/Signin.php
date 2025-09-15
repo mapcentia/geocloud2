@@ -49,13 +49,15 @@ class Signin extends AbstractApi
             try {
                 $res = $userObj->getDatabasesForUser($_POST['user']);
                 // Check if user/password is correct
-                (new SessionModel())->start($_POST['user'], $_POST['password'], "public", $_POST['database'], true);
+                $sessionModel = new SessionModel();
+                $sessionModel->start($_POST['user'], $_POST['password'], "public", $_POST['database'], true);
+                $sessionModel->stop();
                 // Check if client has two factor enabled
                 $client = new Client(connection: new Connection(database: $_POST['database']));
                 $clientData = $client->get($_POST['client_id']);
                 if (!$clientData[0]['twofactor']) {
                     Session::start();
-                    (new SessionModel())->start($_POST['user'], $_POST['password'], "public", $_POST['database']);
+                    $sessionModel->start($_POST['user'], $_POST['password'], "public", $_POST['database']);
                     header('HX-Refresh: true');
                     return $this->emptyResponse();
                 }
@@ -77,12 +79,20 @@ class Signin extends AbstractApi
                     echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Could not find E-mail']) . "</div>";
                     return $this->emptyResponse();
                 }
+                $html = $this->twig->render('email_twofactor.html.twig', [
+                    'app_name' => App::$param['appName'] ?? 'GC2',
+                    'code' => $val,
+                    'recipient_email' => $email,
+                    'expires_in' => '10 minutes',
+                    'context_info' => 'database ' . $_POST['database'],
+                ]);
                 $message = [
                     'To' => $email,
                     'From' => App::$param["notification"]["from"],
                     'TrackOpens' => false,
-                    'Subject' => "Two factor link",
-                    'HtmlBody' => "<div>$val</div>",
+                    'Subject' => "Your one-time code",
+                    'HtmlBody' => $html,
+                    'TextBody' => "Your one-time code: $val\nThis code expires in 10 minutes.",
                 ];
                 $client->sendEmailBatch([$message]);
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => "E-mail with one-time code is send."]) . "</div>";

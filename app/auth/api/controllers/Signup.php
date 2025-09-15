@@ -59,12 +59,20 @@ class Signup extends AbstractApi
                 $userObj->cacheCode($key, $val);
                 // Send email
                 $client = new PostmarkClient(App::$param["notification"]["key"]);
+                $html = $this->twig->render('email_twofactor.html.twig', [
+                    'app_name' => App::$param['appName'] ?? 'GC2',
+                    'code' => $val,
+                    'recipient_email' => $_POST['email'],
+                    'expires_in' => '10 minutes',
+                    'context_info' => !empty($_POST['parentdb']) ? ('database ' . $_POST['parentdb']) : null,
+                ]);
                 $message = [
                     'To' => $_POST['email'],
                     'From' => App::$param["notification"]["from"],
                     'TrackOpens' => false,
-                    'Subject' => "Two factor link",
-                    'HtmlBody' => "<div>$val</div>",
+                    'Subject' => "Your one-time code",
+                    'HtmlBody' => $html,
+                    'TextBody' => "Your one-time code: $val\nThis code expires in 10 minutes.",
                 ];
                 $client->sendEmailBatch([$message]);
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => "E-mail with one-time code is send. $val"]) . "</div>";

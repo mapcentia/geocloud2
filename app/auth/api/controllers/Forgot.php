@@ -10,6 +10,7 @@ namespace app\auth\api\controllers;
 
 use app\api\v4\AbstractApi;
 use app\api\v4\Controller;
+use app\api\v4\Responses\EmptyResponse;
 use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
 use app\conf\App;
@@ -136,12 +137,20 @@ class Forgot extends AbstractApi
                 $url = App::$param["host"] . "/forgot?key=$val&user=$user" . (!empty($parentdb) ? "&parentdb=$parentdb" : '');
                 try {
                     $client = new PostmarkClient(App::$param["notification"]["key"]);
+                    $html = $this->twig->render('email_reset.html.twig', [
+                        'app_name' => App::$param['appName'] ?? 'GC2',
+                        'recipient_email' => $email,
+                        'reset_url' => $url,
+                        'expires_in' => '30 minutes',
+                        'context_info' => !empty($parentdb) ? ('database ' . $parentdb) : null,
+                    ]);
                     $message = [
                         'To' => $email,
                         'From' => App::$param["notification"]["from"],
                         'TrackOpens' => false,
-                        'Subject' => "Reset link",
-                        'HtmlBody' => "<a href='$url'>Click here</a> to reset your password.",
+                        'Subject' => "Reset your password",
+                        'HtmlBody' => $html,
+                        'TextBody' => "Reset your password using this link: $url\nThis link will expire in 30 minutes.",
                     ];
                     try {
                         $sendResult = $client->sendEmailBatch([$message]);
@@ -160,7 +169,7 @@ class Forgot extends AbstractApi
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'User doesn\'t exists']) . "</div>";
             }
         }
-        return [];
+        return $this->emptyResponse();
     }
 
     public function put_index(): Response

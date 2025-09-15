@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ app_name|default('GC2') }} — Activation code</title>
+  <style>
+    body{margin:0;padding:0;background:#f6f8fb;-webkit-font-smoothing:antialiased;font-family:Segoe UI, Roboto, Helvetica, Arial, sans-serif;color:#24324b}
+    .container{max-width:560px;margin:0 auto;padding:24px}
+    .card{background:#ffffff;border-radius:12px;box-shadow:0 2px 8px rgba(23,43,77,.08);overflow:hidden}
+    .header{background:linear-gradient(135deg,#16a34a,#4ade80);padding:20px 24px;color:#fff}
+    .brand{font-weight:700;font-size:18px;letter-spacing:.2px}
+    .content{padding:24px}
+    .heading{font-size:20px;margin:0 0 8px 0;color:#192132}
+    .muted{color:#5f6b7a;font-size:14px;line-height:1.6;margin:0 0 16px 0}
+    .code{display:inline-block;font-family:Consolas, Menlo, Monaco, monospace;letter-spacing:2px;font-size:28px;font-weight:800;background:#16a34a;color:#fff;padding:14px 18px;border-radius:10px;margin:10px 0}
+    .footer{padding:16px 24px;color:#6b778c;font-size:12px;text-align:center}
+    .divider{height:1px;background:#eef1f6;margin:8px 0 0 0}
+    @media (prefers-color-scheme: dark){
+      body{background:#0f1420;color:#e6eaf2}
+      .card{background:#141b2d}
+      .header{background:linear-gradient(135deg,#15803d,#22c55e)}
+      .heading{color:#f0f4ff}
+      .muted,.footer{color:#98a1b3}
+      .divider{background:#1f293b}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div class="brand">{{ app_name|e }}</div>
+      </div>
+      <div class="content">
+        <h1 class="heading">Your activation code</h1>
+        <p class="muted">Use the code below to activate your access.</p>
+        <div class="code">{{ code|e }}</div>
+      </div>
+      <div class="divider"></div>
+        <div class="footer">Need help? <a href="mailto:{{ supportUrl }}">Contact our support.</a>></div>
+    </div>
+  </div>
+</body>
+</html>

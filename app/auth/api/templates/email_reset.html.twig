@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ app_name|default('GC2') }} — Reset your password</title>
+  <style>
+    body{margin:0;padding:0;background:#f6f8fb;-webkit-font-smoothing:antialiased;font-family:Segoe UI, Roboto, Helvetica, Arial, sans-serif;color:#24324b}
+    .container{max-width:560px;margin:0 auto;padding:24px}
+    .card{background:#ffffff;border-radius:12px;box-shadow:0 2px 8px rgba(23,43,77,.08);overflow:hidden}
+    /* Different color scheme than twofactor: teal/green */
+    .header{background:linear-gradient(135deg,#059669,#34d399);padding:20px 24px;color:#fff}
+    .brand{font-weight:700;font-size:18px;letter-spacing:.2px}
+    .content{padding:24px}
+    .heading{font-size:20px;margin:0 0 8px 0;color:#192132}
+    .muted{color:#5f6b7a;font-size:14px;line-height:1.6;margin:0 0 16px 0}
+    .btn{display:inline-block;font-weight:700;font-size:14px;background:#059669;color:#fff;text-decoration:none;padding:12px 18px;border-radius:10px;margin:12px 0}
+    .btn:hover{background:#047857}
+    .footer{padding:16px 24px;color:#6b778c;font-size:12px;text-align:center}
+    .divider{height:1px;background:#eef1f6;margin:8px 0 0 0}
+    @media (prefers-color-scheme: dark){
+      body{background:#0f1420;color:#e6eaf2}
+      .card{background:#141b2d}
+      .header{background:linear-gradient(135deg,#047857,#10b981)}
+      .heading{color:#f0f4ff}
+      .muted,.footer{color:#98a1b3}
+      .divider{background:#1f293b}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div class="brand">{{ app_name|e }}</div>
+      </div>
+      <div class="content">
+        <h1 class="heading">Reset your password</h1>
+        {% if recipient_email %}
+          <p class="muted">We received a request to reset the password for {{ recipient_email|e }}{% if context_info %} ({{ context_info|e }}){% endif %}.</p>
+        {% else %}
+          <p class="muted">We received a request to reset your password{% if context_info %} ({{ context_info|e }}){% endif %}.</p>
+        {% endif %}
+        <p class="muted">Click the button below to set a new password. This link will expire in {{ expires_in|default('30 minutes') }}.</p>
+        <p><a href="{{ reset_url|e }}" class="btn">Reset password</a></p>
+        <p class="muted">If the button doesn’t work, copy and paste this URL into your browser:<br>{{ reset_url|e }}</p>
+      </div>
+      <div class="divider"></div>
+      <div class="footer">If you didn’t request a password reset, you can safely ignore this email.</div>
+    </div>
+  </div>
+</body>
+</html>

@@ -487,46 +487,6 @@ class User extends Model
         $this->execute($res, [":code" => $code]);
     }
 
-    /**
-     * Sends an activation code to the specified email if the email is not already associated with a code.
-     *
-     * @param string $email The email address to which the activation code will be sent.
-     * @return void
-     * @throws GC2Exception If the email is already used or if there are no available activation codes.
-     */
-    public function sendCode(string $email): void
-    {
-        $sql = "SELECT * FROM codes WHERE email=:email";
-        $res = $this->prepare($sql);
-        $this->execute($res, [":email" => $email]);
-        if ($res->rowCount() > 0) {
-            throw new GC2Exception("E-mail already used", 404, null, "CODE_DOES_NOT_EXISTS");
-        }
-        $sql = "SELECT code FROM codes WHERE email isnull and used isnull limit 1";
-        $res = $this->prepare($sql);
-        $this->execute($res);
-        if ($res->rowCount() == 0) {
-            throw new GC2Exception("No more available activation codes. We'll release more, so try again later", 404, null, "CODE_DOES_NOT_EXISTS");
-        }
-        $code = $res->fetchColumn();
-        $client = new PostmarkClient(App::$param["notification"]["key"]);
-        $message = [
-            'To' => $email,
-            'From' => App::$param["notification"]["from"],
-            'TrackOpens' => false,
-            'Subject' => "Activation code",
-            'HtmlBody' => $code,
-        ];
-        try {
-            $client->sendEmailBatch([$message]);
-        } catch (Exception $generalException) {
-            throw new GC2Exception("Could not send email. Try again or report the problem", 500, $generalException);
-        }
-        $sql = "UPDATE codes set email=:email where code=:code";
-        $res = $this->prepare($sql);
-        $this->execute($res, [":code" => $code, ":email" => $email]);
-    }
-
     public function cacheCode(string $key, mixed $value): void
     {
         $CachedString = Cache::getItem($key);
