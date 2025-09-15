@@ -61,10 +61,11 @@ class Model
      */
     public function getPdoConnection(): ?PDO
     {
-        if (empty(self::$PdoConnections[$this->connection->database])) {
+        $str = $this->connectString();
+        if (empty(self::$PdoConnections[$str])) {
             return null;
         }
-        return self::$PdoConnections[$this->connection->database];
+        return self::$PdoConnections[$str];
     }
 
     /**
@@ -76,7 +77,7 @@ class Model
      */
     public function setPdoConnection(PDO $conn): void
     {
-        self::$PdoConnections[$this->connection->database] = $conn;
+        self::$PdoConnections[$this->connectString()] = $conn;
     }
 
     /**
