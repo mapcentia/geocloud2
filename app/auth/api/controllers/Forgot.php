@@ -37,7 +37,7 @@ class Forgot extends AbstractApi
         $userObj = new User();
 
         echo $this->twig->render('header.html.twig');
-        echo "<main class='form-signin w-100 m-auto'>";
+        echo "<main class='form-signin w-100 m-auto flex-grow-1'>";
 
         if (isset($_GET["key"]) && isset($_GET["user"])) {
             $key = '__forgot_' . md5($_GET['user']);

@@ -37,7 +37,7 @@ class Signup extends AbstractApi
     public function get_index(): Response
     {
         echo $this->twig->render('header.html.twig');
-        echo "<main class='form-signin w-100 m-auto'>";
+        echo "<main class='form-signin w-100 m-auto flex-grow-1'>";
         echo "<div hx-trigger='load' hx-target='this'  hx-post='/signup/?parentdb=" . $_GET['parentdb'] . "&r=" . $_GET['redirect_uri'] . "'></div>";
         echo "<div id='alert'></div>";
         echo "</main>";
