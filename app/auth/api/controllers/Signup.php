@@ -48,7 +48,7 @@ class Signup extends AbstractApi
     public function post_index(): Response
     {
         $userObj = new User();
-        if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password']) && empty($_POST['code']) && !empty($_POST['tf_code'])) {
+        if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password']) && !empty($_POST['code']) && empty($_POST['tf_code'])) {
 
             // TODO Check if user exists
 
