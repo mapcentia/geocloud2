@@ -1,17 +1,17 @@
-<footer class="container py-4 mt-5 border-top small text-body-secondary">
-    <div class="row align-items-center gy-2">
-        <div class="col-12 col-md">
-            <span class="me-2">© {{ year|default(("now")|date("Y")) }} {{ app_name|default("MapCentia ApS") }}</span>
+{#<footer class="container py-4 mt-5 border-top small text-body-secondary">#}
+{#    <div class="row align-items-center gy-2">#}
+{#        <div class="col-12 col-md">#}
+{#            <span class="me-2">© {{ year|default(("now")|date("Y")) }} {{ app_name|default("MapCentia ApS") }}</span>#}
 {#            <span class="d-none d-md-inline">·</span>#}
 {#            <a class="link-secondary ms-md-2" href="{{ org_url|default('https://www.mapcentia.com') }}" target="_blank" rel="noopener">{{ org_url_text|default('mapcentia.com') }}</a>#}
-        </div>
-        <div class="col-12 col-md-auto text-md-end">
-            <span class="me-2"><i class="bi bi-info-circle"></i> {{ app_name|default('GC2') }}</span>
+{#        </div>#}
+{#        <div class="col-12 col-md-auto text-md-end">#}
+{#            <span class="me-2"><i class="bi bi-info-circle"></i> {{ app_name|default('GC2') }}</span>#}
 {#            <span class="me-2">v{{ app_version|default(version|default('')) }}</span>#}
-            <a class="link-secondary me-2" href="{{ help_url|default('/docs') }}" target="_blank" rel="noopener"><i class="bi bi-life-preserver"></i> Docs</a>
-            <a class="link-secondary" href="mailto:{{ support_email|default('support@mapcentia.com') }}"><i class="bi bi-envelope"></i> Support</a>
-        </div>
-    </div>
-</footer>
+{#            <a class="link-secondary me-2" href="{{ help_url|default('/docs') }}" target="_blank" rel="noopener"><i class="bi bi-life-preserver"></i> Docs</a>#}
+{#            <a class="link-secondary" href="mailto:{{ support_email|default('support@mapcentia.com') }}"><i class="bi bi-envelope"></i> Support</a>#}
+{#        </div>#}
+{#    </div>#}
+{#</footer>#}
 </body>
 </html>
