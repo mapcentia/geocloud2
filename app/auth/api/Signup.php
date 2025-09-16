@@ -33,7 +33,7 @@ class Signup extends AbstractApi
     {
         echo $this->twig->render('header.html.twig');
         echo "<main class='form-signin w-100 m-auto'>";
-        echo "<div hx-trigger='load' hx-target='this'  hx-post='/signup/?parentdb=" . $_GET['parentdb'] . "&r=" . $_GET['redirect_url'] . "'></div>";
+        echo "<div hx-trigger='load' hx-target='this'  hx-post='/signup/?parentdb=" . $_GET['parentdb'] . "&r=" . $_GET['redirect_uri'] . "'></div>";
         echo "<div id='alert'></div>";
         echo "</main>";
         echo $this->twig->render('footer.html.twig');
