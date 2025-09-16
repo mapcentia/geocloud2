@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2025.9.0] - 2025-16-9
+### Fixed
+- Rename `redirect_url` to `redirect_uri` in Signup/Signout API for consistency.
+
 ## [2025.9.0] - 2025-5-9
 ### Fixed
 - Added checks to reset invalid angles (out of -360 to 360 range) to `0` for various angle fields in MapServer.
