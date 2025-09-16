@@ -29,7 +29,7 @@ class Client extends Model
      */
     public function get(?string $id = null): array
     {
-        $sql = 'SELECT id,name,homepage,description,redirect_uri,public,confirm,twofactor FROM settings.clients';
+        $sql = 'SELECT id,name,homepage,description,redirect_uri,public,confirm,two_factor FROM settings.clients';
         $params = [];
         if ($id != null) {
             $sql .= ' WHERE id = :id';
@@ -53,7 +53,7 @@ class Client extends Model
      */
     public function insert(string $id, string $name, string $redirectUri, ?string $homepage, ?string $description, bool $public = false, bool $confirm = true, bool $twoFactor = true): array
     {
-        $sql = 'INSERT INTO settings.clients (id, secret, name, homepage, description, redirect_uri, "public", confirm, twofactor) VALUES (:id, :secret, :name, :homepage, :description, :redirect_uri, :public, :confirm, :twofactor)';
+        $sql = 'INSERT INTO settings.clients (id, secret, name, homepage, description, redirect_uri, "public", confirm, two_factor) VALUES (:id, :secret, :name, :homepage, :description, :redirect_uri, :public, :confirm, :two_factor)';
         $id = Model::toAscii($id);
         $secret = bin2hex(random_bytes(32));
         $secretHash = password_hash($secret, PASSWORD_BCRYPT);
@@ -72,7 +72,7 @@ class Client extends Model
             'redirect_uri' => $redirectUri,
             'public' => $public,
             'confirm' => $confirm,
-            'twofactor' => $twoFactor,
+            'two_factor' => $twoFactor,
         ]);
         return ['id' => $id, 'secret' => $secret];
     }
@@ -114,8 +114,8 @@ class Client extends Model
             $values['confirm'] = $confirm ? 't' : 'f';
         }
         if (isset($twoFactor)) {
-            $sets[] = "twofactor=:twofactor";;
-            $values['twofactor'] = $twoFactor ? 't' : 'f';
+            $sets[] = "two_factor=:two_factor";;
+            $values['two_factor'] = $twoFactor ? 't' : 'f';
         }
         $setStr = implode(', ', $sets);
         $sql = "UPDATE settings.clients set $setStr  WHERE id = :id RETURNING id";

@@ -184,6 +184,7 @@ class Sql
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN class_cache jsonb";
         $sqls[] = "alter table settings.geometry_columns_join alter class type jsonb using class::jsonb";
         $sqls[] = "ALTER TABLE settings.prepared_statements ADD COLUMN username varchar(255)";
+        $sqls[] = "alter table settings.clients rename column twofactor to two_factor;";
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
                     SELECT

@@ -55,7 +55,7 @@ class Signin extends AbstractApi
                 // Check if client has two factor enabled
                 $client = new Client(connection: new Connection(database: $_POST['database']));
                 $clientData = $client->get($_POST['client_id']);
-                if (!$clientData[0]['twofactor']) {
+                if (!$clientData[0]['two_factor']) {
                     Session::start();
                     $sessionModel->start($_POST['user'], $_POST['password'], "public", $_POST['database']);
                     header('HX-Refresh: true');
