@@ -479,7 +479,8 @@ class User extends Model
         $sql = "SELECT * FROM codes WHERE code=:code AND email=:email AND used is null";
         $res = $this->prepare($sql);
         $this->execute($res, [":code" => $code, ":email" => $email]);
-        if ($res->rowCount() == 0) {
+        if (count($this->fetchAll($res, 'assoc')) == 0) {
+            $this->rollback();
             throw new GC2Exception("Invalid activation code", 404, null, "CODE_DOES_NOT_EXISTS");
         }
         $sql = "UPDATE codes set used=now() where code=:code";
