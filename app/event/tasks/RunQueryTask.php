@@ -45,7 +45,7 @@ final readonly class RunQueryTask implements Task
         try {
             foreach ($this->query as $q) {
                 $q['format'] = $q['output_format'] ?? 'json';
-                $res[] = $statement->run(user: $this->props['user'], api: $sqlApi, json: $q, subuser: !$this->props['superUser'], userGroup: $this->props['userGroup']);
+                $res[] = $statement->run(user: $this->props['user'], api: $sqlApi, query: $q, subuser: !$this->props['superUser'], userGroup: $this->props['userGroup']);
             }
         } catch (GC2Exception $e) {
             $sqlApi->rollback();

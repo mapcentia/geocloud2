@@ -165,7 +165,7 @@ class Sql extends AbstractApi
         $statement = new Statement(connection: $this->connection, convertReturning: true);
         $query['convert_types'] = $value['convert_types'] ?? true;
         $query['format'] = $body['output_format'] ?? 'json';
-        $result = $statement->run(user: $user, api: $this->sqlApi, json: $query, subuser:  !$isSuperUser, userGroup: $userGroup);
+        $result = $statement->run(user: $user, api: $this->sqlApi, query: $query, subuser:  !$isSuperUser, userGroup: $userGroup);
         if (isset($query['id'])) {
             $result['id'] = $query['id'];
         }

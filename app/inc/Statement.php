@@ -34,12 +34,12 @@ class Statement
      *
      * @param string $user The user identifier.
      * @param Sql $api An instance of the Sql class for database interactions.
-     * @param mixed $json The input parameters, typically in JSON format.
+     * @param mixed $query The input parameters, typically in JSON format.
      * @param bool $subuser Optional. Indicates whether the user is a subuser. Defaults to false.
      * @return array The processed response, including additional metadata such as cache information and memory usage.
      * @throws GC2Exception
      */
-    public function run(string $user, Sql $api, array $json, bool $subuser, ?string $userGroup): array
+    public function run(string $user, Sql $api, array $query, bool $subuser, ?string $userGroup): array
     {
         $this->sql = $api;
         if ($subuser) {
@@ -49,7 +49,7 @@ class Statement
             $this->subUser = null;
             $this->userGroup = null;
         }
-        $this->params = $json;
+        $this->params = $query;
         if (!empty($this->params['base64'])) {
             $this->q = Util::base64urlDecode($this->params['q']);
         } else {

@@ -44,7 +44,7 @@ readonly final class RunRpcTask implements Task
         $sqlApi->begin();
         try {
             foreach ($this->query as $q) {
-                $res[] = $rpc->run(user: $this->props['user'], api: $sqlApi, json: $q, subuser: !$this->props['superUser'], userGroup: $this->props['userGroup']);
+                $res[] = $rpc->run(user: $this->props['user'], api: $sqlApi, query: $q, subuser: !$this->props['superUser'], userGroup: $this->props['userGroup']);
             }
         } catch (RPCException $e) {
             $sqlApi->rollback();
