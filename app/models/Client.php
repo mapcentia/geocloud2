@@ -51,9 +51,9 @@ class Client extends Model
     /**
      * @throws RandomException
      */
-    public function insert(string $id, string $name, string $redirectUri, ?string $homepage, ?string $description, bool $public = false, bool $confirm = true): array
+    public function insert(string $id, string $name, string $redirectUri, ?string $homepage, ?string $description, bool $public = false, bool $confirm = true, bool $twoFactor = true): array
     {
-        $sql = 'INSERT INTO settings.clients (id, secret, name, homepage, description, redirect_uri, "public", confirm) VALUES (:id, :secret, :name, :homepage, :description, :redirect_uri, :public, :confirm)';
+        $sql = 'INSERT INTO settings.clients (id, secret, name, homepage, description, redirect_uri, "public", confirm, twofactor) VALUES (:id, :secret, :name, :homepage, :description, :redirect_uri, :public, :confirm, :twofactor)';
         $id = Model::toAscii($id);
         $secret = bin2hex(random_bytes(32));
         $secretHash = password_hash($secret, PASSWORD_BCRYPT);
@@ -62,6 +62,7 @@ class Client extends Model
         $res = $this->prepare($sql);
         $public = $public ? 't' : 'f';
         $confirm = $confirm ? 't' : 'f';
+        $twoFactor = $twoFactor ? 't' : 'f';
         $this->execute($res, [
             'id' => $id,
             'secret' => $secretHash,
@@ -71,6 +72,7 @@ class Client extends Model
             'redirect_uri' => $redirectUri,
             'public' => $public,
             'confirm' => $confirm,
+            'twofactor' => $twoFactor,
         ]);
         return ['id' => $id, 'secret' => $secret];
     }
@@ -78,7 +80,7 @@ class Client extends Model
     /**
      * @throws GC2Exception
      */
-    public function update(string $id, ?string $newId, ?string $name, ?string $redirectUri, ?string $homepage, ?string $description, ?bool $public, ?bool $confirm): string
+    public function update(string $id, ?string $newId, ?string $name, ?string $redirectUri, ?string $homepage, ?string $description, ?bool $public, ?bool $confirm, ?bool $twoFactor): string
     {
         $sets = [];
         $values = [];
@@ -110,6 +112,10 @@ class Client extends Model
         if (isset($confirm)) {
             $sets[] = "confirm=:confirm";;
             $values['confirm'] = $confirm ? 't' : 'f';
+        }
+        if (isset($twoFactor)) {
+            $sets[] = "twofactor=:twofactor";;
+            $values['twofactor'] = $twoFactor ? 't' : 'f';
         }
         $setStr = implode(', ', $sets);
         $sql = "UPDATE settings.clients set $setStr  WHERE id = :id RETURNING id";

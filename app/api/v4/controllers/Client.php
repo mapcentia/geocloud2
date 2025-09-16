@@ -84,6 +84,13 @@ use Symfony\Component\Validator\Constraints as Assert;
             type: "boolean",
             example: true
         ),
+        new OA\Property(
+            property: "two_factor",
+            title: "Two factor authentication",
+            description: "Users must login with two factor authentication.",
+            type: "boolean",
+            example: true
+        ),
     ],
     type: "object"
 )]
@@ -176,6 +183,7 @@ class Client extends AbstractApi
                 'description' => $datum['description'] ?? null,
                 'public' => $datum['public'] ?? false,
                 'confirm' => $datum['confirm'] ?? true,
+                'twoFactor' => $data['two_factor'] ?? true,
             ];
             $list[] = $this->client->insert(...$arr);
         }
@@ -217,6 +225,7 @@ class Client extends AbstractApi
                 'description' => $data['description'] ?? null,
                 'public' => $data['public'] ?? null,
                 'confirm' => $data['confirm'] ?? null,
+                'twoFactor' => $data['two_factor'] ?? null,
             ];
             $list[] = $this->client->update(...$arr);
         }
@@ -300,6 +309,9 @@ class Client extends AbstractApi
             new Assert\Type('boolean')
         );
         $collection->fields['confirm'] = new Assert\Optional(
+            new Assert\Type('boolean')
+        );
+        $collection->fields['two_factor'] = new Assert\Optional(
             new Assert\Type('boolean')
         );
         return $collection;
