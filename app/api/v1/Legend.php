@@ -72,16 +72,18 @@ class Legend extends Controller
                         $this->legendArr[$layerName]['title'] = $layer->metadata->get("ows_title");
                         if ($layer->metadata->get("wms_get_legend_url")) {
                             $icon = imagecreatefrompng($layer->metadata->get("wms_get_legend_url"));
-                            imagecolortransparent($icon, imagecolorallocatealpha($icon, 0, 0, 0, 127));
-                            imagealphablending($icon, false);
-                            imagesavealpha($icon, true);
-                            ob_start();
-                            imagepng($icon);
-                            imagedestroy($icon);
-                            $data = base64_encode(ob_get_clean());
-                            $this->legendArr[$layerName]['classes'][0]['img'] = $data;
-                            $this->legendArr[$layerName]['classes'][0]['name'] = "_gc2_wms_legend";
-                            $this->legendArr[$layerName]['classes'][0]['expression'] = null;
+                            if ($icon) {
+                                imagecolortransparent($icon, imagecolorallocatealpha($icon, 0, 0, 0, 127));
+                                imagealphablending($icon, false);
+                                imagesavealpha($icon, true);
+                                ob_start();
+                                imagepng($icon);
+                                imagedestroy($icon);
+                                $data = base64_encode(ob_get_clean());
+                                $this->legendArr[$layerName]['classes'][0]['img'] = $data;
+                                $this->legendArr[$layerName]['classes'][0]['name'] = "_gc2_wms_legend";
+                                $this->legendArr[$layerName]['classes'][0]['expression'] = null;
+                            }
                         } else {
                             for ($i = 0; $i < $layer->numclasses; $i++) {
                                 $class = $layer->getClass($i);
