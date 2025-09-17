@@ -24,7 +24,7 @@ readonly class Rpc
     /**
      * @throws RPCException
      */
-    function run(string $user, Sql $api, array $query, bool $subuser, ?string $userGroup): array
+    function run(string $user, Sql $api, array $query, bool $subuser, ?string $userGroup): ?array
     {
         $pres = new PreparedstatementModel(connection: $this->connection);;
         try {
@@ -53,7 +53,8 @@ readonly class Rpc
         ];
         if (isset($query['id'])) {
             $jsonRpcResponse['id'] = $query['id'];
+            return $jsonRpcResponse;
         }
-        return $jsonRpcResponse;
+        return null;
     }
 }
