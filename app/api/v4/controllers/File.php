@@ -334,14 +334,9 @@ class File extends AbstractApi
      */
     #[Override] public function validate(): void
     {
-        $file = $this->route->getParam("file");
-        $schema = $this->route->getParam("schema");
         $body = Input::getBody();
-
-        // Throw exception if tried with resource id
-        if (Input::getMethod() == 'post' && $file) {
-            $this->postWithResource();
-        }
+        $data = json_decode($body);
+        $schema = $data->schema;
 
         $collection = new Assert\Collection([
             'file' => new Assert\Required(
