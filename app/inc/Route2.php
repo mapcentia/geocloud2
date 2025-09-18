@@ -89,7 +89,6 @@ class Route2
         }
 
         if ($signatureMatch) {
-            $this->isMatched = true;
             $this->params = $r;
             if ($func) {
                 $func($r);
@@ -100,6 +99,10 @@ class Route2
             $reflectionMethods = $reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC);
 
             if (!method_exists($controller, $action)) {
+                // Only index
+                if ($action != "index") {
+                    return;
+                }
                 $method = Input::getMethod();
                 $contentType = Input::getContentType() ? trim(explode(';', Input::getContentType())[0]) : "application/json";
                 $accepts = Input::getAccept() ? array_map(fn($str) => trim(explode(';', $str)[0]), explode(',', Input::getAccept())) : ["*/*"];
@@ -151,6 +154,7 @@ class Route2
                     }
                 }
             }
+            $this->isMatched = true;
             $controller->validate();
             $response = $controller->$action($r);
             $data = $response->getData();
