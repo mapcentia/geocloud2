@@ -89,6 +89,7 @@ class Route2
         }
 
         if ($signatureMatch) {
+            $this->isMatched = true;
             $this->params = $r;
             if ($func) {
                 $func($r);
@@ -99,8 +100,8 @@ class Route2
             $reflectionMethods = $reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC);
 
             if (!method_exists($controller, $action)) {
-                // Only index
                 if ($action != "index") {
+                    $this->isMatched = false;
                     return;
                 }
                 $method = Input::getMethod();
@@ -154,7 +155,6 @@ class Route2
                     }
                 }
             }
-            $this->isMatched = true;
             $controller->validate();
             $response = $controller->$action($r);
             $data = $response->getData();
