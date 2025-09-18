@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2023 MapCentia ApS
+ * @copyright  2013-2025 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -25,7 +25,6 @@ use app\inc\Route2;
 use app\inc\Session;
 use app\models\Layer;
 use Exception;
-use OpenApi\Annotations\OpenApi;
 use OpenApi\Attributes as OA;
 use Symfony\Component\Validator\Constraints as Assert;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
@@ -39,25 +38,104 @@ use Override;
  * Class Sql
  * @package app\api\v4
  */
-#[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
+#[OA\Schema(
+    schema: "File",
+    required: ["file", "schema"],
+    properties: [
+        new OA\Property(
+            property: "file",
+            description: "File to import to database",
+            type: "string",
+        ),
+        new OA\Property(
+            property: "schema",
+            description: "Destination schema",
+            type: "string",
+        ),
+        new OA\Property(
+            property: "import",
+            description: "If false, a dry-run will be executed.",
+            type: "boolean",
+            default: false,
+        ),
+        new OA\Property(
+            property: "t_srs",
+            title: "Target srs",
+            description: "Fallback target SRS. Will be used if no authority name/code is available.",
+            type: "string",
+            default: "EPSG:4326",
+        ),
+        new OA\Property(
+            property: "s_srs",
+            title: "Source srs",
+            description: "Fallback source SRS. Will be used if file doesn't contain projection information.",
+            type: "string",
+            default: "EPSG:4326",
+        ),
+        new OA\Property(
+            property: "append",
+            title: "Append",
+            description: "Append to existing table instead of creating new.",
+            type: "boolean",
+            default: false,
+        ),
+        new OA\Property(
+            property: "p_multi",
+            title: "Promote to multi",
+            description: "Promote single geometries to multi part.",
+            type: "boolean",
+            default: false,
+        ),
+        new OA\Property(
+            property: "truncate",
+            title: "Truncate",
+            description: "Truncate table before appending. Only have effect if --append is set.",
+            type: "boolean",
+            default: false,
+        ),
+        new OA\Property(
+            property: "timestamp",
+            title: "Timestamp",
+            description: "Name of timestamp field. Create a timestamp field in the import table. Omit property for no timestamp field.",
+            type: "string",
+            example: "creation_timestamp",
+        ),
+        new OA\Property(
+            property: "x_possible_names",
+            title: "Possible names for X",
+            description: "Specify the potential names of the columns that can contain X/longitude. Only effects CSV",
+            type: "string",
+            default: "lon*,Lon*,x,X",
+            example: "Lon*",
+        ),
+        new OA\Property(
+            property: "y_possible_names",
+            title: "Possible names for Y",
+            description: "Specify the potential names of the columns that can contain Y/latitude. Only effects CSV",
+            type: "string",
+            default: "lat*,Lat*,y,Y",
+            example: "Lat*",
+        ),
+    ],
+    type: "object"
+)]
 #[AcceptableMethods(['PATCH', 'POST', 'HEAD', 'OPTIONS'])]
-#[Controller(route: 'api/v4/import/{schema}/[file]', scope: Scope::SUB_USER_ALLOWED)]
-class Import extends AbstractApi
+#[Controller(route: 'api/v4/file/(action)', scope: Scope::SUB_USER_ALLOWED)]
+class File extends AbstractApi
 {
 
     public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
-        $this->resource = 'import';
+        $this->resource = '_file';
     }
 
     /**
      * @return Response
      * @throws GC2Exception
      */
-    #[OA\Post(path: '/api/v4/import/{schema}', operationId: 'postImport', description: 'Upload files', tags: ['Import'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Post(path: '/api/v4/file/upload', operationId: 'postFileUpload', description: 'Upload files', tags: ['File'])]
     #[OA\RequestBody(content: new OA\MediaType('multipart/form-data', new OA\Schema(
         properties: [
             new OA\Property(
@@ -72,7 +150,7 @@ class Import extends AbstractApi
     #[OA\Response(response: 201, description: 'Created')]
     #[AcceptableContentTypes(['multipart/form-data'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
-    public function post_index(): Response
+    public function post_upload(): Response
     {
         @set_time_limit(5 * 60);
         $mainDir = App::$param['path'] . "/app/tmp/" . $this->route->jwt["data"]["database"];
@@ -148,108 +226,34 @@ class Import extends AbstractApi
      * @return Response
      * @throws Exception
      */
-    #[OA\Patch(path: '/api/v4/import/{schema}/{file}', operationId: 'patchImport', description: 'Import files', tags: ['Import'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema', in: 'path', required: true, example: 'my_schema')]
-    #[OA\Parameter(name: 'file', description: 'File to import', in: 'path', required: true, example: 'file.csv')]
-    #[OA\RequestBody(content: new OA\MediaType('application/json', new OA\Schema(
-        properties: [
-            new OA\Property(
-                property: "import",
-                description: "If false, a dry-run will be executed.",
-                type: "boolean",
-                default: false,
-            ),
-            new OA\Property(
-                property: "t_srs",
-                title: "Target srs",
-                description: "Fallback target SRS. Will be used if no authority name/code is available.",
-                type: "string",
-                default: "EPSG:4326",
-            ),
-            new OA\Property(
-                property: "s_srs",
-                title: "Source srs",
-                description: "Fallback source SRS. Will be used if file doesn't contain projection information.",
-                type: "string",
-                default: "EPSG:4326",
-            ),
-            new OA\Property(
-                property: "append",
-                title: "Append",
-                description: "Append to existing table instead of creating new.",
-                type: "boolean",
-                default: false,
-            ),
-            new OA\Property(
-                property: "p_multi",
-                title: "Promote to multi",
-                description: "Promote single geometries to multi part.",
-                type: "boolean",
-                default: false,
-            ),
-            new OA\Property(
-                property: "truncate",
-                title: "Truncate",
-                description: "Truncate table before appending. Only have effect if --append is set.",
-                type: "boolean",
-                default: false,
-            ),
-            new OA\Property(
-                property: "timestamp",
-                title: "Timestamp",
-                description: "Name of timestamp field. Create a timestamp field in the import table. Omit property for no timestamp field.",
-                type: "string",
-                example: "creation_timestamp",
-            ),
-            new OA\Property(
-                property: "x_possible_names",
-                title: "Possible names for X",
-                description: "Specify the potential names of the columns that can contain X/longitude. Only effects CSV",
-                type: "string",
-                default: "lon*,Lon*,x,X",
-                example: "Lon*",
-            ),
-            new OA\Property(
-                property: "y_possible_names",
-                title: "Possible names for Y",
-                description: "Specify the potential names of the columns that can contain Y/latitude. Only effects CSV",
-                type: "string",
-                default: "lat*,Lat*,y,Y",
-                example: "Lat*",
-            ),
-        ],
-        type: 'object',
-    )))]
+    #[OA\Patch(path: '/api/v4/file/process', operationId: 'postFileProcess', description: 'Import files', tags: ['File'])]
+    #[OA\RequestBody(description: 'New table', required: true, content: new OA\JsonContent(ref: "#/components/schemas/File"))]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
-    public function patch_index(): Response
+    public function post_process(): Response
     {
-        $schema = $this->route->getParam("schema");
-        $fileName = $this->route->getParam("file");
         $body = Input::getBody();
         $data = json_decode($body);
+        $fileName = $data->file;
+        $schema = $data->schema;
         // Make dry run to check how many tables would be created
         try {
             if ($data->import) {
                 $data->import = false;
-
                 $result = $this->import($schema, $fileName, $data);
-
                 $result['schema'] = $schema;
                 $this->runPreExtension('processImport', (new Model(connection: $this->connection)), $result);
                 $data->import = true;
             }
             $result = $this->import($schema, $fileName, $data);
             (new Layer(connection: $this->connection))->insertDefaultMeta();
-
             $response['cmd'] = $result['cmd'];
             $response['data'] = $result['data'];
             $response["success"] = true;
             return new PostResponse(data: $response);
-        } catch (Throwable) {
-            throw new GC2Exception("Could not read data from file", 400, null, "FILE_IMPORT_ERROR");
-
+        } catch (Throwable $e) {
+            throw new GC2Exception($e->getMessage(), 400, null, "FILE_IMPORT_ERROR");
         }
     }
 
@@ -305,6 +309,14 @@ class Import extends AbstractApi
             'cmd' => $cmd,
         ];
     }
+    #[Override] public function post_index(): Response
+    {
+        // TODO: Implement put_index() method.
+    }
+    #[Override] public function patch_index(): Response
+    {
+        // TODO: Implement put_index() method.
+    }
 
     #[Override] public function get_index(): Response
     {
@@ -332,6 +344,12 @@ class Import extends AbstractApi
         }
 
         $collection = new Assert\Collection([
+            'file' => new Assert\Required(
+                new Assert\Type('string'),
+            ),
+            'schema' => new Assert\Required(
+                new Assert\Type('string'),
+            ),
             'import' => new Assert\Optional(
                 new Assert\Type('boolean'),
             ),
