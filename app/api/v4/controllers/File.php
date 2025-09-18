@@ -226,7 +226,7 @@ class File extends AbstractApi
      * @return Response
      * @throws Exception
      */
-    #[OA\Patch(path: '/api/v4/file/process', operationId: 'postFileProcess', description: 'Import files', tags: ['File'])]
+    #[OA\Post(path: '/api/v4/file/process', operationId: 'postFileProcess', description: 'Import files', tags: ['File'])]
     #[OA\RequestBody(description: 'New table', required: true, content: new OA\JsonContent(ref: "#/components/schemas/File"))]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 404, description: 'Not found')]
@@ -253,12 +253,12 @@ class File extends AbstractApi
             $response["success"] = true;
             return new PostResponse(data: $response);
         } catch (Throwable $e) {
-            throw new GC2Exception($e->getMessage(), 400, null, "FILE_IMPORT_ERROR");
+            throw new GC2Exception($e->getMessage(), $e->getCode(), null, "FILE_IMPORT_ERROR");
         }
     }
 
     /**
-     * @throws \JsonException
+     * @throws GC2Exception|\JsonException
      */
     protected function import(string $schema, string $fileName, ?stdClass $args = null): array
     {
@@ -268,6 +268,9 @@ class File extends AbstractApi
             $safeName = "_" . $safeName;
         }
         $fileFullPath = $dir . "/" . $fileName;
+        if (!file_exists($fileFullPath)) {
+            throw new GC2Exception("File not found: {$fileName}", 404, null, "FILE_IMPORT_ERROR");
+        }
         // Check if file is .zip
         $zipCheck1 = explode(".", $fileName);
         $zipCheck2 = array_reverse($zipCheck1);
