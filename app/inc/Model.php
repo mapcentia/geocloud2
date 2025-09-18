@@ -1539,7 +1539,7 @@ class Model
         $this->execute($res);
         $row = $res->fetchAll();
         try {
-            $cost = (new Cost())->getCost();
+            $cost = (new Cost(connection: $this->connection))->getCost();
         } catch (PDOException) {
             $cost = 0.0;
         }
