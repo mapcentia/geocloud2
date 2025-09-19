@@ -534,7 +534,7 @@ $handler = static function () use ($routes) {
         echo Response::toJson($exception->getResponse());
     } catch (PDOException $exception) {
         $response["success"] = false;
-        $response["message"] = $exception->errorInfo[2];
+        $response["message"] = $exception->getMessage();
         $response["code"] = 500;
         $response["errorCode"] = $exception->getCode();
         $response["file"] = $exception->getFile();
