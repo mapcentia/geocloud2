@@ -99,7 +99,7 @@ class User extends AbstractApi
         $r = [];
         $requestedUser = $this->route->getParam("user");
         if (!$requestedUser) {
-            return $this->getResponse($this->getAll());
+            return $this->getResponse($this->getAll()['users']);
         }
         $users = explode(',', $requestedUser);
         foreach ($users as $user) {
