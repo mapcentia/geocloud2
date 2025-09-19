@@ -48,7 +48,7 @@ class TableWalkerRule extends BlankWalker
     /**
      * @throws Exception
      */
-    public function walkSelectStatement(Select $statement): void
+    public function walkSelectStatement(Select $statement): mixed
     {
         global $relations;
         $this->request = "select";
@@ -104,12 +104,13 @@ class TableWalkerRule extends BlankWalker
             }
         }
         parent::walkSelectStatement($statement);
+        return null;
     }
 
     /**
      * @throws Exception
      */
-    public function walkUpdateStatement(Update $statement): void
+    public function walkUpdateStatement(Update $statement): mixed
     {
         $this->request = "update";
         foreach ($statement->from->getIterator() as $from) {
@@ -137,12 +138,13 @@ class TableWalkerRule extends BlankWalker
             $statement->where->and($response["filters"]["filter"]);
         }
         parent::walkUpdateStatement($statement);
+        return null;
     }
 
     /**
      * @throws Exception
      */
-    public function walkDeleteStatement(Delete $statement): void
+    public function walkDeleteStatement(Delete $statement): mixed
     {
         $this->request = "delete";
         foreach ($statement->using->getIterator() as $using) {
@@ -174,12 +176,13 @@ class TableWalkerRule extends BlankWalker
             $statement->where->and($response["filters"]["filter"]);
         }
         parent::walkDeleteStatement($statement);
+        return null;
     }
 
     /**
      * @throws Exception
      */
-    public function walkInsertStatement(Insert $statement): void
+    public function walkInsertStatement(Insert $statement): mixed
     {
         $this->request = "insert";
         $schema = $statement->relation->relation->schema->value ?? self::DEFAULT_SCHEMA;
@@ -194,8 +197,9 @@ class TableWalkerRule extends BlankWalker
             $statement->onConflict->where->and($response["filters"]["filter"]);
         }
         parent::walkInsertStatement($statement);
+        return null;
     }
-    public function walkMergeStatement(Merge $statement): void
+    public function walkMergeStatement(Merge $statement): mixed
     {
         // Handle USING sources like SELECT: authorize SELECT and apply filters to ON condition
         // Collect relations from USING, including joins, skip sub-selects
@@ -310,6 +314,8 @@ class TableWalkerRule extends BlankWalker
         }
 
         parent::walkMergeStatement($statement);
+        return null;
+
     }
 
     public function setRules(array $rules): void

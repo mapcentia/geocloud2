@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b4576f5a168d36c9ce9e9107c334af6b",
+    "content-hash": "c5749969ba5fb6449738c595d2c90d09",
     "packages": [
         {
             "name": "amphp/amp",
@@ -5269,33 +5269,30 @@
         },
         {
             "name": "sad_spirit/pg_builder",
-            "version": "v2.4.0",
+            "version": "v3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sad-spirit/pg-builder.git",
-                "reference": "d9d15715fdf789e6ed2d38471c3f7338062df35f"
+                "reference": "cf2fcd45ebeb0516b9f39351dd9db30e04c84757"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sad-spirit/pg-builder/zipball/d9d15715fdf789e6ed2d38471c3f7338062df35f",
-                "reference": "d9d15715fdf789e6ed2d38471c3f7338062df35f",
+                "url": "https://api.github.com/repos/sad-spirit/pg-builder/zipball/cf2fcd45ebeb0516b9f39351dd9db30e04c84757",
+                "reference": "cf2fcd45ebeb0516b9f39351dd9db30e04c84757",
                 "shasum": ""
             },
             "require": {
                 "ext-ctype": "*",
-                "php": ">=7.2.0"
-            },
-            "conflict": {
-                "sad_spirit/pg_wrapper": "<2.4"
+                "php": "^8.2"
             },
             "require-dev": {
                 "ext-pdo_pgsql": "*",
                 "ext-pgsql": "*",
-                "phpstan/phpstan": "^1.10.15",
-                "phpunit/phpunit": "^8.0|^9.0",
-                "psr/cache": "^1.0",
-                "sad_spirit/pg_wrapper": "^2.4.0",
-                "vimeo/psalm": "^4.30"
+                "phpstan/phpstan": "^2",
+                "phpunit/phpunit": "^10",
+                "psr/cache": "^3",
+                "sad_spirit/pg_wrapper": "^3.0@beta",
+                "vimeo/psalm": "^6.8"
             },
             "suggest": {
                 "ext-pdo_pgsql": "Used for running built queries",
@@ -5305,8 +5302,7 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "sad_spirit\\pg_builder\\": "src/sad_spirit/pg_builder",
-                    "sad_spirit\\pg_builder\\rector\\": "rector/"
+                    "sad_spirit\\pg_builder\\": "src/sad_spirit/pg_builder"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -5332,9 +5328,9 @@
             ],
             "support": {
                 "issues": "https://github.com/sad-spirit/pg-builder/issues",
-                "source": "https://github.com/sad-spirit/pg-builder/tree/v2.4.0"
+                "source": "https://github.com/sad-spirit/pg-builder/tree/v3.0.0"
             },
-            "time": "2024-05-27T10:41:05+00:00"
+            "time": "2025-02-25T18:58:21+00:00"
         },
         {
             "name": "sad_spirit/pg_wrapper",
