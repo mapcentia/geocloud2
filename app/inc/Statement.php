@@ -122,7 +122,7 @@ class Statement
         $select->dispatch($walkerRule);
 
         // TODO Set this in TableWalkerRule
-        if ($operation == "Update" || $operation == "Insert" || $operation == "Delete") {
+        if (in_array($operation, ["Update", "Insert", "Delete", "Merge"])) {
             if ($operation == "Insert") {
                 $split = explode(".", $usedRelations["insert"][0]);
             } else {
