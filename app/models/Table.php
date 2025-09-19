@@ -418,10 +418,15 @@ class Table extends Model
     {
         $arr = [];
         $sql = "SELECT DISTINCT(\"$field\") as \"distinct\" FROM {$this->doubleQuoteQualifiedName($this->table)} ORDER BY \"$field\"";
-        $res = $this->prepare($sql);
-        $res->execute();
-        while ($row = $this->fetchRow($res)) {
-            $arr[] = $row["distinct"];
+        // We ignore the error here
+        try {
+            $res = $this->prepare($sql);
+            $res->execute();
+            while ($row = $this->fetchRow($res)) {
+                $arr[] = $row["distinct"];
+            }
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
         }
         $response['success'] = true;
         $response['data'] = $arr;

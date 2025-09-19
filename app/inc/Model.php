@@ -458,10 +458,15 @@ class Model
                         if (!empty($rel->_where)) {
                             $sql .= " WHERE $rel->_where";
                         }
-                        $resC = $this->prepare($sql);
-                        $resC->execute();
-                        while ($rowC = $this->fetchRow($resC)) {
-                            $foreignValues[] = ["value" => $rowC["value"], "alias" => (string)$rowC["text"]];
+                        // We ignore the error here
+                        try {
+                            $resC = $this->prepare($sql);
+                            $resC->execute();
+                            while ($rowC = $this->fetchRow($resC)) {
+                                $foreignValues[] = ["value" => $rowC["value"], "alias" => (string)$rowC["text"]];
+                            }
+                        } catch (Exception $e) {
+                            error_log($e->getMessage());
                         }
                     }
                 } elseif ($restriction && $restrictions && isset($restrictions[$row["column_name"]]) && $restrictions[$row["column_name"]] != "*" && $getEnums) {
