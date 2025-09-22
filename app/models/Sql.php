@@ -21,6 +21,7 @@ use PDOException;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
 use PhpOffice\PhpSpreadsheet\Reader\Exception;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use sad_spirit\pg_wrapper\TypeConverter;
 use sad_spirit\pg_wrapper\types\DateTimeRange;
 use sad_spirit\pg_wrapper\types\Range;
 use sad_spirit\pg_wrapper\Connection as WrapperConnection;
@@ -48,9 +49,14 @@ class Sql extends Model
     private const string DEFAULT_DATE_FORMAT = 'Y-m-d';
     private WrapperConnection|null $wrapperConnection = null;
 
+    private DefaultTypeConverterFactory $defaultTypeConverterFactory;
+    // To hold the converters for the current connection
+    private static array $converters;
+
     /**
      * Sql constructor.
      * @param string $srs
+     * @param Connection|null $connection
      */
     function __construct(string $srs = "3857", ?Connection $connection = null)
     {
@@ -58,6 +64,8 @@ class Sql extends Model
 
         $this->model = $this;
         $this->srs = $srs;
+        $this->defaultTypeConverterFactory = new DefaultTypeConverterFactory();
+        $this->defaultTypeConverterFactory->setConnection($this->getConnection());
     }
 
     /**
@@ -680,6 +688,17 @@ class Sql extends Model
         $this->execute($res, ['username' => $username, 'statement' => $q, 'cost' => $cost]);
     }
 
+   private  function getConverterForTypeSpecification(string $type): ?TypeConverter {
+        if (empty(self::$converters[$type])) {
+            $this->setConverterForTypeSpecification($type);
+        }
+        return self::$converters[$type];
+    }
+
+    private  function setConverterForTypeSpecification(string $type): void {
+        self::$converters[$type] = $this->defaultTypeConverterFactory->getConverterForTypeSpecification($type);
+    }
+
 
     /**
      * Converts a native type value into a corresponding PHP type.
@@ -691,8 +710,8 @@ class Sql extends Model
      */
     private function convertFromNative(string $nativeType, ?string $value, ?string $format): mixed
     {
-//        $newValue = (new DefaultTypeConverterFactory())->setConnection($this->getConnection())->getConverterForTypeSpecification($nativeType)->input($value);
-        $newValue = (new DefaultTypeConverterFactory())->getConverterForTypeSpecification($nativeType)->input($value);
+        $convertor = $this->getConverterForTypeSpecification($nativeType);;
+        $newValue = $convertor->input($value);
         if (is_array($newValue)) {
             $newValue = self::processArray($newValue, fn($i, $format) => $this->convertPhpTypes($i, $format), $format);
         } else {
@@ -712,7 +731,6 @@ class Sql extends Model
      */
     private function convertToNative(string $nativeType, mixed $value, ?string $format): string
     {
-        $factory = (new DefaultTypeConverterFactory())->setConnection($this->getConnection());
         $type = gettype($value);
         $format = $format ?? self::getFormat($nativeType);
 
@@ -733,17 +751,18 @@ class Sql extends Model
                 if (in_array($nativeType, ['numrange[]', 'int4range[]', 'int8range[]'])) {
                     $value = self::processArray($value, fn($i) => new Range(...$i), $format);
                 }
-                $nativeValue = $factory->getConverterForTypeSpecification($nativeType)->output($value);
+                $convertor = $this->getConverterForTypeSpecification($nativeType);
+                $nativeValue = $convertor->output($value);
             } catch (\Exception $e) {
                 throw new GC2Exception($e->getMessage(), 406, null, "VALUE_PARSE_ERROR");
             }
             $paramTmp = $nativeValue;
         } elseif ($type == 'boolean') {
-            $nativeValue = $factory->getConverterForTypeSpecification($type)->output($value);
+            $nativeValue = $this->getConverterForTypeSpecification($type)->output($value);
             $paramTmp = $nativeValue;
         } elseif ($nativeType == 'bytea') {
             $value = base64_decode($value);
-            $nativeValue = $factory->getConverterForTypeSpecification('bytea')->output($value);
+            $nativeValue = $this->getConverterForTypeSpecification('bytea')->output($value);
             $paramTmp = $nativeValue;
         } // In the case of date/time. Else $format will be null
         elseif ($format) {
@@ -751,7 +770,7 @@ class Sql extends Model
             if (!$dateTime) {
                 throw new GC2Exception("Could not format date/time value '$value' with '$format'", 406, null, "VALUE_PARSE_ERROR");
             }
-            $nativeValue = $factory->getConverterForTypeSpecification($nativeType)->output($dateTime);
+            $nativeValue = $this->getConverterForTypeSpecification($nativeType)->output($dateTime);
             $paramTmp = $nativeValue;
         } else {
             $paramTmp = $value;
@@ -876,7 +895,7 @@ class Sql extends Model
     private function getConnection(): WrapperConnection
     {
         if (!$this->wrapperConnection) {
-            $this->wrapperConnection = new WrapperConnection("host=$this->postgishost user=$this->postgisuser dbname=$this->postgisdb password=$this->postgispw port=$this->postgisport");
+            $this->wrapperConnection = new WrapperConnection("host={$this->connection->host} user={$this->connection->user} dbname={$this->connection->database} password={$this->connection->password} port={$this->connection->port}");
         }
         return $this->wrapperConnection;
     }
