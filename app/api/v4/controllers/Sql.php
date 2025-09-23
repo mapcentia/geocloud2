@@ -14,6 +14,7 @@ use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
 use app\api\v4\Controller;
 use app\api\v4\Responses\GetResponse;
+use app\api\v4\Responses\NoContentResponse;
 use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
@@ -21,6 +22,7 @@ use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Route2;
 use app\inc\Statement;
+use app\inc\Util;
 use app\models\Setting;
 use Exception;
 use OpenApi\Annotations\OpenApi;
@@ -146,12 +148,21 @@ class Sql extends AbstractApi
             $srs = $query['srs'] ?? 4326;
             $this->sqlApi->setSRS($srs);
             $query['srs'] = $srs;
-            $result[] = $this->runStatement($query, $user, $isSuperUser, $userGroup);
+            // In REST context the id is set
+            if (!isset($query['id'])) {
+                $query['id'] = Util::guid();
+            }
+            $res = $this->runStatement($query, $user, $isSuperUser, $userGroup);
+            if ($res !== null) {
+                $result[] = $res;
+            }
         }
         // Return response
-        $this->sqlApi->commit();
+        if (count($result) == 0) {
+            return new NoContentResponse();
+        }
         if (count($result) == 1) {
-            $result = $result[0];
+            return new GetResponse(data: $result[0]);
         }
         return new GetResponse(data: $result);
     }
@@ -160,17 +171,16 @@ class Sql extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    public function runStatement(array $query, string $user, bool $isSuperUser, ?string $userGroup): array
+    public function runStatement(array $query, string $user, bool $isSuperUser, ?string $userGroup): ?array
     {
         $statement = new Statement(connection: $this->connection, convertReturning: true);
         $query['convert_types'] = $value['convert_types'] ?? true;
         $query['format'] = $body['output_format'] ?? 'json';
         $result = $statement->run(user: $user, api: $this->sqlApi, query: $query, subuser:  !$isSuperUser, userGroup: $userGroup);
-        if (isset($query['id'])) {
-            $result['id'] = $query['id'];
+        if (!empty($result)) {
+            unset($result['success']);
+            unset($result['forGrid']);
         }
-        unset($result['success']);
-        unset($result['forGrid']);
         return $result;
     }
 

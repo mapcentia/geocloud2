@@ -62,7 +62,7 @@ $router->addRoute('GET', '/ping', new ClosureRequestHandler(
             body: 'pong',
         );
     },
-));//$router->setFallback(new DocumentRoot($server, $errorHandler, '/var/www/geocloud2/public'));
+));
 
 $server->start($router, $errorHandler);
 

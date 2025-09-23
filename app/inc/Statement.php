@@ -39,7 +39,7 @@ class Statement
      * @return array The processed response, including additional metadata such as cache information and memory usage.
      * @throws GC2Exception
      */
-    public function run(string $user, Sql $api, array $query, bool $subuser, ?string $userGroup): array
+    public function run(string $user, Sql $api, array $query, bool $subuser, ?string $userGroup): ?array
     {
         $this->sql = $api;
         if ($subuser) {
@@ -67,10 +67,14 @@ class Statement
         }
         $response = $this->process($this->params['client_encoding'] ?? null, $this->params['type_hints'] ?? null, $this->params['type_formats'] ?? null);
         if (!empty($this->cacheInfo)) {
-            $response["cache"] = $this->cacheInfo;
+            $response['cache'] = $this->cacheInfo;
         }
-        $response["_peak_memory_usage"] = round(memory_get_peak_usage() / 1024) . " KB";
-        return $response;
+        $response['_peak_memory_usage'] = round(memory_get_peak_usage() / 1024) . " KB";
+        if (isset($query['id'])) {
+            $response['id'] = $query['id'];
+            return $response;
+        }
+        return null;
     }
 
     /**

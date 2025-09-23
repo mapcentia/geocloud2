@@ -130,7 +130,13 @@ readonly class WsBroadcast implements WebsocketClientHandler
                 if (isset($parsed[0]['jsonrpc'])) {
                     $r = $this->rpc($parsed, $props);
                 }
-                $this->sendToClient($client, json_encode($r->await()));
+                $result = array_values(array_filter($r->await()));
+                if (count($result) == 1) {
+                    $result = $result[0];
+                }
+                if (!empty($result)) {
+                    $this->sendToClient($client, json_encode($result));
+                }
             } catch (Throwable $e) {
                 echo "[ERROR] " . $e->getMessage() . "\n";
             }
