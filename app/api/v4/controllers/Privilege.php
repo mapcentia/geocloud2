@@ -62,6 +62,7 @@ class Privilege extends AbstractApi
 
     /**
      * @return Response
+     * @throws GC2Exception|PhpfastcacheInvalidArgumentException
      */
     #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/privileges', operationId: 'getPrivileges', description: "Get privileges", tags: ['Privileges'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
@@ -74,15 +75,14 @@ class Privilege extends AbstractApi
     {
         $layer = new Layer(connection: $this->connection);
         $split = explode('.', $this->qualifiedName[0]);
-        $res = $layer->getPrivilegesAsArray($split[0], $split[1]);
-        return [$this->resource => $res];
+        $r = $layer->getPrivilegesAsArray($split[0], $split[1]);
+        return $this->getResponse($r);
     }
 
     #[Override]
     public function post_index(): Response
     {
         // TODO: Implement post_index() method.
-        return [];
     }
 
     /**
@@ -111,7 +111,6 @@ class Privilege extends AbstractApi
         $table->connect();
         $table->begin();
         foreach ($data['privileges'] as $datum) {
-
             $obj = new StdClass();
             $obj->_key_ = $this->qualifiedName[0];
             $obj->privileges = $datum['privilege'];
@@ -119,8 +118,8 @@ class Privilege extends AbstractApi
             $layer->updatePrivileges($obj, $table);
         }
         $table->commit();
-        $baseUri = "Location: /api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/privileges/";
-        return $this->patchResponse($baseUri);
+        $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/privileges/";
+        return $this->patchResponse($baseUri, ['']);
     }
 
     #[Override] public function delete_index(): Response
