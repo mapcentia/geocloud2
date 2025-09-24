@@ -157,6 +157,7 @@ class Sql extends AbstractApi
                 $result[] = $res;
             }
         }
+        $this->sqlApi->commit();
         // Return response
         if (count($result) == 0) {
             return new NoContentResponse();
