@@ -419,7 +419,9 @@ class User extends Model
             Session::set("subuserEmails", $subuserEmails);
         }
         try {
-            (new Database(connection: $this->connection))->dropUser($userName);
+            // Important: use the postgres database connection here.
+            // If error, the rollback will not occur in the model connection.
+            (new Database(connection: new Connection(database: 'postgres')))->dropUser($userName);
         } catch (PDOException $e) {
             error_log("Could not drop user: " . $e->getMessage());
         }

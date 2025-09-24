@@ -192,13 +192,11 @@ class User extends AbstractApi
                     $data['parentdb'] = $this->route->jwt["data"]['database'];
                 }
                 $model = new UserModel();
-                $model->connect();
                 $model->begin();
                 $model->updateUser($data);
                 $model->commit();
             } else {
                 $model = new UserModel($requestedUserId, $dataBase);
-                $model->connect();
                 $model->begin();
                 $user = $model->getData();
                 if ($user["data"]["parentdb"] == $currentUserId) {
@@ -216,6 +214,7 @@ class User extends AbstractApi
     /**
      * @return Response
      * @throws Exception
+     * @throws InvalidArgumentException
      */
     #[OA\Delete(path: '/api/v4/users/{name}', operationId: 'deleteUsers', description: "Delete user", tags: ['Users'])]
     #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: true, example: "joe")]
@@ -227,9 +226,7 @@ class User extends AbstractApi
             throw new Exception("Sub-users are not allowed to delete sub users");
         }
         $requestedUsers = explode(',', $this->route->getParam("user"));
-        $model = new UserModel($this->route->jwt["data"]['uid']);
-
-        $model->connect();
+        $model = new UserModel(userId: $this->route->jwt["data"]['uid']);
         $model->begin();
         foreach ($requestedUsers as $requestedUser) {
             $model->deleteUser($requestedUser);
