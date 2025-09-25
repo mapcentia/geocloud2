@@ -73,7 +73,7 @@ class Route2
                     if (isset($requestSignature[$i])) {
                         $action = Input::getMethod() . "_" . trim($requestSignature[$i], "()");
                     } else {
-                        $signatureMatch = false;
+                        $action = 'index';
                     }
                 } else if (isset($requestSignature[$i]) && $requestSignature[$i] == $routeSignature[$i]) {
                     $e[] = $requestSignature[$i];
