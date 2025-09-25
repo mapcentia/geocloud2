@@ -159,7 +159,7 @@ FROM ecw5 AS gdal5
 
 ENV GDAL_VERSION=3.5.3
 
-RUN wget http://download.osgeo.org/gdal/${GDAL_VERSION}/gdal353.zip \
+RUN wget https://download.osgeo.org/gdal/${GDAL_VERSION}/gdal353.zip \
  && unzip gdal353.zip \
  && cd gdal-${GDAL_VERSION} \
  && ./configure \
