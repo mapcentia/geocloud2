@@ -218,7 +218,7 @@ class File extends AbstractApi
             rename("$filePath.part", $filePath);
         }
 //        return ["code" => 201, "success" => true, "chunk" => $chunk];
-        $data =  ["success" => true, "chunk" => $chunk];
+        $data = ["success" => true, "chunk" => $chunk];
         return new PostResponse(data: $data);
     }
 
@@ -287,7 +287,7 @@ class File extends AbstractApi
             $fileFullPath = $dir . "/" . $safeName;
         }
         $connectionStr =
-            "\"PG:host=" . $this->connection->host . " port=" . $this->connection->port . " user=" . $this->connection->user . " password=" .$this->connection->password . " dbname=" . $this->connection->database . "\"";
+            "\"PG:host=" . $this->connection->host . " port=" . $this->connection->port . " user=" . $this->connection->user . " password=" . $this->connection->password . " dbname=" . $this->connection->database . "\"";
         $cmd = "ogr2postgis" .
             " --json" .
             ($args && property_exists($args, 's_srs') ? " --s_srs " . $args->s_srs : "") .
@@ -305,28 +305,33 @@ class File extends AbstractApi
             " '" . $fileFullPath . "'";
 
         exec($cmd, $out);
-        $args = !empty($out[0]) ? json_decode($out[0], null, 512, JSON_THROW_ON_ERROR) : null
-        ;
+        $args = !empty($out[0]) ? json_decode($out[0], null, 512, JSON_THROW_ON_ERROR) : null;
         return [
             'data' => $args,
             'cmd' => $cmd,
         ];
     }
-    #[Override] public function post_index(): Response
-    {
-        // TODO: Implement put_index() method.
-    }
-    #[Override] public function patch_index(): Response
+
+    #[Override]
+    public function post_index(): Response
     {
         // TODO: Implement put_index() method.
     }
 
-    #[Override] public function get_index(): Response
+    #[Override]
+    public function patch_index(): Response
     {
         // TODO: Implement put_index() method.
     }
 
-    #[Override] public function delete_index(): Response
+    #[Override]
+    public function get_index(): Response
+    {
+        // TODO: Implement put_index() method.
+    }
+
+    #[Override]
+    public function delete_index(): Response
     {
         // TODO: Implement delete_index() method.
     }
@@ -335,7 +340,8 @@ class File extends AbstractApi
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      */
-    #[Override] public function validate(): void
+    #[Override]
+    public function validate(): void
     {
         $body = Input::getBody();
         $data = json_decode($body);
@@ -382,9 +388,11 @@ class File extends AbstractApi
                 new Assert\NotBlank(),
             ]),
         ]);
-        if (!property_exists($data, 'import')) {
+        // If import is not set, set it to true
+        if (!empty($data) && !property_exists($data, 'import')) {
             $data->import = true;
         }
+        // If import is set, set schema to required
         if ($data->import === true) {
             $collection->fields['schema'] = new Assert\Required(
                 new Assert\Type('string')
@@ -394,7 +402,6 @@ class File extends AbstractApi
                 new Assert\Type('string')
             );
         }
-
         $this->validateRequest($collection, $body, Input::getMethod());
         $this->initiate(schema: $schema);
     }
