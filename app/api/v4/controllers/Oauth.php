@@ -143,7 +143,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     type: "object"
 )]
 #[AcceptableMethods(['POST', 'HEAD', 'OPTIONS'])]
-#[Controller(route: 'api/v4/oauth', scope: Scope::PUBLIC)]
+#[Controller(route: 'api/v4/oauth/(action)', scope: Scope::PUBLIC)]
 class Oauth extends AbstractApi
 {
     public Session $session;
