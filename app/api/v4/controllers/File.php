@@ -260,7 +260,7 @@ class File extends AbstractApi
     /**
      * @throws GC2Exception|\JsonException
      */
-    protected function import(string $schema, string $fileName, ?stdClass $args = null): array
+    protected function import(?string $schema, string $fileName, ?stdClass $args = null): array
     {
         $dir = App::$param['path'] . "app/tmp/" . $this->connection->database . "/__vectors";
         $safeName = Session::getUser() . "_" . md5(microtime() . rand());
@@ -345,9 +345,6 @@ class File extends AbstractApi
             'file' => new Assert\Required(
                 new Assert\Type('string'),
             ),
-            'schema' => new Assert\Required(
-                new Assert\Type('string'),
-            ),
             'import' => new Assert\Optional(
                 new Assert\Type('boolean'),
             ),
@@ -385,6 +382,18 @@ class File extends AbstractApi
                 new Assert\NotBlank(),
             ]),
         ]);
+        if (!property_exists($data, 'import')) {
+            $data->import = true;
+        }
+        if ($data->import === true) {
+            $collection->fields['schema'] = new Assert\Required(
+                new Assert\Type('string')
+            );
+        } else {
+            $collection->fields['schema'] = new Assert\Optional(
+                new Assert\Type('string')
+            );
+        }
 
         $this->validateRequest($collection, $body, Input::getMethod());
         $this->initiate(schema: $schema);
