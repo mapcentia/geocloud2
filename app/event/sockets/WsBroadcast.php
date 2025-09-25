@@ -154,7 +154,6 @@ readonly class WsBroadcast implements WebsocketClientHandler
     public function sendToClient(WebsocketClient $client, string $text): void
     {
         $client->sendText($text);
-
     }
 
     private function sql(array $query, ?array $props): Execution
