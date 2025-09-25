@@ -86,7 +86,6 @@ readonly class WsBroadcast implements WebsocketClientHandler
                 $errorMsg = [
                     'type' => 'error',
                     'error' => 'invalid_token',
-                    'message' => $e->getMessage(),
                 ];
             }
         } else {

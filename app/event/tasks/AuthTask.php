@@ -11,6 +11,7 @@ namespace app\event\tasks;
 use Amp\Cancellation;
 use Amp\Parallel\Worker\Task;
 use Amp\Sync\Channel;
+use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\models\Authorization;
 use Exception;
@@ -41,7 +42,7 @@ final readonly class AuthTask implements Task
         $auth = new Authorization(connection: $this->connection);
         try {
             $res = $auth->check(relName: $this->rel, transaction: false, isAuth: true, subUser: $subUser, userGroup: $userGroup);
-        } catch (Exception) {
+        } catch (GC2Exception) {
             return false;
         }
         $auth->close();
