@@ -69,13 +69,12 @@ abstract class AbstractApi implements ApiInterface
         $this->column = $column ? explode(',', $column) : null;
         $this->index = $index ? explode(',', $index) : null;
         $this->constraint = $constraint ? explode(',', $constraint) : null;
-
-        if (!$superUser && !($userName == $this->schema[0] || $this->schema[0] == "public")) {
-            throw new GC2Exception("Not authorized", 403, null, "UNAUTHORIZED");
-        }
         $this->qualifiedName = $relation ? array_map(fn($r) => $schema . "." . $r, explode(',', $relation)) : null;
         if (!empty($this->schema)) {
             $this->doesSchemaExist();
+        }
+        if (!$superUser && !($userName == $this->schema[0] || $this->schema[0] == "public")) {
+            throw new GC2Exception("Not authorized", 403, null, "UNAUTHORIZED");
         }
         if ($this->qualifiedName) {
             $this->doesTableExist();
