@@ -48,7 +48,7 @@ readonly final class RunRpcTask implements Task
             }
         } catch (RPCException $e) {
             $sqlApi->rollback();
-            return $e->getResponse();
+            return [$e->getResponse()];
         }
         $sqlApi->commit();
         return $res;

@@ -16,6 +16,7 @@ use app\inc\Connection;
 use app\inc\Statement;
 use app\models\Sql;
 use Exception;
+use Throwable;
 
 
 error_reporting(E_ERROR | E_PARSE);
@@ -42,15 +43,25 @@ final readonly class RunQueryTask implements Task
         $statement = new Statement(connection: $connection, convertReturning: true);
         $sqlApi = new Sql(connection: $connection);
         $sqlApi->begin();
-        try {
+
             foreach ($this->query as $q) {
                 $q['format'] = $q['output_format'] ?? 'json';
-                $res[] = $statement->run(user: $this->props['user'], api: $sqlApi, query: $q, subuser: !$this->props['superUser'], userGroup: $this->props['userGroup']);
+                try {
+                    $res[] = $statement->run(user: $this->props['user'], api: $sqlApi, query: $q, subuser: !$this->props['superUser'], userGroup: $this->props['userGroup']);
+                } catch (Throwable $e) {
+                    $sqlApi->rollback();
+                    if (isset($q['id'])) {
+                        return [[
+                            'success' => false,
+                            'message' => $e->getMessage(),
+                            'id' => $q['id'],
+                        ]];
+                    } else {
+                        return [];
+                    }
+                }
             }
-        } catch (GC2Exception $e) {
-            $sqlApi->rollback();
-            return ['message' => $e->getMessage()];
-        }
+
         $sqlApi->commit();
         return $res;
     }
