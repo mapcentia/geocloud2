@@ -14,6 +14,7 @@ use app\models\Geofence;
 use app\models\Rule;
 use app\models\Sql;
 use Exception;
+use PDOException;
 use sad_spirit\pg_builder\StatementFactory;
 
 class Statement
@@ -36,7 +37,8 @@ class Statement
      * @param Sql $api An instance of the Sql class for database interactions.
      * @param mixed $query The input parameters, typically in JSON format.
      * @param bool $subuser Optional. Indicates whether the user is a subuser. Defaults to false.
-     * @return array The processed response, including additional metadata such as cache information and memory usage.
+     * @param string|null $userGroup
+     * @return array|null The processed response, including additional metadata such as cache information and memory usage.
      * @throws GC2Exception
      */
     public function run(string $user, Sql $api, array $query, bool $subuser, ?string $userGroup): ?array
