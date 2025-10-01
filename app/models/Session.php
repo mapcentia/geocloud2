@@ -187,7 +187,6 @@ class Session extends Model
     {
         \app\inc\Session::start();
         $openIdConfig = App::$param['openIdConfig'];
-        $parentDb = 'mydb';
         $clientId = $openIdConfig['clientId'];
 
         $expectedNonce = $_SESSION['oauth2_nonce'] ?? null;
@@ -228,7 +227,7 @@ class Session extends Model
             // Handle signature or validation errors
             throw new GC2Exception('Invalid ID token: ' . $e->getMessage());
         }
-
+        $parentDb = $payload->database;
         $row = null;
         $fn = function () use ($payload, &$row, $parentDb): void {
             if ($parentDb) {
