@@ -103,17 +103,11 @@ class Database extends Model
         $saveName = self::toAscii($name, null, "_");
         $sql = "CREATE SCHEMA \"" . $saveName . "\"";
         $res = $model->prepare($sql);
-        $this->execute($res);
+        $model->execute($res);
         $sql = "GRANT USAGE ON SCHEMA \"" . $saveName . "\" TO $model->postgisuser";;
         $res = $model->prepare($sql);
-        $this->execute($res);
-
-        $this->grant($model, $saveName, $model->postgisuser, 'TABLES');
-        $this->grant($model, $saveName, $model->postgisuser, 'SEQUENCES');
-        $this->grant($model, $saveName, $model->postgisuser, 'FUNCTIONS');
-        $this->grant($model, $saveName, $model->postgisuser, 'TYPES');
-
-        $this->execute($res);
+        $model->execute($res);
+        self::grant($model, $saveName, $model->postgisuser);
         $response['success'] = true;
         $response['message'] = "Schema created";
         $response['schema'] = $saveName;
@@ -126,14 +120,15 @@ class Database extends Model
      * @param Model $model The model instance used to prepare and execute the SQL statement.
      * @param string $schema The name of the schema where the default privileges will be altered.
      * @param string $user The name of the user to whom the privileges will be granted.
-     * @param string $relationType The type of relation (e.g., tables, sequences) on which the privileges will be granted.
      * @return void
      */
-    private function grant(Model $model, string $schema, string $user, string $relationType): void
+    private static function grant(Model $model, string $schema, string $user): void
     {
-        $sql = "ALTER DEFAULT PRIVILEGES IN SCHEMA $schema GRANT ALL PRIVILEGES ON $relationType TO $user";
-        $res = $model->prepare($sql);
-        $this->execute($res);
+        foreach (['TABLES', 'SEQUENCES', 'FUNCTIONS', 'TYPES'] as $type) {
+            $sql = "ALTER DEFAULT PRIVILEGES IN SCHEMA $schema GRANT ALL PRIVILEGES ON $type TO $user";
+            $res = $model->prepare($sql);
+            $model->execute($res);
+        }
     }
 
     /**
