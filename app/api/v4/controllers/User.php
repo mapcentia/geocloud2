@@ -149,14 +149,16 @@ class User extends AbstractApi
             $list[] = $userName;
         }
         $model->commit();
-
         // Create schemas for new users
         foreach ($data['users'] as $user) {
             try {
-                $dbObj = new Database(connection: new Connection(user: $user['name'], database: $database));
+                // Create schema with superuser as owner and grant usage to subuser
+                $dbObj = new Database(connection: $this->connection);
                 $dbObj->createSchema(name: $user['name']);
-                $dbObj->setDefaultPrivileges(subUser: $user['name'], parentUser: $database);
-                $dbObj->grantUsage(subUser: $user['name'], parentUser: $database);
+                $dbObj->grantUsage(schema: $user['name'], user: $this->connection->user);
+                // Let subuser set default privileges to superuser
+                $dbObj = new Database(connection: new Connection(user: $user['name'], database: $database));
+                $dbObj->setDefaultPrivileges(schema: $user['name'], user: $this->connection->user);
             } catch (Exception) {
             }
         }

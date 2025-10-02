@@ -113,13 +113,13 @@ class Database extends Model
     /**
      * Grants usage permissions on a schema to a specified parent user.
      *
-     * @param string $subUser The name of the schema owner to grant usage permissions from.
+     * @param string $schema
      * @param string $parentUser The name of the user to grant usage permissions to.
      * @return void This method does not return a value.
      */
-    public function grantUsage(string $subUser, string $parentUser) : void
+    public function grantUsage(string $schema, string $user) : void
     {
-        $sql = "GRANT USAGE ON SCHEMA \"" . $subUser . "\" TO $parentUser";
+        $sql = "GRANT USAGE ON SCHEMA \"" . $schema . "\" TO $user";
         $res = $this->prepare($sql);
         $this->execute($res);
     }
@@ -127,14 +127,14 @@ class Database extends Model
     /**
      * Grants all privileges on a specified type of relation within a given schema to a specific user.
      *
-     * @param string $subUser
-     * @param string $parentUser
+     * @param string $schema
+     * @param string $user
      * @return void
      */
-    public function setDefaultPrivileges(string $subUser, string $parentUser): void
+    public function setDefaultPrivileges(string $schema, string $user): void
     {
         foreach (['TABLES', 'SEQUENCES', 'FUNCTIONS', 'TYPES'] as $type) {
-            $sql = "ALTER DEFAULT PRIVILEGES IN SCHEMA $subUser GRANT ALL PRIVILEGES ON $type TO $parentUser";
+            $sql = "ALTER DEFAULT PRIVILEGES IN SCHEMA $schema GRANT ALL PRIVILEGES ON $type TO $user";
             $res = $this->prepare($sql);
             $this->execute($res);
         }
