@@ -99,18 +99,41 @@ class Database extends Model
      */
     public function createSchema(string $name, ?Model $model = null): array
     {
+        $model = $model ?? $this;
         $saveName = self::toAscii($name, null, "_");
         $sql = "CREATE SCHEMA \"" . $saveName . "\"";
-        if ($model) {
-            $res = $model->prepare($sql);
-        } else {
-            $res = $this->prepare($sql);
-        }
+        $res = $model->prepare($sql);
+        $this->execute($res);
+        $sql = "GRANT USAGE ON SCHEMA \"" . $saveName . "\" TO $model->postgisuser";;
+        $res = $model->prepare($sql);
+        $this->execute($res);
+
+        $this->grant($model, $saveName, $model->postgisuser, 'TABLES');
+        $this->grant($model, $saveName, $model->postgisuser, 'SEQUENCES');
+        $this->grant($model, $saveName, $model->postgisuser, 'FUNCTIONS');
+        $this->grant($model, $saveName, $model->postgisuser, 'TYPES');
+
         $this->execute($res);
         $response['success'] = true;
         $response['message'] = "Schema created";
         $response['schema'] = $saveName;
         return $response;
+    }
+
+    /**
+     * Grants all privileges on a specified type of relation within a given schema to a specific user.
+     *
+     * @param Model $model The model instance used to prepare and execute the SQL statement.
+     * @param string $schema The name of the schema where the default privileges will be altered.
+     * @param string $user The name of the user to whom the privileges will be granted.
+     * @param string $relationType The type of relation (e.g., tables, sequences) on which the privileges will be granted.
+     * @return void
+     */
+    private function grant(Model $model, string $schema, string $user, string $relationType): void
+    {
+        $sql = "ALTER DEFAULT PRIVILEGES IN SCHEMA $schema GRANT ALL PRIVILEGES ON $relationType TO $user";
+        $res = $model->prepare($sql);
+        $this->execute($res);
     }
 
     /**
