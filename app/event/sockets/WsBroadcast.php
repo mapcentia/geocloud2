@@ -54,7 +54,6 @@ readonly class WsBroadcast implements WebsocketClientHandler
                 // Validate token and parsed data
                 $task = new ValidateTokenTask($token);
                 $parsed = $this->worker->submit($task)->await()['data'];
-                print_r($parsed);
                 // Connection to the database
                 $connection = new Connection(database: $parsed["database"]);
                 if (!$parsed['superUser']) {
