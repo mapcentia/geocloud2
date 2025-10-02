@@ -138,19 +138,28 @@ class User extends AbstractApi
         if (!isset($data['users'])) {
             $data['users'] = [$data];
         }
+        $database = $this->route->jwt["data"]['database'];
+        // Create users
         foreach ($data['users'] as $user) {
-            $user['parentdb'] = $this->route->jwt["data"]['database'];
+            $user['parentdb'] = $database;
             $user['subuser'] = true;
             // Load pre extensions and run processAddUser
             $this->runPreExtension('processAddUser', $model);
-            try {
-                (new Database(connection: $this->connection))->createSchema($user['name']);
-            } catch (Exception) {
-            }
             $userName = self::convertUserObject($model->createUser($user)['data'])['name'];
             $list[] = $userName;
         }
         $model->commit();
+
+        // Create schemas for new users
+        foreach ($data['users'] as $user) {
+            try {
+                (new Database(connection: new Connection(user: $user['name'], database: $database)))->createSchema(name: $user['name']);
+                Database::setDefaultPrivileges(subUser: $user['name'], parentUser: $database);
+                Database::grantUsage(subUser: $user['name'], parentUser: $database);
+            } catch (Exception) {
+            }
+        }
+
         foreach ($list as $newUser) {
             (new Setting(connection: $this->connection))->updateApiKeyForUser($newUser, false);
         }
@@ -281,7 +290,7 @@ class User extends AbstractApi
     {
         return new Assert\Collection([
             'name' => new Assert\Optional([
-                new Assert\Length(min : 2, max: 40),
+                new Assert\Length(min: 2, max: 40),
             ]),
             'email' => new Assert\Optional([
                 new Assert\Email(),

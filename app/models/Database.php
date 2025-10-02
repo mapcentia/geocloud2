@@ -104,10 +104,6 @@ class Database extends Model
         $sql = "CREATE SCHEMA \"" . $saveName . "\"";
         $res = $model->prepare($sql);
         $model->execute($res);
-        $sql = "GRANT USAGE ON SCHEMA \"" . $saveName . "\" TO $model->postgisuser";;
-        $res = $model->prepare($sql);
-        $model->execute($res);
-        self::grant($model, $saveName, $model->postgisuser);
         $response['success'] = true;
         $response['message'] = "Schema created";
         $response['schema'] = $saveName;
@@ -115,17 +111,32 @@ class Database extends Model
     }
 
     /**
+     * Grants usage permissions on a schema to a specified parent user.
+     *
+     * @param string $subUser The name of the schema owner to grant usage permissions from.
+     * @param string $parentUser The name of the user to grant usage permissions to.
+     * @return void This method does not return a value.
+     */
+    public static function grantUsage(string $subUser, string $parentUser) : void
+    {
+        $model = new Model(connection: new Connection(user: $subUser, database: $parentUser));
+        $sql = "GRANT USAGE ON SCHEMA \"" . $subUser . "\" TO $parentUser";
+        $res = $model->prepare($sql);
+        $model->execute($res);
+    }
+
+    /**
      * Grants all privileges on a specified type of relation within a given schema to a specific user.
      *
-     * @param Model $model The model instance used to prepare and execute the SQL statement.
-     * @param string $schema The name of the schema where the default privileges will be altered.
-     * @param string $user The name of the user to whom the privileges will be granted.
+     * @param string $subUser
+     * @param string $parentUser
      * @return void
      */
-    private static function grant(Model $model, string $schema, string $user): void
+    public static function setDefaultPrivileges(string $subUser, string $parentUser): void
     {
+        $model = new Model(connection: new Connection(user: $subUser, database: $parentUser));
         foreach (['TABLES', 'SEQUENCES', 'FUNCTIONS', 'TYPES'] as $type) {
-            $sql = "ALTER DEFAULT PRIVILEGES IN SCHEMA $schema GRANT ALL PRIVILEGES ON $type TO $user";
+            $sql = "ALTER DEFAULT PRIVILEGES IN SCHEMA $subUser GRANT ALL PRIVILEGES ON $type TO $parentUser";
             $res = $model->prepare($sql);
             $model->execute($res);
         }
