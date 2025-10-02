@@ -117,12 +117,11 @@ class Database extends Model
      * @param string $parentUser The name of the user to grant usage permissions to.
      * @return void This method does not return a value.
      */
-    public static function grantUsage(string $subUser, string $parentUser) : void
+    public function grantUsage(string $subUser, string $parentUser) : void
     {
-        $model = new Model(connection: new Connection(user: $subUser, database: $parentUser));
         $sql = "GRANT USAGE ON SCHEMA \"" . $subUser . "\" TO $parentUser";
-        $res = $model->prepare($sql);
-        $model->execute($res);
+        $res = $this->prepare($sql);
+        $this->execute($res);
     }
 
     /**
@@ -132,13 +131,12 @@ class Database extends Model
      * @param string $parentUser
      * @return void
      */
-    public static function setDefaultPrivileges(string $subUser, string $parentUser): void
+    public function setDefaultPrivileges(string $subUser, string $parentUser): void
     {
-        $model = new Model(connection: new Connection(user: $subUser, database: $parentUser));
         foreach (['TABLES', 'SEQUENCES', 'FUNCTIONS', 'TYPES'] as $type) {
             $sql = "ALTER DEFAULT PRIVILEGES IN SCHEMA $subUser GRANT ALL PRIVILEGES ON $type TO $parentUser";
-            $res = $model->prepare($sql);
-            $model->execute($res);
+            $res = $this->prepare($sql);
+            $this->execute($res);
         }
     }
 

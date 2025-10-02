@@ -153,9 +153,10 @@ class User extends AbstractApi
         // Create schemas for new users
         foreach ($data['users'] as $user) {
             try {
-                (new Database(connection: new Connection(user: $user['name'], database: $database)))->createSchema(name: $user['name']);
-                Database::setDefaultPrivileges(subUser: $user['name'], parentUser: $database);
-                Database::grantUsage(subUser: $user['name'], parentUser: $database);
+                $dbObj = new Database(connection: new Connection(user: $user['name'], database: $database));
+                $dbObj->createSchema(name: $user['name']);
+                $dbObj->setDefaultPrivileges(subUser: $user['name'], parentUser: $database);
+                $dbObj->grantUsage(subUser: $user['name'], parentUser: $database);
             } catch (Exception) {
             }
         }
