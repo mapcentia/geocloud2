@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2025 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -18,7 +18,7 @@ class GetPart
     /**
      * @var array<string>
      */
-    private $parts;
+    private array $parts;
 
     /**
      * GetPart constructor.
