@@ -116,7 +116,7 @@ class Call extends AbstractApi
         $result = [];
         $api->begin();
         foreach ($decodedBody as $query) {
-            $res = $rpc->run($user, $api, $query, !$isSuperUser, $userGroup);
+            $res = $rpc->run(user: $user, api:  $api, query: $query, subuser: !$isSuperUser, userGroup:  $userGroup);
             if ($res !== null) {
                 $result[] = $res;
             }
