@@ -28,6 +28,7 @@ class Input
     /**
      *
      * @param array<string> $arr
+     * DEPRECATED
      */
     public static function setParams(?array $arr): void
     {
