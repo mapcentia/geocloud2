@@ -156,7 +156,7 @@ class User extends AbstractApi
                 $dbObj = new Database(connection: $this->connection);
                 $dbObj->createSchema(name: $user['name']);
                 $dbObj->grantUsage(schema: $user['name'], user: $this->connection->user);
-                // Let subuser set default privileges to superuser
+                // Let subuser set default privileges on schema to superuser
                 $dbObj = new Database(connection: new Connection(user: $user['name'], database: $database));
                 $dbObj->setDefaultPrivileges(schema: $user['name'], user: $this->connection->user);
             } catch (Exception) {

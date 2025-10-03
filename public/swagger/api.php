@@ -6,6 +6,8 @@
  *
  */
 
+ini_set("display_errors", "no");
+
 require("../../app/vendor/autoload.php");
 require("../../app/conf/App.php");
 
