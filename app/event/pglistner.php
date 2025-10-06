@@ -34,7 +34,6 @@ include_once __DIR__ . "/../models/Database.php";
 
 new App();
 
-Connection::$param["postgisschema"] = "public";
 $worker = Amp\Parallel\Worker\createWorker();
 
 $dbs = [];
@@ -152,9 +151,10 @@ $startListenerForDb = function (
     int      $reconnectDelay
 ) {
     // Pull out the global connection params:
-    $host = Connection::$param["postgishost"];
-    $user = Connection::$param["postgisuser"];
-    $pw = Connection::$param["postgispw"];
+    $host = (new \app\inc\Connection())->host;
+    $user = (new \app\inc\Connection())->user;
+    $port = (new \app\inc\Connection())->port;
+    $pw = (new \app\inc\Connection())->password;
 
     // The channel(s) we want to listen to
     $channel = "_gc2_notify_transaction";
@@ -163,7 +163,7 @@ $startListenerForDb = function (
         $pool = null;
         try {
             $config = PostgresConfig::fromString(
-                "host={$host} user={$user} password={$pw} dbname={$db} sslmode=allow"
+                "host=$host user=$user password=$pw dbname=$db port=$port sslmode=allow"
             );
             // Attempt to connect + create a pool.
             // If DB isn't available, this will throw.
