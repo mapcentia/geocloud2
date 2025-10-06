@@ -5,7 +5,7 @@ export PGUSER=$GC2_USER
 
 if [ $1 == "/usr/bin/supervisord" ]; then
   # Start service so we can create GC2 system tables and users.
-  service postgresql start
+  su postgres /bin/bash -c "/usr/lib/postgresql/15/bin/postgres -F -D /var/lib/postgresql/15/main -c config_file=/etc/postgresql/15/main/postgresql.conf -c log_destination=stderr"
 
   # But first we check if they are created. I.e. if the container is restarted
   if echo 'SELECT 1' | psql postgres >/dev/null 2>&1; then
