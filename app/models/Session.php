@@ -183,7 +183,7 @@ class Session extends Model
      * @throws GC2Exception
      * @throws GuzzleException|InvalidArgumentException
      */
-    public function startWithToken(string $token, ?string $schema = "public"): array
+    public function startWithToken(string $token, string $database, ?string $schema = "public"): array
     {
         \app\inc\Session::start();
         $openIdConfig = App::$param['openIdConfig'];
@@ -227,7 +227,11 @@ class Session extends Model
             // Handle signature or validation errors
             throw new GC2Exception('Invalid ID token: ' . $e->getMessage());
         }
-        $parentDb = $payload->database;
+        $parentDb = $database;
+        $allowedDatabases = explode(',', $payload->database);
+        if (!in_array($parentDb, $allowedDatabases)) {
+            throw new GC2Exception('Wanted database not allowed: ' . $parentDb . '. Allowed: ' . implode(', ', $allowedDatabases) . '.');
+        }
         $row = null;
         $fn = function () use ($payload, &$row, $parentDb): void {
             if ($parentDb) {
@@ -256,6 +260,7 @@ class Session extends Model
                 'email' => $payload->email,
                 'password' => 'Silke2009!',
                 'parentdb' => $parentDb,
+                'subuser' => true,
             ];
             $user->createUser($data);
             $fn();
@@ -268,8 +273,7 @@ class Session extends Model
         // Fetch sub-users
         $this->setSubUsers();
 
-        Database::setDb($response['data']['parentdb']);
-        $response['data']['api_key'] = (new Setting())->get()['data']->api_key;
+        $response['data']['api_key'] = (new Setting(new Connection(database: $response['data']['parentdb'])))->get()['data']->api_key;
 
         // Insert into logins
         $this->logLogin($payload->aud, $parentDb);

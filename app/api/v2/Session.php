@@ -173,7 +173,7 @@ class Session extends Controller
     function post_token()
     {
         $data = json_decode(Input::getBody(), true);
-        return $this->session->startWithToken($data['token']);
+        return $this->session->startWithToken(token: $data['token'], database: $data['database']);
     }
 
     public function get_nonce()

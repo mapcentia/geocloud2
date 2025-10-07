@@ -70,6 +70,7 @@
         "joi-browser": "^13.4.0",
         "jsonlint": "^1.6.3",
         "jsonlint-mod": "^1.7.4",
+        "jwt-decode": "^4.0.0",
         "loadable-components": "2.2.3",
         "lodash": "^4.17.15",
         "minimist": "1.2.0",
