@@ -90,6 +90,14 @@ class Input
     }
 
     /**
+     * @return bool
+     */
+    public static function getDryRun(): bool
+    {
+        return $_SERVER['HTTP_X_DRY_RUN'] ?? false;
+    }
+
+    /**
      * @return string|null
      */
     public static function getJwtToken(): ?string

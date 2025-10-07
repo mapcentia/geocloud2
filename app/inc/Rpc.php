@@ -50,6 +50,7 @@ readonly class Rpc
         $jsonRpcResponse = [
             'jsonrpc' => $query['jsonrpc'],
             'result' => $res,
+            'method' => $query['method'],
         ];
         if (isset($query['id'])) {
             $jsonRpcResponse['id'] = $query['id'];

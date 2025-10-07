@@ -23,6 +23,7 @@ use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Route2;
 use app\inc\Rpc;
+use app\models\Preparedstatement as PreparedstatementModel;
 use Exception;
 use OpenApi\Annotations\OpenApi;
 use OpenApi\Attributes as OA;
@@ -117,11 +118,26 @@ class Call extends AbstractApi
         $api->begin();
         foreach ($decodedBody as $query) {
             $res = $rpc->run(user: $user, api:  $api, query: $query, subuser: !$isSuperUser, userGroup:  $userGroup);
+            // We don't want these in RPC-JSON response
+            unset($res['result']['success']);
+            unset($res['result']['id']);
             if ($res !== null) {
                 $result[] = $res;
             }
         }
-        $api->commit();
+        // Check if dry-run is requested
+        if (!Input::getDryRun()) {
+           $api->commit();
+        } else {
+            $api->rollback();
+            $api->begin();
+            foreach ($result as $key => $res) {
+                $pres = new PreparedstatementModel(connection: $this->connection);
+                $pres->updateOutputSchema(name: $res['method'], outputSchema: $this->extractSchema($res['result']));
+                unset($result[$key]['method']);
+            }
+            $api->commit();
+        }
         // Return response
         if (count($result) == 0) {
             return new NoContentResponse();
@@ -156,6 +172,11 @@ class Call extends AbstractApi
         } catch (GC2Exception $e) {
             throw new RPCException("Invalid Request", -32600, null, $e->getMessage(), $decodedBody->id ?? null);
         }
+    }
+
+    private function extractSchema(array $res): mixed
+    {
+        return $res['returning']['schema'] ?? $res['schema'] ?? null;
     }
 
     static public function getAssert(): Assert\Collection

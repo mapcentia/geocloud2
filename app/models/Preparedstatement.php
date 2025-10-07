@@ -217,4 +217,11 @@ class Preparedstatement extends Model
         $this->clearCacheOnSchemaChanges(md5($row['name']));
         $this->clearCacheOnSchemaChanges(md5($row['uuid']));
     }
+
+    public function updateOutputSchema(string $name, array $outputSchema): void
+    {
+        $sql = "UPDATE settings.prepared_statements SET output_schema=:output_schema WHERE name=:name";
+        $res = $this->prepare($sql);
+        $res->execute(['name' => $name, 'output_schema' => json_encode($outputSchema)]);
+    }
 }

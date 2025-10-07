@@ -218,7 +218,6 @@ class Sql extends Model
         }
         $fieldsStr = implode(",", $fieldsArr);
         $sql = "SELECT $fieldsStr FROM ($q) AS foo LIMIT $limit";
-        $this->begin();
         // Settings from App.php
         if (!empty(App::$param["SqlApiSettings"]["work_mem"])) {
             $this->execQuery("SET work_mem TO '" . App::$param["SqlApiSettings"]["work_mem"] . "'");
@@ -268,7 +267,6 @@ class Sql extends Model
                 $features[] = $arr;
             }
             $this->execQuery("CLOSE curs");
-            $this->commit();
             foreach ($columnTypes as $key => $type) {
                 $schema[$key] = [
                     "type" => ltrim($type, '_'),
@@ -550,6 +548,7 @@ class Sql extends Model
         }
 
         $columnTypes = [];
+        $schema = [];;
         $convertedParameters = [];
         // Convert JSON to native types
         if ($parameters) {
@@ -583,6 +582,7 @@ class Sql extends Model
                             break;
                         }
                         $columnTypes[$meta['name']] = $meta['native_type'];
+                        $schema[$meta['name']] = ['type' => $meta['native_type'], 'array' => str_starts_with($meta['native_type'], '_')];
                     }
                 }
                 $row = $this->fetchRow($result);
@@ -604,9 +604,12 @@ class Sql extends Model
                     }
                 }
                 if ($tmp && sizeof($tmp) > 0) {
-                    $returning[] = $tmp;
+                    $returning['data'][] = $tmp;
                 }
                 $affectedRows += $result->rowCount();
+                if ($returning) {
+                    $returning['schema'] = $schema;
+                }
             }
         } else {
             $this->execute($result);
