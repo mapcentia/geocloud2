@@ -183,9 +183,9 @@ class Sql extends Model
             $convertedParameters = [];
             if ($parameters) {
                 foreach ($parameters as $field => $value) {
-                    $nativeType = $typeHints[$field] ?? 'json';
-                    $formatT = $typeFormats[$field] ?? self::getFormat($nativeType);
-                    $convertedParameters[$field] = $this->convertToNative($nativeType, $value, $formatT);
+                    $nativePgType = $typeHints[$field] ?? self::phpTypeToPgType(gettype($value)) ?? "json";
+                    $formatT = $typeFormats[$field] ?? self::getFormat($nativePgType);
+                    $convertedParameters[$field] = $this->convertToNative($nativePgType, $value, $formatT);
                 }
                 $this->execute($select, $convertedParameters);
             } else {
@@ -249,14 +249,14 @@ class Sql extends Model
             while ($this->execute($innerStatement) && $row = $this->fetchRow($innerStatement)) {
                 $arr = [];
                 foreach ($row as $key => $rowValue) {
-                    $nativeType = $columnTypes[$key];
-                    if ($nativeType == "geometry" && $rowValue !== null) {
+                    $nativePgType = $columnTypes[$key];
+                    if ($nativePgType == "geometry" && $rowValue !== null) {
                         $rowValue = json_decode($rowValue);
                     } else {
                         if ($convertTypes) {
                             try {
-                                $dateTimeFormat = $typeFormats[$key] ?? self::getFormat($nativeType);
-                                $rowValue = $this->convertFromNative($nativeType, $rowValue, $dateTimeFormat);
+                                $dateTimeFormat = $typeFormats[$key] ?? self::getFormat($nativePgType);
+                                $rowValue = $this->convertFromNative($nativePgType, $rowValue, $dateTimeFormat);
                             } catch (\Exception) {
                                 // Pass
                             }
@@ -291,14 +291,14 @@ class Sql extends Model
             while ($this->execute($innerStatement) && $row = $this->fetchRow($innerStatement)) {
                 $arr = array();
                 foreach ($row as $key => $rowValue) {
-                    $nativeType = $columnTypes[$key];
-                    if ($nativeType == "geometry" && $rowValue !== null) {
+                    $nativePgType = $columnTypes[$key];
+                    if ($nativePgType == "geometry" && $rowValue !== null) {
                         $geometries[] = json_decode($rowValue);
                     } else {
                         if ($convertTypes) {
                             try {
-                                $dateTimeFormat = $typeFormats[$key] ?? self::getFormat($nativeType);
-                                $rowValue = $this->convertFromNative($nativeType, $rowValue, $dateTimeFormat);
+                                $dateTimeFormat = $typeFormats[$key] ?? self::getFormat($nativePgType);
+                                $rowValue = $this->convertFromNative($nativePgType, $rowValue, $dateTimeFormat);
                             } catch (\Exception) {
                                 // Pass
                             }
@@ -555,12 +555,12 @@ class Sql extends Model
             foreach ($parameters as $parameter) {
                 $paramTmp = [];
                 foreach ($parameter as $field => $value) {
-                    $nativeType = $typeHints[$field] ?? 'json';
-                    $format = $typeFormats[$field] ?? self::getFormat($nativeType);
-                    if (!self::getFormat($nativeType) && !empty($format)) {
+                    $nativePgType = $typeHints[$field] ?? self::phpTypeToPgType(gettype($value)) ?? "json";
+                    $format = $typeFormats[$field] ?? self::getFormat($nativePgType);
+                    if (!self::getFormat($nativePgType) && !empty($format)) {
                         throw new GC2Exception("Format is only supported for date/time (range) type. 'type_hints' must be set if 'type_formats' are used for input values.", 400, null, 'BAD_REQUEST');
                     }
-                    $paramTmp[$field] = $this->convertToNative($nativeType, $value, $format);
+                    $paramTmp[$field] = $this->convertToNative($nativePgType, $value, $format);
                 }
                 $convertedParameters[] = $paramTmp;
             }
@@ -589,8 +589,8 @@ class Sql extends Model
                 $tmp = null;
                 foreach ($row as $field => $value) {
                     try {
-                        $nativeType = $typeHints[$field] ?? 'json';
-                        $dateTimeFormat = $typeFormats[$field] ?? self::getFormat($nativeType);
+                        $nativePgType = $typeHints[$field] ?? self::phpTypeToPgType(gettype($value)) ?? "json";
+                        $dateTimeFormat = $typeFormats[$field] ?? self::getFormat($nativePgType);
                         $convertedValue = $this->convertFromNative($columnTypes[$field], $value, $dateTimeFormat);
                         $tmp[$field] = $convertedValue;
                     } catch (\Exception) {
@@ -630,8 +630,8 @@ class Sql extends Model
                     $tmp = null;
                     foreach ($row as $field => $value) {
                         try {
-                            $nativeType = $typeHints[$field] ?? 'json';
-                            $dateTimeFormat = $typeFormats[$field] ?? self::getFormat($nativeType);
+                            $nativePgType = $typeHints[$field] ?? self::phpTypeToPgType(gettype($value)) ?? "json";
+                            $dateTimeFormat = $typeFormats[$field] ?? self::getFormat($nativePgType);
                             $convertedValue = $this->convertFromNative($columnTypes[$field], $value, $dateTimeFormat);
                             $tmp[$field] = $convertedValue;
                         } catch (\Exception) {
@@ -886,6 +886,16 @@ class Sql extends Model
             'timestamp', 'tsrange', 'timestamp[]', 'tsrange[]', '_timestamp', '_tsrange' => self::DEFAULT_TIMESTAMP_FORMAT,
             'timestamptz', 'tstzrange', 'timestamptz[]', 'tstzrange[]' => self::DEFAULT_TIMESTAMPTZ_FORMAT,
             'date', 'daterange', 'date[]', 'daterange[]', '_date', '_daterange' => self::DEFAULT_DATE_FORMAT,
+            default => null,
+        };
+    }
+
+    public static function phpTypeToPgType(string $phpType): ?string
+    {
+        return match ($phpType) {
+            'string' => "varchar",
+            'double' => "numeric",
+            'integer' => "bigint",
             default => null,
         };
     }

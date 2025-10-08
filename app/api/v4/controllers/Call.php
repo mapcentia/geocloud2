@@ -117,6 +117,7 @@ class Call extends AbstractApi
         $result = [];
         $api->begin();
         foreach ($decodedBody as $query) {
+            $query['convert_types'] = true;
             $res = $rpc->run(user: $user, api:  $api, query: $query, subuser: !$isSuperUser, userGroup:  $userGroup);
             // We don't want these in RPC-JSON response
             unset($res['result']['success']);
@@ -136,8 +137,8 @@ class Call extends AbstractApi
             foreach ($result as $key => $res) {
                 $pres->updateOutputSchema(name: $res['method'], outputSchema: $this->extractSchema($res['result']));
                 foreach ($res['params'] as $param => $value) {
-                    $type = $res['type_hints'][$param] ?? gettype($value);
-                    $inputSchema[$param] = ['type' => $type, 'array' => str_starts_with($type, '_')];;
+                    $type = $res['type_hints'][$param] ?? \app\models\Sql::phpTypeToPgType(gettype($value)) ?? "json";
+                    $inputSchema[$param] = ['type' => str_replace('[]', '', $type), 'array' => str_ends_with($type, '[]')];
                 }
                 if (!empty($inputSchema)) {
                     $pres->updateInputSchema(name: $res['method'], inputSchema: $inputSchema);
