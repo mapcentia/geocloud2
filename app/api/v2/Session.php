@@ -1,16 +1,19 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2025 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\api\v2;
 
+use app\exceptions\GC2Exception;
 use app\inc\Controller;
 use app\inc\Input;
 use Exception;
+use GuzzleHttp\Exception\GuzzleException;
+use Psr\Cache\InvalidArgumentException;
 use TypeError;
 
 /**
@@ -170,10 +173,15 @@ class Session extends Controller
         return $this->session->stop();
     }
 
+    /**
+     * @throws GC2Exception
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     */
     function post_token()
     {
         $data = json_decode(Input::getBody(), true);
-        return $this->session->startWithToken(token: $data['token'], database: $data['database']);
+        return $this->session->startWithToken(token: $data['token'], parentDb: $data['database'], superuser: $data['superuser']);
     }
 
     public function get_nonce()

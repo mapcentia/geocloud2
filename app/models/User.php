@@ -106,7 +106,11 @@ class User extends Model
     public function getDatabasesForUser(string $userIdentifier): array
     {
         $data = [];
-        if (strrpos($userIdentifier, '@') === false) {
+        if ($userIdentifier == "*") {
+            $query = "SELECT screenname, email, parentdb FROM users WHERE parentdb IS NULL";
+            $res = $this->prepare($query);
+            $this->execute($res);
+        } elseif (strrpos($userIdentifier, '@') === false) {
             $userName = Model::toAscii($userIdentifier, NULL, "_");
             $query = "SELECT screenname, email, parentdb FROM users WHERE screenname = :sUserID";
             $res = $this->prepare($query);

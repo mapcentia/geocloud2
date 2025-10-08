@@ -12,7 +12,7 @@ class OpenId extends Component {
             allowedDatabases: [],
             databasesWithSuperuser: [],
             selectedOption: '',
-            superuserLogin: false,
+            superuserLogin: typeof window !== 'undefined' ? (localStorage.getItem('gc2_selected_superuser') || '') : '',
             token: null,
             nonce: null
         }
@@ -35,9 +35,10 @@ class OpenId extends Component {
     handleResetDb(e) {
         if (e) e.preventDefault()
         localStorage.removeItem('gc2_selected_db')
+        localStorage.removeItem('gc2_selected_superuser')
         this.setState({
             savedDb: '',
-            info: 'Database selection has been reset. You will be asked to choose on next sign-in.'
+            info: 'Database and superuser selection have been reset. You will be asked to choose on next sign-in.'
         })
     }
 
@@ -91,6 +92,11 @@ class OpenId extends Component {
                     selectedDb = savedDbLocal
                     // If selected saved DB supports superuser, ask for role selection
                     if (overlap.includes(selectedDb)) {
+                        const savedSuperuser = localStorage.getItem('gc2_selected_superuser')
+                        if (savedSuperuser !== null) {
+                            this.proceed(token, nonce, selectedDb, savedSuperuser === '1' || savedSuperuser === 'true')
+                            return
+                        }
                         this.setState({
                             selecting: true,
                             allowedDatabases: [selectedDb],
@@ -127,6 +133,11 @@ class OpenId extends Component {
 
                 // If only a single DB and it supports superuser, ask for role selection
                 if (selectedDb && overlap.includes(selectedDb)) {
+                    const savedSuperuser = localStorage.getItem('gc2_selected_superuser')
+                    if (savedSuperuser !== null) {
+                        this.proceed(token, nonce, selectedDb, savedSuperuser === '1' || savedSuperuser === 'true')
+                        return
+                    }
                     this.setState({
                         selecting: true,
                         allowedDatabases: [selectedDb],
@@ -198,6 +209,7 @@ class OpenId extends Component {
         const {selectedOption, token, nonce, superuserLogin} = this.state
         if (!selectedOption) return
         localStorage.setItem('gc2_selected_db', selectedOption)
+        localStorage.setItem('gc2_selected_superuser', superuserLogin ? '1' : '0')
         if (this._isMounted) this.setState({savedDb: selectedOption, selecting: false})
         this.proceed(token, nonce, selectedOption, !!superuserLogin)
     }
@@ -214,7 +226,7 @@ class OpenId extends Component {
     }
 
     render() {
-        const {savedDb, info} = this.state
+        const {savedDb, info, superuserLogin} = this.state
         const containerStyle = {
             maxWidth: 420,
             margin: '60px auto',
@@ -268,7 +280,7 @@ class OpenId extends Component {
                     you'll be asked to choose one during sign-in.
                 </div>
                 {savedDb ? (
-                    <div style={badgeStyle}>Current selection: {savedDb}</div>
+                    <div style={badgeStyle}>Current selection: {savedDb} {superuserLogin ? '(super)': ''}</div>
                 ) : (
                     <div style={badgeStyle}>No database selected yet</div>
                 )}

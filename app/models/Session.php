@@ -183,7 +183,7 @@ class Session extends Model
      * @throws GC2Exception
      * @throws GuzzleException|InvalidArgumentException
      */
-    public function startWithToken(string $token, string $database, ?string $schema = "public"): array
+    public function startWithToken(string $token, string $parentDb, ?string $schema = "public", bool $superuser = false): array
     {
         \app\inc\Session::start();
         $openIdConfig = App::$param['openIdConfig'];
@@ -227,14 +227,18 @@ class Session extends Model
             // Handle signature or validation errors
             throw new GC2Exception('Invalid ID token: ' . $e->getMessage());
         }
-        $parentDb = $database;
         $allowedDatabases = explode(',', $payload->database);
-        if (!in_array($parentDb, $allowedDatabases)) {
+        if (!in_array($parentDb, $allowedDatabases) && $payload->database != "*") {
             throw new GC2Exception('Wanted database not allowed: ' . $parentDb . '. Allowed: ' . implode(', ', $allowedDatabases) . '.');
         }
+        $databasesWithSuperuser = explode(',', $payload->superuser);
+        if (!in_array($parentDb, $databasesWithSuperuser) && $superuser) {
+            throw new GC2Exception('Wanted database is not allowed with superuser privileges: ' . $parentDb . '. Allowed: ' . implode(', ', $databasesWithSuperuser) . '.');
+        }
+
         $row = null;
-        $fn = function () use ($payload, &$row, $parentDb): void {
-            if ($parentDb) {
+        $fn = function () use ($payload, &$row, $parentDb, $superuser): void {
+            if (!$superuser) {
                 $sQuery = "SELECT * FROM users WHERE email = :sEmail AND parentdb = :parentDb";
                 $res = $this->prepare($sQuery);
                 $res->execute([
@@ -242,17 +246,17 @@ class Session extends Model
                     ":parentDb" => $parentDb
                 ]);
             } else {
-                $sQuery = "SELECT * FROM users WHERE email = :sEmail AND parentdb is null";
+                $sQuery = "SELECT * FROM users WHERE screenname = :sDb AND parentdb is null";
                 $res = $this->prepare($sQuery);
                 $res->execute([
-                    ":sEmail" => $payload->email,
+                    ":sDb" => $parentDb,
                 ]);
             }
             $row = $this->fetchRow($res);
         };
         $fn();
 
-        if (!$row) {
+        if (!$row && !$superuser) {
             // Create sub-user
             $user = new UserModel(parentDb: $parentDb);
             $data = [
