@@ -14,17 +14,10 @@ services:
     ports:
       - "8080:80"
       - "8081:8080"
+      - "4001:4000"
     expose:
       - 9000
-    environment:
-      - POSTGIS_HOST=postgis
-      - POSTGIS_DB=postgres
-      - POSTGIS_USER=gc2
-      - POSTGIS_PORT=6432
-      - POSTGIS_PW=1234
-      - POSTGIS_PGBOUNCER=true
-      - MODE_ENV=${MODE_ENV}
-      - BUILD_ID=${BUILD_ID}
+    env_file: connection.env
     extra_hosts:
       - host.docker.internal:host-gateway
 
@@ -41,15 +34,7 @@ services:
       - "8088:80"
     expose:
       - 9000
-    environment:
-      - POSTGIS_HOST=postgis
-      - POSTGIS_DB=postgres
-      - POSTGIS_USER=gc2
-      - POSTGIS_PORT=6432
-      - POSTGIS_PW=1234
-      - POSTGIS_PGBOUNCER=true
-      - MODE_ENV=${MODE_ENV}
-      - BUILD_ID=${BUILD_ID}
+    env_file: connection.env
     extra_hosts:
       - host.docker.internal:host-gateway
   redis:
@@ -105,6 +90,8 @@ services:
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+    volumes:
+      - keycloak:/opt/keycloak/data/
 
 #  limesurvey:
 #    image: acspri/limesurvey
@@ -139,6 +126,7 @@ services:
 
 volumes:
   postgis_var_lib_postgresql:
+  keycloak:
 
 
 
