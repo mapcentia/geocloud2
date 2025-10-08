@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2024 MapCentia ApS
+ * @copyright  2013-2025 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -171,7 +171,7 @@ class Preparedstatement extends Model
             'srs' => $srs ?? $old['srs'],
         ];
         if ($isSuperUser) {
-            $sql = "UPDATE settings.prepared_statements SET name=:newName, statement=:statement,type_hints=:type_hints,type_formats=:type_formats,output_format=:output_format,srs=:srs where name=:name RETURNING uuid,name";;
+            $sql = "UPDATE settings.prepared_statements SET name=:newName, statement=:statement,type_hints=:type_hints,type_formats=:type_formats,output_format=:output_format,srs=:srs where name=:name RETURNING uuid,name";
         } else {
             $sql = "UPDATE settings.prepared_statements SET name=:newName, statement=:statement,type_hints=:type_hints,type_formats=:type_formats,output_format=:output_format,srs=:srs where name=:name and username=:username RETURNING uuid,name";
             $params['username'] = $userName;
@@ -218,10 +218,31 @@ class Preparedstatement extends Model
         $this->clearCacheOnSchemaChanges(md5($row['uuid']));
     }
 
+    /**
+     * Updates the output schema for a specified prepared statement.
+     *
+     * @param string $name The name of the prepared statement to update.
+     * @param array $outputSchema The new output schema to apply, as an associative array.
+     * @return void
+     */
     public function updateOutputSchema(string $name, array $outputSchema): void
     {
         $sql = "UPDATE settings.prepared_statements SET output_schema=:output_schema WHERE name=:name";
         $res = $this->prepare($sql);
         $res->execute(['name' => $name, 'output_schema' => json_encode($outputSchema)]);
+    }
+
+    /**
+     * Updates the input schema for a specific prepared statement in the settings.prepared_statements table.
+     *
+     * @param string $name The name of the prepared statement to update.
+     * @param array $inputSchema The new input schema to assign to the prepared statement.
+     * @return void
+     */
+    public function updateInputSchema(string $name, array $inputSchema): void
+    {
+        $sql = "UPDATE settings.prepared_statements SET input_schema=:input_schema WHERE name=:name";
+        $res = $this->prepare($sql);
+        $res->execute(['name' => $name, 'input_schema' => json_encode($inputSchema)]);
     }
 }

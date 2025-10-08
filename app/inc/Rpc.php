@@ -51,6 +51,8 @@ readonly class Rpc
             'jsonrpc' => $query['jsonrpc'],
             'result' => $res,
             'method' => $query['method'],
+            'type_hints' => $query['type_hints'],
+            'params' => $query['params'],
         ];
         if (isset($query['id'])) {
             $jsonRpcResponse['id'] = $query['id'];

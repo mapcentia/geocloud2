@@ -131,10 +131,21 @@ class Call extends AbstractApi
         } else {
             $api->rollback();
             $api->begin();
+            // In dry-run we interface with
+            $pres = new PreparedstatementModel(connection: $this->connection);
             foreach ($result as $key => $res) {
-                $pres = new PreparedstatementModel(connection: $this->connection);
                 $pres->updateOutputSchema(name: $res['method'], outputSchema: $this->extractSchema($res['result']));
+                foreach ($res['params'] as $param => $value) {
+                    $type = $res['type_hints'][$param] ?? gettype($value);
+                    $inputSchema[$param] = ['type' => $type, 'array' => str_starts_with($type, '_')];;
+                }
+                if (!empty($inputSchema)) {
+                    $pres->updateInputSchema(name: $res['method'], inputSchema: $inputSchema);
+                }
+                // Unset properties in the response
                 unset($result[$key]['method']);
+                unset($result[$key]['type_hints']);
+                unset($result[$key]['params']);
             }
             $api->commit();
         }
