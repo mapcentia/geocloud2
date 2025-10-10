@@ -1063,8 +1063,8 @@ class Model
     public function getColumns(string $schema, string $table): array
     {
         $cacheType = "columns";
-        $cacheRel = $schema . "." . $table;
-        $cacheId = md5($this->connection->database . "_" . $cacheRel . "_" . $cacheType);
+        $cacheRel = md5($schema . "." . $table);
+        $cacheId = $this->connection->database . "_" . $cacheRel . "_" . $cacheType;
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
