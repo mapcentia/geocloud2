@@ -68,8 +68,8 @@ class Table extends Model
 
         if ($this->schema != "settings") {
             $cacheType = "relExist";
-            $cacheRel = ($this->table);
-            $cacheId = ($this->postgisdb . "_" . $cacheRel . "_" . $cacheType);
+            $cacheRel = md5($this->table);
+            $cacheId = $this->postgisdb . "_" . $cacheRel . "_" . $cacheType;
             $CachedString = Cache::getItem($cacheId);
             if ($CachedString != null && $CachedString->isHit()) {
                 $this->exists = $CachedString->get();
@@ -126,7 +126,7 @@ class Table extends Model
     {
         $relName = $relName ?: $this->table;
         $patterns = [
-            $this->postgisdb . '_' . $relName . '*',
+            $this->postgisdb . '_' . md5($relName) . '*',
             $this->postgisdb . '*_meta_*',
             $this->postgisdb . '*_legend_*',
         ];
@@ -416,10 +416,15 @@ class Table extends Model
     {
         $arr = [];
         $sql = "SELECT DISTINCT(\"$field\") as \"distinct\" FROM {$this->doubleQuoteQualifiedName($this->table)} ORDER BY \"$field\"";
-        $res = $this->prepare($sql);
-        $res->execute();
-        while ($row = $this->fetchRow($res)) {
-            $arr[] = $row["distinct"];
+        // We ignore the error here
+        try {
+            $res = $this->prepare($sql);
+            $res->execute();
+            while ($row = $this->fetchRow($res)) {
+                $arr[] = $row["distinct"];
+            }
+        } catch (PDOException $e) {
+            error_log($e->getMessage());
         }
         $response['success'] = true;
         $response['data'] = $arr;

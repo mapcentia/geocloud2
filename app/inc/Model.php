@@ -162,7 +162,7 @@ class Model
     public function getPrimeryKey(string $table): ?array
     {
         $cacheType = "prikey";
-        $cacheRel = $table;
+        $cacheRel = md5($table);
         $cacheId = $this->connection->database . "_" . $cacheRel . "_" . $cacheType;
         if (!empty(App::$param["defaultPrimaryKey"])) {
             return ["attname" => App::$param["defaultPrimaryKey"]];
@@ -368,7 +368,7 @@ class Model
     public function getMetaData(string $table, bool $temp = false, bool $restriction = true, ?array $restrictions = null, ?string $cacheKey = null, bool $getEnums = true, bool $lookupForeignTables = true): array
     {
         $cacheType = "metadata";
-        $cacheRel = $cacheKey ?: $table;
+        $cacheRel = md5($cacheKey ?: $table);
         $cacheId = $this->connection->database . "_" . $cacheRel . "_" . $cacheType . "_" . ($temp ? 'temp' : 'notTemp') . "_" . ($restriction ? 'restriction' : 'notRestriction') . "_" . ($getEnums ? 'enums' : 'notEnums') . "_" . ($restrictions ? 'restrictions_' . md5(serialize($restrictions)) : 'noRestrictions');
         $CachedString = Cache::getItem($cacheId);
 
@@ -476,10 +476,15 @@ class Model
                         if (!empty($rel->_where)) {
                             $sql .= " WHERE $rel->_where";
                         }
-                        $resC = $this->prepare($sql);
-                        $resC->execute();
-                        while ($rowC = $this->fetchRow($resC)) {
-                            $foreignValues[] = ["value" => $rowC["value"], "alias" => (string)$rowC["text"]];
+                        // We ignore the error here
+                        try {
+                            $resC = $this->prepare($sql);
+                            $resC->execute();
+                            while ($rowC = $this->fetchRow($resC)) {
+                                $foreignValues[] = ["value" => $rowC["value"], "alias" => (string)$rowC["text"]];
+                            }
+                        } catch (Exception $e) {
+                            error_log($e->getMessage());
                         }
                     }
                 } elseif ($restriction && $restrictions && isset($restrictions[$row["column_name"]]) && $restrictions[$row["column_name"]] != "*" && $getEnums) {
@@ -621,7 +626,7 @@ class Model
      */
     function close(): void
     {
-        $this->unsetPdoConnection();;
+        $this->unsetPdoConnection();
     }
 
     /**
@@ -782,7 +787,7 @@ class Model
     public function isTableOrView(string $table): array
     {
         $cacheType = "isTableOrView";
-        $cacheRel = $table;
+        $cacheRel = md5($table);
         $cacheId = $this->connection->database . "_" . $cacheRel . "_" . $cacheType;
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
@@ -879,7 +884,7 @@ class Model
     public function doesColumnExist(string $table, string $column): array
     {
         $cacheType = "columnExist";
-        $cacheRel = $table;
+        $cacheRel = md5($table);
         $cacheId = $this->connection->database . "_" . $cacheRel . "_" . $column . "_" . $cacheType;
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
@@ -907,8 +912,8 @@ class Model
     public function getForeignConstrains(string|null $schema, string $table): array
     {
         $cacheType = "foreignConstrain";
-        $cacheRel = ($schema . "." . $table);
-        $cacheId = ($this->connection->database . "_" . $cacheRel . "_" . $cacheType);
+        $cacheRel = md5($schema . "." . $table);
+        $cacheId = $this->connection->database . "_" . $cacheRel . "_" . $cacheType;
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
@@ -956,8 +961,8 @@ class Model
     public function getConstrains(string|null $schema, string $table, ?string $type = null): array
     {
         $cacheType = "checkConstrain";
-        $cacheRel = ($schema . "." . $table);
-        $cacheId = ($this->connection->database . "_" . $cacheRel . "_" . $type . "_" . $cacheType);
+        $cacheRel = md5($schema . "." . $table);
+        $cacheId = $this->connection->database . "_" . $cacheRel . "_" . $type . "_" . $cacheType;
         $CachedString = Cache::getItem($cacheId);
         $where = '';
         $params = ["table" => $table, "schema" => $schema];
@@ -1007,8 +1012,8 @@ class Model
     public function getChildTables(string $schema, string $table): array
     {
         $cacheType = "childTables";
-        $cacheRel = ($schema . "." . $table);
-        $cacheId = ($this->connection->database . "_" . $cacheRel . "_" . $cacheType);
+        $cacheRel = md5($schema . "." . $table);
+        $cacheId = $this->connection->database . "_" . $cacheRel . "_" . $cacheType;
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
@@ -1058,8 +1063,8 @@ class Model
     public function getColumns(string $schema, string $table): array
     {
         $cacheType = "columns";
-        $cacheRel = ($schema . "." . $table);
-        $cacheId = ($this->connection->database . "_" . $cacheRel . "_" . $cacheType);
+        $cacheRel = $schema . "." . $table;
+        $cacheId = md5($this->connection->database . "_" . $cacheRel . "_" . $cacheType);
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
@@ -1598,7 +1603,7 @@ class Model
     protected function getColumnComments(string $schema, string $table): array
     {
         $cacheType = 'colComments';
-        $cacheRel = $schema . '.' . $table;
+        $cacheRel = md5($schema . '.' . $table);
         $cacheId = $this->connection->database . '_' . $cacheRel . '_' . $cacheType;
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
@@ -1641,7 +1646,7 @@ class Model
     public function getTableComment(string $schema, string $table): ?string
     {
         $cacheType = 'tableComment';
-        $cacheRel = $schema . '.' . $table;
+        $cacheRel = md5($schema . '.' . $table);
         $cacheId = $this->connection->database . '_' . $cacheRel . '_' . $cacheType;
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {

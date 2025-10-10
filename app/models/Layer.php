@@ -51,7 +51,7 @@ class Layer extends Table
     private function clearCacheOfColumns($relName): void
     {
         $patterns = [
-            $this->postgisdb . '_' . $relName . '_columns',
+            $this->postgisdb . '_' . md5($relName) . '_columns',
         ];
         Cache::deleteByPatterns($patterns);
     }
@@ -125,7 +125,7 @@ class Layer extends Table
         }
 
         $cacheType = "meta";
-        $cacheId = ($this->postgisdb . "_" . Session::getUser() . "_" . $cacheType . "_" . md5($query . "_" . "(int)$auth" . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es));
+        $cacheId = $this->postgisdb . "_" . Session::getUser() . "_" . $cacheType . "_" . md5($query . "_" . "(int)$auth" . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es);
 
         $CachedString = Cache::getItem($cacheId);
 
