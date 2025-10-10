@@ -167,11 +167,16 @@ class Route2
                 header_remove('Content-Length');
                 return;
             }
-            header('Content-type: application/json; charset=utf-8');
+
             if ($data) {
-                if (!array_is_list($data)) {
+                if (getType($data) == "string") {
+                    header('Content-type: text/plain; charset=utf-8');
+                    echo $data;
+                    return;
+                } elseif (!array_is_list($data)) {
                     $data["_execution_time"] = round((Util::microtime_float() - $time_start), 3);
                 }
+                header('Content-type: application/json; charset=utf-8');
                 echo json_encode($data, JSON_UNESCAPED_UNICODE);
             }
         }

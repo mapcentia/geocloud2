@@ -13,6 +13,7 @@ use app\api\v4\Responses\NoContentResponse;
 use app\api\v4\Responses\PatchResponse;
 use app\api\v4\Responses\PostResponse;
 use app\api\v4\Responses\RedirectResponse;
+use app\api\v4\Responses\TextResponse;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Model;
@@ -347,6 +348,11 @@ abstract class AbstractApi implements ApiInterface
     protected function deleteResponse(): NoContentResponse
     {
         return new NoContentResponse();
+    }
+
+    protected function textResponse(string $text): TextResponse
+    {
+        return new TextResponse(text: $text);
     }
 
     protected function emptyResponse(): NoContentResponse
