@@ -238,9 +238,7 @@ class Method extends AbstractApi
         if (empty($id) && in_array(Input::getMethod(), ['patch', 'delete'])) {
             throw new GC2Exception("PATCH and DELETE on a Method collection is not allowed.", 400);
         }
-        if (empty($body) && in_array(Input::getMethod(), ['post', 'patch'])) {
-            throw new GC2Exception("POST and PATCH without request body is not allowed.", 400);
-        }
+
         // Throw exception if tried with method resource
         if (Input::getMethod() == 'post' && !empty($id)) {
             $this->postWithResource();

@@ -16,6 +16,7 @@ use app\api\v4\Responses\RedirectResponse;
 use app\api\v4\Responses\TextResponse;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
+use app\inc\Input;
 use app\inc\Model;
 use app\models\Database;
 use app\models\Table as TableModel;
@@ -256,6 +257,10 @@ abstract class AbstractApi implements ApiInterface
     {
         if (!empty($data) && !json_validate($data)) {
             throw new GC2Exception("Invalid JSON. Check your request", 400, null, "INVALID_DATA");
+        }
+
+        if (empty($data) && in_array(Input::getMethod(), ['post', 'patch'])) {
+            throw new GC2Exception("POST and PATCH without request body is not allowed.", 400);
         }
 
         $data = $data == null ? null : json_decode($data, true);
