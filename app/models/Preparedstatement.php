@@ -245,4 +245,117 @@ class Preparedstatement extends Model
         $res = $this->prepare($sql);
         $res->execute(['name' => $name, 'input_schema' => json_encode($inputSchema)]);
     }
+
+    /**
+     * Updates the request associated with the specified name in the database.
+     *
+     * @param string $name The name used to identify the record to be updated.
+     * @param string $request The new request string to update the record with. It will be converted to lowercase before storage.
+     * @return void
+     */
+    public function updateRequest(string $name, string $request): void
+    {
+        $sql = "UPDATE settings.prepared_statements SET request=:request WHERE name=:name";
+        $res = $this->prepare($sql);
+        $res->execute(['name' => $name, 'request' => strtolower($request)]);
+    }
+
+    /**
+     * Generates and returns a TypeScript interface representing the API schema.
+     *
+     * This method retrieves all API methods, constructs their TypeScript
+     * method signatures based on the input and output schemas, and organizes
+     * them into an interface definition. The generated interface contains methods
+     * with their respective parameter types and return types derived dynamically
+     * from the schemas.
+     *
+     * @return string The TypeScript interface definition as a string.
+     * @throws GC2Exception
+     */
+    public function getTypeScriptApi(): string
+    {
+        $methods = $this->getAll()['data'];
+        $output = "export interface Api {\n";
+        foreach ($methods as $method) {
+            $inputTs = isset($method['input_schema']) && $method['input_schema'] ? $this->convertTypes($method['input_schema']). ($method['request'] !== 'select' ? '[]' : '') : 'Record<string, unknown>';
+            $outputTs = isset($method['output_schema']) && $method['output_schema'] ? $this->convertTypes($method['output_schema']) . '[]' : 'Record<string, unknown>';
+            $output .= "    " . $method['name'] . "(params: " . $inputTs ."): Promise<" . $outputTs . ">;\n";
+        }
+        $output .= "}\n\n";
+        return $output;
+    }
+
+    /**
+     * Converts PostgreSQL types to TypeScript-compatible type definitions based on a mapping.
+     *
+     * @param string $type The PostgreSQL type definition, which can be either a JSON-encoded string or a plain text type.
+     * @param string|null $ns Optional namespace to use as a prefix for certain TypeScript types. Defaults to 't'.
+     * @return string A formatted TypeScript-compatible type declaration. If the input cannot be parsed, the original type is returned unchanged.
+     */
+    private function convertTypes(string $type, ?string $ns = 't'): string
+    {
+        $decoded = json_decode($type, true);
+        if (!is_array($decoded)) {
+            // If it's already a TS string or invalid JSON, return as-is
+            return $type;
+        }
+        $mapType = function (string $pgType, bool $isArray) use ($ns): string {
+            $t = strtolower(trim($pgType));
+            // normalize common synonyms
+            $base = match ($t) {
+                'smallint', 'int2', 'smallserial', 'serial2', 'int', 'integer', 'int4', 'serial', 'serial8', 'bigserial', 'int8', 'bigint', 'float8', 'double precision', 'float4', 'real', 'serial4' => 'number',
+                'numeric' => 'NumericString',
+                'decimal' => 'DecimalString',
+                'varchar', 'character varying' => 'Varchar',
+                'char', 'character' => 'Char',
+                'bpchar' => 'BPChar',
+                'text' => 'Text',
+                'boolean', 'bool' => 'PgBoolean',
+                'date' => 'DateString',
+                'time' => 'TimeString',
+                'timetz', 'time with time zone' => 'TimetzString',
+                'timestamp' => 'TimestampString',
+                'timestamptz', 'timestamp with time zone' => 'TimestamptzString',
+                'interval' => 'IntervalValue',
+                'json', 'jsonb' => 'JsonObject|JsonArray',
+                'point' => 'Point',
+                'line' => 'Line',
+                'lseg' => 'Lseg',
+                'box' => 'Box',
+                'path' => 'Path',
+                'polygon' => 'Polygon',
+                'circle' => 'Circle',
+                'int4range' => 'Int4Range',
+                'int8range' => 'Int8Range',
+                'numrange' => 'NumRange',
+                'tsrange' => 'TsRange',
+                'tstzrange' => 'TstzRange',
+                'daterange' => 'DateRange',
+                'uuid', 'inet', 'cidr', 'macaddr', 'macaddr8', 'bytea' => 'string',
+                default => 'string',
+            };
+            foreach (explode('|', $base) as $b) {
+                if (preg_match('~^\p{Lu}~u', $b) && $ns !== null) {
+                    $arr[] = $ns . '.' . $b;
+                } else {
+                    $arr[] = $b;
+                }
+                $base = implode('|', $arr);
+
+            }
+            if ($isArray) {
+                return ($ns ? $ns . '.' : '') . 'PgArray<' . $base . '>';
+            }
+            return $base;
+        };
+        $parts = [];
+        foreach ($decoded as $name => $meta) {
+            if (!is_array($meta) || !isset($meta['type'])) {
+                continue;
+            }
+            $isArray = isset($meta['array']) && $meta['array'];
+            $parts[] = $name . ': ' . $mapType((string)$meta['type'], $isArray) . ';';
+        }
+        return '{ ' . implode(' ', $parts) . ' }';
+    }
 }

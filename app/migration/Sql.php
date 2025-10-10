@@ -179,12 +179,15 @@ class Sql
                     )";
         $sqls[] = "alter table settings.prepared_statements add type_hints jsonb";
         $sqls[] = "alter table settings.prepared_statements add type_formats jsonb";
-        $sqls[] = "alter table settings.prepared_statements add output_format varchar(255)";;
-        $sqls[] = "alter table settings.prepared_statements add srs int4";;
+        $sqls[] = "alter table settings.prepared_statements add output_format varchar(255)";
+        $sqls[] = "alter table settings.prepared_statements add srs int4";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN class_cache jsonb";
         $sqls[] = "alter table settings.geometry_columns_join alter class type jsonb using class::jsonb";
         $sqls[] = "ALTER TABLE settings.prepared_statements ADD COLUMN username varchar(255)";
-        $sqls[] = "alter table settings.clients rename column twofactor to two_factor;";
+        $sqls[] = "alter table settings.clients rename column twofactor to two_factor";
+        $sqls[] = "alter table settings.prepared_statements add output_schema jsonb";
+        $sqls[] = "alter table settings.prepared_statements add input_schema jsonb";
+        $sqls[] = "alter table settings.prepared_statements add request varchar check (request in ('*', 'select', 'insert', 'update', 'delete', 'merge'))";
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
                     SELECT
