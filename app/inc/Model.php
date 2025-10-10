@@ -150,7 +150,6 @@ class Model
                 return null;
             }
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);
-            // $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $response;
         }
@@ -854,7 +853,6 @@ class Model
             $response['success'] = true;
             $response['exists'] = isset($row["exists"]);
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-            //$CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $response;
         }
@@ -955,7 +953,6 @@ class Model
             $response['data'] = $rows;
 
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-            //$CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $response;
         }
@@ -1031,7 +1028,6 @@ class Model
             $res->execute();
             $rows = $this->fetchAll($res);
             $CachedString->set($rows)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-            //   $CachedString->addTags([$cacheType, $cacheRel, $this->postgisdb]);
             Cache::save($CachedString);
             return $rows;
         }
