@@ -188,6 +188,7 @@ class Statement
         unset($authResponse["code"]);
         unset($authResponse["success"]);
         $response["_auth_check"] = $authResponse;
+        $response["_request"] = $operation;
         return $response;
     }
 
