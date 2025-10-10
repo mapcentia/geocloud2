@@ -514,10 +514,10 @@ $handler = static function () use ($routes) {
             }
         } else {
             foreach (glob(dirname(__FILE__) . "/../app/extensions/**/routes/*.php") as $filename) {
-//                include($filename);
+                include($filename);
             }
             foreach (glob(dirname(__FILE__) . "/../app/auth/routes/*.php") as $filename) {
-//                include($filename);
+                include($filename);
             }
             Route::miss();
         }
