@@ -191,7 +191,7 @@ class OpenId extends Component {
                 return
             }
             codeFlow.clear()
-            //window.location.href = '/dashboard/'
+            window.location.href = '/dashboard/'
         })
     }
 
@@ -280,7 +280,7 @@ class OpenId extends Component {
                     you'll be asked to choose one during sign-in.
                 </div>
                 {savedDb ? (
-                    <div style={badgeStyle}>Current selection: {savedDb} {superuserLogin ? '(super)': ''}</div>
+                    <div style={badgeStyle}>Current selection: {savedDb} {superuserLogin === '1' ? '(super)': ''}</div>
                 ) : (
                     <div style={badgeStyle}>No database selected yet</div>
                 )}
