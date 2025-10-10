@@ -35,7 +35,7 @@ class Legend extends Controller
         $path = App::$param['path'] . "/app/wms/mapfiles/";
         if (Input::get("l")) {
             $cacheType = "legend";
-            $cacheId = (Input::getPath()->part(5) . "_" . $cacheType . "_" . str_replace('v:', '', Input::get("l")));
+            $cacheId = Input::getPath()->part(5) . "_" . $cacheType . "_" . str_replace('v:', '', Input::get("l"));
             $CachedString = Cache::getItem($cacheId);
             if ($CachedString != null && $CachedString->isHit()) {
                 $this->legendArr = $CachedString->get();
