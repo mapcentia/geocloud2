@@ -162,6 +162,8 @@ class Sql extends AbstractApi
         if (count($result) == 0) {
             return new NoContentResponse();
         }
+        // Cleanup response
+        $result = self::cleanUpResponse($result);
         if (count($result) == 1) {
             return new GetResponse(data: $result[0]);
         }
@@ -170,9 +172,8 @@ class Sql extends AbstractApi
 
     /**
      * @throws GC2Exception
-     * @throws InvalidArgumentException
      */
-    public function runStatement(array $query, string $user, bool $isSuperUser, ?string $userGroup): ?array
+    private function runStatement(array $query, string $user, bool $isSuperUser, ?string $userGroup): ?array
     {
         $statement = new Statement(connection: $this->connection, convertReturning: true);
         $query['convert_types'] = $value['convert_types'] ?? true;
@@ -183,6 +184,25 @@ class Sql extends AbstractApi
             unset($result['forGrid']);
         }
         return $result;
+    }
+
+    /**
+     * Cleans up the given response array by removing unnecessary keys from each element.
+     *
+     * @param array $response The response array to be cleaned up.
+     * Each element is expected to be an associative array containing keys such as 'filters', '_auth_check', '_request', and '_peak_memory_usage'.
+     *
+     * @return array The cleaned-up response array with specified keys removed from each element.
+     */
+    static private function cleanUpResponse(array $response): array
+    {
+        foreach ($response as $key => $res) {
+            unset($response[$key]['filters']);
+            unset($response[$key]['_auth_check']);
+            unset($response[$key]['_request']);
+            unset($response[$key]['_peak_memory_usage']);
+        }
+        return $response;
     }
 
     #[Override]

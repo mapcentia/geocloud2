@@ -119,22 +119,18 @@ class Call extends AbstractApi
         foreach ($decodedBody as $query) {
             $query['convert_types'] = true;
             $res = $rpc->run(user: $user, api:  $api, query: $query, subuser: !$isSuperUser, userGroup:  $userGroup);
-            // We don't want these in RPC-JSON response
-            unset($res['result']['success']);
-            unset($res['result']['id']);
             if ($res !== null) {
                 $result[] = $res;
             }
         }
         // Check if dry-run is requested
-        if (!Input::getDryRun()) {
-           $api->commit();
-        } else {
+        if (Input::getDryRun()) {
             $api->rollback();
             $api->begin();
             // In dry-run we interface with
             $pres = new PreparedstatementModel(connection: $this->connection);
-            foreach ($result as $key => $res) {
+            foreach ($result as $res) {
+                $pres->updateRequest(name: $res['method'], request: $res['result']['_request']);
                 $pres->updateOutputSchema(name: $res['method'], outputSchema: $this->extractSchema($res['result']));
                 foreach ($res['params'] as $param => $value) {
                     $type = $res['type_hints'][$param] ?? \app\models\Sql::phpTypeToPgType(gettype($value)) ?? "json";
@@ -143,21 +139,42 @@ class Call extends AbstractApi
                 if (!empty($inputSchema)) {
                     $pres->updateInputSchema(name: $res['method'], inputSchema: $inputSchema);
                 }
-                // Unset properties in the response
-                unset($result[$key]['method']);
-                unset($result[$key]['type_hints']);
-                unset($result[$key]['params']);
             }
-            $api->commit();
         }
+        $api->commit();
         // Return response
         if (count($result) == 0) {
             return new NoContentResponse();
         }
+        // Cleanup response
+        $result = self::cleanUpResponse($result);
         if (count($result) == 1) {
             return new GetResponse(data: $result[0]);
         }
         return new GetResponse(data: $result);
+    }
+
+    /**
+     * Cleans up the given response array by removing specific keys from its structure.
+     *
+     * @param array $response The response array to be cleaned.
+     *
+     * @return array The cleaned response array with unnecessary keys removed.
+     */
+    static private function cleanUpResponse(array $response): array
+    {
+        foreach ($response as $key => $res) {
+            unset($response[$key]['result']['success']);
+            unset($response[$key]['result']['id']);
+            unset($response[$key]['result']['_auth_check']);
+            unset($response[$key]['result']['_request']);
+            unset($response[$key]['result']['_peak_memory_usage']);
+            unset($response[$key]['result']['filters']);
+            unset($response[$key]['method']);
+            unset($response[$key]['type_hints']);
+            unset($response[$key]['params']);
+        }
+        return $response;
     }
 
     /**
