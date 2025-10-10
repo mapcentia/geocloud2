@@ -232,7 +232,7 @@ class Session extends Model
             throw new GC2Exception('Wanted database not allowed: ' . $parentDb . '. Allowed: ' . implode(', ', $allowedDatabases) . '.');
         }
         $databasesWithSuperuser = explode(',', $payload->superuser);
-        if (!in_array($parentDb, $databasesWithSuperuser) && $superuser) {
+        if (!in_array($parentDb, $databasesWithSuperuser) && $payload->superuser != "*") {
             throw new GC2Exception('Wanted database is not allowed with superuser privileges: ' . $parentDb . '. Allowed: ' . implode(', ', $databasesWithSuperuser) . '.');
         }
 
