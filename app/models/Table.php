@@ -128,7 +128,7 @@ class Table extends Model
     {
         $relName = $relName ?: $this->table;
         $patterns = [
-            $this->postgisdb . '_' . $relName . '*',
+            $this->postgisdb . '_' . md5($relName) . '*',
             $this->postgisdb . '*_meta_*',
             $this->postgisdb . '*_legend_*',
         ];

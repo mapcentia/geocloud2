@@ -51,7 +51,7 @@ class Layer extends Table
     private function clearCacheOfColumns($relName): void
     {
         $patterns = [
-            $this->postgisdb . '_' . $relName . '_columns',
+            $this->postgisdb . '_' . md5($relName) . '_columns',
         ];
         Cache::deleteByPatterns($patterns);
     }
