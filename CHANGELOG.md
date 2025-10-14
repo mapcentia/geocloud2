@@ -5,7 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [2025.9.0] - 2025-16-9
+## [2025.10.0] - 2025-14-10
+### Security
+- Enhance filter handling in `Wms.php` and `TableWalkerRule.php` to use parentheses for getting operator precedence right.
+
+### Fixed
+- Relation names used in Redis keys are now base64 encoded. This fixes a bug where relations with special characters could not be used.
+
+## [2025.9.1] - 2025-16-9
 ### Fixed
 - Rename `redirect_url` to `redirect_uri` in Signup/Signout API for consistency.
 
