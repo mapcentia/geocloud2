@@ -214,7 +214,7 @@ class Sql extends Model
                 if (!empty(App::$param['convertDataUrlsToHttp']) && $rel) {
                     // Convert data URLs to HTTP. Read the first bytes to get the mimetype.
                     $rowValue = App::$param['host'] . "/api/v1/decodeimg/" . $this->postgisdb . "/" . $rel . "/" . $key . "/";
-                    $fieldsArr[] = "'$rowValue'||gid||'?mimetype='||SPLIT_PART(SPLIT_PART(encode(substring($key from 0 for 100),'escape'),';',1),':',2) as \"$key\"";
+                    $fieldsArr[] = "'$rowValue'||gid||'?mimetype='||SPLIT_PART(SPLIT_PART(encode(substring(\"$key\" from 0 for 100),'escape'),';',1),':',2) as \"$key\"";
                 } else {
                     $fieldsArr[] = "encode(\"$key\",'escape') as \"$key\"";
                 }
