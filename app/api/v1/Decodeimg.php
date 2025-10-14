@@ -41,10 +41,14 @@ class Decodeimg extends Controller
      */
     public function get_index(): never
     {
-        header("Content-type: image/jpeg");
-        $data = $this->table->getRecordByPri(Input::getPath()->part(7));
-        $data = explode(",", $data["data"][Input::getPath()->part(6)])[1];
-        echo base64_decode($data);
+        $record = $this->table->getRecordByPri(Input::getPath()->part(7))["data"];
+        $dataUri = $record[Input::getPath()->part(6)];
+        // Extract and set content type
+        if (preg_match('/^data:(.*?);/', $dataUri, $matches)) {
+            header("Content-type: " . $matches[1]);
+        }
+        // PHP can read data URIs directly
+        readfile($dataUri);
         exit();
     }
 }
