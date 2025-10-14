@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2025.10.1] - 2025-14-10
+### Changed
+- By setting `convertDataUrlsToHttp` to true in `App.php`, bytea fields will be converted to http urls in SQL API in the form: 
+`/api/v1/decodeimg/[database]/[relation]/[primary-field]/[id]`. Some caveats:
+  - Relation is inferred from the SQL string and the first found relation is used for [relation]
+  - To infer the mimetype, the first bytes from the bytea field are extracted with `substring`, 
+    which still has a big IO impact on TOASTed tables.
+
 ## [2025.10.0] - 2025-14-10
 ### Security
 - Enhance filter handling in `Wms.php` and `TableWalkerRule.php` to use parentheses for getting operator precedence right.
@@ -26,7 +34,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - `method` API for management of JSON-RPC methods, which can wraps SQL statement with optional instructions on how to interpret and format the data types.
 - `call` API for executing JSON-RPC methods.
 
-### CHANGED
+### Changed
 - Docker images updated to PHP 8.4 (from 8.3). PHP version is now an argument in the Dockerfile. **All locked Composer packages can run on PHP 8.4. This is not the case for earlier versions of the code base. If using an earlier version, then you must build your Docker image with PHP 8.3**
 - Throughout the code base, implicit marking parameters as null are changed to explicit (implicit is deprecated in PHP 8.4)
 - All Symfony validators are updated, so no deprecated notices are thrown.
