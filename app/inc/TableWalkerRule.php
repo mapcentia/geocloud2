@@ -13,8 +13,13 @@ use Exception;
 use sad_spirit\pg_builder\Delete;
 use sad_spirit\pg_builder\Insert;
 use sad_spirit\pg_builder\Merge;
+use sad_spirit\pg_builder\nodes\merge\MergeDelete;
+use sad_spirit\pg_builder\nodes\merge\MergeInsert;
+use sad_spirit\pg_builder\nodes\merge\MergeUpdate;
 use sad_spirit\pg_builder\nodes\range\RelationReference;
+use sad_spirit\pg_builder\Parser;
 use sad_spirit\pg_builder\Select;
+use sad_spirit\pg_builder\StatementFactory;
 use sad_spirit\pg_builder\Update;
 use sad_spirit\pg_builder\BlankWalker;
 
@@ -100,7 +105,17 @@ class TableWalkerRule extends BlankWalker
                 $this->throwException($relation["schema"] . "." . $relation["table"]);
             }
             if (!empty($response["filters"]["filter"])) {
-                $statement->where->and($response["filters"]["filter"]);
+                $filter = $response["filters"]["filter"];
+                $parser = $statement->getParser();
+                if (null === $parser) {
+                    $parser = (new StatementFactory())->getParser();
+                }
+                $filterExpr = $parser->parseExpression($filter);
+                if (null !== $statement->where->condition) {
+                    $this->combineWhereWithFilter($statement, $parser, $filter);
+                } else {
+                    $statement->where->setCondition($filterExpr);
+                }
             }
         }
         parent::walkSelectStatement($statement);
@@ -123,7 +138,17 @@ class TableWalkerRule extends BlankWalker
                 $this->throwException($schema . "." . $relation);
             }
             if (!empty($response["filters"]["filter"])) {
-                $statement->where->and($response["filters"]["filter"]);
+                $filter = $response["filters"]["filter"];
+                $parser = $statement->getParser();
+                if (null === $parser) {
+                    $parser = (new StatementFactory())->getParser();
+                }
+                $filterExpr = $parser->parseExpression($filter);
+                if (null !== $statement->where->condition) {
+                    $this->combineWhereWithFilter($statement, $parser, $filter);
+                } else {
+                    $statement->where->setCondition($filterExpr);
+                }
             }
         }
         $schema = $statement->relation->relation->schema->value ?? self::DEFAULT_SCHEMA;
@@ -135,7 +160,17 @@ class TableWalkerRule extends BlankWalker
             $this->throwException($schema . "." . $relation);
         }
         if (!empty($response["filters"]["filter"])) {
-            $statement->where->and($response["filters"]["filter"]);
+            $filter = $response["filters"]["filter"];
+            $parser = $statement->getParser();
+            if (null === $parser) {
+                $parser = (new StatementFactory())->getParser();
+            }
+            $filterExpr = $parser->parseExpression($filter);
+            if (null !== $statement->where->condition) {
+                $this->combineWhereWithFilter($statement, $parser, $filter);
+            } else {
+                $statement->where->setCondition($filterExpr);
+            }
         }
         parent::walkUpdateStatement($statement);
         return null;
@@ -161,7 +196,17 @@ class TableWalkerRule extends BlankWalker
                 $this->throwException($schema . "." . $relation);
             }
             if (!empty($response["filters"]["filter"])) {
-                $statement->where->and($response["filters"]["filter"]);
+                $filter = $response["filters"]["filter"];
+                $parser = $statement->getParser();
+                if (null === $parser) {
+                    $parser = (new StatementFactory())->getParser();
+                }
+                $filterExpr = $parser->parseExpression($filter);
+                if (null !== $statement->where->condition) {
+                    $this->combineWhereWithFilter($statement, $parser, $filter);
+                } else {
+                    $statement->where->setCondition($filterExpr);
+                }
             }
         }
         $schema = $statement->relation->relation->schema->value ?? self::DEFAULT_SCHEMA;
@@ -173,7 +218,17 @@ class TableWalkerRule extends BlankWalker
             $this->throwException($schema . "." . $relation);
         }
         if (!empty($response["filters"]["filter"])) {
-            $statement->where->and($response["filters"]["filter"]);
+            $filter = $response["filters"]["filter"];
+            $parser = $statement->getParser();
+            if (null === $parser) {
+                $parser = (new StatementFactory())->getParser();
+            }
+            $filterExpr = $parser->parseExpression($filter);
+            if (null !== $statement->where->condition) {
+                $this->combineWhereWithFilter($statement, $parser, $filter);
+            } else {
+                $statement->where->setCondition($filterExpr);
+            }
         }
         parent::walkDeleteStatement($statement);
         return null;
@@ -194,11 +249,28 @@ class TableWalkerRule extends BlankWalker
             $this->throwException($schema . "." . $relation);
         }
         if (!empty($statement->onConflict) && !empty($response["filters"]["filter"])) {
-            $statement->onConflict->where->and($response["filters"]["filter"]);
+            $filter = $response["filters"]["filter"];
+            $parser = $statement->getParser();
+            if (null === $parser) {
+                $parser = (new StatementFactory())->getParser();
+            }
+            $filterExpr = $parser->parseExpression($filter);
+            if (null !== $statement->onConflict->where->condition) {
+                $builder = (new StatementFactory())->getBuilder();
+                $leftSql = $statement->onConflict->where->condition->dispatch($builder);
+                $combined = $parser->parseExpression('(' . $leftSql . ') AND (' . $filter . ')');
+                $statement->onConflict->where->setCondition($combined);
+            } else {
+                $statement->onConflict->where->setCondition($filterExpr);
+            }
         }
         parent::walkInsertStatement($statement);
         return null;
     }
+
+    /**
+     * @throws Exception
+     */
     public function walkMergeStatement(Merge $statement): mixed
     {
         // Handle USING sources like SELECT: authorize SELECT and apply filters to ON condition
@@ -251,12 +323,12 @@ class TableWalkerRule extends BlankWalker
                 $parser = $statement->getParser();
                 if (null === $parser) {
                     // Fallback: wrap via StatementFactory default parser
-                    $parser = (new \sad_spirit\pg_builder\StatementFactory())->getParser();
+                    $parser = (new StatementFactory())->getParser();
                 }
                 $filterExpr = $parser->parseExpression($filter);
                 if (null !== $statement->on) {
                     $left = $statement->on;
-                    $builder = (new \sad_spirit\pg_builder\StatementFactory())->getBuilder();
+                    $builder = (new StatementFactory())->getBuilder();
                     $leftSql = $left->dispatch($builder);
                     $combined = $parser->parseExpression('(' . $leftSql . ') AND (' . $filter . ')');
                     $statement->setOn($combined);
@@ -275,11 +347,11 @@ class TableWalkerRule extends BlankWalker
             $request = null;
             $action = $whenClause->action ?? null;
             if ($action) {
-                if ($action instanceof \sad_spirit\pg_builder\nodes\merge\MergeUpdate) {
+                if ($action instanceof MergeUpdate) {
                     $request = 'update';
-                } elseif ($action instanceof \sad_spirit\pg_builder\nodes\merge\MergeDelete) {
+                } elseif ($action instanceof MergeDelete) {
                     $request = 'delete';
-                } elseif ($action instanceof \sad_spirit\pg_builder\nodes\merge\MergeInsert) {
+                } elseif ($action instanceof MergeInsert) {
                     $request = 'insert';
                 }
             }
@@ -298,12 +370,12 @@ class TableWalkerRule extends BlankWalker
                 $filter = $response["filters"]["filter"];
                 $parser = $statement->getParser();
                 if (null === $parser) {
-                    $parser = (new \sad_spirit\pg_builder\StatementFactory())->getParser();
+                    $parser = (new StatementFactory())->getParser();
                 }
                 $filterExpr = $parser->parseExpression($filter);
                 if (null !== $whenClause->condition) {
                     $left = $whenClause->condition;
-                    $builder = (new \sad_spirit\pg_builder\StatementFactory())->getBuilder();
+                    $builder = (new StatementFactory())->getBuilder();
                     $leftSql = $left->dispatch($builder);
                     $combined = $parser->parseExpression('(' . $leftSql . ') AND (' . $filter . ')');
                     $whenClause->setCondition($combined);
@@ -316,6 +388,14 @@ class TableWalkerRule extends BlankWalker
         parent::walkMergeStatement($statement);
         return null;
 
+    }
+
+    private function combineWhereWithFilter(Select|Update|Delete|Insert $statement, Parser $parser, string $filter): void
+    {
+        $builder = (new StatementFactory())->getBuilder();
+        $leftSql = $statement->where->condition->dispatch($builder);
+        $combined = $parser->parseExpression('(' . $leftSql . ') AND (' . $filter . ')');
+        $statement->where->setCondition($combined);
     }
 
     public function setRules(array $rules): void
