@@ -21,23 +21,27 @@ class TableWalkerRelation extends BlankWalker
      */
     private array $relations = ["all" => [], "insert" => [], "updateAndDelete" => []];
 
-    public function walkRelationReference(RelationReference $rangeItem): void
+    public function walkRelationReference(RelationReference $rangeItem): mixed
     {
         $this->relations["all"][] = (string)$rangeItem->name;
+        return null;
     }
 
-    public function walkUpdateOrDeleteTarget(UpdateOrDeleteTarget $target): void
+    public function walkUpdateOrDeleteTarget(UpdateOrDeleteTarget $target): mixed
     {
         $rel =($target->relation->schema ?? "public") . "." . $target->relation->relation;
         $this->relations["all"][] = $rel;
         $this->relations["updateAndDelete"][] = $rel;
+        return null;
+
     }
 
-    public function walkInsertTarget(nodes\range\InsertTarget $target): void
+    public function walkInsertTarget(nodes\range\InsertTarget $target): mixed
     {
         $rel =($target->relation->schema ?? "public") . "." . $target->relation->relation;
         $this->relations["all"][] = $rel;
         $this->relations["insert"][] = $rel;
+        return null;
     }
 
     /**
