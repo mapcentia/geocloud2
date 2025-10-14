@@ -215,6 +215,8 @@ class Wms extends Controller
         $model = new Model();
         $useFilters = false;
         $filters = isset($_GET["filters"]) ? json_decode(Util::base64urlDecode($_GET["filters"]), true) : [];
+        // Important: enclose the filter in parentheses.
+        $filters = array_map(fn($f) => array_map(fn($i) => "($i)", $f), $filters);
         $qgs = $this->getQGSFilePath($db, $schema);
         $filters = $this->setFilterFromRules($filters);
         // Filters and multiple layers are a no-go, because layers can be defined in different QGS files.

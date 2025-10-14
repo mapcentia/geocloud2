@@ -12,8 +12,14 @@ use app\models\Geofence;
 use Exception;
 use sad_spirit\pg_builder\Delete;
 use sad_spirit\pg_builder\Insert;
+use sad_spirit\pg_builder\Merge;
+use sad_spirit\pg_builder\nodes\merge\MergeDelete;
+use sad_spirit\pg_builder\nodes\merge\MergeInsert;
+use sad_spirit\pg_builder\nodes\merge\MergeUpdate;
 use sad_spirit\pg_builder\nodes\range\RelationReference;
+use sad_spirit\pg_builder\Parser;
 use sad_spirit\pg_builder\Select;
+use sad_spirit\pg_builder\StatementFactory;
 use sad_spirit\pg_builder\Update;
 use sad_spirit\pg_builder\BlankWalker;
 
@@ -47,7 +53,7 @@ class TableWalkerRule extends BlankWalker
     /**
      * @throws Exception
      */
-    public function walkSelectStatement(Select $statement): void
+    public function walkSelectStatement(Select $statement): mixed
     {
         global $relations;
         $this->request = "select";
@@ -99,16 +105,27 @@ class TableWalkerRule extends BlankWalker
                 $this->throwException($relation["schema"] . "." . $relation["table"]);
             }
             if (!empty($response["filters"]["filter"])) {
-                $statement->where->and($response["filters"]["filter"]);
+                $filter = $response["filters"]["filter"];
+                $parser = $statement->getParser();
+                if (null === $parser) {
+                    $parser = (new StatementFactory())->getParser();
+                }
+                $filterExpr = $parser->parseExpression($filter);
+                if (null !== $statement->where->condition) {
+                    $this->combineWhereWithFilter($statement, $parser, $filter);
+                } else {
+                    $statement->where->setCondition($filterExpr);
+                }
             }
         }
         parent::walkSelectStatement($statement);
+        return null;
     }
 
     /**
      * @throws Exception
      */
-    public function walkUpdateStatement(Update $statement): void
+    public function walkUpdateStatement(Update $statement): mixed
     {
         $this->request = "update";
         foreach ($statement->from->getIterator() as $from) {
@@ -121,7 +138,17 @@ class TableWalkerRule extends BlankWalker
                 $this->throwException($schema . "." . $relation);
             }
             if (!empty($response["filters"]["filter"])) {
-                $statement->where->and($response["filters"]["filter"]);
+                $filter = $response["filters"]["filter"];
+                $parser = $statement->getParser();
+                if (null === $parser) {
+                    $parser = (new StatementFactory())->getParser();
+                }
+                $filterExpr = $parser->parseExpression($filter);
+                if (null !== $statement->where->condition) {
+                    $this->combineWhereWithFilter($statement, $parser, $filter);
+                } else {
+                    $statement->where->setCondition($filterExpr);
+                }
             }
         }
         $schema = $statement->relation->relation->schema->value ?? self::DEFAULT_SCHEMA;
@@ -133,15 +160,26 @@ class TableWalkerRule extends BlankWalker
             $this->throwException($schema . "." . $relation);
         }
         if (!empty($response["filters"]["filter"])) {
-            $statement->where->and($response["filters"]["filter"]);
+            $filter = $response["filters"]["filter"];
+            $parser = $statement->getParser();
+            if (null === $parser) {
+                $parser = (new StatementFactory())->getParser();
+            }
+            $filterExpr = $parser->parseExpression($filter);
+            if (null !== $statement->where->condition) {
+                $this->combineWhereWithFilter($statement, $parser, $filter);
+            } else {
+                $statement->where->setCondition($filterExpr);
+            }
         }
         parent::walkUpdateStatement($statement);
+        return null;
     }
 
     /**
      * @throws Exception
      */
-    public function walkDeleteStatement(Delete $statement): void
+    public function walkDeleteStatement(Delete $statement): mixed
     {
         $this->request = "delete";
         foreach ($statement->using->getIterator() as $using) {
@@ -158,7 +196,17 @@ class TableWalkerRule extends BlankWalker
                 $this->throwException($schema . "." . $relation);
             }
             if (!empty($response["filters"]["filter"])) {
-                $statement->where->and($response["filters"]["filter"]);
+                $filter = $response["filters"]["filter"];
+                $parser = $statement->getParser();
+                if (null === $parser) {
+                    $parser = (new StatementFactory())->getParser();
+                }
+                $filterExpr = $parser->parseExpression($filter);
+                if (null !== $statement->where->condition) {
+                    $this->combineWhereWithFilter($statement, $parser, $filter);
+                } else {
+                    $statement->where->setCondition($filterExpr);
+                }
             }
         }
         $schema = $statement->relation->relation->schema->value ?? self::DEFAULT_SCHEMA;
@@ -170,15 +218,26 @@ class TableWalkerRule extends BlankWalker
             $this->throwException($schema . "." . $relation);
         }
         if (!empty($response["filters"]["filter"])) {
-            $statement->where->and($response["filters"]["filter"]);
+            $filter = $response["filters"]["filter"];
+            $parser = $statement->getParser();
+            if (null === $parser) {
+                $parser = (new StatementFactory())->getParser();
+            }
+            $filterExpr = $parser->parseExpression($filter);
+            if (null !== $statement->where->condition) {
+                $this->combineWhereWithFilter($statement, $parser, $filter);
+            } else {
+                $statement->where->setCondition($filterExpr);
+            }
         }
         parent::walkDeleteStatement($statement);
+        return null;
     }
 
     /**
      * @throws Exception
      */
-    public function walkInsertStatement(Insert $statement): void
+    public function walkInsertStatement(Insert $statement): mixed
     {
         $this->request = "insert";
         $schema = $statement->relation->relation->schema->value ?? self::DEFAULT_SCHEMA;
@@ -190,9 +249,153 @@ class TableWalkerRule extends BlankWalker
             $this->throwException($schema . "." . $relation);
         }
         if (!empty($statement->onConflict) && !empty($response["filters"]["filter"])) {
-            $statement->onConflict->where->and($response["filters"]["filter"]);
+            $filter = $response["filters"]["filter"];
+            $parser = $statement->getParser();
+            if (null === $parser) {
+                $parser = (new StatementFactory())->getParser();
+            }
+            $filterExpr = $parser->parseExpression($filter);
+            if (null !== $statement->onConflict->where->condition) {
+                $builder = (new StatementFactory())->getBuilder();
+                $leftSql = $statement->onConflict->where->condition->dispatch($builder);
+                $combined = $parser->parseExpression('(' . $leftSql . ') AND (' . $filter . ')');
+                $statement->onConflict->where->setCondition($combined);
+            } else {
+                $statement->onConflict->where->setCondition($filterExpr);
+            }
         }
-        parent::walkInsertStatement($statement); // TODO: Change the autogenerated stub
+        parent::walkInsertStatement($statement);
+        return null;
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function walkMergeStatement(Merge $statement): mixed
+    {
+        // Handle USING sources like SELECT: authorize SELECT and apply filters to ON condition
+        // Collect relations from USING, including joins, skip sub-selects
+        $relations = [];
+        $using = $statement->using;
+        $getLeft = function ($from, &$relations) use (&$getRight, &$getLeft): void {
+            if (isset($from->right) && $from->right instanceof RelationReference) {
+                $getRight($from, $relations);
+            }
+            if ($from->left instanceof RelationReference) {
+                $relations[] = [
+                    "schema" => ($from->left->name->schema->value ?? self::DEFAULT_SCHEMA),
+                    "table" => $from->left->name->relation->value
+                ];
+            } else {
+                $getLeft($from->left, $relations);
+            }
+        };
+        $getRight = function ($from, &$relations) use (&$getRight): void {
+            if ($from->right instanceof RelationReference) {
+                $relations[] = [
+                    "schema" => ($from->right->name->schema->value ?? self::DEFAULT_SCHEMA),
+                    "table" => $from->right->name->relation->value
+                ];
+            } else {
+                $getRight($from->right, $relations);
+            }
+        };
+        if (isset($using->left)) {
+            $getLeft($using, $relations);
+        } else {
+            if (isset($using->name)) {
+                $relations[] = [
+                    "schema" => ($using->name->schema->value ?? self::DEFAULT_SCHEMA),
+                    "table" => $using->name->relation->value
+                ];
+            }
+        }
+        foreach ($relations as $relation) {
+            $this->request = "select";
+            $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $relation["schema"], $relation["table"]);
+            $geofence = new Geofence($userFilter);
+            $response = $geofence->authorize($this->rules);
+            if (isset($response["access"]) && $response["access"] == Geofence::DENY_ACCESS) {
+                $this->throwException($relation["schema"] . "." . $relation["table"]);
+            }
+            if (!empty($response["filters"]["filter"])) {
+                $filter = $response["filters"]["filter"];
+                $parser = $statement->getParser();
+                if (null === $parser) {
+                    // Fallback: wrap via StatementFactory default parser
+                    $parser = (new StatementFactory())->getParser();
+                }
+                $filterExpr = $parser->parseExpression($filter);
+                if (null !== $statement->on) {
+                    $left = $statement->on;
+                    $builder = (new StatementFactory())->getBuilder();
+                    $leftSql = $left->dispatch($builder);
+                    $combined = $parser->parseExpression('(' . $leftSql . ') AND (' . $filter . ')');
+                    $statement->setOn($combined);
+                } else {
+                    $statement->setOn($filterExpr);
+                }
+            }
+        }
+
+        // Handle target relation per WHEN actions: UPDATE / DELETE / INSERT
+        $targetSchema = $statement->relation->relation->schema->value ?? self::DEFAULT_SCHEMA;
+        $targetTable = $statement->relation->relation->relation->value;
+
+        foreach ($statement->when as $whenClause) {
+            // Determine action type and corresponding request string
+            $request = null;
+            $action = $whenClause->action ?? null;
+            if ($action) {
+                if ($action instanceof MergeUpdate) {
+                    $request = 'update';
+                } elseif ($action instanceof MergeDelete) {
+                    $request = 'delete';
+                } elseif ($action instanceof MergeInsert) {
+                    $request = 'insert';
+                }
+            }
+            if (null === $request) {
+                continue;
+            }
+
+            $this->request = $request;
+            $userFilter = new UserFilter($this->userName, $this->service, $this->request, $this->ipAddress, $targetSchema, $targetTable);
+            $geofence = new Geofence($userFilter);
+            $response = $geofence->authorize($this->rules);
+            if (isset($response["access"]) && $response["access"] == Geofence::DENY_ACCESS) {
+                $this->throwException($targetSchema . "." . $targetTable);
+            }
+            if (!empty($response["filters"]["filter"])) {
+                $filter = $response["filters"]["filter"];
+                $parser = $statement->getParser();
+                if (null === $parser) {
+                    $parser = (new StatementFactory())->getParser();
+                }
+                $filterExpr = $parser->parseExpression($filter);
+                if (null !== $whenClause->condition) {
+                    $left = $whenClause->condition;
+                    $builder = (new StatementFactory())->getBuilder();
+                    $leftSql = $left->dispatch($builder);
+                    $combined = $parser->parseExpression('(' . $leftSql . ') AND (' . $filter . ')');
+                    $whenClause->setCondition($combined);
+                } else {
+                    $whenClause->setCondition($filterExpr);
+                }
+            }
+        }
+
+        parent::walkMergeStatement($statement);
+        return null;
+
+    }
+
+    private function combineWhereWithFilter(Select|Update|Delete|Insert $statement, Parser $parser, string $filter): void
+    {
+        $builder = (new StatementFactory())->getBuilder();
+        $leftSql = $statement->where->condition->dispatch($builder);
+        $combined = $parser->parseExpression('(' . $leftSql . ') AND (' . $filter . ')');
+        $statement->where->setCondition($combined);
     }
 
     public function setRules(array $rules): void
