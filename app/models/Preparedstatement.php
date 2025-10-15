@@ -274,11 +274,13 @@ class Preparedstatement extends Model
      */
     public function getTypeScriptApi(): string
     {
+        $ns = 'cio';
         $methods = $this->getAll()['data'];
-        $output = "export interface Api {\n";
+        $output = "import {type PgTypes as $ns} from \"@centia-io/sdk\"\n";
+        $output .= "export interface Api {\n";
         foreach ($methods as $method) {
-            $inputTs = isset($method['input_schema']) && $method['input_schema'] ? $this->convertTypes($method['input_schema']). ($method['request'] !== 'select' ? '[]' : '') : 'Record<string, unknown>';
-            $outputTs = isset($method['output_schema']) && $method['output_schema'] ? $this->convertTypes($method['output_schema']) . '[]' : 'Record<string, unknown>';
+            $inputTs = isset($method['input_schema']) && $method['input_schema'] ? $this->convertTypes($method['input_schema'], $ns). ($method['request'] !== 'select' ? '[]' : '') : 'Record<string, unknown>';
+            $outputTs = isset($method['output_schema']) && $method['output_schema'] ? $this->convertTypes($method['output_schema'], $ns) . '[]' : 'Record<string, unknown>';
             $output .= "    " . $method['name'] . "(params: " . $inputTs ."): Promise<" . $outputTs . ">;\n";
         }
         $output .= "}\n\n";
