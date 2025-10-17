@@ -87,7 +87,6 @@ class Signup extends AbstractApi
             try {
                 $userObj->connect();
                 $userObj->begin();
-                $userObj->checkCode($_POST['code'], $_POST['email']);
                 // Check if two factor key is correct
                 $key = '__twofactor_' . md5($_POST['name']) . '_' . $_POST['parentdb'];
                 try {
@@ -110,14 +109,15 @@ class Signup extends AbstractApi
                     'subuser' => !empty($_POST['parentdb']),
                     'parentdb' => $_POST['parentdb']
                 ]);
+                // Check activation code. Roll bck if not ok
+                $userObj->checkCode($_POST['code'], $_POST['email']);
+                // Everthing is ok
                 $userObj->commit();
-
                 // Change ownership on all objects in the database
                 if (empty($_POST['parentdb'])) {
                     (new Database())->changeOwner($res['data']['screenname'], $res['data']['screenname']);
                 }
-
-                // Delete key
+                // Delete the two-factor key
                 Cache::deleteItem($key);
                 (new SessionModel())->start($res['data']['screenname'], $_POST['password'], "public", $res['data']['parentdb']);
                 // Redirect
