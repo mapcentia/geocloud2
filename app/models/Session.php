@@ -231,18 +231,26 @@ class Session extends Model
         if (!in_array($parentDb, $allowedDatabases) && $payload->database != "*") {
             throw new GC2Exception('Wanted database not allowed: ' . $parentDb . '. Allowed: ' . implode(', ', $allowedDatabases) . '.');
         }
-        $databasesWithSuperuser = explode(',', $payload->superuser);
-        if (!in_array($parentDb, $databasesWithSuperuser) && $payload->superuser != "*") {
-            throw new GC2Exception('Wanted database is not allowed with superuser privileges: ' . $parentDb . '. Allowed: ' . implode(', ', $databasesWithSuperuser) . '.');
+        if ($superuser) {
+            $databasesWithSuperuser = explode(',', $payload->superuser ?? "");
+            if (!in_array($parentDb, $databasesWithSuperuser) && $payload->superuser != "*") {
+                throw new GC2Exception('Wanted database is not allowed with superuser privileges: ' . $parentDb . '. Allowed: ' . implode(', ', $databasesWithSuperuser));
+            }
         }
 
         $row = null;
         $fn = function () use ($payload, &$row, $parentDb, $superuser): void {
             if (!$superuser) {
-                $sQuery = "SELECT * FROM users WHERE email = :sEmail AND parentdb = :parentDb";
+//                $sQuery = "SELECT * FROM users WHERE email = :sEmail AND parentdb = :parentDb";
+//                $res = $this->prepare($sQuery);
+//                $res->execute([
+//                    ":sEmail" => $payload->email,
+//                    ":parentDb" => $parentDb
+//                ]);
+                $sQuery = "SELECT * FROM users WHERE screenname = :sName AND parentdb = :parentDb";
                 $res = $this->prepare($sQuery);
                 $res->execute([
-                    ":sEmail" => $payload->email,
+                    ":sName" => $payload->preferred_username,
                     ":parentDb" => $parentDb
                 ]);
             } else {
@@ -260,7 +268,8 @@ class Session extends Model
             // Create sub-user
             $user = new UserModel(parentDb: $parentDb);
             $data = [
-                'name' => $payload->email,
+//                'name' => $payload->email,
+                'name' => $payload->preferred_username,
                 'email' => $payload->email,
                 'password' => 'Silke2009!',
                 'parentdb' => $parentDb,
