@@ -47,7 +47,7 @@ class OpenId extends Component {
     }
 
     async getDatabases() {
-        return fetch('http://localhost:8080/api/v2/database/search?userIdentifier=*').then(res => res.json()).then(data =>
+        return fetch('/api/v2/database/search?userIdentifier=*').then(res => res.json()).then(data =>
             data.databases.map(item => item.screenname)
         )
     }
@@ -154,7 +154,7 @@ class OpenId extends Component {
             } else {
                 // If nonce is not set, get it from the server, so it can be used in the sign-in request
                 if (!localStorage.getItem('gc2_nonce')) {
-                    fetch('http://localhost:8080/api/v2/session/nonce').then(res => res.json()).then(data => {
+                    fetch('/api/v2/session/nonce').then(res => res.json()).then(data => {
                         const nonce = data.nonce
                         localStorage.setItem('gc2_nonce', nonce)
                         //  codeFlow.signIn()
@@ -179,7 +179,7 @@ class OpenId extends Component {
         console.log(nonce)
         console.log(selectedDb)
         if (!token || !selectedDb) return
-        fetch('http://localhost:8080/api/v2/session/token', {
+        fetch('/api/v2/session/token', {
             method: 'POST',
             headers: {"Content-Type": "application/json;charset=UTF-8"},
             body: JSON.stringify({nonce, token, database: selectedDb, superuser}),
