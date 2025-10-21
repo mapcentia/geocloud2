@@ -202,7 +202,7 @@ class Github extends AbstractApi
 
                 $data = [
                     // Use GitHub login as GC2 username
-                    'name' => $email . "_slug",
+                    'name' => $email,
                     'email' => $email,
                     'password' => $password,
                 ];
