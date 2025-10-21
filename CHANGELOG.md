@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2025.10.2] - 2025-21-10
+### Added
+- Added `convertDataUrlsToHttp` to `App.php` to convert data urls to http urls in SQL API. If set to true, bytea fields will be converted to http urls in SQL API in the form: 
+`/api/v1/decodeimg/[database]/[relation]/[primary-field]/[id]`. Some caveats:
+  - Relation is inferred from the SQL string and the first found relation is used for [relation]
+  - To infer the mimetype, the first bytes from the bytea field are extracted with `substring`, 
+    which still has a big IO impact on TOASTed tables.
+  - The `convertDataUrlsToHttp` option is set to false by default.
+
 ## [2025.10.1] - 2025-14-10
 ### Changed
 - By setting `convertDataUrlsToHttp` to true in `App.php`, bytea fields will be converted to http urls in SQL API in the form: 
