@@ -170,7 +170,7 @@ class Github extends AbstractApi
             $row = $this->findUserByEmail($userModel, $email, $parentdb);
             // Try to create user if not found, and if we're signing up or if parentdb is specified
             // (in that case we want to create a subuser)
-            if ((!$row && $_SESSION['action'] == 'signup') || (!$row && !empty($parentdb))) {
+            if (!$row) {
                 // Create user as subuser when parentdb specified, else top-level user
                 // Generate a strong password that includes at least:
                 // - one uppercase letter

@@ -1,11 +1,11 @@
 <form hx-post="/signup">
     <h1 class="h3 mb-3 fw-normal">Please sign up</h1>
 
-    <div class="form-floating">
-        <input class="form-control" id="code" type="text" name="code" placeholder="Activation code"  value="{{ code }}" required {% if password is null %}autofocus{% endif %}/>
-        <label class="form-label" for="code">Activation code</label>
-    </div>
-    <p>We're in beta, so you need a <br><a href="/activation">activation code</a></p>
+{#    <div class="form-floating">#}
+{#        <input class="form-control" id="code" type="text" name="code" placeholder="Activation code"  value="{{ code }}" required {% if password is null %}autofocus{% endif %}/>#}
+{#        <label class="form-label" for="code">Activation code</label>#}
+{#    </div>#}
+{#    <p>We're in beta, so you need a <br><a href="/activation">activation code</a></p>#}
     <div class="form-floating mt-4">
         <input class="form-control upper" id="user" type="text" name="name" placeholder="Username or e-mail" value="{{ name }}" required {% if password is null %}autofocus{% endif %}/>
         <label class="form-label" for="user">Username</label>

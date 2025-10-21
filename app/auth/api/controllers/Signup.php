@@ -55,7 +55,7 @@ class Signup extends AbstractApi
     public function post_index(): Response
     {
         $userObj = new User();
-        if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password']) && !empty($_POST['code']) && empty($_POST['tf_code'])) {
+        if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password']) && empty($_POST['tf_code'])) {
 
             // TODO Check if user exists
 
@@ -90,7 +90,7 @@ class Signup extends AbstractApi
             echo $this->twig->render('signup.html.twig', [...$_POST, ...$_GET]);
             return $this->emptyResponse();
 
-        } elseif (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password']) && !empty($_POST['code']) && !empty($_POST['tf_code'])) {
+        } elseif (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password']) && !empty($_POST['tf_code'])) {
             try {
                 $userObj->connect();
                 $userObj->begin();
@@ -117,7 +117,7 @@ class Signup extends AbstractApi
                     'parentdb' => $_POST['parentdb']
                 ]);
                 // Check activation code. Roll bck if not ok
-                $userObj->checkCode($_POST['code'], $_POST['email']);
+//                $userObj->checkCode($_POST['code'], $_POST['email']);
                 // Everthing is ok
                 $userObj->commit();
                 // Change ownership on all objects in the database
