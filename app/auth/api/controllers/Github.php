@@ -16,6 +16,7 @@ use app\conf\App;
 use app\inc\Connection;
 use app\inc\Route2;
 use app\inc\Session as HttpSession;
+use app\models\Session as SessionModel;
 use app\models\User as UserModel;
 use Exception;
 use GuzzleHttp\Client;
@@ -32,16 +33,28 @@ class Github extends AbstractApi
     }
 
     public function get_index(): Response
-    { return []; }
+    {
+    }
+
     public function post_index(): Response
-    { return []; }
+    {
+    }
+
     public function put_index(): Response
-    { return []; }
+    {
+    }
+
     public function delete_index(): Response
-    { return []; }
+    {
+    }
+
     public function patch_index(): Response
-    { return []; }
-    public function validate(): void { /* no-op */ }
+    {
+    }
+
+    public function validate(): void
+    { /* no-op */
+    }
 
     /**
      * Initiates the GitHub OAuth flow
@@ -59,6 +72,8 @@ class Github extends AbstractApi
         $returnQuery = $_SERVER['QUERY_STRING'] ?? '';
         $_SESSION['github_return_query'] = $returnQuery;
         $_SESSION['github_parent_db'] = $_GET['parentdb'] ?? null;
+        $_SESSION['redirect_uri'] = $_GET['redirect_uri'] ?? null;
+        $_SESSION['action'] = $_GET['action'] ?? null;
 
         // CSRF protection state
         $state = bin2hex(random_bytes(16));
@@ -72,8 +87,7 @@ class Github extends AbstractApi
             'state' => $state,
         ];
         $authUrl = 'https://github.com/login/oauth/authorize?' . http_build_query($params);
-        header("Location: $authUrl");
-        return ['code' => 302];
+        return $this->redirectResponse(location: $authUrl);
     }
 
     /**
@@ -154,7 +168,9 @@ class Github extends AbstractApi
             // 5) Ensure local user exists (in specific parentdb if provided, else top-level)
             $userModel = new UserModel(parentDb: $parentdb);
             $row = $this->findUserByEmail($userModel, $email, $parentdb);
-            if (!$row) {
+            // Try to create user if not found, and if we're signing up or if parentdb is specified
+            // (in that case we want to create a subuser)
+            if ((!$row && $_SESSION['action'] == 'signup') || (!$row && !empty($parentdb))) {
                 // Create user as subuser when parentdb specified, else top-level user
                 // Generate a strong password that includes at least:
                 // - one uppercase letter
@@ -186,7 +202,7 @@ class Github extends AbstractApi
 
                 $data = [
                     // Use GitHub login as GC2 username
-                    'name' => $user['login'] ?? $email,
+                    'name' => $email . "_slug",
                     'email' => $email,
                     'password' => $password,
                 ];
@@ -219,7 +235,11 @@ class Github extends AbstractApi
             $_SESSION['postgisschema'] = 'public';
 
             // 7) Redirect back to /auth with original query
-            $redirect = '/auth' . ($returnQuery ? ('?' . $returnQuery) : '');
+            if ($_SESSION['action'] == 'signin') {
+                $redirect = '/auth' . ($returnQuery ? ('?' . $returnQuery) : '');
+            } else {
+                $redirect = $_SESSION['redirect_uri'];
+            }
             return $this->redirectResponse(location: $redirect);
         } catch (Exception $e) {
             echo 'GitHub login failed: ' . htmlspecialchars($e->getMessage());
@@ -232,11 +252,11 @@ class Github extends AbstractApi
         if ($parentDb) {
             $sql = 'SELECT * FROM users WHERE email = :email AND parentdb = :parentdb LIMIT 1';
             $stmt = $userModel->prepare($sql);
-            $userModel->execute($stmt,[':email' => $email, ':parentdb' => $parentDb]);
+            $userModel->execute($stmt, [':email' => $email, ':parentdb' => $parentDb]);
         } else {
             $sql = 'SELECT * FROM users WHERE email = :email AND parentdb IS NULL LIMIT 1';
             $stmt = $userModel->prepare($sql);
-            $userModel->execute($stmt,[':email' => $email]);
+            $userModel->execute($stmt, [':email' => $email]);
         }
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ?: null;
