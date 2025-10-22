@@ -105,6 +105,7 @@ class Index extends AbstractApi
 
     /**
      * @return Response
+     * @throws GC2Exception|InvalidArgumentException
      */
     #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/indices', operationId: 'postIndex', tags: ['Schema'],)]
     #[OA\Parameter(name: 'schema', description: 'Name of schema', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
