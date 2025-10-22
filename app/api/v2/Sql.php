@@ -173,7 +173,6 @@ class Sql extends Controller
         if (!empty($this->cacheInfo)) {
             $response["cache"] = $this->cacheInfo;
         }
-        $response["_peak_memory_usage"] = round(memory_get_peak_usage() / 1024) . " KB";
         return $response;
     }
 
