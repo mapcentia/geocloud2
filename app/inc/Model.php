@@ -315,7 +315,7 @@ class Model
                             $result = $this->getPdoConnection()->exec($query);
                     }
                 } catch (PDOException $e) {
-                    $this->getPdoConnection()->rollBack();
+                    $this->rollBack();
                     throw $e;
                 }
                 break;

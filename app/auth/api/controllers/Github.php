@@ -209,6 +209,7 @@ class Github extends AbstractApi
                 if ($parentdb) {
                     // Create as subuser within the specified parent database
                     $data['parentdb'] = $parentdb;
+                    $data['subuser'] = true;
                 } else {
                     // Create as top-level (superuser) with its own database
                     $data['subuser'] = false;
