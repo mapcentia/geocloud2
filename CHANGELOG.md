@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2025.10.3] - 2025-22-10
+### Fixed
+- Improved `Route.php` to handle empty responses gracefully and remove unused memory usage calculation in `Sql.php`. This fixes JSON artifacts in the non-JSON output formats.
+
 ## [2025.10.2] - 2025-21-10
 ### Added
 - Added `convertDataUrlsToHttp` to `App.php` to convert data urls to http urls in SQL API. If set to true, bytea fields will be converted to http urls in SQL API in the form: 
