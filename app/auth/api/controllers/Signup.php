@@ -82,7 +82,7 @@ class Signup extends AbstractApi
                     'TextBody' => "Your one-time code: $val\nThis code expires in 10 minutes.",
                 ];
                 $client->sendEmailBatch([$message]);
-                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => "E-mail with one-time code is send."]) . "</div>";
+                echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => "E-mail with one-time code is send. $val"]) . "</div>";
             } catch (Exception $e) {
                 unset($_POST['password']);
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $e->getMessage()]) . "</div>";
@@ -116,8 +116,6 @@ class Signup extends AbstractApi
                     'subuser' => !empty($_POST['parentdb']),
                     'parentdb' => $_POST['parentdb']
                 ]);
-                // Check activation code. Roll bck if not ok
-//                $userObj->checkCode($_POST['code'], $_POST['email']);
                 // Everthing is ok
                 $userObj->commit();
                 // Change ownership on all objects in the database
@@ -128,7 +126,7 @@ class Signup extends AbstractApi
                 Cache::deleteItem($key);
                 (new SessionModel())->start($res['data']['screenname'], $_POST['password'], "public", $res['data']['parentdb']);
                 // Redirect
-                $header = "HX-Redirect: " . urldecode($_POST['r']);
+                $header = "HX-Redirect: " . urldecode($_POST['redirect_uri']);
                 header($header);
             } catch (Exception $e) {
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => $e->getMessage()]) . "</div>";
