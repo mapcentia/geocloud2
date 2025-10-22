@@ -101,8 +101,9 @@ class Route
                     echo Response::passthru($response["csv"], "csv/plain");
                 } else {
                     if (!$silent) {
-                        $response["_execution_time"] = round((Util::microtime_float() - $time_start), 3);
-                        echo Response::toJson($response);
+                        if (!empty($response)) {
+                            echo Response::toJson($response);
+                        }
                     }
                 }
                 flush();
