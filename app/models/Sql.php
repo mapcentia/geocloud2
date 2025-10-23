@@ -28,6 +28,8 @@ use sad_spirit\pg_wrapper\types\Range;
 use sad_spirit\pg_wrapper\Connection as WrapperConnection;
 use ZipArchive;
 use sad_spirit\pg_builder\StatementFactory;
+use sad_spirit\pg_wrapper\converters\DefaultTypeConverterFactory;
+
 
 
 /**
