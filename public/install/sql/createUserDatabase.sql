@@ -1,0 +1,1 @@
+CREATE DATABASE mapcentia ENCODING 'UTF-8' TEMPLATE template0;

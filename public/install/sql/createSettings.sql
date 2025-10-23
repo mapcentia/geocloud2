@@ -1,12 +1,3 @@
-<?php
-/**
- * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2024 MapCentia ApS
- * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- *  
- */
-
-$sql = " 
 CREATE SCHEMA settings;
 SET search_path = settings, pg_catalog;
 CREATE TABLE geometry_columns_join (
@@ -38,4 +29,3 @@ CREATE TABLE viewer (
 );
 
 INSERT INTO viewer VALUES ('{\"pw\":\"81dc9bdb52d04dc20036dbd8313ed055\"}');
-";

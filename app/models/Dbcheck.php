@@ -8,36 +8,34 @@
 
 namespace app\models;
 
+use app\inc\Connection;
 use app\inc\Model;
 
 class Dbcheck extends Model
 {
-    function __construct()
+    function __construct(?Connection $connection = null)
     {
-        parent::__construct();
+        parent::__construct(connection: $connection);
     }
 
     public function isSchemaInstalled()
     {
         $sql = "select 1 from settings.viewer";
-        $result = $this->execQuery($sql);
-        $response['success'] = true;
-        return $response;
+        $this->execQuery($sql);
+        return true;
     }
 
     public function isPostGISInstalled()
     {
         $sql = "select postgis_version()";
-        $result = $this->execQuery($sql);
-        $response['success'] = true;
-        return $response;
+        $this->execQuery($sql);
+        return true;
     }
 
     public function isViewInstalled()
     {
         $sql = "select * from settings.geometry_columns_view";
-        $result = $this->execQuery($sql);
-        $response['success'] = true;
-        return $response;
+        $this->execQuery($sql);
+        return true;
     }
 }

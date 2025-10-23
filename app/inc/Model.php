@@ -87,7 +87,7 @@ class Model
      */
     public function unsetPdoConnection(): void
     {
-        unset(self::$PdoConnections[$this->connection->database]);
+        unset(self::$PdoConnections[$this->connectString()]);
     }
 
     /**
@@ -300,6 +300,9 @@ class Model
             case "PG" :
                 $this->connect("PG");
                 $result = pg_query($this->PgConnection, $query);
+                if (!$result) {
+                    throw new PDOException(pg_last_error($this->PgConnection));
+                }
                 break;
             case "PDO" :
                 $this->connect();
