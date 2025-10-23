@@ -693,14 +693,16 @@ class Sql extends Model
         $this->execute($res, ['username' => $username, 'statement' => $q, 'cost' => $cost]);
     }
 
-   private  function getConverterForTypeSpecification(string $type): ?TypeConverter {
+    private function getConverterForTypeSpecification(string $type): ?TypeConverter
+    {
         if (empty(self::$converters[$type])) {
             $this->setConverterForTypeSpecification($type);
         }
         return self::$converters[$type];
     }
 
-    private  function setConverterForTypeSpecification(string $type): void {
+    private function setConverterForTypeSpecification(string $type): void
+    {
         self::$converters[$type] = $this->defaultTypeConverterFactory->getConverterForTypeSpecification($type);
     }
 
