@@ -96,6 +96,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 class Sql extends AbstractApi
 {
     private \app\models\Sql $sqlApi;
+
     public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct(connection: $connection);
@@ -123,20 +124,9 @@ class Sql extends AbstractApi
     #[Override]
     public function post_index(): Response
     {
-        // If no token is provided and /api/v4/sql/database/{database} is used,
-        // then check if the default user is set
-        try {
-            $isSuperUser = $this->route->jwt["data"]["superUser"];
-            $user =  $this->route->jwt["data"]["uid"];
-            $userGroup =  $this->route->jwt["data"]["userGroup"];
-        } catch (Exception) {
-            $database = func_get_arg(0);
-            $userObj = new \app\models\User(null, $database);
-            $defaultUser = $userObj->getDefaultUser();
-            $user = $defaultUser['screenname'];
-            $userGroup = $defaultUser['usergroup'];;
-            $isSuperUser = false;
-        }
+        $isSuperUser = $this->route->jwt["data"]["superUser"];
+        $user = $this->route->jwt["data"]["uid"];
+        $userGroup = $this->route->jwt["data"]["userGroup"];
         $decodedBody = json_decode(Input::getBody(), true);
         if (!array_is_list($decodedBody)) {
             $decodedBody = [$decodedBody];
@@ -178,7 +168,7 @@ class Sql extends AbstractApi
         $statement = new Statement(connection: $this->connection, convertReturning: true);
         $query['convert_types'] = $value['convert_types'] ?? true;
         $query['format'] = $body['output_format'] ?? 'json';
-        $result = $statement->run(user: $user, api: $this->sqlApi, query: $query, subuser:  !$isSuperUser, userGroup: $userGroup);
+        $result = $statement->run(user: $user, api: $this->sqlApi, query: $query, subuser: !$isSuperUser, userGroup: $userGroup);
         if (!empty($result)) {
             unset($result['success']);
             unset($result['forGrid']);
