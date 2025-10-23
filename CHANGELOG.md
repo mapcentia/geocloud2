@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2025.10.4] - 2025-23-10
+### Fixed
+- Add missing import for `DefaultTypeConverterFactory` in `app/models/Sql.php`.
+- Update composer dependencies: upgrade `sad_spirit/pg_builder` to `^3.2` and `sad_spirit/pg_wrapper` to `^3.3`.
+
 ## [2025.10.3] - 2025-22-10
 ### Fixed
 - Improved `Route.php` to handle empty responses gracefully and remove unused memory usage calculation in `Sql.php`. This fixes JSON artifacts in the non-JSON output formats.
