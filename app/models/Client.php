@@ -51,7 +51,7 @@ class Client extends Model
     /**
      * @throws RandomException
      */
-    public function insert(string $id, string $name, string $redirectUri, ?string $homepage, ?string $description, bool $public = false, bool $confirm = true, bool $twoFactor = true, bool $allowSignup = false, bool $socialSignup = false): array
+    public function insert(string $id, string $name, ?string $redirectUri, ?string $homepage, ?string $description, bool $public = false, bool $confirm = true, bool $twoFactor = true, bool $allowSignup = false, bool $socialSignup = false): array
     {
         $sql = 'INSERT INTO settings.clients (id, secret, name, homepage, description, redirect_uri, "public", confirm, two_factor, allow_signup, social_signup) VALUES (:id, :secret, :name, :homepage, :description, :redirect_uri, :public, :confirm, :two_factor, :allow_signup, :social_signup)';
         $id = Model::toAscii($id);
