@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e1d68add0b3c70683f5561c36a3734be",
+    "content-hash": "c64a0b92205858eb2a521ad1fc714716",
     "packages": [
         {
             "name": "amphp/amp",
@@ -5269,16 +5269,16 @@
         },
         {
             "name": "sad_spirit/pg_builder",
-            "version": "v3.1.0",
+            "version": "v3.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sad-spirit/pg-builder.git",
-                "reference": "091a352f54d27f6b2fdc0c4989ae00bcb62d75d8"
+                "reference": "31abd9c1151936958514e18b55a31635c794bc32"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sad-spirit/pg-builder/zipball/091a352f54d27f6b2fdc0c4989ae00bcb62d75d8",
-                "reference": "091a352f54d27f6b2fdc0c4989ae00bcb62d75d8",
+                "url": "https://api.github.com/repos/sad-spirit/pg-builder/zipball/31abd9c1151936958514e18b55a31635c794bc32",
+                "reference": "31abd9c1151936958514e18b55a31635c794bc32",
                 "shasum": ""
             },
             "require": {
@@ -5331,22 +5331,22 @@
             ],
             "support": {
                 "issues": "https://github.com/sad-spirit/pg-builder/issues",
-                "source": "https://github.com/sad-spirit/pg-builder/tree/v3.1.0"
+                "source": "https://github.com/sad-spirit/pg-builder/tree/v3.2.0"
             },
-            "time": "2025-05-28T20:16:54+00:00"
+            "time": "2025-10-10T10:16:41+00:00"
         },
         {
             "name": "sad_spirit/pg_wrapper",
-            "version": "v3.2.0",
+            "version": "v3.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sad-spirit/pg-wrapper.git",
-                "reference": "a67c723c9b35010082baf272ea46598d3264c33f"
+                "reference": "3791aae02e8d441f173c511c47c8dccae6bbc9db"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sad-spirit/pg-wrapper/zipball/a67c723c9b35010082baf272ea46598d3264c33f",
-                "reference": "a67c723c9b35010082baf272ea46598d3264c33f",
+                "url": "https://api.github.com/repos/sad-spirit/pg-wrapper/zipball/3791aae02e8d441f173c511c47c8dccae6bbc9db",
+                "reference": "3791aae02e8d441f173c511c47c8dccae6bbc9db",
                 "shasum": ""
             },
             "require": {
@@ -5396,9 +5396,9 @@
             ],
             "support": {
                 "issues": "https://github.com/sad-spirit/pg-wrapper/issues",
-                "source": "https://github.com/sad-spirit/pg-wrapper/tree/v3.2.0"
+                "source": "https://github.com/sad-spirit/pg-wrapper/tree/v3.3.0"
             },
-            "time": "2025-07-23T18:20:10+00:00"
+            "time": "2025-10-10T10:06:11+00:00"
         },
         {
             "name": "softcreatr/jsonpath",
