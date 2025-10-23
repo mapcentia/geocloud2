@@ -1,21 +1,24 @@
 <form hx-post="/signup">
     <h1 class="h3 mb-3 fw-normal">Please sign up</h1>
 
-{#    <div class="form-floating">#}
-{#        <input class="form-control" id="code" type="text" name="code" placeholder="Activation code"  value="{{ code }}" required {% if password is null %}autofocus{% endif %}/>#}
-{#        <label class="form-label" for="code">Activation code</label>#}
-{#    </div>#}
-{#    <p>We're in beta, so you need a <br><a href="/activation">activation code</a></p>#}
+    {#    <div class="form-floating"> #}
+    {#        <input class="form-control" id="code" type="text" name="code" placeholder="Activation code"  value="{{ code }}" required {% if password is null %}autofocus{% endif %}/> #}
+    {#        <label class="form-label" for="code">Activation code</label> #}
+    {#    </div> #}
+    {#    <p>We're in beta, so you need a <br><a href="/activation">activation code</a></p> #}
     <div class="form-floating mt-4">
-        <input class="form-control upper" id="user" type="text" name="name" placeholder="Username or e-mail" value="{{ name }}" required {% if password is null %}autofocus{% endif %}/>
+        <input class="form-control upper" id="user" type="text" name="name" placeholder="Username or e-mail"
+               value="{{ name }}" required {% if password is null %}autofocus{% endif %}/>
         <label class="form-label" for="user">Username</label>
     </div>
     <div class="form-floating">
-        <input class="form-control middle" type="email" id="email" name="email" placeholder="E-mail" value="{{ email }}" required/>
+        <input class="form-control middle" type="email" id="email" name="email" placeholder="E-mail" value="{{ email }}"
+               required/>
         <label class="form-label" for="email">E-mail</label>
     </div>
     <div class="form-floating">
-        <input class="form-control {% if password is null %}lower{% else %} middle{% endif %}" type="password" name="password" id="password" placeholder="password" value="{{ password }}" required/>
+        <input class="form-control {% if password is null %}lower{% else %} middle{% endif %}" type="password"
+               name="password" id="password" placeholder="password" value="{{ password }}" required/>
         <label class="form-label" for="password">Password</label>
     </div>
     {% if password is not null %}
@@ -29,8 +32,11 @@
     <input type="hidden" name="r" value="{{ r }}">
     <button class="btn btn-primary w-100 py-2 mt-3" type="submit">Sign up</button>
 </form>
-
-<div class="mt-3 text-center">
-    <div class="mb-2 text-secondary">or</div>
-    <a class="btn btn-outline-primary w-100 py-2 mb-3 mt-3 d-flex justify-content-center align-items-center gap-1" href="/github/start?client_id={{ client_id|e }}{% if parentdb %}&parentdb={{ parentdb|url_encode }}{% endif %}{% if redirect_uri %}&redirect_uri={{ redirect_uri|url_encode }}{% endif %}{% if action %}&action={{ action|e }}{% endif %}"><i class="bi bi-github"></i> Continue with GitHub</a>
-</div>
+{% if social_signup == 'true' %}
+    <div class="mt-3 text-center">
+        <div class="mb-2 text-secondary">or</div>
+        <a class="btn btn-outline-primary w-100 py-2 mb-3 mt-3 d-flex justify-content-center align-items-center gap-1"
+           href="/github/start?client_id={{ client_id|e }}{% if parentdb %}&parentdb={{ parentdb|url_encode }}{% endif %}{% if redirect_uri %}&redirect_uri={{ redirect_uri|url_encode }}{% endif %}{% if action %}&action={{ action|e }}{% endif %}"><i
+                    class="bi bi-github"></i> Continue with GitHub</a>
+    </div>
+{% endif %}

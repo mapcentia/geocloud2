@@ -75,6 +75,7 @@ use Symfony\Component\Validator\Constraints as Assert;
             title: "Public",
             description: "Public clients do not require a secret.",
             type: "boolean",
+            default: false,
             example: true
         ),
         new OA\Property(
@@ -82,6 +83,7 @@ use Symfony\Component\Validator\Constraints as Assert;
             title: "Confirm",
             description: "Users must confirm client access.",
             type: "boolean",
+            default: true,
             example: true
         ),
         new OA\Property(
@@ -89,6 +91,23 @@ use Symfony\Component\Validator\Constraints as Assert;
             title: "Two factor authentication",
             description: "Users must login with two factor authentication.",
             type: "boolean",
+            default: true,
+            example: true
+        ),
+        new OA\Property(
+            property: "allow_signup",
+            title: "Allow users to sign up",
+            description: "Users can signup for a new account in the web-dialog.",
+            type: "boolean",
+            default: false,
+            example: true
+        ),
+        new OA\Property(
+            property: "social_signup",
+            title: "Enable social signup",
+            description: "Users can signup for a new account with social login.",
+            type: "boolean",
+            default: false,
             example: true
         ),
     ],
@@ -176,7 +195,7 @@ class Client extends AbstractApi
         }
         foreach ($data['clients'] as $datum) {
             $arr = [
-                'id' => $datum['id'],
+                'id' => $datum['id'] ?? uniqid(),
                 'name' => $datum['name'],
                 'redirectUri' => $datum['redirect_uri'] ? json_encode($datum['redirect_uri']) : null,
                 'homepage' => $datum['homepage'] ?? null,
@@ -184,6 +203,8 @@ class Client extends AbstractApi
                 'public' => $datum['public'] ?? false,
                 'confirm' => $datum['confirm'] ?? true,
                 'twoFactor' => $data['two_factor'] ?? true,
+                'allowSignup' => $data['allow_signup'] ?? false,
+                'socialSignup' => $data['social_signup'] ?? false,
             ];
             $list[] = $this->client->insert(...$arr);
         }
@@ -226,6 +247,8 @@ class Client extends AbstractApi
                 'public' => $data['public'] ?? null,
                 'confirm' => $data['confirm'] ?? null,
                 'twoFactor' => $data['two_factor'] ?? null,
+                'allowSignup' => $data['allow_signup'] ?? null,
+                'socialSignup' => $data['social_signup'] ?? null,
             ];
             $list[] = $this->client->update(...$arr);
         }
@@ -278,7 +301,7 @@ class Client extends AbstractApi
         $collection = new Assert\Collection([]);
 
         if (Input::getMethod() == 'post') {
-            $collection->fields['id'] = new Assert\Required(
+            $collection->fields['id'] = new Assert\Optional(
                 new Assert\Length(min: 3)
             );
             $collection->fields['name'] = new Assert\Required(
@@ -310,6 +333,12 @@ class Client extends AbstractApi
             new Assert\Type('boolean')
         );
         $collection->fields['two_factor'] = new Assert\Optional(
+            new Assert\Type('boolean')
+        );
+        $collection->fields['allow_signup'] = new Assert\Optional(
+            new Assert\Type('boolean')
+        );
+        $collection->fields['social_signup'] = new Assert\Optional(
             new Assert\Type('boolean')
         );
         return $collection;

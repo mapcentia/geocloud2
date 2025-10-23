@@ -29,7 +29,7 @@ class Client extends Model
      */
     public function get(?string $id = null): array
     {
-        $sql = 'SELECT id,name,homepage,description,redirect_uri,public,confirm,two_factor FROM settings.clients';
+        $sql = 'SELECT id,name,homepage,description,redirect_uri,public,confirm,two_factor,allow_signup,social_signup FROM settings.clients';
         $params = [];
         if ($id != null) {
             $sql .= ' WHERE id = :id';
@@ -51,9 +51,9 @@ class Client extends Model
     /**
      * @throws RandomException
      */
-    public function insert(string $id, string $name, string $redirectUri, ?string $homepage, ?string $description, bool $public = false, bool $confirm = true, bool $twoFactor = true): array
+    public function insert(string $id, string $name, string $redirectUri, ?string $homepage, ?string $description, bool $public = false, bool $confirm = true, bool $twoFactor = true, bool $allowSignup = false, bool $socialSignup = false): array
     {
-        $sql = 'INSERT INTO settings.clients (id, secret, name, homepage, description, redirect_uri, "public", confirm, two_factor) VALUES (:id, :secret, :name, :homepage, :description, :redirect_uri, :public, :confirm, :two_factor)';
+        $sql = 'INSERT INTO settings.clients (id, secret, name, homepage, description, redirect_uri, "public", confirm, two_factor, allow_signup, social_signup) VALUES (:id, :secret, :name, :homepage, :description, :redirect_uri, :public, :confirm, :two_factor, :allow_signup, :social_signup)';
         $id = Model::toAscii($id);
         $secret = bin2hex(random_bytes(32));
         $secretHash = password_hash($secret, PASSWORD_BCRYPT);
@@ -63,6 +63,8 @@ class Client extends Model
         $public = $public ? 't' : 'f';
         $confirm = $confirm ? 't' : 'f';
         $twoFactor = $twoFactor ? 't' : 'f';
+        $allowSignup = $allowSignup ? 't' : 'f';
+        $socialSignup = $socialSignup ? 't' : 'f';
         $this->execute($res, [
             'id' => $id,
             'secret' => $secretHash,
@@ -73,6 +75,8 @@ class Client extends Model
             'public' => $public,
             'confirm' => $confirm,
             'two_factor' => $twoFactor,
+            'allow_signup' => $allowSignup,
+            'social_signup' => $socialSignup,
         ]);
         return ['id' => $id, 'secret' => $secret];
     }
@@ -80,7 +84,7 @@ class Client extends Model
     /**
      * @throws GC2Exception
      */
-    public function update(string $id, ?string $newId, ?string $name, ?string $redirectUri, ?string $homepage, ?string $description, ?bool $public, ?bool $confirm, ?bool $twoFactor): string
+    public function update(string $id, ?string $newId, ?string $name, ?string $redirectUri, ?string $homepage, ?string $description, ?bool $public, ?bool $confirm, ?bool $twoFactor, ?bool $allowSignup, ?bool $socialSignup): string
     {
         $sets = [];
         $values = [];
@@ -116,6 +120,14 @@ class Client extends Model
         if (isset($twoFactor)) {
             $sets[] = "two_factor=:two_factor";;
             $values['two_factor'] = $twoFactor ? 't' : 'f';
+        }
+        if (isset($allowSignup)) {
+            $sets[] = "allow_signup=:allow_signup";
+            $values['allow_signup'] = $allowSignup ? 't' : 'f';
+        }
+        if (isset($socialSignup)) {
+            $sets[] = "social_signup=:social_signup";
+            $values['social_signup'] = $socialSignup ? 't' : 'f';
         }
         $setStr = implode(', ', $sets);
         $sql = "UPDATE settings.clients set $setStr  WHERE id = :id RETURNING id";

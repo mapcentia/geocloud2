@@ -168,6 +168,9 @@ class Sql
         $sqls[] = "alter table settings.clients add \"public\" boolean default false not null";
         $sqls[] = "alter table settings.clients add confirm boolean default true not null";
         $sqls[] = "alter table settings.clients add twofactor boolean default true not null";
+        $sqls[] = "alter table settings.clients add allow_signup boolean default false not null";
+        $sqls[] = "alter table settings.clients add social_signup boolean default false not null";
+        $sqls[] = "alter table settings.clients add created timestamptz default now() not null";
         $sqls[] = "INSERT INTO settings.clients (id, name, description, redirect_uri, public, confirm) values ('gc2-cli', 'gc2-cli', 'Client for use in CLI','[\"http://127.0.0.1:5657/auth/callback\"]', true, false)";
         $sqls[] = "create table settings.cost
                     (

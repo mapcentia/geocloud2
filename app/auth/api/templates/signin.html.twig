@@ -68,8 +68,11 @@
         <input type="hidden" name="state" value="{{ state }}"/>
     {% endif %}
 </form>
-
-<div class="mt-3 text-center">
-    <div class="mb-2 text-secondary">or</div>
-    <a class="btn btn-outline-primary w-100 py-2 mb-3 mt-3 d-flex justify-content-center align-items-center gap-1" href="/github/start?client_id={{ client_id|e }}{% if parentdb %}&parentdb={{ parentdb|url_encode }}{% endif %}{% if response_type %}&response_type={{ response_type|e }}{% endif %}{% if redirect_uri %}&redirect_uri={{ redirect_uri|url_encode }}{% endif %}{% if state %}&state={{ state|e }}{% endif %}{% if code_challenge %}&code_challenge={{ code_challenge|e }}{% endif %}{% if code_challenge_method %}&code_challenge_method={{ code_challenge_method|e }}{% endif %}{% if action %}&action={{ action|e }}{% endif %}"><i class="bi bi-github"></i> Continue with GitHub</a>
-</div>
+{% if social_signup == 'true' %}
+    <div class="mt-3 text-center">
+        <div class="mb-2 text-secondary">or</div>
+        <a class="btn btn-outline-primary w-100 py-2 mb-3 mt-3 d-flex justify-content-center align-items-center gap-1"
+           href="/github/start?client_id={{ client_id|e }}{% if parentdb %}&parentdb={{ parentdb|url_encode }}{% endif %}{% if response_type %}&response_type={{ response_type|e }}{% endif %}{% if redirect_uri %}&redirect_uri={{ redirect_uri|url_encode }}{% endif %}{% if state %}&state={{ state|e }}{% endif %}{% if code_challenge %}&code_challenge={{ code_challenge|e }}{% endif %}{% if code_challenge_method %}&code_challenge_method={{ code_challenge_method|e }}{% endif %}{% if action %}&action={{ action|e }}{% endif %}"><i
+                    class="bi bi-github"></i> Continue with GitHub</a>
+    </div>
+{% endif %}

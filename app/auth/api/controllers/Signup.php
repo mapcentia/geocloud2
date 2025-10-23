@@ -17,6 +17,7 @@ use app\inc\Cache;
 use app\inc\Connection;
 use app\inc\Jwt;
 use app\inc\Route2;
+use app\models\Client;
 use app\models\Database;
 use app\models\Session as SessionModel;
 use app\models\User;
@@ -36,11 +37,39 @@ class Signup extends AbstractApi
 
     public function get_index(): Response
     {
+        $socialSignup = true;
+        if ($_GET['parentdb']) {
+            $requiredParams = ['client_id', 'parentdb'];
+            foreach ($requiredParams as $requiredParam) {
+                if (!array_key_exists($requiredParam, $_GET)) {
+                    $error = "invalid_request";
+                    $errorDesc = "The request must contain the following parameter '$requiredParam'";
+                    return $this->error($error, $errorDesc);
+                }
+            }
+            $client = new Client(connection: new Connection(database: $_GET['parentdb']));
+            // Check client id
+            try {
+                $clientData = $client->get($_GET['client_id']);
+            } catch (Exception $e) {
+                $error = "invalid_client";
+                $errorDesc = "Client with identifier '{$_GET['client_id']}' was not found in the directory";
+                return $this->error($error, $errorDesc);
+            }
+            if (!$clientData[0]['allow_signup']) {
+                $error = "invalid_client";
+                $errorDesc = "Client with identifier '{$_GET['client_id']}' doesn't allow signups";
+                return $this->error($error, $errorDesc);
+            }
+            $socialSignup = $clientData[0]['social_signup'];
+        }
+
         $vals = [
             'parentdb' => $_GET['parentdb'] ?? '',
             'client_id' => $_GET['client_id'],
             'redirect_uri' => $_GET['redirect_uri'] ?? null,
             'action' => 'signup',
+            'social_signup' => $socialSignup ? 'true' : 'false',
         ];
         $hxVals = htmlspecialchars(json_encode($vals, JSON_UNESCAPED_SLASHES), ENT_QUOTES);
         echo $this->twig->render('header.html.twig');
@@ -133,6 +162,15 @@ class Signup extends AbstractApi
             }
         }
         echo $this->twig->render('signup.html.twig', [...$_POST, ...$_GET]);
+        return $this->emptyResponse();
+    }
+
+    private function error(string $error, string $errorDesc): Response
+    {
+        echo "[$error] $errorDesc";
+//                $paramsStr = http_build_query(['error' => $error, 'error_description' => $errorDesc]);
+//                $header = "Location: $redirectUri$separator$paramsStr";
+//                header($header);
         return $this->emptyResponse();
     }
 

@@ -34,6 +34,7 @@ class Auth extends AbstractApi
     public function get_index(): Response
     {
         $requiredParams = ['response_type', 'client_id'];
+        $socialSignup = true;
         foreach ($requiredParams as $requiredParam) {
             if (!array_key_exists($requiredParam, $_GET)) {
                 $error = "invalid_request";
@@ -104,6 +105,24 @@ class Auth extends AbstractApi
                 return $this->redirectResponse("$redirectUri$separator$paramsStr");
 
             }
+        } else {
+            if ($_GET['parentdb']) {
+                $client = new Client(connection: new Connection(database: $_GET['parentdb']));
+                // Check client id
+                try {
+                    $clientData = $client->get($_GET['client_id']);
+                } catch (Exception $e) {
+                    $error = "invalid_client";
+                    $errorDesc = "Client with identifier '{$_GET['client_id']}' was not found in the directory";
+                    return $this->error($error, $errorDesc);
+                }
+                if (!$clientData[0]['allow_signup']) {
+                    $error = "invalid_client";
+                    $errorDesc = "Client with identifier '{$_GET['client_id']}' doesn't allow signups";
+                    return $this->error($error, $errorDesc);
+                }
+                $socialSignup = $clientData[0]['social_signup'];
+            }
         }
         $vals = [
             'parentdb' => $_GET['parentdb'] ?? '',
@@ -114,6 +133,7 @@ class Auth extends AbstractApi
             'code_challenge' => $_GET['code_challenge'] ?? null,
             'code_challenge_method' => $_GET['code_challenge_method'] ?? null,
             'action' => 'signin',
+            'social_signup' => $socialSignup ? 'true' : 'false',
         ];
         $hxVals = htmlspecialchars(json_encode($vals, JSON_UNESCAPED_SLASHES), ENT_QUOTES);
 
@@ -134,8 +154,6 @@ class Auth extends AbstractApi
 //                $header = "Location: $redirectUri$separator$paramsStr";
 //                header($header);
         return $this->emptyResponse();
-
-
     }
 
     public function post_index(): Response
