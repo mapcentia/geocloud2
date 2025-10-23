@@ -89,7 +89,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "two_factor",
             title: "Two factor authentication",
-            description: "Users must login with two factor authentication.",
+            description: "Users must log in with two factor authentication.",
             type: "boolean",
             default: true,
             example: true
@@ -97,7 +97,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "allow_signup",
             title: "Allow users to sign up",
-            description: "Users can signup for a new account in the web-dialog.",
+            description: "Users can sign up for a new account in the web-dialog.",
             type: "boolean",
             default: false,
             example: true
@@ -105,7 +105,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "social_signup",
             title: "Enable social signup",
-            description: "Users can signup for a new account with social login.",
+            description: "Users can sign up for a new account with social login.",
             type: "boolean",
             default: false,
             example: true
