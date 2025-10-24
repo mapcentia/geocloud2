@@ -210,7 +210,7 @@ ws.on('message', (data) => console.log(JSON.parse(data.toString())));
 
 Environment variables (inherited from compose; also used by GC2 core):
 
-- `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PW`, `POSTGRES_DB`
+- `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
 - `POSTGRES_PGBOUNCER` (true/false)
 - `MODE_ENV`, `BUILD_ID`
 
