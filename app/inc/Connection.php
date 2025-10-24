@@ -26,17 +26,16 @@ final class Connection
                                 public ?bool   $pgbouncer = null,
     )
     {
-        \app\conf\Connection::$param['postgishost'] = \app\conf\Connection::$param['postgishost'] ?? getenv('POSTGIS_HOST');
-        \app\conf\Connection::$param['postgisport'] = \app\conf\Connection::$param['postgisport'] ?? getenv('POSTGIS_PORT') ?? '5432';
-        \app\conf\Connection::$param['postgisuser'] = \app\conf\Connection::$param['postgisuser'] ?? getenv('POSTGIS_USER');
-        \app\conf\Connection::$param['postgisdb'] = \app\conf\Connection::$param['postgisdb'] ?? getenv('POSTGIS_DB');
-        \app\conf\Connection::$param['postgispw'] = \app\conf\Connection::$param['postgispw'] ?? getenv('POSTGIS_PW');
-        \app\conf\Connection::$param['pgbouncer'] = \app\conf\Connection::$param['pgbouncer'] ?? getenv('POSTGIS_PGBOUNCER') === "true";
+        \app\conf\Connection::$param['postgishost'] = \app\conf\Connection::$param['postgishost'] ?? getenv('POSTGRES_HOST');
+        \app\conf\Connection::$param['postgisport'] = \app\conf\Connection::$param['postgisport'] ?? getenv('POSTGRES_PORT') ?? '5432';
+        \app\conf\Connection::$param['postgisuser'] = \app\conf\Connection::$param['postgisuser'] ?? getenv('POSTGRES_USER');
+        \app\conf\Connection::$param['postgisdb'] = \app\conf\Connection::$param['postgisdb'] ?? getenv('POSTGRES_DB');
+        \app\conf\Connection::$param['postgispw'] = \app\conf\Connection::$param['postgispw'] ?? getenv('POSTGRES_PW');
+        \app\conf\Connection::$param['pgbouncer'] = \app\conf\Connection::$param['pgbouncer'] ?? getenv('POSTGRES_PGBOUNCER') === "true";
 
         $this->host = $host ?? \app\conf\Connection::$param['postgishost'];
         $this->port = $port ?? \app\conf\Connection::$param['postgisport'];
-//        $this->user = $user ?? \app\conf\Connection::$param['postgisuser'];
-        $this->user = \app\conf\Connection::$param['postgisuser'];
+        $this->user = $user ?? \app\conf\Connection::$param['postgisuser'];
         $this->database = $database ?? \app\conf\Connection::$param['postgisdb'];
         $this->password = $password ?? \app\conf\Connection::$param['postgispw'];
         $this->pgbouncer = $pgbouncer ?? \app\conf\Connection::$param['pgbouncer'];

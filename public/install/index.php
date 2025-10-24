@@ -92,7 +92,7 @@ App::$param['host'] = App::$param['host'] ?: App::$param['protocol'] . "://" . $
     try {
         $arr = $dbList->listAllDbs();
         $i = 1;
-        $systemDbs = ['mapcentia', 'gc2scheduler'];
+        $systemDbs = ['mapcentia', 'gc2scheduler', 'rdsadmin'];
         // Check presence of required 'mapcentia' database
         $hasMapcentia = in_array('mapcentia', $arr['data'] ?? [], true);
         if (!$hasMapcentia) {

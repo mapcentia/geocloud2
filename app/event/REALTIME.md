@@ -210,8 +210,8 @@ ws.on('message', (data) => console.log(JSON.parse(data.toString())));
 
 Environment variables (inherited from compose; also used by GC2 core):
 
-- `POSTGIS_HOST`, `POSTGIS_PORT`, `POSTGIS_USER`, `POSTGIS_PW`, `POSTGIS_DB`
-- `POSTGIS_PGBOUNCER` (true/false)
+- `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PW`, `POSTGRES_DB`
+- `POSTGRES_PGBOUNCER` (true/false)
 - `MODE_ENV`, `BUILD_ID`
 
 Listener tuning (edit `pglistner.php`):
