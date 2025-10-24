@@ -22,6 +22,7 @@ use Postmark\PostmarkClient;
 use app\exceptions\GC2Exception;
 use Psr\Cache\InvalidArgumentException;
 
+const USER_DATABASE = 'mapcentia';
 
 /**
  * Class User
@@ -39,9 +40,14 @@ class User extends Model
      */
     public ?string $parentDb;
 
-    function __construct(?string $userId = null, ?string $parentDb = null)
+    function __construct(?Connection $connection = null, ?string $userId = null, ?string $parentDb = null)
     {
-        parent::__construct(new Connection(database: 'mapcentia'));
+        if (!$connection) {
+            $connection =  new Connection(database: USER_DATABASE);
+        } else {
+            $connection->database = USER_DATABASE;
+        }
+        parent::__construct(connection: $connection);
         $this->userId = $userId;
         $this->parentDb = $parentDb;
     }
@@ -163,7 +169,7 @@ class User extends Model
      */
     public function createUser(array $data): array
     {
-        $this->clearCacheOnSchemaChanges();
+//        $this->clearCacheOnSchemaChanges();
 
         $mandatoryParameters = ['name', 'email', 'password'];
         foreach ($mandatoryParameters as $item) {
@@ -245,7 +251,7 @@ class User extends Model
             $db->postgisdb = $this->postgisdb;
             $db->createUser($userId, null, true);
             $db->createdb($userId, App::$param['databaseTemplate']);
-            (new Setting(connection: new Connection(database: $userId)))->updateApiKeyForUser($userId, true);
+            (new Setting(connection: new Connection(user: $this->connection->user, database: $userId)))->updateApiKeyForUser($userId, true);
         } else {
             try {
                 $db->createUser($userId, $parentDb);

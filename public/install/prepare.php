@@ -8,27 +8,30 @@
 
 
 use app\conf\App;
-use app\conf\Connection;
+use app\inc\Cache;
+use app\inc\Connection;
 use app\migration\Sql;
-use app\models\Database;
 
 ini_set("display_errors", "no");
 
-
+include('../../app/vendor/autoload.php');
 include("../../app/inc/Connection.php");
 include("../../app/inc/Model.php");
+include("../../app/inc/Cache.php");
+include("../../app/inc/Util.php");
 include("../../app/models/Database.php");
 include("../../app/migration/Sql.php");
 include("../../app/conf/App.php");
 include("../../app/conf/Connection.php");
+include("../../app/models/User.php");
+include("../../app/models/Setting.php");
+include("../../app/exceptions/GC2Exception.php");
 
 new App();
-
-error_log(Connection::$param['postgisuser']);
-
+Cache::setInstance();
 
 // sql.php defines $sql for creating the GC2 settings schema
-$schemaSql = file_get_contents( __DIR__ . "/sql/createSettings.sql");
+$schemaSql = file_get_contents(__DIR__ . "/sql/createSettings.sql");
 
 
 $messages = [];
@@ -54,13 +57,15 @@ if (!function_exists('exceptionHasSqlState')) {
     }
 }
 
+$connection = new Connection();
+
 // Allow override of Postgres user/pw via POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['pg_user'])) {
-        Connection::$param['postgisuser'] = trim((string)$_POST['pg_user']);
+    if (!empty($_POST['pg_user'])) {
+        $connection->user = trim((string)$_POST['pg_user']);
     }
-    if (isset($_POST['pg_password'])) {
-        Connection::$param['postgispw'] = (string)$_POST['pg_password'];
+    if (!empty($_POST['pg_password'])) {
+        $connection->password = (string)$_POST['pg_password'];
     }
 }
 
@@ -68,12 +73,12 @@ $connected = false;
 $conn = null;
 
 if ($dbName) {
+    $connection->database = $dbName;
     try {
-        Database::setDb($dbName);
-        $conn = new \app\inc\Model();
+        $conn = new \app\inc\Model(connection: $connection);
         $conn->connect();
         $connected = true;
-        $messages[] = "Connected to database '$dbName' as user '" . Connection::$param['postgisuser'] . "'";
+        $messages[] = "Connected to database '$dbName' as user '" . $connection->user . "'";
     } catch (\Throwable $e) {
         $errors[] = "\app\conf\Connecsaasation failed: " . $e->getMessage();
     }
@@ -97,7 +102,9 @@ if ($dbName) {
 <body class="d-flex flex-column min-vh-100">
 <main class="container py-4 flex-grow-1">
     <h1 class="mb-3">GC2 Database Installer</h1>
-    <p class="text-muted">This tool initializes the required PostGIS extensions and GC2 schemas in the selected PostgreSQL database. If the default credentials from app/conf/Connection.php do not work, enter the correct PostgreSQL superuser credentials below and retry.</p>
+    <p class="text-muted">This tool initializes the required PostGIS extensions and GC2 schemas in the selected
+        PostgreSQL database. If the default credentials from app/conf/Connection.php do not work, enter the correct
+        PostgreSQL superuser credentials below and retry.</p>
 
     <?php foreach ($messages as $m): ?>
         <div class="alert alert-success" role="alert"><?php echo htmlspecialchars($m); ?></div>
@@ -110,15 +117,19 @@ if ($dbName) {
         <div class="card mb-4">
             <div class="card-header">PostgreSQL Credentials</div>
             <div class="card-body">
-                <p class="mb-3">The installer could not connect using the configured credentials. Provide a PostgreSQL user with privileges to create extensions and schemas, then submit to retry.</p>
+                <p class="mb-3">The installer could not connect using the configured credentials. Provide a PostgreSQL
+                    user with privileges to create extensions and schemas, then submit to retry.</p>
                 <form method="post" action="prepare.php?db=<?php echo urlencode((string)$dbName); ?>">
                     <div class="mb-3">
                         <label for="pg_user" class="form-label">PostgreSQL user</label>
-                        <input type="text" class="form-control" id="pg_user" name="pg_user" value="<?php echo htmlspecialchars((string)(Connection::$param['postgisuser'] ?? '')); ?>" required>
+                        <input type="text" class="form-control" id="pg_user" name="pg_user"
+                               value="<?php echo htmlspecialchars(($connection->user ?? '')); ?>"
+                               required>
                     </div>
                     <div class="mb-3">
                         <label for="pg_password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="pg_password" name="pg_password" value="<?php echo htmlspecialchars((string)(Connection::$param['postgispw'] ?? '')); ?>">
+                        <input type="password" class="form-control" id="pg_password" name="pg_password"
+                               value="<?php echo htmlspecialchars($connection->password ?? ''); ?>">
                     </div>
                     <button type="submit" class="btn btn-primary">Retry installation</button>
                     <a class="btn btn-secondary" href="index.php">Back</a>
@@ -157,7 +168,7 @@ if ($dbName) {
                     $conn->commit();
                 } catch (Exception $e) {
                     if (exceptionHasSqlState($e, '42P06')) {
-                        echo '<div class="alert alert-warning">GC2 settings schema already exists (SQLSTATE 42P06). Continuing.</div>';
+                        echo '<div class="alert alert-success">GC2 settings schema already exists (SQLSTATE 42P06). Continuing.</div>';
                     } elseif (exceptionHasSqlState($e, '42501')) {
                         $needsElevated = true;
                         echo '<div class="alert alert-danger">Failed to create GC2 settings schema (insufficient privileges, SQLSTATE 42501): ' . htmlspecialchars($e->getMessage()) . '<br>Provide elevated PostgreSQL credentials below to retry.</div>';
@@ -192,20 +203,101 @@ if ($dbName) {
                         } else {
                             echo '<span class="badge text-bg-secondary me-1">SKIP</span>';
                         }
-                        if ($isFirst) { $firstOrLastFailed = true; $firstFailed = true; $firstFailMsg = (string)$e->getMessage(); }
-                        if ($isLast) { $firstOrLastFailed = true; $lastFailed = true; $lastFailMsg = (string)$e->getMessage(); }
+                        if ($isFirst) {
+                            $firstOrLastFailed = true;
+                            $firstFailed = true;
+                            $firstFailMsg = (string)$e->getMessage();
+                        }
+                        if ($isLast) {
+                            $firstOrLastFailed = true;
+                            $lastFailed = true;
+                            $lastFailMsg = (string)$e->getMessage();
+                        }
                     }
                     $i++;
                 }
                 echo '</div>';
                 if ($firstOrLastFailed) {
                     $detail = '';
-                    if ($firstFailed) { $detail .= 'First script failed. '; }
-                    if ($lastFailed) { $detail .= 'Last script failed.'; }
+                    if ($firstFailed) {
+                        $detail .= 'First script failed. ';
+                    }
+                    if ($lastFailed) {
+                        $detail .= 'Last script failed.';
+                    }
                     echo '<div class="alert alert-danger mt-3">One or more critical post-install scripts failed. ' . htmlspecialchars($detail) . ' These scripts must succeed. Please click "Re-run scripts" to try again. It may take a couple of re-runs.</div>';
-                    echo '<a class="btn btn-outline-primary" href="prepare.php?db=' . urlencode((string)$dbName) . '">Re-run scripts</a>';
+                    echo '<form method="post" action="prepare.php?db=' . urlencode((string)$dbName) . '">';
+                    echo '<input type="submit" class="btn btn-outline-primary" value="Re-run scripts">';
+                    echo '<input type="hidden" name="pg_user" value="'. ($_POST['pg_user'] ?? '')  . '">';
+                    echo '<input type="hidden" name="pg_password" value="'. ($_POST['pg_password'] ?? '')  . '">';
+                    echo '</form>';
                 } else {
                     echo '<div class="alert alert-success mt-3">Post-install SQL scripts completed successfully. First and last scripts are OK.</div>';
+                    $userExists = false;
+                    $userModel = new \app\models\User(connection: $connection, userId: (string)$dbName);
+                    $userModel->connect();
+                    try {
+                        $userModel->doesUserExist();
+                        $userExists = true;
+                        echo '<div class="alert alert-success mt-3">Owner user for database ' . htmlspecialchars((string)$dbName) . ' already exists. Skipping creation.</div>';
+                    } catch (\Throwable) {
+                        // Handle create owner user submission
+                        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_owner'])) {
+                            $ownerEmail = trim((string)($_POST['owner_email'] ?? ''));
+                            $ownerPassword = trim((string)($_POST['owner_password'] ?? ''));
+                            if ($ownerEmail === '' || $ownerPassword === '') {
+                                echo '<div class="alert alert-danger mt-3">Please provide both email and password to create the owner user.</div>';
+                            } else {
+                                try {
+                                    // Create the owner user record in mapcentia; name must be the database name
+                                    $result = $userModel->createUser([
+                                            'name' => (string)$dbName,
+                                            'email' => $ownerEmail,
+                                            'password' => $ownerPassword,
+                                            'subuser' => false
+                                    ]);
+                                    if (!empty($result['success'])) {
+                                        echo '<div class="alert alert-success mt-3">Owner user for database ' . htmlspecialchars((string)$dbName) . ' was created successfully.</div>';
+                                        $userExists = true;
+                                    } else {
+                                        echo '<div class="alert alert-danger mt-3">Could not create owner user. Please try again.</div>';
+                                    }
+
+                                } catch (\Throwable $e) {
+                                    echo '<div class="alert alert-danger mt-3">Failed to create owner user: ' . htmlspecialchars($e->getMessage()) . '</div>';
+                                }
+                            }
+                        }
+
+                        // Show form to create owner user
+                        if (!$userExists) {
+                            echo '<div class="card mt-3">';
+                            echo '  <div class="card-header">Create owner user for this database</div>';
+                            echo '  <div class="card-body">';
+                            echo '    <p class="mb-3">Create the primary GC2 user for <strong>' . htmlspecialchars((string)$dbName) . '</strong>. The user\'s identifier will be derived from the database name. Enter an email and password:</p>';
+                            echo '    <form method="post" action="prepare.php?db=' . urlencode((string)$dbName) . '">';
+                            echo '      <input type="hidden" name="create_owner" value="1">';
+                            echo '      <div class="row g-3 align-items-end">';
+                            echo '        <div class="col-md-5">';
+                            echo '          <label for="owner_email" class="form-label">Email</label>';
+                            echo '          <input type="email" class="form-control" id="owner_email" name="owner_email" value="'. ($_POST['owner_email'] ?? '')  . '" required>';
+                            echo '        </div>';
+                            echo '        <div class="col-md-4">';
+                            echo '          <label for="owner_password" class="form-label">Password</label>';
+                            echo '          <input type="password" class="form-control" id="owner_password" name="owner_password" required>';
+                            echo '        </div>';
+                            echo '        <div class="col-md-3">';
+                            echo '          <button type="submit" class="btn btn-primary">Create user</button> ';
+                            echo '          <a class="btn btn-secondary" href="index.php">Back to overview</a>';
+                            echo '        </div>';
+                            echo '      </div>';
+                            echo '      <input type="hidden" name="pg_user" value="'. ($_POST['pg_user'] ?? '')  . '">';
+                            echo '      <input type="hidden" name="pg_password" value="'. ($_POST['pg_password'] ?? '')  . '">';
+                            echo '    </form>';
+                            echo '  </div>';
+                            echo '</div>';
+                        }
+                    }
                 }
                 ?>
                 <?php if ($needsElevated): ?>
@@ -213,19 +305,26 @@ if ($dbName) {
                         <div class="card border-warning">
                             <div class="card-header bg-warning-subtle">Elevated privileges required</div>
                             <div class="card-body">
-                                <p class="mb-3">One or more operations failed due to insufficient privileges. Provide a PostgreSQL user with rights to create extensions and schemas, then retry.</p>
+                                <p class="mb-3">One or more operations failed due to insufficient privileges. Provide a
+                                    PostgreSQL user with rights to create extensions and schemas, then retry.</p>
                                 <form method="post" action="prepare.php?db=<?php echo urlencode((string)$dbName); ?>">
                                     <div class="row g-3 align-items-end">
                                         <div class="col-md-4">
                                             <label for="pg_user2" class="form-label">PostgreSQL user</label>
-                                            <input type="text" class="form-control" id="pg_user2" name="pg_user" value="<?php echo htmlspecialchars((string)(Connection::$param['postgisuser'] ?? '')); ?>" required>
+                                            <input type="text" class="form-control" id="pg_user2" name="pg_user"
+                                                   value="<?php echo htmlspecialchars($connection->user ?? ''); ?>"
+                                                   required>
                                         </div>
                                         <div class="col-md-4">
                                             <label for="pg_password2" class="form-label">Password</label>
-                                            <input type="password" class="form-control" id="pg_password2" name="pg_password" value="<?php echo htmlspecialchars((string)(Connection::$param['postgispw'] ?? '')); ?>">
+                                            <input type="password" class="form-control" id="pg_password2"
+                                                   name="pg_password"
+                                                   value="<?php echo htmlspecialchars($connection->password ?? ''); ?>">
                                         </div>
                                         <div class="col-md-4">
-                                            <button type="submit" class="btn btn-primary">Retry with elevated credentials</button>
+                                            <button type="submit" class="btn btn-primary">Retry with elevated
+                                                credentials
+                                            </button>
                                         </div>
                                     </div>
                                 </form>
