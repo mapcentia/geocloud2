@@ -7,19 +7,29 @@
  */
 
 
+use app\conf\App;
+use app\conf\Connection;
+use app\migration\Sql;
+use app\models\Database;
+
 ini_set("display_errors", "no");
 
-use app\conf\Connection as ConnConf;
-use app\models\Database;
-use app\migration\Sql;
 
+include("../../app/inc/Connection.php");
+include("../../app/inc/Model.php");
+include("../../app/models/Database.php");
+include("../../app/migration/Sql.php");
 include("../../app/conf/App.php");
 include("../../app/conf/Connection.php");
+
+new App();
+
+error_log(Connection::$param['postgisuser']);
+
 
 // sql.php defines $sql for creating the GC2 settings schema
 $schemaSql = file_get_contents( __DIR__ . "/sql/createSettings.sql");
 
-new \app\conf\App();
 
 $messages = [];
 $errors = [];
@@ -47,10 +57,10 @@ if (!function_exists('exceptionHasSqlState')) {
 // Allow override of Postgres user/pw via POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['pg_user'])) {
-        ConnConf::$param['postgisuser'] = trim((string)$_POST['pg_user']);
+        Connection::$param['postgisuser'] = trim((string)$_POST['pg_user']);
     }
     if (isset($_POST['pg_password'])) {
-        ConnConf::$param['postgispw'] = (string)$_POST['pg_password'];
+        Connection::$param['postgispw'] = (string)$_POST['pg_password'];
     }
 }
 
@@ -63,9 +73,9 @@ if ($dbName) {
         $conn = new \app\inc\Model();
         $conn->connect();
         $connected = true;
-        $messages[] = "Connected to database '$dbName' as user '" . ConnConf::$param['postgisuser'] . "'";
+        $messages[] = "Connected to database '$dbName' as user '" . Connection::$param['postgisuser'] . "'";
     } catch (\Throwable $e) {
-        $errors[] = "Connection failed: " . $e->getMessage();
+        $errors[] = "\app\conf\Connecsaasation failed: " . $e->getMessage();
     }
 } else {
     $errors[] = "No database selected. Please go back and choose a database.";
@@ -104,11 +114,11 @@ if ($dbName) {
                 <form method="post" action="prepare.php?db=<?php echo urlencode((string)$dbName); ?>">
                     <div class="mb-3">
                         <label for="pg_user" class="form-label">PostgreSQL user</label>
-                        <input type="text" class="form-control" id="pg_user" name="pg_user" value="<?php echo htmlspecialchars((string)(ConnConf::$param['postgisuser'] ?? '')); ?>" required>
+                        <input type="text" class="form-control" id="pg_user" name="pg_user" value="<?php echo htmlspecialchars((string)(Connection::$param['postgisuser'] ?? '')); ?>" required>
                     </div>
                     <div class="mb-3">
                         <label for="pg_password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="pg_password" name="pg_password" value="<?php echo htmlspecialchars((string)(ConnConf::$param['postgispw'] ?? '')); ?>">
+                        <input type="password" class="form-control" id="pg_password" name="pg_password" value="<?php echo htmlspecialchars((string)(Connection::$param['postgispw'] ?? '')); ?>">
                     </div>
                     <button type="submit" class="btn btn-primary">Retry installation</button>
                     <a class="btn btn-secondary" href="index.php">Back</a>
@@ -208,11 +218,11 @@ if ($dbName) {
                                     <div class="row g-3 align-items-end">
                                         <div class="col-md-4">
                                             <label for="pg_user2" class="form-label">PostgreSQL user</label>
-                                            <input type="text" class="form-control" id="pg_user2" name="pg_user" value="<?php echo htmlspecialchars((string)(ConnConf::$param['postgisuser'] ?? '')); ?>" required>
+                                            <input type="text" class="form-control" id="pg_user2" name="pg_user" value="<?php echo htmlspecialchars((string)(Connection::$param['postgisuser'] ?? '')); ?>" required>
                                         </div>
                                         <div class="col-md-4">
                                             <label for="pg_password2" class="form-label">Password</label>
-                                            <input type="password" class="form-control" id="pg_password2" name="pg_password" value="<?php echo htmlspecialchars((string)(ConnConf::$param['postgispw'] ?? '')); ?>">
+                                            <input type="password" class="form-control" id="pg_password2" name="pg_password" value="<?php echo htmlspecialchars((string)(Connection::$param['postgispw'] ?? '')); ?>">
                                         </div>
                                         <div class="col-md-4">
                                             <button type="submit" class="btn btn-primary">Retry with elevated credentials</button>

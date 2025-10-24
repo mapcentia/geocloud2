@@ -10,11 +10,17 @@
 ini_set("display_errors", "no");
 
 use app\inc\Connection;
-use \app\inc\Util;
-use \app\conf\App;
-use \app\models\Database;
-use \app\models\Dbcheck;
+use app\inc\Util;
+use app\conf\App;
+use app\models\Database;
+use app\models\Dbcheck;
 
+include("../../app/inc/Connection.php");
+include("../../app/inc/Model.php");
+include("../../app/inc/Util.php");
+include("../../app/models/Database.php");
+include("../../app/models/Dbcheck.php");
+include("../../app/migration/Sql.php");
 include("../../app/conf/App.php");
 include("../../app/conf/Connection.php");
 new \app\conf\App();

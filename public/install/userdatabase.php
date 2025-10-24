@@ -9,14 +9,19 @@
 
 ini_set("display_errors", "no");
 
+use app\conf\App;
 use app\conf\Connection as ConnConf;
 use app\models\Database;
 use app\migration\Sql;
 
+include("../../app/inc/Model.php");
+include("../../app/inc/Connection.php");
+include("../../app/models/Database.php");
 include("../../app/conf/App.php");
 include("../../app/conf/Connection.php");
+include("../../app/migration/Sql.php");
 
-new \app\conf\App();
+new App();
 
 $messages = [];
 $errors = [];
