@@ -42,6 +42,7 @@ class User extends Model
 
     function __construct(?Connection $connection = null, ?string $userId = null, ?string $parentDb = null)
     {
+        // Set the database to the user database
         if (!$connection) {
             $connection =  new Connection(database: USER_DATABASE);
         } else {
