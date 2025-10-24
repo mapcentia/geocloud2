@@ -61,8 +61,10 @@ class Database extends Model
             $this->execQuery($sql);
         }
         if ($isSuperUser) {
-            $sql = "GRANT \"$name\" to $this->postgisuser";
-            $this->execQuery($sql);
+            if ($name != $this->postgisuser) {
+                $sql = "GRANT \"$name\" to $this->postgisuser";
+                $this->execQuery($sql);
+            }
         }
     }
 
