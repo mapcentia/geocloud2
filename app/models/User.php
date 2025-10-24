@@ -40,7 +40,7 @@ class User extends Model
      */
     public ?string $parentDb;
 
-    function __construct(?Connection $connection = null, ?string $userId = null, ?string $parentDb = null)
+    function __construct(?string $userId = null, ?string $parentDb = null, ?Connection $connection = null)
     {
         // Set the database to the user database
         if (!$connection) {
@@ -268,7 +268,7 @@ class User extends Model
             ":sUserID" => $userId,
             ":sPassword" => $encryptedPassword,
             ":sEmail" => $email,
-            ":sParentDb" => $parentDb ?: $this->userId,
+            ":sParentDb" => (isset($data['subuser']) && $data['subuser'] === false) ? null : ($parentDb ?: $this->userId),
             ":sUsergroup" => $group,
             ":sZone" => $zone,
             ":sProperties" => $properties,
