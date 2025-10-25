@@ -54,23 +54,17 @@ App::$param['host'] = App::$param['host'] ?: App::$param['protocol'] . "://" . $
     <h1 class="mb-3">GC2 Installation Overview</h1>
     <p class="text-muted">This page checks your environment and lists PostgreSQL databases. For each database, you can install required PostGIS extensions and GC2 schemas if missing.</p>
     <?php
-    echo "<div class='mb-3'>PHP version " . phpversion() . " ";
-    if (function_exists('apache_get_modules')) {
-        echo " running as mod_apache</div>";
-        $mod_apache = true;
-    } else {
-        echo " running as CGI/FastCGI</div>";
-        $mod_apache = false;
-    }
+    echo "<div class='alert alert-info'>Server API: " . php_sapi_name() . "</div>";
+
     // We check if \"wms/mapfiles\" is writeable
     $ourFileName = "../../app/wms/mapfiles/testFile.txt";
     $ourFileHandle = @fopen($ourFileName, 'w');
     if ($ourFileHandle) {
-        echo "<div class='alert alert-success'>app/wms/mapfiles dir is writeable</div>";
+     //   echo "<div class='alert alert-success'>app/wms/mapfiles dir is writeable</div>";
         @fclose($ourFileHandle);
         @unlink($ourFileName);
     } else {
-        echo "<div class='alert alert-danger'>app/wms/mapfiles dir is not writeable. You must set permissions so the webserver can write in the wms/mapfiles dir.</div>";
+    //    echo "<div class='alert alert-danger'>app/wms/mapfiles dir is not writeable. You must set permissions so the webserver can write in the wms/mapfiles dir.</div>";
     }
     $ourFileName = "../../app/tmp/testFile.txt";
     $ourFileHandle = @fopen($ourFileName, 'w');
@@ -82,10 +76,10 @@ App::$param['host'] = App::$param['host'] ?: App::$param['protocol'] . "://" . $
         echo "<div class='alert alert-danger'>app/tmp dir is not writeable. You must set permissions so the webserver can write in the wms/cfgfiles dir.</div>";
     }
     if (class_exists('mapObj')) {
-        echo "<div class='alert alert-success'>MapScript is installed</div>";
-        $mod_apache = true;
+        //echo "<div class='alert alert-success'>MapScript is installed</div>";
+        //$mod_apache = true;
     } else {
-        echo "<div class='alert alert-danger'>MapScript is not installed</div>";
+        //echo "<div class='alert alert-danger'>MapScript is not installed</div>";
         $mod_apache = false;
     }
     $dbList = new Database();
@@ -109,6 +103,7 @@ App::$param['host'] = App::$param['host'] ?: App::$param['protocol'] . "://" . $
                 continue;
             }
             $postgisInstalled = false;
+            $schemaInstalled = false;
             if ($db != "template1" and $db != "template0" and $db != "postgres" and $db != "postgis_template") {
                 echo "<tr><td>" . htmlspecialchars($db) . "</td>";
                 $dbc = new Dbcheck(connection: new Connection(database: $db));
@@ -126,13 +121,14 @@ App::$param['host'] = App::$param['host'] ?: App::$param['protocol'] . "://" . $
                 try {
                     $checkMy = $dbc->isSchemaInstalled();
                     echo "<td><span class='badge text-bg-success'>OK</span></td>";
+                    $schemaInstalled = true;
                 } catch (Exception) {
                     echo "<td><span class='badge text-bg-danger'>Missing</span></td>";
-                    if (!$postgisInstalled) {
-                        $actionCell = "<td><a class='btn btn-primary btn-sm' href='prepare.php?db=" . urlencode($db) . "'>Install</a></td>";
-                    } else {
-                        $actionCell = "<td></td>";
-                    }
+                }
+                if (!$postgisInstalled || !$schemaInstalled) {
+                    $actionCell = "<td><a class='btn btn-primary btn-sm' href='prepare.php?db=" . urlencode($db) . "'>Install</a></td>";
+                } else {
+                    $actionCell = "<td></td>";
                 }
                 echo $actionCell;
                 echo "</tr>";
