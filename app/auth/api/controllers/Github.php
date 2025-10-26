@@ -16,6 +16,7 @@ use app\conf\App;
 use app\inc\Connection;
 use app\inc\Route2;
 use app\inc\Session as HttpSession;
+use app\models\Database;
 use app\models\Session as SessionModel;
 use app\models\User as UserModel;
 use Exception;
@@ -214,7 +215,10 @@ class Github extends AbstractApi
                     // Create as top-level (superuser) with its own database
                     $data['subuser'] = false;
                 }
-                $userModel->createUser($data);
+                $userRes =$userModel->createUser($data);
+                if (!$parentdb) {
+                    (new Database())->changeOwner(db: $userRes['data']['screenname'], newOwner: $userRes['data']['screenname']);
+                }
                 $row = $this->findUserByEmail($userModel, $email, $parentdb);
             }
 
