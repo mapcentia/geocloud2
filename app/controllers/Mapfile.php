@@ -1347,15 +1347,6 @@ class Mapfile extends Controller
         END
 
         OUTPUTFORMAT
-        NAME "utfgrid"
-        DRIVER UTFGRID
-        MIMETYPE "application/json"
-        EXTENSION "json"
-        FORMATOPTION "UTFRESOLUTION=4"
-        FORMATOPTION "DUPLICATES=false"
-        END
-
-        OUTPUTFORMAT
         NAME kml
         DRIVER "OGR/KML"
         MIMETYPE "application/vnd.google-earth.kml+xml"
@@ -1364,6 +1355,14 @@ class Mapfile extends Controller
         FORMATOPTION "FORM=simple"
         FORMATOPTION 'FILENAME=igmap75.kml'
         FORMATOPTION "maxfeaturestodraw=1000"
+        END
+
+        OUTPUTFORMAT
+        NAME "geojson"
+        DRIVER "OGR/GEOJSON"
+        MIMETYPE "application/json"
+        IMAGEMODE FEATURE
+        FORMATOPTION "STORAGE=stream"
         END
 
         #CONFIG "MS_ERRORFILE" "/var/www/geocloud2/app/wms/mapfiles/ms_error.txt"
@@ -1379,7 +1378,7 @@ class Mapfile extends Controller
         "ows_encoding" "UTF-8"
         "ows_namespace_prefix" "<?php echo $user; ?>"
         "ows_namespace_uri" "<?php echo App::$param['host']; ?>"
-        "wfs_getfeature_formatlist" "kml,kmz"
+        "wfs_getfeature_formatlist" "kml,kmz,geojson"
         END
         END
 
@@ -1538,7 +1537,7 @@ class Mapfile extends Controller
                 echo $row['coord_dimension'] == 3 ? "25D" : ""; ?>"
                 "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
                 "gml_<?php echo $row['f_geometry_column'] ?>_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
-                "wfs_getfeature_formatlist" "kml,kmz"
+                "wfs_getfeature_formatlist" "kml,kmz,geojson"
                 END
                 UTFITEM   "<?php echo $primeryKey['attname'] ?>"
                 <?php $fields = !empty($row['fieldconf']) ? json_decode($row['fieldconf'], true) : null;
