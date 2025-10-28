@@ -24,12 +24,8 @@ and this project adheres to [CalVer](https://calver.org/).
   - The `convertDataUrlsToHttp` option is set to false by default.
 
 ## [2025.10.1] - 2025-14-10
-### Changed
-- By setting `convertDataUrlsToHttp` to true in `App.php`, bytea fields will be converted to http urls in SQL API in the form: 
-`/api/v1/decodeimg/[database]/[relation]/[primary-field]/[id]`. Some caveats:
-  - Relation is inferred from the SQL string and the first found relation is used for [relation]
-  - To infer the mimetype, the first bytes from the bytea field are extracted with `substring`, 
-    which still has a big IO impact on TOASTed tables.
+### Skipped
+- No code changes.
 
 ## [2025.10.0] - 2025-14-10
 ### Security
