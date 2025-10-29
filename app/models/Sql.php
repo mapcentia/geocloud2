@@ -14,8 +14,10 @@ use app\inc\Cache;
 use app\inc\Connection;
 use app\inc\Globals;
 use app\inc\Model;
+use app\inc\TableWalkerRelation;
 use DateInterval;
 use DateTimeImmutable;
+use Error;
 use PDO;
 use PDOException;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
@@ -26,7 +28,9 @@ use sad_spirit\pg_wrapper\types\DateTimeRange;
 use sad_spirit\pg_wrapper\types\Range;
 use sad_spirit\pg_wrapper\Connection as WrapperConnection;
 use ZipArchive;
+use sad_spirit\pg_builder\StatementFactory;
 use sad_spirit\pg_wrapper\converters\DefaultTypeConverterFactory;
+
 
 
 /**
@@ -203,6 +207,12 @@ class Sql extends Model
         }
 
         $fieldsArr = [];
+        $string = $q;
+        $walker = new TableWalkerRelation();
+        $factory = new StatementFactory();
+        $select = $factory->createFromString($string);
+        $select->dispatch($walker);
+        $rel = $walker->getRelations()["all"][0] ?? null;
         foreach ($columnTypes as $key => $type) {
             if ($type == "geometry") {
                 if (in_array($format, ["geojson", "ndjson", "json"]) || (($format == "csv" || $format == "excel") && $geoformat == "geojson")) {
@@ -211,7 +221,14 @@ class Sql extends Model
                     $fieldsArr[] = "ST_asText(ST_Transform($ST_Force2D(\"$key\"),$this->srs)) as \"$key\"";
                 }
             } elseif ($type == "bytea") {
-                $fieldsArr[] = "encode(\"$key\",'base64') as \"$key\"";
+                if (!empty(App::$param['convertDataUrlsToHttp']) && $rel) {
+                    // Convert data URLs to HTTP. Read the first bytes to get the mimetype.
+                    $priKeyName = $this->getPrimeryKey($rel)['attname'];
+                    $rowValue = App::$param['host'] . "/api/v1/decodeimg/" . $this->postgisdb . "/" . $rel . "/" . $key . "/";
+                    $fieldsArr[] = "'$rowValue'||$priKeyName||'?mimetype='||SPLIT_PART(SPLIT_PART(encode(substring(\"$key\" from 0 for 100),'escape'),';',1),':',2) as \"$key\"";
+                } else {
+                    $fieldsArr[] = "encode(\"$key\",'escape') as \"$key\"";
+                }
             } else {
                 $fieldsArr[] = "\"$key\"";
             }

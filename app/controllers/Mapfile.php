@@ -477,6 +477,13 @@ class Mapfile extends Controller
                             }
                             return 0;
                         });
+                        // Filter out bytea fields
+                        $meta = array_filter($meta, function ($item, $key) use (&$fieldConf) {
+                            if ($item != 'bytea') {
+                                return $item;
+                            }
+                            return false;
+                        }, ARRAY_FILTER_USE_BOTH);
                         // We always want to select all fields
                         if (sizeof($meta) > 0) {
                             $selectStr = implode("\\\",\\\"", array_keys($meta));
@@ -486,6 +493,7 @@ class Mapfile extends Controller
                             if (empty($fieldConf[$key]['ignore'])) {
                                 return $item;
                             }
+                            return false;
                         }, ARRAY_FILTER_USE_BOTH);
                         if (sizeof($meta) > 0) {
                             $includeItemsStr = implode(",", array_keys($meta));
@@ -642,8 +650,7 @@ class Mapfile extends Controller
                             }
                             if (is_numeric($class['angle']) || strtolower($class['angle']) == "auto") {
                                 echo "ANGLE " . $class['angle'];
-                            }
-                            else
+                            } else
                                 echo "ANGLE [{$class['angle']}]";
                         }
                         echo "\n";
@@ -685,13 +692,13 @@ class Mapfile extends Controller
                         #OFFSET
                         <?php
                         echo "OFFSET " . (!empty($class['style_offsetx']) ? is_numeric($class['style_offsetx']) ? $class['style_offsetx'] : "[" . $class['style_offsetx'] . "]" : "0") . " " .
-                            (!empty($class['style_offsety']) ? is_numeric($class['style_offsety']) ? $class['style_offsety'] : "[" . $class['style_offsety'] . "]" : "0") . "\n"
+                                (!empty($class['style_offsety']) ? is_numeric($class['style_offsety']) ? $class['style_offsety'] : "[" . $class['style_offsety'] . "]" : "0") . "\n"
                         ?>
 
                         #POLAROFFSET
                         <?php
                         echo "POLAROFFSET " . (!empty($class['style_polaroffsetr']) ? is_numeric($class['style_polaroffsetr']) ? $class['style_polaroffsetr'] : "[" . $class['style_polaroffsetr'] . "]" : "0") . " " .
-                            (!empty($class['style_polaroffsetd']) ? is_numeric($class['style_polaroffsetd']) ? $class['style_polaroffsetd'] : "[" . $class['style_polaroffsetd'] . "]" : "0") . "\n"
+                                (!empty($class['style_polaroffsetd']) ? is_numeric($class['style_polaroffsetd']) ? $class['style_polaroffsetd'] : "[" . $class['style_polaroffsetd'] . "]" : "0") . "\n"
                         ?>
 
 
@@ -765,13 +772,13 @@ class Mapfile extends Controller
                         #OFFSET
                         <?php
                         echo "OFFSET " . (!empty($class['overlaystyle_offsetx']) ? is_numeric($class['overlaystyle_offsetx']) ? $class['overlaystyle_offsetx'] : "[" . $class['overlaystyle_offsetx'] . "]" : "0") . " " .
-                            (!empty($class['overlaystyle_offsety']) ? is_numeric($class['overlaystyle_offsety']) ? $class['overlaystyle_offsety'] : "[" . $class['overlaystyle_offsety'] . "]" : "0") . "\n"
+                                (!empty($class['overlaystyle_offsety']) ? is_numeric($class['overlaystyle_offsety']) ? $class['overlaystyle_offsety'] : "[" . $class['overlaystyle_offsety'] . "]" : "0") . "\n"
                         ?>
 
                         #POLAROFFSET
                         <?php
                         echo "POLAROFFSET " . (!empty($class['overlaystyle_polaroffsetr']) ? is_numeric($class['overlaystyle_polaroffsetr']) ? $class['overlaystyle_polaroffsetr'] : "[" . $class['overlaystyle_polaroffsetr'] . "]" : "0") . " " .
-                            (!empty($class['overlaystyle_polaroffsetd']) ? is_numeric($class['overlaystyle_polaroffsetd']) ? $class['overlaystyle_polaroffsetd'] : "[" . $class['overlaystyle_polaroffsetd'] . "]" : "0") . "\n"
+                                (!empty($class['overlaystyle_polaroffsetd']) ? is_numeric($class['overlaystyle_polaroffsetd']) ? $class['overlaystyle_polaroffsetd'] : "[" . $class['overlaystyle_polaroffsetd'] . "]" : "0") . "\n"
                         ?>
 
                         END # style
@@ -834,7 +841,7 @@ class Mapfile extends Controller
                                     $class['label_angle'] = '0';
                                 }
                                 if (is_numeric($class['label_angle']) or $class['label_angle'] == 'auto' or $class['label_angle'] == 'auto2'
-                                    or $class['label_angle'] == 'follow'
+                                        or $class['label_angle'] == 'follow'
                                 )
                                     echo "ANGLE " . $class['label_angle'];
                                 else
@@ -851,12 +858,12 @@ class Mapfile extends Controller
                             <?php if (!empty($class['label_backgroundcolor'])) {
                                 $labelBackgroundColor = Util::hex2RGB($class['label_backgroundcolor'], true, " ");
                                 echo
-                                    "GEOMTRANSFORM 'labelpoly'\n" .
-                                    "COLOR {$labelBackgroundColor}\n";
+                                        "GEOMTRANSFORM 'labelpoly'\n" .
+                                        "COLOR {$labelBackgroundColor}\n";
 
                                 echo
-                                    "OUTLINECOLOR {$labelBackgroundColor}\n" .
-                                    "WIDTH " . ($class['label_backgroundpadding'] ?: "1") . "\n";
+                                        "OUTLINECOLOR {$labelBackgroundColor}\n" .
+                                        "WIDTH " . ($class['label_backgroundpadding'] ?: "1") . "\n";
 
                             }
                             ?>
@@ -919,7 +926,7 @@ class Mapfile extends Controller
                                     $class['label2_angle'] = '0';
                                 }
                                 if (is_numeric($class['label2_angle']) or $class['label2_angle'] == 'auto' or $class['label2_angle'] == 'auto2'
-                                    or $class['label2_angle'] == 'follow'
+                                        or $class['label2_angle'] == 'follow'
                                 )
                                     echo "ANGLE " . $class['label2_angle'];
                                 else
@@ -935,13 +942,13 @@ class Mapfile extends Controller
                             <?php if (!empty($class['label2_backgroundcolor'])) {
                                 $labelBackgroundColor = Util::hex2RGB($class['label2_backgroundcolor'], true, " ");
                                 echo
-                                    "GEOMTRANSFORM 'labelpoly'\n" .
-                                    "COLOR {$labelBackgroundColor}\n";
+                                        "GEOMTRANSFORM 'labelpoly'\n" .
+                                        "COLOR {$labelBackgroundColor}\n";
 
                                 if (!empty($class['label2_backgroundpadding'])) {
                                     echo
-                                        "OUTLINECOLOR {$labelBackgroundColor}\n" .
-                                        "WIDTH {$class['label2_backgroundpadding']}\n";
+                                            "OUTLINECOLOR {$labelBackgroundColor}\n" .
+                                            "WIDTH {$class['label2_backgroundpadding']}\n";
                                 }
                             }
                             ?>
@@ -1340,15 +1347,6 @@ class Mapfile extends Controller
         END
 
         OUTPUTFORMAT
-        NAME "utfgrid"
-        DRIVER UTFGRID
-        MIMETYPE "application/json"
-        EXTENSION "json"
-        FORMATOPTION "UTFRESOLUTION=4"
-        FORMATOPTION "DUPLICATES=false"
-        END
-
-        OUTPUTFORMAT
         NAME kml
         DRIVER "OGR/KML"
         MIMETYPE "application/vnd.google-earth.kml+xml"
@@ -1357,6 +1355,14 @@ class Mapfile extends Controller
         FORMATOPTION "FORM=simple"
         FORMATOPTION 'FILENAME=igmap75.kml'
         FORMATOPTION "maxfeaturestodraw=1000"
+        END
+
+        OUTPUTFORMAT
+        NAME "geojson"
+        DRIVER "OGR/GEOJSON"
+        MIMETYPE "application/json"
+        IMAGEMODE FEATURE
+        FORMATOPTION "STORAGE=stream"
         END
 
         #CONFIG "MS_ERRORFILE" "/var/www/geocloud2/app/wms/mapfiles/ms_error.txt"
@@ -1372,7 +1378,7 @@ class Mapfile extends Controller
         "ows_encoding" "UTF-8"
         "ows_namespace_prefix" "<?php echo $user; ?>"
         "ows_namespace_uri" "<?php echo App::$param['host']; ?>"
-        "wfs_getfeature_formatlist" "kml,kmz"
+        "wfs_getfeature_formatlist" "kml,kmz,geojson"
         END
         END
 
@@ -1531,7 +1537,7 @@ class Mapfile extends Controller
                 echo $row['coord_dimension'] == 3 ? "25D" : ""; ?>"
                 "gml_geometries"    "<?php echo $row['f_geometry_column']; ?>"
                 "gml_<?php echo $row['f_geometry_column'] ?>_type" "<?php echo (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type); ?>"
-                "wfs_getfeature_formatlist" "kml,kmz"
+                "wfs_getfeature_formatlist" "kml,kmz,geojson"
                 END
                 UTFITEM   "<?php echo $primeryKey['attname'] ?>"
                 <?php $fields = !empty($row['fieldconf']) ? json_decode($row['fieldconf'], true) : null;
@@ -1616,8 +1622,7 @@ class Mapfile extends Controller
                             }
                             if (is_numeric($class['angle']) || strtolower($class['angle']) == "auto") {
                                 echo "ANGLE " . $class['angle'];
-                            }
-                            else
+                            } else
                                 echo "ANGLE [{$class['angle']}]";
                         }
                         echo "\n";
@@ -1659,13 +1664,13 @@ class Mapfile extends Controller
                         #OFFSET
                         <?php
                         echo "OFFSET " . (!empty($class['style_offsetx']) ? is_numeric($class['style_offsetx']) ? $class['style_offsetx'] : "[" . $class['style_offsetx'] . "]" : "0") . " " .
-                            (!empty($class['style_offsety']) ? is_numeric($class['style_offsety']) ? $class['style_offsety'] : "[" . $class['style_offsety'] . "]" : "0") . "\n"
+                                (!empty($class['style_offsety']) ? is_numeric($class['style_offsety']) ? $class['style_offsety'] : "[" . $class['style_offsety'] . "]" : "0") . "\n"
                         ?>
 
                         #POLAROFFSET
                         <?php
                         echo "POLAROFFSET " . (!empty($class['style_polaroffsetr']) ? is_numeric($class['style_polaroffsetr']) ? $class['style_polaroffsetr'] : "[" . $class['style_polaroffsetr'] . "]" : "0") . " " .
-                            (!empty($class['style_polaroffsetd']) ? is_numeric($class['style_polaroffsetd']) ? $class['style_polaroffsetd'] : "[" . $class['style_polaroffsetd'] . "]" : "0") . "\n"
+                                (!empty($class['style_polaroffsetd']) ? is_numeric($class['style_polaroffsetd']) ? $class['style_polaroffsetd'] : "[" . $class['style_polaroffsetd'] . "]" : "0") . "\n"
                         ?>
 
 
@@ -1733,13 +1738,13 @@ class Mapfile extends Controller
                         #OFFSET
                         <?php
                         echo "OFFSET " . (!empty($class['overlaystyle_offsetx']) ? is_numeric($class['overlaystyle_offsetx']) ? $class['overlaystyle_offsetx'] : "[" . $class['overlaystyle_offsetx'] . "]" : "0") . " " .
-                            (!empty($class['overlaystyle_offsety']) ? is_numeric($class['overlaystyle_offsety']) ? $class['overlaystyle_offsety'] : "[" . $class['overlaystyle_offsety'] . "]" : "0") . "\n"
+                                (!empty($class['overlaystyle_offsety']) ? is_numeric($class['overlaystyle_offsety']) ? $class['overlaystyle_offsety'] : "[" . $class['overlaystyle_offsety'] . "]" : "0") . "\n"
                         ?>
 
                         #POLAROFFSET
                         <?php
                         echo "POLAROFFSET " . (!empty($class['overlaystyle_polaroffsetr']) ? is_numeric($class['overlaystyle_polaroffsetr']) ? $class['overlaystyle_polaroffsetr'] : "[" . $class['overlaystyle_polaroffsetr'] . "]" : "0") . " " .
-                            (!empty($class['overlaystyle_polaroffsetd']) ? is_numeric($class['overlaystyle_polaroffsetd']) ? $class['overlaystyle_polaroffsetd'] : "[" . $class['overlaystyle_polaroffsetd'] . "]" : "0") . "\n"
+                                (!empty($class['overlaystyle_polaroffsetd']) ? is_numeric($class['overlaystyle_polaroffsetd']) ? $class['overlaystyle_polaroffsetd'] : "[" . $class['overlaystyle_polaroffsetd'] . "]" : "0") . "\n"
                         ?>
 
                         END # style
@@ -1802,7 +1807,7 @@ class Mapfile extends Controller
                                     $class['label_angle'] = '0';
                                 }
                                 if (is_numeric($class['label_angle']) or $class['label_angle'] == 'auto' or $class['label_angle'] == 'auto2'
-                                    or $class['label_angle'] == 'follow'
+                                        or $class['label_angle'] == 'follow'
                                 )
                                     echo "ANGLE " . $class['label_angle'];
                                 else
@@ -1819,12 +1824,12 @@ class Mapfile extends Controller
                             <?php if (!empty($class['label_backgroundcolor'])) {
                                 $labelBackgroundColor = Util::hex2RGB($class['label_backgroundcolor'], true, " ");
                                 echo
-                                    "GEOMTRANSFORM 'labelpoly'\n" .
-                                    "COLOR {$labelBackgroundColor}\n";
+                                        "GEOMTRANSFORM 'labelpoly'\n" .
+                                        "COLOR {$labelBackgroundColor}\n";
 
                                 echo
-                                    "OUTLINECOLOR {$labelBackgroundColor}\n" .
-                                    "WIDTH " . ($class['label_backgroundpadding'] ?: "1") . "\n";
+                                        "OUTLINECOLOR {$labelBackgroundColor}\n" .
+                                        "WIDTH " . ($class['label_backgroundpadding'] ?: "1") . "\n";
 
                             }
                             ?>
@@ -1887,7 +1892,7 @@ class Mapfile extends Controller
                                     $class['label2_angle'] = '0';
                                 }
                                 if (is_numeric($class['label2_angle']) or $class['label2_angle'] == 'auto' or $class['label2_angle'] == 'auto2'
-                                    or $class['label2_angle'] == 'follow'
+                                        or $class['label2_angle'] == 'follow'
                                 )
                                     echo "ANGLE " . $class['label2_angle'];
                                 else
@@ -1903,13 +1908,13 @@ class Mapfile extends Controller
                             <?php if (!empty($class['label2_backgroundcolor'])) {
                                 $labelBackgroundColor = Util::hex2RGB($class['label2_backgroundcolor'], true, " ");
                                 echo
-                                    "GEOMTRANSFORM 'labelpoly'\n" .
-                                    "COLOR {$labelBackgroundColor}\n";
+                                        "GEOMTRANSFORM 'labelpoly'\n" .
+                                        "COLOR {$labelBackgroundColor}\n";
 
                                 if (!empty($class['label2_backgroundpadding'])) {
                                     echo
-                                        "OUTLINECOLOR {$labelBackgroundColor}\n" .
-                                        "WIDTH {$class['label2_backgroundpadding']}\n";
+                                            "OUTLINECOLOR {$labelBackgroundColor}\n" .
+                                            "WIDTH {$class['label2_backgroundpadding']}\n";
                                 }
                             }
                             ?>

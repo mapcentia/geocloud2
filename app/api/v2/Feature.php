@@ -395,7 +395,7 @@ class Feature extends Controller
             return $response;
         }
 
-        $transactionResponse = $res->getBody();
+        $transactionResponse = (string)$res->getBody();
 
         // Unserialize the transaction response
         $status = $unserializer->unserialize($transactionResponse);
@@ -404,6 +404,7 @@ class Feature extends Controller
         if (gettype($status) != "boolean" && $status !== true) {
             $response['success'] = false;
             $response['message'] = "Could not unserialize transaction response";
+            $response['body'] = $transactionResponse;
             $response['code'] = 500;
             return $response;
         }
