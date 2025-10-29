@@ -763,10 +763,24 @@ class Model
     {
         if (str_contains($name, '.')) {
             $split = self::explodeTableName($name);
-            return "\"" . $split["schema"] . "\".\"" . $split["table"] . "\"";
-        } else {
-            return "\"" . $name . "\"";
+            $schema = $split["schema"];
+            $table = $split["table"];
 
+            // Only add quotes if not already present
+            if (!str_starts_with($schema, '"') || !str_ends_with($schema, '"')) {
+                $schema = "\"" . $schema . "\"";
+            }
+            if (!str_starts_with($table, '"') || !str_ends_with($table, '"')) {
+                $table = "\"" . $table . "\"";
+            }
+
+            return $schema . "." . $table;
+        } else {
+            // Only add quotes if not already present
+            if (!str_starts_with($name, '"') || !str_ends_with($name, '"')) {
+                return "\"" . $name . "\"";
+            }
+            return $name;
         }
     }
 
