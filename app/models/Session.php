@@ -186,101 +186,112 @@ class Session extends Model
     public function startWithToken(string $token, string $parentDb, ?string $schema = "public", bool $superuser = false): array
     {
         \app\inc\Session::start();
-        $openIdConfig = App::$param['openIdConfig'];
-        $clientId = $openIdConfig['clientId'];
+        $openIdConfig = App::$param['openIdConfig'] ?? null;
 
-        $expectedNonce = $_SESSION['oauth2_nonce'] ?? null;
-        if (!$expectedNonce) {
+        if ($openIdConfig) {
+
+            $clientId = $openIdConfig['clientId'];
+
+            $expectedNonce = $_SESSION['oauth2_nonce'] ?? null;
+            if (!$expectedNonce) {
 //            throw new GC2Exception('OAuth2 nonce not set in session.');
-        }
+            }
 
-        $http = new \GuzzleHttp\Client(['timeout' => 5]);
+            $http = new \GuzzleHttp\Client(['timeout' => 5]);
 
-        // 1. Get OIDC metadata
-        $metaDataUri = $openIdConfig['metaDataUri'];
-        $metaDataResponse = $http->get($metaDataUri);
-        $metaData = json_decode($metaDataResponse->getBody(), true);
+            // 1. Get OIDC metadata
+            $metaDataUri = $openIdConfig['metaDataUri'];
+            $metaDataResponse = $http->get($metaDataUri);
+            $metaData = json_decode($metaDataResponse->getBody(), true);
 
-        // 2. Fetch JWKS (JSON Web Key Set)
-        $jwksUrl = $metaData['jwks_uri'];
-        $jwksResponse = $http->get($jwksUrl);
-        $jwks = json_decode($jwksResponse->getBody(), true);
+            // 2. Fetch JWKS (JSON Web Key Set)
+            $jwksUrl = $metaData['jwks_uri'];
+            $jwksResponse = $http->get($jwksUrl);
+            $jwks = json_decode($jwksResponse->getBody(), true);
 
-        // 3. Convert JWKs to key map (Azure uses RS256)
-        $publicKeys = JWK::parseKeySet($jwks, 'RS256');
+            // 3. Convert JWKs to key map (Azure uses RS256)
+            $publicKeys = JWK::parseKeySet($jwks, 'RS256');
 
-        try {
-            // Decode and validate the ID token
-            $payload = \Firebase\JWT\JWT::decode($token, $publicKeys);
+            try {
+                // Decode and validate the ID token
+                $payload = \Firebase\JWT\JWT::decode($token, $publicKeys);
 
-            // Additional checks: audience and nonce
-            if (!isset($payload->nonce) || $payload->nonce !== $expectedNonce) {
+                // Additional checks: audience and nonce
+                if (!isset($payload->nonce) || $payload->nonce !== $expectedNonce) {
 //                throw new GC2Exception('Invalid or missing nonce in ID token.');
+                }
+                if (!isset($payload->aud) || $payload->aud !== $clientId) {
+                    throw new GC2Exception('Invalid audience in ID token.');
+                }
+
+                // Optionally: Check exp, iss, etc.
+
+            } catch (\Exception $e) {
+                // Handle signature or validation errors
+                throw new GC2Exception('Invalid ID token: ' . $e->getMessage());
             }
-            if (!isset($payload->aud) || $payload->aud !== $clientId) {
-                throw new GC2Exception('Invalid audience in ID token.');
+            $allowedDatabases = explode(',', $payload->database);
+            if (!in_array($parentDb, $allowedDatabases) && $payload->database != "*") {
+                throw new GC2Exception('Wanted database not allowed: ' . $parentDb . '. Allowed: ' . implode(', ', $allowedDatabases) . '.');
+            }
+            if ($superuser) {
+                $databasesWithSuperuser = explode(',', $payload->superuser ?? "");
+                if (!in_array($parentDb, $databasesWithSuperuser) && $payload->superuser != "*") {
+                    throw new GC2Exception('Wanted database is not allowed with superuser privileges: ' . $parentDb . '. Allowed: ' . implode(', ', $databasesWithSuperuser));
+                }
             }
 
-            // Optionally: Check exp, iss, etc.
-
-        } catch (\Exception $e) {
-            // Handle signature or validation errors
-            throw new GC2Exception('Invalid ID token: ' . $e->getMessage());
-        }
-        $allowedDatabases = explode(',', $payload->database);
-        if (!in_array($parentDb, $allowedDatabases) && $payload->database != "*") {
-            throw new GC2Exception('Wanted database not allowed: ' . $parentDb . '. Allowed: ' . implode(', ', $allowedDatabases) . '.');
-        }
-        if ($superuser) {
-            $databasesWithSuperuser = explode(',', $payload->superuser ?? "");
-            if (!in_array($parentDb, $databasesWithSuperuser) && $payload->superuser != "*") {
-                throw new GC2Exception('Wanted database is not allowed with superuser privileges: ' . $parentDb . '. Allowed: ' . implode(', ', $databasesWithSuperuser));
-            }
-        }
-
-        $row = null;
-        $fn = function () use ($payload, &$row, $parentDb, $superuser): void {
-            if (!$superuser) {
+            $row = null;
+            $userName = $payload->preferred_username;
+            $fn = function () use ($payload, &$row, $parentDb, $superuser, $userName): void {
+                if (!$superuser) {
 //                $sQuery = "SELECT * FROM users WHERE email = :sEmail AND parentdb = :parentDb";
 //                $res = $this->prepare($sQuery);
 //                $res->execute([
 //                    ":sEmail" => $payload->email,
 //                    ":parentDb" => $parentDb
 //                ]);
-                $sQuery = "SELECT * FROM users WHERE screenname = :sName AND parentdb = :parentDb";
-                $res = $this->prepare($sQuery);
-                $res->execute([
-                    ":sName" => $payload->preferred_username,
-                    ":parentDb" => $parentDb
-                ]);
-            } else {
-                $sQuery = "SELECT * FROM users WHERE screenname = :sDb AND parentdb is null";
-                $res = $this->prepare($sQuery);
-                $res->execute([
-                    ":sDb" => $parentDb,
-                ]);
-            }
-            $row = $this->fetchRow($res);
-        };
-        $fn();
-
-        if (!$row && !$superuser) {
-            // Create sub-user
-            $user = new UserModel(parentDb: $parentDb);
-            $data = [
-//                'name' => $payload->email,
-                'name' => $payload->preferred_username,
-                'email' => $payload->email,
-                'password' => 'Silke2009!',
-                'parentdb' => $parentDb,
-                'subuser' => true,
-            ];
-            $user->createUser($data);
+                    $sQuery = "SELECT * FROM users WHERE screenname = :sName AND parentdb = :parentDb";
+                    $res = $this->prepare($sQuery);
+                    $res->execute([
+                        ":sName" => $userName,
+                        ":parentDb" => $parentDb
+                    ]);
+                } else {
+                    $sQuery = "SELECT * FROM users WHERE screenname = :sDb AND parentdb is null";
+                    $res = $this->prepare($sQuery);
+                    $res->execute([
+                        ":sDb" => $parentDb,
+                    ]);
+                }
+                $row = $this->fetchRow($res);
+            };
             $fn();
-        }
 
+            if (!$row && !$superuser) {
+                // Create sub-user
+                $user = new UserModel(parentDb: $parentDb);
+                $data = [
+                    'name' => $userName,
+                    'email' => $payload->email,
+                    'password' => 'Silke2009!',
+                    'parentdb' => $parentDb,
+                    'subuser' => true,
+                ];
+                $user->createUser($data);
+                $fn();
+            }
+
+        } else {
+            $jwt = Jwt::validate($token)['data'];
+            $row['screenname'] = $userName = $jwt['uid'];
+            $row['parentdb'] = $jwt['database'];
+            $row['email'] = $jwt['email'];
+            $row['usergroup'] = $jwt['userGroup'];
+        }
         // Login successful.
         self::setSessionVars($row, $schema);
+
         $response = self::createResponse();
 
         // Fetch sub-users
@@ -289,8 +300,8 @@ class Session extends Model
         $response['data']['api_key'] = (new Setting(new Connection(database: $response['data']['parentdb'])))->get()['data']->api_key;
 
         // Insert into logins
-        $this->logLogin($payload->aud, $parentDb);
-        return $response; // In case it's NOT OAuth
+        $this->logLogin($userName, $parentDb);
+        return $response;
     }
 
     /**
