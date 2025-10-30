@@ -11,6 +11,7 @@ use app\conf\App;
 use app\inc\Cache;
 use app\inc\Connection;
 use app\migration\Sql;
+use app\models\Database;
 
 ini_set("display_errors", "no");
 
@@ -63,9 +64,12 @@ $connection = new Connection();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($_POST['pg_user'])) {
         $connection->user = trim((string)$_POST['pg_user']);
+        // Also set static config so newly created connections (used by changeOwner) use these creds
+        \app\conf\Connection::$param['postgisuser'] = $connection->user;
     }
     if (!empty($_POST['pg_password'])) {
         $connection->password = (string)$_POST['pg_password'];
+        \app\conf\Connection::$param['postgispw'] = $connection->password;
     }
 }
 
@@ -234,7 +238,7 @@ if ($dbName) {
                 } else {
                     echo '<div class="alert alert-success mt-3">Post-install SQL scripts completed successfully. First and last scripts are OK.</div>';
                     $userExists = false;
-                    $userModel = new \app\models\User(connection: $connection, userId: (string)$dbName);
+                    $userModel = new \app\models\User(userId: (string)$dbName, connection: $connection);
                     $userModel->connect();
                     try {
                         $userModel->doesUserExist();
@@ -262,7 +266,6 @@ if ($dbName) {
                                     } else {
                                         echo '<div class="alert alert-danger mt-3">Could not create owner user. Please try again.</div>';
                                     }
-
                                 } catch (\Throwable $e) {
                                     echo '<div class="alert alert-danger mt-3">Failed to create owner user: ' . htmlspecialchars($e->getMessage()) . '</div>';
                                 }
@@ -297,6 +300,40 @@ if ($dbName) {
                             echo '  </div>';
                             echo '</div>';
                         }
+
+                    }
+
+                    // Offer to change ownership if owner user exists (either already existed or was just created)
+                    if (!empty($userExists) && $userExists === true) {
+                        // Handle change owner submission
+                        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['do_change_owner'])) {
+                            try {
+                                (new \app\models\Database())->changeOwner(db: (string)$dbName, newOwner: (string)$dbName);
+                                echo '<div class="alert alert-success mt-3">Database ownership changed to user ' . htmlspecialchars((string)$dbName) . '.</div>';
+                            } catch (\Throwable $e) {
+                                if (exceptionHasSqlState($e, '42501')) {
+                                    $needsElevated = true;
+                                    echo '<div class="alert alert-warning mt-3">Insufficient privileges to change ownership (SQLSTATE 42501). Provide elevated credentials below and try again. Message: ' . htmlspecialchars($e->getMessage()) . '</div>';
+                                } else {
+                                    echo '<div class="alert alert-danger mt-3">Failed to change ownership: ' . htmlspecialchars($e->getMessage()) . '</div>';
+                                }
+                            }
+                        }
+                        echo '<div class="card mt-3">';
+                        echo '  <div class="card-header">Change ownership to the new owner</div>';
+                        echo '  <div class="card-body">';
+                        echo '    <p class="mb-3">After creating the owner user, you can change ownership of the database and all non-system schemas, tables, views and sequences to <strong>' . htmlspecialchars((string)$dbName) . '</strong>. Would you like to do this now? You can also return to this page later and do it.</p>';
+                        echo '    <form method="post" action="prepare.php?db=' . urlencode((string)$dbName) . '">';
+                        echo '      <input type="hidden" name="do_change_owner" value="1">';
+                        echo '      <div class="d-flex gap-2">';
+                        echo '        <button type="submit" class="btn btn-outline-primary">Change ownership now</button>';
+                        echo '        <a class="btn btn-secondary" href="index.php">Back to overview</a>';
+                        echo '      </div>';
+                        echo '      <input type="hidden" name="pg_user" value="'. ($_POST['pg_user'] ?? '')  . '">';
+                        echo '      <input type="hidden" name="pg_password" value="'. ($_POST['pg_password'] ?? '')  . '">';
+                        echo '    </form>';
+                        echo '  </div>';
+                        echo '</div>';
                     }
                 }
                 ?>

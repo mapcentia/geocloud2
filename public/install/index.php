@@ -128,7 +128,7 @@ App::$param['host'] = App::$param['host'] ?: App::$param['protocol'] . "://" . $
                 if (!$postgisInstalled || !$schemaInstalled) {
                     $actionCell = "<td><a class='btn btn-primary btn-sm' href='prepare.php?db=" . urlencode($db) . "'>Install</a></td>";
                 } else {
-                    $actionCell = "<td></td>";
+                    $actionCell = "<td><a class='btn btn-outline-secondary btn-sm' href='prepare.php?db=" . urlencode($db) . "'>Manage</a></td>";
                 }
                 echo $actionCell;
                 echo "</tr>";
