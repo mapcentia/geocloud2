@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2025.10.5] - 2025-31-10
+### Added
+- GeoJSON as output format to WFS 2.0. Use `&format=geojson` or `&format=application/json` in the URL.`
+
 ## [2025.10.4] - 2025-23-10
 ### Fixed
 - Add missing import for `DefaultTypeConverterFactory` in `app/models/Sql.php`.
