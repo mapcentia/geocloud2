@@ -276,17 +276,17 @@ class OpenId extends Component {
         return (
             <div style={containerStyle}>
                 <div style={titleStyle}>Sign in</div>
-                <div style={descStyle}>Use your OpenID provider to sign in. If your account allows multiple databases,
-                    you'll be asked to choose one during sign-in.
+                <div style={descStyle}>Start login processen. Hvis din konto tillader flere databaser,
+                    vil du blive spurgt om at vælge en under login-prosessen.
                 </div>
                 {savedDb ? (
                     <div style={badgeStyle}>Current selection: {savedDb} {superuserLogin === '1' ? '(super)': ''}</div>
                 ) : (
-                    <div style={badgeStyle}>No database selected yet</div>
+                    <div style={badgeStyle}>Ingen database valgt endnu</div>
                 )}
                 {this.state.selecting ? (
                     <div>
-                        <div style={{fontSize: 16, margin: '16px 0'}}>Choose a database</div>
+                        <div style={{fontSize: 16, margin: '16px 0'}}>Vælg en database</div>
                         <div>
                             {this.state.allowedDatabases.map(d => (
                                 <label key={d} style={{display: 'block', marginBottom: 8}}>
@@ -309,18 +309,18 @@ class OpenId extends Component {
                                     checked={!!this.state.superuserLogin}
                                     onChange={this.handleSuperuserToggle}
                                 />
-                                <span>Sign in as superuser for {this.state.selectedOption}</span>
+                                <span>Log ind som superuser for {this.state.selectedOption}</span>
                             </label>
                         )}
                         <div style={btnRowStyle}>
-                            <button style={primaryBtn} onClick={this.handleConfirmSelection}>Continue</button>
-                            <button style={secondaryBtn} onClick={this.handleCancelSelection}>Cancel</button>
+                            <button style={primaryBtn} onClick={this.handleConfirmSelection}>Forsæt</button>
+                            <button style={secondaryBtn} onClick={this.handleCancelSelection}>Fortryd</button>
                         </div>
                     </div>
                 ) : (
                     <div style={btnRowStyle}>
-                        <button style={primaryBtn} onClick={this.handleLogin}>Sign in with OpenID</button>
-                        <button style={secondaryBtn} onClick={this.handleResetDb}>Reset database selection</button>
+                        <button style={primaryBtn} onClick={this.handleLogin}>Login</button>
+                        <button style={secondaryBtn} onClick={this.handleResetDb}>Nulstil database-valg</button>
                     </div>
                 )}
                 {info && <div style={infoStyle}>{info}</div>}
