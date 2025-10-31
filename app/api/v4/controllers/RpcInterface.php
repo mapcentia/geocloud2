@@ -31,8 +31,8 @@ use Override;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[AcceptableMethods(['GET', 'HEAD', 'OPTIONS'])]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
-#[Controller(route: 'api/v4/typescript', scope: Scope::SUB_USER_ALLOWED)]
-class TypeScript extends AbstractApi
+#[Controller(route: 'api/v4/interfaces', scope: Scope::SUB_USER_ALLOWED)]
+class RpcInterface extends AbstractApi
 {
     private PreparedstatementModel $pres;
 
@@ -44,7 +44,7 @@ class TypeScript extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/typescript', operationId: 'getTypeScript', description: "Get TypeScript API", tags: ['Methods'])]
+    #[OA\Get(path: '/api/v4/interfaces', operationId: 'getTypeScript', description: "Get TypeScript API", tags: ['Methods'])]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Method"))]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['text/plain', '*/*'])]
