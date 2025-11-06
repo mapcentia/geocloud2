@@ -258,8 +258,7 @@ abstract class AbstractApi implements ApiInterface
         if (!empty($data) && !json_validate($data)) {
             throw new GC2Exception("Invalid JSON. Check your request", 400, null, "INVALID_DATA");
         }
-
-        if (empty($data) && in_array(Input::getMethod(), ['post', 'patch'])) {
+        if (empty($data) && in_array(Input::getMethod(), ['post', 'patch']) && !str_starts_with(Input::getContentType(), 'multipart/form-data')) {
             throw new GC2Exception("POST and PATCH without request body is not allowed.", 400);
         }
 
