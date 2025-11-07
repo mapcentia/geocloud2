@@ -46,8 +46,8 @@ class Sql extends Model
 
     public Sql $model;
 
-    private const string DEFAULT_TIMESTAMP_FORMAT = 'Y-m-d H:i:s';
-    private const string DEFAULT_TIMESTAMPTZ_FORMAT = 'Y-m-d H:i:s P';
+    private const string DEFAULT_TIMESTAMP_FORMAT = 'Y-m-d\TH:i:s.v';
+    private const string DEFAULT_TIMESTAMPTZ_FORMAT = 'Y-m-d\TH:i:s.v\Z';
     private const string DEFAULT_TIME_FORMAT = 'H:i:s';
     private const string DEFAULT_TIMETZ_FORMAT = 'H:i:s P';
     private const string DEFAULT_DATE_FORMAT = 'Y-m-d';
