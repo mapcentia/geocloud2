@@ -7,17 +7,16 @@ services:
     image: dev_ecw3
     privileged: true
     volumes:
-      - ../../geocloud2:/var/www/geocloud2
+      - ../:/var/www/geocloud2
     networks:
       - default
       - internal
     ports:
       - "8080:80"
       - "8081:8080"
-      - "4001:4000"
     expose:
       - 9000
-    env_file: connection.env
+    env_file: conn.env
     extra_hosts:
       - host.docker.internal:host-gateway
 
@@ -26,7 +25,7 @@ services:
     build: ../app/event/.
     privileged: true
     volumes:
-      - ../../geocloud2:/var/www/geocloud2
+      - ../:/var/www/geocloud2
     networks:
       - default
       - internal
@@ -34,7 +33,7 @@ services:
       - "8088:80"
     expose:
       - 9000
-    env_file: connection.env
+    env_file: conn.env
     extra_hosts:
       - host.docker.internal:host-gateway
   redis:
