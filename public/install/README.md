@@ -180,7 +180,7 @@ The installer inspects exception codes/messages and reacts to specific SQLSTATEs
   - Yes. It is idempotent with regard to key operations (duplicate schema/database cases are handled) and provides re-run options where needed.
 
 - Does the installer support Docker?
-  - If you run GC2 via Docker, ensure the Postgres container exposes the required environment variables (see `docker/connection.env` and `docker/docker-compose.yml`) and that the web container can reach it.
+  - If you run GC2 via Docker, ensure the Postgres container exposes the required environment variables (see `docker/conn.env` and `docker/docker-compose.yml`) and that the web container can reach it.
 
 
 ## File map
