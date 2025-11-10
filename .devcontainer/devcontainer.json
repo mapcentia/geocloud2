@@ -8,20 +8,26 @@
     "postgis",
     "redis"
   ],
-  "workspaceFolder": "../",
+  "workspaceFolder": "..",
   "overrideCommand": false,
   "remoteUser": "root",
   "shutdownAction": "stopCompose",
   "postCreateCommand": "true",
   "forwardPorts": [
+    80,
     8080,
-    8081,
-    8088,
     5432,
-    6379
+    6379,
+    9000
   ],
   "features": {},
   "customizations": {
+    "jetbrains": {
+      "settings": {
+        "com.intellij:app:BuiltInServerOptions.builtInServerPort": 51697,
+        "com.intellij:app:HttpConfigurable.use_proxy_pac": true
+      }
+    },
     "vscode": {
       "extensions": [
         "ms-azuretools.vscode-docker",
