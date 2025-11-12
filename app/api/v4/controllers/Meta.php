@@ -36,6 +36,8 @@ class Meta extends AbstractApi
     public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
+        $this->resource = 'relations';
+
     }
 
 
@@ -77,9 +79,7 @@ class Meta extends AbstractApi
         $jwt = Jwt::validate()["data"];
         $res = $layers->getAll($jwt["database"], true, $this->route->getParam("query"), false, true, false, false);
         $rows = $res["data"];
-        $out = self::processRows($rows);
-        $r = !$res["success"] ? $res : ["relations" => $out];
-
+        $r = self::processRows($rows);
         return $this->getResponse($r);
     }
 
