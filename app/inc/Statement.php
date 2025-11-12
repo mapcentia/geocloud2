@@ -73,7 +73,9 @@ class Statement
         }
         $response['_peak_memory_usage'] = round(memory_get_peak_usage() / 1024) . " KB";
         if (isset($query['id'])) {
-            $response['id'] = $query['id'];
+            if (isset($query['format']) && in_array($query['format'], ["json", "geojson"])) {
+                $response['id'] = $query['id'];
+            }
             return $response;
         }
         return null;
