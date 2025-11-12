@@ -36,8 +36,8 @@ readonly class Rpc
         $query['type_hints'] = json_decode($preStm['data']['type_hints'], true);
         $query['type_formats'] = json_decode($preStm['data']['type_formats'], true);
         $query['format'] = $preStm['data']['output_format'];
-        $query['srs'] = $preStm['data']['srs'];
         $query['params'] = $query['params'] ?? null;
+        $api->setSRS($preStm['data']['srs']);
         try {
             $statement = new Statement(connection: $this->connection, convertReturning: true);
             $res = $statement->run(user: $user, api: $api, query: $query, subuser: $subuser, userGroup: $userGroup);;
