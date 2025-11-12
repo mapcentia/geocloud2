@@ -167,7 +167,7 @@ class Sql extends AbstractApi
     {
         $statement = new Statement(connection: $this->connection, convertReturning: true);
         $query['convert_types'] = $value['convert_types'] ?? true;
-        $query['format'] = $body['output_format'] ?? 'json';
+        $query['format'] = $query['output_format'] ?? 'json';
         $result = $statement->run(user: $user, api: $this->sqlApi, query: $query, subuser: !$isSuperUser, userGroup: $userGroup);
         if (!empty($result)) {
             unset($result['success']);
