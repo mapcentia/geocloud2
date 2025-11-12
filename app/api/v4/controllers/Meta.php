@@ -6,11 +6,14 @@
  *
  */
 
-namespace app\api\v3;
+namespace app\api\v4\controllers;
 
 use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableMethods;
+use app\api\v4\Controller;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Jwt;
@@ -23,14 +26,14 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
  * Class Meta
  * @package app\api\v4
  */
-#[AcceptableMethods(['GET', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
+#[AcceptableMethods(['GET', 'HEAD', 'OPTIONS'])]
+#[Controller(route: 'api/v3/meta/[query]', scope: Scope::SUB_USER_ALLOWED)]
 class Meta extends AbstractApi
 {
-
     /**
      * Meta constructor.
      */
-    public function __construct(private readonly Route2 $route, Connection $connection)
+    public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
     }
@@ -68,14 +71,16 @@ class Meta extends AbstractApi
      */
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
-    public function get_index(): array
+    public function get_index(): Response
     {
-        $layers = new Layer();
+        $layers = new Layer(connection: $this->connection);
         $jwt = Jwt::validate()["data"];
-        $res = $layers->getAll($jwt["database"], true, Route2::getParam("query"), false, true, false, false);
+        $res = $layers->getAll($jwt["database"], true, $this->route->getParam("query"), false, true, false, false);
         $rows = $res["data"];
         $out = self::processRows($rows);
-        return !$res["success"] ? $res : ["relations" => $out];
+        $r = !$res["success"] ? $res : ["relations" => $out];
+
+        return $this->getResponse($r);
     }
 
     static function processRows(array $rows): array
@@ -120,27 +125,25 @@ class Meta extends AbstractApi
     }
 
     #[Override]
-    public function post_index(): array
+    public function post_index(): Response
     {
         // TODO: Implement post_index() method.
-        return [];
     }
 
     #[Override]
-    public function put_index(): array
+    public function put_index(): Response
     {
         // TODO: Implement put_index() method.
-        return [];
     }
 
     #[Override]
-    public function delete_index(): array
+    public function delete_index(): Response
     {
         // TODO: Implement delete_index() method.
-        return [];
+
     }
 
-    public function patch_index(): array
+    public function patch_index(): Response
     {
         // TODO: Implement patch_index() method.
     }
