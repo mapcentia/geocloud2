@@ -12,6 +12,7 @@ use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableMethods;
 use app\api\v4\Controller;
+use app\api\v4\Responses\GetResponse;
 use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
@@ -80,7 +81,7 @@ class Meta extends AbstractApi
         $res = $layers->getAll($jwt["database"], true, $this->route->getParam("query"), false, true, false, false);
         $rows = $res["data"];
         $r = self::processRows($rows);
-        return $this->getResponse($r);
+        return new GetResponse(data: $r);
     }
 
     static function processRows(array $rows): array
