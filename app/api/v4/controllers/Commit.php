@@ -9,7 +9,6 @@
 namespace app\api\v4\controllers;
 
 
-use app\api\v3\Meta;
 use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
