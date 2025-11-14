@@ -124,7 +124,7 @@ class Statement
         }
 
         // Get rules and set them
-        $walkerRule = new TableWalkerRule(!empty($authResponse["is_auth"]) ? $this->subUser ?: $this->connection->database : "*", "sql", strtolower($operation), '');
+        $walkerRule = new TableWalkerRule( $this->subUser ?? $this->connection->database, "sql", strtolower($operation), '');
         $rules = $rule->get($this->sql);
         $walkerRule->setRules($rules);
         $select->dispatch($walkerRule);

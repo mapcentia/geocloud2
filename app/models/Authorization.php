@@ -131,7 +131,6 @@ class Authorization extends Model
         // For other auth levels (e.g., Read), return minimal info
         return $this->success([
             'auth_level' => $auth,
-            'is_auth'    => $isAuth,
             self::USED_RELS_KEY => $rels,
         ]);
     }
