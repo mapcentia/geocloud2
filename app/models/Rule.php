@@ -22,7 +22,7 @@ class Rule extends Model
      * @param Sql|null $conn
      * @return array
      */
-    public function get(Sql $conn = null): array
+    public function get(?Sql $conn = null): array
     {
         $sql = "SELECT * FROM settings.geofence order by priority";
         if ($conn) {
