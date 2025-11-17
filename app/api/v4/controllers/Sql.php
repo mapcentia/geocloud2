@@ -191,6 +191,12 @@ class Sql extends AbstractApi
             unset($response[$key]['_auth_check']);
             unset($response[$key]['_request']);
             unset($response[$key]['_peak_memory_usage']);
+            if (!empty($response[$key]['returning'])) {
+                $response[$key]['data'] = $response[$key]['returning']['data'];
+                $response[$key]['schema'] = $response[$key]['returning']['schema'];
+            }
+            unset($response[$key]['returning']);
+
         }
         return $response;
     }
