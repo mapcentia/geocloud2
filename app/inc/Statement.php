@@ -140,7 +140,7 @@ class Statement
             $geofence = new Geofence($userFilter);
             $auth = $geofence->authorize($rules);
             $finaleStatement = $factory->createFromAST($select, true)->getSql();
-            if ($auth["access"] == Geofence::LIMIT_ACCESS) {
+            if (!empty($auth["access"]) && $auth["access"] == Geofence::LIMIT_ACCESS) {
                 try {
                     $geofence->postProcessQuery($select, $rules, $this->params['params'], $typeHints);
                 } catch (Exception $e) {
@@ -152,7 +152,7 @@ class Statement
                     return $response;
                 }
             }
-            $response = $this->sql->transaction($finaleStatement, $this->params['params'], $this->params['type_hints'], $this->convertReturning, $this->params['type_formats']);
+            $response = $this->sql->transaction($finaleStatement, $this->params['params'] ?? null, $this->params['type_hints'] ?? null, $this->convertReturning, $this->params['type_formats'] ?? null);
             $response["filters"] = $auth["filters"];
             $response["statement"] = $finaleStatement;
         } elseif ($operation == "Select" || $operation == "SetOpSelect") {
