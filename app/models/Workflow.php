@@ -55,7 +55,6 @@ class Workflow extends Model
         }
 
         $this->connect();
-        $this->PgConnection->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
         $res = $this->prepare($sql);
 
         try {
