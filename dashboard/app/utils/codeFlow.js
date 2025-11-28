@@ -3,9 +3,9 @@ import {getGC2ConfigurationCall} from "../api";
 
 // Fallback defaults to preserve existing behavior if remote config is missing
 const DEFAULTS = {
-    redirectUri: 'http://localhost:8080',
+    redirectUri: location.protocol + '//' + location.host + '/dashboard/sign-in',
     clientId: 'gc2-cli',
-    host: 'http://localhost:8080',
+    host: location.protocol + '//' + location.host ,
     scope: 'openid'
 };
 
