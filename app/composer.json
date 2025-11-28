@@ -46,7 +46,8 @@
     "amphp/http-server-static-content": "^2.0",
     "amphp/log": "^2.0",
     "amphp/websocket-client": "^2.0",
-    "revolt/event-loop": "^1.0"
+    "revolt/event-loop": "^1.0",
+    "webonyx/graphql-php": "^15.26"
   },
   "require-dev": {
     "phpstan/phpstan": "^1.10",
