@@ -246,6 +246,8 @@ gc2i18n = {
 
         "You are no longer logged in to GC2. Close or refresh your browser": "You are no longer logged in to GC2. Close or refresh your browser",
         "You have started Admin for another schema. Either close this here or refresh your browser": "You have started Admin for another schema. Either close this here or refresh your browser",
-        "Something went wrong. Try refreshing your browser": "Something went wrong. Try refreshing your browser"
+        "Something went wrong. Try refreshing your browser": "Something went wrong. Try refreshing your browser",
+
+        "Enable workflow on": "Enable workflow on"
     }
 };

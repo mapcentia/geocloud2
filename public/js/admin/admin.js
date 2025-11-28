@@ -1243,7 +1243,7 @@ $(document).ready(function () {
                                             workflowStore.load();
                                         };
                                         if (!r.exists) {
-                                            Ext.MessageBox.confirm(__('Confirm'), __("You are about to .....") + " '" + records[0].get("f_table_name") + "'. " + __("Are you sure?"), function (btn) {
+                                            Ext.MessageBox.confirm(__('Confirm'), __("Enable workflow on") + " '" + records[0].get("f_table_name") + "'. " + __("Are you sure?"), function (btn) {
                                                 if (btn === "yes") {
                                                     Ext.Ajax.request({
                                                         url: '/controllers/table/workflow/' + records[0].get("f_table_schema") + "." + records[0].get("f_table_name"),
