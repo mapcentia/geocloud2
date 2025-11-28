@@ -28,6 +28,22 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Validator\Constraints as Assert;
 
+use GraphQL\Type\Definition\ScalarType;
+use GraphQL\Language\Parser as GraphQLParser;
+use GraphQL\Language\AST\DocumentNode;
+use GraphQL\Language\AST\OperationDefinitionNode;
+use GraphQL\Language\AST\FieldNode;
+use GraphQL\Language\AST\ValueNode;
+use GraphQL\Language\AST\VariableNode;
+use GraphQL\Language\AST\StringValueNode;
+use GraphQL\Language\AST\IntValueNode;
+use GraphQL\Language\AST\FloatValueNode;
+use GraphQL\Language\AST\BooleanValueNode;
+use GraphQL\Language\AST\NullValueNode;
+use GraphQL\Language\AST\ListValueNode;
+use GraphQL\Language\AST\ObjectValueNode;
+
+
 /**
  * Minimal GraphQL endpoint for Postgres.
  *
@@ -88,11 +104,12 @@ class Graphql extends AbstractApi
         }
         $query = $payload['query'] ?? null;
         $variables = $payload['variables'] ?? [];
+        $operationName = $payload['operationName'] ?? null;
         if (!is_string($query) || $query === '') {
             throw new GC2Exception('Missing GraphQL query', 400);
         }
-        // Execute the query in a very limited fashion
-        $result = $this->executeQuery($query, is_array($variables) ? $variables : []);
+        // Execute the query using webonyx/graphql-php
+        $result = $this->executeQuery($query, is_array($variables) ? $variables : [], is_string($operationName) ? $operationName : null);
         return new GetResponse(data: $result);
     }
 
@@ -148,60 +165,75 @@ class Graphql extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException
      * @throws InvalidArgumentException
      */
-    private function executeQuery(string $query, array $variables): array
+    private function executeQuery(string $query, array $variables, ?string $operationName = null): array
     {
-        $normalized = trim($query);
+        try {
+            /** @var DocumentNode $doc */
+            $doc = GraphQLParser::parse($query);
+        } catch (\Throwable $e) {
+            return ['data' => null, 'errors' => [[
+                'message' => 'GraphQL parse error: ' . $e->getMessage(),
+            ]]];
+        }
 
-        // Extract optional operation name from the header before the first top-level '{'
-        $opName = null;
-        $opType = null;
-        $firstBracePos = strpos($normalized, '{');
-        if ($firstBracePos !== false) {
-            $header = substr($normalized, 0, $firstBracePos);
-            if (preg_match('/\b(query|mutation)\b\s*([A-Za-z_][A-Za-z0-9_]*)?/i', $header, $hm)) {
-                $opType = isset($hm[1]) ? strtolower($hm[1]) : null;
-                $opName = $hm[2] ?? null;
+        // Select operation (only queries supported)
+        $operation = null;
+        foreach ($doc->definitions as $def) {
+            if ($def instanceof OperationDefinitionNode) {
+                if ($operationName === null || ($def->name?->value === $operationName)) {
+                    $operation = $def;
+                    if ($operationName !== null) {
+                        break;
+                    }
+                }
             }
-            $body = substr($normalized, $firstBracePos);
-        } else {
-            // Fallback: keep previous behavior if no braces were found
-            $body = preg_replace('/^(query|mutation)\s*/i', '', $normalized ?? '') ?? $normalized;
         }
-
-        // Find first top-level field within the first {...}
-        if (!preg_match('/\{\s*(\w+)\s*(\(([^)]*)\))?/s', $body, $m, PREG_OFFSET_CAPTURE)) {
-            return ['data' => null, 'errors' => [['message' => 'Unable to parse query']]];
+        if (!$operation) {
+            return ['data' => null, 'errors' => [[
+                'message' => 'No operation found in document',
+            ]]];
         }
-        $field = $m[1][0];
-        $argString = $m[3][0] ?? '';
-        $matchEndPos = $m[0][1] + strlen($m[0][0]);
-
-        // Parse optional selection set following the field
-        $selection = null;
-        $rest = substr($body, $matchEndPos);
-        $rest = ltrim($rest);
-        if (isset($rest[0]) && $rest[0] === '{') {
-            [$selContent, $_endPos] = $this->extractBracedBlock($rest, 0);
-            $selection = $this->parseSelectionTree($selContent);
-        }
-
-        // Support single positional arg (e.g., user(5) or user(i))
-        $positional = null;
-        $argStringTrim = trim($argString ?? '');
-        if ($argStringTrim !== '' && !str_contains($argStringTrim, ':')) {
-            $positional = $this->parseValueToken($argStringTrim, $variables);
-        }
-        $args = $this->parseArgs($argString, $variables);
-
-        // Require an operation name and validate it (must start with uppercase). Map to lowercase table logic.
+        $opType = $operation->operation;
+        $opName = $operation->name?->value;
         if (!is_string($opName) || $opName === '') {
-            return ['data' => null, 'errors' => [['message' => 'Operation name is required']]];
+            // Preserve previous behavior: require explicit operation name
+            return ['data' => null, 'errors' => [[
+                'message' => 'Operation name is required',
+            ]]];
         }
-        if ($opType !== 'query') {
-            return ['data' => null, 'errors' => [['message' => 'Only query operations are allowed']]];
+        if (strtolower($opType) !== 'query') {
+            return ['data' => null, 'errors' => [[
+                'message' => 'Only query operations are allowed',
+            ]]];
         }
+        $selections = $operation->selectionSet?->selections ?? [];
+        if (empty($selections)) {
+            return ['data' => null, 'errors' => [[
+                'message' => 'No fields selected',
+            ]]];
+        }
+        $firstSel = $selections[0];
+        if (!$firstSel instanceof FieldNode) {
+            return ['data' => null, 'errors' => [[
+                'message' => 'Unsupported selection at root',
+            ]]];
+        }
+        $field = $firstSel->name->value;
+
+        // Build args array from AST
+        $args = [];
+        foreach ($firstSel->arguments ?? [] as $arg) {
+            $args[$arg->name->value] = $this->valueFromAst($arg->value, $variables);
+        }
+
+        // Build selection tree for nested structure
+        $selection = $this->selectionTreeFromFieldNode($firstSel);
+
+        // Maintain legacy constraint: operation name must match the root field (optionally with ById)
         if (!preg_match('/^[A-Z][A-Za-z0-9_]*(ById)?$/', $opName)) {
-            return ['data' => null, 'errors' => [['message' => 'Invalid operation name: must start with an uppercase letter']]];
+            return ['data' => null, 'errors' => [[
+                'message' => 'Invalid operation name: must start with an uppercase letter',
+            ]]];
         }
         $isById = false;
         if (str_ends_with($opName, 'ById')) {
@@ -215,19 +247,25 @@ class Graphql extends AbstractApi
         $matchesByIdField = strcasecmp($field, $expectedField . 'ById') === 0;
         if ($isById) {
             if (!($matchesBase || $matchesByIdField)) {
-                return ['data' => null, 'errors' => [['message' => "Operation name '$opName' does not match root field '$field'"]]];
+                return ['data' => null, 'errors' => [[
+                    'message' => "Operation name '$opName' does not match root field '$field'",
+                ]]];
             }
             $effectiveField = $expectedField . 'ById';
         } else {
             if (!$matchesBase) {
-                return ['data' => null, 'errors' => [['message' => "Operation name '$opName' does not match root field '$field'"]]];
+                return ['data' => null, 'errors' => [[
+                    'message' => "Operation name '$opName' does not match root field '$field'",
+                ]]];
             }
             $effectiveField = $expectedField;
         }
 
+        // Note: positional arguments are not part of the GraphQL spec; only named args are supported now.
+        $positional = null;
+
         try {
             $value = $this->resolveField($effectiveField, $args, $positional, $selection);
-            // Keep the response key equal to the requested field name, not the effective resolver name
             return ['data' => [$field => $value]];
         } catch (GC2Exception $e) {
             return ['data' => null, 'errors' => [[
@@ -1011,5 +1049,105 @@ class Graphql extends AbstractApi
         }
 
         return $row;
+    }
+
+    /**
+     * Convert AST value into PHP value, using provided variables.
+     */
+    private function valueFromAst(ValueNode $node, array $variables): mixed
+    {
+        if ($node instanceof VariableNode) {
+            $name = $node->name->value;
+            return $variables[$name] ?? null;
+        }
+        if ($node instanceof StringValueNode) {
+            return $node->value;
+        }
+        if ($node instanceof IntValueNode) {
+            return (int)$node->value;
+        }
+        if ($node instanceof FloatValueNode) {
+            return (float)$node->value;
+        }
+        if ($node instanceof BooleanValueNode) {
+            return (bool)$node->value;
+        }
+        if ($node instanceof NullValueNode) {
+            return null;
+        }
+        if ($node instanceof ListValueNode) {
+            $arr = [];
+            foreach ($node->values as $v) {
+                $arr[] = $this->valueFromAst($v, $variables);
+            }
+            return $arr;
+        }
+        if ($node instanceof ObjectValueNode) {
+            $obj = [];
+            foreach ($node->fields as $f) {
+                $obj[$f->name->value] = $this->valueFromAst($f->value, $variables);
+            }
+            return $obj;
+        }
+        return null;
+    }
+
+    /**
+     * Build a selection tree map from AST FieldNode similar to previous parser output.
+     * Returns [fieldName => true|subtree]
+     */
+    private function selectionTreeFromFieldNode(FieldNode $field): array
+    {
+        $tree = [];
+        $selSet = $field->selectionSet?->selections ?? [];
+        foreach ($selSet as $sel) {
+            if ($sel instanceof FieldNode) {
+                $name = $sel->name->value;
+                $child = $this->selectionTreeFromFieldNode($sel);
+                $tree[$name] = empty($child) ? true : $child;
+            }
+        }
+        return $tree;
+    }
+
+    private static ?ScalarType $jsonScalar = null;
+
+    private function getJsonScalar(): ScalarType
+    {
+        if (self::$jsonScalar instanceof ScalarType) {
+            return self::$jsonScalar;
+        }
+        self::$jsonScalar = new class extends ScalarType {
+            public string $name = 'JSON';
+            public ?string $description = 'Arbitrary JSON value.';
+            public function serialize($value): mixed { return $value; }
+            public function parseValue($value): mixed { return $value; }
+            public function parseLiteral($valueNode, ?array $variables = null): mixed {
+                return $this->fromAst($valueNode, $variables ?? []);
+            }
+            private function fromAst(ValueNode $node, array $variables): mixed {
+                if ($node instanceof VariableNode) {
+                    $name = $node->name->value;
+                    return $variables[$name] ?? null;
+                }
+                if ($node instanceof StringValueNode) { return $node->value; }
+                if ($node instanceof IntValueNode) { return (int)$node->value; }
+                if ($node instanceof FloatValueNode) { return (float)$node->value; }
+                if ($node instanceof BooleanValueNode) { return (bool)$node->value; }
+                if ($node instanceof NullValueNode) { return null; }
+                if ($node instanceof ListValueNode) {
+                    $arr = [];
+                    foreach ($node->values as $v) { $arr[] = $this->fromAst($v, $variables); }
+                    return $arr;
+                }
+                if ($node instanceof ObjectValueNode) {
+                    $obj = [];
+                    foreach ($node->fields as $f) { $obj[$f->name->value] = $this->fromAst($f->value, $variables); }
+                    return $obj;
+                }
+                return null;
+            }
+        };
+        return self::$jsonScalar;
     }
 }
