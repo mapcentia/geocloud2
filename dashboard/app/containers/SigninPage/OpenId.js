@@ -62,7 +62,6 @@ class OpenId extends Component {
                 const token = JSON.parse(localStorage.getItem('gc2_tokens'))['accessToken']
                 const nonce = localStorage.getItem('gc2_nonce')
                 const {database} = jwtDecode(token)
-                const {superuser} = jwtDecode(token)
                 if (!database) {
                     alert(`No database set in token. Please contact the administrator.`)
                     codeFlow.clear()
@@ -149,8 +148,7 @@ class OpenId extends Component {
                     })
                     return
                 }
-
-                this.proceed(token, nonce, selectedDb, jwtDecode(token)['superUser'])
+                this.proceed(token, nonce, selectedDb, false)
             } else {
                 // If nonce is not set, get it from the server, so it can be used in the sign-in request
                 if (!localStorage.getItem('gc2_nonce')) {
