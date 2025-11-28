@@ -59,7 +59,7 @@ class OpenId extends Component {
         codeFlow.redirectHandle().then(async isSignedIn => {
             if (!this._isMounted) return
             if (isSignedIn) {
-                const token = JSON.parse(localStorage.getItem('gc2_tokens'))['idToken']
+                const token = JSON.parse(localStorage.getItem('gc2_tokens'))['accessToken']
                 const nonce = localStorage.getItem('gc2_nonce')
                 const {database} = jwtDecode(token)
                 const {superuser} = jwtDecode(token)
@@ -150,7 +150,7 @@ class OpenId extends Component {
                     return
                 }
 
-                this.proceed(token, nonce, selectedDb, false)
+                this.proceed(token, nonce, selectedDb, jwtDecode(token)['superUser'])
             } else {
                 // If nonce is not set, get it from the server, so it can be used in the sign-in request
                 if (!localStorage.getItem('gc2_nonce')) {
@@ -164,8 +164,7 @@ class OpenId extends Component {
                 }
             }
         }).catch(err => {
-            // alert(err)
-            // location.reload()
+            console.error(err.message)
         })
     }
 
