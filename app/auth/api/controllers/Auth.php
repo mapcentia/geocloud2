@@ -12,6 +12,7 @@ use app\api\v4\AbstractApi;
 use app\api\v4\Controller;
 use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
+use app\conf\App;
 use app\inc\Connection;
 use app\inc\Route2;
 use app\inc\Session;
@@ -34,7 +35,7 @@ class Auth extends AbstractApi
     public function get_index(): Response
     {
         $requiredParams = ['response_type', 'client_id'];
-        $socialSignup = true;
+        $socialSignup = !!empty(App::$param['noSocialSignup']);
         foreach ($requiredParams as $requiredParam) {
             if (!array_key_exists($requiredParam, $_GET)) {
                 $error = "invalid_request";
