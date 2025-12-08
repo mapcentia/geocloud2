@@ -688,8 +688,12 @@ class Table extends Model
                     $arr = $this->array_push_assoc($arr, "linksuffix", !empty($fieldconfArr[$key]->linksuffix) ? $fieldconfArr[$key]->linksuffix : null);
                     $arr = $this->array_push_assoc($arr, "template", !empty($fieldconfArr[$key]->template) ? $fieldconfArr[$key]->template : null);
                     $arr = $this->array_push_assoc($arr, "properties", !empty($fieldconfArr[$key]->properties) ? $fieldconfArr[$key]->properties : null);
+                    if ($this->relType == "TABLE" || $this->relType == "MATVIEW") {
+                        $arr = $this->array_push_assoc($arr, "is_nullable", !empty($value['is_nullable']));
+                    } else {
+                        $arr = $this->array_push_assoc($arr, "is_nullable", !empty($fieldconfArr[$key]->is_nullable) && $fieldconfArr[$key]->is_nullable);
+                    }
                     $arr = $this->array_push_assoc($arr, "ignore", !empty($fieldconfArr[$key]->ignore) && $fieldconfArr[$key]->ignore);
-                    $arr = $this->array_push_assoc($arr, "is_nullable", !empty($value['is_nullable']));
                     $arr = $this->array_push_assoc($arr, "desc", $this->getColumnComment($key) ?: (!empty($fieldconfArr[$key]->desc) ? $fieldconfArr[$key]->desc : ""));
                     if ($value['typeObj']['type'] == "decimal") {
                         $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
@@ -751,9 +755,15 @@ class Table extends Model
             if ($this->metaData[$value->id]["is_nullable"] != $value->is_nullable && !$onlyRename) {
                 $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ALTER \"$value->column\" " . ($value->is_nullable ? "DROP" : "SET") . " NOT NULL";
                 $res = $this->prepare($sql);
-                $res->execute();
-                $response['success'] = true;
-                return $response;
+                try {
+                    $res->execute();
+                    $response['success'] = true;
+                    return $response;
+                } catch (PDOException $e) {
+                    if ($this->relType == "TABLE" || $this->relType == "MATVIEW") {
+                        throw $e;
+                    }
+                }
             }
             if ($this->metaData[$value->id]["desc"] !== $value->desc && !$onlyRename) {
                 if ($value->desc === "") {
