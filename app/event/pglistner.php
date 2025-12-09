@@ -14,6 +14,7 @@ use app\conf\App;
 use app\conf\Connection;
 use app\event\tasks\DatabaseTask;
 use app\event\tasks\PreparePayloadTask;
+use app\inc\ShapeFilter;
 use function Amp\async;
 use function Amp\delay;
 
@@ -89,13 +90,23 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
                     // Nothing to send to this client after filtering
                     continue;
                 }
+                echo "[INFO] filtering payload\n";
+
+                $filter = new ShapeFilter();
+
+                $batch = [
+                    'type' => 'batch',
+                    'db' => $db,
+                    'batch' => $batchForClient
+                ];
+
+                //$where = "text = 'test3'";
+                $where = "";
+
+                $batch = $filter->filter($batch, $where);
+
                 echo "[INFO] Sending to: " . $client->getId() . "\n";
-                $client->sendText(json_encode([
-                        'type' => 'batch',
-                        'db' => $db,
-                        'batch' => $batchForClient,
-                    ]
-                ));
+                $client->sendText(json_encode($batch));
 
             }
         } catch (Throwable $error) {
