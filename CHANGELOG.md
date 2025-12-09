@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2025.12.0] - 2025-9-12
+### Changed
+- The `Allow null` setting can now be set on columns in VIEWs and FTs. The settings are stored on the application level 
+  and are read by Vidi Editor, so fields on VIEWs and FTs can be required.
+- Table references can now have an `_order` property, which is used to sort the columns in the referenced table:
+```json
+{"_rel":"[schema.table]", "_value":"[field]", "_text":"[field]", "_where": "[foo <> bar]", "_order": "[field ASC]"}
+```
+
 ## [2025.10.5] - 2025-31-10
 ### Added
 - GeoJSON as output format to WFS 2.0. Use `&format=geojson` or `&format=application/json` in the URL.`
