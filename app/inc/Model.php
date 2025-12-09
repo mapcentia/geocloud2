@@ -479,6 +479,9 @@ class Model
                         if (!empty($rel->_where)) {
                             $sql .= " WHERE $rel->_where";
                         }
+                        if (!empty($rel->_order)) {
+                            $sql .= " ORDER BY $rel->_order";
+                        }
                         // We ignore the error here
                         try {
                             $resC = $this->prepare($sql);
