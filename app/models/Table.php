@@ -690,7 +690,7 @@ class Table extends Model
                     if ($this->relType == "TABLE" || $this->relType == "MATVIEW") {
                         $arr = $this->array_push_assoc($arr, "is_nullable", !empty($value['is_nullable']));
                     } else {
-                        $arr = $this->array_push_assoc($arr, "is_nullable", !empty($fieldconfArr[$key]->is_nullable) && $fieldconfArr[$key]->is_nullable);
+                        $arr = $this->array_push_assoc($arr, "is_nullable", !isset($fieldconfArr[$key]->is_nullable) ? true : $fieldconfArr[$key]->is_nullable);;
                     }
                     $arr = $this->array_push_assoc($arr, "ignore", !empty($fieldconfArr[$key]->ignore) && $fieldconfArr[$key]->ignore);
                     $arr = $this->array_push_assoc($arr, "desc", $this->getColumnComment($key) ?: (!empty($fieldconfArr[$key]->desc) ? $fieldconfArr[$key]->desc : ""));
