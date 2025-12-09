@@ -38,11 +38,13 @@ EventLoop::setErrorHandler(function (Throwable $throwable): void {
 
 new App();
 
+ini_set("memory_limit", "1G");
+
 $logHandler = new StreamHandler(getStdout());
 $logHandler->setFormatter(new ConsoleFormatter());
 $logger = new Logger('server');
 $logger->pushHandler($logHandler);
-$server = SocketHttpServer::createForDirectAccess($logger);
+$server = SocketHttpServer::createForDirectAccess(logger: $logger, connectionLimit: 10000, connectionLimitPerIp: 10);
 $server->expose(new Socket\InternetAddress('0.0.0.0', 80));
 $server->expose(new Socket\InternetAddress('[::1]', 80));
 $errorHandler = new DefaultErrorHandler();
