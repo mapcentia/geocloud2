@@ -459,6 +459,8 @@ class Model
                         }
                         if (!empty($rel->_order)) {
                             $sql .= " ORDER BY $rel->_order";
+                        } else {
+                            $sql .= " ORDER BY $rel->_value";
                         }
                         // We ignore the error here
                         try {
