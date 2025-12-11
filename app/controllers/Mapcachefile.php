@@ -160,7 +160,7 @@ class Mapcachefile extends Controller
             $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ NOTNULL $includeSchemas ORDER BY sort_id";
             $result = $postgisObject->execQuery($sql);
             while ($row = $postgisObject->fetchRow($result)) {
-                if ($row['f_table_schema'] != "sqlapi") {
+                if ($row['f_table_schema'] != "sqlapi" && $row['enableows']) {
                     $layerArr[$row['f_table_schema']][] = $row['f_table_schema'] . "." . $row['f_table_name'];
                     $groups[$row['f_table_schema']][] = strtolower($row['layergroup']);
                     $groupArr[$row['f_table_schema']][$row['f_table_schema'] . "." . $row['f_table_name']] = strtolower($row['layergroup']);
