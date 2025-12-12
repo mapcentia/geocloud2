@@ -228,12 +228,12 @@ RUN git clone --branch branch-1-12 http://github.com/mapserver/mapcache.git \
     && rm -rf mapcache
 
 # Install QGIS Server
-RUN wget -qO - https://qgis.org/downloads/qgis-2022.gpg.key \
-    | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import \
-    && chmod a+r /etc/apt/trusted.gpg.d/qgis-archive.gpg \
-    && add-apt-repository "deb https://qgis.org/debian-ltr $(lsb_release -c -s) main" \
-    && apt-get update && apt-get install -y --no-install-recommends qgis-server \
-    && rm -rf /var/lib/apt/lists/*
+#RUN wget -qO - https://qgis.org/downloads/qgis-2022.gpg.key \
+#    | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import \
+#    && chmod a+r /etc/apt/trusted.gpg.d/qgis-archive.gpg \
+#    && add-apt-repository "deb https://qgis.org/debian-ltr $(lsb_release -c -s) main" \
+#    && apt-get update && apt-get install -y --no-install-recommends qgis-server \
+#    && rm -rf /var/lib/apt/lists/*
 
 # Symlink fonts for QGIS server (slightly corrected syntax)
 RUN ln -s /usr/share/fonts /usr/lib/x86_64-linux-gnu/fonts
