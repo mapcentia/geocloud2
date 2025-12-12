@@ -31,7 +31,7 @@ use GraphQL\Type\Definition\ScalarType;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
 
-class GraphQl
+final class GraphQL
 {
     function __construct(private readonly Connection $connection, private readonly bool $convertReturning = true)
     {

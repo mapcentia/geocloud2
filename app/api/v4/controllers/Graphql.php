@@ -18,7 +18,7 @@ use app\api\v4\Responses\Response as ApiResponse;
 use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
-use app\inc\GraphQl as _GraphQl;
+use app\inc\GraphQL as _GraphQl;
 use app\inc\Input;
 use app\inc\Route2;
 use GraphQL\Language\AST\OperationDefinitionNode;
