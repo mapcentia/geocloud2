@@ -5,10 +5,10 @@
   ],
   "service": "gc2core",
   "runServices": [
-    "postgis",
+    "postgres",
     "redis"
   ],
-  "workspaceFolder": "/home/mh/Source/geocloud2",
+  "workspaceFolder": "/var/www/geocloud2",
   "overrideCommand": false,
   "remoteUser": "root",
   "shutdownAction": "stopCompose",
