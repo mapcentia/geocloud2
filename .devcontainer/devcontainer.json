@@ -8,7 +8,7 @@
     "postgis",
     "redis"
   ],
-  "workspaceFolder": "..",
+  "workspaceFolder": "/home/mh/Source/geocloud2",
   "overrideCommand": false,
   "remoteUser": "root",
   "shutdownAction": "stopCompose",

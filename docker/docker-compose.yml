@@ -4,8 +4,14 @@ networks:
 
 services:
   gc2core:
-    image: dev_ecw3
+    image: gc2core
     privileged: true
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+      args:
+        - ECW_VERSION=3
     volumes:
       - ../:/var/www/geocloud2
     networks:
@@ -21,8 +27,10 @@ services:
       - host.docker.internal:host-gateway
 
   event:
-    image: mapcentia/event
-    build: ../app/event/.
+    image: event
+    build:
+      context: ../app/event/.
+      dockerfile: Dockerfile
     privileged: true
     volumes:
       - ../:/var/www/geocloud2
@@ -45,31 +53,19 @@ services:
       - "6379:6379"
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
-  memcached:
-    image: memcached
-    networks:
-      - default
-      - internal
-    ports:
-      - "11211:11211"
-  postgis:
-    build: ./postgis
-    image: mapcentia/postgis15
-    volumes:
-      - postgis_var_lib_postgresql:/var/lib/postgresql
-    networks:
-      - default
-      - internal
+
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: postgres
+    restart: unless-stopped
     ports:
       - "5432:5432"
-    environment:
-      - GC2_USER=gc2
-      - GC2_PASSWORD=1234
-      - POSTGIS_HOST=127.0.0.1
-      - POSTGIS_USER=gc2
-      - POSTGIS_PORT=5432
-      - POSTGIS_PW=1234
-      - POSTGIS_DB=postgres
+    env_file: conn.env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - default
+      - internal
     healthcheck:
       test: "psql -U postgres -t -c select || exit 1"
       interval: 10s
@@ -124,7 +120,7 @@ services:
 #      - "discovery.type=single-node"
 
 volumes:
-  postgis_var_lib_postgresql:
+  pgdata:
   keycloak:
 
 
