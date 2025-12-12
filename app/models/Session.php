@@ -14,6 +14,7 @@ use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Jwt;
 use app\inc\Model;
+use app\inc\RoleToPriv;
 use app\inc\Util;
 use app\models\User as UserModel;
 use Firebase\JWT\JWK;
@@ -242,8 +243,9 @@ class Session extends Model
             }
 
             $row = null;
+            $user = null;
             $userName = $payload->preferred_username;
-            $fn = function () use ($payload, &$row, $parentDb, $superuser, $userName): void {
+            $fn = function () use ($payload, &$row, $parentDb, $superuser, $userName, $user): void {
                 if (!$superuser) {
 //                $sQuery = "SELECT * FROM users WHERE email = :sEmail AND parentdb = :parentDb";
 //                $res = $this->prepare($sQuery);
@@ -257,6 +259,7 @@ class Session extends Model
                         ":sName" => $userName,
                         ":parentDb" => $parentDb
                     ]);
+                    $user = new User(userId: $row['screenname'], parentDb: $parentDb);
                 } else {
                     $sQuery = "SELECT * FROM users WHERE screenname = :sDb AND parentdb is null";
                     $res = $this->prepare($sQuery);
@@ -280,6 +283,12 @@ class Session extends Model
                 ];
                 $user->createUser($data);
                 $fn();
+            }
+
+            // TODO set privileges for sub-user
+            if ($user) {
+                //            new RoleToPriv(user: $user);
+
             }
 
         } else {
