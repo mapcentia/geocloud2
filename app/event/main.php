@@ -46,7 +46,6 @@ $logger = new Logger('server');
 $logger->pushHandler($logHandler);
 $server = SocketHttpServer::createForDirectAccess(logger: $logger, connectionLimit: 10000, connectionLimitPerIp: 10);
 $server->expose(new Socket\InternetAddress('0.0.0.0', 80));
-$server->expose(new Socket\InternetAddress('[::1]', 80));
 $errorHandler = new DefaultErrorHandler();
 
 $acceptor = new Rfc6455Acceptor();
