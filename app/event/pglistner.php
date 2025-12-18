@@ -35,7 +35,7 @@ include_once __DIR__ . "/../models/Database.php";
 
 new App();
 
-$worker = Amp\Parallel\Worker\createWorker();
+$workerPool = Amp\Parallel\Worker\workerPool();
 
 $dbs = [];
 
@@ -45,14 +45,14 @@ $batchState = [];
 // Keep track of async futures for concurrency
 $futures = [];
 
-$preparePayloadWithPDO = function (array $batchPayload, string $db) use ($worker): Execution {
+$preparePayloadWithPDO = function (array $batchPayload, string $db) use ($workerPool): Execution {
     $task = new PreparePayloadTask($batchPayload, $db);
-    return $worker->submit($task);
+    return $workerPool->getWorker()->submit($task);
 };
 
-$RegisterPayloadWithPDO = function (array $batchPayload, string $db) use ($worker): Execution {
+$RegisterPayloadWithPDO = function (array $batchPayload, string $db) use ($workerPool): Execution {
     $task = new RegisterPayload($batchPayload, $db);
-    return $worker->submit($task);
+    return $workerPool->getWorker()->submit($task);
 };
 
 /**
@@ -234,11 +234,11 @@ async(function () use (
 });
 
 // --- Dynamic DB discovery loop: periodically fetch DBs and start listeners for new ones ---
-async(function () use (&$dbs, &$batchState, &$futures, &$worker, $consumer, $flushBatch, $batchSize, $reconnectDelay, $startListenerForDb) {
+async(function () use (&$dbs, &$batchState, &$futures, &$workerPool, $consumer, $flushBatch, $batchSize, $reconnectDelay, $startListenerForDb) {
     // Initial fetch to seed $dbs
     $current = [];
     try {
-        $current = $worker->submit(new DatabaseTask())->await();
+        $current = $workerPool->getWorker()->submit(new DatabaseTask())->await();
     } catch (Throwable $e) {
         echo "[ERROR] Initial DB discovery failed: " . $e->getMessage() . "\n";
     }
@@ -273,7 +273,7 @@ async(function () use (&$dbs, &$batchState, &$futures, &$worker, $consumer, $flu
     while (true) {
         delay(10);
         try {
-            $discovered = $worker->submit(new DatabaseTask())->await();
+            $discovered = $workerPool->getWorker()->submit(new DatabaseTask())->await();
         } catch (Throwable $e) {
             echo "[ERROR] DB discovery failed: " . $e->getMessage() . "\n";
             continue;

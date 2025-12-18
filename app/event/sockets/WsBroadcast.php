@@ -11,7 +11,7 @@ namespace app\event\sockets;
 use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
 use Amp\Parallel\Worker\Execution;
-use Amp\Parallel\Worker\Worker;
+use Amp\Parallel\Worker\WorkerPool;
 use Amp\Websocket\Server\WebsocketClientGateway;
 use Amp\Websocket\Server\WebsocketClientHandler;
 use Amp\Websocket\Server\WebsocketGateway;
@@ -24,18 +24,18 @@ use app\event\tasks\ValidateTokenTask;
 use app\inc\Connection;
 use SplObjectStorage;
 use Throwable;
-use function Amp\Parallel\Worker\createWorker;
+use function Amp\Parallel\Worker\workerPool;
 
 
 readonly class WsBroadcast implements WebsocketClientHandler
 {
     private SplObjectStorage $clientProperties;
-    public Worker $worker;
+    public WorkerPool $workerPool;
 
     public function __construct(public WebsocketGateway $gateway = new WebsocketClientGateway())
     {
         $this->clientProperties = new SplObjectStorage();
-        $this->worker = createWorker();
+        $this->workerPool = workerPool();
     }
 
     /**
@@ -53,13 +53,13 @@ readonly class WsBroadcast implements WebsocketClientHandler
             try {
                 // Validate token and parsed data
                 $task = new ValidateTokenTask($token);
-                $parsed = $this->worker->submit($task)->await()['data'];
+                $parsed = $this->workerPool->getWorker()->submit($task)->await()['data'];
                 // Connection to the database
                 $connection = new Connection(database: $parsed["database"]);
                 if (!$parsed['superUser']) {
                     foreach (explode(',', $params['rel']) as $rel) {
                         $task = new AuthTask($parsed, $rel, $connection);
-                        if (!$this->worker->submit($task)->await()) {
+                        if (!$this->workerPool->getWorker()->submit($task)->await()) {
                             $errorMsg = [
                                 'type' => 'error',
                                 'error' => 'not_allowed',
@@ -158,13 +158,13 @@ readonly class WsBroadcast implements WebsocketClientHandler
     private function sql(array $query, ?array $props): Execution
     {
         $task = new RunQueryTask($query, $props);
-        return $this->worker->submit($task);
+        return $this->workerPool->getWorker()->submit($task);
     }
 
     private function rpc(array $query, ?array $props): Execution
     {
         $task = new RunRpcTask($query, $props);
-        return $this->worker->submit($task);
+        return $this->workerPool->getWorker()->submit($task);
     }
 
     public function getProperties(WebsocketClient $client): array
