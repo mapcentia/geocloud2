@@ -6,6 +6,7 @@ PHP_SCRIPT=${PHPSCRIPT:-/var/www/geocloud2/app/event/main.php}
 if command -v watchexec >/dev/null 2>&1; then
   echo "[dev-entrypoint] Using watchexec hot-reload"
   watchexec \
+       --watch /var/www/geocloud2/app/conf \
        --watch /var/www/geocloud2/app/models \
        --watch /var/www/geocloud2/app/inc \
        --watch /var/www/geocloud2/app/event \
