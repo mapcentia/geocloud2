@@ -192,6 +192,14 @@ class Sql
         $sqls[] = "alter table settings.prepared_statements add output_schema jsonb";
         $sqls[] = "alter table settings.prepared_statements add input_schema jsonb";
         $sqls[] = "alter table settings.prepared_statements add request varchar check (request in ('*', 'select', 'insert', 'update', 'delete', 'merge'))";
+        $sqls[] = "create table settings.events
+                    (
+                        id        serial,
+                        timestamp timestamp default now() not null,
+                        rel varchar(255) not null,
+                        op varchar(255) not null,
+                        batch  jsonb            not null
+                    )";
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
                     SELECT

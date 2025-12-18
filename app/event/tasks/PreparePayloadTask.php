@@ -67,7 +67,6 @@ final readonly class PreparePayloadTask implements Task
                 $grouped[$groupKey]['values'][] = $value;
             }
         }
-        // Run blocking queries in batch
         foreach ($grouped as $grp) {
             $schemaTable = $grp['schemaTable'];
             $key = $grp['key'];

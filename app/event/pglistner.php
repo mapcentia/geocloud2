@@ -11,9 +11,9 @@ use Amp\Postgres\PostgresConfig;
 use Amp\Postgres\PostgresConnectionPool;
 use Amp\Postgres\PostgresListener;
 use app\conf\App;
-use app\conf\Connection;
 use app\event\tasks\DatabaseTask;
 use app\event\tasks\PreparePayloadTask;
+use app\event\tasks\RegisterPayload;
 use app\inc\ShapeFilter;
 use function Amp\async;
 use function Amp\delay;
@@ -22,7 +22,7 @@ use function Amp\delay;
 //
 // --- Configuration ---
 //
-$batchSize = 10;    // Flush once 10 messages arrive
+$batchSize = 100;    // Flush once 10 messages arrive
 $timeThreshold = 2;     // Seconds to wait before flushing partial batches
 $timerFrequency = 1;     // How often (seconds) to check for stale batches
 $reconnectDelay = 5;     // How long (seconds) to wait before reconnect attempts
@@ -50,11 +50,16 @@ $preparePayloadWithPDO = function (array $batchPayload, string $db) use ($worker
     return $worker->submit($task);
 };
 
+$RegisterPayloadWithPDO = function (array $batchPayload, string $db) use ($worker): Execution {
+    $task = new RegisterPayload($batchPayload, $db);
+    return $worker->submit($task);
+};
+
 /**
  * Flush batch for a specific DB asynchronously.
  */
-$flushBatch = function (string $db, string $channelName = '') use (&$batchState, &$broadcastHandler, $preparePayloadWithPDO) {
-    return async(function () use ($db, $channelName, &$batchState, &$broadcastHandler, $preparePayloadWithPDO) {
+$flushBatch = function (string $db, string $channelName = '') use (&$batchState, &$broadcastHandler, $preparePayloadWithPDO, $RegisterPayloadWithPDO) {
+    return async(function () use ($db, $channelName, &$batchState, &$broadcastHandler, $preparePayloadWithPDO, $RegisterPayloadWithPDO) {
         $count = $batchState[$db]['count'];
         $payLoad = $batchState[$db]['payLoad'];
         $startTime = $batchState[$db]['startTime'];
@@ -69,6 +74,8 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
 
         // Await the asynchronous preparePayload to complete
         $preparedPayload = $preparePayloadWithPDO($payLoad, $db)->await();
+        // Await the asynchronous registerPayload to complete
+        $RegisterPayloadWithPDO($preparedPayload, $db)->await();
         try {
             $clients = $broadcastHandler->gateway->getClients();
             foreach ($clients as $client) {
