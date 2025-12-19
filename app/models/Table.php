@@ -226,9 +226,8 @@ class Table extends Model
      * @param bool $createKeyFrom
      * @param string|null $schema
      * @return array
-     * @throws PhpfastcacheInvalidArgumentException
      */
-    public function getRecords(bool $createKeyFrom = false, string $schema = null): array
+    public function getRecords(bool $createKeyFrom = false, ?string $schema = null): array
     {
         $response['success'] = true;
         $response['message'] = "Layers loaded";
@@ -436,7 +435,7 @@ class Table extends Model
      * @return array
      * @throws InvalidArgumentException
      */
-    public function destroy(string $name = null): array
+    public function destroy(?string $name = null): array
     {
         $table = $name ?? $this->table;
         $this->clearCacheOnSchemaChanges();
