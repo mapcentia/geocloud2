@@ -10,8 +10,11 @@ namespace app\models;
 
 ini_set('max_execution_time', "0");
 
+use app\exceptions\GC2Exception;
 use app\inc\Model;
+use Cron\CronExpression;
 use Exception;
+use InvalidArgumentException;
 
 
 /**
@@ -49,9 +52,11 @@ class Job extends Model
      * @param object $data
      * @param string $db
      * @return array<bool|string|int>
+     * @throws GC2Exception
      */
     public function newJob(object $data, string $db): array
     {
+        $this->validateCronExpression($data);
         $sql = "INSERT INTO jobs (db, name, schema, url, cron, epsg, type, min, hour, dayofmonth, month, dayofweek, encoding, extra, delete_append, download_schema, presql, postsql, active) VALUES(:db, :name, :schema, :url, :cron, :epsg, :type, :min, :hour, :dayofmonth, :month, :dayofweek, :encoding, :extra, :delete_append, :download_schema, :presql, :postsql, :active)";
         $res = $this->prepare($sql);
         $res->execute(array(":db" => $db, ":name" => Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":extra" => $data->extra, ":delete_append" => $data->delete_append, ":download_schema" => $data->download_schema, ":presql" => $data->presql, ":postsql" => $data->postsql, ":active" => $data->active));
@@ -63,9 +68,11 @@ class Job extends Model
     /**
      * @param object $data
      * @return array<bool|string|int>
+     * @throws GC2Exception
      */
     public function updateJob(object $data): array
     {
+        $this->validateCronExpression($data);
         $sql = "UPDATE jobs SET name=:name, schema=:schema, url=:url, cron=:cron, epsg=:epsg, type=:type, min=:min, hour=:hour, dayofmonth=:dayofmonth, month=:month, dayofweek=:dayofweek, encoding=:encoding, extra=:extra, delete_append=:delete_append, download_schema=:download_schema, presql=:presql, postsql=:postsql, active=:active WHERE id=:id";
         $res = $this->prepare($sql);
         $res->execute(array(":name" => Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":id" => $data->id, ":extra" => $data->extra, "delete_append" => $data->delete_append, "download_schema" => $data->download_schema, "presql" => $data->presql, "postsql" => $data->postsql, "active" => $data->active));
@@ -170,5 +177,26 @@ class Job extends Model
         $res = $this->prepare($sql);
         $res->execute(['db' => $db]);
         return $this->fetchAll($res, 'assoc');
+    }
+
+    /**
+     * Validates a cron expression using the provided data fields.
+     *
+     * @param object $data Associative array containing the cron expression fields:
+     *                    - min: Minute field of the cron expression.
+     *                    - hour: Hour field of the cron expression.
+     *                    - dayofmonth: Day of the month field of the cron expression.
+     *                    - month: Month field of the cron expression.
+     *                    - dayofweek: Day of the week field of the cron expression.
+     * @return void
+     * @throws GC2Exception If the cron expression is invalid.
+     */
+    private function validateCronExpression(object $data): void {
+        $expression = "{$data->min} {$data->hour} {$data->dayofmonth} {$data->month} {$data->dayofweek}";
+        try {
+            new CronExpression($expression);
+        } catch (InvalidArgumentException $e) {
+            throw new GC2Exception($e->getMessage(), 400, null, 'INVALID_CRON_FIELD');
+        }
     }
 }
