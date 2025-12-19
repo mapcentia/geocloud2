@@ -196,6 +196,7 @@ class Sql
                     (
                         id        serial,
                         timestamp timestamp default now() not null,
+                        schema varchar(255) not null,
                         rel varchar(255) not null,
                         op varchar(255) not null,
                         batch  jsonb            not null

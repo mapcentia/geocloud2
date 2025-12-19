@@ -1253,8 +1253,8 @@ function cleanUp(int $success = 0): void
     if ($success) {
         Database::setDb($db);
         $layer = new Layer();
-        $res = $layer->updateLastmodified($schema . "." . $safeName . ".the_geom");
-        print "\nInfo: " . $res["message"];
+        $layer->updateLastmodified(schema: $schema, table: $safeName);
+        print "\nInfo: Last modified value updated";
     }
 }
 

@@ -716,26 +716,26 @@ class Layer extends Table
     }
 
     /**
-     * @param string $key
-     * @return array
+     * Updates the last modified timestamp for geometry columns in a specific schema and table.
+     *
+     * @param string $schema The name of the schema containing the table.
+     * @param string $table The name of the table whose geometry columns need to be updated.
+     * @return void
+     * @throws GC2Exception If no geometry columns are found in the specified table.
      */
-    public function updateLastmodified(string $key): array
+    public function updateLastmodified(string $schema, string $table): void
     {
-        $response = [];
         $date = date('Y-m-d H:i:s');
-        $sql = "UPDATE settings.geometry_columns_join set lastmodified=:date WHERE _key_=:key";
-        try {
-            $res = $this->prepare($sql);
-            $this->execute($res, ["date" => $date, "key" => $key]);
-            $response['success'] = true;
-            $response['message'] = "Last modified value updated";
-        } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
+        $geomCols = $this->getGeometryColumnsFromTable($schema, $table);
+        if (sizeof($geomCols) == 0) {
+            throw new GC2Exception('columns not found');
         }
-        return $response;
+        foreach ($geomCols as $geomCol) {
+            $k = $schema . '.' . $table . '.' . $geomCol;
+            $sql = "UPDATE settings.geometry_columns_join set lastmodified=:date WHERE _key_=:key";
+            $res = $this->prepare($sql);
+            $this->execute($res, ["date" => $date, "key" => $k]);
+        }
     }
 
     /**
@@ -950,7 +950,7 @@ class Layer extends Table
      */
     public function installNotifyTrigger(string $_key_): void
     {
-        $explodedKey =  self::explodeTableName($_key_);
+        $explodedKey = self::explodeTableName($_key_);
         $con = $this->getConstrains($explodedKey['schema'], $explodedKey['table'], 'p')['data'];
         if (count($con) == 0) {
             throw new GC2Exception("Table must have a primary key for emitting real time events", 401);
@@ -974,7 +974,7 @@ class Layer extends Table
      */
     public function removeNotifyTrigger(string $_key_): void
     {
-        $explodedKey =  self::explodeTableName($_key_);
+        $explodedKey = self::explodeTableName($_key_);
         $sql = "DROP TRIGGER IF EXISTS _gc2_notify_transaction_trigger ON \"{$explodedKey['schema']}\".\"{$explodedKey['table']}\"";
         $res = $this->prepare($sql);
         $this->execute($res);
