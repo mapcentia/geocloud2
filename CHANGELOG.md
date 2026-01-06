@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.1.0] - 2026-6-1
+### Fixed
+- Refactor `Sql.php`: split `DefaultTypeConverterFactory` instantiation and `setConnection` call so it works after upgrading sad_spirit\pg_wrapper
+
 ## [2025.12.0] - 2025-9-12
 ### Changed
 - The `Allow null` setting can now be set on columns in VIEWs and FTs. The settings are stored on the application level 
