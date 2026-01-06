@@ -13,6 +13,7 @@ use app\conf\App;
 use app\models\Database;
 use app\inc\Model;
 use GO\Scheduler;
+use Cron\CronExpression;
 
 new App();
 Database::setDb("gc2scheduler");
@@ -41,13 +42,20 @@ while ($row = $model->fetchRow($res)) {
         // We run the job function through another script, so it runs async
         // If using $scheduler->call() jobs will run in sync
         $cmd = "/var/www/geocloud2/app/scripts/scheduler_run_job.php";
+        $expression = "{$row["min"]} {$row["hour"]} {$row["dayofmonth"]} {$row["month"]} {$row["dayofweek"]}";
+        try {
+            $cron = new CronExpression($expression);
+        } catch (InvalidArgumentException $e) {
+            error_log($e->getMessage());
+            continue;
+        }
         try {
             $scheduler->php(
                 $cmd,
                 "/usr/bin/php",
                 $args,
                 $row["id"] . "_" . $row["name"]
-            )->at("{$row["min"]} {$row["hour"]} {$row["dayofmonth"]} {$row["month"]} {$row["dayofweek"]}")->output([
+            )->at($expression)->output([
                 __DIR__ . "/../../public/logs/{$row["id"]}_scheduler.log"
             ])->onlyOne();
             $scheduler->run();

@@ -9,6 +9,10 @@ and this project adheres to [CalVer](https://calver.org/).
 ### Fixed
 - Refactor `Sql.php`: split `DefaultTypeConverterFactory` instantiation and `setConnection` call so it works after upgrading sad_spirit\pg_wrapper
 
+## [2025.12.1] - 2025-19-12
+### Added
+- Added Cron expression validation to Scheduler for improved job scheduling reliability.
+
 ## [2025.12.0] - 2025-9-12
 ### Changed
 - The `Allow null` setting can now be set on columns in VIEWs and FTs. The settings are stored on the application level 

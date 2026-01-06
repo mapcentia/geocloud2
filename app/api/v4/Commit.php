@@ -138,7 +138,7 @@ class Commit extends AbstractApi
                 // Check if template and write it out
                 $template = App::$param['path'] . '/app/conf/template.markdown';
                 if (is_file($template)) {
-                    $file = $repo->getRepositoryPath() . '/pages/' . str_replace('t_', '', $item['f_table_name']) . '.markdown';
+                    $file = $repo->getRepositoryPath() . '/pages/' . preg_replace('/t_/', '', $item['f_table_name'], 1) . '.markdown';
                     echo $file . "\n";
                     file_put_contents($file, file_get_contents($template));
                 }
