@@ -729,7 +729,8 @@ class Sql extends Model
      */
     private function convertToNative(string $nativeType, mixed $value, ?string $format): string
     {
-        $factory = (new DefaultTypeConverterFactory())->setConnection($this->getConnection());
+        $factory = new DefaultTypeConverterFactory();
+        $factory->setConnection($this->getConnection());
         $type = gettype($value);
         $format = $format ?? self::getFormat($nativeType);
 
