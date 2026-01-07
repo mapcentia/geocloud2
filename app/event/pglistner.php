@@ -22,7 +22,7 @@ use function Amp\delay;
 //
 // --- Configuration ---
 //
-$batchSize = 100;    // Flush once 10 messages arrive
+$batchSize = 1000;    // Flush once 1000 messages arrive
 $timeThreshold = 2;     // Seconds to wait before flushing partial batches
 $timerFrequency = 1;     // How often (seconds) to check for stale batches
 $reconnectDelay = 5;     // How long (seconds) to wait before reconnect attempts
