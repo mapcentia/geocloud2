@@ -30,7 +30,9 @@ RUN mkdir -p /var/www \
     && cd /var/www \
     && git clone https://github.com/mapcentia/geocloud2.git --branch connection
 
-RUN cd /var/www/geocloud2/app \
+WORKDIR /var/www/geocloud2
+
+RUN cd app \
     && php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
     && php composer-setup.php \
     && php composer.phar install --ignore-platform-req=ext-gd --ignore-platform-req=ext-dba \
