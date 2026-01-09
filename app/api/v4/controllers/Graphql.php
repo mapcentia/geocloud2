@@ -47,8 +47,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * 4) Dynamic table field selection (list) and single by-id query:
  *    - query { user(schema: "public") { id } } // list rows, only id column
  *    - query { user(schema: "my", where: {"status":"active"}, limit: 10) { id name } }
- *    - query { userById(5) { id name } }       // selects row from public.user with primary key = 5
- *    - query { userById(i) { id name } }       // same, using variables: { "variables": { "i": 5 } }
+ *    - query { user(id: 5) { id name } }       // selects row from public.user with primary key = 5
+ *    - query { user(id: $i) { id name } }      // same, using variables: { "variables": { "i": 5 } }
  */
 #[AcceptableMethods(['POST', 'OPTIONS'])]
 #[Controller(route: 'api/v4/graphql', scope: Scope::SUB_USER_ALLOWED)]

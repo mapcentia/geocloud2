@@ -97,37 +97,20 @@ final class GraphQL
         // Build selection tree for nested structure
         $selection = $this->selectionTreeFromFieldNode($firstSel);
 
-        // Maintain legacy constraint: operation name must match the root field (optionally with ById)
-        if (!preg_match('/^[A-Z][A-Za-z0-9_]*(ById)?$/', $opName)) {
+        // Maintain legacy constraint: operation name must match the root field
+        if (!preg_match('/^[A-Z][A-Za-z0-9_]*$/', $opName)) {
             throw new GC2Exception('Invalid operation name: must start with an uppercase letter', 400);
         }
-        $isById = false;
-        if (str_ends_with($opName, 'ById')) {
-            $isById = true;
-            $base = substr($opName, 0, -4);
-        } else {
-            $base = $opName;
-        }
-        $expectedField = strtolower($base);
-        $matchesBase = strcasecmp($field, $expectedField) === 0;
-        $matchesByIdField = strcasecmp($field, $expectedField . 'ById') === 0;
-        if ($isById) {
-            if (!($matchesBase || $matchesByIdField)) {
-                throw new GC2Exception("Operation name '$opName' does not match root field '$field'", 400);
-            }
-            $effectiveField = $expectedField . 'ById';
-        } else {
-            if (!$matchesBase) {
-                throw new GC2Exception("Operation name '$opName' does not match root field '$field'", 400);
-            }
-            $effectiveField = $expectedField;
+        $expectedField = strtolower($opName);
+        if (strcasecmp($field, $expectedField) !== 0) {
+            throw new GC2Exception("Operation name '$opName' does not match root field '$field'", 400);
         }
 
         // Note: positional arguments are not part of the GraphQL spec; only named args are supported now.
         $positional = null;
 
         try {
-            $value = $this->resolveField($effectiveField, $args, $positional, $selection);
+            $value = $this->resolveField($field, $args, $positional, $selection);
             return ['data' => [$alias => $value]];
         } catch (GC2Exception $e) {
             throw new GC2Exception($e->getMessage(), $e->getCode());
@@ -299,16 +282,13 @@ final class GraphQL
      */
     private function resolveField(string $field, array $args, mixed $positional = null, ?array $selection = null): mixed
     {
-        // Special-case dynamic single-row fields named like <table>ById
-        if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*ById$/', $field)) {
-            return $this->resolveDynamicTableById($field, $args, $positional, $selection);
-        }
         return $this->resolveDynamicTable($field, $args, $positional, $selection);
     }
 
     /**
-     * Dynamic table resolver (list query): supports args schema, where, limit, offset.
-     * Use <table>ById(...) to fetch a single row by primary key.
+     * Dynamic table resolver: supports both list and single-row queries.
+     * If an ID-like argument (id, pk, or key) is provided, it returns a single object.
+     * Otherwise, it returns a list based on args schema, where, limit, offset.
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      */
@@ -318,25 +298,112 @@ final class GraphQL
         if (!is_string($schema) || $schema === '') {
             $schema = 'public';
         }
-        $table = $tableField; // field name is table
-        // AuthZ
-       // $this->initiate(schema: $schema, relation: $table);
+        $table = $tableField;
 
-        if ($positional !== null) {
-            throw new GC2Exception("Positional argument not supported for '$table'. Use '{$table}ById(...)' to fetch by primary key.", 400);
-        }
-
-        $qualified = '"' . str_replace('"', '""', $schema) . '"."' . str_replace('"', '""', $table) . '"';
-
-        // Partition selection into columns and nested fields
-        [$selColumns, $nested] = $this->partitionSelection($selection);
-
-        // Validate columns via TableModel metaData
+        // Setup table metadata and columns
         $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
         $metaCols = array_keys($t->metaData ?? []);
         if (empty($metaCols)) {
             throw new GC2Exception('Unable to read table metadata', 500);
         }
+
+        // Determine if this is a single-row fetch by ID
+        $idVal = $positional;
+        if ($idVal === null) {
+            $idVal = $args['id'] ?? ($args['pk'] ?? ($args['key'] ?? null));
+        }
+
+        if ($idVal !== null) {
+            if (!method_exists($t, 'hasPrimeryKey') || !$t->hasPrimeryKey($schema . '.' . $table)) {
+                throw new GC2Exception('Table has no primary key; cannot use ID query', 400);
+            }
+            $pk = $t->primaryKey['attname'] ?? null;
+            if (!$pk) {
+                throw new GC2Exception('Primary key not found', 400);
+            }
+
+            // Partition selection into columns and nested fields
+            [$selColumns, $nested] = $this->partitionSelection($selection);
+            $columns = array_values($selColumns);
+            if (!empty($columns)) {
+                foreach ($columns as $c) {
+                    if (!in_array($c, $metaCols, true)) {
+                        throw new GC2Exception("Unknown column '$c' on {$schema}.{$table}", 400);
+                    }
+                }
+            } else {
+                $columns = $metaCols;
+                foreach ($metaCols as $c) {
+                    $selColumns[$c] = $c;
+                }
+            }
+
+            // Include PK always to allow potential deeper joins
+            if (!in_array($pk, $columns, true)) {
+                $columns[] = $pk;
+            }
+
+            // Build FK map if nested requested and ensure local fk columns
+            $fkMap = [];
+            if (!empty($nested)) {
+                $fkMap = $this->buildForeignMap($schema, $table);
+                foreach ($nested as $alias => $v) {
+                    $relName = $v['name'];
+                    if (!isset($fkMap[$relName])) {
+                        throw new GC2Exception("Unknown nested relation '$relName' on {$schema}.{$table}", 400);
+                    }
+                    $localCol = $fkMap[$relName]['local_col'];
+                    if (!in_array($localCol, $columns, true)) {
+                        $columns[] = $localCol;
+                    }
+                }
+            }
+
+            $colsSqlParts = array_map(fn($c) => '"' . str_replace('"', '""', $c) . '"', array_unique($columns));
+            $selectList = implode(', ', $colsSqlParts);
+            $qualified = '"' . str_replace('"', '""', $schema) . '"."' . str_replace('"', '""', $table) . '"';
+
+            $sql = 'SELECT ' . $selectList . ' FROM ' . $qualified . ' WHERE ' . '"' . str_replace('"', '""', $pk) . '" = :pk LIMIT 1';
+            $sqlModel = new SqlModel(connection: $this->connection);
+            $res = $sqlModel->sql(q: $sql, format: 'json', convertTypes: true, parameters: ['pk' => $idVal]);
+            $rows = $res['data'] ?? ($res['rows'] ?? $res);
+            $row = (is_array($rows) && isset($rows[0])) ? $rows[0] : null;
+
+            if (!is_array($row)) {
+                return null;
+            }
+
+            // Map columns to aliases
+            $mappedRow = [];
+            foreach ($selColumns as $alias => $name) {
+                $mappedRow[$alias] = $row[$name] ?? null;
+            }
+
+            // Attach nested
+            if (!empty($nested)) {
+                foreach ($nested as $alias => $v) {
+                    $relName = $v['name'];
+                    $subSel = $v['selection'];
+                    $map = $fkMap[$relName];
+                    $localVal = $row[$map['local_col']] ?? null;
+                    $mappedRow[$alias] = $this->fetchRelatedSingle(
+                        schema: $map['ref_schema'],
+                        table: $map['ref_table'],
+                        column: $map['ref_col'],
+                        value: $localVal,
+                        selection: is_array($subSel) ? $subSel : null
+                    );
+                }
+            }
+            return $mappedRow;
+        }
+
+        // --- List query logic ---
+        $qualified = '"' . str_replace('"', '""', $schema) . '"."' . str_replace('"', '""', $table) . '"';
+
+        // Partition selection into columns and nested fields
+        [$selColumns, $nested] = $this->partitionSelection($selection);
+
         $columns = array_values($selColumns);
         if (!empty($columns)) {
             foreach ($columns as $c) {
@@ -354,10 +421,9 @@ final class GraphQL
 
         // Build FK map if nested requested
         $fkMap = [];
-        $autoFkCols = [];
         if (!empty($nested)) {
             $fkMap = $this->buildForeignMap($schema, $table);
-            // Ensure local FK columns are present for each nested relation; we will remove later if not explicitly asked
+            // Ensure local FK columns are present for each nested relation
             foreach ($nested as $alias => $v) {
                 $relName = $v['name'];
                 if (!isset($fkMap[$relName])) {
@@ -366,7 +432,6 @@ final class GraphQL
                 $localCol = $fkMap[$relName]['local_col'];
                 if (!in_array($localCol, $columns, true)) {
                     $columns[] = $localCol;
-                    $autoFkCols[$localCol] = true;
                 }
             }
         }
@@ -437,129 +502,6 @@ final class GraphQL
         return $rows;
     }
 
-    /**
-     * Dynamic single-row resolver: <table>ById(positional|$var) { ... }
-     * Accepts optional schema arg; selection behaves like list query.
-     * @throws GC2Exception
-     */
-    private function resolveDynamicTableById(string $tableFieldById, array $args, mixed $positional, ?array $selection): mixed
-    {
-        // Derive table name from <table>ById
-        if (!preg_match('/^(?P<table>[A-Za-z_][A-Za-z0-9_]*)ById$/', $tableFieldById, $mm)) {
-            throw new GC2Exception('Invalid field name', 400);
-        }
-        $table = $mm['table'];
-        $schema = $args['schema'] ?? 'public';
-        if (!is_string($schema) || $schema === '') {
-            $schema = 'public';
-        }
-
-        // AuthZ
-//        $this->initiate(schema: $schema, relation: $table);
-
-        $qualified = '"' . str_replace('"', '""', $schema) . '"."' . str_replace('"', '""', $table) . '"';
-
-        // Setup table metadata and columns
-        $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
-        if (!method_exists($t, 'hasPrimeryKey') || !$t->hasPrimeryKey($schema . '.' . $table)) {
-            throw new GC2Exception('Table has no primary key; cannot use ById query', 400);
-        }
-        $pk = $t->primaryKey['attname'] ?? null;
-        if (!$pk) {
-            throw new GC2Exception('Primary key not found', 400);
-        }
-
-        // Determine selected columns
-        // Partition selection into columns and nested fields
-        [$selColumns, $nested] = $this->partitionSelection($selection);
-
-        $metaCols = array_keys($t->metaData ?? []);
-        if (empty($metaCols)) {
-            throw new GC2Exception('Unable to read table metadata', 500);
-        }
-        $columns = array_values($selColumns);
-        if (!empty($columns)) {
-            foreach ($columns as $c) {
-                if (!in_array($c, $metaCols, true)) {
-                    throw new GC2Exception("Unknown column '$c' on {$schema}.{$table}", 400);
-                }
-            }
-        } else {
-            $columns = $metaCols;
-            // If we default to all columns, we need to populate selColumns so they can be mapped later
-            foreach ($metaCols as $c) {
-                $selColumns[$c] = $c;
-            }
-        }
-
-        // Include PK always to allow potential deeper joins
-        if (!in_array($pk, $columns, true)) {
-            $columns[] = $pk;
-        }
-
-        // Build FK map if nested requested and ensure local fk columns
-        $fkMap = [];
-        $autoFkCols = [];
-        if (!empty($nested)) {
-            $fkMap = $this->buildForeignMap($schema, $table);
-            foreach ($nested as $alias => $v) {
-                $relName = $v['name'];
-                if (!isset($fkMap[$relName])) {
-                    throw new GC2Exception("Unknown nested relation '$relName' on {$schema}.{$table}", 400);
-                }
-                $localCol = $fkMap[$relName]['local_col'];
-                if (!in_array($localCol, $columns, true)) {
-                    $columns[] = $localCol;
-                    $autoFkCols[$localCol] = true;
-                }
-            }
-        }
-
-        $colsSqlParts = array_map(fn($c) => '"' . str_replace('"', '""', $c) . '"', array_unique($columns));
-        $selectList = implode(', ', $colsSqlParts);
-
-        // Determine id value
-        $idVal = $positional;
-        if ($idVal === null) {
-            $idVal = $args['id'] ?? ($args['pk'] ?? ($args['key'] ?? null));
-        }
-        if ($idVal === null) {
-            throw new GC2Exception("Missing id for {$table}ById. Provide a positional value or id/pk argument.", 400);
-        }
-
-        $sql = 'SELECT ' . $selectList . ' FROM ' . $qualified . ' WHERE ' . '"' . str_replace('"', '""', $pk) . '" = :pk LIMIT 1';
-        $sqlModel = new SqlModel(connection: $this->connection);
-        $res = $sqlModel->sql(q: $sql, format: 'json', convertTypes: true, parameters: ['pk' => $idVal]);
-        $rows = $res['data'] ?? ($res['rows'] ?? $res);
-        $row = (is_array($rows) && isset($rows[0])) ? $rows[0] : null;
-        if (!is_array($row)) {
-            return null;
-        }
-
-        // Map columns to aliases
-        $mappedRow = [];
-        foreach ($selColumns as $alias => $name) {
-            $mappedRow[$alias] = $row[$name] ?? null;
-        }
-
-        // Attach nested
-        if (!empty($nested)) {
-            foreach ($nested as $alias => $v) {
-                $relName = $v['name'];
-                $subSel = $v['selection'];
-                $map = $fkMap[$relName];
-                $localVal = $row[$map['local_col']] ?? null;
-                $mappedRow[$alias] = $this->fetchRelatedSingle(
-                    schema: $map['ref_schema'],
-                    table: $map['ref_table'],
-                    column: $map['ref_col'],
-                    value: $localVal,
-                    selection: is_array($subSel) ? $subSel : null
-                );
-            }
-        }
-        return $mappedRow;
-    }
 
     /**
      * Convert AST value into PHP value, using provided variables.
