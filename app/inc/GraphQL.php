@@ -26,9 +26,8 @@ use GraphQL\Language\AST\ValueNode;
 use GraphQL\Language\AST\VariableNode;
 use GraphQL\Language\Parser as GraphQLParser;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
-use Psr\Cache\InvalidArgumentException;
 
-final class GraphQL
+class GraphQL
 {
     function __construct(private readonly Connection $connection, private readonly bool $convertReturning = true)
     {
@@ -77,44 +76,73 @@ final class GraphQL
         if (strtolower($opType) !== 'query') {
             throw new GC2Exception('Only query operations are allowed', 400);
         }
+
+        // Resolve variables including defaults
+        $variables = $this->resolveVariables($operation, $variables);
+
         $selections = $operation->selectionSet?->selections ?? [];
         if (empty($selections)) {
             throw new GC2Exception('No fields selected', 400);
         }
-        $firstSel = $selections[0];
-        if (!$firstSel instanceof FieldNode) {
-            throw new GC2Exception('Unsupported selection at root', 400);
-        }
-        $field = $firstSel->name->value;
-        $alias = $firstSel->alias?->value ?? $field;
 
-        // Build args array from AST
-        $args = [];
-        foreach ($firstSel->arguments ?? [] as $arg) {
-            $args[$arg->name->value] = $this->valueFromAst($arg->value, $variables);
-        }
-
-        // Build selection tree for nested structure
-        $selection = $this->selectionTreeFromFieldNode($firstSel);
-
-        // Maintain legacy constraint: operation name must match the root field
+        // Maintain legacy constraint: operation name must match the root field (check first selection)
         if (!preg_match('/^[A-Z][A-Za-z0-9_]*$/', $opName)) {
             throw new GC2Exception('Invalid operation name: must start with an uppercase letter', 400);
         }
-        $expectedField = strtolower($opName);
-        if (strcasecmp($field, $expectedField) !== 0) {
-            throw new GC2Exception("Operation name '$opName' does not match root field '$field'", 400);
+
+        $data = [];
+        foreach ($selections as $index => $selectionNode) {
+            if (!$selectionNode instanceof FieldNode) {
+                throw new GC2Exception('Unsupported selection at root', 400);
+            }
+            $field = $selectionNode->name->value;
+            $alias = $selectionNode->alias?->value ?? $field;
+
+            if ($index === 0) {
+                $expectedField = strtolower($opName);
+                if (strcasecmp($field, $expectedField) !== 0) {
+                    throw new GC2Exception("Operation name '$opName' does not match root field '$field'", 400);
+                }
+            }
+
+            // Build args array for this field
+            $args = [];
+            foreach ($selectionNode->arguments ?? [] as $arg) {
+                $args[$arg->name->value] = $this->valueFromAst($arg->value, $variables);
+            }
+
+            // Build selection tree for nested structure
+            $selectionTree = $this->selectionTreeFromFieldNode($selectionNode, $variables);
+
+            // Note: positional arguments are not part of the GraphQL spec; only named args are supported now.
+            $positional = null;
+
+            try {
+                $value = $this->resolveField($field, $args, $positional, $selectionTree);
+                $data[$alias] = $value;
+            } catch (GC2Exception $e) {
+                throw new GC2Exception($e->getMessage(), $e->getCode());
+            }
         }
 
-        // Note: positional arguments are not part of the GraphQL spec; only named args are supported now.
-        $positional = null;
+        return ['data' => $data];
+    }
 
-        try {
-            $value = $this->resolveField($field, $args, $positional, $selection);
-            return ['data' => [$alias => $value]];
-        } catch (GC2Exception $e) {
-            throw new GC2Exception($e->getMessage(), $e->getCode());
+    /**
+     * Resolve variable values from input and operation definitions (defaults).
+     */
+    private function resolveVariables(OperationDefinitionNode $operation, array $inputVariables): array
+    {
+        $resolved = [];
+        foreach ($operation->variableDefinitions ?? [] as $def) {
+            $name = $def->variable->name->value;
+            if (array_key_exists($name, $inputVariables)) {
+                $resolved[$name] = $inputVariables[$name];
+            } elseif ($def->defaultValue !== null) {
+                $resolved[$name] = $this->valueFromAst($def->defaultValue, []);
+            }
         }
+        return array_merge($inputVariables, $resolved);
     }
 
     private static function quoteIdent(string $name): string
@@ -201,7 +229,7 @@ final class GraphQL
         ];
     }
 
-    private function fetchRelatedSingle(string $schema, string $table, string $column, mixed $value, ?array $selection, int $depth = 0): ?array
+    private function fetchRelatedSingle(string $schema, string $table, string $column, mixed $value, ?array $selection, array $args = [], int $depth = 0): ?array
     {
         if ($value === null) {
             return null;
@@ -209,6 +237,9 @@ final class GraphQL
         if ($depth > 5) {
             return null;
         }
+
+        // Schema can be overridden via arguments
+        $schema = $args['schema'] ?? $schema;
 
         [$selColumns, $nested] = $this->partitionSelection($selection);
 
@@ -269,6 +300,7 @@ final class GraphQL
                     column: $map['ref_col'],
                     value: $localVal,
                     selection: is_array($subSel) ? $subSel : null,
+                    args: $v['args'] ?? [],
                     depth: $depth + 1
                 );
             }
@@ -280,7 +312,7 @@ final class GraphQL
     /**
      * @throws GC2Exception
      */
-    private function resolveField(string $field, array $args, mixed $positional = null, ?array $selection = null): mixed
+    protected function resolveField(string $field, array $args, mixed $positional = null, ?array $selection = null): mixed
     {
         return $this->resolveDynamicTable($field, $args, $positional, $selection);
     }
@@ -391,7 +423,8 @@ final class GraphQL
                         table: $map['ref_table'],
                         column: $map['ref_col'],
                         value: $localVal,
-                        selection: is_array($subSel) ? $subSel : null
+                        selection: is_array($subSel) ? $subSel : null,
+                        args: $v['args'] ?? []
                     );
                 }
             }
@@ -490,7 +523,8 @@ final class GraphQL
                             table: $map['ref_table'],
                             column: $map['ref_col'],
                             value: $localVal,
-                            selection: is_array($subSel) ? $subSel : null
+                            selection: is_array($subSel) ? $subSel : null,
+                            args: $v['args'] ?? []
                         );
                     }
                 }
@@ -546,9 +580,9 @@ final class GraphQL
 
     /**
      * Build a selection tree map from AST FieldNode similar to previous parser output.
-     * Returns [fieldName => true|subtree]
+     * Returns [fieldName => ['name' => originalName, 'args' => [...], 'selection' => true|subtree]]
      */
-    private function selectionTreeFromFieldNode(FieldNode $field): array
+    private function selectionTreeFromFieldNode(FieldNode $field, array $variables): array
     {
         $tree = [];
         $selSet = $field->selectionSet?->selections ?? [];
@@ -556,9 +590,16 @@ final class GraphQL
             if ($sel instanceof FieldNode) {
                 $name = $sel->name->value;
                 $alias = $sel->alias?->value ?? $name;
-                $child = $this->selectionTreeFromFieldNode($sel);
+
+                $args = [];
+                foreach ($sel->arguments ?? [] as $arg) {
+                    $args[$arg->name->value] = $this->valueFromAst($arg->value, $variables);
+                }
+
+                $child = $this->selectionTreeFromFieldNode($sel, $variables);
                 $tree[$alias] = [
                     'name' => $name,
+                    'args' => $args,
                     'selection' => empty($child) ? true : $child
                 ];
             }
