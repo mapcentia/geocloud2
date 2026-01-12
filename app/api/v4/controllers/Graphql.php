@@ -74,6 +74,11 @@ class Graphql extends AbstractApi
     #[Override]
     public function post_index(): ApiResponse
     {
+        // Set user and user group
+        $isSuperUser = $this->route->jwt["data"]["superUser"];
+        $user = $this->route->jwt["data"]["uid"];
+        $userGroup = $this->route->jwt["data"]["userGroup"];
+
         $graphQl = new _GraphQl(connection: $this->connection);
 
         $body = Input::getBody();
@@ -107,9 +112,12 @@ class Graphql extends AbstractApi
         if (!$operation) {
             throw new GC2Exception('No operation found in document', 400);
         }
-
+        $api = new \app\models\Sql(connection: $this->connection);
+        $api->begin();
         // Execute the query using webonyx/graphql-php
-        $result = $graphQl->executeQuery($query, is_array($variables) ? $variables : [], is_string($operationName) ? $operationName : null);
+        $result = $graphQl->run(user: $user, api:  $api, query: $query, subuser: !$isSuperUser, userGroup:  $userGroup, variables: is_array($variables) ? $variables : [], operationName: is_string($operationName) ? $operationName : null);
+        $api->commit();
+
         return new GetResponse(data: $result);
     }
 

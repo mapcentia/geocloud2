@@ -29,6 +29,11 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 class GraphQL
 {
+    private string $user;
+    private SqlModel $api;
+    private bool $subuser;
+    private ?string $userGroup;
+
     function __construct(private readonly Connection $connection, private readonly bool $convertReturning = true)
     {
 
@@ -38,14 +43,23 @@ class GraphQL
     /**
      * Very small dispatcher for a constrained subset of GraphQL-like queries.
      *
+     * @param string $user
+     * @param SqlModel $api
      * @param string $query
+     * @param bool $subuser
+     * @param string|null $userGroup
      * @param array $variables
      * @param string|null $operationName
      * @return array{data: array|null, errors?: array}
-     * @throws GC2Exception
+     * @throws GC2Exception|PhpfastcacheInvalidArgumentException
      */
-    public function executeQuery(string $query, array $variables, ?string $operationName = null): array
+    public function run(string $user, SqlModel $api, string $query, bool $subuser, ?string $userGroup, array $variables, ?string $operationName = null): array
     {
+        $this->user = $user;
+        $this->api = $api;
+        $this->subuser = $subuser;
+        $this->userGroup = $userGroup;
+
         try {
             $doc = GraphQLParser::parse($query);
         } catch (\Throwable $e) {
@@ -229,6 +243,10 @@ class GraphQL
         ];
     }
 
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     private function fetchRelatedSingle(string $schema, string $table, string $column, mixed $value, ?array $selection, array $args = [], int $depth = 0): ?array
     {
         if ($value === null) {
@@ -283,8 +301,15 @@ class GraphQL
         }
 
         $sql = 'SELECT ' . $colsSql . ' FROM ' . $qualified . ' WHERE ' . self::quoteIdent($column) . ' = :v' . $whereSql . ' LIMIT 1';
-        $sqlModel = new SqlModel(connection: $this->connection);
-        $res = $sqlModel->sql(q: $sql, format: 'json', convertTypes: true, parameters: $params);
+
+        $query['q'] = $sql;
+        $query['params'] = $params;
+        $query['convertTypes'] = true;
+        $query['format'] = 'json';
+
+        $statement = new Statement(connection: $this->connection, convertReturning: true);
+        $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);;
+
         $rows = $res['data'] ?? ($res['rows'] ?? $res);
         $row = (is_array($rows) && isset($rows[0])) ? $rows[0] : null;
         if (!is_array($row)) {
@@ -321,6 +346,7 @@ class GraphQL
 
     /**
      * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
      */
     protected function resolveField(string $field, array $args, mixed $positional = null, ?array $selection = null): mixed
     {
@@ -354,6 +380,12 @@ class GraphQL
         if ($idVal === null) {
             $idVal = $args['id'] ?? ($args['pk'] ?? ($args['key'] ?? null));
         }
+
+        $query['convertTypes'] = true;
+        $query['format'] = 'json';
+
+        $statement = new Statement(connection: $this->connection, convertReturning: true);
+
 
         if ($idVal !== null) {
             if (!method_exists($t, 'hasPrimeryKey') || !$t->hasPrimeryKey($schema . '.' . $table)) {
@@ -416,8 +448,13 @@ class GraphQL
             }
 
             $sql = 'SELECT ' . $selectList . ' FROM ' . $qualified . ' WHERE ' . '"' . str_replace('"', '""', $pk) . '" = :pk' . $whereSql . ' LIMIT 1';
-            $sqlModel = new SqlModel(connection: $this->connection);
-            $res = $sqlModel->sql(q: $sql, format: 'json', convertTypes: true, parameters: $params);
+
+            $query['q'] = $sql;
+            $query['params'] = $params;
+            $query['id'] = uniqid();
+
+            $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);
+
             $rows = $res['data'] ?? ($res['rows'] ?? $res);
             $row = (is_array($rows) && isset($rows[0])) ? $rows[0] : null;
 
@@ -511,8 +548,12 @@ class GraphQL
             $sql .= ' OFFSET ' . max(0, $offset);
         }
 
-        $sqlModel = new SqlModel(connection: $this->connection);
-        $res = $sqlModel->sql(q: $sql, format: 'json', convertTypes: true, parameters: $params);
+
+        $query['q'] = $sql;
+        $query['params'] = $params;
+        $query['id'] = uniqid();
+
+        $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);
         $rows = $res['data'] ?? ($res['rows'] ?? $res);
         $rows = is_array($rows) ? $rows : [];
 
@@ -722,12 +763,7 @@ class GraphQL
     private function isOperatorArray(array $arr): bool
     {
         $operators = ['eq', 'gt', 'lt', 'gte', 'lte', 'neq', 'in', 'like', 'ilike'];
-        foreach ($arr as $k => $v) {
-            if (is_string($k) && in_array(strtolower($k), $operators, true)) {
-                return true;
-            }
-        }
-        return false;
+        return array_any($arr, fn($v, $k) => is_string($k) && in_array(strtolower($k), $operators, true));
     }
 
     /**
