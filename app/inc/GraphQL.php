@@ -672,7 +672,7 @@ class GraphQL
         $statement = new Statement(connection: $this->connection, convertReturning: true);
         $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);
 
-        return $this->mapMutationResult($res['returning']['data'], $selection, false, $schema, $table);
+        return $this->mapMutationResult($res['returning']['data'] ?? [], $selection, false, $schema, $table);
     }
 
     /**
@@ -705,7 +705,7 @@ class GraphQL
         ];
         $statement = new Statement(connection: $this->connection, convertReturning: true);
         $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);
-        return $this->mapMutationResult($res['returning']['data'], $selection, false, $schema, $table);
+        return $this->mapMutationResult($res['returning']['data'] ?? [], $selection, false, $schema, $table);
     }
 
     private function executeQuery(string $sql, array $params): array
