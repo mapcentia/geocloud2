@@ -272,9 +272,19 @@ class GraphQL
         // Build SQL
         $colsSql = implode(', ', array_map(self::quoteIdent(...), array_unique($columns)));
         $qualified = self::quoteIdent($schema) . '.' . self::quoteIdent($table);
-        $sql = 'SELECT ' . $colsSql . ' FROM ' . $qualified . ' WHERE ' . self::quoteIdent($column) . ' = :v LIMIT 1';
+
+        $params = ['v' => $value];
+        $whereSql = '';
+        if (!empty($args['where']) && is_array($args['where'])) {
+            $extraWhere = $this->buildWhere($args['where'], $metaCols, $params);
+            if ($extraWhere !== '') {
+                $whereSql = ' AND (' . $extraWhere . ')';
+            }
+        }
+
+        $sql = 'SELECT ' . $colsSql . ' FROM ' . $qualified . ' WHERE ' . self::quoteIdent($column) . ' = :v' . $whereSql . ' LIMIT 1';
         $sqlModel = new SqlModel(connection: $this->connection);
-        $res = $sqlModel->sql(q: $sql, format: 'json', convertTypes: true, parameters: ['v' => $value]);
+        $res = $sqlModel->sql(q: $sql, format: 'json', convertTypes: true, parameters: $params);
         $rows = $res['data'] ?? ($res['rows'] ?? $res);
         $row = (is_array($rows) && isset($rows[0])) ? $rows[0] : null;
         if (!is_array($row)) {
@@ -395,9 +405,19 @@ class GraphQL
             $selectList = implode(', ', $colsSqlParts);
             $qualified = '"' . str_replace('"', '""', $schema) . '"."' . str_replace('"', '""', $table) . '"';
 
-            $sql = 'SELECT ' . $selectList . ' FROM ' . $qualified . ' WHERE ' . '"' . str_replace('"', '""', $pk) . '" = :pk LIMIT 1';
+            $params = ['pk' => $idVal];
+            $whereSql = '';
+            $where = $args['where'] ?? [];
+            if (is_array($where) && !empty($where)) {
+                $extraWhere = $this->buildWhere($where, $metaCols, $params);
+                if ($extraWhere !== '') {
+                    $whereSql = ' AND (' . $extraWhere . ')';
+                }
+            }
+
+            $sql = 'SELECT ' . $selectList . ' FROM ' . $qualified . ' WHERE ' . '"' . str_replace('"', '""', $pk) . '" = :pk' . $whereSql . ' LIMIT 1';
             $sqlModel = new SqlModel(connection: $this->connection);
-            $res = $sqlModel->sql(q: $sql, format: 'json', convertTypes: true, parameters: ['pk' => $idVal]);
+            $res = $sqlModel->sql(q: $sql, format: 'json', convertTypes: true, parameters: $params);
             $rows = $res['data'] ?? ($res['rows'] ?? $res);
             $row = (is_array($rows) && isset($rows[0])) ? $rows[0] : null;
 
@@ -473,24 +493,15 @@ class GraphQL
         $selectList = implode(', ', $colsSqlParts);
 
         // WHERE clause
-        $clauses = [];
         $params = [];
         $where = $args['where'] ?? [];
         if (!is_array($where)) {
             $where = [];
         }
-        foreach ($where as $col => $val) {
-            if (!is_string($col) || $col === '') {
-                continue;
-            }
-            if (!in_array($col, $metaCols, true)) {
-                throw new GC2Exception("Unknown column '$col'", 400);
-            }
-            $paramName = 'p_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $col);
-            $clauses[] = '"' . str_replace('"', '""', $col) . '" = :' . $paramName;
-            $params[$paramName] = $val;
+        $whereSql = $this->buildWhere($where, $metaCols, $params);
+        if ($whereSql !== '') {
+            $whereSql = ' WHERE ' . $whereSql;
         }
-        $whereSql = count($clauses) ? (' WHERE ' . implode(' AND ', $clauses)) : '';
 
         $limit = isset($args['first']) && is_numeric($args['first']) ? (int)$args['first'] : 100;
         $offset = isset($args['offset']) && is_numeric($args['offset']) ? (int)$args['offset'] : null;
@@ -576,6 +587,147 @@ class GraphQL
             return $obj;
         }
         return null;
+    }
+
+    /**
+     * Build a recursive WHERE clause for operators and logical AND/OR/NOT.
+     * @throws GC2Exception
+     */
+    private function buildWhere(array $where, array $metaCols, array &$params, string $conjunction = 'AND'): string
+    {
+        $clauses = [];
+        foreach ($where as $key => $value) {
+            // Logical operators
+            if (strcasecmp($key, 'AND') === 0) {
+                if (is_array($value)) {
+                    $subClauses = [];
+                    foreach ($value as $v) {
+                        if (is_array($v)) {
+                            $sub = $this->buildWhere($v, $metaCols, $params, 'AND');
+                            if ($sub !== '') {
+                                $subClauses[] = $sub;
+                            }
+                        }
+                    }
+                    if (!empty($subClauses)) {
+                        $clauses[] = '(' . implode(' AND ', $subClauses) . ')';
+                    }
+                }
+                continue;
+            }
+            if (strcasecmp($key, 'OR') === 0) {
+                if (is_array($value)) {
+                    $subClauses = [];
+                    foreach ($value as $v) {
+                        if (is_array($v)) {
+                            $sub = $this->buildWhere($v, $metaCols, $params, 'AND');
+                            if ($sub !== '') {
+                                $subClauses[] = $sub;
+                            }
+                        }
+                    }
+                    if (!empty($subClauses)) {
+                        $clauses[] = '(' . implode(' OR ', $subClauses) . ')';
+                    }
+                }
+                continue;
+            }
+            if (strcasecmp($key, 'NOT') === 0) {
+                if (is_array($value)) {
+                    $sub = $this->buildWhere($value, $metaCols, $params, 'AND');
+                    if ($sub !== '') {
+                        $clauses[] = 'NOT (' . $sub . ')';
+                    }
+                }
+                continue;
+            }
+
+            // Column names
+            if (!in_array($key, $metaCols, true)) {
+                throw new GC2Exception("Unknown column '$key'", 400);
+            }
+
+            $quotedCol = self::quoteIdent($key);
+
+            if (is_array($value) && !empty($value) && $this->isOperatorArray($value)) {
+                foreach ($value as $op => $opVal) {
+                    $p = 'p' . count($params);
+                    switch (strtolower($op)) {
+                        case 'eq':
+                            $clauses[] = "$quotedCol = :$p";
+                            $params[$p] = $opVal;
+                            break;
+                        case 'gt':
+                            $clauses[] = "$quotedCol > :$p";
+                            $params[$p] = $opVal;
+                            break;
+                        case 'lt':
+                            $clauses[] = "$quotedCol < :$p";
+                            $params[$p] = $opVal;
+                            break;
+                        case 'gte':
+                            $clauses[] = "$quotedCol >= :$p";
+                            $params[$p] = $opVal;
+                            break;
+                        case 'lte':
+                            $clauses[] = "$quotedCol <= :$p";
+                            $params[$p] = $opVal;
+                            break;
+                        case 'neq':
+                            $clauses[] = "$quotedCol != :$p";
+                            $params[$p] = $opVal;
+                            break;
+                        case 'in':
+                            if (!is_array($opVal)) {
+                                throw new GC2Exception("Operator 'in' requires an array value", 400);
+                            }
+                            if (empty($opVal)) {
+                                $clauses[] = '1=0';
+                            } else {
+                                $inParams = [];
+                                foreach ($opVal as $i => $v) {
+                                    $ip = $p . '_' . $i;
+                                    $inParams[] = ":$ip";
+                                    $params[$ip] = $v;
+                                }
+                                $clauses[] = "$quotedCol IN (" . implode(', ', $inParams) . ")";
+                            }
+                            break;
+                        case 'like':
+                            $clauses[] = "$quotedCol LIKE :$p";
+                            $params[$p] = $opVal;
+                            break;
+                        case 'ilike':
+                            $clauses[] = "$quotedCol ILIKE :$p";
+                            $params[$p] = $opVal;
+                            break;
+                        default:
+                            throw new GC2Exception("Unknown operator '$op' for column '$key'", 400);
+                    }
+                }
+            } else {
+                // Backward compatibility: simple equality
+                $p = 'p' . count($params);
+                $clauses[] = "$quotedCol = :$p";
+                $params[$p] = $value;
+            }
+        }
+
+        return !empty($clauses) ? implode(" $conjunction ", $clauses) : '';
+    }
+
+    /**
+     * Check if an array contains any of the supported operators.
+     */
+    private function isOperatorArray(array $arr): bool
+    {
+        $operators = ['eq', 'gt', 'lt', 'gte', 'lte', 'neq', 'in', 'like', 'ilike'];
+        foreach ($arr as $k => $v) {
+            if (is_string($k) && in_array(strtolower($k), $operators, true)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
