@@ -604,28 +604,31 @@ class Sql extends Model
                         $schema[$meta['name']] = ['type' => $meta['native_type'], 'array' => str_starts_with($meta['native_type'], '_')];
                     }
                 }
-                $row = $this->fetchRow($result);
-                $tmp = null;
-                if (!empty($row)) {
-                    foreach ($row as $field => $value) {
-                        try {
-                            $nativePgType = $typeHints[$field] ?? self::phpTypeToPgType(gettype($value)) ?? "json";
-                            $dateTimeFormat = $typeFormats[$field] ?? self::getFormat($nativePgType);
-                            $convertedValue = $this->convertFromNative($columnTypes[$field], $value, $dateTimeFormat);
-                            $tmp[$field] = $convertedValue;
-                        } catch (\Exception) {
-                            if ($columnTypes[$field] == 'geometry') {
-                                $resultGeom = $this->prepare("select ST_AsGeoJSON(:v) as json");
-                                $this->execute($resultGeom, ["v" => $value]);
-                                $json = $this->fetchRow($resultGeom)['json'];
-                                $value = !empty($json) ? json_decode($json) : null;
+                $rows = $this->fetchAll($result, 'assoc');
+                if (!empty($rows)) {
+                    $tmp = null;
+                    foreach ($rows as $row) {
+                        foreach ($row as $field => $value) {
+                            try {
+                                $nativePgType = $typeHints[$field] ?? self::phpTypeToPgType(gettype($value)) ?? "json";
+                                $dateTimeFormat = $typeFormats[$field] ?? self::getFormat($nativePgType);
+                                $convertedValue = $this->convertFromNative($columnTypes[$field], $value, $dateTimeFormat);
+                                $tmp[$field] = $convertedValue;
+                            } catch (\Exception) {
+                                if ($columnTypes[$field] == 'geometry') {
+                                    $resultGeom = $this->prepare("select ST_AsGeoJSON(:v) as json");
+                                    $this->execute($resultGeom, ["v" => $value]);
+                                    $json = $this->fetchRow($resultGeom)['json'];
+                                    $value = !empty($json) ? json_decode($json) : null;
+                                }
+                                $tmp[$field] = $value;
                             }
-                            $tmp[$field] = $value;
+
+                        }
+                        if ($tmp && sizeof($tmp) > 0) {
+                            $returning['data'][] = $tmp;
                         }
                     }
-                }
-                if ($tmp && sizeof($tmp) > 0) {
-                    $returning['data'][] = $tmp;
                 }
                 $affectedRows += $result->rowCount();
                 if ($returning) {
