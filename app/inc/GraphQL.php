@@ -102,8 +102,8 @@ class GraphQL
         }
 
         // Maintain legacy constraint: operation name must match the root field (check first selection)
-        if (!preg_match('/^[A-Z][A-Za-z0-9_]*$/', $opName)) {
-            throw new GC2Exception('Invalid operation name: must start with an uppercase letter', 400);
+        if (!preg_match('/^[A-Z][A-Za-z0-9]*$/', $opName)) {
+            throw new GC2Exception('Invalid operation name: must start with an uppercase letter and be in PascalCase', 400);
         }
 
         $data = [];
@@ -114,10 +114,14 @@ class GraphQL
             $field = $selectionNode->name->value;
             $alias = $selectionNode->alias?->value ?? $field;
 
+            if (!preg_match('/^[a-z][A-Za-z0-9]*$/', $field)) {
+                throw new GC2Exception("Invalid root field name '$field': must start with a lowercase letter and be in camelCase", 400);
+            }
+
             if ($index === 0) {
-                $expectedField = strtolower($opName);
-                if (strcasecmp($field, $expectedField) !== 0) {
-                    throw new GC2Exception("Operation name '$opName' does not match root field '$field'", 400);
+                $expectedField = lcfirst($opName);
+                if ($field !== $expectedField) {
+                    throw new GC2Exception("Operation name '$opName' does not match root field '$field'. Expected '$expectedField'.", 400);
                 }
             }
 
@@ -164,6 +168,11 @@ class GraphQL
     private static function quoteIdent(string $name): string
     {
         return '"' . str_replace('"', '""', $name) . '"';
+    }
+
+    private static function camelToSnake(string $input): string
+    {
+        return strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $input));
     }
 
     private function partitionSelection(?array $selection): array
@@ -308,6 +317,7 @@ class GraphQL
         $query['params'] = $params;
         $query['convertTypes'] = true;
         $query['format'] = 'json';
+        $query['id'] = uniqid();
 
         $statement = new Statement(connection: $this->connection, convertReturning: true);
         $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);;
@@ -371,7 +381,7 @@ class GraphQL
         if (!is_string($schema) || $schema === '') {
             $schema = 'public';
         }
-        $table = $tableField;
+        $table = self::camelToSnake($tableField);
 
         // Setup table metadata and columns
         $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
@@ -546,13 +556,25 @@ class GraphQL
     private function resolveMutation(string $field, array $args, ?array $selection): mixed
     {
         if (str_starts_with($field, 'insert')) {
-            return $this->handleInsert(substr($field, 6), $args, $selection);
+            $table = self::camelToSnake(substr($field, 6));
+            if ($table === '') {
+                throw new GC2Exception("Mutation '$field' must be followed by a table name", 400);
+            }
+            return $this->handleInsert($table, $args, $selection);
         }
         if (str_starts_with($field, 'update')) {
-            return $this->handleUpdate(substr($field, 6), $args, $selection);
+            $table = self::camelToSnake(substr($field, 6));
+            if ($table === '') {
+                throw new GC2Exception("Mutation '$field' must be followed by a table name", 400);
+            }
+            return $this->handleUpdate($table, $args, $selection);
         }
         if (str_starts_with($field, 'delete')) {
-            return $this->handleDelete(substr($field, 6), $args, $selection);
+            $table = self::camelToSnake(substr($field, 6));
+            if ($table === '') {
+                throw new GC2Exception("Mutation '$field' must be followed by a table name", 400);
+            }
+            return $this->handleDelete($table, $args, $selection);
         }
         throw new GC2Exception("Unknown mutation '$field'", 400);
     }
@@ -594,8 +616,17 @@ class GraphQL
         }
         $sql .= implode(', ', $valuesRows) . " RETURNING *";
 
-        $rows = $this->executeQuery($sql, $params);
-        return $this->mapMutationResult($rows, $selection, $isSingle, $schema, $table);
+        $query = [
+            'q' => $sql,
+            'params' => $params,
+            'format' => 'json',
+            'convertTypes' => true,
+            'id' => uniqid()
+        ];
+        $statement = new Statement(connection: $this->connection, convertReturning: true);
+        $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);
+
+        return $this->mapMutationResult($res['returning']['data'], $selection, $isSingle, $schema, $table);
     }
 
     /**
@@ -631,8 +662,17 @@ class GraphQL
         $quotedTable = self::quoteIdent($schema) . '.' . self::quoteIdent($table);
         $sql = "UPDATE $quotedTable SET " . implode(', ', $setClauses) . " WHERE $whereSql RETURNING *";
 
-        $rows = $this->executeQuery($sql, $params);
-        return $this->mapMutationResult($rows, $selection, false, $schema, $table);
+        $query = [
+            'q' => $sql,
+            'params' => $params,
+            'format' => 'json',
+            'convertTypes' => true,
+            'id' => uniqid()
+        ];
+        $statement = new Statement(connection: $this->connection, convertReturning: true);
+        $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);
+
+        return $this->mapMutationResult($res['returning']['data'], $selection, false, $schema, $table);
     }
 
     /**
@@ -656,8 +696,16 @@ class GraphQL
         $quotedTable = self::quoteIdent($schema) . '.' . self::quoteIdent($table);
         $sql = "DELETE FROM $quotedTable WHERE $whereSql RETURNING *";
 
-        $rows = $this->executeQuery($sql, $params);
-        return $this->mapMutationResult($rows, $selection, false, $schema, $table);
+        $query = [
+            'q' => $sql,
+            'params' => $params,
+            'format' => 'json',
+            'convertTypes' => true,
+            'id' => uniqid()
+        ];
+        $statement = new Statement(connection: $this->connection, convertReturning: true);
+        $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);
+        return $this->mapMutationResult($res['returning']['data'], $selection, false, $schema, $table);
     }
 
     private function executeQuery(string $sql, array $params): array
