@@ -33,6 +33,7 @@ class GraphQL
     private SqlModel $api;
     private bool $subuser;
     private ?string $userGroup;
+    private string $opType;
 
     function __construct(private readonly Connection $connection, private readonly bool $convertReturning = true)
     {
@@ -87,8 +88,9 @@ class GraphQL
             // Preserve previous behavior: require explicit operation name
             throw new GC2Exception('Operation name is required', 400);
         }
-        if (strtolower($opType) !== 'query') {
-            throw new GC2Exception('Only query operations are allowed', 400);
+        $this->opType = strtolower($opType);
+        if (!in_array($this->opType, ['query', 'mutation'])) {
+            throw new GC2Exception('Only query and mutation operations are allowed', 400);
         }
 
         // Resolve variables including defaults
@@ -350,6 +352,9 @@ class GraphQL
      */
     protected function resolveField(string $field, array $args, mixed $positional = null, ?array $selection = null): mixed
     {
+        if ($this->opType === 'mutation') {
+            return $this->resolveMutation($field, $args, $selection);
+        }
         return $this->resolveDynamicTable($field, $args, $positional, $selection);
     }
 
@@ -454,38 +459,11 @@ class GraphQL
             $query['id'] = uniqid();
 
             $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);
-
             $rows = $res['data'] ?? ($res['rows'] ?? $res);
-            $row = (is_array($rows) && isset($rows[0])) ? $rows[0] : null;
+            $rows = is_array($rows) ? $rows : [];
 
-            if (!is_array($row)) {
-                return null;
-            }
-
-            // Map columns to aliases
-            $mappedRow = [];
-            foreach ($selColumns as $alias => $name) {
-                $mappedRow[$alias] = $row[$name] ?? null;
-            }
-
-            // Attach nested
-            if (!empty($nested)) {
-                foreach ($nested as $alias => $v) {
-                    $relName = $v['name'];
-                    $subSel = $v['selection'];
-                    $map = $fkMap[$relName];
-                    $localVal = $row[$map['local_col']] ?? null;
-                    $mappedRow[$alias] = $this->fetchRelatedSingle(
-                        schema: $map['ref_schema'],
-                        table: $map['ref_table'],
-                        column: $map['ref_col'],
-                        value: $localVal,
-                        selection: is_array($subSel) ? $subSel : null,
-                        args: $v['args'] ?? []
-                    );
-                }
-            }
-            return $mappedRow;
+            $mappedRows = $this->mapRows($rows, $selection, $schema, $table);
+            return $mappedRows[0] ?? null;
         }
 
         // --- List query logic ---
@@ -557,37 +535,203 @@ class GraphQL
         $rows = $res['data'] ?? ($res['rows'] ?? $res);
         $rows = is_array($rows) ? $rows : [];
 
-        // Attach nested objects if requested
-        if (!empty($rows)) {
-            foreach ($rows as &$row) {
-                $mappedRow = [];
-                foreach ($selColumns as $alias => $name) {
-                    $mappedRow[$alias] = $row[$name] ?? null;
-                }
-                if (!empty($nested)) {
-                    foreach ($nested as $alias => $v) {
-                        $relName = $v['name'];
-                        $subSel = $v['selection'];
-                        $map = $fkMap[$relName];
-                        $localVal = $row[$map['local_col']] ?? null;
-                        $mappedRow[$alias] = $this->fetchRelatedSingle(
-                            schema: $map['ref_schema'],
-                            table: $map['ref_table'],
-                            column: $map['ref_col'],
-                            value: $localVal,
-                            selection: is_array($subSel) ? $subSel : null,
-                            args: $v['args'] ?? []
-                        );
-                    }
-                }
-                $row = $mappedRow;
-            }
-            unset($row);
-        }
-
-        return $rows;
+        return $this->mapRows($rows, $selection, $schema, $table);
     }
 
+
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    private function resolveMutation(string $field, array $args, ?array $selection): mixed
+    {
+        if (str_starts_with($field, 'insert')) {
+            return $this->handleInsert(substr($field, 6), $args, $selection);
+        }
+        if (str_starts_with($field, 'update')) {
+            return $this->handleUpdate(substr($field, 6), $args, $selection);
+        }
+        if (str_starts_with($field, 'delete')) {
+            return $this->handleDelete(substr($field, 6), $args, $selection);
+        }
+        throw new GC2Exception("Unknown mutation '$field'", 400);
+    }
+
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    private function handleInsert(string $table, array $args, ?array $selection): mixed
+    {
+        $schema = $args['schema'] ?? 'public';
+        $objects = $args['objects'] ?? [];
+        $isSingle = false;
+        if (isset($args['object'])) {
+            $objects = [$args['object']];
+            $isSingle = true;
+        }
+
+        if (empty($objects)) {
+            throw new GC2Exception("No objects to insert", 400);
+        }
+
+        $columns = array_keys($objects[0]);
+        $quotedTable = self::quoteIdent($schema) . '.' . self::quoteIdent($table);
+        $quotedCols = array_map(self::quoteIdent(...), $columns);
+
+        $sql = "INSERT INTO $quotedTable (" . implode(', ', $quotedCols) . ") VALUES ";
+
+        $params = [];
+        $valuesRows = [];
+        foreach ($objects as $rowIndex => $obj) {
+            $rowValues = [];
+            foreach ($columns as $col) {
+                $p = "p{$rowIndex}_{$col}";
+                $params[$p] = $obj[$col] ?? null;
+                $rowValues[] = ":$p";
+            }
+            $valuesRows[] = "(" . implode(', ', $rowValues) . ")";
+        }
+        $sql .= implode(', ', $valuesRows) . " RETURNING *";
+
+        $rows = $this->executeQuery($sql, $params);
+        return $this->mapMutationResult($rows, $selection, $isSingle, $schema, $table);
+    }
+
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    private function handleUpdate(string $table, array $args, ?array $selection): array
+    {
+        $schema = $args['schema'] ?? 'public';
+        $where = $args['where'] ?? [];
+        $set = $args['_set'] ?? ($args['set'] ?? []);
+
+        if (empty($set)) {
+            throw new GC2Exception("No columns to update", 400);
+        }
+
+        $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
+        $metaCols = array_keys($t->metaData ?? []);
+
+        $params = [];
+        $setClauses = [];
+        foreach ($set as $col => $val) {
+            $p = 's_' . $col;
+            $setClauses[] = self::quoteIdent($col) . " = :$p";
+            $params[$p] = $val;
+        }
+
+        $whereSql = $this->buildWhere($where, $metaCols, $params);
+        if ($whereSql === '') {
+            throw new GC2Exception("Update requires a where clause", 400);
+        }
+
+        $quotedTable = self::quoteIdent($schema) . '.' . self::quoteIdent($table);
+        $sql = "UPDATE $quotedTable SET " . implode(', ', $setClauses) . " WHERE $whereSql RETURNING *";
+
+        $rows = $this->executeQuery($sql, $params);
+        return $this->mapMutationResult($rows, $selection, false, $schema, $table);
+    }
+
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    private function handleDelete(string $table, array $args, ?array $selection): array
+    {
+        $schema = $args['schema'] ?? 'public';
+        $where = $args['where'] ?? [];
+
+        $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
+        $metaCols = array_keys($t->metaData ?? []);
+
+        $params = [];
+        $whereSql = $this->buildWhere($where, $metaCols, $params);
+        if ($whereSql === '') {
+            throw new GC2Exception("Delete requires a where clause", 400);
+        }
+
+        $quotedTable = self::quoteIdent($schema) . '.' . self::quoteIdent($table);
+        $sql = "DELETE FROM $quotedTable WHERE $whereSql RETURNING *";
+
+        $rows = $this->executeQuery($sql, $params);
+        return $this->mapMutationResult($rows, $selection, false, $schema, $table);
+    }
+
+    private function executeQuery(string $sql, array $params): array
+    {
+        $query = [
+            'q' => $sql,
+            'params' => $params,
+            'format' => 'json',
+            'convertTypes' => true,
+            'id' => uniqid()
+        ];
+        $statement = new Statement(connection: $this->connection, convertReturning: true);
+        $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);
+        return $res['data'] ?? ($res['rows'] ?? $res);
+    }
+
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    private function mapMutationResult(array $rows, ?array $selection, bool $isSingle, string $schema, string $table): mixed
+    {
+        $mapped = $this->mapRows($rows, $selection, $schema, $table);
+        if ($isSingle) {
+            return $mapped[0] ?? null;
+        }
+        return $mapped;
+    }
+
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    private function mapRows(array $rows, ?array $selection, string $schema, string $table): array
+    {
+        [$selColumns, $nested] = $this->partitionSelection($selection);
+        if (empty($selColumns) && empty($nested) && !empty($rows)) {
+            $allCols = array_keys($rows[0]);
+            $selColumns = array_combine($allCols, $allCols);
+        }
+
+        $fkMap = [];
+        if (!empty($nested)) {
+            $fkMap = $this->buildForeignMap($schema, $table);
+        }
+
+        foreach ($rows as &$row) {
+            $mappedRow = [];
+            foreach ($selColumns as $alias => $name) {
+                $mappedRow[$alias] = $row[$name] ?? null;
+            }
+            if (!empty($nested)) {
+                foreach ($nested as $alias => $v) {
+                    $relName = $v['name'];
+                    $subSel = $v['selection'];
+                    if (!isset($fkMap[$relName])) {
+                        throw new GC2Exception("Unknown nested relation '$relName' on {$schema}.{$table}", 400);
+                    }
+                    $map = $fkMap[$relName];
+                    $localVal = $row[$map['local_col']] ?? null;
+                    $mappedRow[$alias] = $this->fetchRelatedSingle(
+                        schema: $map['ref_schema'],
+                        table: $map['ref_table'],
+                        column: $map['ref_col'],
+                        value: $localVal,
+                        selection: is_array($subSel) ? $subSel : null,
+                        args: $v['args'] ?? []
+                    );
+                }
+            }
+            $row = $mappedRow;
+        }
+        return $rows;
+    }
 
     /**
      * Convert AST value into PHP value, using provided variables.
