@@ -26,6 +26,7 @@ use GraphQL\Language\AST\ValueNode;
 use GraphQL\Language\AST\VariableNode;
 use GraphQL\Language\Parser as GraphQLParser;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use function Amp\Dns\normalizeName;
 
 class GraphQL
 {
@@ -616,13 +617,8 @@ class GraphQL
         }
         $sql .= implode(', ', $valuesRows) . " RETURNING *";
 
-        $query = [
-            'q' => $sql,
-            'params' => $params,
-            'format' => 'json',
-            'convertTypes' => true,
-            'id' => uniqid()
-        ];
+        $query = $this->buildQueryArray($sql, $params, $schema, $table);
+
         $statement = new Statement(connection: $this->connection, convertReturning: true);
         $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);
 
@@ -662,13 +658,8 @@ class GraphQL
         $quotedTable = self::quoteIdent($schema) . '.' . self::quoteIdent($table);
         $sql = "UPDATE $quotedTable SET " . implode(', ', $setClauses) . " WHERE $whereSql RETURNING *";
 
-        $query = [
-            'q' => $sql,
-            'params' => $params,
-            'format' => 'json',
-            'convertTypes' => true,
-            'id' => uniqid()
-        ];
+        $query = $this->buildQueryArray($sql, $params, $schema, $table);
+
         $statement = new Statement(connection: $this->connection, convertReturning: true);
         $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);
 
@@ -696,13 +687,8 @@ class GraphQL
         $quotedTable = self::quoteIdent($schema) . '.' . self::quoteIdent($table);
         $sql = "DELETE FROM $quotedTable WHERE $whereSql RETURNING *";
 
-        $query = [
-            'q' => $sql,
-            'params' => $params,
-            'format' => 'json',
-            'convertTypes' => true,
-            'id' => uniqid()
-        ];
+        $query = $this->buildQueryArray($sql, $params, $schema, $table);
+
         $statement = new Statement(connection: $this->connection, convertReturning: true);
         $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);
         return $this->mapMutationResult($res['returning']['data'] ?? [], $selection, false, $schema, $table);
@@ -985,5 +971,38 @@ class GraphQL
             }
         }
         return $tree;
+    }
+
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    private function getTypeHints(string $schema, string $table, array $params): array
+    {
+        $meta = $this->api->getMetaData(table: $schema . '.' . $table, restriction: false, getEnums: false, lookupForeignTables: false );
+        $arr = [];
+        foreach ($params as $p => $v) {
+            $arr2 = explode('_', $p);
+            array_shift($arr2);
+            $normalizedCol = implode('_', $arr2);
+            $arr[$p] = $meta[$normalizedCol]['type'];
+        }
+        return $arr;
+    }
+
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     */
+    private function buildQueryArray(string $sql, array $params, string $schema, string $table): array
+    {
+        return      [
+            'q' => $sql,
+            'params' => $params,
+            'format' => 'json',
+            'convertTypes' => true,
+            'id' => uniqid(),
+            'type_hints' => $this->getTypeHints($schema, $table, $params)
+        ];
     }
 }
