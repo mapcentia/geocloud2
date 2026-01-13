@@ -755,10 +755,11 @@ class Sql extends Model
      *
      * @param string $nativeType The native type to which the value needs to be converted.
      * @param mixed $value The value to be converted.
-     * @return string The converted value in its native type.
+     * @param string|null $format
+     * @return string|null The converted value in its native type.
      * @throws GC2Exception
      */
-    private function convertToNative(string $nativeType, mixed $value, ?string $format): string
+    private function convertToNative(string $nativeType, mixed $value, ?string $format): ?string
     {
         $type = gettype($value);
         $format = $format ?? self::getFormat($nativeType);
