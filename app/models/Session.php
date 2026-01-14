@@ -14,7 +14,7 @@ use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Jwt;
 use app\inc\Model;
-use app\inc\RoleToPriv;
+use app\inc\Authorization;
 use app\inc\Util;
 use app\models\User as UserModel;
 use Firebase\JWT\JWK;
@@ -287,7 +287,7 @@ class Session extends Model
 
             // TODO set privileges for sub-user
             if ($user) {
-                //            new RoleToPriv(user: $user);
+                //            new Authorization(user: $user);
 
             }
 
