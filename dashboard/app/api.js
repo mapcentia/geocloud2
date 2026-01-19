@@ -18,8 +18,12 @@ const getDatabasesCall = (action) => {
     return axios.get(`${config.apiUrl}database/search?userIdentifier=${action.payload}`, {withCredentials: true});
 };
 
+let gc2ConfigurationPromise = null;
 const getGC2ConfigurationCall = () => {
-    return axios.get(`${config.apiUrl.replace(`/api/v2/`, `/api/v1/`)}baselayerjs?format=json`, {withCredentials: true});
+    if (!gc2ConfigurationPromise) {
+        gc2ConfigurationPromise = axios.get(`${config.apiUrl.replace(`/api/v2/`, `/api/v1/`)}baselayerjs?format=json`, {withCredentials: true});
+    }
+    return gc2ConfigurationPromise;
 };
 
 const createUserCall = (action) => {

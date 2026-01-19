@@ -23,6 +23,7 @@ import ProtectedLayoutRoute from 'containers/ProtectedLayoutRoute';
 
 import { makeSelectGC2Configuration, makeSelectGC2ConfigurationLoading } from 'containers/App/selectors';
 import saga from 'containers/App/saga';
+import {makeSelectIsAuthenticating} from "./selectors";
 
 class App extends React.Component {
     constructor(props) {
@@ -36,7 +37,7 @@ class App extends React.Component {
     render() {
         let appBaseURL = (process.env.WEBPACK_PUBLIC_PATH ? process.env.WEBPACK_PUBLIC_PATH : `/`);
         return (<div>
-            {this.props.gc2ConfigurationsLoading && this.props.gc2Configurations === false ? (<AppLoadingOverlay messageId="loadingConfiguration"/>) : (
+            {(this.props.gc2ConfigurationsLoading || this.props.isAuthenticating) ? (<AppLoadingOverlay messageId="loadingConfiguration"/>) : (
             <div>
                 <Switch>
                     <ProtectedLayoutRoute exact path={appBaseURL} component={DashboardPage} />
@@ -66,6 +67,7 @@ export function mapDispatchToProps(dispatch) {
 const mapStateToProps = createStructuredSelector({
     gc2Configurations: makeSelectGC2Configuration(),
     gc2ConfigurationsLoading: makeSelectGC2ConfigurationLoading(),
+    isAuthenticating: makeSelectIsAuthenticating(),
 });
 
 const withConnect = connect(mapStateToProps, mapDispatchToProps);

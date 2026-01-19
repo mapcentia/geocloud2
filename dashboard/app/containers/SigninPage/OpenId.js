@@ -14,7 +14,8 @@ class OpenId extends Component {
             selectedOption: '',
             superuserLogin: typeof window !== 'undefined' ? (localStorage.getItem('gc2_selected_superuser') || '') : '',
             token: null,
-            nonce: null
+            nonce: null,
+            processing: false
         }
         this.handleLogin = this.handleLogin.bind(this)
         this.handleResetDb = this.handleResetDb.bind(this)
@@ -56,14 +57,22 @@ class OpenId extends Component {
         this._isMounted = true
         window.addEventListener('storage', this.onStorage)
 
+        if (this.state.processing) {
+            return
+        }
+        this.setState({processing: true})
+
         codeFlow.redirectHandle().then(async isSignedIn => {
             if (!this._isMounted) return
             if (isSignedIn) {
                 const token = JSON.parse(localStorage.getItem('gc2_tokens'))['accessToken']
                 const nonce = localStorage.getItem('gc2_nonce')
-                const {database} = jwtDecode(token)
+                const {database, superuser} = jwtDecode(token)
                 if (!database) {
                     alert(`No database set in token. Please contact the administrator.`)
+                    if (this._isMounted) {
+                        this.setState({processing: false})
+                    }
                     codeFlow.clear()
                     return
                 }
@@ -103,7 +112,8 @@ class OpenId extends Component {
                             selectedOption: selectedDb,
                             superuserLogin: false,
                             token,
-                            nonce
+                            nonce,
+                            processing: false
                         })
                         return
                     }
@@ -119,7 +129,8 @@ class OpenId extends Component {
                             selectedOption: allowedDatabases[0],
                             superuserLogin: false,
                             token,
-                            nonce
+                            nonce,
+                            processing: false
                         })
                         return
                     }
@@ -144,12 +155,14 @@ class OpenId extends Component {
                         selectedOption: selectedDb,
                         superuserLogin: false,
                         token,
-                        nonce
+                        nonce,
+                        processing: false
                     })
                     return
                 }
                 this.proceed(token, nonce, selectedDb, false)
             } else {
+                if (this._isMounted) this.setState({processing: false})
                 // If nonce is not set, get it from the server, so it can be used in the sign-in request
                 if (!localStorage.getItem('gc2_nonce')) {
                     fetch('/api/v2/session/nonce').then(res => res.json()).then(data => {
@@ -175,7 +188,13 @@ class OpenId extends Component {
         console.log(token)
         console.log(nonce)
         console.log(selectedDb)
-        if (!token || !selectedDb) return
+        if (!token || !selectedDb) {
+            if (this._isMounted) this.setState({processing: false})
+            {
+                return
+            }
+        }
+        if (this._isMounted) this.setState({processing: true})
         fetch('/api/v2/session/token', {
             method: 'POST',
             headers: {"Content-Type": "application/json;charset=UTF-8"},
@@ -184,6 +203,7 @@ class OpenId extends Component {
             if (!this._isMounted) return
             if (!data.success) {
                 alert(`Error: ${data.message}`)
+                this.setState({processing: false})
                 codeFlow.clear()
                 return
             }
@@ -223,7 +243,7 @@ class OpenId extends Component {
     }
 
     render() {
-        const {savedDb, info, superuserLogin} = this.state
+        const {savedDb, info, superuserLogin, processing} = this.state
         const containerStyle = {
             maxWidth: 420,
             margin: '60px auto',
@@ -273,52 +293,58 @@ class OpenId extends Component {
         return (
             <div style={containerStyle}>
                 <div style={titleStyle}>Sign in</div>
-                <div style={descStyle}>Start login processen. Hvis din konto tillader flere databaser,
-                    vil du blive spurgt om at vælge en under login-prosessen.
-                </div>
-                {savedDb ? (
-                    <div style={badgeStyle}>Current selection: {savedDb} {superuserLogin === '1' ? '(super)': ''}</div>
+                {processing ? (
+                    <div style={descStyle}>Processing login, please wait...</div>
                 ) : (
-                    <div style={badgeStyle}>Ingen database valgt endnu</div>
-                )}
-                {this.state.selecting ? (
-                    <div>
-                        <div style={{fontSize: 16, margin: '16px 0'}}>Vælg en database</div>
-                        <div>
-                            {this.state.allowedDatabases.map(d => (
-                                <label key={d} style={{display: 'block', marginBottom: 8}}>
-                                    <input
-                                        type="radio"
-                                        name="db"
-                                        value={d}
-                                        checked={this.state.selectedOption === d}
-                                        onChange={this.handleDbSelectChange}
-                                        style={{marginRight: 8}}
-                                    />
-                                    {d}
-                                </label>
-                            ))}
+                    <>
+                        <div style={descStyle}>Start login processen. Hvis din konto tillader flere databaser,
+                            vil du blive spurgt om at vælge en under login-prosessen.
                         </div>
-                        {this.state.selectedOption && this.state.databasesWithSuperuser.includes(this.state.selectedOption) && (
-                            <label style={{display: 'flex', alignItems: 'center', gap: 8, margin: '12px 0'}}>
-                                <input
-                                    type="checkbox"
-                                    checked={!!this.state.superuserLogin}
-                                    onChange={this.handleSuperuserToggle}
-                                />
-                                <span>Log ind som superuser for {this.state.selectedOption}</span>
-                            </label>
+                        {savedDb ? (
+                            <div style={badgeStyle}>Current selection: {savedDb} {superuserLogin === '1' ? '(super)': ''}</div>
+                        ) : (
+                            <div style={badgeStyle}>Ingen database valgt endnu</div>
                         )}
-                        <div style={btnRowStyle}>
-                            <button style={primaryBtn} onClick={this.handleConfirmSelection}>Forsæt</button>
-                            <button style={secondaryBtn} onClick={this.handleCancelSelection}>Fortryd</button>
-                        </div>
-                    </div>
-                ) : (
-                    <div style={btnRowStyle}>
-                        <button style={primaryBtn} onClick={this.handleLogin}>Login</button>
-                        <button style={secondaryBtn} onClick={this.handleResetDb}>Nulstil database-valg</button>
-                    </div>
+                        {this.state.selecting ? (
+                            <div>
+                                <div style={{fontSize: 16, margin: '16px 0'}}>Vælg en database</div>
+                                <div>
+                                    {this.state.allowedDatabases.map(d => (
+                                        <label key={d} style={{display: 'block', marginBottom: 8}}>
+                                            <input
+                                                type="radio"
+                                                name="db"
+                                                value={d}
+                                                checked={this.state.selectedOption === d}
+                                                onChange={this.handleDbSelectChange}
+                                                style={{marginRight: 8}}
+                                            />
+                                            {d}
+                                        </label>
+                                    ))}
+                                </div>
+                                {this.state.selectedOption && this.state.databasesWithSuperuser.includes(this.state.selectedOption) && (
+                                    <label style={{display: 'flex', alignItems: 'center', gap: 8, margin: '12px 0'}}>
+                                        <input
+                                            type="checkbox"
+                                            checked={!!this.state.superuserLogin}
+                                            onChange={this.handleSuperuserToggle}
+                                        />
+                                        <span>Log ind som superuser for {this.state.selectedOption}</span>
+                                    </label>
+                                )}
+                                <div style={btnRowStyle}>
+                                    <button style={primaryBtn} onClick={this.handleConfirmSelection}>Forsæt</button>
+                                    <button style={secondaryBtn} onClick={this.handleCancelSelection}>Fortryd</button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div style={btnRowStyle}>
+                                <button style={primaryBtn} onClick={this.handleLogin}>Login</button>
+                                <button style={secondaryBtn} onClick={this.handleResetDb}>Nulstil database-valg</button>
+                            </div>
+                        )}
+                    </>
                 )}
                 {info && <div style={infoStyle}>{info}</div>}
             </div>
