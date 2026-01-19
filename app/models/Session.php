@@ -14,7 +14,7 @@ use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Jwt;
 use app\inc\Model;
-use app\inc\Authorization;
+use app\inc\ClaimAcl;
 use app\inc\Util;
 use app\models\User as UserModel;
 use Firebase\JWT\JWK;
@@ -195,7 +195,7 @@ class Session extends Model
 
             $expectedNonce = $_SESSION['oauth2_nonce'] ?? null;
             if (!$expectedNonce) {
-//            throw new GC2Exception('OAuth2 nonce not set in session.');
+                throw new GC2Exception('OAuth2 nonce not set in session.');
             }
 
             $http = new \GuzzleHttp\Client(['timeout' => 5]);
@@ -245,7 +245,7 @@ class Session extends Model
             $row = null;
             $user = null;
             $userName = $payload->preferred_username;
-            $fn = function () use ($payload, &$row, $parentDb, $superuser, $userName, $user): void {
+            $fn = function () use ($payload, &$row, $parentDb, $superuser, $userName, &$user): void {
                 if (!$superuser) {
 //                $sQuery = "SELECT * FROM users WHERE email = :sEmail AND parentdb = :parentDb";
 //                $res = $this->prepare($sQuery);
@@ -287,10 +287,69 @@ class Session extends Model
 
             // TODO set privileges for sub-user
             if ($user) {
-                //            new Authorization(user: $user);
+                $customMap = [
+                    "azp->gc2" => [
+                        "__membership" => ["rosa"], // eller ["*"]
+                        "__read" => ["schema.table1"],
+                    ],
+                    "typ->Bearer" => [
+                        "__read" => ["public.albums"],
+                        "__membership" => ["sadsd", "sdfsd"], // eller ["*"]
 
+                    ],
+
+                ];
+
+                if (!$acl = @file_get_contents(App::$param["path"] . "/app/conf/claim_acl.json")) {
+                    error_log("Unable to read claim_acl.json");
+                }
+
+                if ($acl) {
+                    $acl = json_decode($acl);
+                    $claimAcl = new ClaimAcl($acl);
+                    $grants = $claimAcl->allTablePermissions($payload);
+                    $membershipsKeys = $claimAcl->allMembershipKeys($payload);
+                    $memberships = [];
+                    foreach ($membershipsKeys as $key) {
+                        if (!empty($acl[$key]["__membership"])) {
+                            $memberships = array_merge($memberships, $acl[$key]["__membership"]);
+                        }
+                    }
+
+                    // Set grants
+                    $conn = new Connection(database: $parentDb);
+                    $layer = new Layer(connection: $conn);
+                    $table = new Table(table: "settings.geometry_columns_join", connection: $conn);
+                    $table->connect();
+                    $table->begin();
+                    foreach ($grants as $rel => $grant) {
+                        if (empty($grant)) {
+                            continue;
+                        }
+                        $obj = new StdClass();
+                        $obj->_key_ = $rel;
+                        $obj->privileges = !empty($grant['write']) ? 'write' : (!empty($grant['read']) ? 'read' : null);
+                        $obj->subuser = $userName;
+                        try {
+                            $layer->updatePrivileges($obj, $table);
+                        } catch (GC2Exception $e) {
+                            // If relation is not found, skip
+                            error_log($e->getMessage());
+                        }
+                    }
+                    $table->commit();
+
+                    // Set user group
+                    if (count($memberships) > 0) {
+                        $data = [
+                            'usergroup' => $memberships[0],
+                            'parentdb' => $parentDb,
+                            'user' => $userName,
+                        ];
+                        $user->updateUser(data: $data);
+                    }
+                }
             }
-
         } else {
             $jwt = Jwt::validate($token)['data'];
             $row['screenname'] = $userName = $jwt['uid'];
