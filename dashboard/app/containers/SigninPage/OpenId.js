@@ -26,6 +26,7 @@ class OpenId extends Component {
         this.handleSuperuserToggle = this.handleSuperuserToggle.bind(this)
         this.proceed = this.proceed.bind(this)
         this._isMounted = false
+        this._redirectHandleStarted = false
     }
 
     handleLogin(e) {
@@ -57,9 +58,10 @@ class OpenId extends Component {
         this._isMounted = true
         window.addEventListener('storage', this.onStorage)
 
-        if (this.state.processing) {
+        if (this.state.processing || this._redirectHandleStarted) {
             return
         }
+        this._redirectHandleStarted = true
         this.setState({processing: true})
 
         codeFlow.redirectHandle().then(async isSignedIn => {
