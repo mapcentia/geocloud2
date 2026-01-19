@@ -25,6 +25,11 @@ use GraphQL\Language\AST\StringValueNode;
 use GraphQL\Language\AST\ValueNode;
 use GraphQL\Language\AST\VariableNode;
 use GraphQL\Language\Parser as GraphQLParser;
+use GraphQL\Type\Definition\CustomScalarType;
+use GraphQL\Type\Definition\ObjectType;
+use GraphQL\Type\Definition\Type;
+use GraphQL\Type\Schema;
+use GraphQL\GraphQL as GraphQLBase;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use function Amp\Dns\normalizeName;
 
@@ -35,6 +40,7 @@ class GraphQL
     private bool $subuser;
     private ?string $userGroup;
     private string $opType;
+    private array $typeCache = [];
 
     function __construct(private readonly Connection $connection, private readonly bool $convertReturning = true)
     {
@@ -68,7 +74,7 @@ class GraphQL
             throw new GC2Exception('GraphQL parse error: ' . $e->getMessage(), 400);
         }
 
-        // Select operation (only queries supported)
+        // Select operation
         $operation = null;
         foreach ($doc->definitions as $def) {
             if ($def instanceof OperationDefinitionNode) {
@@ -83,70 +89,325 @@ class GraphQL
         if (!$operation) {
             throw new GC2Exception('No operation found in document', 400);
         }
-        $opType = $operation->operation;
+
+        $this->opType = strtolower($operation->operation);
         $opName = $operation->name?->value;
-        if (!is_string($opName) || $opName === '') {
-            // Preserve previous behavior: require explicit operation name
-            throw new GC2Exception('Operation name is required', 400);
-        }
-        $this->opType = strtolower($opType);
-        if (!in_array($this->opType, ['query', 'mutation'])) {
-            throw new GC2Exception('Only query and mutation operations are allowed', 400);
-        }
+        $isIntrospection = $this->isIntrospectionQuery($operation);
 
-        // Resolve variables including defaults
-        $variables = $this->resolveVariables($operation, $variables);
-
-        $selections = $operation->selectionSet?->selections ?? [];
-        if (empty($selections)) {
-            throw new GC2Exception('No fields selected', 400);
-        }
-
-        // Maintain legacy constraint: operation name must match the root field (check first selection)
-        if (!preg_match('/^[A-Z][A-Za-z0-9]*$/', $opName)) {
-            throw new GC2Exception('Invalid operation name: must start with an uppercase letter and be in PascalCase', 400);
-        }
-
-        $data = [];
-        foreach ($selections as $index => $selectionNode) {
-            if (!$selectionNode instanceof FieldNode) {
-                throw new GC2Exception('Unsupported selection at root', 400);
+        if (!$isIntrospection) {
+            if (!is_string($opName) || $opName === '') {
+                throw new GC2Exception('Operation name is required', 400);
             }
-            $field = $selectionNode->name->value;
-            $alias = $selectionNode->alias?->value ?? $field;
-
-            if (!preg_match('/^[a-z][A-Za-z0-9]*$/', $field)) {
-                throw new GC2Exception("Invalid root field name '$field': must start with a lowercase letter and be in camelCase", 400);
+            if (!preg_match('/^[A-Z][A-Za-z0-9]*$/', $opName)) {
+                throw new GC2Exception('Invalid operation name: must start with an uppercase letter and be in PascalCase', 400);
             }
-
-            if ($index === 0) {
-                $expectedField = lcfirst($opName);
-                if ($field !== $expectedField) {
-                    throw new GC2Exception("Operation name '$opName' does not match root field '$field'. Expected '$expectedField'.", 400);
+            $selections = $operation->selectionSet?->selections ?? [];
+            if (empty($selections)) {
+                throw new GC2Exception('No fields selected', 400);
+            }
+            foreach ($selections as $index => $selectionNode) {
+                if (!$selectionNode instanceof FieldNode) {
+                    throw new GC2Exception('Unsupported selection at root', 400);
+                }
+                $field = $selectionNode->name->value;
+                if (!preg_match('/^[a-z][A-Za-z0-9]*$/', $field)) {
+                    throw new GC2Exception("Invalid root field name '$field': must start with a lowercase letter and be in camelCase", 400);
+                }
+                if ($index === 0) {
+                    $expectedField = lcfirst($opName);
+                    if ($field !== $expectedField) {
+                        throw new GC2Exception("Operation name '$opName' does not match root field '$field'. Expected '$expectedField'.", 400);
+                    }
                 }
             }
-
-            // Build args array for this field
-            $args = [];
-            foreach ($selectionNode->arguments ?? [] as $arg) {
-                $args[$arg->name->value] = $this->valueFromAst($arg->value, $variables);
-            }
-
-            // Build selection tree for nested structure
-            $selectionTree = $this->selectionTreeFromFieldNode($selectionNode, $variables);
-
-            // Note: positional arguments are not part of the GraphQL spec; only named args are supported now.
-            $positional = null;
-
-            try {
-                $value = $this->resolveField($field, $args, $positional, $selectionTree);
-                $data[$alias] = $value;
-            } catch (GC2Exception $e) {
-                throw new GC2Exception($e->getMessage(), $e->getCode());
-            }
         }
 
-        return ['data' => $data];
+        $schema = $this->buildSchema();
+        $result = GraphQLBase::executeQuery(
+            schema: $schema,
+            source: $query,
+            variableValues: $variables,
+            operationName: $operationName
+        );
+
+        $output = $result->toArray();
+        if (!empty($output['errors'])) {
+            throw new GC2Exception($output['errors'][0]['message'], 400);
+        }
+        return $output;
+    }
+
+    private function isIntrospectionQuery(OperationDefinitionNode $operation): bool
+    {
+        foreach ($operation->selectionSet->selections as $selection) {
+            if ($selection instanceof FieldNode && (str_starts_with($selection->name->value, '__'))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function buildSchema(): Schema
+    {
+        $queryType = new ObjectType([
+            'name' => 'Query',
+            'fields' => fn() => $this->getQueryFields()
+        ]);
+
+        $mutationType = new ObjectType([
+            'name' => 'Mutation',
+            'fields' => fn() => $this->getMutationFields()
+        ]);
+
+        return new Schema([
+            'query' => $queryType,
+            'mutation' => $mutationType
+        ]);
+    }
+
+    private function getQueryFields(): array
+    {
+        $fields = [
+            'tables' => [
+                'type' => Type::listOf($this->getGraphQLType('json')),
+                'args' => [
+                    'schema' => ['type' => Type::string()],
+                    'namesOnly' => ['type' => Type::boolean()],
+                ],
+                'resolve' => fn($root, $args) => $this->resolveField('tables', $args)
+            ],
+            'table' => [
+                'type' => $this->getGraphQLType('json'),
+                'args' => [
+                    'schema' => ['type' => Type::string()],
+                    'name' => ['type' => Type::string()],
+                ],
+                'resolve' => fn($root, $args) => $this->resolveField('table', $args)
+            ],
+            'rows' => [
+                'type' => Type::listOf($this->getGraphQLType('json')),
+                'args' => [
+                    'schema' => ['type' => Type::string()],
+                    'table' => ['type' => Type::string()],
+                    'limit' => ['type' => Type::int()],
+                    'offset' => ['type' => Type::int()],
+                    'where' => ['type' => $this->getGraphQLType('json')],
+                ],
+                'resolve' => fn($root, $args) => $this->resolveField('rows', $args)
+            ],
+        ];
+
+        // Add tables from public schema to be visible in introspection
+        $tableModel = new TableModel(table: null, connection: $this->connection);
+        try {
+            $tables = $tableModel->getRecords(false, 'public')['data'];
+        } catch (\Throwable) {
+            $tables = [];
+        }
+        foreach ($tables as $t) {
+            $tableName = $t['f_table_name'];
+            $fieldName = self::snakeToCamel($tableName);
+            $fields[$fieldName] = [
+                'type' => Type::listOf($this->getTableType($t['f_table_schema'], $tableName)),
+                'args' => [
+                    'id' => ['type' => Type::string()],
+                    'pk' => ['type' => Type::string()],
+                    'key' => ['type' => Type::string()],
+                    'schema' => ['type' => Type::string()],
+                    'where' => ['type' => $this->getGraphQLType('json')],
+                    'limit' => ['type' => Type::int()],
+                    'offset' => ['type' => Type::int()],
+                ],
+                'resolve' => function ($root, $args, $context, $info) {
+                    return $this->resolveField($info->fieldName, $args, null, $this->selectionTreeFromFieldNode($info->fieldNodes[0], $info->variableValues));
+                }
+            ];
+        }
+        return $fields;
+    }
+
+    private function getMutationFields(): array
+    {
+        $fields = [];
+        $tableModel = new TableModel(table: null, connection: $this->connection);
+        try {
+            $tables = $tableModel->getRecords(false, 'public')['data'];
+        } catch (\Throwable) {
+            $tables = [];
+        }
+        foreach ($tables as $t) {
+            $tableName = $t['f_table_name'];
+            $pascalName = self::snakeToPascal($tableName);
+
+            $resolver = function ($root, $args, $context, $info) {
+                return $this->resolveField($info->fieldName, $args, null, $this->selectionTreeFromFieldNode($info->fieldNodes[0], $info->variableValues));
+            };
+
+            $fields['insert' . $pascalName] = [
+                'type' => Type::listOf($this->getTableType($t['f_table_schema'], $tableName)),
+                'args' => [
+                    'data' => ['type' => $this->getGraphQLType('json')],
+                    'objects' => ['type' => Type::listOf($this->getGraphQLType('json'))]
+                ],
+                'resolve' => $resolver
+            ];
+            $fields['update' . $pascalName] = [
+                'type' => Type::listOf($this->getTableType($t['f_table_schema'], $tableName)),
+                'args' => [
+                    'where' => ['type' => $this->getGraphQLType('json')],
+                    'data' => ['type' => $this->getGraphQLType('json')]
+                ],
+                'resolve' => $resolver
+            ];
+            $fields['delete' . $pascalName] = [
+                'type' => Type::listOf($this->getTableType($t['f_table_schema'], $tableName)),
+                'args' => ['where' => ['type' => $this->getGraphQLType('json')]],
+                'resolve' => $resolver
+            ];
+        }
+        return $fields;
+    }
+
+    private function getTableType(string $schema, string $table): ObjectType
+    {
+        $typeName = self::snakeToPascal($table);
+        if (isset($this->typeCache[$typeName])) {
+            return $this->typeCache[$typeName];
+        }
+        return $this->typeCache[$typeName] = new ObjectType([
+            'name' => $typeName,
+            'fields' => function () use ($schema, $table) {
+                try {
+                    $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
+                    $fields = [];
+                    foreach ($t->metaData ?? [] as $col => $info) {
+                        $fields[$col] = ['type' => $this->getGraphQLType($info['type'])];
+                    }
+                    // Add relationships
+                    $fkMap = $this->buildForeignMap($schema, $table);
+                    foreach ($fkMap as $relName => $map) {
+                        $fieldName = self::snakeToCamel($relName);
+                        $fields[$fieldName] = [
+                            'type' => $this->getTableType($map['ref_schema'], $map['ref_table']),
+                            'args' => [
+                                'where' => ['type' => $this->getGraphQLType('json')],
+                                'schema' => ['type' => Type::string()],
+                            ]
+                        ];
+                    }
+                    return $fields;
+                } catch (\Throwable) {
+                    return ['error' => ['type' => Type::string()]];
+                }
+            }
+        ]);
+    }
+
+    private function getGraphQLType(string $pgType): Type
+    {
+        $pgType = strtolower(trim($pgType));
+        if (str_ends_with($pgType, '[]')) {
+            return Type::listOf($this->getGraphQLType(substr($pgType, 0, -2)));
+        }
+
+        return match ($pgType) {
+            'smallint', 'int2', 'int', 'integer', 'int4', 'serial', 'serial4' => Type::int(),
+            'float4', 'real', 'float8', 'double precision' => Type::float(),
+            'bool', 'boolean' => Type::boolean(),
+            'numeric', 'decimal', 'bigint', 'int8', 'bigserial', 'serial8' => Type::string(),
+            'json', 'jsonb' => $this->getTypeFromCache('JSON', fn() => new CustomScalarType([
+                'name' => 'JSON',
+                'serialize' => fn($v) => $v,
+                'parseValue' => fn($v) => $v,
+                'parseLiteral' => fn($node, $vars) => $this->valueFromAst($node, $vars ?? []),
+            ])),
+            'point' => $this->getTypeFromCache('Point', fn() => new ObjectType([
+                'name' => 'Point',
+                'fields' => [
+                    'x' => ['type' => Type::float()],
+                    'y' => ['type' => Type::float()],
+                ]
+            ])),
+            'line' => $this->getTypeFromCache('Line', fn() => new ObjectType([
+                'name' => 'Line',
+                'fields' => [
+                    'A' => ['type' => Type::float()],
+                    'B' => ['type' => Type::float()],
+                    'C' => ['type' => Type::float()],
+                ]
+            ])),
+            'lseg' => $this->getTypeFromCache('Lseg', fn() => new ObjectType([
+                'name' => 'Lseg',
+                'fields' => [
+                    'start' => ['type' => $this->getGraphQLType('point')],
+                    'end' => ['type' => $this->getGraphQLType('point')],
+                ]
+            ])),
+            'box' => $this->getTypeFromCache('Box', fn() => new ObjectType([
+                'name' => 'Box',
+                'fields' => [
+                    'start' => ['type' => $this->getGraphQLType('point')],
+                    'end' => ['type' => $this->getGraphQLType('point')],
+                ]
+            ])),
+            'circle' => $this->getTypeFromCache('Circle', fn() => new ObjectType([
+                'name' => 'Circle',
+                'fields' => [
+                    'center' => ['type' => $this->getGraphQLType('point')],
+                    'radius' => ['type' => Type::float()],
+                ]
+            ])),
+            'interval' => $this->getTypeFromCache('Interval', fn() => new ObjectType([
+                'name' => 'Interval',
+                'fields' => [
+                    'y' => ['type' => Type::int()],
+                    'm' => ['type' => Type::int()],
+                    'd' => ['type' => Type::int()],
+                    'h' => ['type' => Type::int()],
+                    'i' => ['type' => Type::int()],
+                    's' => ['type' => Type::int()],
+                ]
+            ])),
+            'path' => $this->getJsonType(),
+            'polygon' => Type::listOf($this->getGraphQLType('point')),
+            'int4range', 'int8range', 'numrange', 'tsrange', 'tstzrange', 'daterange' => $this->getRangeType($pgType),
+            default => Type::string(),
+        };
+    }
+
+    private function getRangeType(string $pgType): Type
+    {
+        $name = self::snakeToPascal($pgType);
+        return $this->getTypeFromCache($name, function () use ($name, $pgType) {
+            $boundType = str_contains($pgType, 'int') ? Type::int() : Type::string();
+            return new ObjectType([
+                'name' => $name,
+                'fields' => [
+                    'lower' => ['type' => $boundType],
+                    'upper' => ['type' => $boundType],
+                    'lowerInclusive' => ['type' => Type::boolean()],
+                    'upperInclusive' => ['type' => Type::boolean()],
+                ]
+            ]);
+        });
+    }
+
+    private function getTypeFromCache(string $name, callable $creator): Type
+    {
+        if (!isset($this->typeCache[$name])) {
+            $this->typeCache[$name] = $creator();
+        }
+        return $this->typeCache[$name];
+    }
+
+    public static function snakeToPascal(string $input): string
+    {
+        return str_replace('_', '', ucwords($input, '_'));
+    }
+
+    public static function snakeToCamel(string $input): string
+    {
+        return lcfirst(self::snakeToPascal($input));
     }
 
     /**
@@ -316,12 +577,12 @@ class GraphQL
 
         $query['q'] = $sql;
         $query['params'] = $params;
-        $query['convertTypes'] = true;
+        $query['convert_types'] = true;
         $query['format'] = 'json';
         $query['id'] = uniqid();
 
         $statement = new Statement(connection: $this->connection, convertReturning: true);
-        $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);;
+        $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);
 
         $rows = $res['data'] ?? ($res['rows'] ?? $res);
         $row = (is_array($rows) && isset($rows[0])) ? $rows[0] : null;
@@ -329,20 +590,25 @@ class GraphQL
             return null;
         }
 
-        // Map columns to aliases
+        // Map columns to names
         $mappedRow = [];
         foreach ($selColumns as $alias => $name) {
-            $mappedRow[$alias] = $row[$name] ?? null;
+            $mappedRow[$name] = $row[$name] ?? null;
         }
 
         // Attach deeper nested
         if (!empty($nested)) {
+            $fkMap = $this->buildForeignMap($schema, $table);
             foreach ($nested as $alias => $v) {
                 $relName = $v['name'];
+                $snakeRelName = self::camelToSnake($relName);
+                if (!isset($fkMap[$snakeRelName])) {
+                    continue;
+                }
                 $subSel = $v['selection'];
-                $map = $fkMap[$relName];
+                $map = $fkMap[$snakeRelName];
                 $localVal = $row[$map['local_col']] ?? null;
-                $mappedRow[$alias] = $this->fetchRelatedSingle(
+                $mappedRow[$relName] = $this->fetchRelatedSingle(
                     schema: $map['ref_schema'],
                     table: $map['ref_table'],
                     column: $map['ref_col'],
@@ -397,7 +663,7 @@ class GraphQL
             $idVal = $args['id'] ?? ($args['pk'] ?? ($args['key'] ?? null));
         }
 
-        $query['convertTypes'] = true;
+        $query['convert_types'] = true;
         $query['format'] = 'json';
 
         $statement = new Statement(connection: $this->connection, convertReturning: true);
@@ -470,11 +736,14 @@ class GraphQL
             $query['id'] = uniqid();
 
             $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);
+            if (isset($res['success']) && $res['success'] === false) {
+                throw new GC2Exception($res['message'] ?? 'Unknown SQL error', 400);
+            }
             $rows = $res['data'] ?? ($res['rows'] ?? $res);
             $rows = is_array($rows) ? $rows : [];
 
             $mappedRows = $this->mapRows($rows, $selection, $schema, $table);
-            return $mappedRows[0] ?? null;
+            return $mappedRows;
         }
 
         // --- List query logic ---
@@ -543,6 +812,9 @@ class GraphQL
         $query['id'] = uniqid();
 
         $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);
+        if (isset($res['success']) && $res['success'] === false) {
+            throw new GC2Exception($res['message'] ?? 'Unknown SQL error', 400);
+        }
         $rows = $res['data'] ?? ($res['rows'] ?? $res);
         $rows = is_array($rows) ? $rows : [];
 
@@ -593,6 +865,10 @@ class GraphQL
             $objects = [$args['object']];
             $isSingle = true;
         }
+        if (isset($args['data'])) {
+            $objects = [$args['data']];
+            $isSingle = false; // We want to return a list even for single insert now
+        }
 
         if (empty($objects)) {
             throw new GC2Exception("No objects to insert", 400);
@@ -622,7 +898,7 @@ class GraphQL
         $statement = new Statement(connection: $this->connection, convertReturning: true);
         $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);
 
-        return $this->mapMutationResult($res['returning']['data'], $selection, $isSingle, $schema, $table);
+        return $this->mapMutationResult($res['returning']['data'] ?? [], $selection, $isSingle, $schema, $table);
     }
 
     /**
@@ -633,7 +909,7 @@ class GraphQL
     {
         $schema = $args['schema'] ?? 'public';
         $where = $args['where'] ?? [];
-        $set = $args['_set'] ?? ($args['set'] ?? []);
+        $set = $args['data'] ?? ($args['_set'] ?? ($args['set'] ?? []));
 
         if (empty($set)) {
             throw new GC2Exception("No columns to update", 400);
@@ -700,7 +976,7 @@ class GraphQL
             'q' => $sql,
             'params' => $params,
             'format' => 'json',
-            'convertTypes' => true,
+            'convert_types' => true,
             'id' => uniqid()
         ];
         $statement = new Statement(connection: $this->connection, convertReturning: true);
@@ -714,11 +990,7 @@ class GraphQL
      */
     private function mapMutationResult(array $rows, ?array $selection, bool $isSingle, string $schema, string $table): mixed
     {
-        $mapped = $this->mapRows($rows, $selection, $schema, $table);
-        if ($isSingle) {
-            return $mapped[0] ?? null;
-        }
-        return $mapped;
+        return $this->mapRows($rows, $selection, $schema, $table);
     }
 
     /**
@@ -741,18 +1013,19 @@ class GraphQL
         foreach ($rows as &$row) {
             $mappedRow = [];
             foreach ($selColumns as $alias => $name) {
-                $mappedRow[$alias] = $row[$name] ?? null;
+                $mappedRow[$name] = $row[$name] ?? null;
             }
             if (!empty($nested)) {
                 foreach ($nested as $alias => $v) {
                     $relName = $v['name'];
-                    $subSel = $v['selection'];
-                    if (!isset($fkMap[$relName])) {
+                    $snakeRelName = self::camelToSnake($relName);
+                    if (!isset($fkMap[$snakeRelName])) {
                         throw new GC2Exception("Unknown nested relation '$relName' on {$schema}.{$table}", 400);
                     }
-                    $map = $fkMap[$relName];
+                    $subSel = $v['selection'];
+                    $map = $fkMap[$snakeRelName];
                     $localVal = $row[$map['local_col']] ?? null;
-                    $mappedRow[$alias] = $this->fetchRelatedSingle(
+                    $mappedRow[$relName] = $this->fetchRelatedSingle(
                         schema: $map['ref_schema'],
                         table: $map['ref_table'],
                         column: $map['ref_col'],
@@ -1000,7 +1273,7 @@ class GraphQL
             'q' => $sql,
             'params' => $params,
             'format' => 'json',
-            'convertTypes' => true,
+            'convert_types' => true,
             'id' => uniqid(),
             'type_hints' => $this->getTypeHints($schema, $table, $params)
         ];
