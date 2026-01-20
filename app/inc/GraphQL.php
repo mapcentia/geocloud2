@@ -36,6 +36,7 @@ use function Amp\Dns\normalizeName;
 class GraphQL
 {
     private string $user;
+    private string $schema;
     private SqlModel $api;
     private bool $subuser;
     private ?string $userGroup;
@@ -54,6 +55,7 @@ class GraphQL
      * @param string $user
      * @param SqlModel $api
      * @param string $query
+     * @param string $schema
      * @param bool $subuser
      * @param string|null $userGroup
      * @param array $variables
@@ -61,12 +63,13 @@ class GraphQL
      * @return array{data: array|null, errors?: array}
      * @throws GC2Exception|PhpfastcacheInvalidArgumentException
      */
-    public function run(string $user, SqlModel $api, string $query, bool $subuser, ?string $userGroup, array $variables, ?string $operationName = null): array
+    public function run(string $user, SqlModel $api, string $query, string $schema, bool $subuser, ?string $userGroup, array $variables, ?string $operationName = null): array
     {
         $this->user = $user;
         $this->api = $api;
         $this->subuser = $subuser;
         $this->userGroup = $userGroup;
+        $this->schema = $schema;
 
         try {
             $doc = GraphQLParser::parse($query);
@@ -197,10 +200,10 @@ class GraphQL
             ],
         ];
 
-        // Add tables from public schema to be visible in introspection
+        // Add tables from the schema to be visible in introspection
         $tableModel = new TableModel(table: null, connection: $this->connection);
         try {
-            $tables = $tableModel->getRecords(false, 'public')['data'];
+            $tables = $tableModel->getRecords(false, $this->schema)['data'];
         } catch (\Throwable) {
             $tables = [];
         }
@@ -231,7 +234,7 @@ class GraphQL
         $fields = [];
         $tableModel = new TableModel(table: null, connection: $this->connection);
         try {
-            $tables = $tableModel->getRecords(false, 'public')['data'];
+            $tables = $tableModel->getRecords(false, $this->schema)['data'];
         } catch (\Throwable) {
             $tables = [];
         }
@@ -644,10 +647,8 @@ class GraphQL
      */
     private function resolveDynamicTable(string $tableField, array $args, mixed $positional, ?array $selection): mixed
     {
-        $schema = $args['schema'] ?? 'public';
-        if (!is_string($schema) || $schema === '') {
-            $schema = 'public';
-        }
+        $schema = $this->schema;
+
         if (str_starts_with($tableField, 'get') && strlen($tableField) > 3 && ctype_upper($tableField[3])) {
             $tableField = substr($tableField, 3);
         }
@@ -861,7 +862,7 @@ class GraphQL
      */
     private function handleInsert(string $table, array $args, ?array $selection): mixed
     {
-        $schema = $args['schema'] ?? 'public';
+        $schema = $this->schema;
         $objects = $args['objects'] ?? [];
         $isSingle = false;
         if (isset($args['object'])) {
@@ -910,7 +911,7 @@ class GraphQL
      */
     private function handleUpdate(string $table, array $args, ?array $selection): array
     {
-        $schema = $args['schema'] ?? 'public';
+        $schema = $this->schema;
         $where = $args['where'] ?? [];
         $set = $args['data'] ?? ($args['_set'] ?? ($args['set'] ?? []));
 
@@ -951,7 +952,7 @@ class GraphQL
      */
     private function handleDelete(string $table, array $args, ?array $selection): array
     {
-        $schema = $args['schema'] ?? 'public';
+        $schema = $this->schema;
         $where = $args['where'] ?? [];
 
         $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);

@@ -51,7 +51,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *    - query { getUser(id: $i) { id name } }      // same, using variables: { "variables": { "i": 5 } }
  */
 #[AcceptableMethods(['POST', 'OPTIONS'])]
-#[Controller(route: 'api/v4/graphql', scope: Scope::SUB_USER_ALLOWED)]
+#[Controller(route: 'api/v4/graphql/schema/{schema}', scope: Scope::SUB_USER_ALLOWED)]
 class Graphql extends AbstractApi
 {
     public function __construct(public readonly Route2 $route, Connection $connection)
@@ -115,7 +115,7 @@ class Graphql extends AbstractApi
         $api = new \app\models\Sql(connection: $this->connection);
         $api->begin();
         // Execute the query using webonyx/graphql-php
-        $result = $graphQl->run(user: $user, api:  $api, query: $query, subuser: !$isSuperUser, userGroup:  $userGroup, variables: is_array($variables) ? $variables : [], operationName: is_string($operationName) ? $operationName : null);
+        $result = $graphQl->run(user: $user, api: $api, query: $query, schema: $this->schema[0], subuser: !$isSuperUser, userGroup: $userGroup, variables: is_array($variables) ? $variables : [], operationName: is_string($operationName) ? $operationName : null);
         $api->commit();
 
         return new GetResponse(data: $result);
@@ -149,13 +149,16 @@ class Graphql extends AbstractApi
 
     /**
      * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
      */
     #[Override]
     public function validate(): void
     {
-        // GraphQL endpoint does not take route parameters; basic body validation only
+        $schema = $this->route->getParam("schema");
         $collection = $this->getAssert();
         $this->validateRequest($collection, Input::getBody(), Input::getMethod(), allowPatchOnCollection: false);
+        $this->initiate(schema: $schema);
+
     }
 
     private function getAssert(): Assert\Collection
@@ -166,7 +169,7 @@ class Graphql extends AbstractApi
                 'variables' => new Assert\Optional(new Assert\Type('array')),
                 'operationName' => new Assert\Optional(new Assert\Type('string')),
             ],
-            'allowExtraFields' => true,
+            'allowExtraFields' => false,
             'allowMissingFields' => true,
         ]);
     }
