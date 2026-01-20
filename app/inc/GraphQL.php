@@ -170,35 +170,7 @@ class GraphQL
 
     private function getQueryFields(): array
     {
-        $fields = [
-            'getTables' => [
-                'type' => Type::listOf($this->getGraphQLType('json')),
-                'args' => [
-                    'schema' => ['type' => Type::string()],
-                    'namesOnly' => ['type' => Type::boolean()],
-                ],
-                'resolve' => fn($root, $args, $context, $info) => $this->resolveField($info->fieldName, $args)
-            ],
-            'getTable' => [
-                'type' => $this->getGraphQLType('json'),
-                'args' => [
-                    'schema' => ['type' => Type::string()],
-                    'name' => ['type' => Type::string()],
-                ],
-                'resolve' => fn($root, $args, $context, $info) => $this->resolveField($info->fieldName, $args)
-            ],
-            'getRows' => [
-                'type' => Type::listOf($this->getGraphQLType('json')),
-                'args' => [
-                    'schema' => ['type' => Type::string()],
-                    'table' => ['type' => Type::string()],
-                    'limit' => ['type' => Type::int()],
-                    'offset' => ['type' => Type::int()],
-                    'where' => ['type' => $this->getGraphQLType('json')],
-                ],
-                'resolve' => fn($root, $args, $context, $info) => $this->resolveField($info->fieldName, $args)
-            ],
-        ];
+        $fields = [];
 
         // Add tables from the schema to be visible in introspection
         $tableModel = new TableModel(table: null, connection: $this->connection);
@@ -216,7 +188,6 @@ class GraphQL
                     'id' => ['type' => Type::string()],
                     'pk' => ['type' => Type::string()],
                     'key' => ['type' => Type::string()],
-                    'schema' => ['type' => Type::string()],
                     'where' => ['type' => $this->getGraphQLType('json')],
                     'limit' => ['type' => Type::int()],
                     'offset' => ['type' => Type::int()],
@@ -802,7 +773,7 @@ class GraphQL
             $whereSql = ' WHERE ' . $whereSql;
         }
 
-        $limit = isset($args['first']) && is_numeric($args['first']) ? (int)$args['first'] : 100;
+        $limit = isset($args['limit']) && is_numeric($args['limit']) ? (int)$args['limit'] : 100;
         $offset = isset($args['offset']) && is_numeric($args['offset']) ? (int)$args['offset'] : null;
 
         $sql = 'SELECT ' . $selectList . ' FROM ' . $qualified . $whereSql . ' LIMIT ' . max(0, $limit);
