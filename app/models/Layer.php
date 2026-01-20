@@ -709,10 +709,20 @@ class Layer extends Table
                 $table->updateRecord($privileges, "_key_");
             }
         }
-
         $response['success'] = true;
         $response['message'] = "Privileges updates";
         return $response;
+    }
+
+    public function setPrivilegesOnAll(string $subuser, string $privilege): void
+    {
+        (new User($subuser))->doesUserExist();
+        $this->clearCacheOnSchemaChanges();
+        $path = "{" . $subuser . "}";
+        $privilege = "\"" . $privilege . "\"";
+        $sql = "update settings.geometry_columns_join set privileges = jsonb_set(privileges, :path, :privilege)";
+        $res = $this->prepare($sql);
+        $this->execute($res, ["path" => $path, "privilege" => $privilege]);
     }
 
     /**

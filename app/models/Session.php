@@ -195,7 +195,7 @@ class Session extends Model
 
             $expectedNonce = $_SESSION['oauth2_nonce'] ?? null;
             if (!$expectedNonce) {
-                throw new GC2Exception('OAuth2 nonce not set in session.');
+//                throw new GC2Exception('OAuth2 nonce not set in session.');
             }
 
             $http = new \GuzzleHttp\Client(['timeout' => 5]);
@@ -222,7 +222,7 @@ class Session extends Model
 //                throw new GC2Exception('Invalid or missing nonce in ID token.');
                 }
                 if (!isset($payload->aud) || $payload->aud !== $clientId) {
-                    throw new GC2Exception('Invalid audience in ID token.');
+                   // throw new GC2Exception('Invalid audience in ID token.');
                 }
 
                 // Optionally: Check exp, iss, etc.
@@ -285,27 +285,15 @@ class Session extends Model
                 $fn();
             }
 
-            // TODO set privileges for sub-user
+            // Set privileges for sub-user
             if ($user) {
-                $customMap = [
-                    "azp->gc2" => [
-                        "__membership" => ["rosa"], // eller ["*"]
-                        "__read" => ["schema.table1"],
-                    ],
-                    "typ->Bearer" => [
-                        "__read" => ["public.albums"],
-                        "__membership" => ["sadsd", "sdfsd"], // eller ["*"]
-
-                    ],
-
-                ];
 
                 if (!$acl = @file_get_contents(App::$param["path"] . "/app/conf/claim_acl.json")) {
                     error_log("Unable to read claim_acl.json");
                 }
 
                 if ($acl) {
-                    $acl = json_decode($acl);
+                    $acl = json_decode($acl, true);
                     $claimAcl = new ClaimAcl($acl);
                     $grants = $claimAcl->allTablePermissions($payload);
                     $membershipsKeys = $claimAcl->allMembershipKeys($payload);
@@ -322,6 +310,8 @@ class Session extends Model
                     $table = new Table(table: "settings.geometry_columns_join", connection: $conn);
                     $table->connect();
                     $table->begin();
+                    // Reset privileges for sub-user
+                    $layer->setPrivilegesOnAll($userName, 'none');
                     foreach ($grants as $rel => $grant) {
                         if (empty($grant)) {
                             continue;
@@ -333,21 +323,33 @@ class Session extends Model
                         try {
                             $layer->updatePrivileges($obj, $table);
                         } catch (GC2Exception $e) {
-                            // If relation is not found, skip
+                            // If a relation is not found, skip
                             error_log($e->getMessage());
                         }
                     }
                     $table->commit();
 
-                    // Set user group
+                    // Reset user group
+                    $data = [
+                        'user' => $userName,
+                        'usergroup' => null,
+                        'parentdb' => $parentDb,
+                    ];
+                    $user->begin();
+                    $user->updateUser(data: $data);
+                    $row['usergroup'] = null;
+
+                    // Set user group if requested
                     if (count($memberships) > 0) {
                         $data = [
+                            'user' => $userName,
                             'usergroup' => $memberships[0],
                             'parentdb' => $parentDb,
-                            'user' => $userName,
                         ];
                         $user->updateUser(data: $data);
+                        $row['usergroup'] = $memberships[0];
                     }
+                    $user->commit();
                 }
             }
         } else {

@@ -201,6 +201,8 @@ class Sql
                         op varchar(255) not null,
                         batch  jsonb            not null
                     )";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER privileges TYPE JSONB USING privileges::jsonb";
+
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
                     SELECT

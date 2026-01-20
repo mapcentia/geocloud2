@@ -12,8 +12,8 @@ namespace app\inc;
 final class ClaimAcl
 {
     public function __construct(
-        private array $customMap,
-        private array $defaultRules = [
+        private readonly array $customMap,
+        private readonly array $defaultRules = [
             '__membership' => [],
             '__read' => [],
             '__write' => [],
