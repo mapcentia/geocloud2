@@ -289,12 +289,7 @@ class GraphQL
             'float4', 'real', 'float8', 'double precision' => Type::float(),
             'bool', 'boolean' => Type::boolean(),
             'numeric', 'decimal', 'bigint', 'int8', 'bigserial', 'serial8' => Type::string(),
-            'json', 'jsonb' => $this->getTypeFromCache('JSON', fn() => new CustomScalarType([
-                'name' => 'JSON',
-                'serialize' => fn($v) => $v,
-                'parseValue' => fn($v) => $v,
-                'parseLiteral' => fn($node, $vars) => $this->valueFromAst($node, $vars ?? []),
-            ])),
+            'json', 'jsonb', 'geometry' => $this->getJsonType(),
             'point' => $this->getTypeFromCache('Point', fn() => new ObjectType([
                 'name' => 'Point',
                 'fields' => [
@@ -347,6 +342,16 @@ class GraphQL
             'int4range', 'int8range', 'numrange', 'tsrange', 'tstzrange', 'daterange' => $this->getRangeType($pgType),
             default => Type::string(),
         };
+    }
+
+    private function getJsonType(): Type
+    {
+        return $this->getTypeFromCache('JSON', fn() => new CustomScalarType([
+            'name' => 'JSON',
+            'serialize' => fn($v) => $v,
+            'parseValue' => fn($v) => $v,
+            'parseLiteral' => fn($node, $vars) => $this->valueFromAst($node, $vars ?? []),
+        ]));
     }
 
     private function getRangeType(string $pgType): Type
