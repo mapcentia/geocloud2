@@ -255,7 +255,11 @@ class GraphQL
                     $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
                     $fields = [];
                     foreach ($t->metaData ?? [] as $col => $info) {
-                        $fields[$col] = ['type' => $this->getGraphQLType($info['typname'])];
+                        $type = $this->getGraphQLType($info['typname']);
+                        if (isset($info['is_nullable']) && $info['is_nullable'] === false) {
+                            $type = Type::nonNull($type);
+                        }
+                        $fields[$col] = ['type' => $type];
                     }
                     // Add relationships
                     $fkMap = $this->buildForeignMap($schema, $table);
