@@ -135,7 +135,7 @@ class GraphQL
 
         $output = $result->toArray();
         if (!empty($output['errors'])) {
-            throw new GC2Exception($output['errors'][0]['message'], 400);
+            throw new GC2Exception($result->errors[0], 400);
         }
         return $output;
     }
@@ -255,7 +255,7 @@ class GraphQL
                     $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
                     $fields = [];
                     foreach ($t->metaData ?? [] as $col => $info) {
-                        $fields[$col] = ['type' => $this->getGraphQLType($info['type'])];
+                        $fields[$col] = ['type' => $this->getGraphQLType($info['full_type'])];
                     }
                     // Add relationships
                     $fkMap = $this->buildForeignMap($schema, $table);
@@ -411,14 +411,14 @@ class GraphQL
         return strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $input));
     }
 
-    private function partitionSelection(?array $selection): array
+    private function partitionSelection(?array $selection, array $metaCols = []): array
     {
         // returns [columns[alias => name], nestedMap[alias => ['name' => name, 'selection' => selection]]]
         $columns = [];
         $nested = [];
         if (is_array($selection)) {
             foreach ($selection as $alias => $v) {
-                if ($v['selection'] === true) {
+                if ($v['selection'] === true || in_array($v['name'], $metaCols)) {
                     $columns[$alias] = $v['name'];
                 } elseif (is_array($v['selection'])) {
                     $nested[$alias] = $v;
@@ -506,13 +506,13 @@ class GraphQL
         // Schema can be overridden via arguments
         $schema = $args['schema'] ?? $schema;
 
-        [$selColumns, $nested] = $this->partitionSelection($selection);
-
         $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
         $metaCols = array_keys($t->metaData ?? []);
         if (empty($metaCols)) {
             throw new GC2Exception('Unable to read table metadata', 500);
         }
+
+        [$selColumns, $nested] = $this->partitionSelection($selection, $metaCols);
 
         $columns = !empty($selColumns) ? $selColumns : $metaCols;
 
@@ -654,7 +654,7 @@ class GraphQL
             }
 
             // Partition selection into columns and nested fields
-            [$selColumns, $nested] = $this->partitionSelection($selection);
+            [$selColumns, $nested] = $this->partitionSelection($selection, $metaCols);
             $columns = array_values($selColumns);
             if (!empty($columns)) {
                 foreach ($columns as $c) {
@@ -725,7 +725,7 @@ class GraphQL
         $qualified = '"' . str_replace('"', '""', $schema) . '"."' . str_replace('"', '""', $table) . '"';
 
         // Partition selection into columns and nested fields
-        [$selColumns, $nested] = $this->partitionSelection($selection);
+        [$selColumns, $nested] = $this->partitionSelection($selection, $metaCols);
 
         $columns = array_values($selColumns);
         if (!empty($columns)) {
@@ -743,7 +743,6 @@ class GraphQL
         }
 
         // Build FK map if nested requested
-        $fkMap = [];
         if (!empty($nested)) {
             $fkMap = $this->buildForeignMap($schema, $table);
             // Ensure local FK columns are present for each nested relation
@@ -974,7 +973,8 @@ class GraphQL
      */
     private function mapRows(array $rows, ?array $selection, string $schema, string $table): array
     {
-        [$selColumns, $nested] = $this->partitionSelection($selection);
+        $metaCols = !empty($rows) ? array_keys($rows[0]) : [];
+        [$selColumns, $nested] = $this->partitionSelection($selection, $metaCols);
         if (empty($selColumns) && empty($nested) && !empty($rows)) {
             $allCols = array_keys($rows[0]);
             $selColumns = array_combine($allCols, $allCols);
