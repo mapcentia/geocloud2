@@ -290,6 +290,9 @@ class GraphQL
             'bool', 'boolean' => Type::boolean(),
             'numeric', 'decimal', 'bigint', 'int8', 'bigserial', 'serial8' => Type::string(),
             'json', 'jsonb', 'geometry' => $this->getJsonType(),
+            'timestamp', 'timestamptz' => $this->getDateTimeType(),
+            'date' => $this->getDateType(),
+            'time', 'timetz' => $this->getTimeType(),
             'point' => $this->getTypeFromCache('Point', fn() => new ObjectType([
                 'name' => 'Point',
                 'fields' => [
@@ -348,6 +351,36 @@ class GraphQL
     {
         return $this->getTypeFromCache('JSON', fn() => new CustomScalarType([
             'name' => 'JSON',
+            'serialize' => fn($v) => $v,
+            'parseValue' => fn($v) => $v,
+            'parseLiteral' => fn($node, $vars) => $this->valueFromAst($node, $vars ?? []),
+        ]));
+    }
+
+    private function getDateTimeType(): Type
+    {
+        return $this->getTypeFromCache('DateTime', fn() => new CustomScalarType([
+            'name' => 'DateTime',
+            'serialize' => fn($v) => $v,
+            'parseValue' => fn($v) => $v,
+            'parseLiteral' => fn($node, $vars) => $this->valueFromAst($node, $vars ?? []),
+        ]));
+    }
+
+    private function getDateType(): Type
+    {
+        return $this->getTypeFromCache('Date', fn() => new CustomScalarType([
+            'name' => 'Date',
+            'serialize' => fn($v) => $v,
+            'parseValue' => fn($v) => $v,
+            'parseLiteral' => fn($node, $vars) => $this->valueFromAst($node, $vars ?? []),
+        ]));
+    }
+
+    private function getTimeType(): Type
+    {
+        return $this->getTypeFromCache('Time', fn() => new CustomScalarType([
+            'name' => 'Time',
             'serialize' => fn($v) => $v,
             'parseValue' => fn($v) => $v,
             'parseLiteral' => fn($node, $vars) => $this->valueFromAst($node, $vars ?? []),
