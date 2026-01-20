@@ -168,23 +168,23 @@ class GraphQL
     private function getQueryFields(): array
     {
         $fields = [
-            'tables' => [
+            'getTables' => [
                 'type' => Type::listOf($this->getGraphQLType('json')),
                 'args' => [
                     'schema' => ['type' => Type::string()],
                     'namesOnly' => ['type' => Type::boolean()],
                 ],
-                'resolve' => fn($root, $args) => $this->resolveField('tables', $args)
+                'resolve' => fn($root, $args, $context, $info) => $this->resolveField($info->fieldName, $args)
             ],
-            'table' => [
+            'getTable' => [
                 'type' => $this->getGraphQLType('json'),
                 'args' => [
                     'schema' => ['type' => Type::string()],
                     'name' => ['type' => Type::string()],
                 ],
-                'resolve' => fn($root, $args) => $this->resolveField('table', $args)
+                'resolve' => fn($root, $args, $context, $info) => $this->resolveField($info->fieldName, $args)
             ],
-            'rows' => [
+            'getRows' => [
                 'type' => Type::listOf($this->getGraphQLType('json')),
                 'args' => [
                     'schema' => ['type' => Type::string()],
@@ -193,7 +193,7 @@ class GraphQL
                     'offset' => ['type' => Type::int()],
                     'where' => ['type' => $this->getGraphQLType('json')],
                 ],
-                'resolve' => fn($root, $args) => $this->resolveField('rows', $args)
+                'resolve' => fn($root, $args, $context, $info) => $this->resolveField($info->fieldName, $args)
             ],
         ];
 
@@ -206,7 +206,7 @@ class GraphQL
         }
         foreach ($tables as $t) {
             $tableName = $t['f_table_name'];
-            $fieldName = self::snakeToCamel($tableName);
+            $fieldName = 'get' . self::snakeToPascal($tableName);
             $fields[$fieldName] = [
                 'type' => Type::listOf($this->getTableType($t['f_table_schema'], $tableName)),
                 'args' => [
@@ -647,6 +647,9 @@ class GraphQL
         $schema = $args['schema'] ?? 'public';
         if (!is_string($schema) || $schema === '') {
             $schema = 'public';
+        }
+        if (str_starts_with($tableField, 'get') && strlen($tableField) > 3 && ctype_upper($tableField[3])) {
+            $tableField = substr($tableField, 3);
         }
         $table = self::camelToSnake($tableField);
 

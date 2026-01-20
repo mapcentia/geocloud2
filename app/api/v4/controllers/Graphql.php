@@ -35,20 +35,20 @@ use Symfony\Component\Validator\Constraints as Assert;
  * existing REST/model functionality. It is intended as a lightweight starting point.
  *
  * Supported root fields (examples):
- * 1) tables(schema: "public", namesOnly: true)
- *    query { tables(schema: "public", namesOnly: true) }
+ * 1) getTables(schema: "public", namesOnly: true)
+ *    query { getTables(schema: "public", namesOnly: true) }
  *
- * 2) table(schema: "public", name: "my_table")
- *    query { table(schema: "public", name: "my_table") }
+ * 2) getTable(schema: "public", name: "my_table")
+ *    query { getTable(schema: "public", name: "my_table") }
  *
- * 3) rows(schema: "public", table: "my_table", limit: 100, offset: 0, where: {"status": "active"})
+ * 3) getRows(schema: "public", table: "my_table", limit: 100, offset: 0, where: {"status": "active"})
  *    - where supports simple equality filters only (column = value)
  *
  * 4) Dynamic table field selection (list) and single by-id query:
- *    - query { user(schema: "public") { id } } // list rows, only id column
- *    - query { user(schema: "my", where: {"status":"active"}, limit: 10) { id name } }
- *    - query { user(id: 5) { id name } }       // selects row from public.user with primary key = 5
- *    - query { user(id: $i) { id name } }      // same, using variables: { "variables": { "i": 5 } }
+ *    - query { getUser(schema: "public") { id } } // list rows, only id column
+ *    - query { getUser(schema: "my", where: {"status":"active"}, limit: 10) { id name } }
+ *    - query { getUser(id: 5) { id name } }       // selects row from public.user with primary key = 5
+ *    - query { getUser(id: $i) { id name } }      // same, using variables: { "variables": { "i": 5 } }
  */
 #[AcceptableMethods(['POST', 'OPTIONS'])]
 #[Controller(route: 'api/v4/graphql', scope: Scope::SUB_USER_ALLOWED)]
