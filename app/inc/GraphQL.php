@@ -255,7 +255,7 @@ class GraphQL
                     $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
                     $fields = [];
                     foreach ($t->metaData ?? [] as $col => $info) {
-                        $fields[$col] = ['type' => $this->getGraphQLType($info['full_type'])];
+                        $fields[$col] = ['type' => $this->getGraphQLType($info['typname'])];
                     }
                     // Add relationships
                     $fkMap = $this->buildForeignMap($schema, $table);
@@ -280,8 +280,8 @@ class GraphQL
     private function getGraphQLType(string $pgType): Type
     {
         $pgType = strtolower(trim($pgType));
-        if (str_ends_with($pgType, '[]')) {
-            return Type::listOf($this->getGraphQLType(substr($pgType, 0, -2)));
+        if (str_starts_with($pgType, '_')) {
+            return Type::listOf($this->getGraphQLType(substr($pgType, 1)));
         }
 
         return match ($pgType) {
