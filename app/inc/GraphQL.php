@@ -8,8 +8,7 @@
 
 namespace app\inc;
 
-use app\api\v4\controllers\Table;
-use app\exceptions\GC2Exception;
+use app\exceptions\GraphQLException;
 use app\inc\Model as IncModel;
 use app\models\Sql as SqlModel;
 use app\models\Table as TableModel;
@@ -31,7 +30,6 @@ use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
 use GraphQL\GraphQL as GraphQLBase;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
-use function Amp\Dns\normalizeName;
 
 class GraphQL
 {
@@ -61,7 +59,7 @@ class GraphQL
      * @param array $variables
      * @param string|null $operationName
      * @return array{data: array|null, errors?: array}
-     * @throws GC2Exception|PhpfastcacheInvalidArgumentException
+     * @throws GraphQLException|PhpfastcacheInvalidArgumentException
      */
     public function run(string $user, SqlModel $api, string $query, string $schema, bool $subuser, ?string $userGroup, array $variables, ?string $operationName = null): array
     {
@@ -74,7 +72,7 @@ class GraphQL
         try {
             $doc = GraphQLParser::parse($query);
         } catch (\Throwable $e) {
-            throw new GC2Exception('GraphQL parse error: ' . $e->getMessage(), 400);
+            throw new GraphQLException('GraphQL parse error: ' . $e->getMessage(), 400);
         }
 
         // Select operation
@@ -90,7 +88,7 @@ class GraphQL
             }
         }
         if (!$operation) {
-            throw new GC2Exception('No operation found in document', 400);
+            throw new GraphQLException('No operation found in document', 400);
         }
 
         $this->opType = strtolower($operation->operation);
@@ -99,27 +97,27 @@ class GraphQL
 
         if (!$isIntrospection) {
             if (!is_string($opName) || $opName === '') {
-                throw new GC2Exception('Operation name is required', 400);
+                throw new GraphQLException('Operation name is required', 400);
             }
             if (!preg_match('/^[A-Z][A-Za-z0-9]*$/', $opName)) {
-                throw new GC2Exception('Invalid operation name: must start with an uppercase letter and be in PascalCase', 400);
+                throw new GraphQLException('Invalid operation name: must start with an uppercase letter and be in PascalCase', 400);
             }
             $selections = $operation->selectionSet?->selections ?? [];
             if (empty($selections)) {
-                throw new GC2Exception('No fields selected', 400);
+                throw new GraphQLException('No fields selected', 400);
             }
             foreach ($selections as $index => $selectionNode) {
                 if (!$selectionNode instanceof FieldNode) {
-                    throw new GC2Exception('Unsupported selection at root', 400);
+                    throw new GraphQLException('Unsupported selection at root', 400);
                 }
                 $field = $selectionNode->name->value;
                 if (!preg_match('/^[a-z][A-Za-z0-9]*$/', $field)) {
-                    throw new GC2Exception("Invalid root field name '$field': must start with a lowercase letter and be in camelCase", 400);
+                    throw new GraphQLException("Invalid root field name '$field': must start with a lowercase letter and be in camelCase", 400);
                 }
                 if ($index === 0) {
                     $expectedField = lcfirst($opName);
                     if ($field !== $expectedField) {
-                        throw new GC2Exception("Operation name '$opName' does not match root field '$field'. Expected '$expectedField'.", 400);
+                        throw new GraphQLException("Operation name '$opName' does not match root field '$field'. Expected '$expectedField'.", 400);
                     }
                 }
             }
@@ -135,7 +133,7 @@ class GraphQL
 
         $output = $result->toArray();
         if (!empty($output['errors'])) {
-            throw new GC2Exception($result->errors[0], 400);
+           return $output;
         }
         return $output;
     }
@@ -491,7 +489,7 @@ class GraphQL
     }
 
     /**
-     * @throws GC2Exception
+     * @throws GraphQLException
      * @throws PhpfastcacheInvalidArgumentException
      */
     private function fetchRelatedSingle(string $schema, string $table, string $column, mixed $value, ?array $selection, array $args = [], int $depth = 0): ?array
@@ -509,7 +507,7 @@ class GraphQL
         $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
         $metaCols = array_keys($t->metaData ?? []);
         if (empty($metaCols)) {
-            throw new GC2Exception('Unable to read table metadata', 500);
+            throw new GraphQLException('Unable to read table metadata', 500);
         }
 
         [$selColumns, $nested] = $this->partitionSelection($selection, $metaCols);
@@ -524,7 +522,7 @@ class GraphQL
             foreach ($nested as $alias => $v) {
                 $relName = $v['name'];
                 if (!isset($fkMap[$relName])) {
-                    throw new GC2Exception("Unknown nested relation '$relName' on {$schema}.{$table}", 400);
+                    throw new GraphQLException("Unknown nested relation '$relName' on {$schema}.{$table}", 400);
                 }
                 $localCol = $fkMap[$relName]['local_col'];
                 if (!in_array($localCol, $columns, true)) {
@@ -598,7 +596,7 @@ class GraphQL
     }
 
     /**
-     * @throws GC2Exception
+     * @throws GraphQLException
      * @throws PhpfastcacheInvalidArgumentException
      */
     protected function resolveField(string $field, array $args, mixed $positional = null, ?array $selection = null): mixed
@@ -613,7 +611,7 @@ class GraphQL
      * Dynamic table resolver: supports both list and single-row queries.
      * If an ID-like argument (id, pk, or key) is provided, it returns a single object.
      * Otherwise, it returns a list based on args schema, where, limit, offset.
-     * @throws GC2Exception
+     * @throws GraphQLException
      * @throws PhpfastcacheInvalidArgumentException
      */
     private function resolveDynamicTable(string $tableField, array $args, mixed $positional, ?array $selection): mixed
@@ -629,7 +627,7 @@ class GraphQL
         $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
         $metaCols = array_keys($t->metaData ?? []);
         if (empty($metaCols)) {
-            throw new GC2Exception('Unable to read table metadata', 500);
+            throw new GraphQLException('Unable to read table metadata', 500);
         }
 
         // Determine if this is a single-row fetch by ID
@@ -646,11 +644,11 @@ class GraphQL
 
         if ($idVal !== null) {
             if (!method_exists($t, 'hasPrimeryKey') || !$t->hasPrimeryKey($schema . '.' . $table)) {
-                throw new GC2Exception('Table has no primary key; cannot use ID query', 400);
+                throw new GraphQLException('Table has no primary key; cannot use ID query', 400);
             }
             $pk = $t->primaryKey['attname'] ?? null;
             if (!$pk) {
-                throw new GC2Exception('Primary key not found', 400);
+                throw new GraphQLException('Primary key not found', 400);
             }
 
             // Partition selection into columns and nested fields
@@ -659,7 +657,7 @@ class GraphQL
             if (!empty($columns)) {
                 foreach ($columns as $c) {
                     if (!in_array($c, $metaCols, true)) {
-                        throw new GC2Exception("Unknown column '$c' on {$schema}.{$table}", 400);
+                        throw new GraphQLException("Unknown column '$c' on {$schema}.{$table}", 400);
                     }
                 }
             } else {
@@ -681,7 +679,7 @@ class GraphQL
                 foreach ($nested as $alias => $v) {
                     $relName = $v['name'];
                     if (!isset($fkMap[$relName])) {
-                        throw new GC2Exception("Unknown nested relation '$relName' on {$schema}.{$table}", 400);
+                        throw new GraphQLException("Unknown nested relation '$relName' on {$schema}.{$table}", 400);
                     }
                     $localCol = $fkMap[$relName]['local_col'];
                     if (!in_array($localCol, $columns, true)) {
@@ -712,7 +710,7 @@ class GraphQL
 
             $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);
             if (isset($res['success']) && $res['success'] === false) {
-                throw new GC2Exception($res['message'] ?? 'Unknown SQL error', 400);
+                throw new GraphQLException($res['message'] ?? 'Unknown SQL error', 400);
             }
             $rows = $res['data'] ?? ($res['rows'] ?? $res);
             $rows = is_array($rows) ? $rows : [];
@@ -731,7 +729,7 @@ class GraphQL
         if (!empty($columns)) {
             foreach ($columns as $c) {
                 if (!in_array($c, $metaCols, true)) {
-                    throw new GC2Exception("Unknown column '$c' on {$schema}.{$table}", 400);
+                    throw new GraphQLException("Unknown column '$c' on {$schema}.{$table}", 400);
                 }
             }
         } else {
@@ -749,7 +747,7 @@ class GraphQL
             foreach ($nested as $alias => $v) {
                 $relName = $v['name'];
                 if (!isset($fkMap[$relName])) {
-                    throw new GC2Exception("Unknown nested relation '$relName' on {$schema}.{$table}", 400);
+                    throw new GraphQLException("Unknown nested relation '$relName' on {$schema}.{$table}", 400);
                 }
                 $localCol = $fkMap[$relName]['local_col'];
                 if (!in_array($localCol, $columns, true)) {
@@ -787,7 +785,7 @@ class GraphQL
 
         $res = $statement->run(user: $this->user, api: $this->api, query: $query, subuser: $this->subuser, userGroup: $this->userGroup);
         if (isset($res['success']) && $res['success'] === false) {
-            throw new GC2Exception($res['message'] ?? 'Unknown SQL error', 400);
+            throw new GraphQLException($res['message'] ?? 'Unknown SQL error', 400);
         }
         $rows = $res['data'] ?? ($res['rows'] ?? $res);
         $rows = is_array($rows) ? $rows : [];
@@ -797,7 +795,7 @@ class GraphQL
 
 
     /**
-     * @throws GC2Exception
+     * @throws GraphQLException
      * @throws PhpfastcacheInvalidArgumentException
      */
     private function resolveMutation(string $field, array $args, ?array $selection): mixed
@@ -805,29 +803,29 @@ class GraphQL
         if (str_starts_with($field, 'insert')) {
             $table = self::camelToSnake(substr($field, 6));
             if ($table === '') {
-                throw new GC2Exception("Mutation '$field' must be followed by a table name", 400);
+                throw new GraphQLException("Mutation '$field' must be followed by a table name", 400);
             }
             return $this->handleInsert($table, $args, $selection);
         }
         if (str_starts_with($field, 'update')) {
             $table = self::camelToSnake(substr($field, 6));
             if ($table === '') {
-                throw new GC2Exception("Mutation '$field' must be followed by a table name", 400);
+                throw new GraphQLException("Mutation '$field' must be followed by a table name", 400);
             }
             return $this->handleUpdate($table, $args, $selection);
         }
         if (str_starts_with($field, 'delete')) {
             $table = self::camelToSnake(substr($field, 6));
             if ($table === '') {
-                throw new GC2Exception("Mutation '$field' must be followed by a table name", 400);
+                throw new GraphQLException("Mutation '$field' must be followed by a table name", 400);
             }
             return $this->handleDelete($table, $args, $selection);
         }
-        throw new GC2Exception("Unknown mutation '$field'", 400);
+        throw new GraphQLException("Unknown mutation '$field'", 400);
     }
 
     /**
-     * @throws GC2Exception
+     * @throws GraphQLException
      * @throws PhpfastcacheInvalidArgumentException
      */
     private function handleInsert(string $table, array $args, ?array $selection): mixed
@@ -845,7 +843,7 @@ class GraphQL
         }
 
         if (empty($objects)) {
-            throw new GC2Exception("No objects to insert", 400);
+            throw new GraphQLException("No objects to insert", 400);
         }
 
         $columns = array_keys($objects[0]);
@@ -876,7 +874,7 @@ class GraphQL
     }
 
     /**
-     * @throws GC2Exception
+     * @throws GraphQLException
      * @throws PhpfastcacheInvalidArgumentException
      */
     private function handleUpdate(string $table, array $args, ?array $selection): array
@@ -886,7 +884,7 @@ class GraphQL
         $set = $args['data'] ?? ($args['_set'] ?? ($args['set'] ?? []));
 
         if (empty($set)) {
-            throw new GC2Exception("No columns to update", 400);
+            throw new GraphQLException("No columns to update", 400);
         }
 
         $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
@@ -902,7 +900,7 @@ class GraphQL
 
         $whereSql = $this->buildWhere($where, $metaCols, $params);
         if ($whereSql === '') {
-            throw new GC2Exception("Update requires a where clause", 400);
+            throw new GraphQLException("Update requires a where clause", 400);
         }
 
         $quotedTable = self::quoteIdent($schema) . '.' . self::quoteIdent($table);
@@ -917,7 +915,7 @@ class GraphQL
     }
 
     /**
-     * @throws GC2Exception
+     * @throws GraphQLException
      * @throws PhpfastcacheInvalidArgumentException
      */
     private function handleDelete(string $table, array $args, ?array $selection): array
@@ -931,7 +929,7 @@ class GraphQL
         $params = [];
         $whereSql = $this->buildWhere($where, $metaCols, $params);
         if ($whereSql === '') {
-            throw new GC2Exception("Delete requires a where clause", 400);
+            throw new GraphQLException("Delete requires a where clause", 400);
         }
 
         $quotedTable = self::quoteIdent($schema) . '.' . self::quoteIdent($table);
@@ -959,7 +957,7 @@ class GraphQL
     }
 
     /**
-     * @throws GC2Exception
+     * @throws GraphQLException
      * @throws PhpfastcacheInvalidArgumentException
      */
     private function mapMutationResult(array $rows, ?array $selection, bool $isSingle, string $schema, string $table): mixed
@@ -968,7 +966,7 @@ class GraphQL
     }
 
     /**
-     * @throws GC2Exception
+     * @throws GraphQLException
      * @throws PhpfastcacheInvalidArgumentException
      */
     private function mapRows(array $rows, ?array $selection, string $schema, string $table): array
@@ -995,7 +993,7 @@ class GraphQL
                     $relName = $v['name'];
                     $snakeRelName = self::camelToSnake($relName);
                     if (!isset($fkMap[$snakeRelName])) {
-                        throw new GC2Exception("Unknown nested relation '$relName' on {$schema}.{$table}", 400);
+                        throw new GraphQLException("Unknown nested relation '$relName' on {$schema}.{$table}", 400);
                     }
                     $subSel = $v['selection'];
                     $map = $fkMap[$snakeRelName];
@@ -1058,7 +1056,7 @@ class GraphQL
 
     /**
      * Build a recursive WHERE clause for operators and logical AND/OR/NOT.
-     * @throws GC2Exception
+     * @throws GraphQLException
      */
     private function buildWhere(array $where, array $metaCols, array &$params, string $conjunction = 'AND'): string
     {
@@ -1111,7 +1109,7 @@ class GraphQL
 
             // Column names
             if (!in_array($key, $metaCols, true)) {
-                throw new GC2Exception("Unknown column '$key'", 400);
+                throw new GraphQLException("Unknown column '$key'", 400);
             }
 
             $quotedCol = self::quoteIdent($key);
@@ -1146,7 +1144,7 @@ class GraphQL
                             break;
                         case 'in':
                             if (!is_array($opVal)) {
-                                throw new GC2Exception("Operator 'in' requires an array value", 400);
+                                throw new GraphQLException("Operator 'in' requires an array value", 400);
                             }
                             if (empty($opVal)) {
                                 $clauses[] = '1=0';
@@ -1169,7 +1167,7 @@ class GraphQL
                             $params[$p] = $opVal;
                             break;
                         default:
-                            throw new GC2Exception("Unknown operator '$op' for column '$key'", 400);
+                            throw new GraphQLException("Unknown operator '$op' for column '$key'", 400);
                     }
                 }
             } else {
@@ -1222,7 +1220,7 @@ class GraphQL
     }
 
     /**
-     * @throws GC2Exception
+     * @throws GraphQLException
      * @throws PhpfastcacheInvalidArgumentException
      */
     private function getTypeHints(string $schema, string $table, array $params): array
@@ -1239,7 +1237,7 @@ class GraphQL
     }
 
     /**
-     * @throws GC2Exception
+     * @throws GraphQLException
      * @throws PhpfastcacheInvalidArgumentException
      */
     private function buildQueryArray(string $sql, array $params, string $schema, string $table): array

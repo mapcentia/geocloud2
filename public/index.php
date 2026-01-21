@@ -18,6 +18,7 @@ use app\conf\App;
 use app\conf\Connection;
 use app\controllers\Wms;
 use app\exceptions\GC2Exception;
+use app\exceptions\GraphQLException;
 use app\exceptions\OwsException;
 use app\exceptions\RPCException;
 use app\exceptions\ServiceException;
@@ -198,10 +199,8 @@ foreach (glob(dirname(__FILE__) . "/../app/api/v4/controllers/*.php") as $filena
 }
 
 // Start routing
-
 $handler = static function () use ($routes) {
     setHeaders();
-
     try {
         if (in_array(Input::getPath()->part(1), ['api', 'auth', 'signin', 'signup', 'signout', 'forgot', 'activation', 'device', 'github'])) {
 
@@ -534,11 +533,13 @@ $handler = static function () use ($routes) {
         $response["message"] = $exception->getMessage();
         $response["code"] = $exception->getCode();
         $response["errorCode"] = $exception->getErrorCode();
-        $response["file"] = $exception->getFile();
-        $response["line"] = $exception->getLine();
-        $response["trace"] = $exception->getTraceAsString();
+//        $response["file"] = $exception->getFile();
+//        $response["line"] = $exception->getLine();
+//        $response["trace"] = $exception->getTraceAsString();
         echo Response::toJson($response);
     } catch (RPCException $exception) {
+        echo Response::toJson($exception->getResponse());
+    } catch (GraphQLException $exception) {
         echo Response::toJson($exception->getResponse());
     } catch (PDOException $exception) {
         $response["success"] = false;

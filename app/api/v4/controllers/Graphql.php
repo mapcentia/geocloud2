@@ -17,6 +17,7 @@ use app\api\v4\Responses\NoContentResponse;
 use app\api\v4\Responses\Response as ApiResponse;
 use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
+use app\exceptions\GraphQLException;
 use app\inc\Connection;
 use app\inc\GraphQL as _GraphQl;
 use app\inc\Input;
@@ -68,6 +69,7 @@ class Graphql extends AbstractApi
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      * @throws InvalidArgumentException
+     * @throws GraphQLException
      */
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -78,40 +80,15 @@ class Graphql extends AbstractApi
         $isSuperUser = $this->route->jwt["data"]["superUser"];
         $user = $this->route->jwt["data"]["uid"];
         $userGroup = $this->route->jwt["data"]["userGroup"];
-
         $graphQl = new _GraphQl(connection: $this->connection);
-
         $body = Input::getBody();
         $payload = json_decode($body ?? 'null', true);
         if (!is_array($payload)) {
-            throw new GC2Exception('Invalid JSON body', 400);
+            throw new GraphQLException('Invalid JSON body', 400);
         }
         $query = $payload['query'] ?? null;
         $variables = $payload['variables'] ?? [];
         $operationName = $payload['operationName'] ?? null;
-        if (!is_string($query) || $query === '') {
-            throw new GC2Exception('Missing GraphQL query', 400);
-        }
-        try {
-            $doc = GraphQLParser::parse($query);
-        } catch (\Throwable $e) {
-            throw new GC2Exception('GraphQL parse error: ' . $e->getMessage(), 400);
-        }
-
-        $operation = null;
-        foreach ($doc->definitions as $def) {
-            if ($def instanceof OperationDefinitionNode) {
-                if ($operationName === null || ($def->name?->value === $operationName)) {
-                    $operation = $def;
-                    if ($operationName !== null) {
-                        break;
-                    }
-                }
-            }
-        }
-        if (!$operation) {
-            throw new GC2Exception('No operation found in document', 400);
-        }
         $api = new \app\models\Sql(connection: $this->connection);
         $api->begin();
         // Execute the query using webonyx/graphql-php
@@ -148,16 +125,20 @@ class Graphql extends AbstractApi
     }
 
     /**
-     * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws GraphQLException
      */
     #[Override]
     public function validate(): void
     {
         $schema = $this->route->getParam("schema");
         $collection = $this->getAssert();
-        $this->validateRequest($collection, Input::getBody(), Input::getMethod(), allowPatchOnCollection: false);
-        $this->initiate(schema: $schema);
+        try {
+            $this->validateRequest($collection, Input::getBody(), Input::getMethod());
+            $this->initiate(schema: $schema);
+        } catch (GC2Exception $e) {
+            throw new GraphQLException($e->getMessage());
+        }
 
     }
 
