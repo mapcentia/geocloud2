@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.1.1] - 2026-21-1
+### Fixed
+- WFS did not get the access-control-allow-origin header set and therefore browsere blocked CORS requests.
+
 ## [2026.1.0] - 2026-6-1
 ### Fixed
 - Refactor `Sql.php`: split `DefaultTypeConverterFactory` instantiation and `setConnection` call so it works after upgrading sad_spirit\pg_wrapper
