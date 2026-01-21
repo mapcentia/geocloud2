@@ -343,11 +343,11 @@ class Session extends Model
                     if (count($memberships) > 0) {
                         $data = [
                             'user' => $userName,
-                            'usergroup' => $memberships[0],
+                            'usergroup' => $memberships[0], // TODO
                             'parentdb' => $parentDb,
                         ];
                         $user->updateUser(data: $data);
-                        $row['usergroup'] = $memberships[0];
+                        $row['usergroup'] = $memberships[0]; // TODO
                     }
                     $user->commit();
                 }
