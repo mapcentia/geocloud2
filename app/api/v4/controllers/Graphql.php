@@ -52,7 +52,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *    - query { getUser(id: $i) { id name } }      // same, using variables: { "variables": { "i": 5 } }
  */
 #[AcceptableMethods(['POST', 'OPTIONS'])]
-#[Controller(route: 'api/v4/graphql/schema/{schema}', scope: Scope::SUB_USER_ALLOWED)]
+#[Controller(route: 'api/graphql/schema/{schema}', scope: Scope::SUB_USER_ALLOWED)]
 class Graphql extends AbstractApi
 {
     public function __construct(public readonly Route2 $route, Connection $connection)
