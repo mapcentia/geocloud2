@@ -352,7 +352,7 @@ class Mapfile extends Controller
                     $resultExtent->execute();
                     $rowExtent = $postgisObject->fetchRow($resultExtent);
                     $extent = [$rowExtent["xmin"], $rowExtent["ymin"], $rowExtent["xmax"], $rowExtent["ymax"]];
-                } catch (PDOException $e) {
+                } catch (PDOException) {
                     $extent = $this->bbox;
                 }
 
@@ -365,7 +365,12 @@ class Mapfile extends Controller
                     $q = "select * from {$postgisObject->doubleQuoteQualifiedName($rel)}";
                 }
                 $select = $postgisObject->prepare("select * from ($q) as foo LIMIT 0");
-                $select->execute();
+                try {
+                    $select->execute();
+                } catch (PDOException $e) {
+                    error_log($e->getMessage());
+                    continue;
+                }
                 foreach (range(0, $select->columnCount() - 1) as $column_index) {
                     $col = $select->getColumnMeta($column_index);
                     $meta[$col["name"]] = $col["native_type"];
@@ -1419,7 +1424,12 @@ class Mapfile extends Controller
                     $q = "select * from {$postgisObject->doubleQuoteQualifiedName($rel)}";
                 }
                 $select = $postgisObject->prepare("select * from ($q) as foo LIMIT 0");
-                $select->execute();
+                try {
+                    $select->execute();
+                } catch (PDOException $e) {
+                    error_log($e->getMessage());
+                    continue;
+                }
                 foreach (range(0, $select->columnCount() - 1) as $column_index) {
                     $col = $select->getColumnMeta($column_index);
                     $meta[$col["name"]] = $col["native_type"];
