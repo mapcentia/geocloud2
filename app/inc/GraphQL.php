@@ -241,7 +241,11 @@ class GraphQL
                     $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
                     $fields = [];
                     foreach ($t->metaData ?? [] as $col => $info) {
-                        $fields[$col] = ['type' => $this->getGraphQLType($info['full_type'])];
+                        $type = $this->getGraphQLType($info['typname']);
+                        if (isset($info['is_nullable']) && $info['is_nullable'] === false) {
+                            $type = Type::nonNull($type);
+                        }
+                        $fields[$col] = ['type' => $type];
                     }
                     // Add relationships
                     $fkMap = $this->buildForeignMap($schema, $table);
@@ -266,8 +270,8 @@ class GraphQL
     private function getGraphQLType(string $pgType): Type
     {
         $pgType = strtolower(trim($pgType));
-        if (str_ends_with($pgType, '[]')) {
-            return Type::listOf($this->getGraphQLType(substr($pgType, 0, -2)));
+        if (str_starts_with($pgType, '_')) {
+            return Type::listOf($this->getGraphQLType(substr($pgType, 1)));
         }
 
         return match ($pgType) {
@@ -275,12 +279,10 @@ class GraphQL
             'float4', 'real', 'float8', 'double precision' => Type::float(),
             'bool', 'boolean' => Type::boolean(),
             'numeric', 'decimal', 'bigint', 'int8', 'bigserial', 'serial8' => Type::string(),
-            'json', 'jsonb' => $this->getTypeFromCache('JSON', fn() => new CustomScalarType([
-                'name' => 'JSON',
-                'serialize' => fn($v) => $v,
-                'parseValue' => fn($v) => $v,
-                'parseLiteral' => fn($node, $vars) => $this->valueFromAst($node, $vars ?? []),
-            ])),
+            'json', 'jsonb', 'geometry' => $this->getJsonType(),
+            'timestamp', 'timestamptz' => $this->getDateTimeType(),
+            'date' => $this->getDateType(),
+            'time', 'timetz' => $this->getTimeType(),
             'point' => $this->getTypeFromCache('Point', fn() => new ObjectType([
                 'name' => 'Point',
                 'fields' => [
@@ -333,6 +335,46 @@ class GraphQL
             'int4range', 'int8range', 'numrange', 'tsrange', 'tstzrange', 'daterange' => $this->getRangeType($pgType),
             default => Type::string(),
         };
+    }
+
+    private function getJsonType(): Type
+    {
+        return $this->getTypeFromCache('JSON', fn() => new CustomScalarType([
+            'name' => 'JSON',
+            'serialize' => fn($v) => $v,
+            'parseValue' => fn($v) => $v,
+            'parseLiteral' => fn($node, $vars) => $this->valueFromAst($node, $vars ?? []),
+        ]));
+    }
+
+    private function getDateTimeType(): Type
+    {
+        return $this->getTypeFromCache('DateTime', fn() => new CustomScalarType([
+            'name' => 'DateTime',
+            'serialize' => fn($v) => $v,
+            'parseValue' => fn($v) => $v,
+            'parseLiteral' => fn($node, $vars) => $this->valueFromAst($node, $vars ?? []),
+        ]));
+    }
+
+    private function getDateType(): Type
+    {
+        return $this->getTypeFromCache('Date', fn() => new CustomScalarType([
+            'name' => 'Date',
+            'serialize' => fn($v) => $v,
+            'parseValue' => fn($v) => $v,
+            'parseLiteral' => fn($node, $vars) => $this->valueFromAst($node, $vars ?? []),
+        ]));
+    }
+
+    private function getTimeType(): Type
+    {
+        return $this->getTypeFromCache('Time', fn() => new CustomScalarType([
+            'name' => 'Time',
+            'serialize' => fn($v) => $v,
+            'parseValue' => fn($v) => $v,
+            'parseLiteral' => fn($node, $vars) => $this->valueFromAst($node, $vars ?? []),
+        ]));
     }
 
     private function getRangeType(string $pgType): Type
