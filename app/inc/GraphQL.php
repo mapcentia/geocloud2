@@ -121,7 +121,7 @@ class GraphQL
 
         $output = $result->toArray();
         if (!empty($output['errors'])) {
-           throw new GraphQLException($result->errors[0]->getMessage(), 400);
+            throw new GraphQLException($result->errors[0]->getMessage(), 400);
         }
         return $output;
     }
@@ -212,6 +212,7 @@ class GraphQL
             $fields['update' . $pascalName] = [
                 'type' => Type::listOf($this->getTableType($t['f_table_schema'], $tableName)),
                 'args' => [
+                    'id' => ['type' => Type::ID()],
                     'where' => ['type' => $this->getGraphQLType('json')],
                     'data' => ['type' => $this->getGraphQLType('json')]
                 ],
@@ -219,7 +220,10 @@ class GraphQL
             ];
             $fields['delete' . $pascalName] = [
                 'type' => Type::listOf($this->getTableType($t['f_table_schema'], $tableName)),
-                'args' => ['where' => ['type' => $this->getGraphQLType('json')]],
+                'args' => [
+                    'id' => ['type' => Type::ID()],
+                    'where' => ['type' => $this->getGraphQLType('json')]
+                ],
                 'resolve' => $resolver
             ];
         }
@@ -909,7 +913,9 @@ class GraphQL
     {
         $schema = $this->schema;
         $where = $args['where'] ?? [];
-        $set = $args['data'] ?? ($args['_set'] ?? ($args['set'] ?? []));
+        $set = $args['data'] ?? [];
+        $idVal = $args['id'] ?? null;
+        $pkWhere = null;
 
         if (empty($set)) {
             throw new GraphQLException("No columns to update", 400);
@@ -919,6 +925,19 @@ class GraphQL
         $metaCols = array_keys($t->metaData ?? []);
 
         $params = [];
+
+        if ($idVal !== null) {
+            if (!$t->hasPrimeryKey($schema . '.' . $table)) {
+                throw new GraphQLException('Table has no primary key; cannot use ID query', 400);
+            }
+            $pk = $t->primaryKey['attname'] ?? null;
+            if (!$pk) {
+                throw new GraphQLException('Primary key not found', 400);
+            }
+            $params['pk'] = $idVal;
+            $pkWhere = $pk . ' = :pk';
+        }
+
         $setClauses = [];
         foreach ($set as $col => $val) {
             $p = 's_' . $col;
@@ -927,12 +946,12 @@ class GraphQL
         }
 
         $whereSql = $this->buildWhere($where, $metaCols, $params);
-        if ($whereSql === '') {
-            throw new GraphQLException("Update requires a where clause", 400);
+        if ($whereSql === '' && $idVal === null) {
+            throw new GraphQLException("Update requires 'id ' or 'where' argument", 400);
         }
 
         $quotedTable = self::quoteIdent($schema) . '.' . self::quoteIdent($table);
-        $sql = "UPDATE $quotedTable SET " . implode(', ', $setClauses) . " WHERE $whereSql RETURNING *";
+        $sql = "UPDATE $quotedTable SET " . implode(', ', $setClauses) . " WHERE " . ($pkWhere ?? $whereSql) . " RETURNING *";
 
         $query = $this->buildQueryArray($sql, $params, $schema, $table);
 
@@ -950,18 +969,33 @@ class GraphQL
     {
         $schema = $this->schema;
         $where = $args['where'] ?? [];
+        $idVal = $args['id'] ?? null;
+        $pkWhere = null;
 
         $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
-        $metaCols = array_keys($t->metaData ?? []);
-
         $params = [];
+
+        if ($idVal !== null) {
+            if (!$t->hasPrimeryKey($schema . '.' . $table)) {
+                throw new GraphQLException('Table has no primary key; cannot use ID query', 400);
+            }
+            $pk = $t->primaryKey['attname'] ?? null;
+            if (!$pk) {
+                throw new GraphQLException('Primary key not found', 400);
+            }
+            $params['pk'] = $idVal;
+            $pkWhere = $pk . ' = :pk';
+        }
+
+        $metaCols = array_keys($t->metaData ?? []);
         $whereSql = $this->buildWhere($where, $metaCols, $params);
-        if ($whereSql === '') {
-            throw new GraphQLException("Delete requires a where clause", 400);
+
+        if ($whereSql === '' && $idVal === null) {
+            throw new GraphQLException("Delete requires 'id ' or 'where' argument", 400);
         }
 
         $quotedTable = self::quoteIdent($schema) . '.' . self::quoteIdent($table);
-        $sql = "DELETE FROM $quotedTable WHERE $whereSql RETURNING *";
+        $sql = "DELETE FROM $quotedTable WHERE " . ($pkWhere ?? $whereSql) . " RETURNING *";
 
         $query = $this->buildQueryArray($sql, $params, $schema, $table);
 
@@ -1253,7 +1287,7 @@ class GraphQL
      */
     private function getTypeHints(string $schema, string $table, array $params): array
     {
-        $meta = $this->api->getMetaData(table: $schema . '.' . $table, restriction: false, getEnums: false, lookupForeignTables: false );
+        $meta = $this->api->getMetaData(table: $schema . '.' . $table, restriction: false, getEnums: false, lookupForeignTables: false);
         $arr = [];
         foreach ($params as $p => $v) {
             $arr2 = explode('_', $p);
@@ -1270,7 +1304,7 @@ class GraphQL
      */
     private function buildQueryArray(string $sql, array $params, string $schema, string $table): array
     {
-        return      [
+        return [
             'q' => $sql,
             'params' => $params,
             'format' => 'json',
