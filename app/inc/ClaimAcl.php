@@ -9,11 +9,11 @@
 namespace app\inc;
 
 
-final class ClaimAcl
+final readonly class ClaimAcl
 {
     public function __construct(
-        private readonly array $customMap,
-        private readonly array $defaultRules = [
+        private array $customMap,
+        private array $defaultRules = [
             '__membership' => [],
             '__read' => [],
             '__write' => [],
@@ -179,10 +179,12 @@ final class ClaimAcl
         return array_values(array_filter(explode('->', $path), fn($s) => $s !== ''));
     }
 
-    public function allTablePermissions(object $claims): array
+    public function allTablePermissions(object $claims): ?array
     {
         $matches = $this->collectMatches($claims);
-
+        if (count($matches) < 1) {
+            return null;
+        }
         // Kandidater pr tabel pr op, med specificity
         $candidates = []; // [table => ['__read' => [match...], '__write' => [match...]]]
 
@@ -247,19 +249,21 @@ final class ClaimAcl
             if (!$this->claimMatches($claims, $claimKey, $matcher)) {
                 continue;
             }
-
             $memberships[] = [
                 'key' => $key,
                 'claim' => $claimKey,
                 'matcher' => $matcher,
             ];
         }
-
         return $memberships;
     }
 
-    public function allMembershipKeys(object $claims): array
+    public function allMembershipKeys(object $claims): ?array
     {
+        $memberships = $this->allMemberships($claims);
+        if (count($memberships) < 1) {
+            return null;
+        }
         return array_map(
             fn($m) => $m['key'],
             $this->allMemberships($claims)
@@ -339,5 +343,4 @@ final class ClaimAcl
         // Scalar claim
         return (string)$val === $matcher;
     }
-
 }

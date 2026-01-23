@@ -285,71 +285,84 @@ class Session extends Model
                 $fn();
             }
 
-            // Set privileges for sub-user
+            // Set privileges and group for sub-user
+            // Only set if there is a claim match. Otherwise the sub-user is not changed
             if ($user) {
 
                 if (!$acl = @file_get_contents(App::$param["path"] . "/app/conf/claim_acl.json")) {
                     error_log("Unable to read claim_acl.json");
+                } else {
+                    $acl = json_decode($acl, true);
                 }
 
-                if ($acl) {
-                    $acl = json_decode($acl, true);
+                if (!empty($acl[$parentDb])) {
+                    $acl = $acl[$parentDb];
                     $claimAcl = new ClaimAcl($acl);
+
                     $grants = $claimAcl->allTablePermissions($payload);
+
                     $membershipsKeys = $claimAcl->allMembershipKeys($payload);
-                    $memberships = [];
-                    foreach ($membershipsKeys as $key) {
-                        if (!empty($acl[$key]["__membership"])) {
-                            $memberships = array_merge($memberships, $acl[$key]["__membership"]);
+                    if ($membershipsKeys) {
+                        $memberships = [];
+                        foreach ($membershipsKeys as $key) {
+                            if (!empty($acl[$key]["__membership"])) {
+                                $memberships = array_merge($memberships, $acl[$key]["__membership"]);
+                            }
                         }
+                    } else {
+                        $memberships = null;
                     }
 
                     // Set grants
-                    $conn = new Connection(database: $parentDb);
-                    $layer = new Layer(connection: $conn);
-                    $table = new Table(table: "settings.geometry_columns_join", connection: $conn);
-                    $table->connect();
-                    $table->begin();
-                    // Reset privileges for sub-user
-                    $layer->setPrivilegesOnAll($userName, 'none');
-                    foreach ($grants as $rel => $grant) {
-                        if (empty($grant)) {
-                            continue;
+                    if (is_array($grants)) {
+                        $conn = new Connection(database: $parentDb);
+                        $layer = new Layer(connection: $conn);
+                        $table = new Table(table: "settings.geometry_columns_join", connection: $conn);
+                        $table->connect();
+                        $table->begin();
+                        // Reset privileges for sub-user
+                        $layer->setPrivilegesOnAll($userName, 'none');
+                        foreach ($grants as $rel => $grant) {
+                            if (empty($grant)) {
+                                continue;
+                            }
+                            $obj = new StdClass();
+                            $obj->_key_ = $rel;
+                            $obj->privileges = !empty($grant['write']) ? 'write' : (!empty($grant['read']) ? 'read' : null);
+                            $obj->subuser = $userName;
+                            try {
+                                $layer->updatePrivileges($obj, $table);
+                            } catch (GC2Exception $e) {
+                                // If a relation is not found, skip
+                                error_log($e->getMessage());
+                            }
                         }
-                        $obj = new StdClass();
-                        $obj->_key_ = $rel;
-                        $obj->privileges = !empty($grant['write']) ? 'write' : (!empty($grant['read']) ? 'read' : null);
-                        $obj->subuser = $userName;
-                        try {
-                            $layer->updatePrivileges($obj, $table);
-                        } catch (GC2Exception $e) {
-                            // If a relation is not found, skip
-                            error_log($e->getMessage());
-                        }
+                        $table->commit();
                     }
-                    $table->commit();
 
-                    // Reset user group
-                    $data = [
-                        'user' => $userName,
-                        'usergroup' => null,
-                        'parentdb' => $parentDb,
-                    ];
-                    $user->begin();
-                    $user->updateUser(data: $data);
-                    $row['usergroup'] = null;
-
-                    // Set user group if requested
-                    if (count($memberships) > 0) {
+                    // Set group
+                    if (is_array($memberships)) {
+                        // Reset user group
                         $data = [
                             'user' => $userName,
-                            'usergroup' => $memberships[0], // TODO
+                            'usergroup' => null,
                             'parentdb' => $parentDb,
                         ];
+                        $user->begin();
                         $user->updateUser(data: $data);
-                        $row['usergroup'] = $memberships[0]; // TODO
+                        $row['usergroup'] = null;
+                        // Set user group if requested
+                        if (count($memberships) > 0) {
+                            $data = [
+                                'user' => $userName,
+                                'usergroup' => $memberships[0], // TODO
+                                'parentdb' => $parentDb,
+                            ];
+                            $user->updateUser(data: $data);
+                            $row['usergroup'] = $memberships[0]; // TODO
+                        }
+                        $user->commit();
                     }
-                    $user->commit();
                 }
             }
         } else {
