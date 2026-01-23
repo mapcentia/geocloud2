@@ -96,12 +96,6 @@ class GraphQL
         $isIntrospection = $this->isIntrospectionQuery($operation);
 
         if (!$isIntrospection) {
-            if (!is_string($opName) || $opName === '') {
-                throw new GraphQLException('Operation name is required', 400);
-            }
-            if (!preg_match('/^[A-Z][A-Za-z0-9]*$/', $opName)) {
-                throw new GraphQLException('Invalid operation name: must start with an uppercase letter and be in PascalCase', 400);
-            }
             $selections = $operation->selectionSet?->selections ?? [];
             if (empty($selections)) {
                 throw new GraphQLException('No fields selected', 400);
@@ -113,12 +107,6 @@ class GraphQL
                 $field = $selectionNode->name->value;
                 if (!preg_match('/^[a-z][A-Za-z0-9]*$/', $field)) {
                     throw new GraphQLException("Invalid root field name '$field': must start with a lowercase letter and be in camelCase", 400);
-                }
-                if ($index === 0) {
-                    $expectedField = lcfirst($opName);
-                    if ($field !== $expectedField) {
-                        throw new GraphQLException("Operation name '$opName' does not match root field '$field'. Expected '$expectedField'.", 400);
-                    }
                 }
             }
         }
