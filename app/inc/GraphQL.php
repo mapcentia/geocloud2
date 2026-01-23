@@ -121,7 +121,7 @@ class GraphQL
 
         $output = $result->toArray();
         if (!empty($output['errors'])) {
-           return $output;
+           throw new GraphQLException($result->errors[0]->getMessage(), 400);
         }
         return $output;
     }
@@ -171,9 +171,7 @@ class GraphQL
             $fields[$fieldName] = [
                 'type' => Type::listOf($this->getTableType($t['f_table_schema'], $tableName)),
                 'args' => [
-                    'id' => ['type' => Type::string()],
-                    'pk' => ['type' => Type::string()],
-                    'key' => ['type' => Type::string()],
+                    'id' => ['type' => Type::ID()],
                     'where' => ['type' => $this->getGraphQLType('json')],
                     'limit' => ['type' => Type::int()],
                     'offset' => ['type' => Type::int()],
@@ -241,7 +239,7 @@ class GraphQL
                     $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
                     $fields = [];
                     foreach ($t->metaData ?? [] as $col => $info) {
-                        $type = $this->getGraphQLType($info['typname']);
+                        $type = isset($info['is_primary']) && $info['is_primary'] === true ? Type::ID() : $this->getGraphQLType($info['typname']);
                         if (isset($info['is_nullable']) && $info['is_nullable'] === false) {
                             $type = Type::nonNull($type);
                         }
@@ -639,7 +637,7 @@ class GraphQL
 
     /**
      * Dynamic table resolver: supports both list and single-row queries.
-     * If an ID-like argument (id, pk, or key) is provided, it returns a single object.
+     * If an ID-like argument (id) is provided, it returns a single object.
      * Otherwise, it returns a list based on args schema, where, limit, offset.
      * @throws GraphQLException
      * @throws PhpfastcacheInvalidArgumentException
@@ -663,7 +661,7 @@ class GraphQL
         // Determine if this is a single-row fetch by ID
         $idVal = $positional;
         if ($idVal === null) {
-            $idVal = $args['id'] ?? ($args['pk'] ?? ($args['key'] ?? null));
+            $idVal = $args['id'] ?? null;
         }
 
         $query['convert_types'] = true;
