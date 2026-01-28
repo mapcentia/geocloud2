@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2020 MapCentia ApS
+ * @copyright  2013-2025 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -166,8 +166,12 @@ class Sql
                             primary key (id)
                     )";
         $sqls[] = "alter table settings.clients add \"public\" boolean default false not null";
-        $sqls[] = "alter table settings.clients add confirm boolean default true not null";
-        $sqls[] = "alter table settings.clients add twofactor boolean default true not null";
+        $sqls[] = "alter table settings.clients add confirm boolean default false not null";
+        $sqls[] = "alter table settings.clients add two_factor boolean default false not null";
+        $sqls[] = "alter table settings.clients add allow_signup boolean default false not null";
+        $sqls[] = "alter table settings.clients add social_signup boolean default false not null";
+        $sqls[] = "alter table settings.clients add created timestamptz default now() not null";
+        $sqls[] = "alter table settings.clients alter redirect_uri DROP NOT NULL";
         $sqls[] = "INSERT INTO settings.clients (id, name, description, redirect_uri, public, confirm) values ('gc2-cli', 'gc2-cli', 'Client for use in CLI','[\"http://127.0.0.1:5657/auth/callback\"]', true, false)";
         $sqls[] = "create table settings.cost
                     (
@@ -179,11 +183,27 @@ class Sql
                     )";
         $sqls[] = "alter table settings.prepared_statements add type_hints jsonb";
         $sqls[] = "alter table settings.prepared_statements add type_formats jsonb";
-        $sqls[] = "alter table settings.prepared_statements add output_format varchar(255)";;
-        $sqls[] = "alter table settings.prepared_statements add srs int4";;
+        $sqls[] = "alter table settings.prepared_statements add output_format varchar(255)";
+        $sqls[] = "alter table settings.prepared_statements add srs int4";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN class_cache jsonb";
         $sqls[] = "alter table settings.geometry_columns_join alter class type jsonb using class::jsonb";
         $sqls[] = "ALTER TABLE settings.prepared_statements ADD COLUMN username varchar(255)";
+        $sqls[] = "alter table settings.clients rename column twofactor to two_factor";
+        $sqls[] = "alter table settings.prepared_statements add output_schema jsonb";
+        $sqls[] = "alter table settings.prepared_statements add input_schema jsonb";
+        $sqls[] = "alter table settings.prepared_statements add request varchar check (request in ('*', 'select', 'insert', 'update', 'delete', 'merge'))";
+        $sqls[] = "create table settings.events
+                    (
+                        id        serial,
+                        timestamp timestamp default now() not null,
+                        schema varchar(255) not null,
+                        rel varchar(255) not null,
+                        op varchar(255) not null,
+                        batch  jsonb            not null
+                    )";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER privileges TYPE JSONB USING privileges::jsonb";
+        $sqls[] = "ALTER TABLE settings.symbols ADD COLUMN deleted boolean default false not null";
+
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
                     SELECT
@@ -271,6 +291,8 @@ class Sql
         $sqls[] = "CREATE UNIQUE INDEX only_one_true_default_useridx
                         ON users (default_user, parentdb)
                         WHERE default_user IS TRUE";
+        $sqls[] = "ALTER TABLE users ADD CONSTRAINT email_unique_for_parent UNIQUE  (parentdb, email)";
+        $sqls[] = "alter table public.users alter column email set not null";
         return $sqls;
     }
 
