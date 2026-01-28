@@ -356,6 +356,7 @@ class GraphQL
             'serialize' => fn($v) => $v,
             'parseValue' => fn($v) => $v,
             'parseLiteral' => fn($node, $vars) => $this->valueFromAst($node, $vars ?? []),
+            'description' => "Date and time input is accepted in almost any reasonable format, including ISO 8601, SQL-compatible, traditional POSTGRES, and others.",
         ]));
     }
 
@@ -366,6 +367,7 @@ class GraphQL
             'serialize' => fn($v) => $v,
             'parseValue' => fn($v) => $v,
             'parseLiteral' => fn($node, $vars) => $this->valueFromAst($node, $vars ?? []),
+            'description' => "Date is accepted in almost any reasonable format, including ISO 8601, SQL-compatible, traditional POSTGRES, and others.",
         ]));
     }
 
@@ -376,6 +378,7 @@ class GraphQL
             'serialize' => fn($v) => $v,
             'parseValue' => fn($v) => $v,
             'parseLiteral' => fn($node, $vars) => $this->valueFromAst($node, $vars ?? []),
+            'description' => "Time input is accepted in almost any reasonable format, including ISO 8601, SQL-compatible, traditional POSTGRES, and others.",
         ]));
     }
 
@@ -383,7 +386,7 @@ class GraphQL
     {
         $name = self::snakeToPascal($pgType);
         return $this->getTypeFromCache($name, function () use ($name, $pgType) {
-            $boundType = str_contains($pgType, 'int') ? Type::int() : Type::string();
+            $boundType = str_contains($pgType, 'int') ? Type::int() : (str_contains($pgType, 'date') ? $this->getDateType() : Type::string());
             return new ObjectType([
                 'name' => $name,
                 'fields' => [
@@ -391,7 +394,8 @@ class GraphQL
                     'upper' => ['type' => $boundType],
                     'lowerInclusive' => ['type' => Type::boolean()],
                     'upperInclusive' => ['type' => Type::boolean()],
-                ]
+                ],
+                'description' => "Range type for $pgType, with lower and upper bounds of type $boundType.",
             ]);
         });
     }
