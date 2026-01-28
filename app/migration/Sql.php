@@ -160,13 +160,14 @@ class Sql
                         name                  varchar                                not null,
                         homepage              varchar                                        ,
                         description           text                                           ,
-                        redirect_uri          varchar                                        ,
+                        redirect_uri          varchar                                not null,
                         secret                varchar                                        ,
                         constraint clients_pk
                             primary key (id)
                     )";
         $sqls[] = "alter table settings.clients add \"public\" boolean default false not null";
         $sqls[] = "alter table settings.clients add confirm boolean default false not null";
+        $sqls[] = "alter table settings.clients rename column twofactor to two_factor";
         $sqls[] = "alter table settings.clients add two_factor boolean default false not null";
         $sqls[] = "alter table settings.clients add allow_signup boolean default false not null";
         $sqls[] = "alter table settings.clients add social_signup boolean default false not null";
@@ -188,7 +189,6 @@ class Sql
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN class_cache jsonb";
         $sqls[] = "alter table settings.geometry_columns_join alter class type jsonb using class::jsonb";
         $sqls[] = "ALTER TABLE settings.prepared_statements ADD COLUMN username varchar(255)";
-        $sqls[] = "alter table settings.clients rename column twofactor to two_factor";
         $sqls[] = "alter table settings.prepared_statements add output_schema jsonb";
         $sqls[] = "alter table settings.prepared_statements add input_schema jsonb";
         $sqls[] = "alter table settings.prepared_statements add request varchar check (request in ('*', 'select', 'insert', 'update', 'delete', 'merge'))";
