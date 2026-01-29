@@ -275,7 +275,7 @@ class Session extends Model
                 $data = [
                     'name' => $userName,
                     'email' => $payload->email,
-                    'password' => (new Util)->generateStrongPassword(),
+                    'password' => (new Util())->generateStrongPassword(),
                     'parentdb' => $parentDb,
                     'subuser' => true,
                 ];
