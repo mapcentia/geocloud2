@@ -1688,4 +1688,67 @@ class Model
             return $comment;
         }
     }
+
+    public function getSequences(string $schema): array
+    {
+
+        $sql = "WITH seq AS (
+                        SELECT *
+                        FROM pg_sequences
+                        WHERE schemaname = :schema
+                    )
+                    
+                    SELECT
+                        s.sequencename AS name,
+                        s.start_value,
+                        s.min_value,
+                        s.max_value,
+                        s.data_type,
+                        s.increment_by,
+                        s.cache_size,
+                        s.schemaname||'.'||tbl.relname||'.'||att.attname as owned_by
+                    FROM seq s
+                             JOIN pg_class c
+                                  ON c.relname = s.sequencename
+                             JOIN pg_namespace n
+                                  ON n.oid = c.relnamespace AND n.nspname = s.schemaname
+                             LEFT JOIN pg_depend d
+                                       ON d.objid = c.oid AND d.deptype = 'a'
+                             LEFT JOIN pg_class tbl
+                                       ON tbl.oid = d.refobjid
+                             LEFT JOIN pg_attribute att
+                                       ON att.attrelid = tbl.oid AND att.attnum = d.refobjsubid
+                    ORDER BY s.sequencename";
+        $res = $this->prepare($sql);
+        $this->execute($res, ['schema' => $schema]);
+        $rows = $this->fetchAll($res, 'assoc');
+        $response['success'] = true;
+        $response['data'] = $rows;
+        return $response;
+
+    }
+
+    public function createSequence(string $name, string $schema, array $ddl): string
+    {
+        if (!isset($ddl['data_type'])) $ddl['data_type'] = 'bigint';
+        if (!isset($ddl['increment_by'])) $ddl['increment_by'] = '1';
+        if (!isset($ddl['start_value'])) $ddl['start_value'] = '1';
+        if (!isset($ddl['cache_size'])) $ddl['cache_size'] = '1';
+        if (!isset($ddl['owned_by'])) $ddl['owned_by'] = 'NONE';
+
+        $ddl['min_value'] = isset($ddl['min_value']) ? "MINVALUE {$ddl['min_value']}" : 'NO MINVALUE';
+        $ddl['max_value'] = isset($ddl['max_value']) ? "MAXVALUE {$ddl['max_value']}" : 'NO MAXVALUE';
+
+        $name = self::toAscii(str: $name, delimiterRegex: "/[\/|+ -]+/");
+        $sql = "CREATE SEQUENCE $schema.$name AS {$ddl['data_type']}  
+        INCREMENT BY {$ddl['increment_by']}
+        {$ddl['min_value']}
+        {$ddl['max_value']}
+        START WITH {$ddl['start_value']}
+        CACHE {$ddl['cache_size']}
+        OWNED BY {$ddl['owned_by']}";
+        $res = $this->prepare($sql);
+        $this->execute($res);
+        return $name;
+    }
 }

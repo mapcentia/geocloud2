@@ -40,6 +40,7 @@ abstract class AbstractApi implements ApiInterface
     public ?array $column;
     public ?array $index;
     public ?array $constraint;
+    public ?array $sequence;
     public ?string $resource;
     private const array PRIVATE_PROPERTIES = ['num', 'typname', 'full_type', 'character_maximum_length',
         'numeric_precision', 'numeric_scale', 'max_bytes', 'reference', 'restriction', 'is_primary', 'is_unique',
@@ -57,11 +58,12 @@ abstract class AbstractApi implements ApiInterface
      * @param string|null $column
      * @param string|null $index
      * @param string|null $constraint
+     * @param string|null $sequence
      * @return void
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function initiate(?string $schema = null, ?string $relation = null, ?string $key = null, ?string $column = null, ?string $index = null, ?string $constraint = null): void
+    public function initiate(?string $schema = null, ?string $relation = null, ?string $key = null, ?string $column = null, ?string $index = null, ?string $constraint = null, ?string $sequence = null): void
     {
         $userName = $this->route->jwt["data"]["uid"];
         $superUser = $this->route->jwt["data"]["superUser"];
@@ -71,6 +73,7 @@ abstract class AbstractApi implements ApiInterface
         $this->column = $column ? explode(',', $column) : null;
         $this->index = $index ? explode(',', $index) : null;
         $this->constraint = $constraint ? explode(',', $constraint) : null;
+        $this->sequence = $sequence ? explode(',', $sequence) : null;
         $this->qualifiedName = $relation ? array_map(fn($r) => $schema . "." . $r, explode(',', $relation)) : null;
         if (!empty($this->schema)) {
             $this->doesSchemaExist();
@@ -81,6 +84,8 @@ abstract class AbstractApi implements ApiInterface
         if ($this->qualifiedName) {
             $this->doesTableExist();
             $this->table = array_map(fn($n) => new TableModel(table: $n, lookupForeignTables: false, connection: $this->connection), $this->qualifiedName);
+        } else {
+            $this->table = [new TableModel(table: null, lookupForeignTables: false, connection: $this->connection)];
         }
         if (!empty($this->column)) {
             $this->doesColumnExist();
@@ -90,6 +95,9 @@ abstract class AbstractApi implements ApiInterface
         }
         if (!empty($this->constraint)) {
             $this->doesConstraintExist();
+        }
+        if (!empty($this->sequence)) {
+            $this->doesSequenceExist();
         }
     }
 
@@ -182,6 +190,26 @@ abstract class AbstractApi implements ApiInterface
             }
             if (!$exists) {
                 throw new GC2Exception("Constraint not found", 404, null, "CONSTRAINT_NOT_FOUND");
+            }
+        }
+    }
+
+    /**
+     * @throws GC2Exception
+     */
+    private function doesSequenceExist(): void
+    {
+        $sequences = $this->table[0]->getSequences($this->schema[0]);
+        foreach ($this->sequence as $sequence) {
+            $exists = false;
+            foreach ($sequences['data'] as $seq) {
+                if ($seq['name'] == $sequence) {
+                    $exists = true;
+                    break;
+                }
+            }
+            if (!$exists) {
+                throw new GC2Exception("Sequence not found", 404, null, "SEQUENCE_NOT_FOUND");
             }
         }
     }

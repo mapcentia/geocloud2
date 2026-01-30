@@ -99,6 +99,7 @@ class Schema extends AbstractApi
                 $name = $schema["schema"];
                 $links = [
                     'tables' => '/api/v4/schemas/' . $name . '/tables',
+                    'sequences' => '/api/v4/schemas/' . $name . '/sequences',
                 ];
                 $t = [
                     'name' => $name,
@@ -115,6 +116,7 @@ class Schema extends AbstractApi
             foreach ($this->schema as $schema) {
                 $links = [
                     'tables' => '/api/v4/schemas/' . $schema . '/tables',
+                    'sequences' => '/api/v4/schemas/' . $schema . '/sequences',
                 ];
                 $t = [
                     'name' => $schema,
