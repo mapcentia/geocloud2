@@ -17,6 +17,7 @@ use app\inc\Model;
 use app\inc\ClaimAcl;
 use app\inc\Util;
 use app\models\User as UserModel;
+use Exception;
 use Firebase\JWT\JWK;
 use GuzzleHttp\Exception\GuzzleException;
 use PDOException;
@@ -222,12 +223,12 @@ class Session extends Model
 //                throw new GC2Exception('Invalid or missing nonce in ID token.');
                 }
                 if (!isset($payload->aud) || $payload->aud !== $clientId) {
-                   // throw new GC2Exception('Invalid audience in ID token.');
+                    // throw new GC2Exception('Invalid audience in ID token.');
                 }
 
                 // Optionally: Check exp, iss, etc.
 
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Handle signature or validation errors
                 throw new GC2Exception('Invalid ID token: ' . $e->getMessage());
             }
@@ -243,31 +244,28 @@ class Session extends Model
             }
 
             $row = null;
-            $user = null;
             $userName = $payload->preferred_username;
             $fn = function () use ($payload, &$row, $parentDb, $superuser, $userName, &$user): void {
                 if (!$superuser) {
-//                $sQuery = "SELECT * FROM users WHERE email = :sEmail AND parentdb = :parentDb";
-//                $res = $this->prepare($sQuery);
-//                $res->execute([
-//                    ":sEmail" => $payload->email,
-//                    ":parentDb" => $parentDb
-//                ]);
-                    $sQuery = "SELECT * FROM users WHERE screenname = :sName AND parentdb = :parentDb";
+                    if (filter_var($userName, FILTER_VALIDATE_EMAIL) !== false) {
+                        $sQuery = "SELECT * FROM users WHERE email = :sName AND parentdb = :parentDb";
+                    } else {
+                        $sQuery = "SELECT * FROM users WHERE screenname = :sName AND parentdb = :parentDb";
+                    }
                     $res = $this->prepare($sQuery);
-                    $res->execute([
+                    $this->execute($res, [
                         ":sName" => $userName,
                         ":parentDb" => $parentDb
                     ]);
-                    $user = new User(userId: $row['screenname'], parentDb: $parentDb);
                 } else {
                     $sQuery = "SELECT * FROM users WHERE screenname = :sDb AND parentdb is null";
                     $res = $this->prepare($sQuery);
-                    $res->execute([
+                    $this->execute($res, [
                         ":sDb" => $parentDb,
                     ]);
                 }
                 $row = $this->fetchRow($res);
+                $user = new User(userId: $row['screenname'] ?? null, parentDb: $parentDb);
             };
             $fn();
 
@@ -277,7 +275,7 @@ class Session extends Model
                 $data = [
                     'name' => $userName,
                     'email' => $payload->email,
-                    'password' => 'Silke2009!',
+                    'password' => (new Util())->generateStrongPassword(),
                     'parentdb' => $parentDb,
                     'subuser' => true,
                 ];
@@ -287,20 +285,16 @@ class Session extends Model
 
             // Set privileges and group for sub-user
             // Only set if there is a claim match. Otherwise the sub-user is not changed
-            if ($user) {
-
+            if (!$superuser) {
                 if (!$acl = @file_get_contents(App::$param["path"] . "/app/conf/claim_acl.json")) {
                     error_log("Unable to read claim_acl.json");
                 } else {
                     $acl = json_decode($acl, true);
                 }
-
                 if (!empty($acl[$parentDb])) {
                     $acl = $acl[$parentDb];
                     $claimAcl = new ClaimAcl($acl);
-
                     $grants = $claimAcl->allTablePermissions($payload);
-
                     $membershipsKeys = $claimAcl->allMembershipKeys($payload);
                     if ($membershipsKeys) {
                         $memberships = [];
@@ -312,7 +306,6 @@ class Session extends Model
                     } else {
                         $memberships = null;
                     }
-
                     // Set grants
                     if (is_array($grants)) {
                         $conn = new Connection(database: $parentDb);

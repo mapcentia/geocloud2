@@ -423,4 +423,62 @@ class Util
         }
         return true;
     }
+
+    /**
+     * Generate a strong password with specified length, character sets, and option to add dashes
+     *
+     * @param int $length Length of the password (default 15)
+     * @param bool $add_dashes Whether to add dashes in the password (default false)
+     * @param string $available_sets Character sets to include in the password (default 'luds')
+     * @return string Generated password
+     */
+    public function generateStrongPassword(int $length = 15, bool $add_dashes = false, string $available_sets = 'luds'): string
+    {
+        function tweak_array_rand($array): int|array|string
+        {
+            if (function_exists('random_int')) {
+                return random_int(0, count($array) - 1);
+            } elseif(function_exists('mt_rand')) {
+                return mt_rand(0, count($array) - 1);
+            } else {
+                return array_rand($array);
+            }
+        }
+        $sets = array();
+        if(str_contains($available_sets, 'l'))
+            $sets[] = 'abcdefghjkmnpqrstuvwxyz';
+        if(str_contains($available_sets, 'u'))
+            $sets[] = 'ABCDEFGHJKMNPQRSTUVWXYZ';
+        if(str_contains($available_sets, 'd'))
+            $sets[] = '23456789';
+        if(str_contains($available_sets, 's'))
+            $sets[] = '!@#$%&*?';
+
+        $all = '';
+        $password = '';
+        foreach($sets as $set)
+        {
+            $password .= $set[tweak_array_rand(str_split($set))];
+            $all .= $set;
+        }
+
+        $all = str_split($all);
+        for($i = 0; $i < $length - count($sets); $i++)
+            $password .= $all[tweak_array_rand($all)];
+
+        $password = str_shuffle($password);
+
+        if(!$add_dashes)
+            return $password;
+
+        $dash_len = floor(sqrt($length));
+        $dash_str = '';
+        while(strlen($password) > $dash_len)
+        {
+            $dash_str .= substr($password, 0, $dash_len) . '-';
+            $password = substr($password, $dash_len);
+        }
+        $dash_str .= $password;
+        return $dash_str;
+    }
 }

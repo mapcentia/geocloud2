@@ -8,6 +8,7 @@
 
 namespace app\inc;
 
+use app\exceptions\GC2Exception;
 use app\exceptions\GraphQLException;
 use app\inc\Model as IncModel;
 use app\models\Sql as SqlModel;
@@ -230,24 +231,29 @@ class GraphQL
         return $fields;
     }
 
+    /**
+     * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
+     */
     private function getTableType(string $schema, string $table): ObjectType
     {
         $typeName = self::snakeToPascal($table);
         if (isset($this->typeCache[$typeName])) {
             return $this->typeCache[$typeName];
         }
+        $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
         return $this->typeCache[$typeName] = new ObjectType([
             'name' => $typeName,
-            'fields' => function () use ($schema, $table) {
+            'description' => $t->getComment(),
+            'fields' => function () use ($schema, $table, $t) {
                 try {
-                    $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
                     $fields = [];
                     foreach ($t->metaData ?? [] as $col => $info) {
                         $type = isset($info['is_primary']) && $info['is_primary'] === true ? Type::ID() : $this->getGraphQLType($info['typname']);
                         if (isset($info['is_nullable']) && $info['is_nullable'] === false) {
                             $type = Type::nonNull($type);
                         }
-                        $fields[$col] = ['type' => $type];
+                        $fields[$col] = ['type' => $type, 'description' => $info['comment'] ?? null];
                     }
                     // Add relationships
                     $fkMap = $this->buildForeignMap($schema, $table);
@@ -290,7 +296,8 @@ class GraphQL
                 'fields' => [
                     'x' => ['type' => Type::float()],
                     'y' => ['type' => Type::float()],
-                ]
+                ],
+                'description' => "The Point type represents a point with an x and y coordinate.",
             ])),
             'line' => $this->getTypeFromCache('Line', fn() => new ObjectType([
                 'name' => 'Line',
@@ -298,28 +305,32 @@ class GraphQL
                     'A' => ['type' => Type::float()],
                     'B' => ['type' => Type::float()],
                     'C' => ['type' => Type::float()],
-                ]
+                ],
+                'description' => "The Line type represents a line with an equation Ax + By + C = 0.",
             ])),
             'lseg' => $this->getTypeFromCache('Lseg', fn() => new ObjectType([
                 'name' => 'Lseg',
                 'fields' => [
                     'start' => ['type' => $this->getGraphQLType('point')],
                     'end' => ['type' => $this->getGraphQLType('point')],
-                ]
+                ],
+                'description' => "The Lseg type represents a line segment with two opposite corners.",
             ])),
             'box' => $this->getTypeFromCache('Box', fn() => new ObjectType([
                 'name' => 'Box',
                 'fields' => [
                     'start' => ['type' => $this->getGraphQLType('point')],
                     'end' => ['type' => $this->getGraphQLType('point')],
-                ]
+                ],
+                'description' => "The Box type represents a box with two opposite corners.",
             ])),
             'circle' => $this->getTypeFromCache('Circle', fn() => new ObjectType([
                 'name' => 'Circle',
                 'fields' => [
                     'center' => ['type' => $this->getGraphQLType('point')],
                     'radius' => ['type' => Type::float()],
-                ]
+                ],
+                'description' => "The Circle type represents a circle with a center point and a radius.",
             ])),
             'interval' => $this->getTypeFromCache('Interval', fn() => new ObjectType([
                 'name' => 'Interval',
@@ -330,7 +341,8 @@ class GraphQL
                     'h' => ['type' => Type::int()],
                     'i' => ['type' => Type::int()],
                     's' => ['type' => Type::int()],
-                ]
+                ],
+                'description' => "The Interval type represents a time interval, with years, months, days, hours, minutes and seconds.",
             ])),
             'path' => $this->getJsonType(),
             'polygon' => Type::listOf($this->getGraphQLType('point')),
@@ -346,6 +358,7 @@ class GraphQL
             'serialize' => fn($v) => $v,
             'parseValue' => fn($v) => $v,
             'parseLiteral' => fn($node, $vars) => $this->valueFromAst($node, $vars ?? []),
+            'description' => "The JSON represents a JSON object or a JSON array.",
         ]));
     }
 
@@ -356,7 +369,7 @@ class GraphQL
             'serialize' => fn($v) => $v,
             'parseValue' => fn($v) => $v,
             'parseLiteral' => fn($node, $vars) => $this->valueFromAst($node, $vars ?? []),
-            'description' => "Date and time input is accepted in almost any reasonable format, including ISO 8601, SQL-compatible, traditional POSTGRES, and others.",
+            'description' => "The DateTime type represents time in ISO 8601 format, e.g. '2023-01-01T12:34:56+02'.",
         ]));
     }
 
@@ -367,7 +380,7 @@ class GraphQL
             'serialize' => fn($v) => $v,
             'parseValue' => fn($v) => $v,
             'parseLiteral' => fn($node, $vars) => $this->valueFromAst($node, $vars ?? []),
-            'description' => "Date is accepted in almost any reasonable format, including ISO 8601, SQL-compatible, traditional POSTGRES, and others.",
+            'description' => "The Date type represents dates in ISO 8601 format, e.g. '2023-01-01'.",
         ]));
     }
 
@@ -378,7 +391,7 @@ class GraphQL
             'serialize' => fn($v) => $v,
             'parseValue' => fn($v) => $v,
             'parseLiteral' => fn($node, $vars) => $this->valueFromAst($node, $vars ?? []),
-            'description' => "Time input is accepted in almost any reasonable format, including ISO 8601, SQL-compatible, traditional POSTGRES, and others.",
+            'description' => "The Time type represents time in ISO 8601 format, e.g. '12:34:56'.",
         ]));
     }
 
@@ -386,7 +399,13 @@ class GraphQL
     {
         $name = self::snakeToPascal($pgType);
         return $this->getTypeFromCache($name, function () use ($name, $pgType) {
-            $boundType = str_contains($pgType, 'int') ? Type::int() : (str_contains($pgType, 'date') ? $this->getDateType() : Type::string());
+            $boundType = match (true) {
+                str_contains($pgType, 'int') => Type::int(),
+                str_contains($pgType, 'date') => $this->getDateType(),
+                str_contains($pgType, 'timestamp') => $this->getDateTimeType(),
+                default => Type::string(),
+            };
+
             return new ObjectType([
                 'name' => $name,
                 'fields' => [
@@ -395,7 +414,7 @@ class GraphQL
                     'lowerInclusive' => ['type' => Type::boolean()],
                     'upperInclusive' => ['type' => Type::boolean()],
                 ],
-                'description' => "Range type for $pgType, with lower and upper bounds of type $boundType.",
+                'description' => "The $name type represents a range, with lower and upper bounds of type $boundType.",
             ]);
         });
     }
@@ -649,6 +668,7 @@ class GraphQL
      * Otherwise, it returns a list based on args schema, where, limit, offset.
      * @throws GraphQLException
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws GC2Exception
      */
     private function resolveDynamicTable(string $tableField, array $args, mixed $positional, ?array $selection): mixed
     {
@@ -751,8 +771,7 @@ class GraphQL
             $rows = $res['data'] ?? ($res['rows'] ?? $res);
             $rows = is_array($rows) ? $rows : [];
 
-            $mappedRows = $this->mapRows($rows, $selection, $schema, $table);
-            return $mappedRows;
+            return $this->mapRows($rows, $selection, $schema, $table);
         }
 
         // --- List query logic ---
@@ -1051,7 +1070,7 @@ class GraphQL
 
         foreach ($rows as &$row) {
             $mappedRow = [];
-            foreach ($selColumns as $alias => $name) {
+            foreach ($selColumns as $name) {
                 $mappedRow[$name] = $row[$name] ?? null;
             }
             if (!empty($nested)) {
