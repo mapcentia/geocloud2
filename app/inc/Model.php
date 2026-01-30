@@ -1689,9 +1689,16 @@ class Model
         }
     }
 
+    /**
+     * Retrieves information about sequences in the specified schema.
+     *
+     * @param string $schema The name of the schema for which to retrieve sequence details.
+     *
+     * @return array An associative array containing sequence information. The 'data' key contains an array
+     *               of sequences with their details, and the 'success' key indicates the operation status.
+     */
     public function getSequences(string $schema): array
     {
-
         $sql = "WITH seq AS (
                         SELECT *
                         FROM pg_sequences
@@ -1728,19 +1735,29 @@ class Model
 
     }
 
-    public function createSequence(string $name, string $schema, array $ddl): string
+    /**
+     * Creates a new sequence in the specified schema with the provided configuration.
+     *
+     * @param string $name The name of the sequence to be created.
+     * @param string $schema The schema in which the sequence will be created.
+     * @param array $ddl The definition parameters for the sequence, such as data type, increment value, start value, minimum and maximum values, and cache size.
+     * @param bool $withOwner Determines whether the sequence should be associated with an owner. If false, the sequence will not have an owner.
+     *
+     * @return string The name of the created sequence after processing.
+     */
+    public function createSequence(string $name, string $schema, array $ddl, bool $withOwner = true): string
     {
         if (!isset($ddl['data_type'])) $ddl['data_type'] = 'bigint';
         if (!isset($ddl['increment_by'])) $ddl['increment_by'] = '1';
         if (!isset($ddl['start_value'])) $ddl['start_value'] = '1';
         if (!isset($ddl['cache_size'])) $ddl['cache_size'] = '1';
-        if (!isset($ddl['owned_by'])) $ddl['owned_by'] = 'NONE';
+        if (!isset($ddl['owned_by']) || !$withOwner) $ddl['owned_by'] = 'NONE';
 
         $ddl['min_value'] = isset($ddl['min_value']) ? "MINVALUE {$ddl['min_value']}" : 'NO MINVALUE';
         $ddl['max_value'] = isset($ddl['max_value']) ? "MAXVALUE {$ddl['max_value']}" : 'NO MAXVALUE';
 
         $name = self::toAscii(str: $name, delimiterRegex: "/[\/|+ -]+/");
-        $sql = "CREATE SEQUENCE $schema.$name AS {$ddl['data_type']}  
+        $sql = "CREATE SEQUENCE $schema.$name AS {$ddl['data_type']}
         INCREMENT BY {$ddl['increment_by']}
         {$ddl['min_value']}
         {$ddl['max_value']}
@@ -1750,5 +1767,90 @@ class Model
         $res = $this->prepare($sql);
         $this->execute($res);
         return $name;
+    }
+
+    /**
+     * Alters the properties of a database sequence.
+     *
+     * @param string $name The current name of the sequence to be altered.
+     * @param string $schema The schema in which the sequence exists.
+     * @param array $ddl An associative array containing the modifications to be applied to the sequence.
+     *                    Supported keys include:
+     *                    - `name` (string): Rename the sequence to a new name.
+     *                    - `data_type` (string): Specify a new data type for the sequence.
+     *                    - `increment_by` (int): Change the increment value for the sequence.
+     *                    - `min_value` (int|null): Set a new minimum value for the sequence, or `null` to reset to no minimum value.
+     *                    - `max_value` (int|null): Set a new maximum value for the sequence, or `null` to reset to no maximum value.
+     *                    - `start_value` (int): Define a new starting value for the sequence.
+     *                    - `restart_value` (int): Restart the sequence at a specified value.
+     *                    - `cache_size` (int): Set the number of sequence values to cache.
+     *                    - `owned_by` (string): Define the table column that owns the sequence.
+     *
+     * @return string The final name of the sequence after any potential renaming.
+     */
+    public function alterSequence(string $name, string $schema, array $ddl): string
+    {
+        $name = self::toAscii(str: $name, delimiterRegex: "/[\/|+ -]+/");
+
+        // Handle rename if name differs
+        if (isset($ddl['name']) && $ddl['name'] !== $name) {
+            $newName = self::toAscii(str: $ddl['name'], delimiterRegex: "/[\/|+ -]+/");
+            $sql = "ALTER SEQUENCE $schema.$name RENAME TO $newName";
+            $res = $this->prepare($sql);
+            $this->execute($res);
+            $name = $newName;
+        }
+
+        $alterParts = [];
+
+        if (isset($ddl['data_type'])) {
+            $alterParts[] = "AS {$ddl['data_type']}";
+        }
+        if (isset($ddl['increment_by'])) {
+            $alterParts[] = "INCREMENT BY {$ddl['increment_by']}";
+        }
+        if (isset($ddl['min_value'])) {
+            $alterParts[] = "MINVALUE {$ddl['min_value']}";
+        } elseif (array_key_exists('min_value', $ddl) && $ddl['min_value'] === null) {
+            $alterParts[] = "NO MINVALUE";
+        }
+        if (isset($ddl['max_value'])) {
+            $alterParts[] = "MAXVALUE {$ddl['max_value']}";
+        } elseif (array_key_exists('max_value', $ddl) && $ddl['max_value'] === null) {
+            $alterParts[] = "NO MAXVALUE";
+        }
+        if (isset($ddl['start_value'])) {
+            $alterParts[] = "START WITH {$ddl['start_value']}";
+        }
+        if (isset($ddl['restart_value'])) {
+            $alterParts[] = "RESTART WITH {$ddl['restart_value']}";
+        }
+        if (isset($ddl['cache_size'])) {
+            $alterParts[] = "CACHE {$ddl['cache_size']}";
+        }
+        if (isset($ddl['owned_by'])) {
+            $alterParts[] = "OWNED BY {$ddl['owned_by']}";
+        }
+
+        if (!empty($alterParts)) {
+            $sql = "ALTER SEQUENCE $schema.$name " . implode(' ', $alterParts);
+            $res = $this->prepare($sql);
+            $this->execute($res);
+        }
+        return $name;
+    }
+
+    /**
+     * Deletes a sequence from the database.
+     *
+     * @param string $name The name of the sequence to be deleted.
+     *
+     * @return void
+     */
+    public function deleteSequence(string $name): void
+    {
+        $sql = "DROP SEQUENCE $name";
+        $res = $this->prepare($sql);
+        $this->execute($res);
     }
 }

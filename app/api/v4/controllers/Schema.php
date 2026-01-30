@@ -106,6 +106,7 @@ class Schema extends AbstractApi
                 ];
                 if (Input::get('namesOnly') === null) {
                     $t['tables'] = Table::getTables($name, $this);
+                    $t['sequences'] = Sequence::getSequences($this->table[0], $schema);
                 }
                 $t['_links'] = $links;
                 $response[] = $t;
@@ -123,6 +124,7 @@ class Schema extends AbstractApi
                 ];
                 if (Input::get('namesOnly') === null) {
                     $t['tables'] = Table::getTables($schema, $this);
+                    $t['sequences'] = Sequence::getSequences($this->table[0], $schema);
                 }
                 $t['_links'] = $links;
                 $r[] = $t;
@@ -172,10 +174,23 @@ class Schema extends AbstractApi
             $this->table[0]->postgisschema = $data->name;
             $r = $this->schemaObj->createSchema($data->name, $this->table[0]);
             $list[] = $r['schema'];
+
+            // Add sequences and defer "OWNED BY" to after creation of tables
+            if (!empty($data->sequences)) {
+                foreach ($data->sequences as $sequence) {
+                    Sequence::addSequence($this->table[0], $data->name, (array)$sequence, false);
+                }
+            }
             // Add tables
             if (!empty($data->tables)) {
                 foreach ($data->tables as $table) {
                     Table::addTable($this->table[0], $table, $this);
+                }
+            }
+            // Alter sequences so "OWNED BY" is set after creation of tables
+            if (!empty($data->sequences)) {
+                foreach ($data->sequences as $sequence) {
+                    Sequence::alterSequence($this->table[0], $data->name, (array)$sequence, false);
                 }
             }
         }
@@ -281,6 +296,14 @@ class Schema extends AbstractApi
                     new Assert\NotBlank(),
                     Table::getAssert(),
                 ]),
+            ]),
+            'sequences' => new Assert\Optional([
+                new Assert\Type('array'),
+//                new Assert\Count(min: 1),
+//                new Assert\All([
+//                    new Assert\NotBlank(),
+//                    Table::getAssert(),
+//                ]),
             ]),
         ]);
     }

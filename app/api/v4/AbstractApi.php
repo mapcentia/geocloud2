@@ -102,7 +102,13 @@ abstract class AbstractApi implements ApiInterface
     }
 
     /**
-     * @throws GC2Exception
+     * Checks if the specified schemas exist in the connected database.
+     * Iterates through the list of schemas and verifies their existence,
+     * throwing an exception if any schema is not found.
+     *
+     * @return void
+     *
+     * @throws GC2Exception If any of the schemas in the list do not exist in the database.
      */
     public function doesSchemaExist(): void
     {
@@ -115,7 +121,13 @@ abstract class AbstractApi implements ApiInterface
     }
 
     /**
-     * @throws GC2Exception
+     * Checks whether all specified tables exist in the database.
+     * Iterates through the list of qualified table names and verifies their existence
+     * using the database connection. Throws an exception if any table is not found.
+     *
+     * @return void
+     *
+     * @throws GC2Exception If a specified table does not exist in the database.
      */
     public function doesTableExist(): void
     {
@@ -128,7 +140,13 @@ abstract class AbstractApi implements ApiInterface
     }
 
     /**
-     * @throws GC2Exception
+     * Checks whether the specified columns exist in the table's metadata.
+     * Iterates through the list of columns and validates their presence in the metadata of the table's first row.
+     * Throws an exception if any column is not found.
+     *
+     * @return void
+     *
+     * @throws GC2Exception If any specified column is missing from the table's metadata.
      */
     public function doesColumnExist(): void
     {
@@ -140,8 +158,12 @@ abstract class AbstractApi implements ApiInterface
     }
 
     /**
+     * Checks if the specified indices exist in the table's schema.
+     * Validates against the defined indices and throws an exception if any index is missing.
+     *
      * @return void
-     * @throws GC2Exception
+     *
+     * @throws GC2Exception If one or more specified indices are not found in the schema.
      */
     public function doesIndexExist(): void
     {
@@ -195,7 +217,13 @@ abstract class AbstractApi implements ApiInterface
     }
 
     /**
-     * @throws GC2Exception
+     * Checks if the specified sequences exist within the defined schema and table.
+     * Iterates through the configured sequences and validates their presence in the database metadata.
+     * Throws an exception if any sequence is not found.
+     *
+     * @return void
+     *
+     * @throws GC2Exception If a sequence does not exist in the schema or table.
      */
     private function doesSequenceExist(): void
     {
