@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.2.0] - 2026-5-2
+### Fixed
+- JSON is no longer URL decoded by default, because it can invalidate the raw JSON with control characters.
+
 ## [2026.1.2] - 2026-23-1
 ### Fixed
 - Handle `PDOException` gracefully in `Mapfile.php` to prevent unhandled errors.
