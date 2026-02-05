@@ -397,53 +397,66 @@ class Model
             $foreignConstrains = $this->getForeignConstrains($_schema, $_table)["data"];
             $checkConstrains = $this->getConstrains($_schema, $_table, 'c')["data"];
             $sql = "SELECT
-                  attname                          AS column_name,
-                  attnum                           AS ordinal_position,
-                  atttypid :: REGTYPE              AS udt_name,
-                  typname,
-                  attnotnull                       AS is_nullable,
-                  format_type(atttypid, atttypmod) AS full_type,
-                  pg_get_expr(d.adbin, d.adrelid) AS default_value,
-                  CASE  
-                      when atttypid in (1043) then
-                  atttypmod-4         
-       ELSE null       end       AS character_maximum_length 
-       ,
-                  CASE atttypid
-                     WHEN 21 /*int2*/ THEN 16
-                     WHEN 23 /*int4*/ THEN 32
-                     WHEN 20 /*int8*/ THEN 64
-                     WHEN 1700 /*numeric*/ THEN
-                          CASE WHEN atttypmod = -1
-                               THEN null
-                               ELSE ((atttypmod - 4) >> 16) & 65535     -- calculate the precision
-                               END
-                     WHEN 700 /*float4*/ THEN 24 /*FLT_MANT_DIG*/
-                     WHEN 701 /*float8*/ THEN 53 /*DBL_MANT_DIG*/
-                     ELSE null
-              END   AS numeric_precision,
-              CASE 
-                WHEN atttypid IN (21, 23, 20) THEN 0
-                WHEN atttypid IN (1700) THEN            
-                    CASE 
-                        WHEN atttypmod = -1 THEN null       
-                        ELSE (atttypmod - 4) & 65535            -- calculate the scale  
-                    END
-                   ELSE null
-              END AS numeric_scale
-       ,
-        case 
-          when attlen <> -1 then attlen
-          when atttypid in (1043, 25) then information_schema._pg_char_octet_length(information_schema._pg_truetypid(a.*, t.*), information_schema._pg_truetypmod(a.*, t.*))
-       end as max_bytes
-                  
-                FROM pg_attribute a
-                  join pg_type t on atttypid = t.oid
-                  left join pg_catalog.pg_attrdef d ON (a.attrelid, a.attnum) = (d.adrelid, d.adnum)
-
-                WHERE attrelid = :table :: REGCLASS
-                        AND attnum > 0
-                        AND NOT attisdropped";
+                        attname                          AS column_name,
+                        attnum                           AS ordinal_position,
+                        atttypid :: REGTYPE              AS udt_name,
+                        typname,
+                        attnotnull                       AS is_nullable,
+                        format_type(atttypid, atttypmod) AS full_type,
+                        pg_get_expr(d.adbin, d.adrelid)  AS default_value,
+                    
+                        a.attidentity                    AS attidentity,
+                        CASE a.attidentity
+                            WHEN 'a' THEN true
+                            WHEN 'd' THEN true
+                            ELSE false
+                            END                              AS is_identity,
+                        CASE a.attidentity
+                            WHEN 'a' THEN 'always'
+                            WHEN 'd' THEN 'by default'
+                            ELSE NULL
+                            END                              AS identity_generation,
+                    
+                        CASE
+                            when atttypid in (1043) then
+                                atttypmod-4
+                            ELSE null       end       AS character_maximum_length
+                            ,
+                        CASE atttypid
+                            WHEN 21 /*int2*/ THEN 16
+                            WHEN 23 /*int4*/ THEN 32
+                            WHEN 20 /*int8*/ THEN 64
+                            WHEN 1700 /*numeric*/ THEN
+                                CASE WHEN atttypmod = -1
+                                         THEN null
+                                     ELSE ((atttypmod - 4) >> 16) & 65535     -- calculate the precision
+                                    END
+                            WHEN 700 /*float4*/ THEN 24 /*FLT_MANT_DIG*/
+                            WHEN 701 /*float8*/ THEN 53 /*DBL_MANT_DIG*/
+                            ELSE null
+                            END   AS numeric_precision,
+                        CASE
+                            WHEN atttypid IN (21, 23, 20) THEN 0
+                            WHEN atttypid IN (1700) THEN
+                                CASE
+                                    WHEN atttypmod = -1 THEN null
+                                    ELSE (atttypmod - 4) & 65535            -- calculate the scale
+                                    END
+                            ELSE null
+                            END AS numeric_scale
+                            ,
+                        case
+                            when attlen <> -1 then attlen
+                            when atttypid in (1043, 25) then information_schema._pg_char_octet_length(information_schema._pg_truetypid(a.*, t.*), information_schema._pg_truetypmod(a.*, t.*))
+                            end as max_bytes
+                    
+                    FROM pg_attribute a
+                             join pg_type t on atttypid = t.oid
+                             left join pg_catalog.pg_attrdef d ON (a.attrelid, a.attnum) = (d.adrelid, d.adnum)
+                    
+                    WHERE attrelid = :table :: REGCLASS
+                      AND attnum > 0
+                      AND NOT attisdropped";
             $res = $this->prepare($sql);
             if ($temp) {
                 $this->execute($res, array("table" => "\"" . $table . "\""));
@@ -543,6 +556,7 @@ class Model
                         $tmpArr["is_primary"] = !empty($index["is_primary"][$row["column_name"]]);
                         $tmpArr["is_nullable"] = !$row['is_nullable'];
                         $tmpArr["default_value"] = $row['default_value'];
+                        $tmpArr["identity_generation"] = $row['identity_generation'];
                         $tmpArr["index_method"] = !empty($index["index_method"][$row["column_name"]]) ? $index["index_method"][$row["column_name"]] : null;
                         $tmpArr["checks"] = sizeof($checkValues) > 0 ? array_map(function ($con) {
                             preg_match('#\((.*?)\)#', $con, $match);

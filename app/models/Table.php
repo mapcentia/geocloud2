@@ -894,6 +894,9 @@ class Table extends Model
         // We set the data type
         $type = $this->matchType($data['type']);
         $sql .= "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ADD COLUMN \"$safeColumn\" $type";
+        if (!empty($data['identity_generation'])) {
+            $sql .= " GENERATED {$data['identity_generation']} AS IDENTITY";
+        }
         $res = $this->prepare($sql);
         $res->execute();
 

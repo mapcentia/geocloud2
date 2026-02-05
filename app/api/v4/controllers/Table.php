@@ -221,7 +221,7 @@ class Table extends AbstractApi
             $schemaName = $data->schema ?? $this->schema[0];
             // Set comment
             if (property_exists($data, 'comment')) {
-                $layer->table = $schemaName . "." .$relName;
+                $layer->table = $schemaName . "." . $relName;
                 $layer->setTableComment($data->comment);
             }
             // Emit events
@@ -236,7 +236,7 @@ class Table extends AbstractApi
         $schema = $data->schema ?? $this->schema[0];
         $layer->commit();
         $baseUrl = "/api/v4/schemas/$schema/tables/";
-        $list =  count($r) > 0 ?  $r : $this->unQualifiedName;
+        $list = count($r) > 0 ? $r : $this->unQualifiedName;
         return $this->patchResponse($baseUrl, $list);
     }
 
@@ -273,7 +273,15 @@ class Table extends AbstractApi
         // Add columns
         if (!empty($data->columns)) {
             foreach ($data->columns as $column) {
-                Column::addColumn($table, $column->name, $column->type, true, $column->default_value, $column->is_nullable ?? true);
+                Column::addColumn(
+                    table: $table,
+                    column: $column->name,
+                    type: $column->type,
+                    defaultValue: $column->default_value,
+                    isNullable: $column->is_nullable,
+                    identity: $column->identity_generation,
+                    comment: $column->comment
+                );
             }
         }
         // Add indices
@@ -296,6 +304,7 @@ class Table extends AbstractApi
      * @param ApiInterface $self
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws GC2Exception
      */
     public static function getTable(TableModel $table, ApiInterface $self): array
     {
@@ -331,7 +340,7 @@ class Table extends AbstractApi
         $tables = [];
         foreach ((new Model(connection: $self->connection))->getTablesFromSchema($schema) as $name) {
             $tableName = $schema . "." . $name;
-            $tables[] = Input::get('namesOnly') !== null ? ['name' => $tableName] : self::getTable(new TableModel(table: $tableName, lookupForeignTables:  false, connection: $self->connection), $self);
+            $tables[] = Input::get('namesOnly') !== null ? ['name' => $tableName] : self::getTable(new TableModel(table: $tableName, lookupForeignTables: false, connection: $self->connection), $self);
         }
         return $tables;
     }

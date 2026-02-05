@@ -68,6 +68,13 @@ use Symfony\Component\Validator\Constraints as Assert;
             type: "string",
             example: "my-value"
         ),
+        new OA\Property(
+            property: "identity_generation",
+            title: "Identity generation of the column",
+            description: "An identity column is a special column that is generated automatically from an implicit sequence. It can be used to generate key values.",
+            enum: ["always", "by default"],
+            example: "always"
+        ),
     ],
     type: "object"
 )]
@@ -136,10 +143,6 @@ class Column extends AbstractApi
     {
         $body = Input::getBody();
         $data = json_decode($body);
-        $setDefaultValue = false;
-        if (!empty($data->default_value)) {
-            $setDefaultValue = true;
-        }
         $list = [];
         $this->table[0]->connect();
         $this->table[0]->begin();
@@ -149,7 +152,14 @@ class Column extends AbstractApi
             $columns = $data->columns;
         }
         foreach ($columns as $datum) {
-            $list[] = self::addColumn($this->table[0], $datum->name, $datum->type, $setDefaultValue, $datum->default_value, $datum->is_nullable ?? true, $datum->comment);
+            $list[] = self::addColumn(
+                table: $this->table[0],
+                column: $datum->name,
+                type: $datum->type,
+                defaultValue: $datum->default_value,
+                isNullable: $datum->is_nullable,
+                identity: $datum->identity_generation,
+                comment: $datum->comment);
         }
         $this->table[0]->commit();
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/columns/";
@@ -157,10 +167,9 @@ class Column extends AbstractApi
     }
 
     /**
-     * @return array
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return PatchResponse
      * @throws GC2Exception
-     * @throws InvalidArgumentException
+     * @throws PhpfastcacheInvalidArgumentException
      */
     #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}/', operationId: 'patchColumn', description: "Update column(s)", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
@@ -265,22 +274,35 @@ class Column extends AbstractApi
     }
 
     /**
+     * @param TableModel $table
+     * @param string $column
+     * @param string $type
+     * @param mixed|null $defaultValue
+     * @param bool|null $isNullable
+     * @param string|null $identity
+     * @param string|null $comment
+     * @return string
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    public static function addColumn(TableModel $table, string $column, string $type, bool $setDefaultValue, mixed $defaultValue = null, bool $isNullable = true, ?string $comment = null): string
+    public static function addColumn(TableModel $table, string $column, string $type, mixed $defaultValue = null, ?bool $isNullable = null, ?string $identity = null, ?string $comment = null): string
     {
+        if (!empty($identity) && ($isNullable === true || $defaultValue !== null)) {
+            throw new GC2Exception("Identity columns can not be nullable or have default values", 400);
+        }
         $r = $table->addColumn([
             "column" => $column,
             "type" => $type,
+            "identity_generation" => $identity,
             "comment" => $comment,
         ]);
-        if (!$isNullable) {
+        if ($isNullable === false) {
             $table->addNotNullConstraint($r["column"]);
-        } else {
+        }
+        if ($isNullable === true){
             $table->dropNotNullConstraint($r["column"]);
         }
-        if ($setDefaultValue && isset($defaultValue)) {
+        if (isset($defaultValue)) {
             $table->addDefaultValue($r["column"], $defaultValue);
         }
         return $r["column"];
@@ -323,6 +345,11 @@ class Column extends AbstractApi
             $collection->fields['type'] = new Assert\Required([
                     new Assert\Type('string'),
                     new Assert\NotBlank()
+                ]
+            );
+            $collection->fields['identity_generation'] = new Assert\Optional([
+                    new Assert\Type('string'),
+                    new Assert\Choice(choices: ['always', 'by default']),
                 ]
             );
         } else {
