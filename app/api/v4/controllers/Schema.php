@@ -32,6 +32,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Schema",
+    description: "A database contains one or more named schemas, which in turn contain tables. Within one schema, two tables cannot have the same name. The same table name can be used in different schemas without conflict.",
     required: ["name"],
     properties: [
         new OA\Property(
@@ -72,7 +73,7 @@ class Schema extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/schemas/{schema}', operationId: 'getSchema', description: "Get schema", tags: ['Schema'])]
+    #[OA\Get(path: '/api/v4/schemas/{schema}', operationId: 'getSchema', description: "Get schema(s)", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: false, example: 'my_schema')]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Schema"),
         links: [
@@ -138,11 +139,10 @@ class Schema extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Post(path: '/api/v4/schemas', operationId: 'postSchema', description: "Create schema", tags: ['Schema'])]
+    #[OA\Post(path: '/api/v4/schemas', operationId: 'postSchema', description: "Create schema(s)", tags: ['Schema'])]
     #[OA\RequestBody(description: 'New schema', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Schema"))]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
-    #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
@@ -203,9 +203,9 @@ class Schema extends AbstractApi
      * @return Response
      * @throws GC2Exception
      */
-    #[OA\Patch(path: '/api/v4/schemas/{schema}', operationId: 'patchSchema', description: "Rename schema", tags: ['Schema'])]
+    #[OA\Patch(path: '/api/v4/schemas/{schema}', operationId: 'patchSchema', description: "Rename a schema", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: false, example: 'my_schema')]
-    #[OA\RequestBody(description: 'Update schema', required: true, content: new OA\JsonContent(
+    #[OA\RequestBody(description: 'Rename schema', required: true, content: new OA\JsonContent(
         allOf: [
             new OA\Schema(
                 required: ["name"],
@@ -236,7 +236,7 @@ class Schema extends AbstractApi
      * @return Response
      * @throws GC2Exception
      */
-    #[OA\Delete(path: '/api/v4/schemas/{schema}', operationId: 'deleteSchema', description: "Delete schema", tags: ['Schema'])]
+    #[OA\Delete(path: '/api/v4/schemas/{schema}', operationId: 'deleteSchema', description: "Delete schema(s)", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Response(response: 204, description: 'Schema deleted')]
     #[OA\Response(response: 400, description: 'Bad request')]

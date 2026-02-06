@@ -34,11 +34,12 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Table",
+    description: "A table is much like a table on paper: It consists of rows and columns. The number and order of the columns is fixed, and each column has a name. The number of rows is variable — it reflects how much data is stored at a given moment.",
     required: ["name"],
     properties: [
         new OA\Property(
             property: "name",
-            title: "Name of the table",
+            title: "Name",
             description: "Name of the table",
             type: "string",
             example: "my-column",
@@ -46,18 +47,21 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "columns",
             title: "Columns",
+            description: "Columns in the table.",
             type: "array",
             items: new OA\Items(ref: "#/components/schemas/Column"),
         ),
         new OA\Property(
             property: "indices",
             title: "Indices",
+            description: "Indices in the table.",
             type: "array",
             items: new OA\Items(ref: "#/components/schemas/Index"),
         ),
         new OA\Property(
             property: "constraints",
             title: "Constraints",
+            description: "Constraints in the table.",
             type: "array",
             items: new OA\Items(ref: "#/components/schemas/Constraint"),
         ),
@@ -80,7 +84,7 @@ class Table extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'getTable', description: "Get table", tags: ['Schema'])]
+    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'getTable', description: "Get table(s)", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: false, example: 'my_table')]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Table"),
@@ -144,12 +148,11 @@ class Table extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Post(path: '/api/v4/schemas/{schema}/tables', operationId: 'postTable', description: "Create table", tags: ['Schema'])]
+    #[OA\Post(path: '/api/v4/schemas/{schema}/tables', operationId: 'postTable', description: "Create table(s)", tags: ['Schema'])]
     #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\RequestBody(description: 'New table', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Table"))]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
-    #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
@@ -182,10 +185,10 @@ class Table extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'patchTable', description: "Update table", tags: ['Schema'])]
+    #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'patchTable', description: "Rename and move table(s)", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
-    #[OA\RequestBody(description: 'Update table', required: true, content: new OA\JsonContent(
+    #[OA\RequestBody(description: 'Updated table', required: true, content: new OA\JsonContent(
         allOf: [
             new OA\Schema(
                 properties: [

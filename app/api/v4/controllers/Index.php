@@ -28,18 +28,20 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Index",
+    description: "Indices in a database use a similar approach as in most non-fiction books: terms and concepts that are frequently looked up by readers are collected in an alphabetic index at the end of the book. The interested reader can scan the index relatively quickly and flip to the appropriate page(s), rather than having to read the entire book to find the material of interest.",
     required: ["columns"],
     properties: [
         new OA\Property(
             property: "name",
-            title: "Name of the index.",
+            title: "Name",
+            description: "Name of the index.",
             type: "string",
             example: "my-btree",
         ),
         new OA\Property(
             property: "columns",
-            title: "Columns which should be indexed?.",
-            description: "An index can comprise more columns.",
+            title: "Columns",
+            description: "Column(s) to index. An index can comprise more columns.",
             type: "array",
             items: new OA\Items(type: "string"),
             example: ["field1"]
@@ -47,8 +49,10 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "method",
             title: "The index method.",
+            description: "The index method.",
             type: "string",
             default: "btree",
+            enum: ["btree", "brin", "gin", "gist", "hash"],
             example: "btree"
         ),
     ],
@@ -69,7 +73,7 @@ class Index extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/indices/{index}', operationId: 'getIndex', description: "Get index", tags: ['Schema'])]
+    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/indices/{index}', operationId: 'getIndex', description: "Get index(s)", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table', in: 'path', required: true, example: 'my_table')]
     #[OA\Parameter(name: 'index', description: 'Index', in: 'path', required: false, example: 'my_index')]
@@ -107,7 +111,7 @@ class Index extends AbstractApi
      * @return Response
      * @throws GC2Exception|InvalidArgumentException
      */
-    #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/indices', operationId: 'postIndex', tags: ['Schema'],)]
+    #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/indices', operationId: 'postIndex', description: "Create index(s)", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Name of schema', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Name of table', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\RequestBody(description: 'New index', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Index"))]
@@ -171,7 +175,7 @@ class Index extends AbstractApi
         // TODO: Implement put_index() method.
     }
 
-    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/indices/{index}', operationId: 'deleteIndex', description: "Delete index", tags: ['Schema'])]
+    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/indices/{index}', operationId: 'deleteIndex', description: "Delete index(s)", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Name of schema', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Name of table', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\Parameter(name: 'index', description: 'Index name(s)', in: 'path', required: true, example: 'my_index')]
@@ -227,7 +231,7 @@ class Index extends AbstractApi
             ]),
             'method' => new Assert\Optional([
                 new Assert\Type('string'),
-                new Assert\NotBlank()
+                new Assert\Choice(['btree', 'brin', 'gin', 'gist', 'hash']),
             ]),
             'unique' => new Assert\Optional([
                 new Assert\Type('boolean'),

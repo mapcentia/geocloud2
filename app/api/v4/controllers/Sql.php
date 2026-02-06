@@ -41,12 +41,13 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Sql",
+    description: "SQL query execution endpoint. Supports SELECT, INSERT, UPDATE, DELETE and MERGE statements.",
     required: [],
     properties: [
         new OA\Property(
             property: "q",
             title: "Query",
-            description: "SQL statement. SELECT, INSERT, UPDATE or DELETE",
+            description: "SQL statement. SELECT, INSERT, UPDATE, DELETE or MERGE.",
             type: "string",
             example: "SELECT :my_date::date as my_date",
         ),
@@ -68,7 +69,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
         new OA\Property(
             property: "type_formats",
             title: "Type formats",
-            description: "Formats for types (like date formatting)",
+            description: "Formats for types (like date formatting).",
             type: "object",
             example: ["my_date" => "Y m d"],
         ),
@@ -83,7 +84,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
         new OA\Property(
             property: "srs",
             title: "Spatial reference system",
-            description: "The spatial reference system to use for PostGIS geometry columns. EPSG code",
+            description: "The spatial reference system to use for PostGIS geometry columns. EPSG code.",
             type: "integer",
             default: 4326,
             example: 25832,
@@ -114,10 +115,9 @@ class Sql extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException|GC2Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Post(path: '/api/v4/sql', operationId: 'postSql', description: "Run SQL statements", tags: ['Sql'])]
-    #[OA\RequestBody(description: 'Sql statement to run', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sql"))]
+    #[OA\Post(path: '/api/v4/sql', operationId: 'postSql', description: "Execute SQL statements", tags: ['Sql'])]
+    #[OA\RequestBody(description: 'Sql statement to execute', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sql"))]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\MediaType('application/json'))]
-    #[OA\Response(response: 201, description: 'Insert/update a JSON-RPC method')]
     #[OA\Response(response: 500, description: 'Internal error. Most like an SQL error.')]
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]

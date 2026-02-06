@@ -29,19 +29,20 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Constraint",
+    description: "A constraint is a rule that is enforced on a table to ensure data integrity. Constraints can be used to enforce rules such as uniqueness, foreign key relationships, and check constraints. They help maintain the consistency and accuracy of data in a database.",
     required: ["constraint", "columns"],
     properties: [
         new OA\Property(
             property: "name",
-            title: "Name of the constraint",
-            description: "Name of the constraint",
+            title: "Name",
+            description: "Name of the constraint.",
             type: "string",
             example: "my-constraint",
         ),
         new OA\Property(
             property: "constraint",
-            title: "Type of the constraint",
-            description: "Type of the constraint",
+            title: "Type",
+            description: "Type of the constraint.",
             type: "string",
             example: "foreign",
         ),
@@ -56,14 +57,14 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "check",
             title: "Check",
-            description: "A check constraint",
+            description: "A check constraint.",
             type: "string",
             example: "c1 > 0",
         ),
         new OA\Property(
             property: "referenced_table",
             title: "Referenced table",
-            description: "Referenced table in a foreign key constraint",
+            description: "Referenced table in a foreign key constraint.",
             type: "string",
             example: "my_schema.my.table",
         ),

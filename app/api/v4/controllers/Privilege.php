@@ -30,6 +30,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Privilege",
+    description: "The privilege system enables the super-user to grant sub-users read or write privileges to tables. Sub-users can grant privileges to tables in their own schemas.",
     required: ["subuser", "privileges"],
     properties: [
         new OA\Property(
@@ -42,8 +43,9 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "privileges",
             title: "Privileges",
-            description: "Either none, read, write",
+            description: "The privileges granted to the sub-user on a table.",
             type: "string",
+            enum: ["none", "read", "write"],
             example: "all",
         ),
     ],
@@ -154,9 +156,7 @@ class Privilege extends AbstractApi
             ]),
             'privilege' => new Assert\Required([
                 new Assert\Type('string'),
-                new Assert\NotBlank(),
                 new Assert\Choice(choices: ['none', 'read', 'write']),
-
             ]),
         ]);
         $this->validateRequest($collection, $body, Input::getMethod(), true);

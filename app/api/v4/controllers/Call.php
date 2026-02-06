@@ -41,6 +41,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Call",
+    description: "JSON-RPC is a stateless, lightweight remote procedure call (RPC) protocol that uses JSON for data interchange. Defined by the JSON-RPC 2.0 specification, it enables clients to invoke methods on a server by sending JSON-formatted requests and receiving JSON-formatted responses, with support for batch calls, notifications, and standardized error handling.",
     required: ["jsonrpc", "method"],
     properties: [
         new OA\Property(
@@ -48,6 +49,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
             title: "JSON RPC version",
             description: "The version number of the JSON-RPC protocol. Must be exactly \"2.0\".",
             type: "string",
+            enum: ["2.0"],
             example: "2.0",
         ),
         new OA\Property(
@@ -93,8 +95,8 @@ class Call extends AbstractApi
      * @throws RPCException
      * @throws Exception
      */
-    #[OA\Post(path: '/api/v4/call', operationId: 'postCall', description: "Execute RPC method", tags: ['Methods'])]
-    #[OA\RequestBody(description: 'RPC method to execute', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Call"))]
+    #[OA\Post(path: '/api/v4/call', operationId: 'postCall', description: "Call a RPC method", tags: ['Methods'])]
+    #[OA\RequestBody(description: 'RPC method call', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Call"))]
     #[OA\Response(response: 200, description: 'OK', content: new OA\MediaType('application/json'))]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json', 'application/json-rpc'])]

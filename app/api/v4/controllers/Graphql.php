@@ -22,6 +22,8 @@ use app\inc\Connection;
 use app\inc\GraphQL as _GraphQl;
 use app\inc\Input;
 use app\inc\Route2;
+use OpenApi\Annotations\OpenApi;
+use OpenApi\Attributes as OA;
 use Override;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
@@ -49,6 +51,37 @@ use Symfony\Component\Validator\Constraints as Assert;
  *    - query { getUser(id: 5) { id name } }       // selects row from public.user with primary key = 5
  *    - query { getUser(id: $i) { id name } }      // same, using variables: { "variables": { "i": 5 } }
  */
+#[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
+#[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
+#[OA\Schema(
+    schema: "GraphQL",
+    description: "The GraphQL API allows you to query and manipulate your database data using a dynamically generated schema. Each table in your schema is automatically mapped to GraphQL types, queries, and mutations.",
+    required: ["query"],
+    properties: [
+        new OA\Property(
+            property: "query",
+            title: "Query",
+            description: "GraphQL query. Both query and mutation operations are supported. Queries retrieve data, while mutations modify data.",
+            type: "string",
+            example: "query { ... }",
+        ),
+        new OA\Property(
+            property: "variables",
+            title: "Variables",
+            description: "Variables for the GraphQL query. Should be a JSON object with variable names as keys and their values as values.",
+            type: "object",
+            example: ["id" => 1],
+        ),
+        new OA\Property(
+            property: "operationName",
+            title: "Operation name",
+            description: "Name of the operation to execute. Useful when a query contains multiple operations.",
+            type: "string",
+            example: "Artists",
+        ),
+    ],
+    type: "object"
+)]
 #[AcceptableMethods(['POST', 'OPTIONS'])]
 #[Controller(route: 'api/graphql/schema/{schema}', scope: Scope::SUB_USER_ALLOWED)]
 class Graphql extends AbstractApi
@@ -64,11 +97,16 @@ class Graphql extends AbstractApi
      * Accepts a JSON body: { "query": string, "variables": object|null }
      *
      * @return ApiResponse
-     * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      * @throws InvalidArgumentException
      * @throws GraphQLException
      */
+    #[OA\Post(path: '/api/graphql/{schema}', operationId: 'postGraphQL', description: "Run GraphQL query/mutation", tags: ['GraphQL'])]
+    #[OA\RequestBody(description: 'New rule', required: true, content: new OA\JsonContent(ref: "#/components/schemas/GraphQL"))]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Response(response: 200, description: 'Ok')]
+    #[OA\Response(response: 400, description: 'Bad request')]
+    #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
