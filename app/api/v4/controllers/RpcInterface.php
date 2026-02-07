@@ -44,9 +44,8 @@ class RpcInterface extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/interfaces', operationId: 'getTypeScript', description: "Get TypeScript API", tags: ['Methods'])]
-    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Method"))]
-    #[OA\Response(response: 404, description: 'Not found')]
+    #[OA\Get(path: '/api/v4/interfaces', operationId: 'getTypeScript', description: "Get the interfaces for all RPC-JSON methods.", tags: ['Methods'])]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\MediaType(mediaType: "text/plain"))]
     #[AcceptableAccepts(['text/plain', '*/*'])]
     #[Override]
     public function get_index(): Response

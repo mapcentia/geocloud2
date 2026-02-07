@@ -30,16 +30,32 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Sequence",
+    description: "A sequence is a database object that generates a sequence of integers, often used for auto-incrementing primary key columns.",
     required: ["name"],
     properties: [
-        new OA\Property(property: "name", type: "string", example: "my_sequence"),
-        new OA\Property(property: "data_type", type: "string", example: "bigint"),
-        new OA\Property(property: "increment_by", type: "integer", example: 1),
-        new OA\Property(property: "min_value", type: "integer", example: 1),
-        new OA\Property(property: "max_value", type: "integer", example: 9223372036854775807),
-        new OA\Property(property: "start_value", type: "integer", example: 1),
-        new OA\Property(property: "cache_size", type: "integer", example: 1),
-        new OA\Property(property: "owned_by", type: "string", example: "public.my_table.id"),
+        new OA\Property(property: "name", title: "Name", description: "The name of the sequence", type: "string", example: "my_sequence"),
+        new OA\Property(property: "data_type", title: "Data type", description: "The data type of the sequence", type: "string",
+            default: "bigint",
+            enum: ["smallint", "integer", "bigint"],
+            example: "bigint"
+        ),
+        new OA\Property(property: "increment_by", title: "Increment by", description: "Specifies which value is added to the current sequence value to create a new value",
+            type: "integer",
+            default: 1,
+            example: 1
+        ),
+        new OA\Property(property: "min_value", title: "Min value", description: "Determines the minimum value a sequence can generate.",
+            type: "integer", example: 1
+        ),
+        new OA\Property(property: "max_value", title: "Max value", description: "Determines the maximum value for the sequence.", type: "integer", example: 9223372036854775807),
+        new OA\Property(property: "start_value", title: "Start value", description: "he initial value of the sequence", type: "integer", example: 1),
+        new OA\Property(property: "cache_size", title: "Cache size", description: "Specifies how many sequence numbers should be preallocated and stored in memory for faster access.",
+            type: "integer",
+            default: 1, example: 1
+        ),
+        new OA\Property(property: "owned_by", title: "Qwned by",
+            description: "Associates the sequence with a specific table column, so that if that column (or its whole table) is deleted, the sequence will be automatically deleted as well. The format is schema.table.column.",
+            type: "string", example: "public.my_table.id"),
     ],
     type: "object"
 )]
@@ -58,7 +74,7 @@ class Sequence extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/schemas/{schema}/sequences/{sequence}', operationId: 'getSequence', description: "Get sequence", tags: ['Schema'])]
+    #[OA\Get(path: '/api/v4/schemas/{schema}/sequences/{sequence}', operationId: 'getSequence', description: "Get sequence(s)", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'sequence', description: 'Sequence names', in: 'path', required: false, example: 'my_sequences')]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Sequence"))]
@@ -82,7 +98,7 @@ class Sequence extends AbstractApi
         return $this->getResponse($r);
     }
 
-    #[OA\Post(path: '/api/v4/schemas/{schema}/sequences/', operationId: 'postSequence', description: "Create sequence", tags: ['Schema'])]
+    #[OA\Post(path: '/api/v4/schemas/{schema}/sequences/', operationId: 'postSequence', description: "Create sequence(s)", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\RequestBody(description: 'New sequence', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sequence"))]
     #[OA\Response(response: 201, description: 'Created')]

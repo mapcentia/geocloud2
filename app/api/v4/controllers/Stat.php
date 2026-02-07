@@ -25,7 +25,8 @@ use OpenApi\Attributes as OA;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Stats",
-    required: [],
+    description: "Statistics about the whole database.",
+    required: ["tables", "total_size", "total_size_bytes", "number_of_tables", "cost"],
     properties: [
         new OA\Property(
             property: "tables",
@@ -67,7 +68,8 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\Schema(
     schema: "TableStats",
-    required: [],
+    description: "Table statistics.",
+    required: ["table_name", "schema_name", "total_size", "total_size_bytes"],
     properties: [
         new OA\Property(
             property: "table_name",

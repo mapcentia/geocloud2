@@ -32,7 +32,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "User",
-    required: [],
+    required: ["name", "email", "password"],
     properties: [
         new OA\Property(
             property: "name",

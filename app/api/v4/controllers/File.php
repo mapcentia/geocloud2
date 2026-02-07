@@ -41,20 +41,24 @@ use Override;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "File",
+    description: "Use the Files endpoints to upload one or more files (like CSV files) to temporary storage and then process them into a database table.",
     required: ["file", "schema"],
     properties: [
         new OA\Property(
             property: "file",
-            description: "File to import to database",
+            title: "File",
+            description: "File to import to database.",
             type: "string",
         ),
         new OA\Property(
             property: "schema",
+            title: "Schema",
             description: "Destination schema",
             type: "string",
         ),
         new OA\Property(
             property: "import",
+            title: "Import",
             description: "If false, a dry-run will be executed.",
             type: "boolean",
             default: false,
@@ -135,7 +139,7 @@ class File extends AbstractApi
      * @return Response
      * @throws GC2Exception
      */
-    #[OA\Post(path: '/api/v4/file/upload', operationId: 'postFileUpload', description: 'Upload files', tags: ['File'])]
+    #[OA\Post(path: '/api/v4/file/upload', operationId: 'postFileUpload', description: 'Upload the file(s) using multipart/form-data to get them staged on the server.', tags: ['File'])]
     #[OA\RequestBody(content: new OA\MediaType('multipart/form-data', new OA\Schema(
         properties: [
             new OA\Property(
@@ -226,7 +230,7 @@ class File extends AbstractApi
      * @return Response
      * @throws Exception
      */
-    #[OA\Post(path: '/api/v4/file/process', operationId: 'postFileProcess', description: 'Import files', tags: ['File'])]
+    #[OA\Post(path: '/api/v4/file/process', operationId: 'postFileProcess', description: 'Process the uploaded file into a target schema/table with desired options (dry-run, append, SRS, etc.).', tags: ['File'])]
     #[OA\RequestBody(description: 'New table', required: true, content: new OA\JsonContent(ref: "#/components/schemas/File"))]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 404, description: 'Not found')]

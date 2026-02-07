@@ -30,41 +30,42 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Client",
+    description: "OAuth clients are applications that request and manage access to user resources through the OAuth authorization protocol. These clients act as intermediaries, enabling secure, delegated access to user accounts without directly handling sensitive credentials.",
     required: ["name", "redirect_uri"],
     properties: [
         new OA\Property(
             property: "id",
-            title: "Id of the client.",
-            description: "Id of client, which identify the client",
+            title: "Client id",
+            description: "Id of client, which identify the client.",
             type: "string",
             example: "my_client_id",
         ),
         new OA\Property(
             property: "name",
-            title: "Name of the client.",
-            description: "Name of client. Can help identify the client",
+            title: "Name",
+            description: "Name of client. Can help identify the client.",
             type: "string",
             example: "My Application",
         ),
         new OA\Property(
             property: "homepage",
-            title: "Homepage of the client.",
-            description: "The homepage (or web-app), which starts the code flow",
+            title: "Homepage",
+            description: "The homepage (or web-app), which starts the code flow.",
             type: "string",
             format: "uri",
             example: "https://mapcentia.com"
         ),
         new OA\Property(
             property: "description",
-            title: "Description of the client.",
-            description: "A longer description of the client, which can help identify the client",
+            title: "Description",
+            description: "A longer description of the client, which can help identify the client.",
             type: "string",
             example: null,
             nullable: true
         ),
         new OA\Property(
             property: "redirect_uri",
-            title: "The allowed redirect URIs.",
+            title: "Redirect URIs.",
             description: "The URIs the auth server is allowed to redirect back to.",
             type: "array",
             items: new OA\Items(type: "string"),

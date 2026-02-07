@@ -37,34 +37,35 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Column",
+    description: "Each column has a data type. The data type constrains the set of possible values that can be assigned to a column and assigns semantics to the data stored in the column so that it can be used for computations. For instance, a column declared to be of a numerical type will not accept arbitrary text strings, and the data stored in such a column can be used for mathematical computations. By contrast, a column declared to be of a character string type will accept almost any kind of data but it does not lend itself to mathematical calculations, although other operations such as string concatenation are available.",
     required: [],
     properties: [
         new OA\Property(
             property: "name",
-            title: "Name of the column",
-            description: "Name of the column",
+            title: "Name",
+            description: "Name of the column.",
             type: "string",
             example: "my-column",
         ),
         new OA\Property(
             property: "type",
-            title: "Type of the column",
+            title: "Type",
             description: "The type of the column, like varchar, integer, boolean etc.",
             type: "string",
             example: "int",
         ),
         new OA\Property(
             property: "is_nullable",
-            title: "Should the column be nullable?",
-            description: "If true the column can be set to null",
+            title: "Is nullable",
+            description: "If true the column can be set to null.",
             type: "boolean",
             default: "true",
             example: "false"
         ),
         new OA\Property(
             property: "default_value",
-            title: "Default value of the column",
-            description: "The column i set to the default value if no value is given",
+            title: "Default value",
+            description: "The column is set to the default value if no value is given.",
             type: "string",
             example: "my-value"
         ),
@@ -72,6 +73,7 @@ use Symfony\Component\Validator\Constraints as Assert;
             property: "identity_generation",
             title: "Identity generation of the column",
             description: "An identity column is a special column that is generated automatically from an implicit sequence. It can be used to generate key values.",
+            type: "string",
             enum: ["always", "by default"],
             example: "always"
         ),
@@ -98,7 +100,7 @@ class Column extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}', operationId: 'getColumn', description: "Get column", tags: ['Schema'])]
+    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}', operationId: 'getColumn', description: "Get column(s)", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: false, example: 'my_columns')]
@@ -129,7 +131,7 @@ class Column extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/columns/', operationId: 'postColumn', description: "Get column", tags: ['Schema'])]
+    #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/columns/', operationId: 'postColumn', description: "Create new column(s)", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\RequestBody(description: 'New column', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Column"))]
@@ -233,12 +235,12 @@ class Column extends AbstractApi
     }
 
     /**
-     * @return array
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return NoContentResponse
      * @throws GC2Exception
      * @throws InvalidArgumentException
+     * @throws PhpfastcacheInvalidArgumentException
      */
-    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}', operationId: 'deleteColumn', description: "Get column", tags: ['Schema'])]
+    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}', operationId: 'deleteColumn', description: "Delete column(s)", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: true, example: 'my_columns')]

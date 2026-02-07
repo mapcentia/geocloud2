@@ -52,28 +52,30 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "username",
             title: "Username",
-            description: "Rule match for user name (the user that makes the request)",
+            description: "Rule match for user name (the user that makes the request).",
             type: "string",
             example: "john"
         ),
         new OA\Property(
             property: "service",
             title: "Service",
-            description: "Rule match for service. 'sql', 'ows' or 'wfst'",
+            description: "Rule match for service.",
             type: "string",
+            enum: ["sql", "ows", "wfst"],
             example: "sql"
         ),
         new OA\Property(
             property: "request",
             title: "Request",
-            description: "Rule match for request. 'select', 'insert', 'update' or 'delete'",
+            description: "Rule match for request.",
             type: "string",
+            enum: ["select", "insert", "update", "delete"],
             example: "select"
         ),
         new OA\Property(
             property: "layer",
             title: "Layer",
-            description: "Rule match for the requested layer(s)",
+            description: "Rule match for the requested layer(s).",
             type: "string",
             example: "my_table"
         ),
@@ -87,21 +89,22 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "schema",
             title: "Schema",
-            description: "Rule match for the requested schema(s)",
+            description: "Rule match for the requested schema(s).",
             type: "string",
             example: "my_schema"
         ),
         new OA\Property(
             property: "access",
             title: "Access",
-            description: "The access level the rule grants. Can be 'allow', 'limit' or 'deny'",
+            description: "The access level the rule grants.",
             type: "string",
+            enum: ["allow", "limit", "deny"],
             example: "limit"
         ),
         new OA\Property(
             property: "filter",
             title: "Filter",
-            description: "A filter for rules with 'limit' access. This is a valid WHERE clause",
+            description: "A filter for rules with 'limit' access. This is a valid WHERE clause.",
             type: "string",
             example: "user='john'"
         ),
@@ -126,7 +129,7 @@ class Geofence extends AbstractApi
      * @return Response
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/rules/{id}', operationId: 'getRule', description: "Get rules", tags: ['Rules'])]
+    #[OA\Get(path: '/api/v4/rules/{id}', operationId: 'getRule', description: "Get rule(s)", tags: ['Rules'])]
     #[OA\Parameter(name: 'id', description: 'Rule identifier', in: 'path', required: false, example: 2)]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Rule"))]
     #[OA\Response(response: 404, description: 'Not found')]
@@ -157,12 +160,12 @@ class Geofence extends AbstractApi
      * @return Response
      *
      */
-    #[OA\Post(path: '/api/v4/rules', operationId: 'postRule', description: "New rules", tags: ['Rules'])]
+    #[OA\Post(path: '/api/v4/rules', operationId: 'postRule', description: "Create rule(s)", tags: ['Rules'])]
     #[OA\RequestBody(description: 'New rule', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Rule"))]
-    #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
+    #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
     public function post_index(): Response
@@ -190,7 +193,7 @@ class Geofence extends AbstractApi
      * @throws GC2Exception
      */
 
-    #[OA\Patch(path: '/api/v4/rules/{id}', operationId: 'patchRule', description: "New rules", tags: ['Rules'])]
+    #[OA\Patch(path: '/api/v4/rules/{id}', operationId: 'patchRule', description: "Update rule(s)", tags: ['Rules'])]
     #[OA\Parameter(name: 'id', description: 'Rule identifier', in: 'path', required: true, example: 2)]
     #[OA\RequestBody(description: 'Update rule', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Rule"))]
     #[OA\Response(response: 204, description: "Rule updated")]
@@ -226,7 +229,7 @@ class Geofence extends AbstractApi
      * @return Response
      * @throws GC2Exception
      */
-    #[OA\Delete(path: '/api/v4/rules/{id}', operationId: 'deleteRule', description: "Delete rule", tags: ['Rules'])]
+    #[OA\Delete(path: '/api/v4/rules/{id}', operationId: 'deleteRule', description: "Delete rule(s)", tags: ['Rules'])]
     #[OA\Parameter(name: 'id', description: 'Id of rule', in: 'path', required: true, example: '2')]
     #[OA\Response(response: 204, description: "Rule deleted")]
     #[OA\Response(response: 404, description: 'Not found')]

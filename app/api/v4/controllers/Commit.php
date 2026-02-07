@@ -32,31 +32,34 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Commit",
+    description: "Schema commit.",
     required: ["schema", "repo", "message"],
     properties: [
         new OA\Property(
             property: "schema",
-            title: "Schema to commit",
+            title: "Schema",
+            description: "Schema to commit",
             type: "string",
             example: "myschema",
         ),
         new OA\Property(
             property: "repo",
             title: "Repository",
-            description: "An Git repository URL",
+            description: "An Git repository URL with credentials.",
             type: "string",
             example: "https://user:password@github.com/path/repo.git"
         ),
         new OA\Property(
             property: "message",
             title: "Commit message",
+            description: "The commit message.",
             type: "string",
             example: "My first commit"
         ),
         new OA\Property(
             property: "meta_query",
             title: "Meta query string",
-            description: "Only commit meta for this search",
+            description: "Only commit meta for this search.",
             type: "string",
             default: null,
             example: "tag:mytables"
@@ -82,7 +85,7 @@ class Commit extends AbstractApi
      * @throws GC2Exception
      * @throws GitException
      */
-    #[OA\Post(path: '/api/v4/commit', operationId: 'postCommit', description: "Commit schema changes to Git and push to remote", tags: ['Commit'],)]
+    #[OA\Post(path: '/api/v4/commit', operationId: 'postCommit', description: "Commit schema changes to Git and push to remote.", tags: ['Commit'],)]
     #[OA\RequestBody(description: 'New index', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Commit"))]
     #[OA\Response(response: 200, description: 'Committed')]
     #[OA\Response(response: 400, description: 'Bad request')]
