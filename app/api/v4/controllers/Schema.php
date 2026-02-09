@@ -107,7 +107,7 @@ class Schema extends AbstractApi
                 ];
                 if (Input::get('namesOnly') === null) {
                     $t['tables'] = Table::getTables($name, $this);
-                    $t['sequences'] = Sequence::getSequences($this->table[0], $schema);
+                    $t['sequences'] = Sequence::getSequences($this->table[0], $name);
                 }
                 $t['_links'] = $links;
                 $response[] = $t;
