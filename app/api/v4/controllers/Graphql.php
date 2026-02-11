@@ -101,7 +101,7 @@ class Graphql extends AbstractApi
      * @throws InvalidArgumentException
      * @throws GraphQLException
      */
-    #[OA\Post(path: '/api/graphql/{schema}', operationId: 'postGraphQL', description: "Run GraphQL query/mutation", tags: ['GraphQL'])]
+    #[OA\Post(path: '/api/graphql/schema/{schema}', operationId: 'postGraphQL', description: "Run GraphQL query/mutation", tags: ['GraphQL'])]
     #[OA\RequestBody(description: 'New rule', required: true, content: new OA\JsonContent(ref: "#/components/schemas/GraphQL"))]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Response(response: 200, description: 'Ok')]

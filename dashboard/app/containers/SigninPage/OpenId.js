@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import {jwtDecode} from 'jwt-decode'
+import {FormattedMessage} from 'react-intl'
 import codeFlow from '../../utils/codeFlow'
 
 class OpenId extends Component {
@@ -15,7 +16,9 @@ class OpenId extends Component {
             superuserLogin: typeof window !== 'undefined' ? (localStorage.getItem('gc2_selected_superuser') || '') : '',
             token: null,
             nonce: null,
-            processing: false
+            processing: false,
+            searchTerm: '',
+            superuserSelections: {}
         }
         this.handleLogin = this.handleLogin.bind(this)
         this.handleResetDb = this.handleResetDb.bind(this)
@@ -24,6 +27,8 @@ class OpenId extends Component {
         this.handleConfirmSelection = this.handleConfirmSelection.bind(this)
         this.handleCancelSelection = this.handleCancelSelection.bind(this)
         this.handleSuperuserToggle = this.handleSuperuserToggle.bind(this)
+        this.handleSearchChange = this.handleSearchChange.bind(this)
+        this.handleDatabaseSuperuserToggle = this.handleDatabaseSuperuserToggle.bind(this)
         this.proceed = this.proceed.bind(this)
         this._isMounted = false
         this._redirectHandleStarted = false
@@ -40,7 +45,7 @@ class OpenId extends Component {
         localStorage.removeItem('gc2_selected_superuser')
         this.setState({
             savedDb: '',
-            info: 'Database and superuser selection have been reset. You will be asked to choose on next sign-in.'
+            info: 'reset' // Will be handled in render
         })
     }
 
@@ -86,6 +91,9 @@ class OpenId extends Component {
                 } else {
                     allowedDatabases = database.split(',').map(d => d.trim()).filter(Boolean)
                 }
+
+                // Sort databases alphabetically
+                allowedDatabases.sort((a, b) => a.localeCompare(b))
 
                 if (superuser === '*') {
                     databasesWithSuperuser = allowedDatabases
@@ -225,12 +233,13 @@ class OpenId extends Component {
 
     handleConfirmSelection(e) {
         if (e) e.preventDefault()
-        const {selectedOption, token, nonce, superuserLogin} = this.state
+        const {selectedOption, token, nonce, superuserSelections} = this.state
         if (!selectedOption) return
+        const isSuperuser = !!superuserSelections[selectedOption]
         localStorage.setItem('gc2_selected_db', selectedOption)
-        localStorage.setItem('gc2_selected_superuser', superuserLogin ? '1' : '0')
+        localStorage.setItem('gc2_selected_superuser', isSuperuser ? '1' : '0')
         if (this._isMounted) this.setState({savedDb: selectedOption, selecting: false})
-        this.proceed(token, nonce, selectedOption, !!superuserLogin)
+        this.proceed(token, nonce, selectedOption, isSuperuser)
     }
 
     handleCancelSelection(e) {
@@ -242,6 +251,19 @@ class OpenId extends Component {
 
     handleSuperuserToggle(e) {
         this.setState({ superuserLogin: !!e.target.checked })
+    }
+
+    handleSearchChange(e) {
+        this.setState({ searchTerm: e.target.value })
+    }
+
+    handleDatabaseSuperuserToggle(database, checked) {
+        this.setState(prev => ({
+            superuserSelections: {
+                ...prev.superuserSelections,
+                [database]: checked
+            }
+        }))
     }
 
     render() {
@@ -294,61 +316,125 @@ class OpenId extends Component {
 
         return (
             <div style={containerStyle}>
-                <div style={titleStyle}>Sign in</div>
+                <div style={titleStyle}><FormattedMessage id="Sign in" /></div>
                 {processing ? (
-                    <div style={descStyle}>Processing login, please wait...</div>
+                    <div style={descStyle}><FormattedMessage id="Processing login, please wait..." /></div>
                 ) : (
                     <>
-                        <div style={descStyle}>Start login processen. Hvis din konto tillader flere databaser,
-                            vil du blive spurgt om at vælge en under login-prosessen.
+                        <div style={descStyle}>
+                            <FormattedMessage id="Start the login process" />
                         </div>
                         {savedDb ? (
-                            <div style={badgeStyle}>Current selection: {savedDb} {superuserLogin === '1' ? '(super)': ''}</div>
+                            <div style={badgeStyle}>
+                                <FormattedMessage
+                                    id="Current selection"
+                                    values={{db: savedDb, superuser: superuserLogin === '1' ? '(super)' : ''}}
+                                />
+                            </div>
                         ) : (
-                            <div style={badgeStyle}>Ingen database valgt endnu</div>
+                            <div style={badgeStyle}><FormattedMessage id="No database selected yet" /></div>
                         )}
                         {this.state.selecting ? (
                             <div>
-                                <div style={{fontSize: 16, margin: '16px 0'}}>Vælg en database</div>
-                                <div>
-                                    {this.state.allowedDatabases.map(d => (
-                                        <label key={d} style={{display: 'block', marginBottom: 8}}>
-                                            <input
-                                                type="radio"
-                                                name="db"
-                                                value={d}
-                                                checked={this.state.selectedOption === d}
-                                                onChange={this.handleDbSelectChange}
-                                                style={{marginRight: 8}}
-                                            />
-                                            {d}
-                                        </label>
-                                    ))}
+                                <div style={{fontSize: 16, margin: '16px 0'}}><FormattedMessage id="Select a database" /></div>
+                                <div style={{marginBottom: 12}}>
+                                    <input
+                                        type="text"
+                                        placeholder="Search for a database..."
+                                        value={this.state.searchTerm}
+                                        onChange={this.handleSearchChange}
+                                        style={{
+                                            width: '100%',
+                                            padding: '10px 12px',
+                                            border: '1px solid #d1d5db',
+                                            borderRadius: 8,
+                                            fontSize: 14,
+                                            boxSizing: 'border-box'
+                                        }}
+                                    />
                                 </div>
-                                {this.state.selectedOption && this.state.databasesWithSuperuser.includes(this.state.selectedOption) && (
-                                    <label style={{display: 'flex', alignItems: 'center', gap: 8, margin: '12px 0'}}>
-                                        <input
-                                            type="checkbox"
-                                            checked={!!this.state.superuserLogin}
-                                            onChange={this.handleSuperuserToggle}
-                                        />
-                                        <span>Log ind som superuser for {this.state.selectedOption}</span>
-                                    </label>
-                                )}
+                                <div style={{
+                                    maxHeight: 200,
+                                    overflowY: 'auto',
+                                    border: '1px solid #e5e7eb',
+                                    borderRadius: 8,
+                                    marginBottom: 12
+                                }}>
+                                    {this.state.allowedDatabases
+                                        .filter(d => d.toLowerCase().includes(this.state.searchTerm.toLowerCase()))
+                                        .map(d => (
+                                            <div key={d} style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                padding: '10px 12px',
+                                                background: this.state.selectedOption === d ? '#eff6ff' : 'transparent',
+                                                borderBottom: '1px solid #f3f4f6',
+                                                transition: 'background 0.15s'
+                                            }}
+                                                 onMouseEnter={(e) => {
+                                                     if (this.state.selectedOption !== d) {
+                                                         e.currentTarget.style.background = '#f9fafb'
+                                                     }
+                                                 }}
+                                                 onMouseLeave={(e) => {
+                                                     if (this.state.selectedOption !== d) {
+                                                         e.currentTarget.style.background = 'transparent'
+                                                     }
+                                                 }}>
+                                                <label style={{cursor: 'pointer', flex: 1, display: 'flex', alignItems: 'center'}}>
+                                                    <input
+                                                        type="radio"
+                                                        name="db"
+                                                        value={d}
+                                                        checked={this.state.selectedOption === d}
+                                                        onChange={this.handleDbSelectChange}
+                                                        style={{marginRight: 8}}
+                                                    />
+                                                    {d}
+                                                </label>
+                                                {this.state.databasesWithSuperuser.includes(d) && (
+                                                    <label style={{display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 13, color: '#6b7280'}}
+                                                           onClick={(e) => e.stopPropagation()}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={!!this.state.superuserSelections[d]}
+                                                            onChange={(e) => this.handleDatabaseSuperuserToggle(d, e.target.checked)}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        />
+                                                        <span><FormattedMessage id="Superuser" /></span>
+                                                    </label>
+                                                )}
+                                            </div>
+                                        ))}
+                                    {this.state.allowedDatabases.filter(d => d.toLowerCase().includes(this.state.searchTerm.toLowerCase())).length === 0 && (
+                                        <div style={{padding: '10px 12px', color: '#6b7280', fontSize: 14}}>
+                                            <FormattedMessage id="No databases found" />
+                                        </div>
+                                    )}
+                                </div>
                                 <div style={btnRowStyle}>
-                                    <button style={primaryBtn} onClick={this.handleConfirmSelection}>Forsæt</button>
-                                    <button style={secondaryBtn} onClick={this.handleCancelSelection}>Fortryd</button>
+                                    <button style={primaryBtn} onClick={this.handleConfirmSelection}>
+                                        <FormattedMessage id="Continue" />
+                                    </button>
+                                    <button style={secondaryBtn} onClick={this.handleCancelSelection}>
+                                        <FormattedMessage id="Cancel" />
+                                    </button>
                                 </div>
                             </div>
                         ) : (
                             <div style={btnRowStyle}>
-                                <button style={primaryBtn} onClick={this.handleLogin}>Login</button>
-                                <button style={secondaryBtn} onClick={this.handleResetDb}>Nulstil database-valg</button>
+                                <button style={primaryBtn} onClick={this.handleLogin}>
+                                    <FormattedMessage id="Login" />
+                                </button>
+                                <button style={secondaryBtn} onClick={this.handleResetDb}>
+                                    <FormattedMessage id="Reset selected database" />
+                                </button>
                             </div>
                         )}
                     </>
                 )}
-                {info && <div style={infoStyle}>{info}</div>}
+                {info === 'reset' && <div style={infoStyle}><FormattedMessage id="Database reset message" /></div>}
             </div>
         )
     }

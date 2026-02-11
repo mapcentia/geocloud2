@@ -47,7 +47,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(property: "min_value", title: "Min value", description: "Determines the minimum value a sequence can generate.",
             type: "integer", example: 1
         ),
-        new OA\Property(property: "max_value", title: "Max value", description: "Determines the maximum value for the sequence.", type: "integer", example: 9223372036854775807),
+        new OA\Property(property: "max_value", title: "Max value", description: "Determines the maximum value for the sequence.", type: "integer", example: 9223372036854),
         new OA\Property(property: "start_value", title: "Start value", description: "he initial value of the sequence", type: "integer", example: 1),
         new OA\Property(property: "cache_size", title: "Cache size", description: "Specifies how many sequence numbers should be preallocated and stored in memory for faster access.",
             type: "integer",

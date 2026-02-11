@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2024 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -37,16 +37,24 @@ use Symfony\Component\Validator\Constraints as Assert;
     properties: [
         new OA\Property(
             property: "name",
-            title: "Name of the column",
-            description: "Name of the column",
+            title: "Name",
+            description: "Name of the schema.",
             type: "string",
             example: "my-schema",
         ),
         new OA\Property(
             property: "tables",
             title: "Tables",
+            description: "Tables in the schema.",
             type: "array",
             items: new OA\Items(ref: "#/components/schemas/Table"),
+        ),
+        new OA\Property(
+            property: "sequences",
+            title: "Sequences",
+            description: "Sequences in the schema.",
+            type: "array",
+            items: new OA\Items(ref: "#/components/schemas/Sequence"),
         ),
     ],
     type: "object"
@@ -107,7 +115,7 @@ class Schema extends AbstractApi
                 ];
                 if (Input::get('namesOnly') === null) {
                     $t['tables'] = Table::getTables($name, $this);
-                    $t['sequences'] = Sequence::getSequences($this->table[0], $schema);
+                    $t['sequences'] = Sequence::getSequences($this->table[0], $name);
                 }
                 $t['_links'] = $links;
                 $response[] = $t;
