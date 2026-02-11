@@ -77,6 +77,13 @@ use Symfony\Component\Validator\Constraints as Assert;
             enum: ["always", "by default"],
             example: "always"
         ),
+        new OA\Property(
+            property: "comment",
+            title: "Comment",
+            description: "Comment on the column.",
+            type: "string",
+            example: "This is a comment on the column",
+        )
     ],
     type: "object"
 )]

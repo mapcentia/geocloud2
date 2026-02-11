@@ -65,6 +65,13 @@ use Symfony\Component\Validator\Constraints as Assert;
             type: "array",
             items: new OA\Items(ref: "#/components/schemas/Constraint"),
         ),
+        new OA\Property(
+            property: "comment",
+            title: "Comment",
+            description: "Comment on the table",
+            type: "string",
+            example: "This is a comment on the table",
+        ),
     ],
     type: "object"
 )]
