@@ -88,8 +88,8 @@ class User extends AbstractApi
      * @return Response
      * @throws Exception
      */
-    #[OA\Get(path: '/api/v4/user/{name}', operationId: 'getUser', description: "Get rules", tags: ['Users'])]
-    #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: false, example: "joe")]
+    #[OA\Get(path: '/api/v4/user/{name}', operationId: 'getUser', description: "Get user(s)", tags: ['Users'])]
+    #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: false, schema: null, example: "joe")]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/User"))]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -117,7 +117,7 @@ class User extends AbstractApi
      * @throws Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Post(path: '/api/v4/users', operationId: 'postUser', description: "New user", tags: ['Users'])]
+    #[OA\Post(path: '/api/v4/users', operationId: 'postUser', description: "Create user(s)", tags: ['Users'])]
     #[OA\RequestBody(description: 'New user', required: true, content: new OA\JsonContent(ref: "#/components/schemas/User"))]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
@@ -173,7 +173,7 @@ class User extends AbstractApi
      * @return Response
      * @throws Exception
      */
-    #[OA\Patch(path: '/api/v4/users/{name}', operationId: 'patchUser', description: "Update user", tags: ['Users'])]
+    #[OA\Patch(path: '/api/v4/users/{name}', operationId: 'patchUser', description: "Update user(s)", tags: ['Users'])]
     #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: true, example: "joe")]
     #[OA\RequestBody(description: 'User', required: true, content: new OA\JsonContent(ref: "#/components/schemas/User"))]
     #[OA\Response(response: 204, description: "Rule updated")]
@@ -228,7 +228,7 @@ class User extends AbstractApi
      * @throws Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Delete(path: '/api/v4/users/{name}', operationId: 'deleteUsers', description: "Delete user", tags: ['Users'])]
+    #[OA\Delete(path: '/api/v4/users/{name}', operationId: 'deleteUsers', description: "Delete user(s)", tags: ['Users'])]
     #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: true, example: "joe")]
     #[OA\Response(response: 204, description: "User deleted")]
     #[OA\Response(response: 404, description: 'Not found')]
