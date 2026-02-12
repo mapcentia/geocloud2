@@ -55,14 +55,14 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
         new OA\Property(
             property: "id",
             title: "Identifier",
-            description: "An identifier established by the Client that MUST contain a string if included",
+            description: "An identifier established by the Client that MUST contain a string if included.",
             type: "string",
             example: "1",
         ),
         new OA\Property(
             property: "method",
             title: "Method name",
-            description: "A String containing the name of the method to be invoked or created",
+            description: "A String containing the name of the method to be invoked or created.",
             type: "string",
             example: "getDate",
         ),
@@ -89,13 +89,10 @@ class Call extends AbstractApi
     }
 
     /**
-     * @return array
-     * @throws PhpfastcacheInvalidArgumentException|GC2Exception
-     * @throws InvalidArgumentException
+     * @return Response
      * @throws RPCException
-     * @throws Exception
      */
-    #[OA\Post(path: '/api/v4/call', operationId: 'postCall', description: "Call a RPC method", tags: ['Methods'])]
+    #[OA\Post(path: '/api/v4/call', operationId: 'postCall', description: "Call a JSON-RPC method with or without parameters. The method must be defined in the database.", tags: ['Methods'])]
     #[OA\RequestBody(description: 'RPC method call', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Call"))]
     #[OA\Response(response: 200, description: 'OK', content: new OA\MediaType('application/json'))]
     #[OA\Response(response: 400, description: 'Bad request')]

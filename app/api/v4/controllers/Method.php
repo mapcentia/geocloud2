@@ -102,7 +102,7 @@ class Method extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/methods/{method}', operationId: 'getRpc', description: "Get JSON-RPC method(s)", tags: ['Methods'])]
+    #[OA\Get(path: '/api/v4/methods/{method}', operationId: 'getRpc', description: "Get JSON-RPC method definitions.", tags: ['Methods'])]
     #[OA\Parameter(name: 'method', description: 'Identifier of RPC method', in: 'path', required: false, example: 'myMethod')]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Method"))]
     #[OA\Response(response: 404, description: 'Not found')]
@@ -140,7 +140,7 @@ class Method extends AbstractApi
      * @return Response
      * @throws GC2Exception
      */
-    #[OA\Post(path: '/api/v4/methods', operationId: 'postRpc', description: "Create JSON-RPC method(s)", tags: ['Methods'])]
+    #[OA\Post(path: '/api/v4/methods', operationId: 'postRpc', description: "Create JSON-RPC method(s). This means you define a named method which holds your SQL query along with optional instructions on how to interpret and format the data types.", tags: ['Methods'])]
     #[OA\RequestBody(description: 'RPC method to create', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Method"))]
     #[OA\Response(response: 201, description: 'Created', content: new OA\MediaType('application/json'))]
     #[OA\Response(response: 400, description: 'Bad request')]
@@ -176,7 +176,7 @@ class Method extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Patch(path: '/api/v4/methods/{method}', operationId: 'patchRpc', description: "Update JSON-RPC method(s)", tags: ['Methods'])]
+    #[OA\Patch(path: '/api/v4/methods/{method}', operationId: 'patchRpc', description: "Update JSON-RPC method(s).", tags: ['Methods'])]
     #[OA\Parameter(name: 'method', description: 'Method name', in: 'path', required: true, example: '66f5005bd44c6')]
     #[OA\RequestBody(description: 'RPC method to execute', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Method"))]
     #[OA\Response(response: 204, description: 'Method updated')]
@@ -207,7 +207,7 @@ class Method extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Delete(path: '/api/v4/methods/{id}', operationId: 'deleteRpc', description: "Delete JSON-RPC method(s)", tags: ['Methods'])]
+    #[OA\Delete(path: '/api/v4/methods/{id}', operationId: 'deleteRpc', description: "Delete JSON-RPC method(s).", tags: ['Methods'])]
     #[OA\Parameter(name: 'id', description: 'Name of method', in: 'path', required: true, example: 'myStatement')]
     #[OA\Response(response: 204, description: "Method deleted")]
     #[OA\Response(response: 404, description: 'Not found')]

@@ -50,7 +50,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "type",
             title: "Type",
-            description: "The type of the column, like varchar, integer, boolean etc.",
+            description: "The type of the column, like varchar, integer, boolean etc. Array types are denoted by adding [] to the type, e.g. varchar[].",
             type: "string",
             example: "int",
         ),
@@ -103,9 +103,9 @@ class Column extends AbstractApi
     }
 
     /**
-     * @return array
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return GetResponse
      * @throws GC2Exception
+     * @throws PhpfastcacheInvalidArgumentException
      */
     #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}', operationId: 'getColumn', description: "Get column(s)", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
