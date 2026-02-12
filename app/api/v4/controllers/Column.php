@@ -138,7 +138,7 @@ class Column extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/columns/', operationId: 'postColumn', description: "Create new column(s)", tags: ['Schema'])]
+    #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/columns/', operationId: 'postColumn', description: "Create new column(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\RequestBody(description: 'New column', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Column"))]
@@ -180,7 +180,7 @@ class Column extends AbstractApi
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      */
-    #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}/', operationId: 'patchColumn', description: "Update column(s)", tags: ['Schema'])]
+    #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}/', operationId: 'patchColumn', description: "Update existing column(s)", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: true, example: 'my_columns')]

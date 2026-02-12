@@ -32,6 +32,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "User",
+    description: "Sub-users are users for your API. While you can use your super-user for single user projects, it is a good idea to create sub-users for projects involving multiple users, which can be granted different privileges in the database.",
     required: ["name", "email", "password"],
     properties: [
         new OA\Property(
@@ -88,7 +89,7 @@ class User extends AbstractApi
      * @return Response
      * @throws Exception
      */
-    #[OA\Get(path: '/api/v4/user/{name}', operationId: 'getUser', description: "Get user(s)", tags: ['Users'])]
+    #[OA\Get(path: '/api/v4/users/{name}', operationId: 'getUser', description: "Get sub-user(s)", tags: ['Users'])]
     #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: false, schema: null, example: "joe")]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/User"))]
     #[OA\Response(response: 404, description: 'Not found')]
@@ -117,7 +118,7 @@ class User extends AbstractApi
      * @throws Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Post(path: '/api/v4/users', operationId: 'postUser', description: "Create user(s)", tags: ['Users'])]
+    #[OA\Post(path: '/api/v4/users', operationId: 'postUser', description: "Create new sub-user(s)", tags: ['Users'])]
     #[OA\RequestBody(description: 'New user', required: true, content: new OA\JsonContent(ref: "#/components/schemas/User"))]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
@@ -173,7 +174,7 @@ class User extends AbstractApi
      * @return Response
      * @throws Exception
      */
-    #[OA\Patch(path: '/api/v4/users/{name}', operationId: 'patchUser', description: "Update user(s)", tags: ['Users'])]
+    #[OA\Patch(path: '/api/v4/users/{name}', operationId: 'patchUser', description: "Update exiting sub-user(s)", tags: ['Users'])]
     #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: true, example: "joe")]
     #[OA\RequestBody(description: 'User', required: true, content: new OA\JsonContent(ref: "#/components/schemas/User"))]
     #[OA\Response(response: 204, description: "Rule updated")]
@@ -228,7 +229,7 @@ class User extends AbstractApi
      * @throws Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Delete(path: '/api/v4/users/{name}', operationId: 'deleteUsers', description: "Delete user(s)", tags: ['Users'])]
+    #[OA\Delete(path: '/api/v4/users/{name}', operationId: 'deleteUsers', description: "Delete sub-user(s)", tags: ['Users'])]
     #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: true, example: "joe")]
     #[OA\Response(response: 204, description: "User deleted")]
     #[OA\Response(response: 404, description: 'Not found')]

@@ -130,7 +130,7 @@ class Client extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/clients/{id}', operationId: 'getClient', description: "Get client", tags: ['Clients'])]
+    #[OA\Get(path: '/api/v4/clients/{id}', operationId: 'getClient', description: "Get OAuth client(s).", tags: ['Clients'])]
     #[OA\Parameter(name: 'id', description: 'Id of client', in: 'path', required: false, example: '66f5005bd44c6')]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(
         allOf: [
@@ -162,7 +162,7 @@ class Client extends AbstractApi
     /**
      * @throws RandomException
      */
-    #[OA\Post(path: '/api/v4/clients', operationId: 'postClient', description: 'Create a new client OAuth client', tags: ['Clients'])]
+    #[OA\Post(path: '/api/v4/clients', operationId: 'postClient', description: 'Create new OAuth client(s).', tags: ['Clients'])]
     #[OA\RequestBody(description: 'New client', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Client"))]
     #[OA\Response(response: 201, description: "Client created",
         content: new OA\JsonContent(
@@ -222,7 +222,7 @@ class Client extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Patch(path: '/api/v4/clients/{id}', operationId: 'patchClient', description: "Update client", tags: ['Clients'])]
+    #[OA\Patch(path: '/api/v4/clients/{id}', operationId: 'patchClient', description: "Update existing OAuth client(s).", tags: ['Clients'])]
     #[OA\Parameter(name: 'id', description: 'Id of client', in: 'path', required: true, example: '66f5005bd44c6')]
     #[OA\RequestBody(description: 'Properties to update. Partial update is allowed.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Client"))]
     #[OA\Response(response: 204, description: "Client updated")]
@@ -260,7 +260,7 @@ class Client extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Delete(path: '/api/v4/clients/{id}', operationId: 'deleteClient', description: "Delete client", tags: ['Clients'])]
+    #[OA\Delete(path: '/api/v4/clients/{id}', operationId: 'deleteClient', description: "Delete OAuth client(s).", tags: ['Clients'])]
     #[OA\Parameter(name: 'id', description: 'Id of client', in: 'path', required: true, example: '66f5005bd44c6')]
     #[OA\Response(response: 204, description: "Client deleted")]
     #[OA\Response(response: 404, description: 'Not found')]

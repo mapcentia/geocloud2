@@ -44,7 +44,8 @@ use Symfony\Component\Validator\Constraints as Assert;
             title: "Type",
             description: "Type of the constraint.",
             type: "string",
-            example: "foreign",
+            enum: ["primary", "foreign", "unique", "check"],
+            example: "primary",
         ),
         new OA\Property(
             property: "columns",
@@ -96,7 +97,7 @@ class Constraint extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'getConstraint', description: "Get constraints", tags: ['Schema'])]
+    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'getConstraint', description: "Get constraint(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\Parameter(name: 'constraint', description: 'Constraint name(s)', in: 'path', required: false, example: 'my_constraint')]
@@ -126,7 +127,7 @@ class Constraint extends AbstractApi
      * @return Response
      * @throws GC2Exception
      */
-    #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'postConstraint', description: "Get constraints", tags: ['Schema'])]
+    #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/constraints', operationId: 'postConstraint', description: "Create constraint(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\RequestBody(description: 'New constraint', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Constraint"))]
@@ -176,7 +177,7 @@ class Constraint extends AbstractApi
      * @return Response
      * @throws GC2Exception
      */
-    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'deleteConstraint', description: "Get constraint", tags: ['Schema'])]
+    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'deleteConstraint', description: "Delete constraint(s)", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\Parameter(name: 'constraint', description: 'Constraint name(s)', in: 'path', required: true, example: 'my_constraint')]
@@ -312,6 +313,7 @@ class Constraint extends AbstractApi
             ]),
             'constraint' => new Assert\Required([
                 new Assert\Type('string'),
+                new Assert\Choice(['primary', 'foreign', 'unique', 'check']),
                 new Assert\NotBlank(),
             ]),
             'columns' => new Assert\Optional([

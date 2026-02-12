@@ -91,7 +91,7 @@ class Table extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'getTable', description: "Get table(s)", tags: ['Schema'])]
+    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'getTable', description: "Get table(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: false, example: 'my_table')]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Table"),
@@ -155,7 +155,7 @@ class Table extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Post(path: '/api/v4/schemas/{schema}/tables', operationId: 'postTable', description: "Create table(s)", tags: ['Schema'])]
+    #[OA\Post(path: '/api/v4/schemas/{schema}/tables', operationId: 'postTable', description: "Create table(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\RequestBody(description: 'New table', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Table"))]
     #[OA\Response(response: 201, description: 'Created')]
@@ -192,7 +192,7 @@ class Table extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'patchTable', description: "Rename and move table(s)", tags: ['Schema'])]
+    #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'patchTable', description: "Rename and move existing table(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\RequestBody(description: 'Updated table', required: true, content: new OA\JsonContent(
@@ -201,6 +201,13 @@ class Table extends AbstractApi
                 properties: [
                     new OA\Property(property: "name", description: "New name of table", type: "string", example: "my_table_with_new_name"),
                     new OA\Property(property: "schema", description: "Move table to schema", type: "string", example: "my_other_schema"),
+                    new OA\Property(
+                        property: "comment",
+                        title: "Comment",
+                        description: "Comment on the table",
+                        type: "string",
+                        example: "This is a comment on the table",
+                    ),
                 ]
             )
         ]
@@ -253,7 +260,7 @@ class Table extends AbstractApi
     /**
      * @return Response
      */
-    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'deleteTable', description: "Delete table", tags: ['Schema'])]
+    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'deleteTable', description: "Delete table(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\Response(response: 204, description: 'Table deleted')]

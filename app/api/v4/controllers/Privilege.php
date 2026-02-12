@@ -41,9 +41,9 @@ use Symfony\Component\Validator\Constraints as Assert;
             example: "joe",
         ),
         new OA\Property(
-            property: "privileges",
-            title: "Privileges",
-            description: "The privileges granted to the sub-user on a table.",
+            property: "privilege",
+            title: "Privilege",
+            description: "The privilege granted to the sub-user on a table.",
             type: "string",
             enum: ["none", "read", "write"],
             example: "all",
@@ -66,7 +66,7 @@ class Privilege extends AbstractApi
      * @return Response
      * @throws GC2Exception|PhpfastcacheInvalidArgumentException
      */
-    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/privileges', operationId: 'getPrivileges', description: "Get privileges", tags: ['Privileges'])]
+    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/privileges', operationId: 'getPrivileges', description: "Get privileges.", tags: ['Privileges'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Privilege"))]
@@ -91,7 +91,7 @@ class Privilege extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException
      * @throws InvalidArgumentException|GC2Exception
      */
-    #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}/privileges', operationId: 'patchPrivileges', description: "Update privileges", tags: ['Privileges'])]
+    #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}/privileges', operationId: 'patchPrivileges', description: "Update privileges.", tags: ['Privileges'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
     #[OA\RequestBody(description: 'Privileges', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Privilege"))]
