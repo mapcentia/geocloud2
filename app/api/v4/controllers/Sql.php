@@ -57,7 +57,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
             description: "Parameters for prepared statements.",
             type: "array",
             items: new OA\Items(type: "object"),
-            example: ["my_date" => "2011 04 01"],
+            example: [["my_date" => "2011 04 01"], ["my_string" => "hello world"]],
         ),
         new OA\Property(
             property: "type_hints",
@@ -112,8 +112,7 @@ class Sql extends AbstractApi
 
     /**
      * @return Response
-     * @throws PhpfastcacheInvalidArgumentException|GC2Exception
-     * @throws InvalidArgumentException
+     * @throws GC2Exception
      */
     #[OA\Post(path: '/api/v4/sql', operationId: 'postSql', description: "Execute SQL statements", tags: ['Sql'])]
     #[OA\RequestBody(description: 'Sql statement to execute', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sql"))]
