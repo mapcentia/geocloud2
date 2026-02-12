@@ -76,7 +76,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
         new OA\Property(
             property: "output_format",
             title: "Output format",
-            description: "The wanted output format. json, csv, ndjson, excel or ogr/[any ogr vector format] (e.g 'ogr/ESRI Shape')",
+            description: "The wanted output format: json, geojson, csv, ccsv ndjson, excel or ogr/[any ogr vector format e.g 'ogr/ESRI Shape']. ccsv and ndjson are streamed instead of returning a whole document or file.",
             type: "string",
             default: "json",
             example: "csv",
