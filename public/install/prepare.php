@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2025 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -29,6 +29,9 @@ include("../../app/models/Setting.php");
 include("../../app/exceptions/GC2Exception.php");
 
 new App();
+
+include("./check.php");
+
 Cache::setInstance();
 
 // sql.php defines $sql for creating the GC2 settings schema
