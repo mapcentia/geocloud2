@@ -69,7 +69,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
         new OA\Property(
             property: "params",
             title: "Parameters",
-            description: "Parameters for method.",
+            description: "Parameters for the method. For SELECT methods, only one set of parameters is accepted.",
             type: "array",
             items: new OA\Items(type: "object"),
             example: [["my_date" => "2011 04 01"], ["my_string" => "hello world"]],
