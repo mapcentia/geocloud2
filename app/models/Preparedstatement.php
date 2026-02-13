@@ -222,10 +222,10 @@ class Preparedstatement extends Model
      * Updates the output schema for a specified prepared statement.
      *
      * @param string $name The name of the prepared statement to update.
-     * @param array $outputSchema The new output schema to apply, as an associative array.
+     * @param array|null $outputSchema The new output schema to apply, as an associative array.
      * @return void
      */
-    public function updateOutputSchema(string $name, array $outputSchema): void
+    public function updateOutputSchema(string $name, ?array $outputSchema): void
     {
         $sql = "UPDATE settings.prepared_statements SET output_schema=:output_schema WHERE name=:name";
         $res = $this->prepare($sql);
