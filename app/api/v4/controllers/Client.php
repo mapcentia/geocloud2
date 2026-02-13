@@ -31,7 +31,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Schema(
     schema: "Client",
     description: "OAuth clients are applications that request and manage access to user resources through the OAuth authorization protocol. These clients act as intermediaries, enabling secure, delegated access to user accounts without directly handling sensitive credentials.",
-    required: ["name", "redirect_uri"],
+    required: [],
     properties: [
         new OA\Property(
             property: "id",
