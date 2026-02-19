@@ -351,12 +351,13 @@ class User extends Model
             }
             $password = Setting::encryptPwSecure(Util::format($data["password"]));
         }
-        $properties = isset($data["properties"]) ? json_encode($data["properties"]) : null;
+        $hasProperties = array_key_exists("properties", $data);
+        $properties = $hasProperties && $data["properties"] !== null ? json_encode($data["properties"]) : null;
         $default = (isset($data["default_user"]) && $data['default_user'] === false) ? 'f' : ((isset($data["default_user"]) && $data['default_user'] === true) ? 't' : 'f');
         $sQuery = "UPDATE users SET screenname=screenname";
         if ($password) $sQuery .= ", pw=:sPassword";
         if ($email) $sQuery .= ", email=:sEmail";
-        if ($properties) $sQuery .= ", properties=:sProperties";
+        if ($hasProperties) $sQuery .= ", properties=:sProperties";
         $sQuery .= ", default_user=:sDefault";
         if (array_key_exists('usergroup', $data)) {
             $userGroup = $data["usergroup"];
@@ -385,7 +386,7 @@ class User extends Model
             $str = $userGroup !== "" ? $userGroup : null;
             $res->bindParam(":sUsergroup", $str);
         }
-        if ($properties) {
+        if ($hasProperties) {
             $res->bindParam(":sProperties", $properties);
         }
         if ($default) {
