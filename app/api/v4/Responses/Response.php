@@ -8,6 +8,7 @@ abstract class Response
     {
         if ($this->location) {
             header('Location: ' . $this->location);
+            flush();
         }
     }
     public function getData(): array|string|null

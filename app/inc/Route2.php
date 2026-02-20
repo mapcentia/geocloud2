@@ -161,6 +161,9 @@ class Route2
             $status = $response->getStatus();
             header("HTTP/1.0 $status " . Util::httpCodeText($status));
 
+            if ($status == 302) {
+                return;
+            }
             // Ensure no Content-Type (or body) is sent for 204/303
             if ($status == 204) {
                 header_remove('Content-Type');
