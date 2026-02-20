@@ -106,7 +106,7 @@ class Sql extends Model
             $parameters = [$parameters];
         }
 
-        if (count($parameters) > 1) {
+        if (is_array($parameters) && count($parameters) > 1) {
             throw new GC2Exception("Only one set of parameters can be use in SELECT statements.", 406);
         }
 
@@ -705,13 +705,15 @@ class Sql extends Model
     public function insertCost(string $q, string $username, $convertedParameters): void
     {
         // Get total cost and insert in cost
+        $factor = 0.001;
         $cost = 0;
         $ex = "EXPLAIN (format json) $q";
         $res = $this->prepare($ex);
         $this->execute($res, $convertedParameters);;
         $plan = $res->fetchAll();
         if (isset($plan[0]['QUERY PLAN'])) {
-            $cost = json_decode($plan[0]['QUERY PLAN'], true)[0]['Plan']['Total Cost'];
+            $cost = (float)json_decode($plan[0]['QUERY PLAN'], true)[0]['Plan']['Total Cost'];
+            $cost = $cost * $factor;
         }
         $ex = "INSERT INTO settings.cost (username, statement, cost) VALUES (:username, :statement, :cost)";
         $res = $this->prepare($ex);
