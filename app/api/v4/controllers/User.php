@@ -255,6 +255,7 @@ class User extends AbstractApi
             "user_group" => $user["usergroup"] ?? null,
             "email" => $user["email"] ?? null,
             "properties" => $user["properties"] ?? null,
+            "private_properties" => $user["private_properties"] ?? null,
             "default_user" => $user["default_user"],
         ];
     }

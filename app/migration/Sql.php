@@ -292,7 +292,9 @@ class Sql
                         ON users (default_user, parentdb)
                         WHERE default_user IS TRUE";
         $sqls[] = "ALTER TABLE users ADD CONSTRAINT email_unique_for_parent UNIQUE  (parentdb, email)";
-        $sqls[] = "alter table public.users alter column email set not null";
+        $sqls[] = "ALTER TABLE public.users ALTER COLUMN email SET NOT NULL";
+        $sqls[] = "ALTER TABLE users ADD COLUMN private_properties JSONB";
+
         return $sqls;
     }
 

@@ -80,9 +80,10 @@ class User extends Model
         return $response;
     }
 
-    public function getByProperty(string $path): array
+    public function getByProperty(string $path, bool $private = true): array
     {
-        $query = "SELECT * FROM users WHERE properties->>$path";
+        $field = $private ? 'private_properties' : 'properties';
+        $query = "SELECT * FROM users WHERE $field->>$path";
         $res = $this->execQuery($query);
         $rows = $this->fetchAll($res);
         $response['success'] = true;
@@ -146,7 +147,7 @@ class User extends Model
      */
     public function getData(): array
     {
-        $query = "SELECT email, parentdb, usergroup, screenname as userid, properties, zone, default_user FROM users WHERE (screenname = :sUserID OR email = :sUserID) AND (parentdb = :parentDb OR parentdb IS NULL)";
+        $query = "SELECT email, parentdb, usergroup, screenname as userid, properties, private_properties, zone, default_user FROM users WHERE (screenname = :sUserID OR email = :sUserID) AND (parentdb = :parentDb OR parentdb IS NULL)";
         $res = $this->prepare($query);
         $this->execute($res, array(":sUserID" => $this->userId, ":parentDb" => $this->parentDb));
         $row = $this->fetchRow($res);
@@ -155,6 +156,9 @@ class User extends Model
         }
         if (!empty($row['properties'])) {
             $row['properties'] = json_decode($row['properties']);
+        }
+        if (!empty($row['private_properties'])) {
+            $row['private_properties'] = json_decode($row['private_properties']);
         }
         $response['success'] = true;
         $response['data'] = $row;
@@ -353,11 +357,16 @@ class User extends Model
         }
         $hasProperties = array_key_exists("properties", $data);
         $properties = $hasProperties && $data["properties"] !== null ? json_encode($data["properties"]) : null;
+
+        $hasPrivateProperties = array_key_exists("private_properties", $data);
+        $privateProperties = $hasPrivateProperties && $data["private_properties"] !== null ? json_encode($data["private_properties"]) : null;
+
         $default = (isset($data["default_user"]) && $data['default_user'] === false) ? 'f' : ((isset($data["default_user"]) && $data['default_user'] === true) ? 't' : 'f');
         $sQuery = "UPDATE users SET screenname=screenname";
         if ($password) $sQuery .= ", pw=:sPassword";
         if ($email) $sQuery .= ", email=:sEmail";
         if ($hasProperties) $sQuery .= ", properties=:sProperties";
+        if ($hasPrivateProperties) $sQuery .= ", private_properties=:sPrivateProperties";
         $sQuery .= ", default_user=:sDefault";
         if (array_key_exists('usergroup', $data)) {
             $userGroup = $data["usergroup"];
@@ -388,6 +397,9 @@ class User extends Model
         }
         if ($hasProperties) {
             $res->bindParam(":sProperties", $properties);
+        }
+        if ($hasPrivateProperties) {
+            $res->bindParam(":sPrivateProperties", $privateProperties);
         }
         if ($default) {
             $res->bindParam(":sDefault", $default);
