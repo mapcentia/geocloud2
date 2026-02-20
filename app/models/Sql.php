@@ -102,8 +102,12 @@ class Sql extends Model
     public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, ?string $nlt = null, ?string $nln = null, ?bool $convertTypes = false, ?array $parameters = null, ?array $typeHints = null, ?array $typeFormats = null): array
     {
         // Check params
-        if (is_array($parameters) && array_key_exists(0, $parameters) && is_array($parameters[0])) {
-            throw new GC2Exception("Only JSON objects are accepted in SELECT statements. Not arrays", 406);
+        if (is_array($parameters) && !array_is_list($parameters)) {
+            $parameters = [$parameters];
+        }
+
+        if (count($parameters) > 1) {
+            throw new GC2Exception("Only one set of parameters can be use in SELECT statements.", 406);
         }
 
         if ($format == "excel") {
@@ -186,7 +190,7 @@ class Sql extends Model
             $select = $this->prepare("select * from ($q) as foo LIMIT 0");
             $convertedParameters = [];
             if ($parameters) {
-                foreach ($parameters as $field => $value) {
+                foreach ($parameters[0] as $field => $value) {
                     $nativePgType = $typeHints[$field] ?? self::phpTypeToPgType(gettype($value)) ?? "json";
                     $formatT = $typeFormats[$field] ?? self::getFormat($nativePgType);
                     $convertedParameters[$field] = $this->convertToNative($nativePgType, $value, $formatT);

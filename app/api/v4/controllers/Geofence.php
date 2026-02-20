@@ -33,6 +33,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Rule",
+    description: "Rules can deny or allow access to tables or rewrite the SQL statement by adding a where clause. Rules are not attached to tables but applied to the incoming SQL statement before it actually runs in the database engine.",
     required: [],
     properties: [
         new OA\Property(
@@ -129,7 +130,7 @@ class Geofence extends AbstractApi
      * @return Response
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/rules/{id}', operationId: 'getRule', description: "Get rule(s)", tags: ['Rules'])]
+    #[OA\Get(path: '/api/v4/rules/{id}', operationId: 'getRule', description: "Get rule(s).", tags: ['Rules'])]
     #[OA\Parameter(name: 'id', description: 'Rule identifier', in: 'path', required: false, example: 2)]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Rule"))]
     #[OA\Response(response: 404, description: 'Not found')]
@@ -160,7 +161,7 @@ class Geofence extends AbstractApi
      * @return Response
      *
      */
-    #[OA\Post(path: '/api/v4/rules', operationId: 'postRule', description: "Create rule(s)", tags: ['Rules'])]
+    #[OA\Post(path: '/api/v4/rules', operationId: 'postRule', description: "Create rule(s).", tags: ['Rules'])]
     #[OA\RequestBody(description: 'New rule', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Rule"))]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
@@ -193,7 +194,7 @@ class Geofence extends AbstractApi
      * @throws GC2Exception
      */
 
-    #[OA\Patch(path: '/api/v4/rules/{id}', operationId: 'patchRule', description: "Update rule(s)", tags: ['Rules'])]
+    #[OA\Patch(path: '/api/v4/rules/{id}', operationId: 'patchRule', description: "Update existing rule(s).", tags: ['Rules'])]
     #[OA\Parameter(name: 'id', description: 'Rule identifier', in: 'path', required: true, example: 2)]
     #[OA\RequestBody(description: 'Update rule', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Rule"))]
     #[OA\Response(response: 204, description: "Rule updated")]
@@ -229,7 +230,7 @@ class Geofence extends AbstractApi
      * @return Response
      * @throws GC2Exception
      */
-    #[OA\Delete(path: '/api/v4/rules/{id}', operationId: 'deleteRule', description: "Delete rule(s)", tags: ['Rules'])]
+    #[OA\Delete(path: '/api/v4/rules/{id}', operationId: 'deleteRule', description: "Delete rule(s).", tags: ['Rules'])]
     #[OA\Parameter(name: 'id', description: 'Id of rule', in: 'path', required: true, example: '2')]
     #[OA\Response(response: 204, description: "Rule deleted")]
     #[OA\Response(response: 404, description: 'Not found')]

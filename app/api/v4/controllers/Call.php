@@ -55,30 +55,30 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
         new OA\Property(
             property: "id",
             title: "Identifier",
-            description: "An identifier established by the Client that MUST contain a string if included",
+            description: "An identifier established by the Client that MUST contain a string if included.",
             type: "string",
             example: "1",
         ),
         new OA\Property(
             property: "method",
             title: "Method name",
-            description: "A String containing the name of the method to be invoked or created",
+            description: "A String containing the name of the method to be invoked or created.",
             type: "string",
             example: "getDate",
         ),
         new OA\Property(
             property: "params",
             title: "Parameters",
-            description: "Parameters for method.",
+            description: "Parameters for the method. For SELECT methods, only one set of parameters is accepted.",
             type: "array",
             items: new OA\Items(type: "object"),
-            example: ["my_date" => "2011 04 01"],
+            example: [["my_date" => "2011 04 01"], ["my_string" => "hello world"]],
         ),
     ],
     type: "object"
 )]
 #[AcceptableMethods(['POST', 'HEAD', 'OPTIONS'])]
-#[Controller(route: 'api/v4/call', scope: Scope::SUB_USER_ALLOWED)]
+#[Controller(route: 'api/v4/call/(action)', scope: Scope::SUB_USER_ALLOWED)]
 class Call extends AbstractApi
 {
 
@@ -89,15 +89,14 @@ class Call extends AbstractApi
     }
 
     /**
-     * @return array
-     * @throws PhpfastcacheInvalidArgumentException|GC2Exception
-     * @throws InvalidArgumentException
+     * @return Response
      * @throws RPCException
-     * @throws Exception
      */
-    #[OA\Post(path: '/api/v4/call', operationId: 'postCall', description: "Call a RPC method", tags: ['Methods'])]
+    #[OA\Post(path: '/api/v4/call', operationId: 'postCall',
+        description: "Call a JSON-RPC method with or without parameters. The method must be defined in the database. See /api/v4/methods (postRpc) ",
+        tags: ['Methods'])]
     #[OA\RequestBody(description: 'RPC method call', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Call"))]
-    #[OA\Response(response: 200, description: 'OK', content: new OA\MediaType('application/json'))]
+    #[OA\Response(response: 200, description: 'Ok', content: [new OA\MediaType('application/json'), new OA\MediaType('application/gpx'), new OA\MediaType('application/octet-stream')])]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json', 'application/json-rpc'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -126,7 +125,7 @@ class Call extends AbstractApi
             }
         }
         // Check if dry-run is requested
-        if (Input::getDryRun()) {
+        if (Input::getDryRun() || $this->route->action == 'post_dry') {
             $api->rollback();
             $api->begin();
             // In dry-run we interface with
@@ -154,6 +153,25 @@ class Call extends AbstractApi
             return new GetResponse(data: $result[0]);
         }
         return new GetResponse(data: $result);
+    }
+
+    /**
+     * @return Response
+     * @throws RPCException
+     */
+    #[OA\Post(path: '/api/v4/call/dry', operationId: 'postCallDry', description:
+        "Dry run the RPC-JSON call to infer the types and store them. 
+        Types are only inferred and stored when dry running calls. Dry runs doesn't make effects on the database.
+        Dry-run before getting TypeScript types from /api/v4/interfaces (getTypeScript)",
+        tags: ['Methods'])]
+    #[OA\RequestBody(description: 'RPC method call', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Call"))]
+    #[OA\Response(response: 200, description: 'Ok', content: [new OA\MediaType('application/json'), new OA\MediaType('application/gpx'), new OA\MediaType('application/octet-stream')])]
+    #[OA\Response(response: 400, description: 'Bad request')]
+    #[AcceptableContentTypes(['application/json', 'application/json-rpc'])]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    public function post_dry(): Response
+    {
+        return $this->post_index();
     }
 
     /**

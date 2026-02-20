@@ -47,22 +47,22 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
         new OA\Property(
             property: "q",
             title: "Query",
-            description: "SQL statement. SELECT, INSERT, UPDATE, DELETE or MERGE.",
+            description: "SQL statement. SELECT, INSERT, UPDATE, DELETE or MERGE. No DDL, transaction control, etc.",
             type: "string",
             example: "SELECT :my_date::date as my_date",
         ),
         new OA\Property(
             property: "params",
             title: "Parameters",
-            description: "Parameters for prepared statements.",
+            description: "Parameters for statements. For SELECT statements, only one set of parameters is accepted.",
             type: "array",
             items: new OA\Items(type: "object"),
-            example: ["my_date" => "2011 04 01"],
+            example: [["my_date" => "2011 04 01"], ["my_string" => "hello world"]],
         ),
         new OA\Property(
             property: "type_hints",
             title: "Type hints",
-            description: "For JSON represented parameters which are not of JSON type.",
+            description: "For JSON represented parameters which are not of JSON/JSONB type.",
             type: "object",
             example: ["my_date" => "date"],
         ),
@@ -76,7 +76,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
         new OA\Property(
             property: "output_format",
             title: "Output format",
-            description: "The wanted output format.",
+            description: "The wanted output format: json, geojson, csv, ccsv ndjson, excel or ogr/[any ogr vector format e.g 'ogr/ESRI Shape']. ccsv and ndjson are streamed instead of returning a whole document or file.",
             type: "string",
             default: "json",
             example: "csv",
@@ -112,15 +112,14 @@ class Sql extends AbstractApi
 
     /**
      * @return Response
-     * @throws PhpfastcacheInvalidArgumentException|GC2Exception
-     * @throws InvalidArgumentException
+     * @throws GC2Exception
      */
     #[OA\Post(path: '/api/v4/sql', operationId: 'postSql', description: "Execute SQL statements", tags: ['Sql'])]
     #[OA\RequestBody(description: 'Sql statement to execute', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sql"))]
-    #[OA\Response(response: 200, description: 'Ok', content: new OA\MediaType('application/json'))]
-    #[OA\Response(response: 500, description: 'Internal error. Most like an SQL error.')]
+    #[OA\Response(response: 200, description: 'Ok', content: [new OA\MediaType('application/json'), new OA\MediaType('application/gpx'), new OA\MediaType('application/octet-stream')])]
+    #[OA\Response(response: 500, description: 'Internal error. Most likely an SQL error.')]
     #[AcceptableContentTypes(['application/json'])]
-    #[AcceptableAccepts(['application/json', '*/*'])]
+    #[AcceptableAccepts(['application/json', 'application/gpx', 'application/octet-stream', '*/*'])]
     #[Override]
     public function post_index(): Response
     {

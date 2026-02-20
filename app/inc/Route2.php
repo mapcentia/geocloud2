@@ -31,6 +31,7 @@ class Route2
     public array $params;
     public bool $isMatched = false;
     public ?array $jwt;
+    public ?string $action;
 
     /**
      * @param string $uri
@@ -91,6 +92,7 @@ class Route2
         if ($signatureMatch) {
             $this->isMatched = true;
             $this->params = $r;
+            $this->action = $action;
             if ($func) {
                 $func($r);
             }

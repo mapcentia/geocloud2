@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2025 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -14,7 +14,6 @@ use app\inc\Util;
 use app\conf\App;
 use app\models\Database;
 use app\models\Dbcheck;
-
 include("../../app/inc/Connection.php");
 include("../../app/inc/Model.php");
 include("../../app/inc/Util.php");
@@ -23,10 +22,13 @@ include("../../app/models/Dbcheck.php");
 include("../../app/migration/Sql.php");
 include("../../app/conf/App.php");
 include("../../app/conf/Connection.php");
-new \app\conf\App();
+new App();
 
-App::$param['protocol'] = App::$param['protocol'] ?: Util::protocol();
-App::$param['host'] = App::$param['host'] ?: App::$param['protocol'] . "://" . $_SERVER['SERVER_NAME'] . ":" . $_SERVER['SERVER_PORT'];
+include("./check.php");
+
+
+App::$param['protocol'] = App::$param['protocol'] ?? Util::protocol();
+App::$param['host'] = App::$param['host'] ?? App::$param['protocol'] . "://" . $_SERVER['SERVER_NAME'] . ":" . $_SERVER['SERVER_PORT'];
 
 ?>
 

@@ -74,7 +74,7 @@ class Sequence extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/schemas/{schema}/sequences/{sequence}', operationId: 'getSequence', description: "Get sequence(s)", tags: ['Schema'])]
+    #[OA\Get(path: '/api/v4/schemas/{schema}/sequences/{sequence}', operationId: 'getSequence', description: "Get sequence(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'sequence', description: 'Sequence names', in: 'path', required: false, example: 'my_sequences')]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Sequence"))]
@@ -98,7 +98,7 @@ class Sequence extends AbstractApi
         return $this->getResponse($r);
     }
 
-    #[OA\Post(path: '/api/v4/schemas/{schema}/sequences/', operationId: 'postSequence', description: "Create sequence(s)", tags: ['Schema'])]
+    #[OA\Post(path: '/api/v4/schemas/{schema}/sequences/', operationId: 'postSequence', description: "Create sequence(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\RequestBody(description: 'New sequence', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sequence"))]
     #[OA\Response(response: 201, description: 'Created')]
@@ -131,7 +131,7 @@ class Sequence extends AbstractApi
         return $this->emptyResponse();
     }
 
-    #[OA\Patch(path: '/api/v4/schemas/{schema}/sequences/{sequence}', operationId: 'patchSequence', description: "Update sequence(s)", tags: ['Schema'])]
+    #[OA\Patch(path: '/api/v4/schemas/{schema}/sequences/{sequence}', operationId: 'patchSequence', description: "Update existing sequence(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'sequence', description: 'Sequence names', in: 'path', required: true, example: 'my_sequences')]
     #[OA\RequestBody(description: 'Sequence', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sequence"))]
@@ -156,7 +156,7 @@ class Sequence extends AbstractApi
 
     }
 
-    #[OA\Delete(path: '/api/v4/schemas/{schema}/sequences/{sequence}', operationId: 'deleteSequence', description: "Delete sequence(s)", tags: ['Schema'])]
+    #[OA\Delete(path: '/api/v4/schemas/{schema}/sequences/{sequence}', operationId: 'deleteSequence', description: "Delete sequence(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'sequence', description: 'Sequence names', in: 'path', required: true, example: 'my_sequences')]
     #[OA\Response(response: 204, description: 'Sequence deleted')]
