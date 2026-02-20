@@ -528,37 +528,33 @@ $handler = static function () use ($routes) {
             }
             Route::miss();
         }
-    } catch (GC2Exception $exception) {
+    } catch (PDOException|GC2Exception $exception) {
         $response["success"] = false;
         $response["message"] = $exception->getMessage();
         $response["code"] = $exception->getCode();
         $response["errorCode"] = $exception->getErrorCode();
-//        $response["file"] = $exception->getFile();
-//        $response["line"] = $exception->getLine();
-//        $response["trace"] = $exception->getTraceAsString();
-        echo Response::toJson($response);
+        if (getenv('MODE_ENV') == 'dev') {
+            $response["file"] = $exception->getFile();
+            $response["line"] = $exception->getLine();
+            $response["trace"] = $exception->getTraceAsString();
+        }
     } catch (RPCException $exception) {
         echo Response::toJson($exception->getResponse());
     } catch (GraphQLException $exception) {
         echo Response::toJson($exception->getResponse());
-    } catch (PDOException $exception) {
-        $response["success"] = false;
-        $response["message"] = $exception->getMessage();
-        $response["code"] = 500;
-        $response["errorCode"] = $exception->getCode();
-        $response["file"] = $exception->getFile();
-        $response["line"] = $exception->getLine();
-        $response["trace"] = $exception->getTraceAsString();
-        echo Response::toJson($response);
     } catch (Throwable $exception) {
         $response["success"] = false;
         $response["message"] = $exception->getMessage();
         $response["file"] = $exception->getFile();
-        $response["line"] = $exception->getLine();
-        $response["trace"] = $exception->getTraceAsString();
-        $response["code"] = 500;
-        echo Response::toJson($response);
+        if (getenv('MODE_ENV') == 'dev') {
+            $response["file"] = $exception->getFile();
+            $response["line"] = $exception->getLine();
+            $response["trace"] = $exception->getTraceAsString();
+        }
     } finally {
+        if (!empty($response)) {
+            echo Response::toJson($response);
+        }
         return;
     }
 };
