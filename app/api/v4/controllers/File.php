@@ -151,7 +151,7 @@ class File extends AbstractApi
         ],
         type: 'object',
     )))]
-    #[OA\Response(response: 201, description: 'Created')]
+    #[OA\Response(response: 201, description: 'File uploaded successfully.')]
     #[AcceptableContentTypes(['multipart/form-data'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     public function post_upload(): Response
@@ -167,10 +167,12 @@ class File extends AbstractApi
         if (!file_exists($targetDir)) {
             @mkdir($targetDir, 0777, true);
         }
-
         $fileName = $_FILES["filename"]["name"];
-
+        if (!$fileName) {
+            throw new GC2Exception("File does not exists.", 400, null, "FILE_IMPORT_ERROR");
+        }
         $filePath = $targetDir . DIRECTORY_SEPARATOR . $fileName;
+
         $chunk = isset($_REQUEST["chunk"]) ? intval($_REQUEST["chunk"]) : 0;
         $chunks = isset($_REQUEST["chunks"]) ? intval($_REQUEST["chunks"]) : 0;
         if (!is_dir($targetDir) || !$dir = opendir($targetDir)) {
@@ -221,7 +223,6 @@ class File extends AbstractApi
             // Strip the temp .part suffix off
             rename("$filePath.part", $filePath);
         }
-//        return ["code" => 201, "success" => true, "chunk" => $chunk];
         $data = ["success" => true, "chunk" => $chunk];
         return new PostResponse(data: $data);
     }
