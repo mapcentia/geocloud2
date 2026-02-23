@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.2.0] - 2026-5-2
+### Fixed
+- JSON is no longer URL decoded by default, because it can invalidate the raw JSON with control characters.
+
+## [2026.1.2] - 2026-23-1
+### Fixed
+- Handle `PDOException` gracefully in `Mapfile.php` to prevent unhandled errors.
+
+## [2026.1.1] - 2026-21-1
+### Fixed
+- WFS did not get the access-control-allow-origin header set and therefore browsere blocked CORS requests.
+
+## [2026.1.0] - 2026-6-1
+### Fixed
+- Refactor `Sql.php`: split `DefaultTypeConverterFactory` instantiation and `setConnection` call so it works after upgrading sad_spirit\pg_wrapper
+
+## [2025.12.1] - 2025-19-12
+### Added
+- Added Cron expression validation to Scheduler for improved job scheduling reliability.
+
+## [2025.12.0] - 2025-9-12
+### Changed
+- The `Allow null` setting can now be set on columns in VIEWs and FTs. The settings are stored on the application level 
+  and are read by Vidi Editor, so fields on VIEWs and FTs can be required.
+- Table references can now have an `_order` property, which is used to sort the columns in the referenced table:
+```json
+{"_rel":"[schema.table]", "_value":"[field]", "_text":"[field]", "_where": "[foo <> bar]", "_order": "[field ASC]"}
+```
+
+## [2025.10.5] - 2025-31-10
+### Added
+- GeoJSON as output format to WFS 2.0. Use `&format=geojson` or `&format=application/json` in the URL.`
+
 ## [2025.10.4] - 2025-23-10
 ### Fixed
 - Add missing import for `DefaultTypeConverterFactory` in `app/models/Sql.php`.

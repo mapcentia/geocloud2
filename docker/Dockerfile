@@ -228,12 +228,12 @@ RUN git clone --branch branch-1-12 http://github.com/mapserver/mapcache.git \
     && rm -rf mapcache
 
 # Install QGIS Server
-#RUN wget -qO - https://qgis.org/downloads/qgis-2022.gpg.key \
-#    | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import \
-#    && chmod a+r /etc/apt/trusted.gpg.d/qgis-archive.gpg \
-#    && add-apt-repository "deb https://qgis.org/debian-ltr $(lsb_release -c -s) main" \
-#    && apt-get update && apt-get install -y --no-install-recommends qgis-server \
-#    && rm -rf /var/lib/apt/lists/*
+RUN wget -qO - https://qgis.org/downloads/qgis-2022.gpg.key \
+    | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import \
+    && chmod a+r /etc/apt/trusted.gpg.d/qgis-archive.gpg \
+    && add-apt-repository "deb https://qgis.org/debian-ltr $(lsb_release -c -s) main" \
+    && apt-get update && apt-get install -y --no-install-recommends qgis-server \
+    && rm -rf /var/lib/apt/lists/*
 
 # Symlink fonts for QGIS server (slightly corrected syntax)
 RUN ln -s /usr/share/fonts /usr/lib/x86_64-linux-gnu/fonts
@@ -318,8 +318,11 @@ RUN mkdir -p /var/www \
 WORKDIR /var/www/geocloud2
 
 # Instal composer
-RUN cd app \
+RUN set -e; cd app \
+    && EXPECTED_SIGNATURE="$(php -r "echo file_get_contents('https://composer.github.io/installer.sig');")" \
     && php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+    && ACTUAL_SIGNATURE="$(php -r "echo hash_file('sha384', 'composer-setup.php');")" \
+    && if [ "$EXPECTED_SIGNATURE" != "$ACTUAL_SIGNATURE" ]; then echo 'Installer corrupt' >&2; rm composer-setup.php; exit 1; fi \
     && php composer-setup.php \
     && php -r "unlink('composer-setup.php');"
 
