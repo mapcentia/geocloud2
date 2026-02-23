@@ -15,6 +15,8 @@
 
 namespace app\inc;
 
+use app\conf\App;
+
 final class Connection
 {
     public function __construct(public ?string $host = null,
@@ -35,7 +37,7 @@ final class Connection
 
         $this->host = $host ?? \app\conf\Connection::$param['postgishost'];
         $this->port = $port ?? \app\conf\Connection::$param['postgisport'];
-        $this->user = $user ?? \app\conf\Connection::$param['postgisuser'];
+        $this->user = ($user && !empty(App::$param['setUser']))  ? $user : \app\conf\Connection::$param['postgisuser'];
         $this->database = $database ?? \app\conf\Connection::$param['postgisdb'];
         $this->password = $password ?? \app\conf\Connection::$param['postgispw'];
         $this->pgbouncer = $pgbouncer ?? \app\conf\Connection::$param['pgbouncer'];
