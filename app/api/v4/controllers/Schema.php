@@ -83,6 +83,7 @@ class Schema extends AbstractApi
      */
     #[OA\Get(path: '/api/v4/schemas/{schema}', operationId: 'getSchema', description: "Get schema(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: false, example: 'my_schema')]
+    #[OA\Parameter(name: 'namesOnly', description: 'Return only schema names without tables and sequences', in: 'query', required: false)]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Schema"),
         links: [
             new OA\Link(
