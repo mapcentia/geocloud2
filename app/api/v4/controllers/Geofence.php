@@ -74,9 +74,9 @@ use Symfony\Component\Validator\Constraints as Assert;
             example: "select"
         ),
         new OA\Property(
-            property: "layer",
-            title: "Layer",
-            description: "Rule match for the requested layer(s).",
+            property: "table",
+            title: "Table",
+            description: "Rule match for the requested table(s).",
             type: "string",
             example: "my_table"
         ),
