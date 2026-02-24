@@ -94,6 +94,7 @@ class Table extends AbstractApi
     #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'getTable', description: "Get table(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: false, example: 'my_table')]
+    #[OA\Parameter(name: 'namesOnly', description: 'Return only table names without columns, indices, constraints and other details.', in: 'query', required: false)]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Table"),
         links: [
             new OA\Link(
