@@ -167,6 +167,9 @@ class GraphQL
             $tables = [];
         }
         foreach ($tables as $t) {
+            if (!$t['enableows']) {
+                continue;
+            }
             $tableName = $t['f_table_name'];
             $fieldName = 'get' . self::snakeToPascal($tableName);
             $fields[$fieldName] = [
