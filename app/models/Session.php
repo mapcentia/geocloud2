@@ -361,7 +361,7 @@ class Session extends Model
         } else {
             $jwt = Jwt::validate($token)['data'];
             $row['screenname'] = $userName = $jwt['uid'];
-            $row['parentdb'] = $jwt["superUser"] ? null : $jwt['database'];
+            $row['parentdb'] = $jwt["superUser"] ? null : $jwt['database']; // Important: Nullify parentdb for superusers
             $row['email'] = $jwt['email'];
             $row['usergroup'] = $jwt['userGroup'];
         }
