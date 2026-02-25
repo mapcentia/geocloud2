@@ -247,7 +247,7 @@ class GraphQL
         $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
         return $this->typeCache[$typeName] = new ObjectType([
             'name' => $typeName,
-            'description' => $t->getComment(),
+            'description' => self::sanitizeDescription($t->getComment()),
             'fields' => function () use ($schema, $table, $t) {
                 try {
                     $fields = [];
@@ -256,7 +256,7 @@ class GraphQL
                         if (isset($info['is_nullable']) && $info['is_nullable'] === false) {
                             $type = Type::nonNull($type);
                         }
-                        $fields[$col] = ['type' => $type, 'description' => $info['comment'] ?? null];
+                        $fields[$col] = ['type' => $type, 'description' => self::sanitizeDescription($info['comment'] ?? null)];
                     }
                     // Add relationships
                     $fkMap = $this->buildForeignMap($schema, $table);
@@ -1338,5 +1338,19 @@ class GraphQL
             'id' => uniqid(),
             'type_hints' => $this->getTypeHints($schema, $table, $params)
         ];
+    }
+
+    /**
+     * Sanitizes a string for use in GraphQL descriptions.
+     * Removes control characters that are invalid in GraphQL strings.
+     * Allowed: \t (0x09), \n (0x0A), \r (0x0D), and \u0020-\uFFFF.
+     */
+    private static function sanitizeDescription(?string $description): ?string
+    {
+        if ($description === null) {
+            return null;
+        }
+        // Remove control characters (0x00-0x1F) except \t, \n, \r
+        return preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', $description);
     }
 }
