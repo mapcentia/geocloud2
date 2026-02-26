@@ -148,9 +148,9 @@ class Sql extends Controller
         $settings = new Setting();
         $res = $settings->get();
         $this->apiKey = $res['data']->api_key;
-
+        $this->api->begin();
         $serializedResponse = $this->transaction(Input::get('client_encoding'), Input::get('type_hints'), true, Input::get('type_formats'));
-
+        $this->api->commit();
 
         // Check if $this->data is set in SELECT section
         if (!isset($this->data)) {
