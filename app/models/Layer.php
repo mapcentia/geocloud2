@@ -116,7 +116,7 @@ class Layer extends Table
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function getAll(string $db, ?bool $auth, ?string $query = null, ?bool $includeExtent = false, ?bool $parse = false, ?bool $es = false, ?bool $lookupForeignTables = true): array
+    public function getAll(string $db, ?bool $auth, ?string $query = null, ?bool $includeExtent = false, ?bool $parse = false, ?bool $es = false, ?bool $lookupForeignTables = true, ?array $jwt = null): array
     {
         // If user is signed in with another user than the requested,
         // when consider the user as not signed in.
@@ -366,8 +366,8 @@ class Layer extends Table
                 }
                 $fields = $this->getMetaData($rel, false, true, $restrictions, null, true, $lookupForeignTables);
 
-                // If column comment is empty, we output from field conf
                 foreach ($fields as $key => $field) {
+                    // If column comment is empty, we output from field conf
                     if (empty($field['comment'])) {
                         $fields[$key]['comment'] = $fieldConf[$key]['desc'];
                     }
@@ -408,11 +408,15 @@ class Layer extends Table
                 }
 
                 // If session is sub-user we always check privileges
-                if (isset($_SESSION["subuser"]) && $_SESSION["subuser"]) {
+                $subUser = $_SESSION["subuser"] ?? !$jwt['superUser'] ?? false;
+                $userName = $_SESSION["screen_name"] ?? $jwt['uid'] ?? null;
+                $userGroup = $_SESSION["usergroup"] ?? $jwt['userGroup'] ?? null;
+
+                if ($subUser) {
                     $privileges = (array)json_decode($row["privileges"]);
-                    if (($privileges[$_SESSION['usergroup'] ?: $_SESSION['screen_name']] != "none" && $privileges[$_SESSION['usergroup'] ?: $_SESSION['screen_name']])) {
+                    if (($privileges[$userGroup ?: $userName] != "none" && $privileges[$userGroup ?: $userName])) {
                         $response['data'][] = $arr;
-                    } elseif ($_SESSION['screen_name'] == $schema || $_SESSION['usergroup'] == $schema) {
+                    } elseif ($userName == $schema || $userGroup == $schema) {
                         $response['data'][] = $arr;
                         // Always add layers with Write and None.
                     } elseif ($row["authentication"] == "None" || $row["authentication"] == "Write") {
