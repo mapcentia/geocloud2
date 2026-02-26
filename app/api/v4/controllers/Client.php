@@ -131,7 +131,7 @@ class Client extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Get(path: '/api/v4/clients/{id}', operationId: 'getClient', description: "Get OAuth client(s).", tags: ['Clients'])]
-    #[OA\Parameter(name: 'id', description: 'Id of client', in: 'path', required: false, example: '66f5005bd44c6')]
+    #[OA\Parameter(name: 'id', description: 'Id of client', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: '66f5005bd44c6')]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(
         allOf: [
             new OA\Schema(

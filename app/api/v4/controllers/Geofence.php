@@ -131,7 +131,7 @@ class Geofence extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Get(path: '/api/v4/rules/{id}', operationId: 'getRule', description: "Get rule(s).", tags: ['Rules'])]
-    #[OA\Parameter(name: 'id', description: 'Rule identifier', in: 'path', required: false, example: 2)]
+    #[OA\Parameter(name: 'id', description: 'Rule identifier', in: 'path', required: false, schema: new OA\Schema(type: 'integer'), example: 2)]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Rule"))]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -195,7 +195,7 @@ class Geofence extends AbstractApi
      */
 
     #[OA\Patch(path: '/api/v4/rules/{id}', operationId: 'patchRule', description: "Update existing rule(s).", tags: ['Rules'])]
-    #[OA\Parameter(name: 'id', description: 'Rule identifier', in: 'path', required: true, example: 2)]
+    #[OA\Parameter(name: 'id', description: 'Rule identifier', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 2)]
     #[OA\RequestBody(description: 'Update rule', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Rule"))]
     #[OA\Response(response: 204, description: "Rule updated")]
     #[OA\Response(response: 400, description: 'Bad request')]
@@ -231,7 +231,7 @@ class Geofence extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Delete(path: '/api/v4/rules/{id}', operationId: 'deleteRule', description: "Delete rule(s).", tags: ['Rules'])]
-    #[OA\Parameter(name: 'id', description: 'Id of rule', in: 'path', required: true, example: '2')]
+    #[OA\Parameter(name: 'id', description: 'Id of rule', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 2)]
     #[OA\Response(response: 204, description: "Rule deleted")]
     #[OA\Response(response: 404, description: 'Not found')]
     public function delete_index(): Response
@@ -317,5 +317,4 @@ class Geofence extends AbstractApi
         // TODO: Implement put_index() method.
     }
 }
-
 

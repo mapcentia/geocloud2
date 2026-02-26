@@ -54,7 +54,8 @@ use Symfony\Component\Validator\Constraints as Assert;
             property: "password",
             title: "Password",
             description: "Users password. Min. 8 characters and at least one upper case letter and one number.",
-            type: "password",
+            type: "string",
+            format: "password",
             example: "Abc123!",
         ),
         new OA\Property(
@@ -90,7 +91,7 @@ class User extends AbstractApi
      * @throws Exception
      */
     #[OA\Get(path: '/api/v4/users/{name}', operationId: 'getUser', description: "Get sub-user(s)", tags: ['Users'])]
-    #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: false, schema: null, example: "joe")]
+    #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: "joe")]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/User"))]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -174,10 +175,10 @@ class User extends AbstractApi
      * @return Response
      * @throws Exception
      */
-    #[OA\Patch(path: '/api/v4/users/{name}', operationId: 'patchUser', description: "Update exiting sub-user(s)", tags: ['Users'])]
-    #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: true, example: "joe")]
+    #[OA\Patch(path: '/api/v4/users/{name}', operationId: 'patchUser', description: "Update existing sub-user(s)", tags: ['Users'])]
+    #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: "joe")]
     #[OA\RequestBody(description: 'User', required: true, content: new OA\JsonContent(ref: "#/components/schemas/User"))]
-    #[OA\Response(response: 204, description: "Rule updated")]
+    #[OA\Response(response: 204, description: "User updated")]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]
@@ -230,7 +231,7 @@ class User extends AbstractApi
      * @throws InvalidArgumentException
      */
     #[OA\Delete(path: '/api/v4/users/{name}', operationId: 'deleteUsers', description: "Delete sub-user(s)", tags: ['Users'])]
-    #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: true, example: "joe")]
+    #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: "joe")]
     #[OA\Response(response: 204, description: "User deleted")]
     #[OA\Response(response: 404, description: 'Not found')]
     public function delete_index(): Response

@@ -41,20 +41,20 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Sql",
-    description: "SQL query execution endpoint. Supports SELECT, INSERT, UPDATE, DELETE and MERGE statements.",
+    description: "Execute SQL statements. Supports SELECT, INSERT, UPDATE, DELETE, and MERGE (no DDL or transaction control).",
     required: [],
     properties: [
         new OA\Property(
             property: "q",
             title: "Query",
-            description: "SQL statement. SELECT, INSERT, UPDATE, DELETE or MERGE. No DDL, transaction control, etc.",
+            description: "SQL statement to run. Allowed: SELECT, INSERT, UPDATE, DELETE, MERGE. Not allowed: DDL, transaction control.",
             type: "string",
             example: "SELECT :my_date::date as my_date",
         ),
         new OA\Property(
             property: "params",
             title: "Parameters",
-            description: "Parameters for statements. For SELECT statements, only one set of parameters is accepted.",
+            description: "Parameters for the statement. For SELECT, only one parameter set is allowed.",
             type: "array",
             items: new OA\Items(type: "object"),
             example: [["my_date" => "2011 04 01"], ["my_string" => "hello world"]],
@@ -62,21 +62,21 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
         new OA\Property(
             property: "type_hints",
             title: "Type hints",
-            description: "For JSON represented parameters which are not of JSON/JSONB type.",
+            description: "Type hints for JSON-encoded parameters that are not JSON/JSONB in the database.",
             type: "object",
             example: ["my_date" => "date"],
         ),
         new OA\Property(
             property: "type_formats",
             title: "Type formats",
-            description: "Formats for types (like date formatting).",
+            description: "Formatting rules for typed parameters, e.g. date formats.",
             type: "object",
             example: ["my_date" => "Y m d"],
         ),
         new OA\Property(
             property: "output_format",
             title: "Output format",
-            description: "The wanted output format: json, geojson, csv, ccsv ndjson, excel or ogr/[any ogr vector format e.g 'ogr/ESRI Shape']. ccsv and ndjson are streamed instead of returning a whole document or file.",
+            description: "Output format. Supported: json, geojson, csv, ccsv, ndjson, excel, or ogr/<format> (e.g. ogr/ESRI Shape). ccsv and ndjson are streamed.",
             type: "string",
             default: "json",
             example: "csv",
@@ -84,7 +84,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
         new OA\Property(
             property: "srs",
             title: "Spatial reference system",
-            description: "The spatial reference system to use for PostGIS geometry columns. EPSG code.",
+            description: "EPSG code for the spatial reference system used for PostGIS geometry output.",
             type: "integer",
             default: 4326,
             example: 25832,
@@ -114,8 +114,8 @@ class Sql extends AbstractApi
      * @return Response
      * @throws GC2Exception
      */
-    #[OA\Post(path: '/api/v4/sql', operationId: 'postSql', description: "Execute SQL statements", tags: ['Sql'])]
-    #[OA\RequestBody(description: 'Sql statement to execute', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sql"))]
+    #[OA\Post(path: '/api/v4/sql', operationId: 'postSql', description: "Execute SQL statements.", tags: ['Sql'])]
+    #[OA\RequestBody(description: 'SQL statement(s) to execute.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sql"))]
     #[OA\Response(response: 200, description: 'Ok', content: [new OA\MediaType('application/json'), new OA\MediaType('application/gpx'), new OA\MediaType('application/octet-stream')])]
     #[OA\Response(response: 500, description: 'Internal error. Most likely an SQL error.')]
     #[AcceptableContentTypes(['application/json'])]
@@ -216,11 +216,11 @@ class Sql extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException
      * @throws InvalidArgumentException
      */
-    #[OA\Post(path: '/api/v4/sql/database/{database}', operationId: 'postSqlNoToken', description: "Run SQL statements without token", tags: ['Sql'])]
-    #[OA\Parameter(name: 'database', description: 'Database to use', in: 'path', required: false, example: 'mydb')]
-    #[OA\RequestBody(description: 'Sql statement to run', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sql"))]
+    #[OA\Post(path: '/api/v4/sql/database/{database}', operationId: 'postSqlNoToken', description: "Run SQL statements without a token.", tags: ['Sql'])]
+    #[OA\Parameter(name: 'database', description: 'Database name to use.', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'mydb')]
+    #[OA\RequestBody(description: 'SQL statement(s) to run.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sql"))]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\MediaType('application/json'))]
-    #[OA\Response(response: 500, description: 'Internal error. Most like an SQL error.')]
+    #[OA\Response(response: 500, description: 'Internal error. Most likely an SQL error.')]
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     public function post_database(): Response

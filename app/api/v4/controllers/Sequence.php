@@ -48,12 +48,12 @@ use Symfony\Component\Validator\Constraints as Assert;
             type: "integer", example: 1
         ),
         new OA\Property(property: "max_value", title: "Max value", description: "Determines the maximum value for the sequence.", type: "integer", example: 9223372036854),
-        new OA\Property(property: "start_value", title: "Start value", description: "he initial value of the sequence", type: "integer", example: 1),
+        new OA\Property(property: "start_value", title: "Start value", description: "The initial value of the sequence", type: "integer", example: 1),
         new OA\Property(property: "cache_size", title: "Cache size", description: "Specifies how many sequence numbers should be preallocated and stored in memory for faster access.",
             type: "integer",
             default: 1, example: 1
         ),
-        new OA\Property(property: "owned_by", title: "Qwned by",
+        new OA\Property(property: "owned_by", title: "Owned by",
             description: "Associates the sequence with a specific table column, so that if that column (or its whole table) is deleted, the sequence will be automatically deleted as well. The format is schema.table.column.",
             type: "string", example: "public.my_table.id"),
     ],
@@ -75,8 +75,8 @@ class Sequence extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Get(path: '/api/v4/schemas/{schema}/sequences/{sequence}', operationId: 'getSequence', description: "Get sequence(s).", tags: ['Schema'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
-    #[OA\Parameter(name: 'sequence', description: 'Sequence names', in: 'path', required: false, example: 'my_sequences')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'sequence', description: 'Sequence names', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'my_sequences')]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Sequence"))]
     #[OA\Response(response: 404, description: 'Not found')]
     #[Override]
@@ -99,7 +99,7 @@ class Sequence extends AbstractApi
     }
 
     #[OA\Post(path: '/api/v4/schemas/{schema}/sequences/', operationId: 'postSequence', description: "Create sequence(s).", tags: ['Schema'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\RequestBody(description: 'New sequence', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sequence"))]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
@@ -132,8 +132,8 @@ class Sequence extends AbstractApi
     }
 
     #[OA\Patch(path: '/api/v4/schemas/{schema}/sequences/{sequence}', operationId: 'patchSequence', description: "Update existing sequence(s).", tags: ['Schema'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
-    #[OA\Parameter(name: 'sequence', description: 'Sequence names', in: 'path', required: true, example: 'my_sequences')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'sequence', description: 'Sequence names', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_sequences')]
     #[OA\RequestBody(description: 'Sequence', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sequence"))]
     #[OA\Response(response: 204, description: "Sequence updated")]
     #[OA\Response(response: 400, description: 'Bad request')]
@@ -157,8 +157,8 @@ class Sequence extends AbstractApi
     }
 
     #[OA\Delete(path: '/api/v4/schemas/{schema}/sequences/{sequence}', operationId: 'deleteSequence', description: "Delete sequence(s).", tags: ['Schema'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
-    #[OA\Parameter(name: 'sequence', description: 'Sequence names', in: 'path', required: true, example: 'my_sequences')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'sequence', description: 'Sequence names', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_sequences')]
     #[OA\Response(response: 204, description: 'Sequence deleted')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[Override]

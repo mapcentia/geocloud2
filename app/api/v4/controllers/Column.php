@@ -59,8 +59,8 @@ use Symfony\Component\Validator\Constraints as Assert;
             title: "Is nullable",
             description: "If true the column can be set to null.",
             type: "boolean",
-            default: "true",
-            example: "false"
+            default: true,
+            example: false
         ),
         new OA\Property(
             property: "default_value",
@@ -108,9 +108,9 @@ class Column extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException
      */
     #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}', operationId: 'getColumn', description: "Get column(s)", tags: ['Schema'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
-    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
-    #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: false, example: 'my_columns')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
+    #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'my_columns')]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Column"))]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -139,8 +139,8 @@ class Column extends AbstractApi
      * @throws InvalidArgumentException
      */
     #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/columns/', operationId: 'postColumn', description: "Create new column(s).", tags: ['Schema'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
-    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\RequestBody(description: 'New column', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Column"))]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
@@ -181,9 +181,9 @@ class Column extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException
      */
     #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}/', operationId: 'patchColumn', description: "Update existing column(s)", tags: ['Schema'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
-    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
-    #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: true, example: 'my_columns')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
+    #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_columns')]
     #[OA\RequestBody(description: 'Column', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Column"))]
     #[OA\Response(response: 204, description: "Column updated")]
     #[OA\Response(response: 400, description: 'Bad request')]
@@ -248,9 +248,9 @@ class Column extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException
      */
     #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}', operationId: 'deleteColumn', description: "Delete column(s)", tags: ['Schema'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
-    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
-    #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: true, example: 'my_columns')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
+    #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_columns')]
     #[OA\Response(response: 204, description: 'Column deleted')]
     #[OA\Response(response: 404, description: 'Not found')]
     public function delete_index(): NoContentResponse

@@ -74,9 +74,9 @@ class Index extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/indices/{index}', operationId: 'getIndex', description: "Get index(s).", tags: ['Schema'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema', in: 'path', required: true, example: 'my_schema')]
-    #[OA\Parameter(name: 'table', description: 'Table', in: 'path', required: true, example: 'my_table')]
-    #[OA\Parameter(name: 'index', description: 'Index', in: 'path', required: false, example: 'my_index')]
+    #[OA\Parameter(name: 'schema', description: 'Schema', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
+    #[OA\Parameter(name: 'index', description: 'Index', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'my_index')]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(
         allOf: [
             new OA\Schema(

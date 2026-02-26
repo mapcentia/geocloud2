@@ -98,9 +98,9 @@ class Constraint extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'getConstraint', description: "Get constraint(s).", tags: ['Schema'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
-    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
-    #[OA\Parameter(name: 'constraint', description: 'Constraint name(s)', in: 'path', required: false, example: 'my_constraint')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
+    #[OA\Parameter(name: 'constraint', description: 'Constraint name(s)', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'my_constraint')]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Constraint"))]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -128,8 +128,8 @@ class Constraint extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/constraints', operationId: 'postConstraint', description: "Create constraint(s).", tags: ['Schema'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
-    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\RequestBody(description: 'New constraint', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Constraint"))]
     #[OA\Response(response: 201, description: 'Created')]
     #[AcceptableContentTypes(['application/json'])]
@@ -178,10 +178,10 @@ class Constraint extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'deleteConstraint', description: "Delete constraint(s)", tags: ['Schema'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
-    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
-    #[OA\Parameter(name: 'constraint', description: 'Constraint name(s)', in: 'path', required: true, example: 'my_constraint')]
-    #[OA\Response(response: 204, description: 'Column deleted')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
+    #[OA\Parameter(name: 'constraint', description: 'Constraint name(s)', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_constraint')]
+    #[OA\Response(response: 204, description: 'Constraint deleted')]
     #[OA\Response(response: 404, description: 'Not found')]
     public function delete_index(): Response
     {

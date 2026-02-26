@@ -82,8 +82,8 @@ class Schema extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Get(path: '/api/v4/schemas/{schema}', operationId: 'getSchema', description: "Get schema(s).", tags: ['Schema'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: false, example: 'my_schema')]
-    #[OA\Parameter(name: 'namesOnly', description: 'Return only schema names without tables and sequences', in: 'query', required: false)]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'namesOnly', description: 'Return only schema names without tables and sequences', in: 'query', required: false, schema: new OA\Schema(type: 'boolean'), example: true)]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Schema"),
         links: [
             new OA\Link(
@@ -213,7 +213,7 @@ class Schema extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Patch(path: '/api/v4/schemas/{schema}', operationId: 'patchSchema', description: "Rename an existing schema.", tags: ['Schema'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: false, example: 'my_schema')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\RequestBody(description: 'Rename schema', required: true, content: new OA\JsonContent(
         allOf: [
             new OA\Schema(
@@ -246,7 +246,7 @@ class Schema extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Delete(path: '/api/v4/schemas/{schema}', operationId: 'deleteSchema', description: "Delete schema(s).", tags: ['Schema'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Response(response: 204, description: 'Schema deleted')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]

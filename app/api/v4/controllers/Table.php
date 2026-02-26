@@ -92,9 +92,9 @@ class Table extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'getTable', description: "Get table(s).", tags: ['Schema'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
-    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: false, example: 'my_table')]
-    #[OA\Parameter(name: 'namesOnly', description: 'Return only table names without columns, indices, constraints and other details.', in: 'query', required: false)]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'my_table')]
+    #[OA\Parameter(name: 'namesOnly', description: 'Return only table names without columns, indices, constraints and other details.', in: 'query', required: false, schema: new OA\Schema(type: 'boolean'), example: true)]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Table"),
         links: [
             new OA\Link(
@@ -102,7 +102,7 @@ class Table extends AbstractApi
                 operationId: "getColumn",
                 parameters: [
                     "schema" => '$request.path.schema',
-                    "table " => '$request.path.table',
+                    "table" => '$request.path.table',
                 ],
                 description: "Link to columns."
             ),
@@ -111,7 +111,7 @@ class Table extends AbstractApi
                 operationId: "getConstraint",
                 parameters: [
                     "schema" => '$request.path.schema',
-                    "table " => '$request.path.table',
+                    "table" => '$request.path.table',
                 ],
                 description: "Link to constraints."
             ),
@@ -120,7 +120,7 @@ class Table extends AbstractApi
                 operationId: "getIndex",
                 parameters: [
                     "schema" => '$request.path.schema',
-                    "table " => '$request.path.table',
+                    "table" => '$request.path.table',
                 ],
                 description: "Link to indices."
             ),
@@ -129,7 +129,7 @@ class Table extends AbstractApi
                 operationId: "getPrivileges",
                 parameters: [
                     "schema" => '$request.path.schema',
-                    "table " => '$request.path.table',
+                    "table" => '$request.path.table',
                 ],
                 description: "Link to privileges."
             )
@@ -157,7 +157,7 @@ class Table extends AbstractApi
      * @throws InvalidArgumentException
      */
     #[OA\Post(path: '/api/v4/schemas/{schema}/tables', operationId: 'postTable', description: "Create table(s).", tags: ['Schema'])]
-    #[OA\Parameter(name: 'name', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\RequestBody(description: 'New table', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Table"))]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
@@ -194,8 +194,8 @@ class Table extends AbstractApi
      * @throws InvalidArgumentException
      */
     #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'patchTable', description: "Rename and move existing table(s).", tags: ['Schema'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
-    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\RequestBody(description: 'Updated table', required: true, content: new OA\JsonContent(
         allOf: [
             new OA\Schema(
@@ -262,8 +262,8 @@ class Table extends AbstractApi
      * @return Response
      */
     #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'deleteTable', description: "Delete table(s).", tags: ['Schema'])]
-    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
-    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\Response(response: 204, description: 'Table deleted')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]

@@ -35,7 +35,7 @@ use Override;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Method",
-    description: "nstead of sending raw SQL every time you want to run a statement, you can wrap your SQL statements inside JSON-RPC methods. This means you define a named method which holds your SQL query along with optional instructions on how to interpret and format the data types.",
+    description: "Instead of sending raw SQL every time you want to run a statement, you can wrap your SQL statements inside JSON-RPC methods. This means you define a named method which holds your SQL query along with optional instructions on how to interpret and format the data types.",
     required: ["method", "q"],
     properties: [
         new OA\Property(
@@ -103,7 +103,7 @@ class Method extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Get(path: '/api/v4/methods/{method}', operationId: 'getRpc', description: "Get JSON-RPC method definitions.", tags: ['Methods'])]
-    #[OA\Parameter(name: 'method', description: 'Identifier of RPC method', in: 'path', required: false, example: 'myMethod')]
+    #[OA\Parameter(name: 'method', description: 'Identifier of RPC method', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'myMethod')]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Method"))]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -178,7 +178,7 @@ class Method extends AbstractApi
      * @throws InvalidArgumentException
      */
     #[OA\Patch(path: '/api/v4/methods/{method}', operationId: 'patchRpc', description: "Update existing JSON-RPC method(s).", tags: ['Methods'])]
-    #[OA\Parameter(name: 'method', description: 'Method name', in: 'path', required: true, example: '66f5005bd44c6')]
+    #[OA\Parameter(name: 'method', description: 'Method name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'myMethod')]
     #[OA\RequestBody(description: 'RPC method to execute', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Method"))]
     #[OA\Response(response: 204, description: 'Method updated')]
     #[OA\Response(response: 400, description: 'Bad request')]
@@ -209,7 +209,7 @@ class Method extends AbstractApi
      * @throws InvalidArgumentException
      */
     #[OA\Delete(path: '/api/v4/methods/{method}', operationId: 'deleteRpc', description: "Delete JSON-RPC method(s).", tags: ['Methods'])]
-    #[OA\Parameter(name: 'method', description: 'Name of method', in: 'path', required: true, example: 'myStatement')]
+    #[OA\Parameter(name: 'method', description: 'Name of method', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'myStatement')]
     #[OA\Response(response: 204, description: "Method deleted")]
     #[OA\Response(response: 404, description: 'Not found')]
     #[Override]
