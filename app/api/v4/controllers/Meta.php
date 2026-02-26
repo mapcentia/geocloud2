@@ -13,7 +13,7 @@ use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableMethods;
 use app\api\v4\Controller;
 use app\api\v4\Responses\GetResponse;
-use app\api\v4\Responses\PatchResponse;
+use app\api\v4\Responses\NoContentResponse;
 use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
@@ -93,7 +93,7 @@ class Meta extends AbstractApi
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      */
-    #[OA\Get(path: '/api/v4/meta/{query}', summary: 'Get relation metadata', security: [['bearerAuth' => []]], tags: ['Meta'])]
+    #[OA\Get(path: '/api/v4/meta/{query}', operationId: 'getMetaData', summary: 'Get relation metadata', security: [['bearerAuth' => []]], tags: ['Metadata'])]
     #[OA\Parameter(name: 'query', description: 'Schema-qualified relation name, schema name, or tag (tag:name). Comma-separated values are supported.', in: 'path', required: false, schema: new OA\Schema(type: 'string'))]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Meta"))]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -120,7 +120,7 @@ class Meta extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException
      * @throws InvalidArgumentException
      */
-    #[OA\Patch(path: '/api/v4/meta', summary: 'Update relation metadata', security: [['bearerAuth' => []]], tags: ['Meta'])]
+    #[OA\Patch(path: '/api/v4/meta', operationId: 'patchMetaData',summary: 'Update relation metadata', security: [['bearerAuth' => []]], tags: ['Metadata'])]
     #[OA\RequestBody(description: 'Metadata updates.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Meta"))]
     #[OA\Response(response: 204, description: "Metadata updated")]
     #[OA\Response(response: 400, description: 'Bad request')]
@@ -136,7 +136,7 @@ class Meta extends AbstractApi
         }
         $geometryJoinTable->commit();
 
-        return new PatchResponse(data: []);
+        return new NoContentResponse();
     }
 
     static function processRows(array $rows): array
@@ -150,45 +150,60 @@ class Meta extends AbstractApi
 
     static function processRow(array $row): array
     {
-        return [
-            "title" => $row["f_table_title"],
-            "abstract" => $row["f_table_abstract"],
-            "group" => $row["layergroup"],
-            "sort_id" => $row["sort_id"],
-            "tags" => $row["tags"],
-            "properties" => $row["meta"],
-            "fields" => self::setPropertiesToPrivate($row["fields"]),
-
-            "_uuid" => $row["uuid"],
-            "_schema" => $row["f_table_schema"],
-            "_rel" => $row["f_table_name"],
-            "_geometry_column" => $row["f_geometry_column"],
-            "_pkey" => $row["pkey"],
-            "_rel_type" => $row["rel_type"],
-            "_coord_dimension" => $row["coord_dimension"],
-            "_geom_type" => $row["type"],
-            "_srid" => $row["srid"],
-            "_authentication" => $row["authentication"],
-//            "wmssource" => $row["wmssource"],
-//            "privileges" => $row["privileges"],
-            "_children" => $row["children"],
+        $out = [];
+        $map = [
+            "title" => "f_table_title",
+            "abstract" => "f_table_abstract",
+            "group" => "layergroup",
+            "sort_id" => "sort_id",
+            "tags" => "tags",
+            "properties" => "meta",
+            "_uuid" => "uuid",
+            "_schema" => "f_table_schema",
+            "_rel" => "f_table_name",
+            "_geometry_column" => "f_geometry_column",
+            "_pkey" => "pkey",
+            "_rel_type" => "rel_type",
+            "_coord_dimension" => "coord_dimension",
+            "_geom_type" => "type",
+            "_srid" => "srid",
+            "_authentication" => "authentication",
         ];
 
+        foreach ($map as $outKey => $rowKey) {
+            if (isset($row[$rowKey])) {
+                $out[$outKey] = $row[$rowKey];
+            }
+        }
+
+        if (isset($row["fields"])) {
+            $out["fields"] = self::setPropertiesToPrivate($row["fields"]);
+        }
+
+        return $out;
     }
 
     static function processRowReverse(array $row): array
     {
-        return [
-            "_key_" => $row["_key_"],
-            "f_table_abstract" => $row["abstract"],
-            "f_table_title" => $row["title"],
-            "layergroup" => $row["group"],
-            "sort_id" => $row["sort_id"],
-            "tags" => $row["tags"],
-            "meta" => $row["properties"],
-            "fieldconf" => ($row["fields"]),
+        $out = [];
+        $map = [
+            "_key_" => "_key_",
+            "f_table_abstract" => "abstract",
+            "f_table_title" => "title",
+            "layergroup" => "group",
+            "sort_id" => "sort_id",
+            "tags" => "tags",
+            "meta" => "properties",
+            "fieldconf" => "fields",
         ];
 
+        foreach ($map as $rowKey => $inputKey) {
+            if (isset($row[$inputKey])) {
+                $out[$rowKey] = $row[$inputKey];
+            }
+        }
+
+        return $out;
     }
 
     protected static function setPropertiesToPrivate(array $properties): array
@@ -212,6 +227,8 @@ class Meta extends AbstractApi
     public function validate(): void
     {
         $body = Input::getBody();
+        error_log("Received metadata patch request with body: " . $body);
+
         $this->validateRequest(
             collection: self::getAssert(),
             data: $body,
