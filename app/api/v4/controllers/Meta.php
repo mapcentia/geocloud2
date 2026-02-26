@@ -34,26 +34,26 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Meta",
-    description: "",
+    description: "Metadata for relations (tables/views) used by clients and tools. Stored outside the physical schema.",
     required: [],
     properties: [
         new OA\Property(
             property: 'relations',
-            description: 'Relation metadata provides supplementary, context-dependent information about database relations. 
-            Metadata is stored outside the physical database schema and does not affect table structure or constraints. 
-            It is primarily consumed by clients such as UI applications, query builders, and access layers.',
+            description: 'Relation metadata provides supplementary information about database relations.
+            Metadata is stored outside the physical schema and does not change table structure or constraints.
+            It is used by clients such as UI applications, query builders, and access layers.',
             type: 'object',
             additionalProperties: new OA\AdditionalProperties(
                 properties: [
                     new OA\Property(property: 'title', description: 'Human-readable relation title.', type: 'string'),
                     new OA\Property(property: 'abstract', description: 'Description or summary of the relation.', type: 'string'),
-                    new OA\Property(property: 'group', description: 'Logical grouping (e.g., for UI categorization).', type: 'string'),
+                    new OA\Property(property: 'group', description: 'Logical grouping (e.g. for UI categorization).', type: 'string'),
                     new OA\Property(property: 'sort_id', description: 'Sorting weight for presentation.',type: 'integer'),
                     new OA\Property(property: 'tags', description: 'Arbitrary classification tags.', type: 'array', items: new OA\Items(type: 'string')),
                     new OA\Property(property: 'properties', description: 'Free-form key/value metadata.', type: 'object'),
                     new OA\Property(
                         property: 'fields',
-                        description: 'Describes individual columns within the relation.',
+                        description: 'Per-column metadata.',
                         type: 'object',
                         additionalProperties: new OA\AdditionalProperties(
                             properties: [
@@ -93,9 +93,8 @@ class Meta extends AbstractApi
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      */
-    #[OA\Get(path: '/api/v4/meta/{query}', summary: 'Get layer meta data', security: [['bearerAuth' => []]], tags: ['Meta'])]
-    #[OA\Parameter(name: 'query', description: 'Can be a schema qualified relation name, a schame name, 
-    a tag in the form tag:name or combination of the three separated by comma.', in: 'path', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Get(path: '/api/v4/meta/{query}', summary: 'Get relation metadata', security: [['bearerAuth' => []]], tags: ['Meta'])]
+    #[OA\Parameter(name: 'query', description: 'Schema-qualified relation name, schema name, or tag (tag:name). Comma-separated values are supported.', in: 'path', required: false, schema: new OA\Schema(type: 'string'))]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Meta"))]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
@@ -121,9 +120,9 @@ class Meta extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException
      * @throws InvalidArgumentException
      */
-    #[OA\Patch(path: '/api/v4/meta', summary: 'Update layer meta data', security: [['bearerAuth' => []]], tags: ['Meta'])]
-    #[OA\RequestBody(description: 'Meta', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Meta"))]
-    #[OA\Response(response: 204, description: "Meta data updated")]
+    #[OA\Patch(path: '/api/v4/meta', summary: 'Update relation metadata', security: [['bearerAuth' => []]], tags: ['Meta'])]
+    #[OA\RequestBody(description: 'Metadata updates.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Meta"))]
+    #[OA\Response(response: 204, description: "Metadata updated")]
     #[OA\Response(response: 400, description: 'Bad request')]
     public function patch_index(): Response
     {

@@ -37,27 +37,27 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Column",
-    description: "Each column has a data type. The data type constrains the set of possible values that can be assigned to a column and assigns semantics to the data stored in the column so that it can be used for computations. For instance, a column declared to be of a numerical type will not accept arbitrary text strings, and the data stored in such a column can be used for mathematical computations. By contrast, a column declared to be of a character string type will accept almost any kind of data but it does not lend itself to mathematical calculations, although other operations such as string concatenation are available.",
+    description: "Table column definition, including name, data type, nullability, defaults, identity, and comment.",
     required: [],
     properties: [
         new OA\Property(
             property: "name",
             title: "Name",
-            description: "Name of the column.",
+            description: "Column name.",
             type: "string",
             example: "my-column",
         ),
         new OA\Property(
             property: "type",
             title: "Type",
-            description: "The type of the column, like varchar, integer, boolean etc. Array types are denoted by adding [] to the type, e.g. varchar[].",
+            description: "Column type, e.g. varchar, integer, boolean. Array types use [] (e.g. varchar[]).",
             type: "string",
             example: "int",
         ),
         new OA\Property(
             property: "is_nullable",
             title: "Is nullable",
-            description: "If true the column can be set to null.",
+            description: "Whether the column allows NULL values.",
             type: "boolean",
             default: true,
             example: false
@@ -65,14 +65,14 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "default_value",
             title: "Default value",
-            description: "The column is set to the default value if no value is given.",
+            description: "Default value used when no value is provided.",
             type: "string",
             example: "my-value"
         ),
         new OA\Property(
             property: "identity_generation",
             title: "Identity generation of the column",
-            description: "An identity column is a special column that is generated automatically from an implicit sequence. It can be used to generate key values.",
+            description: "Identity generation mode for auto-generated values.",
             type: "string",
             enum: ["always", "by default"],
             example: "always"
@@ -80,7 +80,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "comment",
             title: "Comment",
-            description: "Comment on the column.",
+            description: "Comment for the column.",
             type: "string",
             example: "This is a comment on the column",
         )
@@ -107,7 +107,7 @@ class Column extends AbstractApi
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      */
-    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}', operationId: 'getColumn', description: "Get column(s)", tags: ['Schema'])]
+    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}', operationId: 'getColumn', description: "Get column(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'my_columns')]
@@ -141,7 +141,7 @@ class Column extends AbstractApi
     #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/columns/', operationId: 'postColumn', description: "Create new column(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
-    #[OA\RequestBody(description: 'New column', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Column"))]
+    #[OA\RequestBody(description: 'Column to create.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Column"))]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
@@ -180,7 +180,7 @@ class Column extends AbstractApi
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      */
-    #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}/', operationId: 'patchColumn', description: "Update existing column(s)", tags: ['Schema'])]
+    #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}/', operationId: 'patchColumn', description: "Update existing column(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_columns')]
@@ -247,7 +247,7 @@ class Column extends AbstractApi
      * @throws InvalidArgumentException
      * @throws PhpfastcacheInvalidArgumentException
      */
-    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}', operationId: 'deleteColumn', description: "Delete column(s)", tags: ['Schema'])]
+    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/columns/{column}', operationId: 'deleteColumn', description: "Delete column(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_columns')]

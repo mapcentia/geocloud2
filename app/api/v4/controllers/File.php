@@ -41,74 +41,74 @@ use Override;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "File",
-    description: "Use the Files endpoints to upload one or more files (like CSV files) to temporary storage and then process them into a database table.",
+    description: "Upload files to temporary storage and then import them into database tables.",
     required: ["file", "schema"],
     properties: [
         new OA\Property(
             property: "file",
             title: "File",
-            description: "File to import to database.",
+            description: "Uploaded file name to import.",
             type: "string",
         ),
         new OA\Property(
             property: "schema",
             title: "Schema",
-            description: "Destination schema",
+            description: "Destination schema name.",
             type: "string",
         ),
         new OA\Property(
             property: "import",
             title: "Import",
-            description: "If false, a dry-run will be executed.",
+            description: "If false, run a dry-run (no changes).",
             type: "boolean",
             default: false,
         ),
         new OA\Property(
             property: "t_srs",
             title: "Target srs",
-            description: "Fallback target SRS. Will be used if no authority name/code is available.",
+            description: "Fallback target SRS. Used if no authority name/code is available.",
             type: "string",
             default: "EPSG:4326",
         ),
         new OA\Property(
             property: "s_srs",
             title: "Source srs",
-            description: "Fallback source SRS. Will be used if file doesn't contain projection information.",
+            description: "Fallback source SRS. Used if the file has no projection information.",
             type: "string",
             default: "EPSG:4326",
         ),
         new OA\Property(
             property: "append",
             title: "Append",
-            description: "Append to existing table instead of creating new.",
+            description: "Append to an existing table instead of creating a new one.",
             type: "boolean",
             default: false,
         ),
         new OA\Property(
             property: "p_multi",
             title: "Promote to multi",
-            description: "Promote single geometries to multi part.",
+            description: "Promote single-part geometries to multi-part.",
             type: "boolean",
             default: false,
         ),
         new OA\Property(
             property: "truncate",
             title: "Truncate",
-            description: "Truncate table before appending. Only have effect if --append is set.",
+            description: "Truncate table before appending. Only applies when append is true.",
             type: "boolean",
             default: false,
         ),
         new OA\Property(
             property: "timestamp",
             title: "Timestamp",
-            description: "Name of timestamp field. Create a timestamp field in the import table. Omit property for no timestamp field.",
+            description: "Name of timestamp field to create. Omit to skip creating a timestamp field.",
             type: "string",
             example: "creation_timestamp",
         ),
         new OA\Property(
             property: "x_possible_names",
             title: "Possible names for X",
-            description: "Specify the potential names of the columns that can contain X/longitude. Only effects CSV",
+            description: "Possible column names for X/longitude (CSV only).",
             type: "string",
             default: "lon*,Lon*,x,X",
             example: "Lon*",
@@ -116,7 +116,7 @@ use Override;
         new OA\Property(
             property: "y_possible_names",
             title: "Possible names for Y",
-            description: "Specify the potential names of the columns that can contain Y/latitude. Only effects CSV",
+            description: "Possible column names for Y/latitude (CSV only).",
             type: "string",
             default: "lat*,Lat*,y,Y",
             example: "Lat*",
@@ -139,7 +139,7 @@ class File extends AbstractApi
      * @return Response
      * @throws GC2Exception
      */
-    #[OA\Post(path: '/api/v4/file/upload', operationId: 'postFileUpload', description: 'Upload the file(s) using multipart/form-data to get them staged on the server.', tags: ['File'])]
+    #[OA\Post(path: '/api/v4/file/upload', operationId: 'postFileUpload', description: 'Upload file(s) via multipart/form-data and stage them on the server.', tags: ['File'])]
     #[OA\RequestBody(content: new OA\MediaType('multipart/form-data', new OA\Schema(
         properties: [
             new OA\Property(
@@ -231,8 +231,8 @@ class File extends AbstractApi
      * @return Response
      * @throws Exception
      */
-    #[OA\Post(path: '/api/v4/file/process', operationId: 'postFileProcess', description: 'Process the uploaded file into a target schema/table with desired options (dry-run, append, SRS, etc.).', tags: ['File'])]
-    #[OA\RequestBody(description: 'New table', required: true, content: new OA\JsonContent(ref: "#/components/schemas/File"))]
+    #[OA\Post(path: '/api/v4/file/process', operationId: 'postFileProcess', description: 'Import a staged file into a target schema/table. Supports dry-run, append, SRS, and more.', tags: ['File'])]
+    #[OA\RequestBody(description: 'Import options and target information.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/File"))]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]

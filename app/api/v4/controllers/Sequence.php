@@ -30,31 +30,31 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Sequence",
-    description: "A sequence is a database object that generates a sequence of integers, often used for auto-incrementing primary key columns.",
+    description: "Sequence definition for generating incremental numeric values.",
     required: ["name"],
     properties: [
-        new OA\Property(property: "name", title: "Name", description: "The name of the sequence", type: "string", example: "my_sequence"),
-        new OA\Property(property: "data_type", title: "Data type", description: "The data type of the sequence", type: "string",
+        new OA\Property(property: "name", title: "Name", description: "Sequence name.", type: "string", example: "my_sequence"),
+        new OA\Property(property: "data_type", title: "Data type", description: "Data type used by the sequence.", type: "string",
             default: "bigint",
             enum: ["smallint", "integer", "bigint"],
             example: "bigint"
         ),
-        new OA\Property(property: "increment_by", title: "Increment by", description: "Specifies which value is added to the current sequence value to create a new value",
+        new OA\Property(property: "increment_by", title: "Increment by", description: "Value added to the current sequence value to create a new value.",
             type: "integer",
             default: 1,
             example: 1
         ),
-        new OA\Property(property: "min_value", title: "Min value", description: "Determines the minimum value a sequence can generate.",
+        new OA\Property(property: "min_value", title: "Min value", description: "Minimum value the sequence can generate.",
             type: "integer", example: 1
         ),
-        new OA\Property(property: "max_value", title: "Max value", description: "Determines the maximum value for the sequence.", type: "integer", example: 9223372036854),
+        new OA\Property(property: "max_value", title: "Max value", description: "Maximum value the sequence can generate.", type: "integer", example: 9223372036854),
         new OA\Property(property: "start_value", title: "Start value", description: "The initial value of the sequence", type: "integer", example: 1),
-        new OA\Property(property: "cache_size", title: "Cache size", description: "Specifies how many sequence numbers should be preallocated and stored in memory for faster access.",
+        new OA\Property(property: "cache_size", title: "Cache size", description: "How many sequence numbers to preallocate and cache.",
             type: "integer",
             default: 1, example: 1
         ),
         new OA\Property(property: "owned_by", title: "Owned by",
-            description: "Associates the sequence with a specific table column, so that if that column (or its whole table) is deleted, the sequence will be automatically deleted as well. The format is schema.table.column.",
+            description: "Associates the sequence with a table column so it is dropped with that column/table. Format: schema.table.column.",
             type: "string", example: "public.my_table.id"),
     ],
     type: "object"
@@ -100,7 +100,7 @@ class Sequence extends AbstractApi
 
     #[OA\Post(path: '/api/v4/schemas/{schema}/sequences/', operationId: 'postSequence', description: "Create sequence(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
-    #[OA\RequestBody(description: 'New sequence', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sequence"))]
+    #[OA\RequestBody(description: 'Sequence to create.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sequence"))]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]

@@ -35,41 +35,41 @@ use Override;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Method",
-    description: "Instead of sending raw SQL every time you want to run a statement, you can wrap your SQL statements inside JSON-RPC methods. This means you define a named method which holds your SQL query along with optional instructions on how to interpret and format the data types.",
+    description: "Define reusable JSON-RPC methods that wrap SQL statements plus optional type hints and output formats.",
     required: ["method", "q"],
     properties: [
         new OA\Property(
             property: "method",
             title: "Method",
-            description: "A String containing the name of the method to be created.",
+            description: "Name of the method to create.",
             type: "string",
             example: "getDate",
         ),
         new OA\Property(
             property: "q",
             title: "Query",
-            description: "SQL statement. SELECT, INSERT, UPDATE, DELETE or MERGE.",
+            description: "SQL statement. Allowed: SELECT, INSERT, UPDATE, DELETE, MERGE.",
             type: "string",
             example: "SELECT :my_date::date as my_date",
         ),
         new OA\Property(
             property: "type_hints",
             title: "Type hints",
-            description: "For JSON represented parameters which are not of JSON type.",
+            description: "Type hints for JSON-encoded parameters that are not JSON in the database.",
             type: "object",
             example: ["my_date" => "date"],
         ),
         new OA\Property(
             property: "type_formats",
             title: "Type formats",
-            description: "For JSON represented parameters which are not of JSON type.",
+            description: "Formatting rules for typed parameters, e.g. date formats.",
             type: "object",
             example: ["my_date" => "Y m d"],
         ),
         new OA\Property(
             property: "output_format",
             title: "Output format",
-            description: "The wanted output format.",
+            description: "Output format for the result.",
             type: "string",
             default: "json",
             example: "csv",
@@ -77,7 +77,7 @@ use Override;
         new OA\Property(
             property: "srs",
             title: "Spatial reference system",
-            description: "The spatial reference system to use for PostGIS geometry columns. EPSG code.",
+            description: "EPSG code for the spatial reference system used for geometry output.",
             type: "integer",
             default: 4326,
             example: 25832,
@@ -141,8 +141,8 @@ class Method extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Post(path: '/api/v4/methods', operationId: 'postRpc',
-        description: "Create JSON-RPC method(s). This means you define a named method which holds your SQL query along with optional instructions on how to interpret and format the data types.", tags: ['Methods'])]
-    #[OA\RequestBody(description: 'RPC method to create', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Method"))]
+        description: "Create JSON-RPC method definitions.", tags: ['Methods'])]
+    #[OA\RequestBody(description: 'RPC method definition(s).', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Method"))]
     #[OA\Response(response: 201, description: 'Created', content: new OA\MediaType('application/json'))]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json', 'application/json-rpc'])]
@@ -177,9 +177,9 @@ class Method extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Patch(path: '/api/v4/methods/{method}', operationId: 'patchRpc', description: "Update existing JSON-RPC method(s).", tags: ['Methods'])]
+    #[OA\Patch(path: '/api/v4/methods/{method}', operationId: 'patchRpc', description: "Update existing JSON-RPC method definitions.", tags: ['Methods'])]
     #[OA\Parameter(name: 'method', description: 'Method name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'myMethod')]
-    #[OA\RequestBody(description: 'RPC method to execute', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Method"))]
+    #[OA\RequestBody(description: 'RPC method updates.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Method"))]
     #[OA\Response(response: 204, description: 'Method updated')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]

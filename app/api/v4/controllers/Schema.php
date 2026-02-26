@@ -32,13 +32,13 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Schema",
-    description: "A database contains one or more named schemas, which in turn contain tables. Within one schema, two tables cannot have the same name. The same table name can be used in different schemas without conflict.",
+    description: "Schema definition, including tables and sequences.",
     required: ["name"],
     properties: [
         new OA\Property(
             property: "name",
             title: "Name",
-            description: "Name of the schema.",
+            description: "Schema name.",
             type: "string",
             example: "my-schema",
         ),
@@ -83,7 +83,7 @@ class Schema extends AbstractApi
      */
     #[OA\Get(path: '/api/v4/schemas/{schema}', operationId: 'getSchema', description: "Get schema(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
-    #[OA\Parameter(name: 'namesOnly', description: 'Return only schema names without tables and sequences', in: 'query', required: false, schema: new OA\Schema(type: 'boolean'), example: true)]
+    #[OA\Parameter(name: 'namesOnly', description: 'Return only schema names (omit tables and sequences).', in: 'query', required: false, schema: new OA\Schema(type: 'boolean'), example: true)]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Schema"),
         links: [
             new OA\Link(
@@ -149,7 +149,7 @@ class Schema extends AbstractApi
      * @throws InvalidArgumentException
      */
     #[OA\Post(path: '/api/v4/schemas', operationId: 'postSchema', description: "Create schema(s).", tags: ['Schema'])]
-    #[OA\RequestBody(description: 'New schema', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Schema"))]
+    #[OA\RequestBody(description: 'Schema to create.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Schema"))]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json'])]
@@ -219,7 +219,7 @@ class Schema extends AbstractApi
             new OA\Schema(
                 required: ["name"],
                 properties: [
-                    new OA\Property(property: "name", description: "New name of schema", type: "string", example: "my_schema_with_new_name")
+                    new OA\Property(property: "name", description: "New schema name.", type: "string", example: "my_schema_with_new_name")
                 ]
             )
         ]

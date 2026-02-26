@@ -38,13 +38,13 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "OAuth",
-    description: "OAuth is used to authenticate users and grant access to resources. It is a protocol that allows users to authorize third-party applications to access their resources without sharing their credentials.",
+    description: "OAuth token request payload for supported grant types.",
     required: ["grant_type"],
     properties: [
         new OA\Property(
             property: "grant_type",
             title: "OAuth grant type",
-            description: "The OAuth grant type to use for authentication.",
+            description: "OAuth grant type to use.",
             type: "string",
             enum: ["password", "authorization_code", "refresh_token", "device_code"],
             example: "password",
@@ -52,7 +52,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "username",
             title: "Username",
-            description: "Username - either database user or sub-user. Only used in password grant.",
+            description: "Username (database user or sub-user). Used only with password grant.",
             type: "string",
             example: "mydb",
         ),
@@ -66,42 +66,42 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "database",
             title: "Database",
-            description: "The database the user belongs to.",
+            description: "Database name the user belongs to.",
             type: "string",
             example: "mydb"
         ),
         new OA\Property(
             property: "client_id",
             title: "Client id",
-            description: "The OAuth client id.",
+            description: "OAuth client id.",
             type: "string",
             example: "djskjskdj"
         ),
         new OA\Property(
             property: "client_secret",
             title: "Client secret",
-            description: "The OAuth client secret.",
+            description: "OAuth client secret.",
             type: "string",
             example: "xxx"
         ),
         new OA\Property(
             property: "code",
             title: "Code",
-            description: "The code which is exchanged for an access token in authorization_code grant",
+            description: "Authorization code exchanged for tokens (authorization_code grant).",
             type: "string",
             example: "xxx"
         ),
         new OA\Property(
             property: "redirect_uri",
             title: "Redirect uri",
-            description: "The redirect uris for authorization_code grant.",
+            description: "Redirect URI for authorization_code grant.",
             type: "string",
             example: "xxx"
         ),
         new OA\Property(
             property: "code_verifier",
             title: "Code verifier",
-            description: "The code verifier for PKCE.",
+            description: "PKCE code verifier.",
             type: "string",
             example: "xxx"
         ),
@@ -110,7 +110,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 #[OA\Schema(
     schema: "OAuthResponse",
-    description: "OAuth grant response. This is the final response with tokens.",
+    description: "OAuth token response payload.",
     required: ["access_token", "token_type", "expires_in", "refresh_token", "scope"],
     properties: [
         new OA\Property(
@@ -123,7 +123,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "token_type",
             title: "Token type",
-            description: "Always 'bearer'",
+            description: "Always 'bearer'.",
             type: "string",
             enum: ["bearer"],
             example: "bearer",
@@ -131,21 +131,21 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "expires_in",
             title: "Expiration time",
-            description: "The token expiration time.",
+            description: "Token lifetime in seconds.",
             type: "integer",
             example: 3600,
         ),
         new OA\Property(
             property: "refresh_token",
             title: "JWT refresh token",
-            description: "The JWT refresh token.",
+            description: "Refresh token.",
             type: "string",
             example: "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
         ),
         new OA\Property(
             property: "scope",
             title: "Scope",
-            description: "The scope.",
+            description: "Granted scope.",
             type: "string",
             example: "sql",
         ),
@@ -154,27 +154,27 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 #[OA\Schema(
     schema: "OAuthDeviceResponse",
-    description: "Device response with user code and verification uri.",
+    description: "Device flow response with user code and verification URI.",
     required: ["device_code", "user_code", "verification_uri", "expires_in", "interval"],
     properties: [
         new OA\Property(
             property: "device_code",
             title: "Device code",
-            description: "The device code.",
+            description: "Device code.",
             type: "string",
             example: "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
         ),
         new OA\Property(
             property: "user_code",
             title: "User code",
-            description: "The user code.",
+            description: "User code to show to the user.",
             type: "string",
             example: "AB12-CD34",
         ),
         new OA\Property(
             property: "verification_uri",
             title: "Verification uri",
-            description: "The verification URI.",
+            description: "Verification URI where the user completes authorization.",
             type: "string",
             format: "url",
             example: "https://api.centia.io/api/v4/oauth",
@@ -182,14 +182,14 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "expires_in",
             title: "Expiration time",
-            description: "The JWT refresh token.",
+            description: "Device code lifetime in seconds.",
             type: "integer",
             example: "1800",
         ),
         new OA\Property(
             property: "interval",
             title: "Interval",
-            description: "The interval.",
+            description: "Polling interval in seconds.",
             type: "integer",
             example: 5,
         ),
@@ -198,13 +198,13 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 #[OA\Schema(
     schema: "OAuthDevice",
-    description: "Device request for starting a device flow.",
+    description: "Device flow request payload.",
     required: ["client_id"],
     properties: [
         new OA\Property(
             property: "client_id",
             title: "Client id",
-            description: "The client id.",
+            description: "OAuth client id.",
             type: "string",
             example: "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
         )
@@ -229,8 +229,8 @@ class Oauth extends AbstractApi
      * @throws InvalidArgumentException
      * @throws GC2Exception
      */
-    #[OA\Post(path: '/api/v4/oauth', operationId: 'postOauth', description: 'Create token', tags: ['OAuth'])]
-    #[OA\RequestBody(description: 'OAuth flow', required: true, content: new OA\JsonContent(ref: "#/components/schemas/OAuth"))]
+    #[OA\Post(path: '/api/v4/oauth', operationId: 'postOauth', description: 'Create token.', tags: ['OAuth'])]
+    #[OA\RequestBody(description: 'OAuth token request.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/OAuth"))]
     #[OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(ref: "#/components/schemas/OAuthResponse"))]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json', 'application/x-www-form-urlencoded'])]
@@ -369,8 +369,8 @@ class Oauth extends AbstractApi
     }
 
 
-    #[OA\Post(path: '/api/v4/oauth/device', operationId: 'postDevice', description: 'Start device flow', tags: ['OAuth'])]
-    #[OA\RequestBody(description: 'OAuth device flow', required: true, content: new OA\JsonContent(ref: "#/components/schemas/OAuthDevice"))]
+    #[OA\Post(path: '/api/v4/oauth/device', operationId: 'postDevice', description: 'Start device flow.', tags: ['OAuth'])]
+    #[OA\RequestBody(description: 'Device flow request.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/OAuthDevice"))]
     #[OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(ref: "#/components/schemas/OAuthDeviceResponse"))]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json', 'application/x-www-form-urlencoded'])]

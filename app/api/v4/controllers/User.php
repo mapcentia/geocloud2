@@ -32,20 +32,20 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "User",
-    description: "Sub-users are users for your API. While you can use your super-user for single user projects, it is a good idea to create sub-users for projects involving multiple users, which can be granted different privileges in the database.",
+    description: "Sub-users are API users managed under a super-user and can be granted specific database privileges.",
     required: ["name", "email", "password"],
     properties: [
         new OA\Property(
             property: "name",
             title: "Name",
-            description: "Name of user.",
+            description: "User name.",
             type: "string",
             example: "joe",
         ),
         new OA\Property(
             property: "email",
             title: "E-mail",
-            description: "Users e-mail.",
+            description: "User email address.",
             type: "string",
             format: "email",
             example: "joe@example.com",
@@ -53,7 +53,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "password",
             title: "Password",
-            description: "Users password. Min. 8 characters and at least one upper case letter and one number.",
+            description: "User password. Minimum 8 characters with at least one uppercase letter and one number.",
             type: "string",
             format: "password",
             example: "Abc123!",
@@ -61,14 +61,14 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "properties",
             title: "Properties",
-            description: "An object, which can contain any properties and values.",
+            description: "Arbitrary custom properties for the user.",
             type: "object",
             example: ["phone" => "555-1234567", "address" => "123 Main St", "city" => "New York"],
         ),
         new OA\Property(
             property: "default_user",
             title: "Is default user",
-            description: "The default user is the user that is used when no token is provided. Use for public applications where users should not be able to access data without a token.",
+            description: "Whether this is the default user when no token is provided (public access).",
             type: "boolean",
             example: true,
         ),
@@ -90,7 +90,7 @@ class User extends AbstractApi
      * @return Response
      * @throws Exception
      */
-    #[OA\Get(path: '/api/v4/users/{name}', operationId: 'getUser', description: "Get sub-user(s)", tags: ['Users'])]
+    #[OA\Get(path: '/api/v4/users/{name}', operationId: 'getUser', description: "Get sub-user(s).", tags: ['Users'])]
     #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: "joe")]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/User"))]
     #[OA\Response(response: 404, description: 'Not found')]
@@ -119,8 +119,8 @@ class User extends AbstractApi
      * @throws Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Post(path: '/api/v4/users', operationId: 'postUser', description: "Create new sub-user(s)", tags: ['Users'])]
-    #[OA\RequestBody(description: 'New user', required: true, content: new OA\JsonContent(ref: "#/components/schemas/User"))]
+    #[OA\Post(path: '/api/v4/users', operationId: 'postUser', description: "Create new sub-user(s).", tags: ['Users'])]
+    #[OA\RequestBody(description: 'User to create.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/User"))]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
@@ -175,9 +175,9 @@ class User extends AbstractApi
      * @return Response
      * @throws Exception
      */
-    #[OA\Patch(path: '/api/v4/users/{name}', operationId: 'patchUser', description: "Update existing sub-user(s)", tags: ['Users'])]
+    #[OA\Patch(path: '/api/v4/users/{name}', operationId: 'patchUser', description: "Update existing sub-user(s).", tags: ['Users'])]
     #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: "joe")]
-    #[OA\RequestBody(description: 'User', required: true, content: new OA\JsonContent(ref: "#/components/schemas/User"))]
+    #[OA\RequestBody(description: 'User updates.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/User"))]
     #[OA\Response(response: 204, description: "User updated")]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
@@ -230,7 +230,7 @@ class User extends AbstractApi
      * @throws Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Delete(path: '/api/v4/users/{name}', operationId: 'deleteUsers', description: "Delete sub-user(s)", tags: ['Users'])]
+    #[OA\Delete(path: '/api/v4/users/{name}', operationId: 'deleteUsers', description: "Delete sub-user(s).", tags: ['Users'])]
     #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: "joe")]
     #[OA\Response(response: 204, description: "User deleted")]
     #[OA\Response(response: 404, description: 'Not found')]

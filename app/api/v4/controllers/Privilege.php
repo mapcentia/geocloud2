@@ -30,23 +30,23 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Privilege",
-    description: "The privilege system enables the super-user to grant sub-users read or write privileges to tables. Sub-users can grant privileges to tables in their own schemas.",
+    description: "Privileges define read/write access for sub-users on tables.",
     required: ["subuser", "privileges"],
     properties: [
         new OA\Property(
             property: "subuser",
             title: "Sub-user",
-            description: "Name of the sub-user",
+            description: "Sub-user name.",
             type: "string",
             example: "joe",
         ),
         new OA\Property(
             property: "privilege",
             title: "Privilege",
-            description: "The privilege granted to the sub-user on a table.",
+            description: "Privilege level for the sub-user on the table.",
             type: "string",
             enum: ["none", "read", "write"],
-            example: "all",
+            example: "read",
         ),
     ],
     type: "object"

@@ -41,7 +41,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Call",
-    description: "JSON-RPC is a stateless, lightweight remote procedure call (RPC) protocol that uses JSON for data interchange. Defined by the JSON-RPC 2.0 specification, it enables clients to invoke methods on a server by sending JSON-formatted requests and receiving JSON-formatted responses, with support for batch calls, notifications, and standardized error handling.",
+    description: "JSON-RPC 2.0 request payload. Used to call a named RPC method with optional parameters.",
     required: ["jsonrpc", "method"],
     properties: [
         new OA\Property(
@@ -55,21 +55,21 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
         new OA\Property(
             property: "id",
             title: "Identifier",
-            description: "An identifier established by the Client that MUST contain a string if included.",
+            description: "Client-supplied request id. If present, must be a string.",
             type: "string",
             example: "1",
         ),
         new OA\Property(
             property: "method",
             title: "Method name",
-            description: "A String containing the name of the method to be invoked or created.",
+            description: "Name of the RPC method to call.",
             type: "string",
             example: "getDate",
         ),
         new OA\Property(
             property: "params",
             title: "Parameters",
-            description: "Parameters for the method. For SELECT methods, only one set of parameters is accepted.",
+            description: "Parameters for the method. For SELECT methods, only one parameter set is allowed.",
             type: "array",
             items: new OA\Items(type: "object"),
             example: [["my_date" => "2011 04 01"], ["my_string" => "hello world"]],
@@ -93,9 +93,9 @@ class Call extends AbstractApi
      * @throws RPCException
      */
     #[OA\Post(path: '/api/v4/call', operationId: 'postCall',
-        description: "Call a JSON-RPC method with or without parameters. The method must be defined in the database. See /api/v4/methods (postRpc) ",
+        description: "Call a JSON-RPC method. The method must exist (see /api/v4/methods).",
         tags: ['Methods'])]
-    #[OA\RequestBody(description: 'RPC method call', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Call"))]
+    #[OA\RequestBody(description: 'RPC request payload.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Call"))]
     #[OA\Response(response: 200, description: 'Ok', content: [new OA\MediaType('application/json'), new OA\MediaType('application/gpx'), new OA\MediaType('application/octet-stream')])]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json', 'application/json-rpc'])]
@@ -160,9 +160,8 @@ class Call extends AbstractApi
      * @throws RPCException
      */
     #[OA\Post(path: '/api/v4/call/dry', operationId: 'postCallDry', description:
-        "Dry run the RPC-JSON call to infer the types and store them. 
-        Types are only inferred and stored when dry running calls. Dry runs doesn't make effects on the database.
-        Dry-run before getting TypeScript types from /api/v4/interfaces (getTypeScript)",
+        "Dry-run an RPC call to infer and store input/output types. Dry-runs do not modify the database. 
+        Run this before requesting TypeScript types from /api/v4/interfaces.",
         tags: ['Methods'])]
     #[OA\RequestBody(description: 'RPC method call', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Call"))]
     #[OA\Response(response: 200, description: 'Ok', content: [new OA\MediaType('application/json'), new OA\MediaType('application/gpx'), new OA\MediaType('application/octet-stream')])]

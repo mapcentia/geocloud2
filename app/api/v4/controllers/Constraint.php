@@ -29,20 +29,20 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Constraint",
-    description: "A constraint is a rule that is enforced on a table to ensure data integrity. Constraints can be used to enforce rules such as uniqueness, foreign key relationships, and check constraints. They help maintain the consistency and accuracy of data in a database.",
+    description: "Table constraint definition (primary key, foreign key, unique, or check).",
     required: ["constraint", "columns"],
     properties: [
         new OA\Property(
             property: "name",
             title: "Name",
-            description: "Name of the constraint.",
+            description: "Constraint name.",
             type: "string",
             example: "my-constraint",
         ),
         new OA\Property(
             property: "constraint",
             title: "Type",
-            description: "Type of the constraint.",
+            description: "Constraint type.",
             type: "string",
             enum: ["primary", "foreign", "unique", "check"],
             example: "primary",
@@ -50,7 +50,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "columns",
             title: "Columns",
-            description: "Columns in constraint",
+            description: "Columns included in the constraint.",
             type: "array",
             items: new OA\Items(type: "string"),
             example: ["c1", "c2", "c3"],
@@ -58,21 +58,21 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "check",
             title: "Check",
-            description: "A check constraint.",
+            description: "CHECK expression (for check constraints).",
             type: "string",
             example: "c1 > 0",
         ),
         new OA\Property(
             property: "referenced_table",
             title: "Referenced table",
-            description: "Referenced table in a foreign key constraint.",
+            description: "Referenced table for a foreign key constraint.",
             type: "string",
             example: "my_schema.my.table",
         ),
         new OA\Property(
             property: "referenced_columns",
             title: "Referenced columns",
-            description: "Referenced columns in a foreign key constraint. This will default to the primary key if omitted.",
+            description: "Referenced columns for a foreign key. Defaults to the referenced table's primary key.",
             type: "array",
             items: new OA\Items(type: "string"),
             example: ["c1", "c2", "c3"],
@@ -130,7 +130,7 @@ class Constraint extends AbstractApi
     #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/constraints', operationId: 'postConstraint', description: "Create constraint(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
-    #[OA\RequestBody(description: 'New constraint', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Constraint"))]
+    #[OA\RequestBody(description: 'Constraint to create.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Constraint"))]
     #[OA\Response(response: 201, description: 'Created')]
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -177,7 +177,7 @@ class Constraint extends AbstractApi
      * @return Response
      * @throws GC2Exception
      */
-    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'deleteConstraint', description: "Delete constraint(s)", tags: ['Schema'])]
+    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/constraints/{constraint}', operationId: 'deleteConstraint', description: "Delete constraint(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\Parameter(name: 'constraint', description: 'Constraint name(s)', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_constraint')]

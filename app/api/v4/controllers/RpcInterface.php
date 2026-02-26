@@ -44,7 +44,7 @@ class RpcInterface extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/interfaces', operationId: 'getTypeScript', description: "Get the interfaces for all RPC-JSON methods. Returns TypeScript interfaces inferred from dry-runs via /api/v4/call/dry (postCallDry)", tags: ['Methods'])]
+    #[OA\Get(path: '/api/v4/interfaces', operationId: 'getTypeScript', description: "Get TypeScript interfaces for RPC methods inferred from /api/v4/call/dry.", tags: ['Methods'])]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\MediaType(mediaType: "text/plain"))]
     #[AcceptableAccepts(['text/plain', '*/*'])]
     #[Override]
@@ -80,4 +80,3 @@ class RpcInterface extends AbstractApi
         // TODO: Implement validate() method.
     }
 }
-

@@ -25,41 +25,41 @@ use OpenApi\Attributes as OA;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Stats",
-    description: "Statistics about the whole database.",
+    description: "Database-level statistics, including sizes and per-table stats.",
     required: ["tables", "total_size", "total_size_bytes", "number_of_tables", "cost"],
     properties: [
         new OA\Property(
             property: "tables",
             title: "Tables.",
-            description: "List of stats for all tables.",
+            description: "Per-table statistics.",
             type: "array",
             items: new OA\Items(ref: "#/components/schemas/TableStats"),
         ),
         new OA\Property(
             property: "total_size",
             title: "Total size",
-            description: "The total size of all tables in human-readable format.",
+            description: "Total size of all tables in bytes.",
             type: "integer",
             example: 722018304,
         ),
         new OA\Property(
             property: "total_size_bytes",
             title: "Total size",
-            description: "The total size of all tables in bytes.",
+            description: "Total size of all tables in human-readable format.",
             type: "string",
             example: "689 MB",
         ),
         new OA\Property(
             property: "number_of_tables",
             title: "Number of tables",
-            description: "The total of table in the database",
+            description: "Number of tables in the database.",
             type: "integer",
             example: 21,
         ),
         new OA\Property(
             property: "cost",
             title: "Cost of queries",
-            description: "The cost of queries.",
+            description: "Aggregate cost of queries (as reported by the database).",
             type: "number",
             example: 25686.6,
         ),
@@ -68,7 +68,7 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\Schema(
     schema: "TableStats",
-    description: "Table statistics.",
+    description: "Per-table statistics.",
     required: ["table_name", "schema_name", "total_size", "total_size_bytes"],
     properties: [
         new OA\Property(
@@ -88,7 +88,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(
             property: "total_size",
             title: "Total size",
-            description: "The total size of the table including indices in human-readable format.",
+            description: "Total size of the table including indexes, human-readable.",
             type: "string",
             example: "2728 kB",
         ),
@@ -116,7 +116,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(
             property: "indices_size",
             title: "Indices size",
-            description: "The size of the table's indices in human-readable format",
+            description: "Size of the table's indexes, human-readable.",
             type: "string",
             example: "520 kB",
         ),
@@ -152,7 +152,7 @@ class Stat extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/stats', operationId: 'getStats', description: "Get statistics", tags: ['Stats'])]
+    #[OA\Get(path: '/api/v4/stats', operationId: 'getStats', description: "Get database statistics.", tags: ['Stats'])]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Stats"))]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]

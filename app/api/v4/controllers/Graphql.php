@@ -55,27 +55,27 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "GraphQL",
-    description: "The GraphQL API allows you to query and manipulate your database data using a dynamically generated schema. Each table in your schema is automatically mapped to GraphQL types, queries, and mutations.",
+    description: "GraphQL request payload for the limited GraphQL endpoint backed by database metadata.",
     required: ["query"],
     properties: [
         new OA\Property(
             property: "query",
             title: "Query",
-            description: "GraphQL query. Both query and mutation operations are supported. Queries retrieve data, while mutations modify data.",
+            description: "GraphQL query string. Queries read data; mutations modify data.",
             type: "string",
             example: "query { ... }",
         ),
         new OA\Property(
             property: "variables",
             title: "Variables",
-            description: "Variables for the GraphQL query. Should be a JSON object with variable names as keys and their values as values.",
+            description: "Variables object for the GraphQL query.",
             type: "object",
             example: ["id" => 1],
         ),
         new OA\Property(
             property: "operationName",
             title: "Operation name",
-            description: "Name of the operation to execute. Useful when a query contains multiple operations.",
+            description: "Operation name to execute when the document contains multiple operations.",
             type: "string",
             example: "Artists",
         ),
@@ -101,9 +101,9 @@ class Graphql extends AbstractApi
      * @throws InvalidArgumentException
      * @throws GraphQLException
      */
-    #[OA\Post(path: '/api/graphql/schema/{schema}', operationId: 'postGraphQL', description: "Run GraphQL query/mutation", tags: ['GraphQL'])]
-    #[OA\RequestBody(description: 'New rule', required: true, content: new OA\JsonContent(ref: "#/components/schemas/GraphQL"))]
-    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
+    #[OA\Post(path: '/api/graphql/schema/{schema}', operationId: 'postGraphQL', description: "Run a GraphQL query or mutation.", tags: ['GraphQL'])]
+    #[OA\RequestBody(description: 'GraphQL request payload.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/GraphQL"))]
+    #[OA\Parameter(name: 'schema', description: 'Schema name.', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Response(response: 200, description: 'Ok')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]

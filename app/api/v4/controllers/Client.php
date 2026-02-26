@@ -30,27 +30,27 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Client",
-    description: "OAuth clients are applications that request and manage access to user resources through the OAuth authorization protocol. These clients act as intermediaries, enabling secure, delegated access to user accounts without directly handling sensitive credentials.",
+    description: "OAuth client definition used to request and manage user access.",
     required: [],
     properties: [
         new OA\Property(
             property: "id",
             title: "Client id",
-            description: "Id of client, which identify the client.",
+            description: "Client id.",
             type: "string",
             example: "my_client_id",
         ),
         new OA\Property(
             property: "name",
             title: "Name",
-            description: "Name of client. Can help identify the client.",
+            description: "Client display name.",
             type: "string",
             example: "My Application",
         ),
         new OA\Property(
             property: "homepage",
             title: "Homepage",
-            description: "The homepage (or web-app), which starts the code flow.",
+            description: "Homepage or web app URL that starts the code flow.",
             type: "string",
             format: "uri",
             example: "https://mapcentia.com"
@@ -58,7 +58,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "description",
             title: "Description",
-            description: "A longer description of the client, which can help identify the client.",
+            description: "Longer description to identify the client.",
             type: "string",
             example: null,
             nullable: true
@@ -66,7 +66,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "redirect_uri",
             title: "Redirect URIs.",
-            description: "The URIs the auth server is allowed to redirect back to.",
+            description: "Allowed redirect URIs for this client.",
             type: "array",
             items: new OA\Items(type: "string"),
             example: ["https://my_site1.com", "https://my_site2.com"]
@@ -82,7 +82,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "confirm",
             title: "Confirm",
-            description: "Users must confirm client access.",
+            description: "Require user confirmation before granting access.",
             type: "boolean",
             default: true,
             example: true
@@ -90,7 +90,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "two_factor",
             title: "Two factor authentication",
-            description: "Users must log in with two factor authentication.",
+            description: "Require two-factor authentication for login.",
             type: "boolean",
             default: true,
             example: true
@@ -98,7 +98,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "allow_signup",
             title: "Allow users to sign up",
-            description: "Users can sign up for a new account in the web-dialog.",
+            description: "Allow users to sign up in the web dialog.",
             type: "boolean",
             default: false,
             example: true
@@ -106,7 +106,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "social_signup",
             title: "Enable social signup",
-            description: "Users can sign up for a new account with social login.",
+            description: "Allow social login during signup.",
             type: "boolean",
             default: false,
             example: true
@@ -163,7 +163,7 @@ class Client extends AbstractApi
      * @throws RandomException
      */
     #[OA\Post(path: '/api/v4/clients', operationId: 'postClient', description: 'Create new OAuth client(s).', tags: ['Clients'])]
-    #[OA\RequestBody(description: 'New client', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Client"))]
+    #[OA\RequestBody(description: 'Client to create.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Client"))]
     #[OA\Response(response: 201, description: "Client created",
         content: new OA\JsonContent(
             required: ["id", "secret"],
@@ -224,7 +224,7 @@ class Client extends AbstractApi
      */
     #[OA\Patch(path: '/api/v4/clients/{id}', operationId: 'patchClient', description: "Update existing OAuth client(s).", tags: ['Clients'])]
     #[OA\Parameter(name: 'id', description: 'Id of client', in: 'path', required: true, example: '66f5005bd44c6')]
-    #[OA\RequestBody(description: 'Properties to update. Partial update is allowed.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Client"))]
+    #[OA\RequestBody(description: 'Fields to update. Partial update is allowed.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Client"))]
     #[OA\Response(response: 204, description: "Client updated")]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]

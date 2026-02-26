@@ -34,13 +34,13 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: "Table",
-    description: "A table is much like a table on paper: It consists of rows and columns. The number and order of the columns is fixed, and each column has a name. The number of rows is variable — it reflects how much data is stored at a given moment.",
+    description: "Table definition including columns, indexes, constraints, and comments.",
     required: ["name"],
     properties: [
         new OA\Property(
             property: "name",
             title: "Name",
-            description: "Name of the table",
+            description: "Table name.",
             type: "string",
             example: "my-column",
         ),
@@ -54,21 +54,21 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "indices",
             title: "Indices",
-            description: "Indices in the table.",
+            description: "Indexes defined on the table.",
             type: "array",
             items: new OA\Items(ref: "#/components/schemas/Index"),
         ),
         new OA\Property(
             property: "constraints",
             title: "Constraints",
-            description: "Constraints in the table.",
+            description: "Constraints defined on the table.",
             type: "array",
             items: new OA\Items(ref: "#/components/schemas/Constraint"),
         ),
         new OA\Property(
             property: "comment",
             title: "Comment",
-            description: "Comment on the table",
+            description: "Comment for the table.",
             type: "string",
             example: "This is a comment on the table",
         ),
@@ -94,7 +94,7 @@ class Table extends AbstractApi
     #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'getTable', description: "Get table(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'my_table')]
-    #[OA\Parameter(name: 'namesOnly', description: 'Return only table names without columns, indices, constraints and other details.', in: 'query', required: false, schema: new OA\Schema(type: 'boolean'), example: true)]
+    #[OA\Parameter(name: 'namesOnly', description: 'Return only table names (omit columns, indexes, constraints, and other details).', in: 'query', required: false, schema: new OA\Schema(type: 'boolean'), example: true)]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Table"),
         links: [
             new OA\Link(
@@ -122,7 +122,7 @@ class Table extends AbstractApi
                     "schema" => '$request.path.schema',
                     "table" => '$request.path.table',
                 ],
-                description: "Link to indices."
+                description: "Link to indexes."
             ),
             new OA\Link(
                 link: "getPrivileges",
@@ -158,7 +158,7 @@ class Table extends AbstractApi
      */
     #[OA\Post(path: '/api/v4/schemas/{schema}/tables', operationId: 'postTable', description: "Create table(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
-    #[OA\RequestBody(description: 'New table', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Table"))]
+    #[OA\RequestBody(description: 'Table to create.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Table"))]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json'])]
@@ -193,7 +193,7 @@ class Table extends AbstractApi
      * @throws GC2Exception
      * @throws InvalidArgumentException
      */
-    #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'patchTable', description: "Rename and move existing table(s).", tags: ['Schema'])]
+    #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'patchTable', description: "Rename or move existing table(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\RequestBody(description: 'Updated table', required: true, content: new OA\JsonContent(
@@ -201,7 +201,7 @@ class Table extends AbstractApi
             new OA\Schema(
                 properties: [
                     new OA\Property(property: "name", description: "New name of table", type: "string", example: "my_table_with_new_name"),
-                    new OA\Property(property: "schema", description: "Move table to schema", type: "string", example: "my_other_schema"),
+                    new OA\Property(property: "schema", description: "Target schema to move the table to.", type: "string", example: "my_other_schema"),
                     new OA\Property(
                         property: "comment",
                         title: "Comment",
