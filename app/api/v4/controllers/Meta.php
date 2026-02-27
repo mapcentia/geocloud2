@@ -75,10 +75,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[Controller(route: '/api/v4/meta/[query]', scope: Scope::SUB_USER_ALLOWED)]
 class Meta extends AbstractApi
 {
-    private const array PRIVATE_PROPERTIES = ['num', 'typname', 'full_type', 'character_maximum_length',
-        'numeric_precision', 'numeric_scale', 'max_bytes', 'reference', 'restriction', 'is_primary', 'is_unique',
-        'index_method', 'checks', 'geom_type', 'srid', 'is_array', 'udt_name', 'identity_generation',
-        'default_value', 'type', 'comment', 'is_nullable'];
+    private const array PRIVATE_PROPERTIES = ['character_maximum_length',
+        'numeric_precision', 'numeric_scale', 'max_bytes', 'is_unique',
+        'default_value', 'type', 'is_nullable'];
+
+    private const array PUBLIC_PROPERTIES = ['alias', 'queryable', 'sort_id'];
 
     public function __construct(public readonly Route2 $route, Connection $connection)
     {
@@ -213,8 +214,8 @@ class Meta extends AbstractApi
             $col = [];
             foreach ($property as $key => $value) {
                 if (in_array($key, self::PRIVATE_PROPERTIES)) {
-                    //$col['_' . $key] = $value;
-                } else {
+                    $col['_' . $key] = $value;
+                } elseif (in_array($key, self::PUBLIC_PROPERTIES)) {
                     $col[$key] = $value;
                 }
             }
