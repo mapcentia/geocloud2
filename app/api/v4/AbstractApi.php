@@ -381,8 +381,6 @@ abstract class AbstractApi implements ApiInterface
     {
         if (count($data) == 0) {
             throw new GC2Exception("No $this->resource found", 404, null, 'NO_RESOURCE');
-        } elseif (count($data) == 1) {
-            $data = $data[0];
         } else {
             $data = [$this->resource => $data];
         }
