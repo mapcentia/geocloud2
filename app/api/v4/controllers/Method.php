@@ -120,6 +120,8 @@ class Method extends AbstractApi
                 'type_hints' => json_decode($s['type_hints']),
                 'type_formats' => json_decode($s['type_formats']),
                 'output_format' => $s['output_format'],
+                'input_schema' => json_decode($s['input_schema']),
+                'output_schema' => json_decode($s['output_schema']),
                 'srs' => $s['srs'],
             ];
         }
