@@ -78,7 +78,7 @@ class Privilege extends AbstractApi
         $layer = new Layer(connection: $this->connection);
         $split = explode('.', $this->qualifiedName[0]);
         $r = $layer->getPrivilegesAsArray($split[0], $split[1]);
-        return $this->getResponse($r);
+        return $this->getResponse(data: $r);
     }
 
     #[Override]
@@ -121,7 +121,7 @@ class Privilege extends AbstractApi
         }
         $table->commit();
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/privileges/";
-        return $this->patchResponse($baseUri, ['']);
+        return $this->emptyResponse();
     }
 
     #[Override] public function delete_index(): Response
