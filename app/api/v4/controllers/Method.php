@@ -133,6 +133,7 @@ class Method extends AbstractApi
             if (count($r) !== count($names)) {
                 throw new GC2Exception("Not found", 404);
             }
+            return $this->getResponse($r, single: count($r) == 1);
         }
         return $this->getResponse($r);
 

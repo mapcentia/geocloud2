@@ -139,7 +139,7 @@ class Schema extends AbstractApi
                 $t['_links'] = $links;
                 $r[] = $t;
             }
-            return $this->getResponse($r);
+            return $this->getResponse($r, single: count($r) == 1);
         }
     }
 

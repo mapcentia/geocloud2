@@ -145,6 +145,7 @@ class Table extends AbstractApi
             for ($i = 0; sizeof($this->qualifiedName) > $i; $i++) {
                 $r[] = self::getTable($this->table[$i], $this);
             }
+            return $this->getResponse($r, single: count($r) == 1);
         } else {
             $r = self::getTables($this->schema[0], $this);
         }

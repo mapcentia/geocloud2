@@ -153,6 +153,7 @@ class Client extends AbstractApi
             foreach ($ids as $id) {
                 $r[] = $this->client->get($id)[0];
             }
+            return $this->getResponse($r, single: count($r) == 1);
         } else {
             $r = $this->client->get();
         }

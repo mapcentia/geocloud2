@@ -117,6 +117,7 @@ class Constraint extends AbstractApi
                     }
                 }
             }
+            return $this->getResponse($r, single: count($r) == 1);
         } else {
             $r = $res;
         }
