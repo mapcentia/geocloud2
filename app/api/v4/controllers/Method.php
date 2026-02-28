@@ -157,8 +157,8 @@ class Method extends AbstractApi
         $uid = $this->route->jwt["data"]["uid"];
         $decodedBody = json_decode(Input::getBody(), true);
 
-        if (!empty($decodedBody['methods'])) {
-            $methods = $decodedBody['methods'];
+        if (array_is_list($decodedBody)) {
+            $methods = $decodedBody;
         } else {
             $methods = [$decodedBody];
         }

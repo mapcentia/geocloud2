@@ -113,10 +113,10 @@ class Sequence extends AbstractApi
         $list = [];
         $this->table[0]->connect();
         $this->table[0]->begin();
-        if (!isset($data->sequences)) {
-            $sequences = [$data];
+        if (is_array($data)) {
+            $sequences = $data;
         } else {
-            $sequences = $data->sequences;
+            $sequences = [$data];
         }
         foreach ($sequences as $datum) {
             $list[] = self::addSequence($this->table[0], $this->schema[0], (array)$datum);

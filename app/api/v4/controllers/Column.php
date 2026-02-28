@@ -156,10 +156,10 @@ class Column extends AbstractApi
         $list = [];
         $this->table[0]->connect();
         $this->table[0]->begin();
-        if (!isset($data->columns)) {
-            $columns = [$data];
+        if (is_array($data)) {
+            $columns = $data;
         } else {
-            $columns = $data->columns;
+            $columns = [$data];
         }
         foreach ($columns as $datum) {
             $list[] = self::addColumn(

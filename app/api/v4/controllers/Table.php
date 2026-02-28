@@ -174,8 +174,8 @@ class Table extends AbstractApi
         $this->table[0]->begin();
         $list = [];
 
-        if (isset($data->tables)) {
-            foreach ($data->tables as $datum) {
+        if (is_array($data)) {
+            foreach ($data as $datum) {
                 $r = self::addTable($this->table[0], (object)$datum, $this);
                 $list[] = $r['tableName'];
             }
