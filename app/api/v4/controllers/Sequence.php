@@ -168,7 +168,7 @@ class Sequence extends AbstractApi
         $names = explode(',', $this->route->getParam("sequence"));
         $this->table[0]->begin();
         foreach ($names as $name) {
-            $this->table[0]->deleteSequence($name);
+            $this->table[0]->deleteSequence($name, $this->schema[0]);
         }
         $this->table[0]->commit();
         return $this->deleteResponse();

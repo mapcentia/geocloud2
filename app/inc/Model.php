@@ -1858,12 +1858,12 @@ class Model
      * Deletes a sequence from the database.
      *
      * @param string $name The name of the sequence to be deleted.
-     *
+     * @param string $schema
      * @return void
      */
-    public function deleteSequence(string $name): void
+    public function deleteSequence(string $name, string $schema): void
     {
-        $sql = "DROP SEQUENCE $name";
+        $sql = "DROP SEQUENCE $schema.$name";
         $res = $this->prepare($sql);
         $this->execute($res);
     }
