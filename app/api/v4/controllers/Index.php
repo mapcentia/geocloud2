@@ -101,6 +101,7 @@ class Index extends AbstractApi
                     }
                 }
             }
+            return $this->getResponse($r, single: count($r) == 1);
         } else {
             $r = $res;
         }
@@ -124,10 +125,10 @@ class Index extends AbstractApi
         $data = json_decode($body);
         $list = [];
         $this->table[0]->begin();
-        if (!isset($data->indices)) {
-            $data->indices = [$data];
+        if (!is_array($data)) {
+            $data = [$data];
         }
-        foreach ($data->indices as $datum) {
+        foreach ($data as $datum) {
             $name = $datum->name ?? null;
             $method = $datum->method ?? "btree";
             $columns = $datum->columns;

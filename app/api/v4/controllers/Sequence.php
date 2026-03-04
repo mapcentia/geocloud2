@@ -92,6 +92,7 @@ class Sequence extends AbstractApi
                     }
                 }
             }
+            return $this->getResponse($r, single: count($r) == 1);
         } else {
             $r = $res;
         }
@@ -112,10 +113,10 @@ class Sequence extends AbstractApi
         $list = [];
         $this->table[0]->connect();
         $this->table[0]->begin();
-        if (!isset($data->sequences)) {
-            $sequences = [$data];
+        if (is_array($data)) {
+            $sequences = $data;
         } else {
-            $sequences = $data->sequences;
+            $sequences = [$data];
         }
         foreach ($sequences as $datum) {
             $list[] = self::addSequence($this->table[0], $this->schema[0], (array)$datum);
@@ -167,7 +168,7 @@ class Sequence extends AbstractApi
         $names = explode(',', $this->route->getParam("sequence"));
         $this->table[0]->begin();
         foreach ($names as $name) {
-            $this->table[0]->deleteSequence($name);
+            $this->table[0]->deleteSequence($name, $this->schema[0]);
         }
         $this->table[0]->commit();
         return $this->deleteResponse();

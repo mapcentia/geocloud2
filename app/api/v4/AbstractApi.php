@@ -333,8 +333,8 @@ abstract class AbstractApi implements ApiInterface
         // Validate the payload if the method is POST or PATCH
         if (in_array($method, ['post', 'patch'])) {
             $validator = Validation::createValidator();
-            if (isset($data[$this->resource]) && is_array($data[$this->resource])) {
-                foreach ($data[$this->resource] as $datum) {
+            if (!empty($data) && array_is_list($data)) {
+                foreach ($data as $datum) {
                     $violations = $validator->validate($datum, $collection);
                     $this->checkViolations($violations);
                 }
@@ -377,14 +377,10 @@ abstract class AbstractApi implements ApiInterface
     /**
      * @throws GC2Exception
      */
-    protected function getResponse(array $data): GetResponse
+    protected function getResponse(array $data, bool $single = false): GetResponse
     {
-        if (count($data) == 0) {
-            throw new GC2Exception("No $this->resource found", 404, null, 'NO_RESOURCE');
-        } elseif (count($data) == 1) {
+        if ($single) {
             $data = $data[0];
-        } else {
-            $data = [$this->resource => $data];
         }
         return new GetResponse(data: $data);
     }

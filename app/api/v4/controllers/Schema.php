@@ -139,7 +139,7 @@ class Schema extends AbstractApi
                 $t['_links'] = $links;
                 $r[] = $t;
             }
-            return $this->getResponse($r);
+            return $this->getResponse($r, single: count($r) == 1);
         }
     }
 
@@ -167,8 +167,8 @@ class Schema extends AbstractApi
         $this->table[0]->begin();
         $list = [];
 
-        if (isset($data->schemas)) {
-            foreach ($data->schemas as $datum) {
+        if (is_array($data)) {
+            foreach ($data as $datum) {
                 $this->table[0]->postgisschema = $datum->name;
                 $r = $this->schemaObj->createSchema($datum->name, $this->table[0]);
                 $list[] = $r['schema'];

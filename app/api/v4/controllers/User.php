@@ -111,7 +111,7 @@ class User extends AbstractApi
             $userModelLocal = new UserModel($user, $this->route->jwt["data"]["database"]);
             $r[] = self::convertUserObject($userModelLocal->getData()["data"]);
         }
-        return $this->getResponse($r);
+        return $this->getResponse(data: $r, single: count($r) == 1);
     }
 
     /**
@@ -137,12 +137,12 @@ class User extends AbstractApi
         $data = json_decode(Input::getBody(), true) ?: [];
         $data["usergroup"] = $data["user_group"] ?? null;
         $model->begin();
-        if (!isset($data['users'])) {
-            $data['users'] = [$data];
+        if (!array_is_list($data)) {
+            $data = [$data];
         }
         $database = $this->route->jwt["data"]['database'];
         // Create users
-        foreach ($data['users'] as $user) {
+        foreach ($data as $user) {
             $user['parentdb'] = $database;
             $user['subuser'] = true;
             // Load pre extensions and run processAddUser
@@ -152,7 +152,7 @@ class User extends AbstractApi
         }
         $model->commit();
         // Create schemas for new users
-        foreach ($data['users'] as $user) {
+        foreach ($data as $user) {
             try {
                 // Create schema with superuser as owner and grant usage to subuser
                 $dbObj = new Database(connection: $this->connection);

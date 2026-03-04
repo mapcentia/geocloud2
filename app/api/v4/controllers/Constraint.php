@@ -117,6 +117,7 @@ class Constraint extends AbstractApi
                     }
                 }
             }
+            return $this->getResponse($r, single: count($r) == 1);
         } else {
             $r = $res;
         }
@@ -142,25 +143,17 @@ class Constraint extends AbstractApi
 
         $this->table[0]->begin();
 
-        if (isset($data->constraints)) {
-            foreach ($data->constraints as $datum) {
-                $name = $datum->name;
-                $type = $datum->constraint;
-                $columns = $datum->columns;
-                $check = $datum->check;
-                $referencedTable = $datum->referenced_table;
-                $referencedColumns = $datum->referenced_columns;
-                $list[] = self::addConstraint($this->table[0], $type, $columns, $check, $name, $referencedTable, $referencedColumns);
-            }
-        } else {
-            $name = $data->name;
-            $type = $data->constraint;
-            $columns = $data->columns;
-            $check = $data->check;
-            $referencedTable = $data->referenced_table;
-            $referencedColumns = $data->referenced_columns;
+        if (!is_array($data)) {
+            $data = [$data];
+        }
+        foreach ($data as $datum) {
+            $name = $datum->name;
+            $type = $datum->constraint;
+            $columns = $datum->columns;
+            $check = $datum->check;
+            $referencedTable = $datum->referenced_table;
+            $referencedColumns = $datum->referenced_columns;
             $list[] = self::addConstraint($this->table[0], $type, $columns, $check, $name, $referencedTable, $referencedColumns);
-
         }
         $this->table[0]->commit();
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/constraints/";

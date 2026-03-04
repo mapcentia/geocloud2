@@ -133,6 +133,7 @@ class Method extends AbstractApi
             if (count($r) !== count($names)) {
                 throw new GC2Exception("Not found", 404);
             }
+            return $this->getResponse($r, single: count($r) == 1);
         }
         return $this->getResponse($r);
 
@@ -156,8 +157,8 @@ class Method extends AbstractApi
         $uid = $this->route->jwt["data"]["uid"];
         $decodedBody = json_decode(Input::getBody(), true);
 
-        if (!empty($decodedBody['methods'])) {
-            $methods = $decodedBody['methods'];
+        if (array_is_list($decodedBody)) {
+            $methods = $decodedBody;
         } else {
             $methods = [$decodedBody];
         }

@@ -153,6 +153,7 @@ class Client extends AbstractApi
             foreach ($ids as $id) {
                 $r[] = $this->client->get($id)[0];
             }
+            return $this->getResponse($r, single: count($r) == 1);
         } else {
             $r = $this->client->get();
         }
@@ -191,10 +192,10 @@ class Client extends AbstractApi
         $body = Input::getBody();
         $data = json_decode($body, true);
         $this->client->begin();
-        if (!isset($data['clients'])) {
-            $data['clients'] = [$data];
+        if (!array_is_list($data)) {
+            $data = [$data];
         }
-        foreach ($data['clients'] as $datum) {
+        foreach ($data as $datum) {
             $arr = [
                 'id' => $datum['id'] ?? uniqid(),
                 'name' => $datum['name'],
@@ -203,18 +204,18 @@ class Client extends AbstractApi
                 'description' => $datum['description'] ?? null,
                 'public' => $datum['public'] ?? false,
                 'confirm' => $datum['confirm'] ?? true,
-                'twoFactor' => $data['two_factor'] ?? true,
-                'allowSignup' => $data['allow_signup'] ?? false,
-                'socialSignup' => $data['social_signup'] ?? false,
+                'twoFactor' => $datum['two_factor'] ?? true,
+                'allowSignup' => $datum['allow_signup'] ?? false,
+                'socialSignup' => $datum['social_signup'] ?? false,
             ];
             $list[] = $this->client->insert(...$arr);
         }
         $this->client->commit();
         $baseUri = "/api/v4/clients/";
         header("Location: $baseUri" . implode(",", array_map(fn($c) => $c['id'], $list)));
-        $res[$this->resource] = array_map(fn($l) => ['_links' => ['self' => $baseUri . $l['id']], 'secret' => $l['secret']], $list);
-        if (count($res[$this->resource]) == 1) {
-            $res = $res[$this->resource][0];
+        $res = array_map(fn($l) => ['_links' => ['self' => $baseUri . $l['id']], 'secret' => $l['secret']], $list);
+        if (count($res) == 1) {
+            $res = $res[0];
         }
         return new PostResponse(data: $res);
     }
@@ -308,6 +309,11 @@ class Client extends AbstractApi
             $collection->fields['name'] = new Assert\Required(
                 new Assert\Length(min: 3)
             );
+            $collection->fields['redirect_uri'] = new Assert\Required([
+                new Assert\Type('array'),
+                new Assert\Count(min: 1),
+                new Assert\NotBlank(),
+            ]);
         } else {
             $collection->fields['id'] = new Assert\Optional(
                 new Assert\Length(min: 3)
@@ -315,6 +321,11 @@ class Client extends AbstractApi
             $collection->fields['name'] = new Assert\Optional(
                 new Assert\Length(min: 3)
             );
+            $collection->fields['redirect_uri'] = new Assert\Optional([
+                new Assert\Type('array'),
+                new Assert\Count(min: 1),
+                new Assert\NotBlank(),
+            ]);
         }
         $collection->fields['homepage'] = new Assert\Optional(
             new Assert\Url(requireTld: true),
@@ -322,11 +333,7 @@ class Client extends AbstractApi
         $collection->fields['description'] = new Assert\Optional(
             new Assert\Length(min: 3)
         );
-        $collection->fields['redirect_uri'] = new Assert\Optional([
-            new Assert\Type('array'),
-            new Assert\Count(min: 1),
-            new Assert\NotBlank(),
-        ]);
+
         $collection->fields['public'] = new Assert\Optional(
             new Assert\Type('boolean')
         );

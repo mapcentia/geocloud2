@@ -173,7 +173,7 @@ class Route2
                 return;
             }
 
-            if ($data) {
+            if ($data !== null) {
                 if (getType($data) == "string") {
                     header('Content-type: text/plain; charset=utf-8');
                     echo $data;
