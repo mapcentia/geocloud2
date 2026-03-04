@@ -333,7 +333,7 @@ abstract class AbstractApi implements ApiInterface
         // Validate the payload if the method is POST or PATCH
         if (in_array($method, ['post', 'patch'])) {
             $validator = Validation::createValidator();
-            if (array_is_list($data)) {
+            if (!empty($data) && array_is_list($data)) {
                 foreach ($data as $datum) {
                     $violations = $validator->validate($datum, $collection);
                     $this->checkViolations($violations);
