@@ -11,5 +11,7 @@ interface ApiInterface
     public function put_index(): Response;
     public function patch_index(): Response;
     public function delete_index(): Response;
+    public function options_index(): void;
+    public function head_index(): void;
     public function validate(): void;
 }

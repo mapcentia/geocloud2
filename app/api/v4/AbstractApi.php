@@ -484,4 +484,11 @@ abstract class AbstractApi implements ApiInterface
             ]),
         ]);
     }
+
+    public function options_index(): void
+    {
+    }
+    public function head_index(): void
+    {
+    }
 }
