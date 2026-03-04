@@ -415,4 +415,11 @@ class File extends AbstractApi
     {
         // TODO: Implement patch_index() method.
     }
+
+    public function options_upload(): void
+    {
+    }
+    public function options_process(): void
+    {
+    }
 }
