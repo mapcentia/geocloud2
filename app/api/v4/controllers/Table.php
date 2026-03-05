@@ -95,7 +95,8 @@ class Table extends AbstractApi
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\Parameter(name: 'namesOnly', description: 'Return only table names (omit columns, indexes, constraints, and other details).', in: 'query', required: false, schema: new OA\Schema(type: 'boolean'), example: true)]
-    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Table"),
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/Table"),
+        new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/Table"))]),
         links: [
             new OA\Link(
                 link: "getColumn",
@@ -159,7 +160,9 @@ class Table extends AbstractApi
      */
     #[OA\Post(path: '/api/v4/schemas/{schema}/tables', operationId: 'postTable', description: "Create table(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
-    #[OA\RequestBody(description: 'Table to create.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Table"))]
+    #[OA\RequestBody(description: 'Table to create.', required: true, content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/Table"),
+        new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/Table"))])
+    )]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json'])]

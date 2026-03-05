@@ -84,7 +84,8 @@ class Schema extends AbstractApi
     #[OA\Get(path: '/api/v4/schemas/{schema}', operationId: 'getSchema', description: "Get schema(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'namesOnly', description: 'Return only schema names (omit tables and sequences).', in: 'query', required: false, schema: new OA\Schema(type: 'boolean'), example: true)]
-    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Schema"),
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/Schema"),
+        new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/Schema"))]),
         links: [
             new OA\Link(
                 link: "getTableLink",
@@ -94,7 +95,8 @@ class Schema extends AbstractApi
                 ],
                 description: "Link to tables in schema."
             )
-        ])]
+        ])
+    ]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -149,7 +151,9 @@ class Schema extends AbstractApi
      * @throws InvalidArgumentException
      */
     #[OA\Post(path: '/api/v4/schemas', operationId: 'postSchema', description: "Create schema(s).", tags: ['Schema'])]
-    #[OA\RequestBody(description: 'Schema to create.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Schema"))]
+    #[OA\RequestBody(description: 'Schema to create.', required: true, content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/Schema"),
+        new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/Schema"))])
+    )]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json'])]
@@ -203,7 +207,7 @@ class Schema extends AbstractApi
                 }
             }
         }
-        $this->table[0]->commit();
+//        $this->table[0]->commit();
         $baseUri = "/api/v4/schemas/";
         return $this->postResponse($baseUri, $list);
     }
