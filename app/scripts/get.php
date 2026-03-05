@@ -215,6 +215,71 @@ function which(): string
 }
 
 /**
+ * Build an ogr2ogr shell command with common flags and escapeshellarg.
+ *
+ * @param string $encoding PGCLIENTENCODING value
+ * @param string $srid EPSG code
+ * @param string $db Database name
+ * @param string $workingSchema Target schema
+ * @param string $randTableName Target table
+ * @param string $inputPath Source file/path (already escaped if needed)
+ * @param string $mode "-overwrite" or "-append"
+ * @param string $type Geometry type (or "AUTO" to omit -nlt)
+ * @param bool $preserveFid Whether to add -preserve_fid
+ * @param array $extraArgs Additional arguments (already escaped)
+ * @return string
+ */
+function buildOgr2ogrCmd(
+    string $encoding,
+    string $srid,
+    string $db,
+    string $workingSchema,
+    string $randTableName,
+    string $inputPath,
+    string $mode = '-overwrite',
+    string $type = 'AUTO',
+    bool   $preserveFid = false,
+    array  $extraArgs = [],
+): string
+{
+    $pgConn = "host=" . Connection::$param["postgishost"]
+        . " port=" . Connection::$param["postgisport"]
+        . " user=" . Connection::$param["postgisuser"]
+        . " password=" . Connection::$param["postgispw"]
+        . " dbname=" . $db;
+
+    $parts = [
+        "env PGCLIENTENCODING=" . escapeshellarg($encoding),
+        which(),
+        $mode,
+        "-dim 2",
+        "-lco " . escapeshellarg("GEOMETRY_NAME=the_geom"),
+        "-lco " . escapeshellarg("FID=gid"),
+        "-lco " . escapeshellarg("PRECISION=NO"),
+        "-a_srs " . escapeshellarg("EPSG:$srid"),
+        "-f " . escapeshellarg("PostgreSQL"),
+        "PG:" . escapeshellarg($pgConn),
+    ];
+
+    if ($preserveFid) {
+        $parts[] = "-preserve_fid";
+    }
+
+    foreach ($extraArgs as $arg) {
+        $parts[] = $arg;
+    }
+
+    $parts[] = $inputPath;
+    $parts[] = "-nln " . escapeshellarg("$workingSchema.$randTableName");
+
+    if ($type !== "AUTO") {
+        $parts[] = "-nlt " . escapeshellarg($type);
+    }
+
+    return implode(" ", $parts);
+}
+
+/**
  *
  */
 function getCmd(): void
@@ -254,20 +319,28 @@ function getCmd(): void
 
     print "\nInfo: Staring inserting in temp table using ogr2ogr...";
 
-    $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
-        "-overwrite " .
-        "-dim 2 " .
-        "-oo 'DOWNLOAD_SCHEMA=" . ($downloadSchema && !$contentIsCsv ? "YES" : "NO") . "' " .
-        "-lco 'GEOMETRY_NAME=the_geom' " .
-        "-lco 'FID=gid' " .
-        "-lco 'PRECISION=NO' " .
-        "-a_srs 'EPSG:{$srid}' " .
-        "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
-        ($isCsv ? "-oo X_POSSIBLE_NAMES=lon*,Lon*,x,X -oo Y_POSSIBLE_NAMES=lat*,Lat*,y,Y -oo AUTODETECT_TYPE=YES -oo GEOM_POSSIBLE_NAMES=geometri " : '') .
-        ($isCsv ? "'CSV:" : "'") .
-        $tmpFilePath . "' " .
-        "-nln " . $workingSchema . "." . $randTableName . " " .
-        ($type == "AUTO" ? "" : "-nlt {$type}");
+    $extraArgs = [
+        "-oo " . escapeshellarg("DOWNLOAD_SCHEMA=" . ($downloadSchema && !$contentIsCsv ? "YES" : "NO")),
+    ];
+    if ($isCsv) {
+        $extraArgs[] = "-oo " . escapeshellarg("X_POSSIBLE_NAMES=lon*,Lon*,x,X");
+        $extraArgs[] = "-oo " . escapeshellarg("Y_POSSIBLE_NAMES=lat*,Lat*,y,Y");
+        $extraArgs[] = "-oo " . escapeshellarg("AUTODETECT_TYPE=YES");
+        $extraArgs[] = "-oo " . escapeshellarg("GEOM_POSSIBLE_NAMES=geometri");
+    }
+
+    $source = $isCsv ? escapeshellarg("CSV:" . $tmpFilePath) : escapeshellarg($tmpFilePath);
+
+    $cmd = buildOgr2ogrCmd(
+        encoding: $encoding,
+        srid: $srid,
+        db: $db,
+        workingSchema: $workingSchema,
+        randTableName: $randTableName,
+        inputPath: $source,
+        type: $type,
+        extraArgs: $extraArgs,
+    );
     exec($cmd . ' 2>&1', $out, $err);
 }
 
@@ -302,7 +375,6 @@ function getCmdPaging(): void
             $pass = false;
         }
 
-        $ogr2ogr = which(); // /usr/local/bin/ogr2ogr
         $gmlPath = $tmpDir . $gmlName;
 
         // SRS normalizer
@@ -337,55 +409,37 @@ function getCmdPaging(): void
             }gex;
             PERL;
 
-        $normalizePipe = "perl -0777 -pe " . escapeshellarg($perlExpr) . " " . escapeshellarg($gmlPath) . " | ";
-
-        // Common ogr2ogr bits
-        $pgConn =
-            "host=" . Connection::$param["postgishost"] .
-            " port=" . Connection::$param["postgisport"] .
-            " user=" . Connection::$param["postgisuser"] .
-            " password=" . Connection::$param["postgispw"] .
-            " dbname=" . $db;
-
-        $baseArgs =
-            "env PGCLIENTENCODING=" . escapeshellarg($encoding) . " " . escapeshellarg($ogr2ogr) . " " .
-            "-overwrite " .
-            "-preserve_fid " .
-            "-dim 2 " .
-            "-lco " . escapeshellarg("GEOMETRY_NAME=the_geom") . " " .
-            "-lco " . escapeshellarg("FID=gid") . " " .
-            "-lco " . escapeshellarg("PRECISION=NO") . " " .
-            "-a_srs " . escapeshellarg("EPSG:$srid") . " " .
-            "-f " . escapeshellarg("PostgreSQL") . " " .
-            "PG:" . escapeshellarg($pgConn) . " " .
-            "-nln " . escapeshellarg("$workingSchema.$cellTemp") . " " .
-            "-nlt " . escapeshellarg($type);
+        // Normalize SRS in-place
+        $normalizeCmd = "perl -i -0777 -pe " . escapeshellarg($perlExpr) . " " . escapeshellarg($gmlPath);
+        exec($normalizeCmd . ' 2>&1');
 
         // Build final cmd
         if ($downloadSchema) {
-            // Streaming normalize -> GMLAS reads from stdin
-            $cmd =
-                $normalizePipe .
-                $baseArgs . " " .
-                "-oo " . escapeshellarg("CONFIG_FILE=/var/www/geocloud2/app/scripts/gmlasconf.xml") . " " .
-                "GMLAS:/vsistdin/";
+            $extraArgs = [
+                "-oo " . escapeshellarg("CONFIG_FILE=/var/www/geocloud2/app/scripts/gmlasconf.xml"),
+            ];
+            $cmd = buildOgr2ogrCmd(
+                encoding: $encoding,
+                srid: $srid,
+                db: $db,
+                workingSchema: $workingSchema,
+                randTableName: $cellTemp,
+                inputPath: "GMLAS:" . escapeshellarg($gmlPath),
+                type: $type,
+                preserveFid: true,
+                extraArgs: $extraArgs,
+            );
         } else {
-            // If this branch can also contain legacy URL SRS, you probably want normalization here too.
-            // Option A (recommended): still normalize and stream into normal GML driver via stdin
-            // BUT if you want to keep it as-file, just set $input = escapeshellarg($gmlPath) and no pipe.
-
-            $useNormalizationAlsoHere = true;
-
-            if ($useNormalizationAlsoHere) {
-                $cmd =
-                    $normalizePipe .
-                    $baseArgs . " " .
-                    "/vsistdin/"; // standard file input from stdin (driver auto-detects)
-            } else {
-                $cmd =
-                    $baseArgs . " " .
-                    escapeshellarg($gmlPath);
-            }
+            $cmd = buildOgr2ogrCmd(
+                encoding: $encoding,
+                srid: $srid,
+                db: $db,
+                workingSchema: $workingSchema,
+                randTableName: $cellTemp,
+                inputPath: escapeshellarg($gmlPath),
+                type: $type,
+                preserveFid: true,
+            );
         }
 
         exec($cmd . ' 2>&1', $out, $err);
@@ -808,17 +862,16 @@ function getCmdFile(): void
         }
     }
 
-    $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
-        "-append " .
-        "-dim 2 " .
-        "-lco 'GEOMETRY_NAME=the_geom' " .
-        "-lco 'FID=gid' " .
-        "-lco 'PRECISION=NO' " .
-        "-a_srs 'EPSG:{$srid}' " .
-        "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
-        $dir . "/" . $fileSetName . " " .
-        "-nln {$workingSchema}.{$randTableName} " .
-        "-nlt {$type}";
+    $cmd = buildOgr2ogrCmd(
+        encoding: $encoding,
+        srid: $srid,
+        db: $db,
+        workingSchema: $workingSchema,
+        randTableName: $randTableName,
+        inputPath: escapeshellarg($dir . "/" . $fileSetName),
+        mode: '-append',
+        type: $type,
+    );
     exec($cmd . ' 2>&1', $out, $err);
 
     array_map('unlink', glob($dir . "/" . $randFileName . ".*"));
@@ -906,19 +959,25 @@ function getCmdZip(): void
         $isCsv = true;
     }
 
-    $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
-        "-overwrite " .
-        "-dim 2 " .
-        "-oo 'DOWNLOAD_SCHEMA=" . ($downloadSchema ? "YES" : "NO") . "' " .
-        "-lco 'GEOMETRY_NAME=the_geom' " .
-        "-lco 'FID=gid' " .
-        "-lco 'PRECISION=NO' " .
-        "-a_srs 'EPSG:{$srid}' " .
-        "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
-        ($isCsv ? "-oo X_POSSIBLE_NAMES=lon*,Lon*,x,X -oo Y_POSSIBLE_NAMES=lat*,Lat*,y,Y -oo GEOM_POSSIBLE_NAMES=geometri " : '') .
-        "'" . $outFileName . "' " .
-        "-nln " . $workingSchema . "." . $randTableName . " " .
-        ($type == "AUTO" ? "" : "-nlt {$type}");
+    $extraArgs = [
+        "-oo " . escapeshellarg("DOWNLOAD_SCHEMA=" . ($downloadSchema ? "YES" : "NO")),
+    ];
+    if ($isCsv) {
+        $extraArgs[] = "-oo " . escapeshellarg("X_POSSIBLE_NAMES=lon*,Lon*,x,X");
+        $extraArgs[] = "-oo " . escapeshellarg("Y_POSSIBLE_NAMES=lat*,Lat*,y,Y");
+        $extraArgs[] = "-oo " . escapeshellarg("GEOM_POSSIBLE_NAMES=geometri");
+    }
+
+    $cmd = buildOgr2ogrCmd(
+        encoding: $encoding,
+        srid: $srid,
+        db: $db,
+        workingSchema: $workingSchema,
+        randTableName: $randTableName,
+        inputPath: escapeshellarg($outFileName),
+        type: $type,
+        extraArgs: $extraArgs,
+    );
     exec($cmd . ' 2>&1', $out, $err);
 }
 
