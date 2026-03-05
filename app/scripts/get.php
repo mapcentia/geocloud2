@@ -301,39 +301,92 @@ function getCmdPaging(): void
             print "\nError: could not get GML for cell #{$row["gid"]}";
             $pass = false;
         }
-        if ($downloadSchema) {
-            $cmd = "
-            
-            perl -pe 's/srsName=\"http:\/\/www\.opengis\.net\/gml\/srs\/epsg\.xml#(\d+)\"/srsName=\"EPSG:$1\"/g' $tmpDir$gmlName | PGCLIENTENCODING=$encoding " . which() . " " .
-                "-overwrite " .
-                "-preserve_fid " .
-                "-dim 2 " .
-                "-oo 'CONFIG_FILE=/var/www/geocloud2/app/scripts/gmlasconf.xml' " .
-                "-lco 'GEOMETRY_NAME=the_geom' " .
-                "-lco 'FID=gid' " .
-                "-lco 'PRECISION=NO' " .
-                "-a_srs 'EPSG:$srid' " .
-                "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
-                "GMLAS:/vsistdin/ " .
-                "-nln $workingSchema.$cellTemp " .
-                "-nlt $type";
-        } else {
-            $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
-                "-overwrite " .
-                "-preserve_fid " .
-                "-dim 2 " .
-                "-lco 'GEOMETRY_NAME=the_geom' " .
-                "-lco 'FID=gid' " .
-                "-lco 'PRECISION=NO' " .
-                "-lco 'ALLOW_NETWORK_ACCESS=YES' " .
-                "-a_srs 'EPSG:{$srid}' " .
-                "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
-                $tmpDir . $gmlName . " " .
-                "-nln {$workingSchema}.{$cellTemp} " .
-                "-nlt {$type}";
-        }
 
-        print "\nInfo: Command: " . $cmd;
+        $ogr2ogr = which(); // /usr/local/bin/ogr2ogr
+        $gmlPath = $tmpDir . $gmlName;
+
+        // SRS normalizer
+        $logNormalizeCount = true;
+
+        $perlExpr = $logNormalizeCount ? <<<'PERL'
+            BEGIN { $c = 0; }
+            $c += s{
+              (srsName=")
+              (?:
+                https?://www\.opengis\.net/gml/srs/epsg\.xml\#(\d+)
+              | https?://www\.opengis\.net/def/crs/EPSG/0/(\d+)/?
+              | urn:ogc:def:crs:EPSG::(\d+)
+              )
+              (")
+            }{
+              $1 . "EPSG:" . ($2 // $3 // $4) . $5
+            }gex;
+            END { print STDERR "SRS normalized: $c\n"; }
+            PERL
+            : <<<'PERL'
+            $c += s{
+              (srsName=")
+              (?:
+                https?://www\.opengis\.net/gml/srs/epsg\.xml\#(\d+)
+              | https?://www\.opengis\.net/def/crs/EPSG/0/(\d+)/?
+              | urn:ogc:def:crs:EPSG::(\d+)
+              )
+              (")
+            }{
+              $1 . "EPSG:" . ($2 // $3 // $4) . $5
+            }gex;
+            PERL;
+
+        $normalizePipe = "perl -0777 -pe " . escapeshellarg($perlExpr) . " " . escapeshellarg($gmlPath) . " | ";
+
+        // Common ogr2ogr bits
+        $pgConn =
+            "host=" . Connection::$param["postgishost"] .
+            " port=" . Connection::$param["postgisport"] .
+            " user=" . Connection::$param["postgisuser"] .
+            " password=" . Connection::$param["postgispw"] .
+            " dbname=" . $db;
+
+        $baseArgs =
+            "env PGCLIENTENCODING=" . escapeshellarg($encoding) . " " . escapeshellarg($ogr2ogr) . " " .
+            "-overwrite " .
+            "-preserve_fid " .
+            "-dim 2 " .
+            "-lco " . escapeshellarg("GEOMETRY_NAME=the_geom") . " " .
+            "-lco " . escapeshellarg("FID=gid") . " " .
+            "-lco " . escapeshellarg("PRECISION=NO") . " " .
+            "-a_srs " . escapeshellarg("EPSG:$srid") . " " .
+            "-f " . escapeshellarg("PostgreSQL") . " " .
+            "PG:" . escapeshellarg($pgConn) . " " .
+            "-nln " . escapeshellarg("$workingSchema.$cellTemp") . " " .
+            "-nlt " . escapeshellarg($type);
+
+        // Build final cmd
+        if ($downloadSchema) {
+            // Streaming normalize -> GMLAS reads from stdin
+            $cmd =
+                $normalizePipe .
+                $baseArgs . " " .
+                "-oo " . escapeshellarg("CONFIG_FILE=/var/www/geocloud2/app/scripts/gmlasconf.xml") . " " .
+                "GMLAS:/vsistdin/";
+        } else {
+            // If this branch can also contain legacy URL SRS, you probably want normalization here too.
+            // Option A (recommended): still normalize and stream into normal GML driver via stdin
+            // BUT if you want to keep it as-file, just set $input = escapeshellarg($gmlPath) and no pipe.
+
+            $useNormalizationAlsoHere = true;
+
+            if ($useNormalizationAlsoHere) {
+                $cmd =
+                    $normalizePipe .
+                    $baseArgs . " " .
+                    "/vsistdin/"; // standard file input from stdin (driver auto-detects)
+            } else {
+                $cmd =
+                    $baseArgs . " " .
+                    escapeshellarg($gmlPath);
+            }
+        }
 
         exec($cmd . ' 2>&1', $out, $err);
         if ($err) {
@@ -480,22 +533,20 @@ function getCmdPaging(): void
     $sql = "ALTER TABLE {$workingSchema}.{$randTableName} RENAME id2 TO id";
     $res = $table->prepare($sql);
     try {
-        $res->execute();
+        $table->execute(statement: $res, autoRollback: false);
     } catch (PDOException $e) {
-        print "\nNotice: Could not rename id2 to id. Source may not has an 'id' field.";
+        print "\nNotice: Could not rename id2 to id. Source may not has an 'id' field.\n";
         $table->execQuery("ROLLBACK TO SAVEPOINT rename_id2");
     }
-
     $table->execQuery("SAVEPOINT drop_id1");
     $sql = "ALTER TABLE {$workingSchema}.{$randTableName} DROP id1";
     $res = $table->prepare($sql);
     try {
-        $res->execute();
+        $table->execute(statement: $res, autoRollback: false);
     } catch (PDOException $e) {
         print "\nNotice: Could not drop id1. Source may not has an 'id' field.";
         $table->execQuery("ROLLBACK TO SAVEPOINT drop_id1");
     }
-
 
     if (!$id) {
         $sql = "SELECT column_name FROM information_schema.columns WHERE table_schema='{$workingSchema}' AND table_name='{$randTableName}' and column_name='gml_id'";
