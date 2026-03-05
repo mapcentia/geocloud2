@@ -301,20 +301,39 @@ function getCmdPaging(): void
             print "\nError: could not get GML for cell #{$row["gid"]}";
             $pass = false;
         }
+        if ($downloadSchema) {
+            $cmd = "
+            
+            perl -pe 's/srsName=\"http:\/\/www\.opengis\.net\/gml\/srs\/epsg\.xml#(\d+)\"/srsName=\"EPSG:$1\"/g' $tmpDir$gmlName | PGCLIENTENCODING=$encoding " . which() . " " .
+                "-overwrite " .
+                "-preserve_fid " .
+                "-dim 2 " .
+                "-oo 'CONFIG_FILE=/var/www/geocloud2/app/scripts/gmlasconf.xml' " .
+                "-lco 'GEOMETRY_NAME=the_geom' " .
+                "-lco 'FID=gid' " .
+                "-lco 'PRECISION=NO' " .
+                "-a_srs 'EPSG:$srid' " .
+                "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
+                "GMLAS:/vsistdin/ " .
+                "-nln $workingSchema.$cellTemp " .
+                "-nlt $type";
+        } else {
+            $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
+                "-overwrite " .
+                "-preserve_fid " .
+                "-dim 2 " .
+                "-lco 'GEOMETRY_NAME=the_geom' " .
+                "-lco 'FID=gid' " .
+                "-lco 'PRECISION=NO' " .
+                "-lco 'ALLOW_NETWORK_ACCESS=YES' " .
+                "-a_srs 'EPSG:{$srid}' " .
+                "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
+                $tmpDir . $gmlName . " " .
+                "-nln {$workingSchema}.{$cellTemp} " .
+                "-nlt {$type}";
+        }
 
-        $cmd = "PGCLIENTENCODING={$encoding} " . which() . " " .
-            "-overwrite " .
-            "-preserve_fid " .
-            "-dim 2 " .
-            ($downloadSchema ? "-oo 'CONFIG_FILE=/var/www/geocloud2/app/scripts/gmlasconf.xml' " : " ") .
-            "-lco 'GEOMETRY_NAME=the_geom' " .
-            "-lco 'FID=gid' " .
-            "-lco 'PRECISION=NO' " .
-            "-a_srs 'EPSG:{$srid}' " .
-            "-f 'PostgreSQL' PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . $db . "' " .
-            ($downloadSchema ? "GMLAS:" . $tmpDir . $gmlName . " " : $tmpDir . $gmlName . " ") .
-            "-nln {$workingSchema}.{$cellTemp} " .
-            "-nlt {$type}";
+        print "\nInfo: Command: " . $cmd;
 
         exec($cmd . ' 2>&1', $out, $err);
         if ($err) {
