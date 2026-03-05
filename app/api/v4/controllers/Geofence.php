@@ -132,7 +132,9 @@ class Geofence extends AbstractApi
      */
     #[OA\Get(path: '/api/v4/rules/{id}', operationId: 'getRule', description: "Get rule(s).", tags: ['Rules'])]
     #[OA\Parameter(name: 'id', description: 'Rule identifier', in: 'path', required: false, schema: new OA\Schema(type: 'integer'), example: 2)]
-    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Rule"))]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/Rule"),
+        new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/Rule"))])
+    )]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
@@ -162,7 +164,9 @@ class Geofence extends AbstractApi
      *
      */
     #[OA\Post(path: '/api/v4/rules', operationId: 'postRule', description: "Create rule(s).", tags: ['Rules'])]
-    #[OA\RequestBody(description: 'Rule to create.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Rule"))]
+    #[OA\RequestBody(description: 'Rule to create.', required: true, content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/Rule"),
+        new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/Rule"))])
+    )]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
@@ -174,11 +178,11 @@ class Geofence extends AbstractApi
         $list = [];
         $body = Input::getBody();
         $data = json_decode($body, true);
-        if (!isset($data['rules'])) {
-            $data['rules'] = [$data];
+        if (!array_is_list($data)) {
+            $data = [$data];
         }
         $this->geofence->begin();
-        foreach ($data['rules'] as $datum) {
+        foreach ($data as $datum) {
             if (isset($datum['table'])) {
                 $datum['layer'] = $datum['table'];
                 unset($datum['table']);

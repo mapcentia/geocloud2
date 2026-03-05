@@ -133,13 +133,12 @@ class Client extends AbstractApi
     #[OA\Get(path: '/api/v4/clients/{id}', operationId: 'getClient', description: "Get OAuth client(s).", tags: ['Clients'])]
     #[OA\Parameter(name: 'id', description: 'Id of client', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: '66f5005bd44c6')]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(
-        allOf: [
+        oneOf: [
+            new OA\Schema(ref: "#/components/schemas/Client"),
             new OA\Schema(
-                properties: [
-                    new OA\Property(property: "id", description: "Client ID", type: "string", example: "66f5005bd44c6")
-                ]
-            ),
-            new OA\Schema(ref: "#/components/schemas/Client")
+                type: "array",
+                items: new OA\Items(ref: "#/components/schemas/Client")
+            )
         ]
     ))]
     #[OA\Response(response: 404, description: 'Not found')]
@@ -164,7 +163,19 @@ class Client extends AbstractApi
      * @throws RandomException
      */
     #[OA\Post(path: '/api/v4/clients', operationId: 'postClient', description: 'Create new OAuth client(s).', tags: ['Clients'])]
-    #[OA\RequestBody(description: 'Client to create.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Client"))]
+    #[OA\RequestBody(
+        description: 'Client to create.',
+        required: true,
+        content: new OA\JsonContent(
+            oneOf: [
+                new OA\Schema(ref: "#/components/schemas/Client"),
+                new OA\Schema(
+                    type: "array",
+                    items: new OA\Items(ref: "#/components/schemas/Client")
+                )
+            ]
+        )
+    )]
     #[OA\Response(response: 201, description: "Client created",
         content: new OA\JsonContent(
             required: ["id", "secret"],

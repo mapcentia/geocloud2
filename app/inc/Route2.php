@@ -72,9 +72,7 @@ class Route2
                     }
                 } else if ($routeSignature[$i][0] == '(' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == ')') {
                     if (isset($requestSignature[$i])) {
-                        $action = Input::getMethod() . "_" . trim($requestSignature[$i], "()");
-                    } else {
-                        $action = 'index';
+                        $action = trim($requestSignature[$i], "()");
                     }
                 } else if (isset($requestSignature[$i]) && $requestSignature[$i] == $routeSignature[$i]) {
                     $e[] = $requestSignature[$i];
@@ -100,58 +98,55 @@ class Route2
 
             $reflectionClass = new ReflectionClass($controller);
             $reflectionMethods = $reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC);
-
+            $method = Input::getMethod();
+            $action = $method . "_" . $action;
             if (!method_exists($controller, $action)) {
-                if ($action != "index") {
-                    $this->isMatched = false;
-                    return;
-                }
-                $method = Input::getMethod();
-                $contentType = Input::getContentType() ? trim(explode(';', Input::getContentType())[0]) : "application/json";
-                $accepts = Input::getAccept() ? array_map(fn($str) => trim(explode(';', $str)[0]), explode(',', Input::getAccept())) : ["*/*"];
-                $action = $method . "_index";
-                $attributes = $reflectionClass->getAttributes(AcceptableMethods::class);
-                foreach ($attributes as $attribute) {
-                    $listener = $attribute->newInstance();
-                    $listener->setHeaders();
-                    if ($listener::class == AcceptableMethods::class) {
-                        $allowedMethods = array_map('strtolower', $listener->getAllowedMethods());
-                        if (!in_array($method, $allowedMethods)) {
-                            $listener->throwException();
-                        }
-                        if ($method == "options" || $method == "head") {
-                            if ($method == "options") {
-                                $m = Input::getAccessControlRequestMethod();
-                                $m = $m ? strtolower($m) : null;
-                                if (!in_array($m, $allowedMethods)) {
-                                    $listener->throwException();
-                                }
+                $this->isMatched = false;
+                return;
+            }
+            $contentType = Input::getContentType() ? trim(explode(';', Input::getContentType())[0]) : "application/json";
+            $accepts = Input::getAccept() ? array_map(fn($str) => trim(explode(';', $str)[0]), explode(',', Input::getAccept())) : ["*/*"];
+            $attributes = $reflectionClass->getAttributes(AcceptableMethods::class);
+            foreach ($attributes as $attribute) {
+                $listener = $attribute->newInstance();
+                $listener->setHeaders();
+                if ($listener::class == AcceptableMethods::class) {
+                    $allowedMethods = array_map('strtolower', $listener->getAllowedMethods());
+                    if (!in_array($method, $allowedMethods)) {
+                        $listener->throwException();
+                    }
+                    if ($method == "options" || $method == "head") {
+                        if ($method == "options") {
+                            $m = Input::getAccessControlRequestMethod();
+                            $m = $m ? strtolower($m) : null;
+                            if (!in_array($m, $allowedMethods)) {
+                                $listener->throwException();
                             }
-                            $listener->options();
-                            return;
                         }
+                        $listener->options();
+                        return;
                     }
                 }
-                foreach ($reflectionMethods as $reflectionMethod) {
-                    if ($reflectionMethod->getName() == $action) {
-                        $attributes = $reflectionMethod->getAttributes(AcceptableContentTypes::class);
-                        foreach ($attributes as $attribute) {
-                            $listener = $attribute->newInstance();
-                            if ($listener::class == AcceptableContentTypes::class) {
-                                $allowedContentTypes = array_map('strtolower', $listener->getAllowedContentTypes());
-                                if (!in_array($contentType, $allowedContentTypes)) {
-                                    $listener->throwException($contentType);
-                                }
+            }
+            foreach ($reflectionMethods as $reflectionMethod) {
+                if ($reflectionMethod->getName() == $action) {
+                    $attributes = $reflectionMethod->getAttributes(AcceptableContentTypes::class);
+                    foreach ($attributes as $attribute) {
+                        $listener = $attribute->newInstance();
+                        if ($listener::class == AcceptableContentTypes::class) {
+                            $allowedContentTypes = array_map('strtolower', $listener->getAllowedContentTypes());
+                            if (!in_array($contentType, $allowedContentTypes)) {
+                                $listener->throwException($contentType);
                             }
                         }
-                        $attributes = $reflectionMethod->getAttributes(AcceptableAccepts::class);
-                        foreach ($attributes as $attribute) {
-                            $listener = $attribute->newInstance();
-                            if ($listener::class == AcceptableAccepts::class) {
-                                $allowedAccepts = array_map('strtolower', $listener->getAllowedAccepts());
-                                if (!in_array('*/*', $accepts) && count(array_intersect($accepts, $allowedAccepts)) == 0) {
-                                    $listener->throwException($accepts);
-                                }
+                    }
+                    $attributes = $reflectionMethod->getAttributes(AcceptableAccepts::class);
+                    foreach ($attributes as $attribute) {
+                        $listener = $attribute->newInstance();
+                        if ($listener::class == AcceptableAccepts::class) {
+                            $allowedAccepts = array_map('strtolower', $listener->getAllowedAccepts());
+                            if (!in_array('*/*', $accepts) && count(array_intersect($accepts, $allowedAccepts)) == 0) {
+                                $listener->throwException($accepts);
                             }
                         }
                     }
