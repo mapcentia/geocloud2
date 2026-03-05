@@ -33,7 +33,7 @@ RUN echo "deb https://packages.sury.org/php/ bookworm main" \
     apt-transport-https ca-certificates software-properties-common \
     libprotobuf-c-dev libprotobuf-dev libprotobuf-c1 libprotobuf32 \
     protobuf-compiler protobuf-c-compiler libtool python3-dev bison \
-    python3-setuptools jq libwxgtk3.2-dev libuv1-dev libpq-dev libxml2-dev libgif-dev\
+    python3-setuptools jq libwxgtk3.2-dev libuv1-dev libpq-dev libxml2-dev libgif-dev libxerces-c-dev\
     && rm -rf /var/lib/apt/lists/*
 
 ###############################################################################
