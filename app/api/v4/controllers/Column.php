@@ -111,7 +111,9 @@ class Column extends AbstractApi
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'my_columns')]
-    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Column"))]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/Column"),
+        new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/Column"))])
+    )]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
@@ -142,7 +144,9 @@ class Column extends AbstractApi
     #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/columns/', operationId: 'postColumn', description: "Create new column(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
-    #[OA\RequestBody(description: 'Column to create.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Column"))]
+    #[OA\RequestBody(description: 'Column to create.', required: true, content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/Column"),
+        new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/Column"))])
+    )]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]

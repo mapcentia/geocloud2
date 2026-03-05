@@ -77,7 +77,9 @@ class Sequence extends AbstractApi
     #[OA\Get(path: '/api/v4/schemas/{schema}/sequences/{sequence}', operationId: 'getSequence', description: "Get sequence(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'sequence', description: 'Sequence names', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'my_sequences')]
-    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Sequence"))]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/Sequence"),
+        new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/Sequence"))])
+    )]
     #[OA\Response(response: 404, description: 'Not found')]
     #[Override]
     public function get_index(): GetResponse
@@ -101,7 +103,9 @@ class Sequence extends AbstractApi
 
     #[OA\Post(path: '/api/v4/schemas/{schema}/sequences/', operationId: 'postSequence', description: "Create sequence(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
-    #[OA\RequestBody(description: 'Sequence to create.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sequence"))]
+    #[OA\RequestBody(description: 'Sequence to create.', required: true, content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/Sequence"),
+        new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/Sequence"))])
+    )]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]

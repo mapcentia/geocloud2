@@ -69,7 +69,9 @@ class Privilege extends AbstractApi
     #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/privileges', operationId: 'getPrivileges', description: "Get privileges.", tags: ['Privileges'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
-    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Privilege"))]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/Privilege"),
+        new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/Privilege"))])
+    )]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
@@ -106,13 +108,13 @@ class Privilege extends AbstractApi
         $body = Input::getBody();
         $data = json_decode($body, true);
 
-        if (!isset($data['privileges'])) {
-            $data['privileges'] = [$data];
+        if (!array_is_list($data)) {
+            $data = [$data];
         }
         $table = new Table(table: "settings.geometry_columns_join", connection: $this->connection);
         $table->connect();
         $table->begin();
-        foreach ($data['privileges'] as $datum) {
+        foreach ($data as $datum) {
             $obj = new StdClass();
             $obj->_key_ = $this->qualifiedName[0];
             $obj->privileges = $datum['privilege'];

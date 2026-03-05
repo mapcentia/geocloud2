@@ -77,16 +77,12 @@ class Index extends AbstractApi
     #[OA\Parameter(name: 'schema', description: 'Schema', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\Parameter(name: 'index', description: 'Index', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'my_index')]
-    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(
-        allOf: [
-            new OA\Schema(
-                properties: [
-                    new OA\Property(property: "unique", description: "If the index has a unique constraint", type: "boolean", example: true)
-                ]
-            ),
-            new OA\Schema(ref: "#/components/schemas/Index")
-        ]
-    ))]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(oneOf: [new OA\JsonContent(allOf: [new OA\Schema(properties: [
+        new OA\Property(property: "unique", description: "If the index has a unique constraint", type: "boolean", example: true)]),
+        new OA\Schema(ref: "#/components/schemas/Index")]
+    ), new OA\Schema(type: "array", items: new OA\Items(allOf: [new OA\Schema(properties: [
+        new OA\Property(property: "unique", description: "If the index has a unique constraint", type: "boolean", example: true)]),
+        new OA\Schema(ref: "#/components/schemas/Index")]))]))]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     public function get_index(): Response
@@ -115,7 +111,9 @@ class Index extends AbstractApi
     #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/indices', operationId: 'postIndex', description: "Create index(es).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Name of schema', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Name of table', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
-    #[OA\RequestBody(description: 'Index to create.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Index"))]
+    #[OA\RequestBody(description: 'Index to create.', required: true, content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/Index"),
+        new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/Index"))])
+    )]
     #[OA\Response(response: 201, description: 'Created', links: [new OA\Link('', null, null, 'getIndex')])]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json'])]

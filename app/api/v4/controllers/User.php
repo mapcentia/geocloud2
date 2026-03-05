@@ -92,7 +92,9 @@ class User extends AbstractApi
      */
     #[OA\Get(path: '/api/v4/users/{name}', operationId: 'getUser', description: "Get sub-user(s).", tags: ['Users'])]
     #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: "joe")]
-    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/User"))]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/User"),
+        new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/User"))])
+    )]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
@@ -120,7 +122,9 @@ class User extends AbstractApi
      * @throws InvalidArgumentException
      */
     #[OA\Post(path: '/api/v4/users', operationId: 'postUser', description: "Create new sub-user(s).", tags: ['Users'])]
-    #[OA\RequestBody(description: 'User to create.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/User"))]
+    #[OA\RequestBody(description: 'User to create.', required: true, content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/User"),
+        new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/User"))])
+    )]
     #[OA\Response(response: 201, description: 'Created')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
@@ -135,7 +139,6 @@ class User extends AbstractApi
         $list = [];
         $model = new UserModel();
         $data = json_decode(Input::getBody(), true) ?: [];
-        $data["usergroup"] = $data["user_group"] ?? null;
         $model->begin();
         if (!array_is_list($data)) {
             $data = [$data];
@@ -145,6 +148,7 @@ class User extends AbstractApi
         foreach ($data as $user) {
             $user['parentdb'] = $database;
             $user['subuser'] = true;
+            $user["usergroup"] = $user["user_group"] ?? null;
             // Load pre extensions and run processAddUser
             $this->runPreExtension('processAddUser', $model);
             $userName = self::convertUserObject($model->createUser($user)['data'])['name'];

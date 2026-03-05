@@ -104,7 +104,9 @@ class Method extends AbstractApi
      */
     #[OA\Get(path: '/api/v4/methods/{method}', operationId: 'getRpc', description: "Get JSON-RPC method definitions.", tags: ['Methods'])]
     #[OA\Parameter(name: 'method', description: 'Identifier of RPC method', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'myMethod')]
-    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Method"))]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/Method"),
+        new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/Method"))])
+    )]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
@@ -145,7 +147,9 @@ class Method extends AbstractApi
      */
     #[OA\Post(path: '/api/v4/methods', operationId: 'postRpc',
         description: "Create JSON-RPC method definitions.", tags: ['Methods'])]
-    #[OA\RequestBody(description: 'RPC method definition(s).', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Method"))]
+    #[OA\RequestBody(description: 'RPC method definition(s).', required: true, content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/Method"),
+        new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/Method"))])
+    )]
     #[OA\Response(response: 201, description: 'Created', content: new OA\MediaType('application/json'))]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[AcceptableContentTypes(['application/json', 'application/json-rpc'])]
