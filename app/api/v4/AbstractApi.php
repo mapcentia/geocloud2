@@ -429,10 +429,7 @@ abstract class AbstractApi implements ApiInterface
     private function prepareResponse(string $method, string $baseUri, array $list = []): PostResponse|PatchResponse
     {
         $location = $baseUri . implode(",", $list);
-        $res[$this->resource] = array_map(fn($l) => ['_links' => ['self' => $baseUri . $l]], $list);
-        if (count($res[$this->resource]) == 1) {
-            $res = $res[$this->resource][0];
-        }
+        $res = array_map(fn($l) => ['_links' => ['self' => $baseUri . $l]], $list);
         if ($method == 'patch') {
             return new PatchResponse(data: $res, location: $location);
         } elseif ($method == 'post') {
