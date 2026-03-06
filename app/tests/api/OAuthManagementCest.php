@@ -348,10 +348,8 @@ class OAuthManagementCest
 
         // Add multiple columns in one request
         $payload = json_encode([
-            'columns' => [
-                ['name' => 'col_b', 'type' => 'text', 'is_nullable' => true],
-                ['name' => 'col_c', 'type' => 'int4', 'default_value' => 1],
-            ]
+            ['name' => 'col_b', 'type' => 'text', 'is_nullable' => true],
+            ['name' => 'col_c', 'type' => 'int4', 'default_value' => 1],
         ]);
         $I->sendPOST('/api/v4/schemas/' . $this->schemaName . '/tables/' . $table . '/columns', $payload);
         $I->seeResponseCodeIs(HttpCode::CREATED);
