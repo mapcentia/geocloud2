@@ -114,9 +114,6 @@ class Preparedstatement extends Model
         $sql = "SELECT * FROM settings.prepared_statements";
         $res = $this->prepare($sql);
         $res->execute();
-        if ($res->rowCount() == 0) {
-            throw new GC2Exception("No statements", 404, null, "NO_STATEMENT_ERROR");
-        }
         $rows = $this->fetchAll($res, 'assoc');
         $response['success'] = true;
         $response['message'] = "Statements fetched";
