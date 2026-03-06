@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.3.0] - 2026-6-3
+
+### Added
+- Limited Graphql support. api/graphql
+- Realtime
+
+### Changed
+- OAuth code-flow login.
+- API v4 is ready for use.
+
+### Fixed
+- Scheduler: Url-based SRS in GML is normalized, so they don't throw errors when using ogr GMLAS driver.
+
 ## [2026.2.1] - 2026-23-2
 ## Added
 - Graphql support
