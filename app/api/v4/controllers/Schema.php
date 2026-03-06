@@ -207,7 +207,7 @@ class Schema extends AbstractApi
                 }
             }
         }
-//        $this->table[0]->commit();
+        $this->table[0]->commit();
         $baseUri = "/api/v4/schemas/";
         return $this->postResponse($baseUri, $list);
     }
