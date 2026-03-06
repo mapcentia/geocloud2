@@ -512,7 +512,7 @@ function getCmdPaging(): void
 
     print "\n";
     $cellNumber = 1;
-    print "\n Processing cell ";
+    print "\nProcessing cell ";
     while ($row = $table->fetchRow($res)) {
         global $count;
         $count = 1;
@@ -528,7 +528,7 @@ function getCmdPaging(): void
     $gotFields = false;
     foreach ($cellTemps as $t) {
         if (!$gotFields) {
-            foreach ($table->getMetaData("{$workingSchema}.{$t}", false, false, null, null, false, false) as $k => $v) {
+            foreach ($table->getMetaData("$workingSchema.$t", false, false, null, null, false, false) as $k => $v) {
                 if (
                     array_reverse(explode("_", $k))[0] != "nil" &&
                     $k != "description_href" &&
@@ -560,10 +560,10 @@ function getCmdPaging(): void
         cleanUp(1);
     }
 
-    $sql = "CREATE TABLE {$workingSchema}.{$randTableName} AS " . implode("\nUNION ALL\n", $selects);
+    $sql = "CREATE TABLE $workingSchema.$randTableName AS " . implode("\nUNION ALL\n", $selects);
     $res = $table->prepare($sql);
     try {
-        $res->execute();
+        $table->execute($res);
     } catch (PDOException $e) {
         print "Error: ";
         print_r($e->getMessage());
@@ -574,7 +574,7 @@ function getCmdPaging(): void
         foreach ($drops as $d) {
             $res = $table->prepare($d);
             try {
-                $res->execute();
+                $table->execute($res);
             } catch (PDOException $e) {
                 print "Warning: ";
                 print_r($e->getMessage());
@@ -589,11 +589,10 @@ function getCmdPaging(): void
         $sql = "ALTER TABLE $tmpTableName RENAME id2 TO id";
         $res = $table->prepare($sql);
         try {
-            $table->execute(statement: $res, autoRollback: false);
+            $table->execute($res);
         } catch (PDOException $e) {
             print "Error: ";
             print_r($e->getMessage());
-            $table->rollback();
             cleanUp();
             exit(1);
         }
@@ -604,11 +603,10 @@ function getCmdPaging(): void
         $sql = "ALTER TABLE $tmpTableName DROP id1";
         $res = $table->prepare($sql);
         try {
-            $table->execute(statement: $res, autoRollback: false);
+            $table->execute($res);
         } catch (PDOException $e) {
             print "Error: ";
             print_r($e->getMessage());
-            $table->rollback();
             cleanUp();
             exit(1);
         }
