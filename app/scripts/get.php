@@ -356,7 +356,7 @@ function getCmdPaging(): void
     print "\nInfo: Start paged download...";
 
     $pass = true;
-    $sql = "SELECT gid,ST_XMIN(st_fishnet), ST_YMIN(st_fishnet), ST_XMAX(st_fishnet), ST_YMAX(st_fishnet) FROM {$grid} GROUP BY gid, st_xmin, st_ymin, st_xmax, st_ymax ORDER BY gid";
+    $sql = "SELECT gid,ST_XMIN(st_fishnet), ST_YMIN(st_fishnet), ST_XMAX(st_fishnet), ST_YMAX(st_fishnet) FROM $grid GROUP BY gid, st_xmin, st_ymin, st_xmax, st_ymax ORDER BY gid";
     $res = $table->execQuery($sql);
     $cellTemps = [];
 
@@ -512,10 +512,11 @@ function getCmdPaging(): void
 
     print "\n";
     $cellNumber = 1;
+    print "\n Processing cell ";
     while ($row = $table->fetchRow($res)) {
         global $count;
         $count = 1;
-        print "\n Processing cell #" . $cellNumber;
+        print $cellNumber . ' ';
         $cellNumber++;
         fetch($row, $url, $randTableName, $encoding, $downloadSchema, $workingSchema, $type, $db, $id);
     }
@@ -583,23 +584,36 @@ function getCmdPaging(): void
 
     // If source has an "id" fields and identifier is gml:id, it will be mapped to id2 by GMLAS driver
     // We try to rename id2 to id and drop id1
-    $table->execQuery("SAVEPOINT rename_id2");
-    $sql = "ALTER TABLE {$workingSchema}.{$randTableName} RENAME id2 TO id";
-    $res = $table->prepare($sql);
-    try {
-        $table->execute(statement: $res, autoRollback: false);
-    } catch (PDOException $e) {
-        print "\nNotice: Could not rename id2 to id. Source may not has an 'id' field.\n";
-        $table->execQuery("ROLLBACK TO SAVEPOINT rename_id2");
+    $tmpTableName = $workingSchema . ".". $randTableName;
+    if ($table->doesColumnExist($tmpTableName, 'id2')['exists']) {
+        $sql = "ALTER TABLE $tmpTableName RENAME id2 TO id";
+        $res = $table->prepare($sql);
+        try {
+            $table->execute(statement: $res, autoRollback: false);
+        } catch (PDOException $e) {
+            print "Error: ";
+            print_r($e->getMessage());
+            $table->rollback();
+            cleanUp();
+            exit(1);
+        }
+    } else {
+        print "\nNotice: Could not rename id2 to id. Source may not has an 'id' field.";
     }
-    $table->execQuery("SAVEPOINT drop_id1");
-    $sql = "ALTER TABLE {$workingSchema}.{$randTableName} DROP id1";
-    $res = $table->prepare($sql);
-    try {
-        $table->execute(statement: $res, autoRollback: false);
-    } catch (PDOException $e) {
+    if ($table->doesColumnExist($tmpTableName, 'id1')['exists']) {
+        $sql = "ALTER TABLE $tmpTableName DROP id1";
+        $res = $table->prepare($sql);
+        try {
+            $table->execute(statement: $res, autoRollback: false);
+        } catch (PDOException $e) {
+            print "Error: ";
+            print_r($e->getMessage());
+            $table->rollback();
+            cleanUp();
+            exit(1);
+        }
+    } else {
         print "\nNotice: Could not drop id1. Source may not has an 'id' field.";
-        $table->execQuery("ROLLBACK TO SAVEPOINT drop_id1");
     }
 
     if (!$id) {
