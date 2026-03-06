@@ -145,6 +145,9 @@ class Geofence extends AbstractApi
             $ids = explode(',', $this->route->getParam("id"));
             foreach ($ids as $id) {
                 $t = $this->geofence->get($id)[0];
+                if (empty($t)) {
+                    throw new GC2Exception("Not found", 404);
+                }
                 $r[] = $t;
             }
         } else {

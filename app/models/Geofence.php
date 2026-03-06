@@ -169,11 +169,7 @@ class Geofence extends Model
         $sql .= ' order by priority';
         $res = $this->prepare($sql);
         $this->execute($res, $params);
-        $data = $this->fetchAll($res, "assoc");
-        if (sizeof($data) == 0) {
-            throw new GC2Exception("No rules", 404, null, 'RULE_NOT_FOUND');
-        }
-        return $data;
+        return $this->fetchAll($res, "assoc");
     }
 
     /**
