@@ -203,7 +203,16 @@ class Sql
                     )";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER privileges TYPE JSONB USING privileges::jsonb";
         $sqls[] = "ALTER TABLE settings.symbols ADD COLUMN deleted boolean default false not null";
-
+        $sqls[] = "CREATE TABLE settings.outbox (
+                        id BIGSERIAL PRIMARY KEY,
+                        op CHAR(1) NOT NULL CHECK (op IN ('I', 'U', 'D')),
+                        schema_name TEXT NOT NULL,
+                        table_name TEXT NOT NULL,
+                        pk_column TEXT NOT NULL,
+                        pk_value TEXT NOT NULL,
+                        payload JSONB,
+                        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+                    )";
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
                     SELECT

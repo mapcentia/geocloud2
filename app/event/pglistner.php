@@ -55,28 +55,53 @@ $RegisterPayloadWithPDO = function (array $batchPayload, string $db) use ($worke
     return $workerPool->getWorker()->submit($task);
 };
 
+$opMap = ['I' => 'INSERT', 'U' => 'UPDATE', 'D' => 'DELETE'];
+
 /**
  * Flush batch for a specific DB asynchronously.
+ * Drains the outbox table and processes the events.
  */
-$flushBatch = function (string $db, string $channelName = '') use (&$batchState, &$broadcastHandler, $preparePayloadWithPDO, $RegisterPayloadWithPDO) {
-    return async(function () use ($db, $channelName, &$batchState, &$broadcastHandler, $preparePayloadWithPDO, $RegisterPayloadWithPDO) {
-        $count = $batchState[$db]['count'];
-        $payLoad = $batchState[$db]['payLoad'];
-        $startTime = $batchState[$db]['startTime'];
-
-        echo "\n==========================================\n";
-        echo "DB:         {$db}\n";
-        echo "Channel:    " . ($channelName ?: '(periodic timer)') . "\n";
-        echo "Batch size: {$count}\n";
-        echo "Time:       " . (time() - $startTime) . " second(s)\n";
-        echo "Payloads:\n";
-        echo "==========================================\n\n";
-
-        // Await the asynchronous preparePayload to complete
-        $preparedPayload = $preparePayloadWithPDO($payLoad, $db)->await();
-        // Await the asynchronous registerPayload to complete
-        $RegisterPayloadWithPDO($preparedPayload, $db)->await();
+$flushBatch = function (string $db, string $channelName = '') use (&$batchState, &$broadcastHandler, $preparePayloadWithPDO, $RegisterPayloadWithPDO, $opMap) {
+    return async(function () use ($db, $channelName, &$batchState, &$broadcastHandler, $preparePayloadWithPDO, $RegisterPayloadWithPDO, $opMap) {
         try {
+            $pool = $batchState[$db]['pool'] ?? null;
+            if (!$pool) {
+                echo "[ERROR] No pool available for DB '{$db}', skipping flush\n";
+                return;
+            }
+
+            // Atomically drain outbox
+            $result = $pool->query(
+                "WITH d AS (DELETE FROM settings.outbox RETURNING id, op, schema_name, table_name, pk_column, pk_value, payload) " .
+                "SELECT * FROM d ORDER BY id"
+            );
+
+            $payLoad = [];
+            foreach ($result as $row) {
+                $op = $opMap[$row['op']] ?? $row['op'];
+                $payLoad[] = "{$op},{$row['schema_name']},{$row['table_name']},{$row['pk_column']},{$row['pk_value']}";
+            }
+
+            if (empty($payLoad)) {
+                return;
+            }
+
+            $count = count($payLoad);
+            $startTime = $batchState[$db]['startTime'];
+
+            echo "\n==========================================\n";
+            echo "DB:         {$db}\n";
+            echo "Channel:    " . ($channelName ?: '(periodic timer)') . "\n";
+            echo "Batch size: {$count}\n";
+            echo "Time:       " . (time() - $startTime) . " second(s)\n";
+            echo "Payloads:\n";
+            echo "==========================================\n\n";
+
+            // Await the asynchronous preparePayload to complete
+            $preparedPayload = $preparePayloadWithPDO($payLoad, $db)->await();
+            // Await the asynchronous registerPayload to complete
+            $RegisterPayloadWithPDO($preparedPayload, $db)->await();
+
             $clients = $broadcastHandler->gateway->getClients();
             foreach ($clients as $client) {
                 $props = $broadcastHandler->getProperties($client);
@@ -114,16 +139,14 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
 
                 echo "[INFO] Sending to: " . $client->getId() . "\n";
                 $client->sendText(json_encode($batch));
-
             }
         } catch (Throwable $error) {
             echo "[ERROR in flushBatch] " . $error->getMessage() . "\n";
+        } finally {
+            // Always reset counters so the system keeps running
+            $batchState[$db]['count'] = 0;
+            $batchState[$db]['startTime'] = time();
         }
-
-        // Reset counters for this DB
-        $batchState[$db]['count'] = 0;
-        $batchState[$db]['startTime'] = time();
-        $batchState[$db]['payLoad'] = [];
     });
 };
 
@@ -137,13 +160,12 @@ $consumer = function (PostgresListener $listener, string $db) use (
     $flushBatch
 ) {
     foreach ($listener as $notification) {
-        // If this is the first message in a new batch, reset timer
+        // If this is the first wake-up in a new batch, reset timer
         if ($batchState[$db]['count'] === 0) {
             $batchState[$db]['startTime'] = time();
         }
-        // Accumulate
+        // Count wake-ups (actual data is in the outbox table)
         $batchState[$db]['count']++;
-        $batchState[$db]['payLoad'][] = $notification->payload;
         // Flush on batch size
         if ($batchState[$db]['count'] >= $batchSize) {
             $flushBatch($db, $notification->channel)->await();
@@ -174,8 +196,8 @@ $startListenerForDb = function (
     $port = (new \app\inc\Connection())->port;
     $pw = (new \app\inc\Connection())->password;
 
-    // The channel(s) we want to listen to
-    $channel = "_gc2_notify_transaction";
+    // The channel for outbox wake-up notifications
+    $channel = "_gc2_outbox_wake";
 
     while (true) {
         $pool = null;
@@ -186,6 +208,11 @@ $startListenerForDb = function (
             // Attempt to connect + create a pool.
             // If DB isn't available, this will throw.
             $pool = new PostgresConnectionPool($config);
+            // Store pool reference so flushBatch can query outbox
+            $batchState[$db]['pool'] = $pool;
+            // Drain any events left in outbox from before this connection
+            $batchState[$db]['count'] = 1;
+            $batchState[$db]['startTime'] = 0;
             // Now attempt to listen on your channel.
             // If DB fails mid-listen, it throws inside consumer loop.
             $listener = $pool->listen($channel);
@@ -254,7 +281,7 @@ async(function () use (&$dbs, &$batchState, &$futures, &$workerPool, $consumer, 
             $batchState[$db] = [
                 'count' => 0,
                 'startTime' => time(),
-                'payLoad' => []
+                'pool' => null,
             ];
             $futures[$db] = async(function () use ($db, &$batchState, $consumer, $flushBatch, $batchSize, $reconnectDelay, $startListenerForDb) {
                 while (true) {
@@ -292,7 +319,7 @@ async(function () use (&$dbs, &$batchState, &$futures, &$workerPool, $consumer, 
                 $batchState[$db] = [
                     'count' => 0,
                     'startTime' => time(),
-                    'payLoad' => []
+                    'pool' => null,
                 ];
                 $futures[$db] = async(function () use ($db, &$batchState, $consumer, $flushBatch, $batchSize, $reconnectDelay, $startListenerForDb) {
                     while (true) {
