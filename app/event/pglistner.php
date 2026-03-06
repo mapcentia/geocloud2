@@ -76,14 +76,37 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
                 "SELECT * FROM d ORDER BY id"
             );
 
-            $payLoad = [];
+            $rows = [];
             foreach ($result as $row) {
-                $op = $opMap[$row['op']] ?? $row['op'];
-                $payLoad[] = "{$op},{$row['schema_name']},{$row['table_name']},{$row['pk_column']},{$row['pk_value']}";
+                $rows[] = $row;
             }
 
-            if (empty($payLoad)) {
+            if (empty($rows)) {
                 return;
+            }
+
+            $drained = count($rows);
+
+            // Coalesce U-events: last-write-wins per (schema, table, pk)
+            $seenUpdates = [];
+            $coalesced = [];
+            for ($i = count($rows) - 1; $i >= 0; $i--) {
+                $row = $rows[$i];
+                if ($row['op'] === 'U') {
+                    $key = "{$row['schema_name']}.{$row['table_name']}:{$row['pk_value']}";
+                    if (isset($seenUpdates[$key])) {
+                        continue;
+                    }
+                    $seenUpdates[$key] = true;
+                }
+                $coalesced[] = $row;
+            }
+            $coalesced = array_reverse($coalesced);
+
+            $payLoad = [];
+            foreach ($coalesced as $row) {
+                $op = $opMap[$row['op']] ?? $row['op'];
+                $payLoad[] = "{$op},{$row['schema_name']},{$row['table_name']},{$row['pk_column']},{$row['pk_value']}";
             }
 
             $count = count($payLoad);
@@ -92,7 +115,7 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
             echo "\n==========================================\n";
             echo "DB:         {$db}\n";
             echo "Channel:    " . ($channelName ?: '(periodic timer)') . "\n";
-            echo "Batch size: {$count}\n";
+            echo "Drained:    {$drained}, after coalesce: {$count}\n";
             echo "Time:       " . (time() - $startTime) . " second(s)\n";
             echo "Payloads:\n";
             echo "==========================================\n\n";
