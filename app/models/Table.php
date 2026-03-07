@@ -547,9 +547,13 @@ class Table extends Model
                         if (!$raw) {
                             $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["fieldconf"] ?? '[]', true);
                             foreach ($value as $fKey => $fValue) {
-                                $rec[$fKey] = $fValue;
+                                if (isset($fValue['queryable'])) {
+                                    $fValue['querable'] = $fValue['queryable'];
+                                    unset($fValue['queryable']);
+                                }
+                                $rec[$fKey] = array_merge($rec[$fKey] ?? [],$fValue);
                             }
-                            $value = json_encode(array_merge($rec, $value), JSON_UNESCAPED_UNICODE);
+                            $value = json_encode($rec, JSON_UNESCAPED_UNICODE);
                         }
                     } else {
                         if (is_object($value) || is_array($value)) {
