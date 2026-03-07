@@ -40,6 +40,7 @@ final readonly class PreparePayloadTask implements Task
         new App();
         Cache::setInstance();
         $api = new Sql(connection: new Connection(database: $this->db));
+        $api->begin();
 
         $results = [];
         $grouped = [];
@@ -84,6 +85,7 @@ final readonly class PreparePayloadTask implements Task
                 $response['data']
             );
         }
+        $api->commit();
         $api->close();
         return $results;
     }

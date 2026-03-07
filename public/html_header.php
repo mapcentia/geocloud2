@@ -15,11 +15,11 @@ header('Content-Type: text/html; charset=utf-8');
     | |              | || |              | || |              | |
     | '--------------' || '--------------' || '--------------' |
      '----------------'  '----------------'  '----------------'
-    The world breaks everyone, and afterward, some are strong at the broken places.
+    What we call the beginning is often the end. And to make an end is to make a beginning.
 
 
   ~ @author     Martin Høgh <mh@mapcentia.com>
-  ~ @copyright  2013-2024 MapCentia ApS
+  ~ @copyright  2013-2026 MapCentia ApS
   ~ @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
   ~ @version    2026.3.0
 
