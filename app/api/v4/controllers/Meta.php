@@ -242,26 +242,38 @@ class Meta extends AbstractApi
     {
         return new Assert\Collection(
             fields: [
-                'title' => new Assert\Optional(new Assert\Type('string')),
-                'abstract' => new Assert\Optional(new Assert\Type('string')),
-                'group' => new Assert\Optional(new Assert\Type('string')),
-                'sort_id' => new Assert\Optional(new Assert\Type('integer')),
-                'tags' => new Assert\Optional(new Assert\Type('list', 'This value should be of type list.')),
-                'properties' => new Assert\Optional(new Assert\Type('associative_array', 'This value should be of type object.')),
-                'fields' => new Assert\Optional([
+                'relations' => new Assert\Optional([
                     new Assert\Type('array'),
                     new Assert\All([
                         new Assert\Collection(
                             fields: [
-                                'alias' => new Assert\Optional(new Assert\Type('string')),
-                                'queryable' => new Assert\Optional(new Assert\Type('boolean')),
+                                'title' => new Assert\Optional(new Assert\Type('string')),
+                                'abstract' => new Assert\Optional(new Assert\Type('string')),
+                                'group' => new Assert\Optional(new Assert\Type('string')),
                                 'sort_id' => new Assert\Optional(new Assert\Type('integer')),
+                                'tags' => new Assert\Optional(new Assert\Type('list', 'This value should be of type list.')),
+                                'properties' => new Assert\Optional(new Assert\Type('associative_array', 'This value should be of type object.')),
+                                'fields' => new Assert\Optional([
+                                    new Assert\Type('array'),
+                                    new Assert\All([
+                                        new Assert\Collection(
+                                            fields: [
+                                                'alias' => new Assert\Optional(new Assert\Type('string')),
+                                                'queryable' => new Assert\Optional(new Assert\Type('boolean')),
+                                                'sort_id' => new Assert\Optional(new Assert\Type('integer')),
+                                            ],
+                                            allowExtraFields: false,
+                                            allowMissingFields: true,
+                                        )
+                                    ])
+                                ]),
                             ],
                             allowExtraFields: false,
                             allowMissingFields: true,
                         )
                     ])
                 ]),
+
             ],
             allowExtraFields: false,
             allowMissingFields: true,
