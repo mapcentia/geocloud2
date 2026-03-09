@@ -19,6 +19,7 @@ use app\api\v4\Responses\PatchResponse;
 use app\api\v4\Responses\PostResponse;
 use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
+use app\conf\App;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
@@ -202,14 +203,17 @@ class Column extends AbstractApi
 
         $layer = new Layer(connection: $this->connection);
         $geomFields = $layer->getGeometryColumnsFromTable($this->schema[0], $this->unQualifiedName[0]);
-
         $this->table[0]->begin();
         $r = [];
         $list = [];
 
         foreach ($this->column as $oldColumnName) {
             foreach ($geomFields as $geomField) {
-                $key = $this->qualifiedName[0] . '.' . $geomField;
+                if(!empty(App::$param['dontUseGeometryColumnInJoin'])) {
+                    $key = $this->qualifiedName[0];
+                } else {
+                    $key = $this->qualifiedName[0] . '.' . $geomField;
+                }
                 $conf = json_decode($layer->getValueFromKey($key, 'fieldconf'));
                 $obj = $conf->{$oldColumnName} ?? new stdClass();
                 $obj->id = $oldColumnName;

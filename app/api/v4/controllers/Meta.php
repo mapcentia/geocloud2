@@ -16,6 +16,7 @@ use app\api\v4\Responses\GetResponse;
 use app\api\v4\Responses\NoContentResponse;
 use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
+use app\conf\App;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
@@ -48,7 +49,7 @@ use Symfony\Component\Validator\Constraints as Assert;
                     new OA\Property(property: 'title', description: 'Human-readable relation title.', type: 'string'),
                     new OA\Property(property: 'abstract', description: 'Description or summary of the relation.', type: 'string'),
                     new OA\Property(property: 'group', description: 'Logical grouping (e.g. for UI categorization).', type: 'string'),
-                    new OA\Property(property: 'sort_id', description: 'Sorting weight for presentation.',type: 'integer'),
+                    new OA\Property(property: 'sort_id', description: 'Sorting weight for presentation.', type: 'integer'),
                     new OA\Property(property: 'tags', description: 'Arbitrary classification tags.', type: 'array', items: new OA\Items(type: 'string')),
                     new OA\Property(property: 'properties', description: 'Free-form key/value metadata.', type: 'object'),
                     new OA\Property(
@@ -121,7 +122,7 @@ class Meta extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException
      * @throws InvalidArgumentException
      */
-    #[OA\Patch(path: '/api/v4/meta', operationId: 'patchMetaData',summary: 'Update relation metadata', security: [['bearerAuth' => []]], tags: ['Metadata'])]
+    #[OA\Patch(path: '/api/v4/meta', operationId: 'patchMetaData', summary: 'Update relation metadata', security: [['bearerAuth' => []]], tags: ['Metadata'])]
     #[OA\RequestBody(description: 'Metadata updates.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Meta"))]
     #[OA\Response(response: 204, description: "Metadata updated")]
     #[OA\Response(response: 400, description: 'Bad request')]
@@ -132,11 +133,17 @@ class Meta extends AbstractApi
         $geometryJoinTable = new \app\models\Table(table: "settings.geometry_columns_join", connection: $this->connection);
         $geometryJoinTable->begin();
         foreach ($data['relations'] as $key => $datum) {
-            $datum['_key_'] = $key;
-            $geometryJoinTable->updateRecord(data: self::processRowReverse($datum), keyName: '_key_');
+            $split = explode(".", $key);
+            $geomFields = (new Layer(connection: $this->connection))->getGeometryColumnsFromTable($split[0], $split[1]);
+            foreach ($geomFields as $geomField) {
+                if(empty(App::$param['dontUseGeometryColumnInJoin']) && count($split) == 2) {
+                    $key = $key . '.' . $geomField;
+                }
+                $datum['_key_'] = $key;
+                $geometryJoinTable->updateRecord(data: self::processRowReverse($datum), keyName: '_key_');
+            }
         }
         $geometryJoinTable->commit();
-
         return new NoContentResponse();
     }
 
@@ -144,7 +151,8 @@ class Meta extends AbstractApi
     {
         $out = [];
         foreach ($rows as $row) {
-            $out[$row['_key_']] = self::processRow($row);
+            $key = $row['f_table_schema'] . '.' . $row['f_table_name'];
+            $out[$key] = self::processRow($row);
         }
         return $out;
     }
