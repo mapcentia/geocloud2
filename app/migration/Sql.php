@@ -269,11 +269,8 @@ class Sql
                       NOT (t.table_schema :: TEXT = 'public' :: TEXT AND t.table_name :: TEXT = 'non_postgis_matviews' :: TEXT) AND
                       NOT t.table_schema :: TEXT = 'pg_catalog' :: TEXT AND NOT t.table_schema :: TEXT = 'information_schema' :: TEXT;
                     ";
-        if (isset(App::$param['dontUseGeometryColumnInJoin']) && App::$param['dontUseGeometryColumnInJoin'] === true) {
-            include 'Views2.php';
-        } else {
-            include 'Views1.php';
-        }
+
+        include 'Views1.php';
         return $sqls;
     }
 

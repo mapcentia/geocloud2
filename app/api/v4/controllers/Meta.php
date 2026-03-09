@@ -136,8 +136,10 @@ class Meta extends AbstractApi
             $split = explode(".", $key);
             $geomFields = (new Layer(connection: $this->connection))->getGeometryColumnsFromTable($split[0], $split[1]);
             foreach ($geomFields as $geomField) {
-                if(empty(App::$param['dontUseGeometryColumnInJoin']) && count($split) == 2) {
-                    $key = $key . '.' . $geomField;
+                if (count($split) == 3) {
+                    $key = $split[0] . '.' . $split[1] . '.' . $split[2];
+                } else {
+                    $key = $split[0] . '.' . $split[1] . '.' . $geomField;
                 }
                 $datum['_key_'] = $key;
                 $geometryJoinTable->updateRecord(data: self::processRowReverse($datum), keyName: '_key_');

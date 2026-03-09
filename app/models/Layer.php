@@ -656,10 +656,6 @@ class Layer extends Table
      */
     public function getPrivileges(string $_key_): array
     {
-        if (!empty(App::$param['dontUseGeometryColumnInJoin'])) {
-            $split = explode('.', $_key_);
-            $_key_ = $split[0] . '.' . $split[1];
-        }
         $privileges = json_decode($this->getValueFromKey($_key_, "privileges") ?: "{}");
         if (!empty(Session::get())) {
             $arr = Session::getByKey('subusers');
@@ -943,11 +939,7 @@ class Layer extends Table
      */
     public function insertDefaultMeta(): array
     {
-        if (!empty(App::$param['dontUseGeometryColumnInJoin'])) {
-            $key = "f_table_schema || '.' || f_table_name";
-        } else {
-            $key = "f_table_schema || '.' || f_table_name || '.' || f_geometry_column";
-        }
+        $key = "f_table_schema || '.' || f_table_name || '.' || f_geometry_column";
         $sql = "with t as (select $key as key
                     from settings.geometry_columns_view
                     where _key_ isnull)

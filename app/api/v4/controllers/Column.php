@@ -209,11 +209,7 @@ class Column extends AbstractApi
 
         foreach ($this->column as $oldColumnName) {
             foreach ($geomFields as $geomField) {
-                if(!empty(App::$param['dontUseGeometryColumnInJoin'])) {
-                    $key = $this->qualifiedName[0];
-                } else {
-                    $key = $this->qualifiedName[0] . '.' . $geomField;
-                }
+                $key = $this->qualifiedName[0] . '.' . $geomField;
                 $conf = json_decode($layer->getValueFromKey($key, 'fieldconf'));
                 $obj = $conf->{$oldColumnName} ?? new stdClass();
                 $obj->id = $oldColumnName;
@@ -246,7 +242,7 @@ class Column extends AbstractApi
             }
         }
         $this->table[0]->commit();
-        $baseUri="/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/columns/";
+        $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/columns/";
         return $this->patchResponse($baseUri, $list);
     }
 
@@ -317,7 +313,7 @@ class Column extends AbstractApi
         if ($isNullable === false) {
             $table->addNotNullConstraint($r["column"]);
         }
-        if ($isNullable === true){
+        if ($isNullable === true) {
             $table->dropNotNullConstraint($r["column"]);
         }
         if (isset($defaultValue)) {

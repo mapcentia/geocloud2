@@ -513,10 +513,6 @@ class Table extends Model
                     if (in_array($key, ["editable", "skipconflict", "enableows"])) {
                         $value = $value ?: "0";
                     }
-                    if ($key == "_key_" && !empty(App::$param['dontUseGeometryColumnInJoin'])) {
-                        $split = explode('.', $value);
-                        $value = $split[0] . '.' . $split[1];
-                    }
                     if ($key == "tags") {
                         $value = $value ?: [];
                         if (!$raw) {
