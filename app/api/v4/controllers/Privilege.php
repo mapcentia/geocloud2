@@ -96,7 +96,9 @@ class Privilege extends AbstractApi
     #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}/privileges', operationId: 'patchPrivileges', description: "Update privileges.", tags: ['Privileges'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
-    #[OA\RequestBody(description: 'Privileges', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Privilege"))]
+    #[OA\RequestBody(description: 'Privileges.', required: true, content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/Privilege"),
+        new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/Privilege"))])
+    )]
     #[OA\Response(response: 204, description: "Privileges updated")]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
