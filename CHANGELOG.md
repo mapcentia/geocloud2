@@ -5,8 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [2026.3.0] - 2026-6-3
+## [2026.3.2] - 2026-10-3
+### Fixed
+- Change from the static Connection object to the injected one to avoid issues ogr download.
 
+## [2026.3.1] - 2026-10-3
+### Changed
+- New tag
+
+## [2026.3.0] - 2026-9-3
 ### Added
 - Limited Graphql support. api/graphql
 - Realtime
