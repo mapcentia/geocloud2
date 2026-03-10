@@ -144,7 +144,7 @@ class Auth extends AbstractApi
         echo "<div id='alert'></div>";
         echo "<div id='forgot'></div>";
         echo "</main>";
-        echo $this->twig->render('footer.html.twig', ['app_name' => 'Centia.io', 'help_url' => 'https://centia.io/docs/intro']);
+        echo $this->twig->render('footer.html.twig', []);
         return $this->emptyResponse();
     }
 
