@@ -35,7 +35,7 @@ class Auth extends AbstractApi
     public function get_index(): Response
     {
         $requiredParams = ['response_type', 'client_id'];
-        $socialSignup = !!empty(App::$param['noSocialSignup']);
+        $socialSignup = !empty(App::$param['socialSignup']);
         foreach ($requiredParams as $requiredParam) {
             if (!array_key_exists($requiredParam, $_GET)) {
                 $error = "invalid_request";
