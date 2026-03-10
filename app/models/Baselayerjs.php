@@ -89,6 +89,7 @@ class Baselayerjs extends Controller
         if (!empty(App::$param['baseLayers'])) $overallSettings["setBaseLayers"] = (App::$param['baseLayers']);
         if (!empty(App::$param['baseLayersCollector'])) $overallSettings["setBaseLayersCollector"] = (App::$param['baseLayersCollector']);
         if (!empty(App::$param['mapAttribution'])) $overallSettings["mapAttribution"] = App::$param['mapAttribution'];
+        if (!empty(App::$param['host'])) $overallSettings["host"] = App::$param['host'];
 
         $locales = array("en_US", "da_DK", "fr_FR", "es_ES", "it_IT", "de_DE", "ru_RU");
         if (isset( $_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
