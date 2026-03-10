@@ -123,7 +123,7 @@ class Sql extends Model
         if (sizeof($formatSplit) == 2 && $formatSplit[0] == "ogr") {
             $fileOrFolder = $nln ? $nln . $name : $view;
             $fileOrFolder .= "." . self::toAscii($formatSplit[1], null, "_");
-            $path = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__vectors/" . $fileOrFolder;
+            $path = App::$param['path'] . "app/tmp/" . $this->connection->database . "/__vectors/" . $fileOrFolder;
             $cmd = "ogr2ogr " .
                 "-mapFieldType Time=String,Binary=String " .
                 "-f \"" . explode("/", $format)[1] . "\" " . $path . " " .
@@ -131,7 +131,7 @@ class Sql extends Model
                 ($nlt ? "-nlt " . $nlt . " " : "") .
                 ($nln ? "-nln " . $nln . " " : "") .
                 "-preserve_fid " .
-                "PG:'host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " dbname=" . Connection::$param["postgisdb"] . "' " .
+                "PG:'host=" . $this->connection->host . " port=" . $this->connection->port . " user=" . $this->connection->user . " password=" . $this->connection->password . " dbname=" . $this->connection->database . "' " .
                 "-sql \"" . $q . "\"";
             exec($cmd . ' 2>&1', $out);
             if ($out) {
