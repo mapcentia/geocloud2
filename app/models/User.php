@@ -205,7 +205,7 @@ class User extends Model
         }
 
         // Generate user identifier from the name
-        $userId = Model::toAscii($name, NULL, "_");
+        $userId = Model::toAscii(str:$name, replace: NULL, delimiter: "_", skipEmail: !empty($data['subuser']));
 
         // Check if such user identifier already exists
         $res = $this->execQuery("SELECT COUNT(*) AS count FROM users WHERE screenname = '$userId'");

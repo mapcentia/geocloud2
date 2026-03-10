@@ -263,7 +263,8 @@ class Setting extends Model
     public function get(bool $unsetPw = false): array
     {
         $cacheType = "settings";
-        $cacheId = $this->postgisdb . "_" . $cacheType . "_" . ($_SESSION["screen_name"] ?? ""); // Cache per user because personal API key is stored
+        $user = Model::toAscii(str:$_SESSION['screen_name'] ?? '', skipEmail: false);
+        $cacheId = $this->postgisdb . "_" . $cacheType . "_" . $user; // Cache per user because personal API key is stored
         $CachedString = Cache::getItem($cacheId);
         if ($CachedString != null && $CachedString->isHit()) {
             $response = $CachedString->get();
@@ -278,7 +279,7 @@ class Setting extends Model
             $arr = $this->getArray();
             if (!empty($_SESSION["subuser"])) {
                 $arr->pw = $arr->pw_subuser->{$_SESSION["screen_name"]} ?? null;
-                $arr->api_key = isset($arr->api_key_subuser) ? $arr->api_key_subuser->{$_SESSION["screen_name"]} : null;
+                $arr->api_key = isset($arr->api_key_subuser) ? $arr->api_key_subuser->{$user} : null;
                 if (isset($arr->pw_subuser)) unset($arr->pw_subuser);
             }
             // If user has no key, we generate one.

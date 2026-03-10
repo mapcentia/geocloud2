@@ -740,17 +740,24 @@ class Model
         return $response;
     }
 
+
     /**
-     * Converts a given string to its ASCII representation, replacing specified substrings and normalizing it with a delimiter.
+     * Converts a given string to its ASCII representation, optionally replacing certain substrings,
+     * removing non-ASCII characters, and normalizing delimiters.
      *
      * @param string $str The input string to be converted to ASCII.
-     * @param array|null $replace An optional array of substrings to be replaced with spaces before conversion.
-     * @param string $delimiter The delimiter used to replace spaces and other non-alphanumeric characters after conversion.
+     * @param array|null $replace An optional array of substrings to replace with spaces before processing.
+     * @param string $delimiter The delimiter to replace matching patterns in the string.
+     * @param string $delimiterRegex The regular expression for identifying patterns to replace with the delimiter.
+     * @param bool $skipEmail Whether to skip conversion if the input string is a valid email address. Defaults to true.
      *
-     * @return string The ASCII representation of the input string, normalized and formatted with the specified delimiter.
+     * @return string The ASCII-converted string with applied transformations.
      */
-    public static function toAscii(string $str, ?array $replace = [], string $delimiter = '-', string $delimiterRegex = "/[\/_|+ -]+/"): string
+    public static function toAscii(string $str, ?array $replace = [], string $delimiter = '-', string $delimiterRegex = "/[\/_|+ -]+/", bool $skipEmail = true): string
     {
+        if (filter_var($str, FILTER_VALIDATE_EMAIL) !== false && $skipEmail) {
+            return $str;
+        }
         if (!empty($replace)) {
             $str = str_replace($replace, ' ', $str);
         }
