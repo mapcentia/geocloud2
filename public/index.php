@@ -113,6 +113,7 @@ Cache::setInstance();
 
 function setHeaders(): void
 {
+    // TODO tjek header is set
     // Write Access-Control-Allow-Origin if origin is white listed
     $http_origin = $_SERVER['HTTP_ORIGIN'] ?? null;
     if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App::$param["AccessControlAllowOrigin"])) {
@@ -125,8 +126,6 @@ function setHeaders(): void
     header("Access-Control-Allow-Methods: GET, PUT, POST, DELETE, HEAD, OPTIONS");
 }
 
-setHeaders();
-
 // Setup host
 App::$param['protocol'] = App::$param['protocol'] ?? Util::protocol();
 App::$param['host'] = App::$param['host'] ?? App::$param['protocol'] . "://" . $_SERVER['SERVER_NAME'] . ($_SERVER['SERVER_PORT'] != "80" && $_SERVER['SERVER_PORT'] != "443" ? ":" . $_SERVER["SERVER_PORT"] : "");
@@ -135,6 +134,7 @@ App::$param['userHostName'] = App::$param['userHostName'] ?? App::$param['host']
 // Handle OWS outside handler function
 try {
     if (Input::getPath()->part(1) == "wfs") {
+        setHeaders();
         if (!empty(Input::getCookies()["PHPSESSID"])) {
             Session::start();
         }
@@ -149,6 +149,7 @@ try {
         Connection::$param["postgisschema"] = Input::getPath()->part(3);
         include_once("app/wfs/server.php");
     } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
+        setHeaders();
         if (!empty(Input::getCookies()["PHPSESSID"])) { // Do not start session if no cookie is set
             Session::start();
         }
