@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2025 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -13,24 +13,15 @@ use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
 use app\api\v4\Controller;
-use app\api\v4\Responses\GetResponse;
-use app\api\v4\Responses\NoContentResponse;
 use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Route2;
-use app\inc\Statement;
-use app\inc\Util;
-use app\models\Setting;
-use Exception;
 use OpenApi\Annotations\OpenApi;
 use OpenApi\Attributes as OA;
-use Psr\Cache\InvalidArgumentException;
-use Symfony\Component\Validator\Constraints as Assert;
 use Override;
-use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
 
 /**
