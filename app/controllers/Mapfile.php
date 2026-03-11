@@ -124,6 +124,7 @@ class Mapfile extends Controller
         "wms_enable_request" "*"
         "ows_encoding" "UTF-8"
         "wms_extent" "<?php echo implode(" ", $extent) ?>"
+        "wms_allow_getmap_without_styles" "true"
         END
         END
 
