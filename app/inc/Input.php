@@ -124,6 +124,10 @@ class Input
         if (empty($content)) {
             return null;
         }
+        // Hack to support + in URL encoded data
+        if (str_contains($content, '%2B')) {
+            $content = str_replace('%2B', '+', $content);
+        }
         if ($decode) {
             return urldecode($content);
         } else {
