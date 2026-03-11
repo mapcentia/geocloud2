@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.3.3] - 2026-11-3
+### Changed
+- SqlNoToken class added for more robust handling of SQL API calls without a token.
+- `wms_allow_getmap_without_styles` added to MapFiles, so url parameter STYLES in WMS getMap request is not required.
+- `%2B` is replaced with `+` in requests bodies. This is a hack to ensure encoded JSON payloads.
+
 ## [2026.3.2] - 2026-10-3
 ### Fixed
 - Change from the static Connection object to the injected one to avoid issues ogr download.
