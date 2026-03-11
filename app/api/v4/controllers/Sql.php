@@ -213,23 +213,6 @@ class Sql extends AbstractApi
 
     /**
      * @throws GC2Exception
-     * @throws PhpfastcacheInvalidArgumentException
-     * @throws InvalidArgumentException
-     */
-    #[OA\Post(path: '/api/v4/sql/database/{database}', operationId: 'postSqlNoToken', description: "Run SQL statements without a token.", tags: ['Sql'])]
-    #[OA\Parameter(name: 'database', description: 'Database name to use.', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'mydb')]
-    #[OA\RequestBody(description: 'SQL statement(s) to run.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sql"))]
-    #[OA\Response(response: 200, description: 'Ok', content: new OA\MediaType('application/json'))]
-    #[OA\Response(response: 500, description: 'Internal error. Most likely an SQL error.')]
-    #[AcceptableContentTypes(['application/json'])]
-    #[AcceptableAccepts(['application/json', '*/*'])]
-    public function post_database(): Response
-    {
-        return $this->post_index($this->route->getParam('database'));
-    }
-
-    /**
-     * @throws GC2Exception
      */
     #[Override]
     public function validate(): void
