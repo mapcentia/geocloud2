@@ -18,6 +18,7 @@ use Amp\Websocket\Server\WebsocketGateway;
 use Amp\Websocket\WebsocketClient;
 use Amp\Websocket\WebsocketClosedException;
 use app\event\tasks\AuthTask;
+use app\event\tasks\RunGraphQLTask;
 use app\event\tasks\RunQueryTask;
 use app\event\tasks\RunRpcTask;
 use app\event\tasks\ValidateTokenTask;
@@ -129,6 +130,11 @@ class WsBroadcast implements WebsocketClientHandler
                 if (isset($parsed[0]['jsonrpc'])) {
                     $r = $this->rpc($parsed, $props);
                 }
+
+                if (isset($parsed[0]['test'])) {
+                    $r = $this->gql($parsed, $props);
+                }
+
                 if (isset($parsed[0]['rel'])) {
                     $data = $this->clientProperties[$client];
                     $data['rels'] = [$parsed[0]['rel']];
@@ -173,6 +179,12 @@ class WsBroadcast implements WebsocketClientHandler
     private function rpc(array $query, ?array $props): Execution
     {
         $task = new RunRpcTask($query, $props);
+        return $this->workerPool->getWorker()->submit($task);
+    }
+
+    private function gql(array $query, string $schema, ?array $props): Execution
+    {
+        $task = new RunGraphQLTask($query, $schema, $props);
         return $this->workerPool->getWorker()->submit($task);
     }
 
