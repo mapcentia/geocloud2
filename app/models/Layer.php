@@ -408,7 +408,7 @@ class Layer extends Table
                 }
 
                 // If session is sub-user we always check privileges
-                $subUser = $_SESSION["subuser"] ?? !$jwt['superUser'] ?? false;
+                $subUser = $_SESSION["subuser"] ?? !($jwt['superUser'] ?? true);
                 $userName = $_SESSION["screen_name"] ?? $jwt['uid'] ?? null;
                 $userGroup = $_SESSION["usergroup"] ?? $jwt['userGroup'] ?? null;
 
