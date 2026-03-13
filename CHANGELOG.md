@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.3.5] - 2026-13-3
+### Fixed
+- v2 API SQL with file output format failed because app/models/Sql.php didn't exit any longer, resulting in output after flushing the file.
+  Exit is moved to app/api/v2/Sql.php. This is not an issue in v4 APIs, which are not allowed to exit due to the need for running in worker mode.
+
 ## [2026.3.4] - 2026-13-3
 ### Fixed
 - Fix sub-user privilege check in Layer::getAll by correctly handling `jwt['superUser']` fallback logic.
