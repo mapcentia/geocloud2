@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.3.4] - 2026-13-3
+### Fixed
+- Fix sub-user privilege check in Layer::getAll by correctly handling `jwt['superUser']` fallback logic.
+
 ## [2026.3.3] - 2026-11-3
 ### Changed
 - SqlNoToken class added for more robust handling of SQL API calls without a token.
