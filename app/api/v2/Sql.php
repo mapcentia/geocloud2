@@ -314,6 +314,9 @@ class Sql extends Controller
             } else {
                 ob_start();
                 $this->response = $this->api->sql($this->q, $clientEncoding, Input::get('format') ?: "geojson", Input::get('geoformat') ?: null, Input::get('allstr') ?: null, Input::get('alias') ?: null, null, null, Input::get('convert_types') ?: null, Input::get('params') ?: null, $typeHints, $typeFormats);
+                if (empty($this->response)) {
+                    exit();
+                }
                 $response["statement"] = $this->q;
                 $this->addAttr($response);
                 echo serialize($this->response);
