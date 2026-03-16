@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.3.6] - 2026-16-3
+- Update default UUID generation to use the buildin `gen_random_uuid()` instead of `uuid_generate_v4()` from the uuid-ossp extension. Run migrations to update existing UUID columns to use the new default.
+
 ## [2026.3.5] - 2026-13-3
 ### Fixed
 - v2 API SQL with file output format failed because app/models/Sql.php didn't exit any longer, resulting in output after flushing the file.

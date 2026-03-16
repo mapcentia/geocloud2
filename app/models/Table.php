@@ -939,7 +939,7 @@ class Table extends Model
         $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_end_date TIMESTAMP WITH TIME ZONE DEFAULT NULL";
         $res = $this->prepare($sql);
         $res->execute();
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_uuid UUID NOT NULL DEFAULT uuid_generate_v4()";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_uuid UUID NOT NULL DEFAULT gen_random_uuid()";
         $res = $this->prepare($sql);
         $res->execute();
         $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_user VARCHAR(255)";
