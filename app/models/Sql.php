@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2024 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -99,7 +99,20 @@ class Sql extends Model
      * @throws GC2Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
-    public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, ?string $nlt = null, ?string $nln = null, ?bool $convertTypes = false, ?array $parameters = null, ?array $typeHints = null, ?array $typeFormats = null): array
+    public function sql(
+        string $q,
+        ?string $clientEncoding = null,
+        ?string $format = "geojson",
+        ?string $geoformat = "wkt",
+        bool $csvAllToStr = false,
+        ?string $aliasesFrom = null,
+        ?string $nlt = null,
+        ?string $nln = null,
+        bool $convertTypes = false,
+        ?array $parameters = null,
+        ?array $typeHints = null,
+        ?array $typeFormats = null
+    ): array
     {
         // Check params
         if (is_array($parameters) && !array_is_list($parameters)) {
