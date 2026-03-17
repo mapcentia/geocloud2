@@ -220,6 +220,10 @@ class Feature extends Controller
                 if (isset($this->field) && $this->field != $elem) {
                     if (is_string($value)) {
                         $value = "<![CDATA[" . $value . "]]>";
+                    } elseif (is_array($value)) {
+                        // Create PG array
+                        $value =  json_encode($value);
+                        $value = '{' . substr($value, 1, -1) . '}';
                     }
                     if ($value === false) {
                         $value = 'f';
