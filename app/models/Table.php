@@ -1215,7 +1215,11 @@ class Table extends Model
         $sql = "SELECT " . implode(",", $fieldsArr);
         foreach ($this->metaData as $key => $arr) {
             if ($arr['type'] == "bytea") {
-                $sql = str_replace("\"$key\"", "encode(\"" . $key . "\",'escape') as " . $key, $sql);
+                if ($arr['is_array']) {
+                    $sql = str_replace("\"$key\"", "(SELECT array_to_json(array_agg(encode(f, 'escape'))) FROM unnest(\"$key\") AS f) as \"$key\"", $sql);
+                } else {
+                    $sql = str_replace("\"$key\"", "encode(\"" . $key . "\",'escape') as \"$key\"", $sql);
+                }
             }
         }
         $sql .= " FROM " . $this->doubleQuoteQualifiedName($this->table) . " WHERE " . $this->primaryKey['attname'] . "=:pkey";
@@ -1245,7 +1249,11 @@ class Table extends Model
         $sql = "SELECT " . implode(",", $fieldsArr);
         foreach ($this->metaData as $key => $arr) {
             if ($arr['type'] == "bytea") {
-                $sql = str_replace("\"$key\"", "encode(\"" . $key . "\",'escape') as " . $key, $sql);
+                if ($arr['is_array']) {
+                    $sql = str_replace("\"$key\"", "(SELECT array_to_json(array_agg(encode(f, 'escape'))) FROM unnest(\"$key\") AS f) as \"$key\"", $sql);
+                } else {
+                    $sql = str_replace("\"$key\"", "encode(\"" . $key . "\",'escape') as \"$key\"", $sql);
+                }
             }
         }
         $sql .= " FROM " . $this->doubleQuoteQualifiedName($this->table) . " LIMIT 1";
