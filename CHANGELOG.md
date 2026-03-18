@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED] - 2026-17-3
+## [2026.3.8] - 2026-18-3
 ### Changed
 - Feature API does not any more url decode properties and the Editor in Vidi does not url encode properties any.
   Transport is changed to application/json from application/x-www-form-urlencoded, so both Vidi and GC2 must be upgraded to the latest version.
