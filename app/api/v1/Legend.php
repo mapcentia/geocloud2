@@ -95,10 +95,13 @@ class Legend extends Controller
 
                             }
                         }
+                    } else {
+                        $this->legendArr[$layerName]['classes'][0]['img'] = null;
+                        $this->legendArr[$layerName]['classes'][0]['name'] = null;
+                        $this->legendArr[$layerName]['classes'][0]['expression'] = null;
                     }
                 }
                 $CachedString->set($this->legendArr)->expiresAfter(Globals::$cacheTtl);
-               // $CachedString->addTags([$cacheType, Input::getPath()->part(5)]);
                 Cache::save($CachedString);
             }
         }
