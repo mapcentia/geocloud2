@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.3.10] - 2026-23-3
+### Fixed
+- Add JSON encoding for `properties` in session data initialization by token.
+
 ## [2026.3.9] - 2026-23-3
 ### Fixed
 - Handle empty legend class values by setting properties (`img`, `name`, `expression`) to null to avoid errors.
