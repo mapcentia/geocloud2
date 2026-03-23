@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -46,13 +46,13 @@ class Sqlwrapper extends Controller
 
         $rasterData = null;
 
-        $data = explode(",", Input::get("custom_data"));
+        $body = json_decode(Input::getBody(), true);
+        $data = $body["custom_data"];
         $schema = explode(".", $data[0])[0];
         $db = Route::getParam("user");
 
-        if (sizeof($data) == 9) {
+        if ($data && sizeof($data) == 9) {
             $getFeatureInfoUrl = "http://127.0.0.1/ows/{$db}/{$schema}?LAYERS={$data[0]}&QUERY_LAYERS={$data[0]}&STYLES=&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&BBOX={$data[5]},{$data[6]},{$data[7]},{$data[8]}&FEATURE_COUNT=1&HEIGHT={$data[2]}&WIDTH={$data[1]}&FORMAT=image%2Fpng&INFO_FORMAT=application%2Fvnd.ogc.gml&SRS=EPSG%3A4326&X={$data[3]}&Y={$data[4]}";
-            //die($getFeatureInfoUrl);
             try {
                 $res = $client->get($getFeatureInfoUrl);
             } catch (Exception $e) {
@@ -96,13 +96,13 @@ class Sqlwrapper extends Controller
         }
 
         $form = [
-            "q" => Input::get("q"),
-            "base64" => Input::get("base64") === true || Input::get("base64") === "true" ? "true" : "false",
-            "srs" => Input::get("srs"),
-            "lifetime" => Input::get("lifetime"),
-            "client_encoding" => Input::get("client_encoding"),
-            "format" => Input::get("format"),
-            "key" => Input::get("key"),
+            "q" => $body["q"],
+            "base64" => $body["base64"] === true || $body["base64"] === "true" ? "true" : "false",
+            "srs" => $body["srs"],
+            "lifetime" => $body["lifetime"],
+            "client_encoding" => $body["client_encoding"],
+            "format" => $body["format"],
+            "key" => $body["key"],
         ];
 
         $url = "http://127.0.0.1/api/v2/sql/" . $db;
