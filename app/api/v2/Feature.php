@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2023 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -219,7 +219,11 @@ class Feature extends Controller
             foreach ($props as $elem => $value) {
                 if (isset($this->field) && $this->field != $elem) {
                     if (is_string($value)) {
-                        $value = "<![CDATA[" . urldecode($value) . "]]>";
+                        $value = "<![CDATA[" . $value . "]]>";
+                    } elseif (is_array($value)) {
+                        // Create PG array
+                        $value =  json_encode($value);
+                        $value = '{' . substr($value, 1, -1) . '}';
                     }
                     if ($value === false) {
                         $value = 'f';
@@ -286,7 +290,11 @@ class Feature extends Controller
             // Create the elements
             foreach ($props as $elem => $value) {
                 if (is_string($value)) {
-                    $value = "<![CDATA[" . urldecode($value) . "]]>";
+                    $value = "<![CDATA[" . $value . "]]>";
+                } elseif (is_array($value)) {
+                    // Create PG array
+                    $value =  json_encode($value);
+                    $value = '{' . substr($value, 1, -1) . '}';
                 }
                 if ($value === false) {
                     $value = 'f';
@@ -295,8 +303,8 @@ class Feature extends Controller
                     $value = 't';
                 }
                 $xml .= "<wfs:Property>\n";
-                $xml .= "<wfs:Name>{$elem}</wfs:Name>\n";
-                $xml .= "<wfs:Value>{$value}</wfs:Value>\n";
+                $xml .= "<wfs:Name>$elem</wfs:Name>\n";
+                $xml .= "<wfs:Value>$value</wfs:Value>\n";
                 $xml .= "</wfs:Property>\n";
             }
 

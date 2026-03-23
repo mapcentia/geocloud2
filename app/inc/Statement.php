@@ -1,20 +1,19 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2025 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\inc;
-;
+
 use app\exceptions\GC2Exception;
 use app\models\Authorization;
 use app\models\Geofence;
 use app\models\Rule;
 use app\models\Sql;
 use Exception;
-use PDOException;
 use sad_spirit\pg_builder\StatementFactory;
 
 class Statement
@@ -26,7 +25,9 @@ class Statement
     private array $cacheInfo;
     private array $params;
 
-    function __construct(private readonly Connection $connection, private readonly bool $convertReturning = true) {
+
+    function __construct(private readonly Connection $connection, private readonly bool $convertReturning = true)
+    {
 
     }
 
@@ -124,7 +125,7 @@ class Statement
         }
 
         // Get rules and set them
-        $walkerRule = new TableWalkerRule( $this->subUser ?? $this->connection->database, "sql", strtolower($operation), '');
+        $walkerRule = new TableWalkerRule($this->subUser ?? $this->connection->database, "sql", strtolower($operation), '');
         $rules = $rule->get($this->sql);
         $walkerRule->setRules($rules);
         $select->dispatch($walkerRule);
@@ -174,7 +175,18 @@ class Statement
                 $this->cacheInfo["signature"] = md5(serialize($response));
             } else {
                 ob_start();
-                $response = $this->sql->sql($this->q, $clientEncoding, $this->params['format'] ?: "geojson", $this->params['geoformat'] ?? null, $this->params['allstr'] ?? null, $this->params['alias'] ?? null, null, null, $this->params['convert_types'], $this->params['params'] ?? null, $typeHints, $typeFormats);
+                $response = $this->sql->sql(
+                    q: $this->q,
+                    clientEncoding: $clientEncoding,
+                    format: $this->params['format'] ?: "geojson",
+                    geoformat: $this->params['geoformat'] ?? null,
+                    csvAllToStr: $this->params['allstr'] ?? false,
+                    aliasesFrom: $this->params['alias'] ?? null,
+                    convertTypes: $this->params['convert_types'] ?? false,
+                    parameters: $this->params['params'] ?? null,
+                    typeHints: $typeHints,
+                    typeFormats: $typeFormats
+                );
                 if (count($response) > 0) {
                     $response["statement"] = $this->q;
                     if ($lifetime > 0 && !empty($CachedString)) {

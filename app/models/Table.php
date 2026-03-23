@@ -939,7 +939,7 @@ class Table extends Model
         $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_end_date TIMESTAMP WITH TIME ZONE DEFAULT NULL";
         $res = $this->prepare($sql);
         $res->execute();
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_uuid UUID NOT NULL DEFAULT uuid_generate_v4()";
+        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_uuid UUID NOT NULL DEFAULT gen_random_uuid()";
         $res = $this->prepare($sql);
         $res->execute();
         $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_user VARCHAR(255)";
@@ -1215,7 +1215,11 @@ class Table extends Model
         $sql = "SELECT " . implode(",", $fieldsArr);
         foreach ($this->metaData as $key => $arr) {
             if ($arr['type'] == "bytea") {
-                $sql = str_replace("\"$key\"", "encode(\"" . $key . "\",'escape') as " . $key, $sql);
+                if ($arr['is_array']) {
+                    $sql = str_replace("\"$key\"", "(SELECT array_to_json(array_agg(encode(f, 'escape'))) FROM unnest(\"$key\") AS f) as \"$key\"", $sql);
+                } else {
+                    $sql = str_replace("\"$key\"", "encode(\"" . $key . "\",'escape') as \"$key\"", $sql);
+                }
             }
         }
         $sql .= " FROM " . $this->doubleQuoteQualifiedName($this->table) . " WHERE " . $this->primaryKey['attname'] . "=:pkey";
@@ -1245,7 +1249,11 @@ class Table extends Model
         $sql = "SELECT " . implode(",", $fieldsArr);
         foreach ($this->metaData as $key => $arr) {
             if ($arr['type'] == "bytea") {
-                $sql = str_replace("\"$key\"", "encode(\"" . $key . "\",'escape') as " . $key, $sql);
+                if ($arr['is_array']) {
+                    $sql = str_replace("\"$key\"", "(SELECT array_to_json(array_agg(encode(f, 'escape'))) FROM unnest(\"$key\") AS f) as \"$key\"", $sql);
+                } else {
+                    $sql = str_replace("\"$key\"", "encode(\"" . $key . "\",'escape') as \"$key\"", $sql);
+                }
             }
         }
         $sql .= " FROM " . $this->doubleQuoteQualifiedName($this->table) . " LIMIT 1";

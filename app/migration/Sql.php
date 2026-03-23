@@ -62,6 +62,7 @@ class Sql
                     )";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN elasticsearch TEXT";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN uuid UUID NOT NULL DEFAULT uuid_generate_v4()";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER COLUMN uuid set DEFAULT gen_random_uuid()";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN tags JSON";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN meta JSON";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN wmsclientepsgs TEXT";
@@ -97,6 +98,7 @@ class Sql
                       created   TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE,
                       CONSTRAINT name_unique UNIQUE (name)
                     )";
+        $sqls[] = "ALTER TABLE settings.prepared_statements ALTER COLUMN uuid set DEFAULT gen_random_uuid()";
         $sqls[] = "ALTER TABLE settings.qgis_files ADD COLUMN old BOOLEAN DEFAULT FALSE";
         $sqls[] = "CREATE TABLE settings.seed_jobs
                     (
@@ -106,6 +108,7 @@ class Sql
                       host      CHARACTER VARYING(255)    NOT NULL,
                       created   TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE
                     )";
+        $sqls[] = "ALTER TABLE settings.seed_jobs ALTER COLUMN uuid set DEFAULT gen_random_uuid()";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN legend_url VARCHAR(255)";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER roles TYPE JSONB USING roles::jsonb";
         $sqls[] = "CREATE TABLE settings.geofence

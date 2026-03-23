@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2024 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -99,7 +99,20 @@ class Sql extends Model
      * @throws GC2Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
-    public function sql(string $q, ?string $clientEncoding = null, ?string $format = "geojson", ?string $geoformat = "wkt", ?bool $csvAllToStr = false, ?string $aliasesFrom = null, ?string $nlt = null, ?string $nln = null, ?bool $convertTypes = false, ?array $parameters = null, ?array $typeHints = null, ?array $typeFormats = null): array
+    public function sql(
+        string $q,
+        ?string $clientEncoding = null,
+        ?string $format = "geojson",
+        ?string $geoformat = "wkt",
+        bool $csvAllToStr = false,
+        ?string $aliasesFrom = null,
+        ?string $nlt = null,
+        ?string $nln = null,
+        bool $convertTypes = false,
+        ?array $parameters = null,
+        ?array $typeHints = null,
+        ?array $typeFormats = null
+    ): array
     {
         // Check params
         if (is_array($parameters) && !array_is_list($parameters)) {
@@ -231,7 +244,17 @@ class Sql extends Model
                     $rowValue = App::$param['host'] . "/api/v1/decodeimg/" . $this->postgisdb . "/" . str_replace('"', '', $rel) . "/" . $key . "/";
                     $fieldsArr[] = "'$rowValue'||$priKeyName||'?mimetype='||SPLIT_PART(SPLIT_PART(encode(substring(\"$key\" from 0 for 100),'escape'),';',1),':',2) as \"$key\"";
                 } else {
+//                    $fieldsArr[] = "\"$key\"";
                     $fieldsArr[] = "encode(\"$key\",'escape') as \"$key\"";
+                }
+            } elseif ($type == "_bytea") {
+                if (!empty(App::$param['convertDataUrlsToHttp']) && $rel) {
+                    // Convert data URLs to HTTP. Read the first bytes to get the mimetype.
+                    $priKeyName = $this->getPrimeryKey($rel)['attname'];
+                    $rowValue = App::$param['host'] . "/api/v1/decodeimg/" . $this->postgisdb . "/" . str_replace('"', '', $rel) . "/" . $key . "/";
+                    $fieldsArr[] = "(SELECT (array_agg('$rowValue' || $priKeyName || '/' || (i - 1) || '?mimetype=' || SPLIT_PART(SPLIT_PART(encode(substring(f from 0 for 100), 'escape'), ';', 1), ':', 2))) FROM unnest(\"$key\") WITH ORDINALITY AS t(f, i)) as \"$key\"";
+                } else {
+                    $fieldsArr[] = "\"$key\"";
                 }
             } else {
                 $fieldsArr[] = "\"$key\"";
@@ -245,9 +268,6 @@ class Sql extends Model
         }
         $this->execQuery("SET LOCAL statement_timeout = " . (App::$param["SqlApiSettings"]["statement_timeout"] ?? "60000"));
         $this->execQuery("SET LOCAL idle_in_transaction_session_timeout = 300000");
-        if ($clientEncoding) {
-            $this->execQuery("set client_encoding='$clientEncoding'");
-        }
         if ($clientEncoding) {
             $this->execQuery("set client_encoding='$clientEncoding'");
         }
@@ -271,7 +291,7 @@ class Sql extends Model
                 $arr = [];
                 foreach ($row as $key => $rowValue) {
                     $nativePgType = $columnTypes[$key];
-                    if ($nativePgType == "geometry" && $rowValue !== null) {
+                    if (($nativePgType == "geometry" || $nativePgType == "json" || $nativePgType == "jsonb") && $rowValue !== null) {
                         $rowValue = json_decode($rowValue);
                     } else {
                         if ($convertTypes) {
@@ -315,6 +335,8 @@ class Sql extends Model
                     $nativePgType = $columnTypes[$key];
                     if ($nativePgType == "geometry" && $rowValue !== null) {
                         $geometries[] = json_decode($rowValue);
+                    } elseif (($nativePgType == "json" || $nativePgType == "jsonb") && $rowValue !== null) {
+                        $arr = $this->array_push_assoc($arr, $key, json_decode($rowValue));
                     } else {
                         if ($convertTypes) {
                             try {
@@ -363,7 +385,7 @@ class Sql extends Model
                 foreach ($row as $key => $value) {
                     if ($columnTypes[$key] == "geometry" && $value !== null) {
                         $geometries[] = json_decode($value);
-                    } elseif ($columnTypes[$key] == "json" || $columnTypes[$key] == "jsonb" && $value !== null) {
+                    } elseif (($columnTypes[$key] == "json" || $columnTypes[$key] == "jsonb") && $value !== null) {
                         $arr = $this->array_push_assoc($arr, $key, json_decode($value));
                     } else {
                         $arr = $this->array_push_assoc($arr, $key, $value);
@@ -775,6 +797,9 @@ class Sql extends Model
                 if (in_array($nativeType, ['daterange[]', 'tsrange[]', 'tstzrange[]'])) {
                     $value = self::processArray($value, fn($i, $format) => $this->convertDateTimeRange($i, $format), $format);
                 }
+                if ($nativeType == 'bytea[]' || $nativeType == '_bytea') {
+                    $value = self::processArray($value, fn($i) => base64_decode($i), $format);
+                }
                 if ($nativeType == 'interval') {
                     $value = $this->convertInterval($value);
                 }
@@ -868,6 +893,12 @@ class Sql extends Model
             $tmp['lowerInclusive'] = $value->lowerInclusive;
             $tmp['upperInclusive'] = $value->upperInclusive;
             $value = $tmp;
+        }
+        if (is_resource($value)) {
+            $value = base64_encode(stream_get_contents($value));
+        }
+        if (is_string($value) && !mb_check_encoding($value, 'UTF-8')) {
+            $value = base64_encode($value);
         }
         return $value;
     }

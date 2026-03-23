@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.3.9] - 2026-23-3
+### Fixed
+- Handle empty legend class values by setting properties (`img`, `name`, `expression`) to null to avoid errors.
+- Inner boundary handling in WFS-T to correctly process polygons with multiple rings.
+
+## [2026.3.8] - 2026-18-3
+### Changed
+- Feature API does not anymore url decode properties, and the Editor in Vidi does not url encode properties anymore.
+  Transport is changed to application/json from application/x-www-form-urlencoded, so both Vidi and GC2 must be upgraded to the latest version.
+
+## [2026.3.6] - 2026-16-3
+### Changed
+- Update default UUID generation to use the Postgres builtin `gen_random_uuid()` instead of `uuid_generate_v4()` from the uuid-ossp extension. Run migrations to update existing UUID columns to use the new default.
+
+## [2026.3.5] - 2026-13-3
+### Fixed
+- v2 API SQL with file output format failed because app/models/Sql.php didn't exit any longer, resulting in output after flushing the file.
+  Exit is moved to app/api/v2/Sql.php. This is not an issue in v4 APIs, which are not allowed to exit due to the need for running in worker mode.
+
+## [2026.3.4] - 2026-13-3
+### Fixed
+- Fix sub-user privilege check in Layer::getAll by correctly handling `jwt['superUser']` fallback logic.
+
 ## [2026.3.3] - 2026-11-3
 ### Changed
 - SqlNoToken class added for more robust handling of SQL API calls without a token.

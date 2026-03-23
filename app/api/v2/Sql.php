@@ -313,7 +313,21 @@ class Sql extends Controller
                 $this->cacheInfo["signature"] = md5(serialize($this->data));
             } else {
                 ob_start();
-                $this->response = $this->api->sql($this->q, $clientEncoding, Input::get('format') ?: "geojson", Input::get('geoformat') ?: null, Input::get('allstr') ?: null, Input::get('alias') ?: null, null, null, Input::get('convert_types') ?: null, Input::get('params') ?: null, $typeHints, $typeFormats);
+                $this->response = $this->api->sql(
+                    q: $this->q,
+                    clientEncoding: $clientEncoding,
+                    format: Input::get('format') ?: "geojson",
+                    geoformat: Input::get('geoformat') ?: null,
+                    csvAllToStr: Input::get('allstr') ?: false,
+                    aliasesFrom: Input::get('alias') ?: null,
+                    convertTypes: Input::get('convert_types') ?: false,
+                    parameters: Input::get('params') ?: null,
+                    typeHints: $typeHints,
+                    typeFormats: $typeFormats
+                );
+                if (empty($this->response)) {
+                    exit();
+                }
                 $response["statement"] = $this->q;
                 $this->addAttr($response);
                 echo serialize($this->response);

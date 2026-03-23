@@ -54,9 +54,7 @@ class SqlNoToken extends AbstractApi
     {
         $db = $this->route->getParam('database');
         $this->connection->database = $db;
-        $defaultUser = new \app\models\User(
-            parentDb: $db
-        )->getDefaultUser();
+        $defaultUser = new \app\models\User(parentDb: $db)->getDefaultUser();
         $this->route->jwt['data']['superUser'] = false;
         $this->route->jwt['data']['uid'] = $defaultUser['screenname'];
         $this->route->jwt['data']['userGroup'] = $defaultUser['usergroup'];

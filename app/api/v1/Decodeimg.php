@@ -48,6 +48,11 @@ class Decodeimg extends Controller
     {
         $record = $this->table->getRecordByPri(Input::getPath()->part(7))["data"];
         $dataUri = $record[Input::getPath()->part(6)];
+        $index = Input::getPath()->part(8); // if array
+        if ( $index !== null) {
+            $dataUri = json_decode($dataUri);
+            $dataUri = $dataUri[$index] ?? null;
+        }
         if (!$dataUri) {
             header("HTTP/1.0 404 " . Util::httpCodeText("404"));
             exit();

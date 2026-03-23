@@ -18,6 +18,7 @@ use Amp\Websocket\Server\WebsocketGateway;
 use Amp\Websocket\WebsocketClient;
 use Amp\Websocket\WebsocketClosedException;
 use app\event\tasks\AuthTask;
+use app\event\tasks\RunGraphQLTask;
 use app\event\tasks\RunQueryTask;
 use app\event\tasks\RunRpcTask;
 use app\event\tasks\ValidateTokenTask;
@@ -27,7 +28,7 @@ use Throwable;
 use function Amp\Parallel\Worker\workerPool;
 
 
-readonly class WsBroadcast implements WebsocketClientHandler
+class WsBroadcast implements WebsocketClientHandler
 {
     private SplObjectStorage $clientProperties;
     public WorkerPool $workerPool;
@@ -72,7 +73,7 @@ readonly class WsBroadcast implements WebsocketClientHandler
                 }
                 $this->gateway->addClient($client);
                 $db = $parsed['database'];
-                $this->clientProperties->attach($client, [
+                $this->clientProperties->offsetSet($client, [
                     'joinedAt' => time(),
                     'db' => $parsed['database'],
                     'user' => $parsed['uid'],
@@ -122,23 +123,37 @@ readonly class WsBroadcast implements WebsocketClientHandler
                 if (!array_is_list($parsed)) {
                     $parsed = [$parsed];
                 }
+                $r = null;
                 if (isset($parsed[0]['q'])) {
                     $r = $this->sql($parsed, $props);
                 }
                 if (isset($parsed[0]['jsonrpc'])) {
                     $r = $this->rpc($parsed, $props);
                 }
-                $result = array_values(array_filter($r->await()));
-                if (count($result) == 1) {
-                    $result = $result[0];
+
+                if (isset($parsed[0]['test'])) {
+                    $r = $this->gql($parsed, $props);
                 }
-                if (!empty($result)) {
-                    $this->sendToClient($client, json_encode($result));
+
+                if (isset($parsed[0]['rel'])) {
+                    $data = $this->clientProperties[$client];
+                    $data['rels'] = [$parsed[0]['rel']];
+                    $this->clientProperties[$client] = $data;
+                }
+                if ($r) {
+                    $result = array_values(array_filter($r->await()));
+                    if (count($result) == 1) {
+                        $result = $result[0];
+                    }
+                    if (!empty($result)) {
+                        $this->sendToClient($client, json_encode($result));
+                    }
                 }
             } catch (Throwable $e) {
                 echo "[ERROR] " . $e->getMessage() . "\n";
             }
         }
+        $this->clientProperties->detach($client);
     }
 
     public function sendToAll(string $text): void
@@ -167,8 +182,19 @@ readonly class WsBroadcast implements WebsocketClientHandler
         return $this->workerPool->getWorker()->submit($task);
     }
 
+    private function gql(array $query, string $schema, ?array $props): Execution
+    {
+        $task = new RunGraphQLTask($query, $schema, $props);
+        return $this->workerPool->getWorker()->submit($task);
+    }
+
     public function getProperties(WebsocketClient $client): array
     {
         return $this->clientProperties[$client];
+    }
+
+    public function setProperties(WebsocketClient $client, array $props): void
+    {
+        $this->clientProperties[$client] = $props;
     }
 }
