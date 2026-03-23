@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED] - 2026-20-3
+## [2026.3.9] - 2026-23-3
 ### Fixed
 - Handle empty legend class values by setting properties (`img`, `name`, `expression`) to null to avoid errors.
 - Inner boundary handling in WFS-T to correctly process polygons with multiple rings.
