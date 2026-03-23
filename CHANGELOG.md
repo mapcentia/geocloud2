@@ -8,6 +8,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [UNRELEASED] - 2026-20-3
 ### Fixed
 - Handle empty legend class values by setting properties (`img`, `name`, `expression`) to null to avoid errors.
+- Inner boundary handling in WFS-T to correctly process polygons with multiple rings.
 
 ## [2026.3.8] - 2026-18-3
 ### Changed
