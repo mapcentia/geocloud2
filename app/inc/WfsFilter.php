@@ -207,10 +207,10 @@ final class WfsFilter
                     }
                     $str .= ")";
                     $inner = $value["gml:innerBoundaryIs"] ?? $value["gml:interior"] ?? null;
-                    if (isset($inner)) {
-                        $inner = self::addDimensionOnArray($inner);
-                    }
-                    if (isset($inner[0]["gml:LinearRing"])) {
+                    if ($inner) {
+                        if (count($inner) == 1) {
+                            $inner = self::addDimensionOnArray($inner);
+                        }
                         foreach ($inner as $linearRing) {
                             $v = $linearRing["gml:LinearRing"];
                             if (isset($v["gml:coordinates"]) && is_array($v["gml:coordinates"])) {
