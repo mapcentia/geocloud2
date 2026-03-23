@@ -364,6 +364,7 @@ class Session extends Model
             $row['parentdb'] = $jwt["superUser"] ? null : $jwt['database']; // Important: Nullify parentdb for superusers
             $row['email'] = $jwt['email'];
             $row['usergroup'] = $jwt['userGroup'];
+            $row['properties'] = json_encode($jwt['properties']);
         }
         // Login successful.
         self::setSessionVars($row, $schema);
