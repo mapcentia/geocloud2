@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
 ## [UNRELEASED] - 2026-23-3
+### Changed
+- Throw exception for unauthorized database access in `Layer` model.
+
 ### Fixed
 - Stop session on error handling in OAuth2 authentication flow.
 
