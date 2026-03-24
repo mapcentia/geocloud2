@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED] - 2026-23-3
+### Fixed
+- Stop session on error handling in OAuth2 authentication flow.
+
 ## [2026.3.10] - 2026-23-3
 ### Fixed
 - Add JSON encoding for `properties` in session data initialization by token.
