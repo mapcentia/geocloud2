@@ -120,8 +120,8 @@ class Layer extends Table
     {
         // If user is signed in with another user than the requested,
         // when consider the user as not signed in.
-        if ($db != Session::getUser()) {
-            //$auth = null;
+        if ($db != Session::getDatabase()) {
+            throw new GC2Exception("User is not authorized to access this database", 400, null, "USER_NOT_AUTHORIZED");
         }
 
         $cacheType = "meta";
