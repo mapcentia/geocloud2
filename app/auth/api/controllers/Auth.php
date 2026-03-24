@@ -104,7 +104,6 @@ class Auth extends AbstractApi
                 return $this->emptyResponse();
             } else {
                 return $this->redirectResponse("$redirectUri$separator$paramsStr");
-
             }
         } else {
             if ($_GET['parentdb']) {
@@ -150,10 +149,11 @@ class Auth extends AbstractApi
 
     private function error(string $error, string $errorDesc): Response
     {
-            echo "[$error] $errorDesc";
+        echo "[$error] $errorDesc";
 //                $paramsStr = http_build_query(['error' => $error, 'error_description' => $errorDesc]);
 //                $header = "Location: $redirectUri$separator$paramsStr";
 //                header($header);
+        new SessionModel()->stop();
         return $this->emptyResponse();
     }
 
