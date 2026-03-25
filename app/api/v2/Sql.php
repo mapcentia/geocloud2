@@ -228,9 +228,14 @@ class Sql extends Controller
 
     /**
      * @param string|null $clientEncoding
+     * @param array|null $typeHints
+     * @param bool $convertReturning
+     * @param array|null $typeFormats
      * @return string
-     * @throws PhpfastcacheInvalidArgumentException
-     * @throws Exception
+     * @throws GC2Exception
+     * @throws InvalidArgumentException
+     * @throws \PhpOffice\PhpSpreadsheet\Reader\Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
     private function transaction(?string $clientEncoding = null, ?array $typeHints = null, bool $convertReturning = true, ?array $typeFormats = null): string
     {
