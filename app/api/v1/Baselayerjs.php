@@ -65,10 +65,10 @@ class Baselayerjs extends Controller
             }
 
             if ($overallSettings['gc2Al']) {
-                echo "window.gc2Al='" . $overallSettings['gc2Al'] . "'\n";
+                echo "window.gc2Al='" . $overallSettings['gc2Al'] . "';\n";
             }
             if ($overallSettings['host']) {
-                echo "window.host='" . $overallSettings['host'] . "'\n";
+                echo "window.host='" . $overallSettings['host'] . "';\n";
             }
         }
 

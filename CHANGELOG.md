@@ -8,11 +8,11 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [UNRELEASED] - 2026-23-3
 ### Changed
 - Throw an exception for unauthorized database access in Meta v1 API. 
-  If user is not authorized to access the database, a exception with code 401 and message "USER_NOT_AUTHORIZED" is thrown.
+  If a user is not authorized to access the database, an exception with code 401 and the message "USER_NOT_AUTHORIZED" is thrown.
   Anonymous access is still possible. 
 
 ### Fixed
-- Stop session on error handling in OAuth2 authentication flow.
+- Stop the session on error handling in OAuth2 authentication flow.
 
 ## [2026.3.10] - 2026-23-3
 ### Fixed
