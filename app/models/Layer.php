@@ -112,6 +112,7 @@ class Layer extends Table
      * @param bool|null $parse
      * @param bool|null $es
      * @param bool|null $lookupForeignTables
+     * @param array|null $jwt
      * @return array
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
@@ -120,7 +121,7 @@ class Layer extends Table
     {
         // If user is signed in with another user than the requested,
         // when consider the user as not signed in.
-        if ($auth && $db != Session::getDatabase()) {
+        if ($auth && (Session::isAuth() && $db != Session::getDatabase())) {
             throw new GC2Exception("User is not authorized to access this database", 401, null, "USER_NOT_AUTHORIZED");
         }
 
