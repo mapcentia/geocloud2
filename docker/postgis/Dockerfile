@@ -1,20 +1,30 @@
-FROM debian:bookworm-slim
-MAINTAINER Martin Høgh<mh@mapcentia.com>
+ARG PHP_VERSION=8.4
+ARG POSTGRES_VERSION=15
 
-RUN  export DEBIAN_FRONTEND=noninteractive
-ENV  DEBIAN_FRONTEND noninteractive
+FROM debian:bookworm-slim
+LABEL maintainer="Martin Høgh <mh@mapcentia.com>"
+
+RUN export DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
+ARG PHP_VERSION
+ENV PHP_VERSION=${PHP_VERSION}
+ARG POSTGRES_VERSION
+ENV POSTGRES_VERSION=${POSTGRES_VERSION}
 
 RUN apt-get -y update
 RUN apt-get -y install wget gnupg2
 
 # Add PHP8 repo
-RUN echo "deb https://packages.sury.org/php/ bookworm main" |  tee /etc/apt/sources.list.d/sury-php.list
-RUN wget -qO - https://packages.sury.org/php/apt.gpg | apt-key add -
-RUN apt-get -y update
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends wget gnupg; \
+    wget -qO /usr/share/keyrings/sury-php.gpg https://packages.sury.org/php/apt.gpg; \
+    echo "deb [signed-by=/usr/share/keyrings/sury-php.gpg] https://packages.sury.org/php/ bookworm main" > /etc/apt/sources.list.d/sury-php.list; \
+    apt-get update
 
 # Install packages
-RUN apt-get -y install vim git php8.3-pgsql php8.3-cli curl \
-    postgis postgresql-15-postgis-3 postgresql-15-pgrouting postgresql-15-ogr-fdw pgagent tdsodbc postgresql-server-dev-15 libsybdb5 freetds-dev freetds-common gnupg gcc make \
+RUN apt-get -y install vim git php${PHP_VERSION}-pgsql php${PHP_VERSION}-cli curl \
+    postgis postgresql-${POSTGRES_VERSION}-postgis-3 postgresql-${POSTGRES_VERSION}-pgrouting postgresql-${POSTGRES_VERSION}-ogr-fdw pgagent tdsodbc postgresql-server-dev-${POSTGRES_VERSION} libsybdb5 freetds-dev freetds-common gnupg gcc make \
     pgbouncer locales-all osm2pgsql supervisor \
     osm2pgsql unixodbc
 
@@ -42,7 +52,7 @@ RUN mkdir /var/www &&\
 	git clone https://github.com/mapcentia/geocloud2.git
 
 # Add config files from Docker repo
-COPY conf/postgresql/pg_hba.conf /etc/postgresql/15/main/
+COPY conf/postgresql/pg_hba.conf /etc/postgresql/${POSTGRES_VERSION}/main/
 COPY conf/gc2/geometry_columns_join.sql /var/www/geocloud2/public/install/
 COPY conf/tds_fdw/locales.conf /etc/freetds/locales.conf
 
@@ -51,7 +61,7 @@ COPY conf/gc2/App.php /var/www/geocloud2/app/conf/App.php
 COPY conf/gc2/Connection.php /var/www/geocloud2/app/conf/Connection.php
 
 # Make config in PostGreSQL
-RUN echo "listen_addresses='*'" >> /etc/postgresql/15/main/postgresql.conf
+RUN echo "listen_addresses='*'" >> /etc/postgresql/${POSTGRES_VERSION}/main/postgresql.conf
 
 # Expose standard for PostGreSQL and pgboucer
 EXPOSE 5432 6432
