@@ -36,15 +36,41 @@ final class ClaimAcl
     {
         $matches = $this->collectMatches($claims);
 
-        $bestRead = $this->pickBest($matches, $table, '__read');
-        $bestWrite = $this->pickBest($matches, $table, '__write');
+        // Find the single governing rule: highest table specificity, then claim specificity.
+        // An exact table match beats schema.*, which beats *.
+        $candidates = [];
+        foreach ($matches as $m) {
+            $tableSpec = $this->tableMatchSpecificity($table, $m['rules']);
+            if ($tableSpec < 0) continue;
+            $m['tableSpecificity'] = $tableSpec;
+            $candidates[] = $m;
+        }
 
-        $writeAllowed = $bestWrite !== null;
-        $readAllowed = $writeAllowed || ($bestRead !== null);
+        if (empty($candidates)) {
+            return ['read' => false, 'write' => false, 'matched' => []];
+        }
+
+        usort($candidates, function ($a, $b) {
+            $cmp = $b['tableSpecificity'] <=> $a['tableSpecificity'];
+            if ($cmp !== 0) return $cmp;
+            $cmp = $b['specificity'] <=> $a['specificity'];
+            if ($cmp !== 0) return $cmp;
+            return strcmp($a['claimPath'], $b['claimPath']);
+        });
+
+        // Keep only candidates at the highest table specificity level
+        $bestTableSpec = $candidates[0]['tableSpecificity'];
+        $topCandidates = array_values(array_filter($candidates, fn($c) => $c['tableSpecificity'] === $bestTableSpec));
+
+        $winner = $topCandidates[0];
+
+        $readAllowed = $this->tableInList($table, $winner['rules']['__read'] ?? []);
+        $writeAllowed = $this->tableInList($table, $winner['rules']['__write'] ?? []);
+        $readAllowed = $readAllowed || $writeAllowed;
 
         $matched = array_values(array_filter([
-            'read' => $bestRead,
-            'write' => $bestWrite,
+            'read' => $readAllowed ? $winner : null,
+            'write' => $writeAllowed ? $winner : null,
         ]));
 
         return [
@@ -81,29 +107,49 @@ final class ClaimAcl
 
             $claimKey = $segs[0];
             $matcher = $segs[1];
-            $resourceSegs = array_slice($segs, 2); // hvis du vil bruge det senere
+            $resourceSegs = array_slice($segs, 2);
 
             // Claim match: array-contains, scalar equals, '*' wildcard
             if (!$this->claimMatches($claims, $claimKey, $matcher)) {
                 continue;
             }
 
-
             $out[] = [
                 'claimPath' => $key,
-                'specificity' => count($resourceSegs), // eller count($segs) hvis du vil vægte claimKey/matcher også
+                'specificity' => count($resourceSegs),
                 'rules' => $rules,
+                'claimGroup' => $claimKey . '->' . $matcher,
             ];
         }
+
         if (count($out) == 0) {
             $out[] = [
                 'claimPath' => '__default',
-                'specificity' => 0, // eller count($segs) hvis du vil vægte claimKey/matcher også
+                'specificity' => 0,
                 'rules' => $this->defaultRules,
+                'claimGroup' => '__default',
             ];
+            return $out;
         }
 
-        return $out;
+        // Per (claimKey, matcher) group, keep only matches with the highest specificity.
+        // E.g. "groups->A->B" (spec 1) supersedes "groups->A" (spec 0).
+        $groups = [];
+        foreach ($out as $m) {
+            $groups[$m['claimGroup']][] = $m;
+        }
+
+        $filtered = [];
+        foreach ($groups as $members) {
+            $maxSpec = max(array_column($members, 'specificity'));
+            foreach ($members as $m) {
+                if ($m['specificity'] === $maxSpec) {
+                    $filtered[] = $m;
+                }
+            }
+        }
+
+        return $filtered;
     }
 
 
@@ -140,6 +186,34 @@ final class ClaimAcl
         });
 
         return $candidates[0];
+    }
+
+    /**
+     * Compute the best table match specificity across all ops in a rule.
+     * Returns: 2 = exact match, 1 = schema.* match, 0 = * wildcard, -1 = no match.
+     */
+    private function tableMatchSpecificity(string $table, array $rules): int
+    {
+        $maxSpec = -1;
+        foreach (['__read', '__write'] as $op) {
+            $list = $rules[$op] ?? [];
+            if (!is_array($list)) continue;
+
+            if (in_array($table, $list, true)) {
+                return 2; // exact match, can't do better
+            }
+
+            [$schema,] = array_pad(explode('.', $table, 2), 2, null);
+            if ($schema !== null && in_array($schema . '.*', $list, true)) {
+                $maxSpec = max($maxSpec, 1);
+                continue;
+            }
+
+            if (in_array('*', $list, true)) {
+                $maxSpec = max($maxSpec, 0);
+            }
+        }
+        return $maxSpec;
     }
 
     private function tableInList(string $table, array $list): bool

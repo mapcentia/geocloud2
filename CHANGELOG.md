@@ -12,6 +12,7 @@ and this project adheres to [CalVer](https://calver.org/).
   Anonymous access is still possible. 
 
 ### Fixed
+- Fix `ClaimAcl` rule prioritization to ensure specific table matches override wildcard matches for both read and write permissions.
 - Stop the session on error handling in OAuth2 authentication flow.
 
 ## [2026.3.10] - 2026-23-3
