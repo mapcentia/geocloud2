@@ -9,17 +9,20 @@
 namespace app\inc;
 
 
-final readonly class ClaimAcl
+final class ClaimAcl
 {
+    private array $defaultRules = [
+        '__membership' => [],
+        '__read' => [],
+        '__write' => [],
+    ];
     public function __construct(
-        private array $customMap,
-        private array $defaultRules = [
-            '__membership' => [],
-            '__read' => [],
-            '__write' => [],
-        ]
+        private readonly array $customMap
     )
     {
+        if (isset($this->customMap['__default'])) {
+            $this->defaultRules = $this->customMap['__default'];
+        }
     }
 
     /**
@@ -85,12 +88,18 @@ final readonly class ClaimAcl
                 continue;
             }
 
-            $rules = array_merge($this->defaultRules, is_array($rules) ? $rules : []);
 
             $out[] = [
                 'claimPath' => $key,
                 'specificity' => count($resourceSegs), // eller count($segs) hvis du vil vægte claimKey/matcher også
                 'rules' => $rules,
+            ];
+        }
+        if (count($out) == 0) {
+            $out[] = [
+                'claimPath' => '__default',
+                'specificity' => 0, // eller count($segs) hvis du vil vægte claimKey/matcher også
+                'rules' => $this->defaultRules,
             ];
         }
 
