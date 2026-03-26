@@ -16,11 +16,12 @@ ENV PHP_VERSION=${PHP_VERSION}
 RUN apt-get -y  update && apt-get -y install wget gnupg2 && rm -rf /var/lib/apt/lists/*
 
 # Add PHP8 repo
-RUN echo "deb https://packages.sury.org/php/ bookworm main" \
-    | tee /etc/apt/sources.list.d/sury-php.list \
-    && wget -qO - https://packages.sury.org/php/apt.gpg \
-    | apt-key add - \
-    && apt-get update && apt-get install -y \
+RUN set -eux; \
+    apt-get install -y --no-install-recommends wget gnupg; \
+    wget -qO /usr/share/keyrings/sury-php.gpg https://packages.sury.org/php/apt.gpg; \
+    echo "deb [signed-by=/usr/share/keyrings/sury-php.gpg] https://packages.sury.org/php/ bookworm main" > /etc/apt/sources.list.d/sury-php.list; \
+    apt-get update && \
+    apt-get install -y \
     cron vim g++ build-essential git unzip rng-tools \
     apache2-utils postgresql-client supervisor \
     apache2 apache2-dev \
