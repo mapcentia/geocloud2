@@ -37,28 +37,21 @@ class Baselayerjs extends Controller
 
         $settingsRawJSON = '';
         $settingsRawJSON .= "{";
-        $settingsRawJSON .= "\"leafletDraw\": " . (!empty(App::$param['leafletDraw']) ? "true" : "false") . ",\n";
         $settingsRawJSON .= "\"reverseLayerOrder\": " . (!empty(App::$param['reverseLayerOrder']) ? "true" : "false") . ",\n";
-
         $settingsRawJSON .= "\"epsg\": \"" . (!empty(App::$param['epsg']) ? App::$param['epsg'] : "4326") . "\",\n";
         $settingsRawJSON .= "\"extraShareFields\": " . (!empty(App::$param['extraShareFields']) ? "true" : "false") . ",\n";
-        $settingsRawJSON .= "\"showDownloadOtionsInHeron\": " . ((App::$param['showDownloadOtionsInHeron']) ? "true" : "false") . ",\n";
         $settingsRawJSON .= "\"disableDatabaseCreation\": " . (!empty(App::$param['disableDatabaseCreation']) ? "true" : "false") . ",\n";
         $settingsRawJSON .= "\"esIndexingInGui\": " . (!empty(App::$param['esIndexingInGui']) ? "true" : "false") . ",\n";
         $settingsRawJSON .= "\"hideUngroupedLayers\": " . (!empty(App::$param['hideUngroupedLayers']) ? "true" : "false") . ",\n";
-        $settingsRawJSON .= "\"staticMapHost\": \"" . (!empty(App::$param['staticMapHost']) ? App::$param['staticMapHost'] : App::$param['host']) . "\",\n";
-        $settingsRawJSON .= "\"geoserverHost\": \"" . (!empty(App::$param['geoserverHost']) ? App::$param['geoserverHost'] : App::$param['host']) . "\",\n";
+        $settingsRawJSON .= "\"host\": \"" . (!empty(App::$param['host']) ? App::$param['host'] : "null") . "\",\n";
         $settingsRawJSON .= "\"encoding\": \"" . (!empty(App::$param['encoding']) ? App::$param['encoding'] : "UTF8") . "\",\n";
-        $settingsRawJSON .= "\"osmConfig\": " . (!empty(App::$param['osmConfig']) ? json_encode(App::$param['osmConfig']) : "null") . ",\n";
         $settingsRawJSON .= "\"customPrintParams\": " . (!empty(App::$param['customPrintParams']) ? json_encode(App::$param['customPrintParams']) : "null") . ",\n";
         $settingsRawJSON .= "\"gc2scheduler\": " . (!empty(App::$param['gc2scheduler']) ? json_encode(App::$param['gc2scheduler']) : "null") . ",\n";
         $settingsRawJSON .= "\"mergeSchemata\": " . (!empty(App::$param['mergeSchemata']) ? json_encode(App::$param['mergeSchemata']) : "null") . ",\n";
         $settingsRawJSON .= "\"showConflictOptions\": " . (!empty(App::$param['showConflictOptions']) ? json_encode(App::$param['showConflictOptions']) : "null") . ",\n";
         $settingsRawJSON .= "\"showExtraLayerProperty\": " . (!empty(App::$param['showExtraLayerProperty']) ? json_encode(App::$param['showExtraLayerProperty']) : "null") . ",\n";
         $settingsRawJSON .= "\"extraLayerPropertyName\": " . (!empty(App::$param['extraLayerPropertyName']) ? json_encode(App::$param['extraLayerPropertyName']) : "null") . ",\n";
-        $settingsRawJSON .= "\"clientConfig\": " . (!empty(App::$param['clientConfig']) ? json_encode(App::$param['clientConfig']) : "null") . ",\n";
         $settingsRawJSON .= "\"metaConfig\": " . json_encode($metaConfig) . ",\n";
-        $settingsRawJSON .= "\"enablePrint\": " . (!empty(App::$param['enablePrint']) ? json_encode(App::$param['enablePrint']) : "null") . ",\n";
         $settingsRawJSON .= "\"enableWorkflow\": " . (!empty(App::$param['enableWorkflow']) ? json_encode(App::$param['enableWorkflow']) : "null") . ",\n";
         $settingsRawJSON .= "\"hereApp\": " . (!empty(App::$param['hereApp']) ? json_encode(App::$param['hereApp']) : "null") . ",\n";
         $settingsRawJSON .= "\"vidiUrl\": " . (!empty(App::$param['vidiUrl']) ? json_encode(App::$param['vidiUrl'], JSON_UNESCAPED_SLASHES) : "null") . ",\n";
