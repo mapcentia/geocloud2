@@ -40,7 +40,7 @@ use Override;
  */
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
-    schema: "File",
+    schema: "FileProcessRequest",
     description: "Upload files to temporary storage and then import them into database tables.",
     required: ["file", "schema"],
     properties: [
@@ -120,6 +120,64 @@ use Override;
             type: "string",
             default: "lat*,Lat*,y,Y",
             example: "Lat*",
+        ),
+    ],
+    type: "object"
+)]
+#[OA\Schema(
+    schema: "FileProcessResponse",
+    description: "Upload files to temporary storage and then import them into database tables.",
+    required: ["file", "schema"],
+    properties: [
+        new OA\Property(
+            property: "driver",
+            title: "Driver",
+            description: "Driver name.",
+            type: "string",
+        ),
+        new OA\Property(
+            property: "count",
+            title: "Count",
+            description: "Count of rows.",
+            type: "integer",
+        ),
+        new OA\Property(
+            property: "geom_type",
+            title: "Geometry type",
+            description: "Type of geometry if PostGIS table is created.",
+            type: "string",
+            example: "Multipolygon",
+        ),
+        new OA\Property(
+            property: "index",
+            title: "Index",
+            description: "Index of multi layered geometry files like GML and GeoPackage",
+            type: "integer",
+        ),
+        new OA\Property(
+            property: "name",
+            title: "Name",
+            description: "Name of created table.",
+            type: "string",
+        ),
+        new OA\Property(
+            property: "has_wkt",
+            title: "Has WKT",
+            description: "If file has WKT projection information.",
+            type: "boolean"
+        ),
+        new OA\Property(
+            property: "auth_str",
+            title: "Authority string",
+            description: "EPSG Authority string.",
+            type: "string",
+            example: "EPSG:25832",
+        ),
+        new OA\Property(
+            property: "error",
+            title: "Error",
+            description: "Error message.",
+            type: "string",
         ),
     ],
     type: "object"
@@ -232,8 +290,8 @@ class File extends AbstractApi
      * @throws Exception
      */
     #[OA\Post(path: '/api/v4/file/process', operationId: 'postFileProcess', description: 'Import a staged file into a target schema/table. Supports dry-run, append, SRS, and more.', tags: ['File'])]
-    #[OA\RequestBody(description: 'Import options and target information.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/File"))]
-    #[OA\Response(response: 201, description: 'Created')]
+    #[OA\RequestBody(description: 'Import options and target information.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/FileProcessRequest"))]
+    #[OA\Response(response: 200, description: 'Files processed.', content: new OA\JsonContent(type: "array", items: new OA\Items(ref: "#/components/schemas/FileProcessResponse")))]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     public function post_process(): Response
@@ -252,10 +310,19 @@ class File extends AbstractApi
                 $data->import = true;
             }
             $result = $this->import($schema, $fileName, $data);
-            (new Layer(connection: $this->connection))->insertDefaultMeta();
-            $response['cmd'] = $result['cmd'];
-            $response['data'] = $result['data'];
-            $response["success"] = true;
+            new Layer(connection: $this->connection)->insertDefaultMeta();
+            $response = [];
+            foreach ($result['data'] as $k => $v) {
+                $r['driver'] = $v['driver'];
+                $r['count'] = $v['featureCount'];
+                $r['geom_type'] = $v['type'];
+                $r['index'] = $v['layerIndex'];
+                $r['name'] = $v['layerName'];
+                $r['has_wkt'] = $v['hasWkt'];
+                $r['auth_str'] = $v['authStr'];
+                $r['error'] = $v['error'];
+                $response[] = $r;
+            }
             return new PostResponse(data: $response);
         } catch (Throwable $e) {
             throw new GC2Exception($e->getMessage(), $e->getCode(), null, "FILE_IMPORT_ERROR");
@@ -310,7 +377,7 @@ class File extends AbstractApi
             " '" . $fileFullPath . "'";
 
         exec($cmd, $out);
-        $args = !empty($out[0]) ? json_decode($out[0], null, 512, JSON_THROW_ON_ERROR) : null;
+        $args = !empty($out[0]) ? json_decode($out[0], true, 512, JSON_THROW_ON_ERROR) : null;
         return [
             'data' => $args,
             'cmd' => $cmd,
