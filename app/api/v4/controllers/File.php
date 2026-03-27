@@ -127,7 +127,7 @@ use Override;
 #[OA\Schema(
     schema: "FileProcessResponse",
     description: "Upload files to temporary storage and then import them into database tables.",
-    required: ["file", "schema"],
+    required: ["driver", "count", "geom_type", "index", "name", "has_wkt", "auth_str", "error"],
     properties: [
         new OA\Property(
             property: "driver",
