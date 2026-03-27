@@ -125,7 +125,7 @@ class Call extends AbstractApi
             }
         }
         // Check if dry-run is requested
-        if (Input::getDryRun() || $this->route->action == 'post_dry') {
+        if (Input::getDryRun() || $this->route->action == 'dry') {
             $api->rollback();
             $api->begin();
             // In dry-run we interface with
@@ -250,5 +250,8 @@ class Call extends AbstractApi
     public function delete_index(): Response
     {
         // TODO: Implement delete_index() method.
+    }
+    public function options_dry(): void
+    {
     }
 }
