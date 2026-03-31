@@ -200,7 +200,7 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
                         echo "[INFO] Subscription $subId -> {$client->getId()} ($subOp on $subRel, " . count($rows) . " rows)\n";
                         $client->sendText(json_encode($response));
                     }
-//                    continue; // Subscriptions handled, skip legacy batch for this client
+                    continue; // Subscriptions handled, skip legacy batch for this client
                 }
 
                 // --- Legacy batch delivery (clients without subscriptions) ---
