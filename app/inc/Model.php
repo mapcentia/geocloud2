@@ -1633,13 +1633,19 @@ class Model
      */
     public function doesRelationExists(string $rel): bool
     {
-        $sql = "SELECT FROM " . $this->doubleQuoteQualifiedName($rel) . " LIMIT 1";
-        try {
-            $this->execQuery($sql);
-            return true;
-        } catch (PDOException) {
-            return false;
-        }
+        $parts = $this->explodeTableName($rel);
+        $schema = $parts['schema'] ? str_replace('.', '', $parts['schema']) : null;
+        $table = $parts['table'];
+        $sql = "SELECT EXISTS (
+                    SELECT 1 FROM pg_catalog.pg_class c
+                    JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                    WHERE c.relname = :table
+                    AND (:schema::text IS NULL OR n.nspname = :schema)
+                    AND c.relkind IN ('r','v','m','f','p')
+                ) AS exists";
+        $res = $this->prepare($sql);
+        $res->execute(['table' => $table, 'schema' => $schema]);
+        return (bool)$res->fetchColumn();
     }
 
     /**
