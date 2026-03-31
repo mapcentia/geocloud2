@@ -64,7 +64,7 @@ class Sql extends Model
      */
     function __construct(string $srs = "3857", ?Connection $connection = null)
     {
-        parent::__construct(connection: $connection);;
+        parent::__construct(connection: $connection);
 
         $this->model = $this;
         $this->srs = $srs;
