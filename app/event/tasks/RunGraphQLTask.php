@@ -11,14 +11,11 @@ namespace app\event\tasks;
 use Amp\Cancellation;
 use Amp\Parallel\Worker\Task;
 use Amp\Sync\Channel;
-use app\exceptions\GC2Exception;
 use app\exceptions\GraphQLException;
 use app\inc\Connection;
 use app\inc\GraphQL;
-use app\inc\GraphQL as _GraphQl;
 use app\models\Sql;
 use Exception;
-use Throwable;
 
 
 error_reporting(E_ERROR | E_PARSE);
@@ -29,8 +26,8 @@ final readonly class RunGraphQLTask implements Task
 
     public function __construct(
         private array $query,
-        private string $schema,
         private ?array $props,
+        private string $schema,
     )
     {
     }
@@ -46,14 +43,11 @@ final readonly class RunGraphQLTask implements Task
         $sqlApi = new Sql(connection: $connection);
         $sqlApi->begin();
 
-//print_r($this->props);
-//print_r($this->query);
-
         try {
             $res = $graphQl->run(
                 user: $this->props['user'],
                 api: $sqlApi,
-                query: $this->query['query'],
+                query: $this->query[0]['payload']['query'],
                 schema: $this->schema,
                 subuser: !$this->props['superUser'],
                 userGroup: $this->props['userGroup'],
@@ -66,6 +60,13 @@ final readonly class RunGraphQLTask implements Task
         }
 
         $sqlApi->commit();
-        return $res;
+
+        $wrapper = [
+            'id' => $this->query[0]['id'],
+            'type' => 'next',
+            'payload' => $res,
+        ];
+
+        return [$wrapper];
     }
 }

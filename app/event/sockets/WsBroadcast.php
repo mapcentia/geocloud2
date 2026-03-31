@@ -131,7 +131,7 @@ class WsBroadcast implements WebsocketClientHandler
                     $r = $this->rpc($parsed, $props);
                 }
                 if (isset($parsed[0]['type'])) {
-                    $r = $this->gql($parsed[0]['payload'], 'public', $props);
+                    $r = $this->gql($parsed, $props, $parsed[0]['schema']);
                 }
 
                 if (isset($parsed[0]['rel'])) {
@@ -181,9 +181,9 @@ class WsBroadcast implements WebsocketClientHandler
         return $this->workerPool->getWorker()->submit($task);
     }
 
-    private function gql(array $query, string $schema, ?array $props): Execution
+    private function gql(array $query,  ?array $props, string $schema,): Execution
     {
-        $task = new RunGraphQLTask($query, $schema, $props);
+        $task = new RunGraphQLTask($query, $props, $schema);
         return $this->workerPool->getWorker()->submit($task);
     }
 
