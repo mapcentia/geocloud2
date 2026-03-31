@@ -130,9 +130,8 @@ class WsBroadcast implements WebsocketClientHandler
                 if (isset($parsed[0]['jsonrpc'])) {
                     $r = $this->rpc($parsed, $props);
                 }
-
-                if (isset($parsed[0]['test'])) {
-                    $r = $this->gql($parsed, $props);
+                if (isset($parsed[0]['type'])) {
+                    $r = $this->gql($parsed[0]['payload'], 'public', $props);
                 }
 
                 if (isset($parsed[0]['rel'])) {

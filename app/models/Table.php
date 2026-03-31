@@ -304,7 +304,12 @@ class Table extends Model
         while ($row = $this->fetchRow($result)) {
             $privileges = !empty($row["privileges"]) ? json_decode($row["privileges"]) : null;
             $arr = [];
-            $prop = !empty($_SESSION['usergroup']) ? $_SESSION['usergroup'] : $_SESSION['screen_name'];
+            if (isset($_SESSION)) {
+                $prop = !empty($_SESSION['usergroup']) ? $_SESSION['usergroup'] : $_SESSION['screen_name'];
+            } else {
+                $prop = null;
+            }
+
             if (empty($_SESSION["subuser"]) || ($prop == $this->postgisschema)
                 || (!empty($privileges->$prop) && $privileges->$prop != "none")) {
                 $relType = "t"; // Default
