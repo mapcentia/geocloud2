@@ -339,8 +339,13 @@ class GraphQL
 
             $where = '';
             foreach ($sel->arguments ?? [] as $arg) {
-                if ($arg->name->value === 'where' && $arg->value instanceof StringValueNode) {
-                    $where = $arg->value->value;
+                if ($arg->name->value === 'where') {
+                    if ($arg->value instanceof StringValueNode) {
+                        $where = $arg->value->value;
+                    } elseif ($arg->value instanceof ObjectValueNode) {
+                        $whereArray = self::valueFromAstStatic($arg->value);
+                        $where = self::whereArrayToFilterString($whereArray);
+                    }
                 }
             }
 
@@ -365,6 +370,126 @@ class GraphQL
         }
 
         return $results;
+    }
+
+    /**
+     * Convert a GraphQL AST ValueNode to a plain PHP value (static version for use in parseSubscription).
+     */
+    private static function valueFromAstStatic(ValueNode $node): mixed
+    {
+        if ($node instanceof StringValueNode) {
+            return $node->value;
+        }
+        if ($node instanceof IntValueNode) {
+            return (int)$node->value;
+        }
+        if ($node instanceof FloatValueNode) {
+            return (float)$node->value;
+        }
+        if ($node instanceof BooleanValueNode) {
+            return (bool)$node->value;
+        }
+        if ($node instanceof NullValueNode) {
+            return null;
+        }
+        if ($node instanceof ListValueNode) {
+            $arr = [];
+            foreach ($node->values as $v) {
+                $arr[] = self::valueFromAstStatic($v);
+            }
+            return $arr;
+        }
+        if ($node instanceof ObjectValueNode) {
+            $obj = [];
+            foreach ($node->fields as $f) {
+                $obj[$f->name->value] = self::valueFromAstStatic($f->value);
+            }
+            return $obj;
+        }
+        return null;
+    }
+
+    /**
+     * Convert a JSON-style where array (e.g. {id: {eq: 30}}) to a SQL-style WHERE string
+     * that ShapeFilter can parse.
+     */
+    private static function whereArrayToFilterString(array $where, string $conjunction = 'AND'): string
+    {
+        $opMap = [
+            'eq' => '=', 'gt' => '>', 'lt' => '<',
+            'gte' => '>=', 'lte' => '<=', 'neq' => '!=',
+            'like' => 'LIKE', 'ilike' => 'ILIKE',
+        ];
+
+        $clauses = [];
+        foreach ($where as $key => $value) {
+            $upper = strtoupper($key);
+
+            // Logical operators: AND, OR take arrays; NOT takes an object
+            if ($upper === 'AND' || $upper === 'OR') {
+                if (is_array($value)) {
+                    $sub = [];
+                    foreach ($value as $v) {
+                        if (is_array($v)) {
+                            $s = self::whereArrayToFilterString($v);
+                            if ($s !== '') {
+                                $sub[] = $s;
+                            }
+                        }
+                    }
+                    if (!empty($sub)) {
+                        $clauses[] = '(' . implode(" $upper ", $sub) . ')';
+                    }
+                }
+                continue;
+            }
+            if ($upper === 'NOT') {
+                if (is_array($value)) {
+                    $s = self::whereArrayToFilterString($value);
+                    if ($s !== '') {
+                        $clauses[] = 'NOT (' . $s . ')';
+                    }
+                }
+                continue;
+            }
+
+            // Column with operator object: {col: {eq: val}} or simple equality {col: val}
+            if (is_array($value)) {
+                foreach ($value as $op => $opVal) {
+                    $opLower = strtolower($op);
+                    if ($opLower === 'in') {
+                        if (is_array($opVal)) {
+                            $items = array_map(fn($v) => self::filterLiteral($v), $opVal);
+                            $clauses[] = "$key IN (" . implode(', ', $items) . ")";
+                        }
+                    } elseif (isset($opMap[$opLower])) {
+                        $clauses[] = "$key " . $opMap[$opLower] . " " . self::filterLiteral($opVal);
+                    }
+                }
+            } else {
+                $clauses[] = "$key = " . self::filterLiteral($value);
+            }
+        }
+
+        return !empty($clauses) ? implode(" $conjunction ", $clauses) : '';
+    }
+
+    /**
+     * Format a value as a literal for ShapeFilter parsing.
+     */
+    private static function filterLiteral(mixed $value): string
+    {
+        if (is_null($value)) {
+            return 'NULL';
+        }
+        if (is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+        if (is_int($value) || is_float($value)) {
+            return (string)$value;
+        }
+        // String: single-quote with backslash escaping
+        return "'" . str_replace(["\\", "'"], ["\\\\", "\\'"], (string)$value) . "'";
     }
 
     /**
