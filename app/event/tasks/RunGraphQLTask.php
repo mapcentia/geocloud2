@@ -52,7 +52,7 @@ final readonly class RunGraphQLTask implements Task
                 subuser: !$this->props['superUser'],
                 userGroup: $this->props['userGroup'],
                 variables: isset($this->query['variables']) && is_array($this->query['variables']) ? $this->query['variables'] : [],
-                operationName: isset($this->query['operationName']) && is_string($this->query['operationName']) ? $this->query['operationName'] :  null
+                operationName: isset($this->query[0]['payload']['operationName']) && is_string($this->query[0]['payload']['operationName']) ? $this->query[0]['payload']['operationName'] :  null
             );
         } catch (GraphQLException $e) {
             $sqlApi->rollback();
