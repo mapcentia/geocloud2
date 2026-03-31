@@ -973,7 +973,7 @@ class Layer extends Table
         $sql = "DROP TRIGGER IF EXISTS _gc2_notify_transaction_trigger ON \"{$explodedKey['schema']}\".\"{$explodedKey['table']}\"";
         $res = $this->prepare($sql);
         $this->execute($res);
-        $sql = "CREATE TRIGGER _gc2_notify_transaction_trigger AFTER INSERT OR UPDATE OR DELETE ON \"{$explodedKey['schema']}\".\"{$explodedKey['table']}\" FOR EACH ROW EXECUTE PROCEDURE _gc2_notify_transaction('{$con[0]['column_name']}', '{$explodedKey['schema']}','{$explodedKey['table']}')";
+        $sql = "CREATE TRIGGER _gc2_notify_transaction_trigger AFTER INSERT OR UPDATE OR DELETE ON \"{$explodedKey['schema']}\".\"{$explodedKey['table']}\" FOR EACH ROW EXECUTE PROCEDURE _gc2_notify_transaction('{$con[0]['column_name']}', '{$explodedKey['schema']}','{$explodedKey['table']}', 'snapshot')";
         $res = $this->prepare($sql);
         $this->execute($res);
     }

@@ -46,17 +46,25 @@ final readonly class PreparePayloadTask implements Task
         $grouped = [];
         // Group notifications by schema.table + key
         foreach ($this->batchPayload as $p) {
-            $bits = explode(',', $p);
-            $op = $bits[0];
-            $schema = $bits[1];
-            $table = $bits[2];
-            $key = $bits[3];
-            $value = $bits[4];
+            $op = $p['op'];
+            $schema = $p['schema'];
+            $table = $p['table'];
+            $key = $p['pk_column'];
+            $value = $p['pk_value'];
 
             $schemaTable = "{$schema}.{$table}";
-            $results[$this->db][$schemaTable][$op][] = array_slice($bits, 3);
+            $results[$this->db][$schemaTable][$op][] = [$key, $value];
 
-            if ($op === 'INSERT' || $op === 'UPDATE') {
+            // If outbox row has a pre-built payload, use it directly as full_data
+            if (!empty($p['payload'])) {
+                $decoded = json_decode($p['payload'], true);
+                if (is_array($decoded)) {
+                    if (!isset($results[$this->db][$schemaTable]['full_data'])) {
+                        $results[$this->db][$schemaTable]['full_data'] = [];
+                    }
+                    $results[$this->db][$schemaTable]['full_data'][] = $decoded;
+                }
+            } elseif ($op === 'INSERT' || $op === 'UPDATE') {
                 $groupKey = $schemaTable . ':' . $key;
                 if (!isset($grouped[$groupKey])) {
                     $grouped[$groupKey] = [

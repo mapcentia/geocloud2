@@ -85,6 +85,9 @@ class Event extends AbstractApi
 
     }
 
+    /**
+     * @throws GC2Exception
+     */
     #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}/events', operationId: 'postEvents', description: "Install event trigger.", tags: ['Events'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]

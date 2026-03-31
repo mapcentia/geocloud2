@@ -106,7 +106,17 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
             $payLoad = [];
             foreach ($coalesced as $row) {
                 $op = $opMap[$row['op']] ?? $row['op'];
-                $payLoad[] = "{$op},{$row['schema_name']},{$row['table_name']},{$row['pk_column']},{$row['pk_value']}";
+                $entry = [
+                    'op' => $op,
+                    'schema' => $row['schema_name'],
+                    'table' => $row['table_name'],
+                    'pk_column' => $row['pk_column'],
+                    'pk_value' => $row['pk_value'],
+                ];
+                if (!empty($row['payload'])) {
+                    $entry['payload'] = $row['payload'];
+                }
+                $payLoad[] = $entry;
             }
 
             $count = count($payLoad);
