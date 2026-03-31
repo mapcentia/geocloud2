@@ -22,7 +22,9 @@ use app\event\tasks\RunGraphQLTask;
 use app\event\tasks\RunQueryTask;
 use app\event\tasks\RunRpcTask;
 use app\event\tasks\ValidateTokenTask;
+use app\exceptions\GraphQLException;
 use app\inc\Connection;
+use app\inc\GraphQL;
 use SplObjectStorage;
 use Throwable;
 use function Amp\Parallel\Worker\workerPool;
@@ -80,6 +82,7 @@ class WsBroadcast implements WebsocketClientHandler
                     'superUser' => $parsed['superUser'],
                     'userGroup' => $parsed['userGroup'] ?? null,
                     'rels' => !empty($params['rel']) ? explode(',', $params['rel']) : null,
+                    'subscriptions' => [],
                 ]);
                 echo "[INFO] Client {$client->getId()} connected on $db\n";;
             } catch (Throwable $e) {
@@ -124,19 +127,29 @@ class WsBroadcast implements WebsocketClientHandler
                     $parsed = [$parsed];
                 }
                 $r = null;
+
                 if (isset($parsed[0]['q'])) {
                     $r = $this->sql($parsed, $props);
                 }
+
                 if (isset($parsed[0]['jsonrpc'])) {
                     $r = $this->rpc($parsed, $props);
                 }
-                if (isset($parsed[0]['type'])) {
-                    $r = $this->gql($parsed, $props, $parsed[0]['schema']);
+
+                if (isset($parsed[0]['type']) && $parsed[0]['type'] === 'subscribe') {
+                    try {
+                        GraphQL::parseSubscription($parsed[0]['query'], $parsed[0]['schema']);
+                        $this->subscribe($client, $parsed[0]);
+                        continue;
+                    } catch (Throwable) {
+                        $r = $this->gql($parsed, $props, $parsed[0]['schema']);
+                    }
                 }
 
-                if (isset($parsed[0]['rel'])) {
+                // Add dynamically relations for messaging
+                if (isset($parsed[0]['type']) && $parsed[0]['type'] === 'subscription') {
                     $data = $this->clientProperties[$client];
-                    $data['rels'] = [$parsed[0]['rel']];
+                    $data['rels'] = [$parsed[0]['schema'] . '.' . $parsed[0]['rel']];
                     $this->clientProperties[$client] = $data;
                 }
                 if ($r) {
@@ -153,6 +166,70 @@ class WsBroadcast implements WebsocketClientHandler
             }
         }
         $this->clientProperties->detach($client);
+    }
+
+    /**
+     * Register a GraphQL subscription for a client.
+     *
+     * Expected message format:
+     * {
+     *   "type": "subscribe",
+     *   "id": "sub1",
+     *   "schema": "my_schema",
+     *   "query": "subscription { MyTableMessageAdded(where: \"col = 'val'\") { id name } }"
+     * }
+     */
+    private function subscribe(WebsocketClient $client, array $msg): void
+    {
+        $subId = $msg['id'] ?? null;
+        $schema = $msg['schema'] ?? null;
+        $query = $msg['query'] ?? null;
+
+        if (!$subId || !$schema || !$query) {
+            $this->sendToClient($client, json_encode([
+                'type' => 'error',
+                'id' => $subId,
+                'error' => 'INVALID_SUBSCRIPTION',
+                'message' => 'Missing required fields: id, schema, query',
+            ]));
+            return;
+        }
+
+        try {
+            $parsed = GraphQL::parseSubscription($query, $schema);
+        } catch (GraphQLException $e) {
+            $this->sendToClient($client, json_encode([
+                'type' => 'error',
+                'id' => $subId,
+                'error' => 'SUBSCRIPTION_PARSE_ERROR',
+                'message' => $e->getMessage(),
+            ]));
+            return;
+        }
+
+        $props = $this->clientProperties[$client];
+
+        foreach ($parsed as $sub) {
+            $sub['id'] = $subId;
+            $props['subscriptions'][] = $sub;
+        }
+
+        $rels = $props['rels'] ?? [];
+        foreach ($parsed as $sub) {
+            if (!in_array($sub['rel'], $rels, true)) {
+                $rels[] = $sub['rel'];
+            }
+        }
+        $props['rels'] = $rels;
+
+        $this->clientProperties[$client] = $props;
+
+        echo "[INFO] Client {$client->getId()} subscribed: $subId on $schema\n";
+
+        $this->sendToClient($client, json_encode([
+            'type' => 'subscribe_ack',
+            'id' => $subId,
+        ]));
     }
 
     public function sendToAll(string $text): void
@@ -181,7 +258,7 @@ class WsBroadcast implements WebsocketClientHandler
         return $this->workerPool->getWorker()->submit($task);
     }
 
-    private function gql(array $query,  ?array $props, string $schema,): Execution
+    private function gql(array $query, ?array $props, string $schema): Execution
     {
         $task = new RunGraphQLTask($query, $props, $schema);
         return $this->workerPool->getWorker()->submit($task);

@@ -149,9 +149,15 @@ class GraphQL
             'fields' => fn() => $this->getMutationFields()
         ]);
 
+        $subscriptionType = new ObjectType([
+            'name' => 'Subscription',
+            'fields' => fn() => $this->getSubscriptionFields()
+        ]);
+
         return new Schema([
             'query' => $queryType,
-            'mutation' => $mutationType
+            'mutation' => $mutationType,
+            'subscription' => $subscriptionType,
         ]);
     }
 
@@ -235,6 +241,130 @@ class GraphQL
             ];
         }
         return $fields;
+    }
+
+    private function getSubscriptionFields(): array
+    {
+        $fields = [];
+        $tableModel = new TableModel(table: null, connection: $this->connection);
+        try {
+            $tables = $tableModel->getRecords(false, $this->schema)['data'];
+        } catch (\Throwable) {
+            $tables = [];
+        }
+        $opSuffixes = [
+            'MessageAdded' => 'INSERT',
+            'MessageUpdated' => 'UPDATE',
+            'MessageDeleted' => 'DELETE',
+        ];
+        foreach ($tables as $t) {
+            if (!$t['enableows']) {
+                continue;
+            }
+            $tableName = $t['f_table_name'];
+            $pascalName = self::snakeToPascal($tableName);
+            foreach ($opSuffixes as $suffix => $op) {
+                $fieldName = $pascalName . $suffix;
+                $fields[$fieldName] = [
+                    'type' => Type::listOf($this->getTableType($t['f_table_schema'], $tableName)),
+                    'args' => [
+                        'where' => ['type' => Type::string()],
+                    ],
+                    'resolve' => fn() => null,
+                ];
+            }
+        }
+        return $fields;
+    }
+
+    /**
+     * Parse a GraphQL subscription query and extract table, operation, where, and columns.
+     *
+     * @param string $query The GraphQL subscription query string
+     * @param string $schema The database schema name
+     * @return array{rel: string, op: string, where: string, columns: string, field: string}
+     * @throws GraphQLException
+     */
+    public static function parseSubscription(string $query, string $schema): array
+    {
+        try {
+            $doc = GraphQLParser::parse($query);
+        } catch (\Throwable $e) {
+            throw new GraphQLException('Subscription parse error: ' . $e->getMessage(), 400);
+        }
+
+        $operation = null;
+        foreach ($doc->definitions as $def) {
+            if ($def instanceof OperationDefinitionNode && $def->operation === 'subscription') {
+                $operation = $def;
+                break;
+            }
+        }
+        if (!$operation) {
+            throw new GraphQLException('No subscription operation found', 400);
+        }
+
+        $selections = $operation->selectionSet?->selections ?? [];
+        if (empty($selections)) {
+            throw new GraphQLException('No fields selected in subscription', 400);
+        }
+
+        $opSuffixes = [
+            'MessageAdded' => 'INSERT',
+            'MessageUpdated' => 'UPDATE',
+            'MessageDeleted' => 'DELETE',
+        ];
+
+        $results = [];
+        foreach ($selections as $sel) {
+            if (!$sel instanceof FieldNode) {
+                continue;
+            }
+            $fieldName = $sel->name->value;
+
+            $matchedOp = null;
+            $tablePartPascal = null;
+            foreach ($opSuffixes as $suffix => $op) {
+                if (str_ends_with($fieldName, $suffix)) {
+                    $matchedOp = $op;
+                    $tablePartPascal = substr($fieldName, 0, -strlen($suffix));
+                    break;
+                }
+            }
+            if ($matchedOp === null || $tablePartPascal === null) {
+                throw new GraphQLException("Invalid subscription field: '$fieldName'. Expected format: {Table}MessageAdded|Updated|Deleted", 400);
+            }
+
+            $tableName = self::camelToSnake($tablePartPascal);
+
+            $where = '';
+            foreach ($sel->arguments ?? [] as $arg) {
+                if ($arg->name->value === 'where' && $arg->value instanceof StringValueNode) {
+                    $where = $arg->value->value;
+                }
+            }
+
+            $columns = [];
+            foreach ($sel->selectionSet?->selections ?? [] as $subSel) {
+                if ($subSel instanceof FieldNode) {
+                    $columns[] = $subSel->name->value;
+                }
+            }
+
+            $results[] = [
+                'rel' => $schema . '.' . $tableName,
+                'op' => $matchedOp,
+                'where' => $where,
+                'columns' => implode(',', $columns),
+                'field' => $fieldName,
+            ];
+        }
+
+        if (empty($results)) {
+            throw new GraphQLException('No valid subscription fields found', 400);
+        }
+
+        return $results;
     }
 
     /**

@@ -47,12 +47,12 @@ final readonly class RunGraphQLTask implements Task
             $res = $graphQl->run(
                 user: $this->props['user'],
                 api: $sqlApi,
-                query: $this->query[0]['payload']['query'],
+                query: $this->query[0]['query'],
                 schema: $this->schema,
                 subuser: !$this->props['superUser'],
                 userGroup: $this->props['userGroup'],
                 variables: isset($this->query['variables']) && is_array($this->query['variables']) ? $this->query['variables'] : [],
-                operationName: isset($this->query[0]['payload']['operationName']) && is_string($this->query[0]['payload']['operationName']) ? $this->query[0]['payload']['operationName'] :  null
+                operationName: isset($this->query[0]['operationName']) && is_string($this->query[0]['operationName']) ? $this->query[0]['operationName'] :  null
             );
         } catch (GraphQLException $e) {
             $sqlApi->rollback();
@@ -64,7 +64,7 @@ final readonly class RunGraphQLTask implements Task
         $wrapper = [
             'id' => $this->query[0]['id'],
             'type' => 'next',
-            'payload' => $res,
+            'data' => $res['data'],
         ];
 
         return [$wrapper];

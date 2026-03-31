@@ -141,9 +141,70 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
                 if ($props['db'] !== $db) {
                     continue;
                 }
-                // Filter payload per client relations (if specified)
-                $batchForClient = [];
+
+                $subscriptions = $props['subscriptions'] ?? [];
                 $allowedRels = $props['rels'] ?? null;
+
+                // --- Subscription-based delivery ---
+                if (!empty($subscriptions)) {
+                    foreach ($subscriptions as $sub) {
+                        $subRel = $sub['rel'];
+                        $subOp = $sub['op'];       // 'INSERT', 'UPDATE', or 'DELETE'
+                        $subWhere = $sub['where'];
+                        $subColumns = $sub['columns'];
+                        $subField = $sub['field'];
+                        $subId = $sub['id'];
+
+                        // Check if this batch has data for the subscription's relation and operation
+                        if (!isset($preparedPayload[$db][$subRel])) {
+                            continue;
+                        }
+                        $relData = $preparedPayload[$db][$subRel];
+                        if (!isset($relData[$subOp]) || empty($relData[$subOp])) {
+                            continue;
+                        }
+
+                        // Build a mini-batch with only this relation and operation
+                        $miniBatch = [
+                            'type' => 'batch',
+                            'db' => $db,
+                            'batch' => [
+                                $db => [
+                                    $subRel => [
+                                        $subOp => $relData[$subOp],
+                                        'full_data' => $relData['full_data'] ?? [],
+                                    ]
+                                ]
+                            ]
+                        ];
+
+                        // Apply ShapeFilter with subscription's where and columns
+                        $filter = new ShapeFilter();
+                        $miniBatch = $filter->filter($miniBatch, $subWhere, $subColumns);
+
+                        // Extract filtered full_data rows
+                        $rows = $miniBatch['batch'][$db][$subRel]['full_data'] ?? [];
+                        if (empty($rows)) {
+                            continue;
+                        }
+
+                        // Send as GraphQL subscription response
+                        $response = [
+                            'type' => 'subscription',
+                            'id' => $subId,
+                            'data' => [
+                                $subField => $rows,
+                            ],
+                        ];
+
+                        echo "[INFO] Subscription $subId -> {$client->getId()} ($subOp on $subRel, " . count($rows) . " rows)\n";
+                        $client->sendText(json_encode($response));
+                    }
+//                    continue; // Subscriptions handled, skip legacy batch for this client
+                }
+
+                // --- Legacy batch delivery (clients without subscriptions) ---
+                $batchForClient = [];
                 if (is_array($allowedRels) && !empty($allowedRels) && is_array($preparedPayload)) {
                     foreach ($preparedPayload[$db] as $key => $value) {
                         if (in_array($key, $allowedRels)) {
@@ -152,7 +213,6 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
                     }
                 }
                 if (empty($batchForClient)) {
-                    // Nothing to send to this client after filtering
                     continue;
                 }
                 echo "[INFO] filtering payload\n";
@@ -165,7 +225,6 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
                     'batch' => $batchForClient
                 ];
 
-                //$where = "text = 'test3'";
                 $where = "";
 
                 $batch = $filter->filter($batch, $where);
