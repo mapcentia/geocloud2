@@ -1,5 +1,26 @@
 <?php
 
+/*
+
+Batch:
+
+ {
+  "type": "batch",
+  "db": "my_database",
+  "batch": {
+    "my_database": {
+      "my_schema.my_table": {
+        "INSERT": [["key","value"]],
+        "UPDATE": [["key","value"]],
+        "DELETE": [["key","value"]],
+        "full_data": [ { "col1": "val", "col2": 123 } ]
+      },
+      "another_schema.table": {}
+    }
+  }
+}
+ */
+
 namespace app\inc;
 
 use InvalidArgumentException;
@@ -34,26 +55,43 @@ class ShapeFilter
      *
      * @param array  $payload Electric-style "batch" payload
      * @param string $where   SQL-like WHERE clause
+     * @param string $columns Comma-separated column names to include (empty = all)
      *
      * @return array filtered payload
      */
-    public function filter(array $payload, string $where): array
+    public function filter(array $payload, string $where, string $columns = ''): array
     {
         $where = trim($where);
-        if ($where === '') {
-            return $payload; // no filter
+        $columns = trim($columns);
+
+        // Parse column list
+        $columnList = [];
+        if ($columns !== '') {
+            foreach (explode(',', $columns) as $col) {
+                $col = trim($col);
+                if ($col !== '') {
+                    $columnList[] = $col;
+                }
+            }
         }
 
-        // Normalize whitespace for cache key
-        $normWhere = preg_replace('/\s+/', ' ', $where);
+        if ($where === '' && $columnList === []) {
+            return $payload; // no filter, no projection
+        }
 
-        if (isset($this->astCache[$normWhere])) {
-            $ast = $this->astCache[$normWhere];
-        } else {
-            $this->tokens = $this->tokenize($normWhere);
-            $this->pos    = 0;
-            $ast          = $this->parseExpression();
-            $this->astCache[$normWhere] = $ast;
+        $ast = null;
+        if ($where !== '') {
+            // Normalize whitespace for cache key
+            $normWhere = preg_replace('/\s+/', ' ', $where);
+
+            if (isset($this->astCache[$normWhere])) {
+                $ast = $this->astCache[$normWhere];
+            } else {
+                $this->tokens = $this->tokenize($normWhere);
+                $this->pos    = 0;
+                $ast          = $this->parseExpression();
+                $this->astCache[$normWhere] = $ast;
+            }
         }
 
         if (!isset($payload['batch']) || !is_array($payload['batch'])) {
@@ -68,7 +106,9 @@ class ShapeFilter
             foreach ($tables as $tableName => &$tableOps) {
                 if (!isset($tableOps['full_data']) || !is_array($tableOps['full_data'])) {
                     // No full_data: still filter INSERT/UPDATE/DELETE based on pseudo-rows
-                    $this->filterOpsWithoutFullData($tableOps, $ast);
+                    if ($ast !== null) {
+                        $this->filterOpsWithoutFullData($tableOps, $ast);
+                    }
                     continue;
                 }
 
@@ -81,39 +121,48 @@ class ShapeFilter
                         continue;
                     }
 
-                    if ($this->evaluateNode($ast, $row)) {
-                        $filteredFull[] = $row;
-
-                        // Any column/value pair can be used as a "key"
-                        foreach ($row as $col => $val) {
-                            $key = $col . "\0" . (string)$val;
-                            $allowedKeys[$key] = true;
-                        }
+                    if ($ast !== null && !$this->evaluateNode($ast, $row)) {
+                        continue;
                     }
+
+                    // Build allowed keys from full row before projection
+                    foreach ($row as $col => $val) {
+                        $key = $col . "\0" . (string)$val;
+                        $allowedKeys[$key] = true;
+                    }
+
+                    // Project columns
+                    if ($columnList !== []) {
+                        $row = array_intersect_key($row, array_flip($columnList));
+                    }
+
+                    $filteredFull[] = $row;
                 }
 
                 $tableOps['full_data'] = $filteredFull;
 
                 // Filter INSERT / UPDATE / DELETE entries to match remaining rows
-                foreach (['INSERT', 'UPDATE', 'DELETE'] as $op) {
-                    if (!isset($tableOps[$op]) || !is_array($tableOps[$op])) {
-                        continue;
-                    }
-
-                    $filteredOps = [];
-                    foreach ($tableOps[$op] as $entry) {
-                        // Expecting ["colName", "pkValue"]
-                        if (!is_array($entry) || count($entry) < 2) {
+                if ($ast !== null) {
+                    foreach (['INSERT', 'UPDATE', 'DELETE'] as $op) {
+                        if (!isset($tableOps[$op]) || !is_array($tableOps[$op])) {
                             continue;
                         }
-                        [$colName, $pkVal] = $entry;
-                        $key = $colName . "\0" . (string)$pkVal;
-                        if (isset($allowedKeys[$key])) {
-                            $filteredOps[] = $entry;
-                        }
-                    }
 
-                    $tableOps[$op] = $filteredOps;
+                        $filteredOps = [];
+                        foreach ($tableOps[$op] as $entry) {
+                            // Expecting ["colName", "pkValue"]
+                            if (!is_array($entry) || count($entry) < 2) {
+                                continue;
+                            }
+                            [$colName, $pkVal] = $entry;
+                            $key = $colName . "\0" . (string)$pkVal;
+                            if (isset($allowedKeys[$key])) {
+                                $filteredOps[] = $entry;
+                            }
+                        }
+
+                        $tableOps[$op] = $filteredOps;
+                    }
                 }
             }
         }
