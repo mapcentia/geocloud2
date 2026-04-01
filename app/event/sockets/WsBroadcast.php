@@ -139,18 +139,17 @@ class WsBroadcast implements WebsocketClientHandler
                 if (isset($parsed[0]['type']) && $parsed[0]['type'] === 'subscribe') {
                     try {
                         GraphQL::parseSubscription($parsed[0]['query'], $parsed[0]['schema']);
-                        $this->subscribe($client, $parsed[0]);
+                        $this->gqlSubscribe($client, $parsed[0]);
                         continue;
                     } catch (Throwable) {
                         $r = $this->gql($parsed, $props, $parsed[0]['schema']);
                     }
                 }
 
-                // Add dynamically relations for messaging
+                // Add relations dynamically for messaging
                 if (isset($parsed[0]['type']) && $parsed[0]['type'] === 'subscription') {
-                    $data = $this->clientProperties[$client];
-                    $data['rels'] = [$parsed[0]['schema'] . '.' . $parsed[0]['rel']];
-                    $this->clientProperties[$client] = $data;
+                    $this->rawSubscribe($client, $parsed[0], $parsed[0]['id'] ?? null);
+                    continue;
                 }
                 if ($r) {
                     $result = array_values(array_filter($r->await()));
@@ -179,7 +178,7 @@ class WsBroadcast implements WebsocketClientHandler
      *   "query": "subscription { MyTableMessageAdded(where: \"col = 'val'\") { id name } }"
      * }
      */
-    private function subscribe(WebsocketClient $client, array $msg): void
+    private function gqlSubscribe(WebsocketClient $client, array $msg): void
     {
         $subId = $msg['id'] ?? null;
         $schema = $msg['schema'] ?? null;
@@ -229,6 +228,19 @@ class WsBroadcast implements WebsocketClientHandler
         $this->sendToClient($client, json_encode([
             'type' => 'subscribe_ack',
             'id' => $subId,
+        ]));
+    }
+
+    private function rawSubscribe(WebsocketClient $client, array $msg): void {
+        $data = $this->clientProperties[$client];
+        $data['rels'] = [$msg['schema'] . '.' . $msg['rel']];
+        $data['where'] = $msg['where'] ?? null;
+        $data['columns'] = $msg['columns'] ?? null;
+        $data['op'] = $msg['op'] ?? null;
+        $this->clientProperties[$client] = $data;
+        $this->sendToClient($client, json_encode([
+            'type' => 'subscribe_ack',
+            'id' => $msg['id'],
         ]));
     }
 

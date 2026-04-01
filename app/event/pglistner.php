@@ -225,9 +225,17 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
                     'batch' => $batchForClient
                 ];
 
-                $where = "";
+                $where = $props["where"];
+                $columns = $props["columns"];
+                print_r($props);
 
-                $batch = $filter->filter($batch, $where);
+                $batch = $filter->filter($batch, $where, $columns);
+
+                if (empty($batch['batch'][$db][$props['rel']]['INSERT'])) {
+                    print_r("CONTINUE");
+                    continue;
+
+                }
 
                 echo "[INFO] Sending to: " . $client->getId() . "\n";
                 $client->sendText(json_encode($batch));
