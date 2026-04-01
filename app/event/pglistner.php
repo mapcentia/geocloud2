@@ -223,13 +223,15 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
 //                        }
 
                         // Build a mini-batch with only this relation and operation
+                        $ops = $subOp ? [$subOp => $relData[$subOp]] : $relData;
                         $miniBatch = [
+                            'id' => $subId,
                             'type' => 'batch',
                             'db' => $db,
                             'batch' => [
                                 $db => [
                                     $subRel => [
-                                        $subOp => $relData[$subOp],
+                                        ...$ops,
                                         'full_data' => $relData['full_data'] ?? [],
                                     ]
                                 ]

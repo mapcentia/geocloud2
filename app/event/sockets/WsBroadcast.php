@@ -260,6 +260,7 @@ class WsBroadcast implements WebsocketClientHandler
      * @throws WebsocketClosedException
      */
     private function rawSubscribe(WebsocketClient $client, array $msg, Connection $connection): void {
+        $sub['id'] =  $msg['id'];
         $sub['schema'] =  $msg['schema'];
         $sub['rel'] =  $msg['rel'];
         $sub['where'] =  $msg['where'] ?? '';
