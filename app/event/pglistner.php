@@ -143,9 +143,10 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
                 }
 
                 $subscriptions = $props['subscriptions'] ?? [];
+                $rawSubscriptions = $props['rawSubscriptions'] ?? [];
                 $allowedRels = $props['rels'] ?? null;
 
-                // --- Subscription-based delivery ---
+                // --- GraphQL Subscription-based delivery ---
                 if (!empty($subscriptions)) {
                     foreach ($subscriptions as $sub) {
                         $subRel = $sub['rel'];
@@ -160,7 +161,7 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
                             continue;
                         }
                         $relData = $preparedPayload[$db][$subRel];
-                        if (!isset($relData[$subOp]) || empty($relData[$subOp])) {
+                        if (empty($relData[$subOp])) {
                             continue;
                         }
 
@@ -203,6 +204,48 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
                     continue; // Subscriptions handled, skip legacy batch for this client
                 }
 
+                // --- Raw Subscription-based delivery ---
+                if (!empty($rawSubscriptions)) {
+                    foreach ($rawSubscriptions as $sub) {
+                        $subRel = $sub['schema'] . '.' . $sub['rel'];
+                        $subOp = $sub['op'];       // 'INSERT', 'UPDATE', or 'DELETE'
+                        $subWhere = $sub['where'];
+                        $subColumns = $sub['columns'];
+                        $subId = $sub['id'];
+
+                        // Check if this batch has data for the subscription's relation and operation
+                        if (!isset($preparedPayload[$db][$subRel])) {
+                            continue;
+                        }
+                        $relData = $preparedPayload[$db][$subRel];
+//                        if (empty($relData[$subOp])) {
+//                            continue;
+//                        }
+
+                        // Build a mini-batch with only this relation and operation
+                        $miniBatch = [
+                            'type' => 'batch',
+                            'db' => $db,
+                            'batch' => [
+                                $db => [
+                                    $subRel => [
+                                        $subOp => $relData[$subOp],
+                                        'full_data' => $relData['full_data'] ?? [],
+                                    ]
+                                ]
+                            ]
+                        ];
+
+                        // Apply ShapeFilter with subscription's where and columns
+                        $filter = new ShapeFilter();
+                        $miniBatch = $filter->filter($miniBatch, $subWhere, $subColumns);
+
+                        echo "[INFO] Subscription $subId -> {$client->getId()} ($subOp on $subRel, " . count($rows) . " rows)\n";
+                        $client->sendText(json_encode($miniBatch));
+                    }
+                    continue; // Subscriptions handled, skip legacy batch for this client
+                }
+
                 // --- Legacy batch delivery (clients without subscriptions) ---
                 $batchForClient = [];
                 if (is_array($allowedRels) && !empty($allowedRels) && is_array($preparedPayload)) {
@@ -215,27 +258,12 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
                 if (empty($batchForClient)) {
                     continue;
                 }
-                echo "[INFO] filtering payload\n";
-
-                $filter = new ShapeFilter();
 
                 $batch = [
                     'type' => 'batch',
                     'db' => $db,
                     'batch' => $batchForClient
                 ];
-
-                $where = $props["where"];
-                $columns = $props["columns"];
-                print_r($props);
-
-                $batch = $filter->filter($batch, $where, $columns);
-
-                if (empty($batch['batch'][$db][$props['rel']]['INSERT'])) {
-                    print_r("CONTINUE");
-                    continue;
-
-                }
 
                 echo "[INFO] Sending to: " . $client->getId() . "\n";
                 $client->sendText(json_encode($batch));
