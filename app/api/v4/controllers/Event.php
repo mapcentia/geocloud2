@@ -14,6 +14,7 @@ use app\api\v4\AcceptableContentTypes;
 use app\api\v4\AcceptableMethods;
 use app\api\v4\ApiInterface;
 use app\api\v4\Controller;
+use app\api\v4\Responses\GetResponse;
 use app\api\v4\Responses\NoContentResponse;
 use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
@@ -82,7 +83,7 @@ class Event extends AbstractApi
     #[Override]
     public function get_index(): Response
     {
-
+        return new GetResponse(["enabled"=> false]);
     }
 
     /**
