@@ -294,6 +294,7 @@ class Database extends Model
     /**
      * Sets the database name for the PostGIS connection.
      *
+     * @deprecated
      * @param string|null $db The name of the database to set. Null if no database is specified.
      * @return void
      */
@@ -305,6 +306,7 @@ class Database extends Model
     /**
      * Sets connection parameters based on the provided JWT data.
      *
+     * @deprecated
      * @param array $jwt The JWT containing connection data, including the database name and user ID.
      * @return void
      */
