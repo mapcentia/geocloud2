@@ -28,7 +28,7 @@ RUN apt-get update -y && apt-get -y install git
 # Clone GC2 from GitHub
 RUN mkdir -p /var/www \
     && cd /var/www \
-    && git clone https://github.com/mapcentia/geocloud2.git --branch connection
+    && git clone https://github.com/mapcentia/geocloud2.git --branch master
 
 WORKDIR /var/www/geocloud2
 
