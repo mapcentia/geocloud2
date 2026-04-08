@@ -57,12 +57,34 @@ $RegisterPayloadWithPDO = function (array $batchPayload, string $db) use ($worke
 
 $opMap = ['I' => 'INSERT', 'U' => 'UPDATE', 'D' => 'DELETE'];
 
+$reduceFullData = function (array &$relData, string $op): void {
+    if (empty($relData[$op])) {
+        $relData['full_data'] = [];
+        return;
+    }
+    if (!empty($relData['full_data'])) {
+        $pkIndex = [];
+        foreach ($relData[$op] as $pkRef) {
+            $pkIndex[$pkRef[0] . ':' . $pkRef[1]] = true;
+        }
+        $relData['full_data'] = array_values(array_filter($relData['full_data'], function ($row) use ($pkIndex) {
+            foreach ($pkIndex as $key => $_) {
+                [$col, $val] = explode(':', $key, 2);
+                if (isset($row[$col]) && (string)$row[$col] === $val) {
+                    return true;
+                }
+            }
+            return false;
+        }));
+    }
+};
+
 /**
  * Flush batch for a specific DB asynchronously.
  * Drains the outbox table and processes the events.
  */
-$flushBatch = function (string $db, string $channelName = '') use (&$batchState, &$broadcastHandler, $preparePayloadWithPDO, $RegisterPayloadWithPDO, $opMap) {
-    return async(function () use ($db, $channelName, &$batchState, &$broadcastHandler, $preparePayloadWithPDO, $RegisterPayloadWithPDO, $opMap) {
+$flushBatch = function (string $db, string $channelName = '') use (&$batchState, &$broadcastHandler, $preparePayloadWithPDO, $RegisterPayloadWithPDO, $opMap, $reduceFullData) {
+    return async(function () use ($db, $channelName, &$batchState, &$broadcastHandler, $preparePayloadWithPDO, $RegisterPayloadWithPDO, $opMap, $reduceFullData) {
         try {
             $pool = $batchState[$db]['pool'] ?? null;
             if (!$pool) {
@@ -165,6 +187,13 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
                             continue;
                         }
 
+                        foreach ($relData as $key => $datum) {
+                            if ($key !== $subOp && $key != 'full_data') {
+                                unset($relData[$key]);
+                            }
+                        }
+                        $reduceFullData($relData, $subOp);
+
                         // Build a mini-batch with only this relation and operation
                         $miniBatch = [
                             'type' => 'batch',
@@ -172,8 +201,7 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
                             'batch' => [
                                 $db => [
                                     $subRel => [
-                                        $subOp => $relData[$subOp],
-                                        'full_data' => $relData['full_data'] ?? [],
+                                        ...$relData,
                                     ]
                                 ]
                             ]
@@ -218,21 +246,25 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
                             continue;
                         }
                         $relData = $preparedPayload[$db][$subRel];
-//                        if (empty($relData[$subOp])) {
-//                            continue;
-//                        }
 
-                        // Build a mini-batch with only this relation and operation
-                        $ops = $subOp ? [$subOp => $relData[$subOp]] : $relData;
-                        $miniBatch = [
+                        if (!empty($subOp)) {
+                            foreach ($relData as $key => $datum) {
+                                if ($key !== $subOp && $key != 'full_data') {
+                                    unset($relData[$key]);
+                                }
+                            }
+                            $reduceFullData($relData, $subOp);
+                        }
+
+                        // Build a batch with only this relation and operation
+                        $batch = [
                             'id' => $subId,
                             'type' => 'batch',
                             'db' => $db,
                             'batch' => [
                                 $db => [
                                     $subRel => [
-                                        ...$ops,
-                                        'full_data' => $relData['full_data'] ?? [],
+                                        ...$relData
                                     ]
                                 ]
                             ]
@@ -240,10 +272,15 @@ $flushBatch = function (string $db, string $channelName = '') use (&$batchState,
 
                         // Apply ShapeFilter with subscription's where and columns
                         $filter = new ShapeFilter();
-                        $miniBatch = $filter->filter($miniBatch, $subWhere, $subColumns);
+                        $batch = $filter->filter($batch, $subWhere, $subColumns);
+                        // Extract filtered full_data rows
+                        $rows = $batch['batch'][$db][$subRel]['full_data'] ?? [];
+                        if (empty($rows)) {
+                            continue;
+                        }
 
                         echo "[INFO] Subscription $subId -> {$client->getId()} ($subOp on $subRel, " . count($rows) . " rows)\n";
-                        $client->sendText(json_encode($miniBatch));
+                        $client->sendText(json_encode($batch));
                     }
                     continue; // Subscriptions handled, skip legacy batch for this client
                 }
