@@ -306,13 +306,13 @@ class File extends AbstractApi
                 $data->import = false;
                 $result = $this->import($schema, $fileName, $data);
                 $result['schema'] = $schema;
-                $this->runPreExtension('processImport', (new Model(connection: $this->connection)), $result);
+                $this->runPreExtension('processImport', new Model(connection: $this->connection), $result);
                 $data->import = true;
             }
             $result = $this->import($schema, $fileName, $data);
             new Layer(connection: $this->connection)->insertDefaultMeta();
             $response = [];
-            foreach ($result['data'] as $k => $v) {
+            foreach ($result['data'] as $v) {
                 $r['driver'] = $v['driver'];
                 $r['count'] = $v['featureCount'];
                 $r['geom_type'] = $v['type'];
@@ -330,7 +330,8 @@ class File extends AbstractApi
     }
 
     /**
-     * @throws GC2Exception|\JsonException
+     * @throws GC2Exception
+     * @throws \JsonException
      */
     protected function import(?string $schema, string $fileName, ?stdClass $args = null): array
     {
@@ -341,7 +342,7 @@ class File extends AbstractApi
         }
         $fileFullPath = $dir . "/" . $fileName;
         if (!file_exists($fileFullPath)) {
-            throw new GC2Exception("File not found: {$fileName}", 404, null, "FILE_IMPORT_ERROR");
+            throw new GC2Exception("File not found: $fileName", 404, null, "FILE_IMPORT_ERROR");
         }
         // Check if file is .zip
         $zipCheck1 = explode(".", $fileName);
@@ -464,7 +465,7 @@ class File extends AbstractApi
         if (!empty($data) && !property_exists($data, 'import')) {
             $data->import = true;
         }
-        // If import is set, set schema to required
+        // If import is set, set schema to require
         if ($data->import === true) {
             $collection->fields['schema'] = new Assert\Required(
                 new Assert\Type('string')
