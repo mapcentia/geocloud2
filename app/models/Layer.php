@@ -29,7 +29,7 @@ class Layer extends Table
 {
     function __construct(public ?Connection $connection = null)
     {
-        parent::__construct(table: "settings.geometry_columns_view", connection: $this->connection);;
+        parent::__construct(table: "settings.geometry_columns_view", connection: $this->connection);
     }
 
     /**
@@ -60,6 +60,7 @@ class Layer extends Table
      * @param string $schema The schema in which the table resides.
      * @param string $table The name of the table to retrieve geometry columns from.
      * @return array The list of geometry columns from the specified table.
+     * @throws PDOException
      */
     public function getGeometryColumnsFromTable(string $schema, string $table): array
     {
@@ -73,6 +74,7 @@ class Layer extends Table
      * @param string $schema
      * @param string $table
      * @return array
+     * @throws PDOException
      */
     public function getPrivilegesAsArray(string $schema, string $table): array
     {
@@ -81,6 +83,7 @@ class Layer extends Table
         $this->execute($res, ['table' => $table, 'schema' => $schema]);
         $privileges = $res->fetchAll(PDO::FETCH_COLUMN);
         $response = [];
+        $p = [];
         foreach ($privileges as $privilege) {
             $p = json_decode($privilege, true);
         }
@@ -94,6 +97,7 @@ class Layer extends Table
      * @param string $_key_
      * @param string $column
      * @return string|null
+     * @throws PDOException
      */
     public function getValueFromKey(string $_key_, string $column): ?string
     {
@@ -408,7 +412,7 @@ class Layer extends Table
                     $arr = $this->array_push_assoc($arr, "children", !empty($this->getChildTables($row["f_table_schema"], $row["f_table_name"])["data"]) ? $this->getChildTables($row["f_table_schema"], $row["f_table_name"])["data"] : null);
                 }
 
-                // If session is sub-user we always check privileges
+                // If session is sub-user, we always check privileges
                 $subUser = $_SESSION["subuser"] ?? !($jwt['superUser'] ?? true);
                 $userName = $_SESSION["screen_name"] ?? $jwt['uid'] ?? null;
                 $userGroup = $_SESSION["usergroup"] ?? $jwt['userGroup'] ?? null;
@@ -467,6 +471,7 @@ class Layer extends Table
      * @param string $_key_
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws GC2Exception
      */
     public function getElasticsearchMapping(string $_key_): array
     {
@@ -505,7 +510,7 @@ class Layer extends Table
      * @param $data
      * @param $_key_
      * @return array
-     * @throws PhpfastcacheInvalidArgumentException|InvalidArgumentException
+     * @throws PhpfastcacheInvalidArgumentException|InvalidArgumentException|GC2Exception
      */
     public function updateElasticsearchMapping($data, $_key_): array
     {
@@ -595,7 +600,7 @@ class Layer extends Table
      * @param array<string> $tables List of fully qualified table names to move, in the format "schema.table".
      * @param string $schema The target schema to which the tables should be moved.
      * @return array<string, mixed> An array containing the success status and a message.
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws PhpfastcacheInvalidArgumentException|InvalidArgumentException
      */
     public function setSchema(array $tables, string $schema): array
     {
@@ -653,7 +658,6 @@ class Layer extends Table
     /**
      * @param string $_key_ The key used to fetch privileges, potentially modified based on configuration settings.
      * @return array<string, mixed> An associative array containing success flag, privileges data, and optional message.
-     * @throws PhpfastcacheInvalidArgumentException
      */
     public function getPrivileges(string $_key_): array
     {
@@ -689,7 +693,7 @@ class Layer extends Table
      */
     public function updatePrivileges(object $data, ?Table $table = null): array
     {
-        (new User($data->subuser))->doesUserExist();
+        new User($data->subuser)->doesUserExist();
         $this->clearCacheOnSchemaChanges();
         $LayerKeys = explode(',', $data->_key_);
         foreach ($LayerKeys as $layerKey) {
@@ -715,9 +719,12 @@ class Layer extends Table
         return $response;
     }
 
+    /**
+     * @throws PDOException|InvalidArgumentException|GC2Exception
+     */
     public function setPrivilegesOnAll(string $subuser, string $privilege): void
     {
-        (new User($subuser))->doesUserExist();
+        new User($subuser)->doesUserExist();
         $this->clearCacheOnSchemaChanges();
         $path = "{" . $subuser . "}";
         $privilege = "\"" . $privilege . "\"";
@@ -793,7 +800,7 @@ class Layer extends Table
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws PDOException
      */
     public function getEstExtent($_key_, $srs = "4326"): array
     {
@@ -836,6 +843,7 @@ class Layer extends Table
      *                     and the `keys` property is an array of target keys.
      * @return array<bool|string> Returns an array indicating success with a boolean value.
      *                            If the operation fails, it includes an error message and a status code.
+     * @throws InvalidArgumentException|GC2Exception
      */
     public function copyMeta(string $from, object $data): array
     {
@@ -874,7 +882,7 @@ class Layer extends Table
      * @param string $schema
      * @param string $table
      * @return array<bool|array<string>>
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws PDOException
      */
     public function getRole(string $schema, string $table): array
     {
@@ -911,7 +919,7 @@ class Layer extends Table
     /**
      * @param string $field The database field used for grouping the results.
      * @return array<bool|array<array<string, mixed>>> An array containing the success status and the grouped data retrieved from the database.
-     * @throws DatabaseException If there is an error executing the database query.
+     * @throws PDOException
      */
     public function getGroups(string $field): array
     {
