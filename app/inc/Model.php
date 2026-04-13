@@ -1107,6 +1107,7 @@ class Model
      * @param string $schema
      * @param string $table
      * @return array
+     * @throws PDOException
      */
     public function getColumns(string $schema, string $table): array
     {
