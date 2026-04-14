@@ -11,15 +11,15 @@ namespace app\inc;
 
 class Response
 {
-    const SUPER_USER_ONLY = [
+    const array SUPER_USER_ONLY = [
         "code" => 400,
         "success" => false,
         "message" => "Only a super user can use this API",
     ];
 
     /**
-     * @param array<mixed> $response
-     * @return array<mixed>
+     * @param array $response
+     * @return array
      */
     static function json(array $response): array
     {
@@ -27,13 +27,13 @@ class Response
     }
 
     /**
-     * @param array<mixed> $response
+     * @param array $response
      * @return string
      */
     static function toJson(array $response): string
     {
         $code = (isset($response["code"])) ? $response["code"] : "200";
-        header("HTTP/1.0 {$code} " . Util::httpCodeText($code));
+        header("HTTP/1.0 $code " . Util::httpCodeText($code));
         $callback = Input::get('jsonp_callback') ?: Input::get('callback');
         if ($callback) {
             header('Content-type: application/javascript; charset=utf-8');

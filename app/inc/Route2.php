@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2023 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -12,6 +12,7 @@ use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableMethods;
 use app\api\v4\AcceptableContentTypes;
+use app\api\v4\Controller;
 use app\api\v4\ApiInterface;
 use app\exceptions\GC2Exception;
 use Closure;
@@ -106,6 +107,7 @@ class Route2
             }
             $contentType = Input::getContentType() ? trim(explode(';', Input::getContentType())[0]) : "application/json";
             $accepts = Input::getAccept() ? array_map(fn($str) => trim(explode(';', $str)[0]), explode(',', Input::getAccept())) : ["*/*"];
+            // Check AcceptableMethods
             $attributes = $reflectionClass->getAttributes(AcceptableMethods::class);
             foreach ($attributes as $attribute) {
                 $listener = $attribute->newInstance();
@@ -127,7 +129,17 @@ class Route2
                         return;
                     }
                 }
+
             }
+            // Check scope
+            $attributes = $reflectionClass->getAttributes(Controller::class);
+            foreach ($attributes as $attribute) {
+                $listener = $attribute->newInstance();
+                if ($listener::class == Controller::class) {
+                    $listener->checkScope($this->jwt);
+                }
+            }
+
             foreach ($reflectionMethods as $reflectionMethod) {
                 if ($reflectionMethod->getName() == $action) {
                     $attributes = $reflectionMethod->getAttributes(AcceptableContentTypes::class);

@@ -14,10 +14,10 @@ use app\inc\Response;
 use Attribute;
 
 #[Attribute]
-class Controller
+readonly class Controller
 {
 
-    public function __construct(private readonly string $route, private readonly Scope $scope)
+    public function __construct(private string $route, private Scope $scope)
     {
     }
 
@@ -32,6 +32,9 @@ class Controller
 
     }
 
+    /**
+     * @throws GC2Exception
+     */
     public function checkScope(array $jwt): void
     {
         if (Input::getMethod() === 'options') {
