@@ -136,7 +136,9 @@ class Route2
             foreach ($attributes as $attribute) {
                 $listener = $attribute->newInstance();
                 if ($listener::class == Controller::class) {
-                    $listener->checkScope($this->jwt);
+                    if (isset($this->jwt)) {
+                        $listener->checkScope($this->jwt);
+                    }
                 }
             }
 
