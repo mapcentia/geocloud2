@@ -37,7 +37,7 @@ class Signup extends AbstractApi
 
     public function get_index(): Response
     {
-        $socialSignup = true;
+        $socialSignup = !empty(App::$param['socialSignup']);
         if ($_GET['parentdb']) {
             $requiredParams = ['client_id', 'parentdb'];
             foreach ($requiredParams as $requiredParam) {
