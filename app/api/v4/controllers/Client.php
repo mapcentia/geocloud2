@@ -116,7 +116,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['POST', 'PATCH', 'DELETE', 'GET', 'HEAD', 'OPTIONS'])]
-#[Controller(route: 'api/v4/clients/[id]', scope: Scope::SUB_USER_ALLOWED)]
+#[Controller(route: 'api/v4/clients/[id]', scope: Scope::SUPER_USER_ONLY)]
 class Client extends AbstractApi
 {
     private readonly ClientModel $client;
