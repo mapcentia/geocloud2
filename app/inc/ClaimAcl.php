@@ -355,6 +355,28 @@ final class ClaimAcl
 
 
     /**
+     * Aggregates all applicable rules from the matched claims.
+     *
+     * @param object $claims The claims object used to determine matching rules.
+     * @return array|null An array of rules if matches are found, or null if no matches exist.
+     */
+    public function allRules(object $claims): ?array
+    {
+        $matches = $this->collectMatches($claims);
+        if (count($matches) < 1) {
+            return null;
+        }
+        $out = [];
+        foreach ($matches as $m) {
+            foreach ($m['rules']['__rules'] as $op) {
+                $out[] = $op;
+            }
+        }
+        return $out;
+    }
+
+
+    /**
      * Deterministic "most specific wins" among already-matching candidates.
      */
     private function pickBestAmong(array $candidates): ?array

@@ -16,6 +16,7 @@ use app\inc\Jwt;
 use app\inc\Model;
 use app\inc\ClaimAcl;
 use app\inc\Util;
+use app\models\Geofence as GeofenceModel;
 use app\models\User as UserModel;
 use Exception;
 use Firebase\JWT\JWK;
@@ -189,6 +190,7 @@ class Session extends Model
     {
         \app\inc\Session::start();
         $openIdConfig = App::$param['openIdConfig'] ?? null;
+        $conn = new Connection(database: $parentDb);
 
         if ($openIdConfig) {
 
@@ -284,7 +286,7 @@ class Session extends Model
             }
 
             // Set privileges and group for sub-user
-            // Only set if there is a claim match. Otherwise the sub-user is not changed
+            // Only set if there is a claim match. Otherwise, the sub-user is not changed
             if (!$superuser) {
                 if (!$acl = @file_get_contents(App::$param["path"] . "/app/conf/claim_acl.json")) {
                     error_log("Unable to read claim_acl.json");
@@ -296,6 +298,7 @@ class Session extends Model
                     $claimAcl = new ClaimAcl($acl);
                     $grants = $claimAcl->allTablePermissions($payload);
                     $membershipsKeys = $claimAcl->allMembershipKeys($payload);
+                    $rules = $claimAcl->allRules($payload);
                     if ($membershipsKeys) {
                         $memberships = [];
                         foreach ($membershipsKeys as $key) {
@@ -308,7 +311,6 @@ class Session extends Model
                     }
                     // Set grants
                     if (is_array($grants)) {
-                        $conn = new Connection(database: $parentDb);
                         $layer = new Layer(connection: $conn);
                         $table = new Table(table: "settings.geometry_columns_join", connection: $conn);
                         $table->connect();
@@ -355,6 +357,15 @@ class Session extends Model
                             $row['usergroup'] = $memberships[0]; // TODO
                         }
                         $user->commit();
+                    }
+
+                    // Set rules
+                    if (is_array($rules)) {
+                        $geofence = new GeofenceModel(connection: $conn);
+                        $geofence->begin();
+                        foreach ($rules as $rule) {
+                            $geofence->create($rule);
+                        }
                     }
                 }
             }
