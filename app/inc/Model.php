@@ -1240,7 +1240,14 @@ class Model
         $this->execute($res);
     }
 
-    public function getTablesFromSchema(string $schema): array
+    /**
+     * Retrieves the names of tables from the specified schema.
+     *
+     * @param string $schema The name of the schema from which to retrieve table names.
+     *
+     * @return array An array of table names belonging to the specified schema.
+     */
+    public function getTableNamesFromSchema(string $schema): array
     {
         $response = [];
         $sql = "SELECT tablename as name FROM pg_tables WHERE schemaname = :schema";
@@ -1252,6 +1259,35 @@ class Model
         return $response;
     }
 
+    /**
+     * Retrieves the names of views and materialized views from the specified schema.
+     *
+     * @param string $schema The name of the schema from which to retrieve the view names.
+     *
+     * @return array An array containing the names of the views and materialized views in the specified schema.
+     */
+    public function getViewNamesFromSchema(string $schema): array
+    {
+        $response = [];
+        $views = $this->getViewsFromSchema($schema);
+        foreach ($views as $v) {
+            $response[] = $v["name"];
+        }
+        return $response;
+    }
+
+    /**
+     * Retrieves views and materialized views from the specified schema.
+     *
+     * @param string $schema The name of the schema from which to fetch views and materialized views.
+     *
+     * @return array An array of views and materialized views, where each item includes:
+     *               - name: The name of the view or materialized view.
+     *               - schema: The schema to which the view or materialized view belongs.
+     *               - owner: The owner of the view or materialized view.
+     *               - ismat: A flag indicating if it is a materialized view ('t') or a regular view ('f').
+     *               - definition: The SQL definition of the view or materialized view.
+     */
     public function getViewsFromSchema(string $schema): array
     {
         $response = [];

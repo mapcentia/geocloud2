@@ -337,10 +337,8 @@ class Table extends AbstractApi
         $response['name'] = $table->tableWithOutSchema;
         $response['columns'] = $columns;
         $response['comment'] = $comment;
-        if ($table->relType == "TABLE") {
-            $response['indices'] = $indices;
-            $response['constraints'] = $constraints;
-        }
+        $response['indices'] = $indices;
+        $response['constraints'] = $constraints;
         $response['_links'] = [
             'columns' => "/api/v4/schemas/$table->schema/tables/$table->tableWithOutSchema/columns",
             'indices' => "/api/v4/schemas/$table->schema/tables/$table->tableWithOutSchema/indices",
@@ -360,7 +358,10 @@ class Table extends AbstractApi
     public static function getTables(string $schema, ApiInterface $self): array
     {
         $tables = [];
-        foreach ((new Model(connection: $self->connection))->getTablesFromSchema($schema) as $name) {
+        foreach ([
+                     ...new Model(connection: $self->connection)->getTableNamesFromSchema($schema),
+                     ...new Model(connection: $self->connection)->getViewNamesFromSchema($schema),
+                 ] as $name) {
             $tableName = $schema . "." . $name;
             $tables[] = Input::get('namesOnly') !== null ? ['name' => $tableName] : self::getTable(new TableModel(table: $tableName, lookupForeignTables: false, connection: $self->connection), $self);
         }

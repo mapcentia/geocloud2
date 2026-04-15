@@ -134,7 +134,7 @@ class Commit extends AbstractApi
         @mkdir($baseDir . '/meta', 0777, true);
         @mkdir($repo->getRepositoryPath() . '/pages', 0777, true);
 
-        foreach ((new Model())->getTablesFromSchema($schema) as $name) {
+        foreach (new Model()->getTableNamesFromSchema($schema) as $name) {
             $table = Table::getTable(new TableModel($schema . "." . $name, false, true, false, connection: $this->connection), $this);
             $file = $baseDir . "/$schema/tables/" . $name . '.json';
             file_put_contents($file, json_encode($table, JSON_PRETTY_PRINT));
