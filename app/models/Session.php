@@ -364,7 +364,7 @@ class Session extends Model
                         $geofence = new GeofenceModel(connection: $conn);
                         $geofence->begin();
                         foreach ($rules as $rule) {
-                            $geofence->create($rule);
+//                            $geofence->create($rule);
                         }
                     }
                 }
