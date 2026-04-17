@@ -1,4 +1,4 @@
-import {CodeFlow} from "@mapcentia/gc2-js-client";
+import {CodeFlow} from "@centia-io/sdk";
 import {getGC2ConfigurationCall} from "../api";
 
 // Fallback defaults to preserve existing behavior if remote config is missing
