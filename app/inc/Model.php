@@ -467,6 +467,8 @@ class Model
             }
             $index = $this->getIndexes($_schema, $_table);
             $comments = $this->getColumnComments($_schema, $_table);
+            $fieldconf = !empty($this->geometryColumns["fieldconf"]) ? (array)json_decode($this->geometryColumns["fieldconf"]) : [];
+
 
             while ($row = $this->fetchRow($res)) {
                 $column = $row["column_name"];
@@ -549,6 +551,7 @@ class Model
                     "max_bytes" => $row["max_bytes"],
                     "reference" => count($references) == 0 ? null : $references,
                     "restriction" => sizeof($foreignValues) > 0 ? $foreignValues : null,
+                    "is_nullable" => $fieldconf[$column]->is_nullable,
                 );
 
                 // The following is only set on tables
@@ -556,7 +559,6 @@ class Model
                     if ($this->isTableOrView($_schema . '.' . $_table)['data'] == "TABLE") {
                         $tmpArr["is_unique"] = !empty($index["is_unique"][$row["column_name"]]);
                         $tmpArr["is_primary"] = !empty($index["is_primary"][$row["column_name"]]);
-                        $tmpArr["is_nullable"] = !$row['is_nullable'];
                         $tmpArr["default_value"] = $row['default_value'];
                         $tmpArr["identity_generation"] = $row['identity_generation'];
                         $tmpArr["index_method"] = !empty($index["index_method"][$row["column_name"]]) ? $index["index_method"][$row["column_name"]] : null;
