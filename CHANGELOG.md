@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.4.0] - 2026-16-4
+### Added
+- Event: GraphQL subscriptions.
+
+### Changed
+- Event: implementation of Shape filter with column projection.
+
+### Security
+- Controller scope in v4 API was not working, which could allow sub-users to call super-user-only APIs. 
+
+
 ## [2026.3.11] - 2026-30-3
 ### Changed
 - Throw an exception for unauthorized database access in Meta v1 API. 
