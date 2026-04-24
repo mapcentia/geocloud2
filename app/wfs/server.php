@@ -1412,10 +1412,10 @@ function doSelect(string $table, string $sql, string $from, ?string $sql2): void
             $fieldValue = $myrow[$fieldName];
             if (
                 !empty($fieldName) &&
-                !empty($tableObj->metaData[$fieldName] && $tableObj->metaData[$fieldName]['type'] != "geometry") &&
+                !empty($tableObj->metaData[$fieldName] && isset($tableObj->metaData[$fieldName]) && $tableObj->metaData[$fieldName]['type'] != "geometry") &&
                 $fieldName != "txmin" && $fieldName != "tymin" &&
                 $fieldName != "txmax" && $fieldName != "tymax" &&
-                $fieldName != "tymax" && $fieldName != "oid"
+                $fieldName != "oid"
             ) {
                 if (!empty($gmlUseAltFunctions['altFieldValue'])) {
                     $fieldValue = altFieldValue($fieldName, $fieldValue);
