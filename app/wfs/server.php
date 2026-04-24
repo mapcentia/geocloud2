@@ -895,7 +895,7 @@ function getXSD(\app\inc\Model $postgisObject)
             $fieldsArr[$table][] = $value[1];
         }
         foreach ($fieldsArr[$table] as $hello) {
-            $atts["nillable"] = $tableObj->metaData[$hello]["is_nullable"] ? "true" : "false";
+            $atts["nillable"] = !empty($tableObj->metaData[$hello]["is_nullable"]) ? "true" : "false";
             $atts["name"] = $hello;
             $properties = !empty($fieldConf->{$atts["name"]}) ? $fieldConf->{$atts["name"]} : null;
             //$atts["label"] = !empty($properties->alias) ? $properties->alias : $atts["name"];
