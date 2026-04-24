@@ -551,7 +551,7 @@ class Model
                     "max_bytes" => $row["max_bytes"],
                     "reference" => count($references) == 0 ? null : $references,
                     "restriction" => sizeof($foreignValues) > 0 ? $foreignValues : null,
-                    "is_nullable" => $fieldconf[$column]->is_nullable,
+                    "is_nullable" => $fieldconf[$column]->is_nullable ?? null,
                 );
 
                 // The following is only set on tables
