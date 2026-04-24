@@ -960,43 +960,4 @@ class Layer extends Table
         $response['count'] = $res->rowCount();
         return $response;
     }
-
-    /**
-     * Installs or replaces a database trigger to emit real-time notifications for a specified table.
-     *
-     * @param string $_key_ The full identifier of the table in the format "schema.table".
-     * @return void
-     * @throws GC2Exception If the table does not have a primary key or has a primary key with multiple columns.
-     */
-    public function installNotifyTrigger(string $_key_): void
-    {
-        $explodedKey = self::explodeTableName($_key_);
-        $con = $this->getConstrains($explodedKey['schema'], $explodedKey['table'], 'p')['data'];
-        if (count($con) == 0) {
-            throw new GC2Exception("Table must have a primary key for emitting real time events", 401);
-        }
-        if (count($con) > 1) {
-            throw new GC2Exception("Table has primary key with multiple columns", 401);
-        }
-        $sql = "DROP TRIGGER IF EXISTS _gc2_notify_transaction_trigger ON \"{$explodedKey['schema']}\".\"{$explodedKey['table']}\"";
-        $res = $this->prepare($sql);
-        $this->execute($res);
-        $sql = "CREATE TRIGGER _gc2_notify_transaction_trigger AFTER INSERT OR UPDATE OR DELETE ON \"{$explodedKey['schema']}\".\"{$explodedKey['table']}\" FOR EACH ROW EXECUTE PROCEDURE _gc2_notify_transaction('{$con[0]['column_name']}', '{$explodedKey['schema']}','{$explodedKey['table']}', 'snapshot')";
-        $res = $this->prepare($sql);
-        $this->execute($res);
-    }
-
-    /**
-     * Removes a notification trigger from the specified table in a schema.
-     *
-     * @param string $_key_ The composite key in the format "schema.table" used to identify the schema and table.
-     * @return void
-     */
-    public function removeNotifyTrigger(string $_key_): void
-    {
-        $explodedKey = self::explodeTableName($_key_);
-        $sql = "DROP TRIGGER IF EXISTS _gc2_notify_transaction_trigger ON \"{$explodedKey['schema']}\".\"{$explodedKey['table']}\"";
-        $res = $this->prepare($sql);
-        $this->execute($res);
-    }
 }

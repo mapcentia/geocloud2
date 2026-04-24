@@ -215,21 +215,17 @@ class Column extends AbstractApi
                 $obj->id = $oldColumnName;
                 $obj->column = $data->name ?? $oldColumnName;
                 $obj->type = $data->type;
+                $obj->is_nullable = $data->is_nullable; // Is set as Meta and will be set on table, if so
                 if (property_exists($data, 'comment')) {
                     $obj->comment = $data->comment;
                 }
-                $r = $this->table[0]->updateColumn($obj, $key, true);
+                $r = $this->table[0]->updateColumn($obj, $key, false);
                 $list[] = $r['name'];
 
             }
             $newName = $r["name"];
-            if (property_exists($data, "is_nullable")) {
-                if (!$data->is_nullable) {
-                    $this->table[0]->addNotNullConstraint($newName);
-                } else {
-                    $this->table[0]->dropNotNullConstraint($newName);
-                }
-            }
+
+            // OK for views. Postgres is permissive with defaults on views. No effect
             if (property_exists($data, "default_value")) {
                 if ($data->default_value === null) {
                     $this->table[0]->dropDefaultValue($newName);

@@ -187,7 +187,7 @@ class Table extends AbstractApi
             $list[] = $r['tableName'];
         }
         $this->table[0]->commit();
-        (new Layer(connection: $this->connection))->insertDefaultMeta();
+        new Layer(connection: $this->connection)->insertDefaultMeta();
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/";
         return $this->postResponse($baseUri, $list);
     }
@@ -339,6 +339,8 @@ class Table extends AbstractApi
         $response['comment'] = $comment;
         $response['indices'] = $indices;
         $response['constraints'] = $constraints;
+        $response['_type'] = $table->relType;
+        $response['_events'] = $table->isNotifyTriggerInstalled();
         $response['_links'] = [
             'columns' => "/api/v4/schemas/$table->schema/tables/$table->tableWithOutSchema/columns",
             'indices' => "/api/v4/schemas/$table->schema/tables/$table->tableWithOutSchema/indices",
@@ -357,15 +359,14 @@ class Table extends AbstractApi
      */
     public static function getTables(string $schema, ApiInterface $self): array
     {
-        $tables = [];
-        foreach ([
-                     ...new Model(connection: $self->connection)->getTableNamesFromSchema($schema),
-                     ...new Model(connection: $self->connection)->getViewNamesFromSchema($schema),
-                 ] as $name) {
-            $tableName = $schema . "." . $name;
-            $tables[] = Input::get('namesOnly') !== null ? ['name' => $tableName] : self::getTable(new TableModel(table: $tableName, lookupForeignTables: false, connection: $self->connection), $self);
+        $rels = [];
+        $tables = array_map(fn($t) => ['name' => $t, 'type' => 'TABLE', 'events' =>
+            new TableModel(table: $schema . "." . $t, lookupForeignTables: false, connection: $self->connection)->isNotifyTriggerInstalled()], new Model(connection: $self->connection)->getTableNamesFromSchema($schema));
+        $views = array_map(fn($t) => ['name' => $t, 'type' => 'VIEW', 'events' => null], new Model(connection: $self->connection)->getViewNamesFromSchema($schema));
+        foreach ([...$tables, ...$views] as $v) {
+            $rels[] = Input::get('namesOnly') !== null ? ['name' => $v['name'], '_type' => $v['type'], '_events' => $v['events']] : self::getTable(new TableModel(table: $schema . "." . $v['name'], lookupForeignTables: false, connection: $self->connection), $self);
         }
-        return $tables;
+        return $rels;
     }
 
     /**

@@ -83,7 +83,7 @@ class Event extends AbstractApi
     #[Override]
     public function get_index(): Response
     {
-        return new GetResponse(["enabled"=> false]);
+        return new GetResponse(["enabled"=> $this->table[0]->isNotifyTriggerInstalled()]);
     }
 
     /**
@@ -103,9 +103,9 @@ class Event extends AbstractApi
         $body = Input::getBody();
         $data = json_decode($body);
         if ($data->enabled === true) {
-            $this->layer->installNotifyTrigger($this->qualifiedName[0]);
+            $this->table[0]->installNotifyTrigger();
         } elseif ($data->enabled === false) {
-            $this->layer->removeNotifyTrigger($this->qualifiedName[0]);
+            $this->table[0]->removeNotifyTrigger();
         }
         return new NoContentResponse();
     }
