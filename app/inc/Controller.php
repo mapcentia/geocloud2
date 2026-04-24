@@ -208,7 +208,7 @@ class Controller
                     $privileges = (array)json_decode($row["privileges"]);
                     $response['auth_level'] = $auth;
                     if ($isAuth) {
-                        $response['privileges'] = $privileges[$userGroup] ?? $privileges[$subUser];
+                        $response['privileges'] = $privileges[$userGroup] ?? $privileges[$subUser] ?? null;
                         $response['session'] = $session;
                         $response[self::USED_RELS_KEY] = $rels;
                         switch ($transaction) {
