@@ -768,25 +768,7 @@ class Table extends Model
         $fieldconfArr = $this->geometryColumns["fieldconf"] == null ? [] : (array)json_decode($this->geometryColumns["fieldconf"]);
         foreach ($data as $value) {
             $safeColumn = $value->column;
-            if ($this->metaData[$value->id]["is_nullable"] != $value->is_nullable && !$onlyRename) {
-                $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ALTER \"$value->column\" " . ($value->is_nullable ? "DROP" : "SET") . " NOT NULL";
-                $res = $this->prepare($sql);
-                try {
-                    $this->execute($res);
-                    $response['success'] = true;
-                } catch (PDOException $e) {
-                    if ($this->relType == "TABLE" || $this->relType == "MATVIEW") {
-                        throw $e;
-                    }
-                }
-            }
-            if ($this->metaData[$value->id]["desc"] !== $value->desc && !$onlyRename) {
-                if ($value->desc === "") {
-                    $value->desc = null;
-                }
-                $this->setColumnComment($value->desc, $value->id);
 
-            }
             // Case of renaming column
             if ($value->id != $value->column && ($value->column) && ($value->id)) {
                 if ($safeColumn == "state") {
@@ -808,6 +790,25 @@ class Table extends Model
             } else {
                 $response['message'] = "Updated";
                 $response['name'] = $value->id;
+            }
+            if ($this->metaData[$value->id]["is_nullable"] != $value->is_nullable && !$onlyRename) {
+                $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ALTER \"$value->column\" " . ($value->is_nullable ? "DROP" : "SET") . " NOT NULL";
+                $res = $this->prepare($sql);
+                try {
+                    $this->execute($res);
+                    $response['success'] = true;
+                } catch (PDOException $e) {
+                    if ($this->relType == "TABLE" || $this->relType == "MATVIEW") {
+                        throw $e;
+                    }
+                }
+            }
+            if ($this->metaData[$value->id]["desc"] !== $value->desc && !$onlyRename) {
+                if ($value->desc === "") {
+                    $value->desc = null;
+                }
+                $this->setColumnComment($value->desc, $value->id);
+
             }
             if (property_exists($value, 'comment')) {
                 $this->setColumnComment($value->comment, $safeColumn);
