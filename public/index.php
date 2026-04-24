@@ -529,7 +529,16 @@ $handler = static function () use ($routes) {
             }
             Route::miss();
         }
-    } catch (PDOException|GC2Exception $exception) {
+    } catch (PDOException $exception) {
+        $response["success"] = false;
+        $response["message"] = $exception->getMessage();
+        $response["code"] = $exception->getCode();
+        if (getenv('MODE_ENV') == 'dev') {
+            $response["file"] = $exception->getFile();
+            $response["line"] = $exception->getLine();
+            $response["trace"] = $exception->getTraceAsString();
+        }
+    } catch (GC2Exception $exception) {
         $response["success"] = false;
         $response["message"] = $exception->getMessage();
         $response["code"] = $exception->getCode();
