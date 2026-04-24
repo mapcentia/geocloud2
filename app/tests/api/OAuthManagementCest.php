@@ -287,9 +287,9 @@ class OAuthManagementCest
         $I->sendGET('/api/v4/schemas/' . $this->schemaName . '/tables?namesOnly=1');
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsJson();
-        $I->seeResponseContainsJson([
-            'name' => $this->schemaName . '.' . $this->tableName3,
-        ]);
+        $I->seeResponseContainsJson([[
+            'name' =>  $this->tableName3,
+        ]]);
     }
 
     public function shouldPatchRenameTableAndSetComment(ApiTester $I)
