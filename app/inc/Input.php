@@ -62,7 +62,7 @@ class Input
      */
     public static function getAccept(): ?string
     {
-        return $_SERVER['HTTP_ACCEPT'];
+        return $_SERVER['HTTP_ACCEPT'] ?? null;
     }
 
     /**
