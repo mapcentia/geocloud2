@@ -259,7 +259,8 @@ class Geofence extends Model
                 $newArr["{{{$key}}}"] = $value;
             }
             return strtr($str, $newArr);
-        } catch (Exception) {
+        } catch (Exception $e) {
+            error_log("Geofence: fillPlaceholders error: " . $e->getMessage());
            return $str;
         }
     }
