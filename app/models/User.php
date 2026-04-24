@@ -151,7 +151,7 @@ class User extends Model
         $res = $this->prepare($query);
         $this->execute($res, array(":sUserID" => $this->userId, ":parentDb" => $this->parentDb));
         $row = $this->fetchRow($res);
-        if (!$row['userid']) {
+        if (empty($row['userid'])) {
             throw new GC2Exception("User identifier $this->userId was not found (parent database: " . ($this->parentDb ?: 'null') . ")", 404, null, 'USER_NOT_FOUND');
         }
         if (!empty($row['properties'])) {
