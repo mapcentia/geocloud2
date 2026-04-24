@@ -331,6 +331,9 @@ ADD entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
+# Final CMD
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
 ###############################################################################
 # Dev Stage (final)
 ###############################################################################
@@ -365,5 +368,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends php${PHP_VERSIO
 COPY conf/fpm/xdebug.ini /etc/php/${PHP_VERSION}/mods-available/
 RUN phpenmod xdebug
 
-# Final CMD
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+

@@ -3,6 +3,15 @@ networks:
     external: false
 
 services:
+  mapserver:
+    image: mapcentia/gc2core8:mapserver
+    privileged: true
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: mapserver
+      args:
+        - ECW_VERSION=3
   gc2core:
     image: gc2core
     privileged: true
@@ -83,25 +92,39 @@ services:
       - keycloak:/opt/keycloak/data/
 
 #  limesurvey:
-#    image: acspri/limesurvey
-#    ports:
-#      - 8082:80
+#    image: docker.io/martialblog/limesurvey:6-fpm
 #    networks:
 #      - default
 #      - internal
+#    links:
+#      - postgres
+#    depends_on:
+#      - postgres
 #    environment:
-#      LIMESURVEY_DB_PASSWORD: 1234
-#      LIMESURVEY_DB_USER: gc2
-#      LIMESURVEY_DB_HOST: postgis
-#      LIMESURVEY_DB_NAME: mydb
-#      LIMESURVEY_ADMIN_USER: admin
-#      LIMESURVEY_ADMIN_PASSWORD: password
-#      LIMESURVEY_ADMIN_NAME: Lime Administrator
-#      LIMESURVEY_ADMIN_EMAIL: lime@lime.lime
+#      DB_TYPE: pgsql
+#      DB_PASSWORD: 1234
+#      DB_USERNAME: gc2
+#      DB_HOST: postgres
+#      DB_NAME: mydb
+#      DB_PORT: 5432
+#      ADMIN_USER: admin
+#      ADMIN_NAME: Admin
+#      ADMIN_PASSWORD: admin
+#      PUBLIC_URL: http://localhost:8082  # Example, Change this
+#      BASE_URL: http://localhost:8082 # Example, Change this
 #    volumes:
-#      - ./plugins:/var/www/html/plugins
-#      - ./upload:/var/www/html/upload
-#      - ./config:/var/www/html/application/config
+#      - ./config.php:/var/www/html/application/config/config.php
+#      - lime:/var/www/html
+#
+#  lime-web:
+#    image: docker.io/nginx
+#    links:
+#      - limesurvey
+#    ports:
+#      - "8082:80"
+#    volumes:
+#      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+#      - lime:/var/www/html
 
 #  elasticsearch:
 #    image: elasticsearch:7.17.6
@@ -114,6 +137,7 @@ services:
 #      - "discovery.type=single-node"
 
 volumes:
+  lime:
   pgdata:
   keycloak:
 
