@@ -17,14 +17,10 @@ namespace app\inc;
  */
 class Globals
 {
-    /**
-     * @var int
-     */
+    public static string $userDatabase = "mapcentia";
+
     public static int $cacheTtl = 1;
 
-    /**
-     * @var array[]
-     */
     static public array $metaConfig = [
         [
             "fieldsetName" => "CKAN",

@@ -18,7 +18,6 @@ use Phpfastcache\Exceptions\PhpfastcacheLogicException;
 use Psr\Cache\InvalidArgumentException;
 use stdClass;
 
-const USER_DATABASE = 'mapcentia';
 
 /**
  * Class Setting
@@ -294,7 +293,7 @@ class Setting extends Model
             $response['data'] = $arr;
 
             // Get userGroups from mapcentia database
-            $users = new Model(new \app\inc\Connection(database: USER_DATABASE));
+            $users = new Model(new \app\inc\Connection(database: Globals::$userDatabase));
             $sQuery = "SELECT * FROM users WHERE parentdb = :parentDb";
             $users->connect();
             $res = $users->prepare($sQuery);

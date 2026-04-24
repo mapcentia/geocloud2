@@ -22,8 +22,6 @@ use Postmark\PostmarkClient;
 use app\exceptions\GC2Exception;
 use Psr\Cache\InvalidArgumentException;
 
-const USER_DATABASE = 'mapcentia';
-
 /**
  * Class User
  * @package app\models
@@ -44,9 +42,9 @@ class User extends Model
     {
         // Set the database to the user database
         if (!$connection) {
-            $connection =  new Connection(database: USER_DATABASE);
+            $connection =  new Connection(database: Globals::$userDatabase);
         } else {
-            $connection->database = USER_DATABASE;
+            $connection->database = Globals::$userDatabase;
         }
         parent::__construct(connection: $connection);
         $this->userId = $userId;

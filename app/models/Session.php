@@ -16,6 +16,7 @@ use app\inc\Jwt;
 use app\inc\Model;
 use app\inc\ClaimAcl;
 use app\inc\Util;
+use app\inc\Globals;
 use app\models\Geofence as GeofenceModel;
 use app\models\User as UserModel;
 use Exception;
@@ -26,8 +27,6 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
 use stdClass;
 
-const USER_DATABASE = 'mapcentia';
-
 
 /**
  * Class Session
@@ -37,7 +36,7 @@ class Session extends Model
 {
     function __construct()
     {
-        parent::__construct(new Connection(database: USER_DATABASE));
+        parent::__construct(new Connection(database: Globals::$userDatabase));
     }
 
     /**
