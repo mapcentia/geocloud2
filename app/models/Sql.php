@@ -291,7 +291,7 @@ class Sql extends Model
                 $arr = [];
                 foreach ($row as $key => $rowValue) {
                     $nativePgType = $columnTypes[$key];
-                    if (($nativePgType == "geometry" || $nativePgType == "json" || $nativePgType == "jsonb") && $rowValue !== null) {
+                    if ($convertTypes && ($nativePgType == "geometry" || $nativePgType == "json" || $nativePgType == "jsonb") && $rowValue !== null) {
                         $rowValue = json_decode($rowValue);
                     } else {
                         if ($convertTypes) {
@@ -336,7 +336,11 @@ class Sql extends Model
                     if ($nativePgType == "geometry" && $rowValue !== null) {
                         $geometries[] = json_decode($rowValue);
                     } elseif (($nativePgType == "json" || $nativePgType == "jsonb") && $rowValue !== null) {
-                        $arr = $this->array_push_assoc($arr, $key, json_decode($rowValue));
+                        if ($convertTypes) {
+                            $arr = $this->array_push_assoc($arr, $key, json_decode($rowValue));
+                        } else {
+                            $arr = $this->array_push_assoc($arr, $key, $rowValue);
+                        }
                     } else {
                         if ($convertTypes) {
                             try {
