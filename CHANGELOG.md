@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.4.2] - 2026-22-4
+### Fixed
+- Version 2 of the SQL decodes JSON/JSONB fields starting with the 2026.3.0 release. This was not intended. This is only a version 4 API behavior. The change is rolled back.
+
 ## [2026.4.1] - 2026-22-4
 ### Added
 - Events v4 API, for enable/disable events on tables and getting status.
