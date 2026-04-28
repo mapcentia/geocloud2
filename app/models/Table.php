@@ -439,21 +439,18 @@ class Table extends Model
      * @param string|null $name
      * @return array
      * @throws InvalidArgumentException
+     * @throws GC2Exception
      */
     public function destroy(?string $name = null): array
     {
         $table = $name ?? $this->table;
         $this->clearCacheOnSchemaChanges();
         $response = [];
-        $sql = "DROP TABLE {$this->doubleQuoteQualifiedName($table)} CASCADE;";
-        $res = $this->prepare($sql);
-        try {
-            $this->execute($res);
-        } catch (PDOException) {
-            $sql = "DROP VIEW {$this->doubleQuoteQualifiedName($table)} CASCADE;";
-            $res = $this->prepare($sql);
-            $this->execute($res);
-        }
+        $check = $this->isTableOrView($table);
+        $type = $check["data"];
+        $query = "DROP $type " . $this->doubleQuoteQualifiedName($table) . " CASCADE";
+        $res = $this->prepare($query);
+        $this->execute($res);
         $response['success'] = true;
         return $response;
     }
