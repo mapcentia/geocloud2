@@ -240,7 +240,7 @@ class Sql extends Controller
     private function transaction(?string $clientEncoding = null, ?array $typeHints = null, bool $convertReturning = true, ?array $typeFormats = null): string
     {
         $response = [];
-        $rule = new Rule();
+        $rule = new Rule(connection: $this->api->connection);
         $walkerRelation = new TableWalkerRelation();
         $factory = new StatementFactory(PDOCompatible: true);
         $select = $factory->createFromString($this->q);
@@ -267,7 +267,7 @@ class Sql extends Controller
 
         // Get rules and set them
         $walkerRule = new TableWalkerRule(!empty($response["is_auth"]) ? $this->subUser ?: Connection::$param['postgisdb'] : "*", "sql", strtolower($operation), '');
-        $rules = $rule->get($this->api);
+        $rules = $rule->get();
         $walkerRule->setRules($rules);
         $select->dispatch($walkerRule);
 

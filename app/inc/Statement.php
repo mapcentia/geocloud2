@@ -99,7 +99,7 @@ class Statement
     {
         $response = [];
         $authResponse = [];
-        $rule = new Rule();
+        $rule = new Rule(connection: $this->sql->connection);
         $walkerRelation = new TableWalkerRelation();
         $factory = new StatementFactory(PDOCompatible: true);
         $select = $factory->createFromString($this->q);
@@ -126,7 +126,7 @@ class Statement
 
         // Get rules and set them
         $walkerRule = new TableWalkerRule($this->subUser ?? $this->connection->database, "sql", strtolower($operation), '');
-        $rules = $rule->get($this->sql);
+        $rules = $rule->get();
         $walkerRule->setRules($rules);
         $select->dispatch($walkerRule);
 
