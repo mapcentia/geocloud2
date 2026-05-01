@@ -10,7 +10,7 @@ ini_set("display_errors", "no");
 //ini_set("display_errors", "yes");
 error_reporting(E_ERROR | E_WARNING | E_PARSE | E_DEPRECATED | E_USER_DEPRECATED);
 //error_reporting(E_ALL);
-ob_start("ob_gzhandler");
+ob_start();
 
 use app\api\v4\Controller;
 use app\api\v4\Scope;
