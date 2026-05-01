@@ -455,12 +455,26 @@ $handler = static function () use ($routes) {
             }
             // Then go through non-PUBLIC routes
             if (!$Route2->isMatched) {
-                error_log('JWT-DEBUG path=' . ($_SERVER['REQUEST_URI'] ?? 'none')
-                    . ' method=' . ($_SERVER['REQUEST_METHOD'] ?? 'none')
-                    . ' has_auth=' . (isset($_SERVER['HTTP_AUTHORIZATION']) ? 'YES(' . strlen($_SERVER['HTTP_AUTHORIZATION']) . ')' : 'NO')
-                    . ' has_redirect_auth=' . (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) ? 'YES' : 'NO')
-                    . ' all_http_keys=' . implode(',', array_filter(array_keys($_SERVER), fn($k) => str_starts_with($k, 'HTTP_'))));
-                $jwt = Jwt::validate();
+                try {
+                    $redisPing = \app\inc\Cache::$instanceCache->getItem('healthcheck')->isHit() ? 'ok' : 'miss';
+                } catch (\Throwable $e) {
+                    $redisPing = 'ERR:' . $e->getMessage();
+                }
+                error_log(sprintf(
+                    'JWT-DEBUG req#%d uri=%s method=%s mem=%s auth=%s redis=%s',
+                    $nbRequests ?? -1,
+                    $_SERVER['REQUEST_URI'] ?? '?',
+                    $_SERVER['REQUEST_METHOD'] ?? '?',
+                    round(memory_get_usage(true)/1024/1024, 1) . 'MB',
+                    isset($_SERVER['HTTP_AUTHORIZATION']) ? 'YES('.strlen($_SERVER['HTTP_AUTHORIZATION']).')' : 'NO',
+                    $redisPing
+                ));
+                try {
+                    $jwt = Jwt::validate();
+                } catch (\Throwable $e) {
+                    error_log('JWT-DEBUG validate failed: ' . get_class($e) . ': ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+                    throw $e;
+                }
                 $Route2->jwt = $jwt;
                 $conn = new \app\inc\Connection(user: $jwt["data"]["uid"], database: $jwt["data"]["database"]);
                 foreach ($routes as $c => $r) {
