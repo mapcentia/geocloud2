@@ -36,6 +36,23 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
 
+  gc2core_frankenphp:
+    image: centia-io:http
+    privileged: true
+    volumes:
+      - ../:/app/geocloud2
+    networks:
+      - default
+      - internal
+    ports:
+      - "8080:80"
+      - "8081:8080"
+    expose:
+      - 9000
+    env_file: conn.env
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
   event:
     image: event
     build:
