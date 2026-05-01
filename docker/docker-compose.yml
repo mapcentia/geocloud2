@@ -14,6 +14,7 @@ services:
         - ECW_VERSION=3
   gc2core:
     image: gc2core
+    restart: unless-stopped
     privileged: true
     build:
       context: .
@@ -55,6 +56,7 @@ services:
       - host.docker.internal:host-gateway
   redis:
     image: redis
+    restart: unless-stopped
     networks:
       - default
       - internal
