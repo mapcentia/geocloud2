@@ -335,10 +335,12 @@ class Table extends AbstractApi
         $indices = Index::getIndices($table);
         $comment = $table->getComment();
         $response['name'] = $table->tableWithOutSchema;
-        $response['columns'] = $columns;
-        $response['comment'] = $comment;
-        $response['indices'] = $indices;
-        $response['constraints'] = $constraints;
+        if (!in_array(Input::get('namesOnly'), ['', 'true', '1', 't'], true)) {
+            $response['columns'] = $columns;
+            $response['comment'] = $comment;
+            $response['indices'] = $indices;
+            $response['constraints'] = $constraints;
+        }
         $response['_type'] = $table->relType;
         $response['_events'] = $table->isNotifyTriggerInstalled();
         $response['_links'] = [
@@ -360,11 +362,10 @@ class Table extends AbstractApi
     public static function getTables(string $schema, ApiInterface $self): array
     {
         $rels = [];
-        $tables = array_map(fn($t) => ['name' => $t, 'type' => 'TABLE', 'events' =>
-            new TableModel(table: $schema . "." . $t, lookupForeignTables: false, connection: $self->connection)->isNotifyTriggerInstalled()], new Model(connection: $self->connection)->getTableNamesFromSchema($schema));
-        $views = array_map(fn($t) => ['name' => $t, 'type' => 'VIEW', 'events' => null], new Model(connection: $self->connection)->getViewNamesFromSchema($schema));
-        foreach ([...$tables, ...$views] as $v) {
-            $rels[] = Input::get('namesOnly') !== null ? ['name' => $v['name'], '_type' => $v['type'], '_events' => $v['events']] : self::getTable(new TableModel(table: $schema . "." . $v['name'], lookupForeignTables: false, connection: $self->connection), $self);
+        $tables = new Model(connection: $self->connection)->getTableNamesFromSchema($schema);
+        $views = new Model(connection: $self->connection)->getViewNamesFromSchema($schema);
+        foreach ([...$tables, ...$views] as $name) {
+            $rels[] = self::getTable(new TableModel(table: $schema . "." . $name, lookupForeignTables: false, connection: $self->connection), $self);
         }
         return $rels;
     }
