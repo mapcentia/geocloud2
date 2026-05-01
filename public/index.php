@@ -455,6 +455,11 @@ $handler = static function () use ($routes) {
             }
             // Then go through non-PUBLIC routes
             if (!$Route2->isMatched) {
+                error_log('JWT-DEBUG path=' . ($_SERVER['REQUEST_URI'] ?? 'none')
+                    . ' method=' . ($_SERVER['REQUEST_METHOD'] ?? 'none')
+                    . ' has_auth=' . (isset($_SERVER['HTTP_AUTHORIZATION']) ? 'YES(' . strlen($_SERVER['HTTP_AUTHORIZATION']) . ')' : 'NO')
+                    . ' has_redirect_auth=' . (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) ? 'YES' : 'NO')
+                    . ' all_http_keys=' . implode(',', array_filter(array_keys($_SERVER), fn($k) => str_starts_with($k, 'HTTP_'))));
                 $jwt = Jwt::validate();
                 $Route2->jwt = $jwt;
                 $conn = new \app\inc\Connection(user: $jwt["data"]["uid"], database: $jwt["data"]["database"]);
