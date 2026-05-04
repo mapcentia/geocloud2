@@ -605,6 +605,17 @@ SYMBOLS;
         return $s;
     }
 
+    public function renderGmlMetaData(string $includeItemsStr, string $geomColumn, $gmlType): string
+    {
+        $s = '';
+        $s .= "\"gml_include_items\" \"$includeItemsStr\"\n";
+        $s .= "\"gml_types\" \"auto\"\n";
+        $s .= "\"gml_geometries\" \"$geomColumn\"\n";
+        $s .= "\"gml_{$geomColumn}_type\" \"$gmlType\"\n";
+
+        return $s;
+    }
+
     /**
      * @throws PhpfastcacheInvalidArgumentException
      */
@@ -788,6 +799,9 @@ SYMBOLS;
             if (!empty($layerArr['data'][0]['query_buffer'])) {
                 $s .= "\"appformap_query_buffer\" \"{$layerArr['data'][0]['query_buffer']}\"\n";
             }
+            $gmlType = (str_starts_with($row['type'], "MULTI") ? "multi" : "") . strtolower($type);
+            $s .= $this->renderGmlMetaData($layerData['includeItemsStr'], $row['f_geometry_column'], $gmlType);
+
             $s .= "END\n\n";
 
             // PROJECTION + TEMPLATE
@@ -880,16 +894,13 @@ SYMBOLS;
             $abstract = !empty($row['f_table_abstract']) ? addslashes($row['f_table_abstract']) : "";
             $s .= "\"wfs_abstract\"    \"{$abstract}\"\n";
             $s .= "\"wfs_extent\" \"" . implode(" ", $layerData['extent']) . "\"\n";
-            $s .= "\"gml_include_items\" \"{$layerData['includeItemsStr']}\"\n";
             $s .= "\"wfs_featureid\" \"{$layerData['primeryKey']['attname']}\"\n";
-            $s .= "\"gml_types\" \"auto\"\n";
             $geomType = $row['type'] . ($row['coord_dimension'] == 3 ? "25D" : "");
-            $s .= "\"wfs_geomtype\" \"{$geomType}\"\n";
-            $s .= "\"gml_geometries\"    \"{$row['f_geometry_column']}\"\n";
-            $gmlType = (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type);
-            $s .= "\"gml_{$row['f_geometry_column']}_type\" \"{$gmlType}\"\n";
+            $s .= "\"wfs_geomtype\" \"$geomType\"\n";
             $s .= "\"wfs_getfeature_formatlist\" \"kml,kmz,geojson\"\n";
             $s .= "\"wfs_geometry_precision\" \"8\"\n";
+            $gmlType = (str_starts_with($row['type'], "MULTI") ? "multi" : "") . strtolower($type);
+            $s .= $this->renderGmlMetaData($layerData['includeItemsStr'], $row['f_geometry_column'], $gmlType);
             $s .= "END\n";
 
             // UTFITEM / UTFDATA
