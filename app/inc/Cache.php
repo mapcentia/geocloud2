@@ -18,10 +18,13 @@ use Phpfastcache\Core\Pool\ExtendedCacheItemPoolInterface;
 use Phpfastcache\Core\Pool\TaggableCacheItemPoolInterface;
 use Phpfastcache\Drivers\Redis\Config as RedisConfig;
 use Phpfastcache\Drivers\Rediscluster\Config as RedisClustersConfig;
+use Phpfastcache\Exceptions\PhpfastcacheDriverException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
 use Redis;
 use RedisCluster;
+use RedisClusterException;
+use RedisException;
 
 
 abstract class Cache
@@ -37,6 +40,8 @@ abstract class Cache
      */
     static public function setInstance(): void
     {
+        // Drop any cached pool so we get a fresh underlying client on reconnect.
+        CacheManager::clearInstances();
         if (App::$param['appCache']["type"] == "redis") {
             if (!empty(App::$param['appCache']["host"])) {
                 $u = parse_url(App::$param['appCache']["host"]);
@@ -92,11 +97,27 @@ abstract class Cache
     }
 
     /**
+     * Runs $op against the cache pool. If it throws a Redis/driver connection
+     * error (typical after idle timeout in long-running workers), reconnects
+     * once and retries. Non-connection errors propagate unchanged.
+     */
+    static private function withReconnect(callable $op): mixed
+    {
+        try {
+            return $op();
+        } catch (RedisException|RedisClusterException|PhpfastcacheDriverException $e) {
+            error_log('Cache: connection error (' . $e->getMessage() . '), reconnecting');
+            self::setInstance();
+            return $op();
+        }
+    }
+
+    /**
      * @return array
      */
     static public function clear(): array
     {
-        $res = self::$instanceCache->clear();
+        $res = self::withReconnect(fn() => self::$instanceCache->clear());
         return [
             "success" => true,
             "message" => $res
@@ -105,7 +126,7 @@ abstract class Cache
 
     static public function deleteItemsByTagsAll(array $tags): void
     {
-        self::$instanceCache->deleteItemsByTags($tags, TaggableCacheItemPoolInterface::TAG_STRATEGY_ALL); // V8
+        self::withReconnect(fn() => self::$instanceCache->deleteItemsByTags($tags, TaggableCacheItemPoolInterface::TAG_STRATEGY_ALL)); // V8
     }
 
     /**
@@ -114,7 +135,7 @@ abstract class Cache
      */
     static public function deleteItem(string $key): void
     {
-        self::$instanceCache->deleteItem($key);
+        self::withReconnect(fn() => self::$instanceCache->deleteItem($key));
     }
 
     /**
@@ -122,7 +143,7 @@ abstract class Cache
      */
     static public function deleteItems(array $keys): void
     {
-        self::$instanceCache->deleteItems($keys);
+        self::withReconnect(fn() => self::$instanceCache->deleteItems($keys));
     }
 
 
@@ -153,7 +174,7 @@ abstract class Cache
     static public function getItem(?string $key): ?ExtendedCacheItemInterface
     {
         try {
-            $CachedString = self::$instanceCache->getItem($key);
+            $CachedString = self::withReconnect(fn() => self::$instanceCache->getItem($key));
         } catch (PhpfastcacheInvalidArgumentException|Error) {
             $CachedString = null;
         }
@@ -163,7 +184,7 @@ abstract class Cache
     static private function getAllItems(string $pattern): iterable
     {
         try {
-            $items = self::$instanceCache->getAllItems($pattern);
+            $items = self::withReconnect(fn() => self::$instanceCache->getAllItems($pattern));
         } catch (Exception|Error) {
             $items = null;
         }
@@ -177,7 +198,7 @@ abstract class Cache
      */
     static private function getAllKeys(string $pattern): array
     {
-        return self::$instanceCache->getAllKeys($pattern);
+        return self::withReconnect(fn() => self::$instanceCache->getAllKeys($pattern));
     }
 
     /**
@@ -186,7 +207,7 @@ abstract class Cache
     static public function save(ExtendedCacheItemInterface $CachedString): void
     {
         try {
-            self::$instanceCache->save($CachedString);
+            self::withReconnect(fn() => self::$instanceCache->save($CachedString));
         } catch (Error $exception) {
             error_log($exception->getMessage());
         }
@@ -197,7 +218,7 @@ abstract class Cache
      */
     static public function getStats(): array
     {
-        return (array)self::$instanceCache->getStats();
+        return (array)self::withReconnect(fn() => self::$instanceCache->getStats());
     }
 
     /**
@@ -205,6 +226,6 @@ abstract class Cache
      */
     static public function getItemsByTagsAsJsonString(): array
     {
-        return self::$instanceCache->getItems();
+        return self::withReconnect(fn() => self::$instanceCache->getItems());
     }
 }
