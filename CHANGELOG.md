@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
 ## [2026.5.0] - 2026-1-5
+### CHANGED
+- Refactor of MapFile controller into a controller class and model class. The latter can be injected with a Connection object and is ready for use in the V4 API.
+- Extract `renderGmlMetaData` method in `Mapfile` so it can be applied to both WFS and WMS. The latter didn't have the metadata, which is used in GetFeatureInfo requests resulting in no geometry returned.
+
+## [2026.5.0] - 2026-1-5
 ### Fixed
 - Refactor `namesOnly` checks in Schema and Table GET APIs to standardize input validation.
 
