@@ -30,8 +30,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Event: implementation of Shape filter with column projection.
 
 ### Security
-- Controller scope in v4 API was not working, which could allow sub-users to call super-user-only APIs. 
-
+- Controller scope in v4 API was not working, which could allow sub-users to call super-user-only APIs.
 
 ## [2026.3.11] - 2026-30-3
 ### Changed
