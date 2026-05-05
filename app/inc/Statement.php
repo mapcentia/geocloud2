@@ -174,7 +174,6 @@ class Statement
                 $this->cacheInfo["tags"] = $CachedString->getTags();
                 $this->cacheInfo["signature"] = md5(serialize($response));
             } else {
-                ob_start();
                 $response = $this->sql->sql(
                     q: $this->q,
                     clientEncoding: $clientEncoding,

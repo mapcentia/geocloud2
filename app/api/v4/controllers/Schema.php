@@ -116,7 +116,7 @@ class Schema extends AbstractApi
                 $t = [
                     'name' => $name,
                 ];
-                if (Input::get('namesOnly') === null) {
+                if (!in_array(Input::get('namesOnly'), ['', 'true', '1', 't'], true)) {
                     $t['tables'] = Table::getTables($name, $this);
                     $t['sequences'] = Sequence::getSequences($this->table[0], $name);
                 }
@@ -134,7 +134,7 @@ class Schema extends AbstractApi
                 $t = [
                     'name' => $schema,
                 ];
-                if (Input::get('namesOnly') === null) {
+                if (!in_array(Input::get('namesOnly'), ['', 'true', '1', 't'], true)) {
                     $t['tables'] = Table::getTables($schema, $this);
                     $t['sequences'] = Sequence::getSequences($this->table[0], $schema);
                 }

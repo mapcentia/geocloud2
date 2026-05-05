@@ -10,7 +10,6 @@ ini_set("display_errors", "no");
 //ini_set("display_errors", "yes");
 error_reporting(E_ERROR | E_WARNING | E_PARSE | E_DEPRECATED | E_USER_DEPRECATED);
 //error_reporting(E_ALL);
-ob_start("ob_gzhandler");
 
 use app\api\v4\Controller;
 use app\api\v4\Scope;
@@ -113,6 +112,7 @@ Cache::setInstance();
 
 function setHeaders(): void
 {
+    ob_start();
     // TODO tjek header is set
     // Write Access-Control-Allow-Origin if origin is white listed
     $http_origin = $_SERVER['HTTP_ORIGIN'] ?? null;
@@ -455,7 +455,26 @@ $handler = static function () use ($routes) {
             }
             // Then go through non-PUBLIC routes
             if (!$Route2->isMatched) {
-                $jwt = Jwt::validate();
+                try {
+                    $redisPing = \app\inc\Cache::$instanceCache->getItem('healthcheck')->isHit() ? 'ok' : 'miss';
+                } catch (\Throwable $e) {
+                    $redisPing = 'ERR:' . $e->getMessage();
+                }
+                error_log(sprintf(
+                    'JWT-DEBUG req#%d uri=%s method=%s mem=%s auth=%s redis=%s',
+                    $nbRequests ?? -1,
+                    $_SERVER['REQUEST_URI'] ?? '?',
+                    $_SERVER['REQUEST_METHOD'] ?? '?',
+                    round(memory_get_usage(true)/1024/1024, 1) . 'MB',
+                    isset($_SERVER['HTTP_AUTHORIZATION']) ? 'YES('.strlen($_SERVER['HTTP_AUTHORIZATION']).')' : 'NO',
+                    $redisPing
+                ));
+                try {
+                    $jwt = Jwt::validate();
+                } catch (\Throwable $e) {
+                    error_log('JWT-DEBUG validate failed: ' . get_class($e) . ': ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+                    throw $e;
+                }
                 $Route2->jwt = $jwt;
                 $conn = new \app\inc\Connection(user: $jwt["data"]["uid"], database: $jwt["data"]["database"]);
                 foreach ($routes as $c => $r) {

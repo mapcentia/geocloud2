@@ -14,6 +14,7 @@ services:
         - ECW_VERSION=3
   gc2core:
     image: gc2core
+    restart: unless-stopped
     privileged: true
     build:
       context: .
@@ -23,6 +24,23 @@ services:
         - ECW_VERSION=3
     volumes:
       - ../:/var/www/geocloud2
+    networks:
+      - default
+      - internal
+    ports:
+      - "8080:80"
+      - "8081:8080"
+    expose:
+      - 9000
+    env_file: conn.env
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  gc2core_frankenphp:
+    image: centia-io:http
+    privileged: true
+    volumes:
+      - ../:/app/geocloud2
     networks:
       - default
       - internal
@@ -55,6 +73,7 @@ services:
       - host.docker.internal:host-gateway
   redis:
     image: redis
+    restart: unless-stopped
     networks:
       - default
       - internal

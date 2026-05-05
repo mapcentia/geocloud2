@@ -18,6 +18,7 @@ use Psr\Cache\InvalidArgumentException;
 class Mapfile extends Model
 {
     private array $bbox;
+    private string $mapServerHost;
 
     /**
      * @throws PhpfastcacheInvalidArgumentException|InvalidArgumentException
@@ -25,9 +26,10 @@ class Mapfile extends Model
     function __construct(?\app\inc\Connection $connection = null)
     {
         parent::__construct(connection: $connection);
+        $this->mapServerHost = Connection::$param['mapserverhost'] ?? $this->connection->host;
         $settings = new Setting(connection: $connection);
         $extents = $settings->get()["data"]->extents ?? null;
-        $schema = $this->postgisschema;
+        $schema = $this->connection->schema;
         $this->bbox = is_object($extents) && property_exists($extents, $schema)
             ? $extents->$schema
             : [-20037508.34, -20037508.34, 20037508.34, 20037508.34];
@@ -54,7 +56,7 @@ class Mapfile extends Model
      */
     public function getOwsLayerRows(): \PDOStatement
     {
-        $sql = "SELECT * FROM settings.getColumns('f_table_schema=''{$this->postgisschema}'' AND enableows=true','raster_columns.r_table_schema=''{$this->postgisschema}'' AND enableows=true') ORDER BY sort_id";
+        $sql = "SELECT * FROM settings.getColumns('f_table_schema=''{$this->connection->schema}'' AND enableows=true','raster_columns.r_table_schema=''{$this->connection->schema}'' AND enableows=true') ORDER BY sort_id";
         return $this->execQuery($sql);
     }
 
@@ -201,16 +203,14 @@ class Mapfile extends Model
 
     public function renderPostgisConnection(): string
     {
-        $s = "user=" . Connection::$param['postgisuser'];
-        $s .= " dbname=" . Connection::$param['postgisdb'];
-        if (Connection::$param['postgishost']) {
-            $s .= " host=" . (!empty(Connection::$param['mapserverhost']) ? Connection::$param['mapserverhost'] : Connection::$param['postgishost']);
+        $s = "user=" . $this->connection->user;
+        $s .= " dbname=" . $this->connection->database;
+            $s .= " host=" . $this->mapServerHost;
+        $s .= " port=" . $this->connection->port;
+        if ($this->connection->password) {
+            $s .= " password=" . $this->connection->password;
         }
-        $s .= " port=" . ((!empty(Connection::$param['mapserverport']) ? Connection::$param['mapserverport'] : Connection::$param['postgisport']) ?: "5432");
-        if (Connection::$param['postgispw']) {
-            $s .= " password=" . Connection::$param['postgispw'];
-        }
-        if (!Connection::$param['pgbouncer']) {
+        if (!$this->connection->pgbouncer) {
             $s .= " options='-c client_encoding=UTF8'";
         }
         return $s;
@@ -605,12 +605,23 @@ SYMBOLS;
         return $s;
     }
 
+    public function renderGmlMetaData(string $includeItemsStr, string $geomColumn, $gmlType): string
+    {
+        $s = '';
+        $s .= "\"gml_include_items\" \"$includeItemsStr\"\n";
+        $s .= "\"gml_types\" \"auto\"\n";
+        $s .= "\"gml_geometries\" \"$geomColumn\"\n";
+        $s .= "\"gml_{$geomColumn}_type\" \"$gmlType\"\n";
+
+        return $s;
+    }
+
     /**
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function generateWms(): string
     {
-        $user = Connection::$param['postgisdb'];
+        $user = $this->connection->database;
         $extent = $this->transformBbox(4326);
         $srs = !empty(App::$param['advertisedSrs']) ? implode(" ", App::$param['advertisedSrs']) : "EPSG:4326 EPSG:3857 EPSG:3044 EPSG:25832";
 
@@ -642,7 +653,7 @@ SYMBOLS;
         $s .= "\"wms_srs\"    \"{$srs}\"\n";
         $s .= "\"wms_name\"    \"{$user}\"\n";
         $s .= "\"wms_format\"    \"image/png\"\n";
-        $s .= "\"wms_onlineresource\"    \"" . App::$param['host'] . "/ows/" . Connection::$param['postgisdb'] . "/" . Connection::$param['postgisschema'] . "/\"\n";
+        $s .= "\"wms_onlineresource\"    \"" . App::$param['host'] . "/ows/" . $this->connection->database . "/" . $this->connection->schema . "/\"\n";
         $s .= "\"wms_enable_request\" \"*\"\n";
         $s .= "\"ows_encoding\" \"UTF-8\"\n";
         $s .= "\"wms_extent\" \"" . implode(" ", $extent) . "\"\n";
@@ -695,7 +706,7 @@ SYMBOLS;
                 $s .= "PROCESSING \"RESAMPLE=BILINEAR\"\n";
             } elseif ($row['bitmapsource']) {
                 $s .= "TYPE RASTER\n";
-                $s .= "DATA \"" . App::$param['path'] . "/app/wms/files/" . Connection::$param["postgisdb"] . "/__bitmaps/{$row['bitmapsource']}\"\n";
+                $s .= "DATA \"" . App::$param['path'] . "/app/wms/files/" . $this->connection->database . "/__bitmaps/{$row['bitmapsource']}\"\n";
                 $s .= "PROCESSING \"RESAMPLE=AVERAGE\"\n";
                 if (!empty($layerArr['data'][0]['bands'])) {
                     $s .= "PROCESSING \"BANDS={$layerArr['data'][0]['bands']}\"\n";
@@ -708,9 +719,8 @@ SYMBOLS;
                     if (!empty($layerArr['data'][0]['label_no_clip'])) $s .= "PROCESSING \"LABEL_NO_CLIP=True\"\n";
                     if (!empty($layerArr['data'][0]['polyline_no_clip'])) $s .= "PROCESSING \"POLYLINE_NO_CLIP=True\"\n";
                 } else {
-                    $host = Connection::$param['mapserverhost'] ?: Connection::$param['postgishost'];
-                    $port = !empty(Connection::$param['mapserverport']) ? Connection::$param['mapserverport'] : (!empty(Connection::$param['postgisport']) ? Connection::$param['postgisport'] : "5432");
-                    $s .= "DATA \"PG:host={$host} port={$port} dbname='" . Connection::$param['postgisdb'] . "' user='" . Connection::$param['postgisuser'] . "' password='" . Connection::$param['postgispw'] . "'\n";
+                    $host = $this->mapServerHost;
+                    $s .= "DATA \"PG:host=$host port={$this->connection->port} dbname='{$this->connection->database}' user='{$this->connection->user}' password='{$this->connection->password}'\n";
                     $s .= "\t\t\t    schema='{$row['f_table_schema']}' table='{$row['f_table_name']}' mode='2'\"\n";
                     $s .= "PROCESSING \"CLOSE_CONNECTION=ALWAYS\" \n";
                 }
@@ -789,6 +799,9 @@ SYMBOLS;
             if (!empty($layerArr['data'][0]['query_buffer'])) {
                 $s .= "\"appformap_query_buffer\" \"{$layerArr['data'][0]['query_buffer']}\"\n";
             }
+            $gmlType = (str_starts_with($row['type'], "MULTI") ? "multi" : "") . strtolower($type);
+            $s .= $this->renderGmlMetaData($layerData['includeItemsStr'], $row['f_geometry_column'], $gmlType);
+
             $s .= "END\n\n";
 
             // PROJECTION + TEMPLATE
@@ -811,7 +824,7 @@ SYMBOLS;
      */
     public function generateWfs(): string
     {
-        $user = Connection::$param['postgisdb'];
+        $user = $this->connection->database;
         $extent = $this->transformBbox(4326);
         $srs = !empty(App::$param['advertisedSrs']) ? implode(" ", App::$param['advertisedSrs']) : "EPSG:4326 EPSG:3857 EPSG:3044 EPSG:25832";
 
@@ -840,7 +853,7 @@ SYMBOLS;
         $s .= "\"ows_title\"    \"{$user}'s OWS\"\n";
         $s .= "\"ows_srs\"    \"{$srs}\"\n";
         $s .= "\"ows_name\"    \"{$user}\"\n";
-        $s .= "\"ows_onlineresource\"    \"" . App::$param['host'] . "/ows/" . Connection::$param['postgisdb'] . "/" . Connection::$param['postgisschema'] . "/\"\n";
+        $s .= "\"ows_onlineresource\"    \"" . App::$param['host'] . "/ows/" . $this->connection->database . "/" . $this->connection->schema . "/\"\n";
         $s .= "\"ows_enable_request\" \"*\"\n";
         $s .= "\"ows_encoding\" \"UTF-8\"\n";
         $s .= "\"ows_namespace_prefix\" \"{$user}\"\n";
@@ -881,16 +894,13 @@ SYMBOLS;
             $abstract = !empty($row['f_table_abstract']) ? addslashes($row['f_table_abstract']) : "";
             $s .= "\"wfs_abstract\"    \"{$abstract}\"\n";
             $s .= "\"wfs_extent\" \"" . implode(" ", $layerData['extent']) . "\"\n";
-            $s .= "\"gml_include_items\" \"{$layerData['includeItemsStr']}\"\n";
             $s .= "\"wfs_featureid\" \"{$layerData['primeryKey']['attname']}\"\n";
-            $s .= "\"gml_types\" \"auto\"\n";
             $geomType = $row['type'] . ($row['coord_dimension'] == 3 ? "25D" : "");
-            $s .= "\"wfs_geomtype\" \"{$geomType}\"\n";
-            $s .= "\"gml_geometries\"    \"{$row['f_geometry_column']}\"\n";
-            $gmlType = (substr($row['type'], 0, 5) == "MULTI" ? "multi" : "") . strtolower($type);
-            $s .= "\"gml_{$row['f_geometry_column']}_type\" \"{$gmlType}\"\n";
+            $s .= "\"wfs_geomtype\" \"$geomType\"\n";
             $s .= "\"wfs_getfeature_formatlist\" \"kml,kmz,geojson\"\n";
             $s .= "\"wfs_geometry_precision\" \"8\"\n";
+            $gmlType = (str_starts_with($row['type'], "MULTI") ? "multi" : "") . strtolower($type);
+            $s .= $this->renderGmlMetaData($layerData['includeItemsStr'], $row['f_geometry_column'], $gmlType);
             $s .= "END\n";
 
             // UTFITEM / UTFDATA
@@ -924,7 +934,7 @@ SYMBOLS;
     public function writeMapfile(string $content, string $type): array
     {
         $path = App::$param['path'] . "app/wms/mapfiles/";
-        $name = Connection::$param['postgisdb'] . "_" . Connection::$param['postgisschema'] . "_{$type}.map";
+        $name = $this->connection->database . "_" . $this->connection->schema . "_{$type}.map";
         @unlink($path . $name);
         $fh = fopen($path . $name, 'w');
         fwrite($fh, $content);

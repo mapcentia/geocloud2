@@ -477,8 +477,7 @@ class Table extends Model
      * @param bool $raw
      * @param bool $append
      * @return array<bool|string|int>
-     * @throws PDOException|InvalidArgumentException
-     * @throws GC2Exception
+     * @throws PDOException|InvalidArgumentException|GC2Exception
      */
     public function updateRecord(array $data, string $keyName, bool $raw = false, bool $append = false): array
     {

@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.5.0] - 2026-1-5
+### CHANGED
+- Refactor of MapFile controller into a controller class and model class. The latter can be injected with a Connection object and is ready for use in the V4 API.
+- Extract `renderGmlMetaData` method in `Mapfile` so it can be applied to both WFS and WMS. The latter didn't have the metadata, which is used in GetFeatureInfo requests resulting in no geometry returned.
+
+## [2026.5.0] - 2026-1-5
+### Fixed
+- Refactor `namesOnly` checks in Schema and Table GET APIs to standardize input validation.
+
 ## [2026.4.2] - 2026-27-4
 ### Fixed
 - Version 2 of the SQL decodes JSON/JSONB fields starting with the 2026.3.0 release. This was not intended. This is only a version 4 API behavior. The change is rolled back.
@@ -21,8 +30,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Event: implementation of Shape filter with column projection.
 
 ### Security
-- Controller scope in v4 API was not working, which could allow sub-users to call super-user-only APIs. 
-
+- Controller scope in v4 API was not working, which could allow sub-users to call super-user-only APIs.
 
 ## [2026.3.11] - 2026-30-3
 ### Changed

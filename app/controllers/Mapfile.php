@@ -7,6 +7,7 @@
 
 namespace app\controllers;
 
+use app\inc\Connection;
 use app\inc\Controller;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 
@@ -18,7 +19,7 @@ class Mapfile extends Controller
      */
     public function get_index(): array
     {
-        $model = new \app\models\Mapfile();
+        $model = new \app\models\Mapfile(connection: new Connection);
         return [
             $model->writeMapfile($model->generateWms(), 'wms'),
             $model->writeMapfile($model->generateWfs(), 'wfs'),
