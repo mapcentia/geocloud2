@@ -387,14 +387,14 @@ class Classification extends Model
         $query = "SELECT distinct($field) as value FROM " . $this->table->table . " ORDER BY $field";
         $res = $this->prepare($query);
         try {
-            $res->execute();
+            $this->execute($res);
         } catch (PDOException $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
             $response['code'] = 400;
             return $response;
         }
-        $rows = $this->fetchAll($res);
+        $rows = $this->fetchAll($res, "assoc");
         $type = $fieldObj['type'];
         if (sizeof($rows) > 1000) {
             $response['success'] = false;
@@ -409,20 +409,22 @@ class Classification extends Model
         $cArr = array();
         $expression = '';
         foreach ($rows as $key => $row) {
+            if ($row['value'] === null) {
+                $row['value'] = '';
+            }
             if ($type == "number" || $type == "int") {
                 $expression = "[$field]={$row['value']}";
             }
             if ($type == "text" || $type == "string") {
                 $expression = "'[$field]'='{$row['value']}'";
             }
-            $name = $row['value'];
             if ($data->custom->colorramp !== false && $data->custom->colorramp != "-1") {
                 $c = current($colorBrewer);
                 next($colorBrewer);
             } else {
                 $c = null;
             }
-            $cArr[$key] = self::createClass($geometryType, $name, $expression, ($key * 10) + 10, $c, $data);
+            $cArr[$key] = self::createClass($geometryType, $row['value'], $expression, ($key * 10) + 10, $c, $data);
         }
         $response['success'] = true;
         $response['message'] = "Updated " . sizeof($rows) . " classes";
@@ -458,7 +460,7 @@ class Classification extends Model
             $query = "SELECT max($field) as max, min($field) FROM {$this->table->table}";
         }
         $res = $this->prepare($query);
-        $res->execute();
+        $this->execute($res);
         $row = $this->fetchRow($res);
         $diff = $row["max"] - $row["min"];
         $interval = $diff / $num;
@@ -513,7 +515,7 @@ class Classification extends Model
         $numPerClass = $temp = ($count / $num);
         $query = "SELECT * FROM " . $this->table->table . " ORDER BY $field";
         $res = $this->prepare($query);
-        $res->execute();
+        $this->execute($res);
         $grad = Util::makeGradient($startColor, $endColor, $num);
         $bottom = 0;
         $top = 0;
