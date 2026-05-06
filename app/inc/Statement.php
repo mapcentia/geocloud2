@@ -138,7 +138,7 @@ class Statement
                 $split = explode(".", $usedRelations["updateAndDelete"][0]);
             }
             $userFilter = new UserFilter($this->subUser ?: $this->connection->database, "sql", strtolower($operation), "*", $split[0], $split[1]);
-            $geofence = new Geofence($userFilter);
+            $geofence = new Geofence($userFilter, $this->connection);
             $auth = $geofence->authorize($rules);
             $finaleStatement = $factory->createFromAST($select, true)->getSql();
             if (!empty($auth["access"]) && $auth["access"] == Geofence::LIMIT_ACCESS) {

@@ -2214,7 +2214,7 @@ function doParse(array $arr)
                     $split = explode(".", $usedRelations["updateAndDelete"][0]);
                 }
                 $userFilter = new UserFilter(isAuth() ? $user : "*", "wfs", $operation, "*", $split[0], $split[1]);
-                $geofence = new Geofence($userFilter);
+                $geofence = new Geofence($userFilter, $postgisObject->connection);
                 // Try post proccesing
                 try {
                     $geofence->postProcessQuery($select, $rules);

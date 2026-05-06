@@ -279,7 +279,7 @@ class Sql extends Controller
                 $split = explode(".", $usedRelations["updateAndDelete"][0]);
             }
             $userFilter = new UserFilter($this->subUser ?: Connection::$param['postgisdb'], "sql", strtolower($operation), "*", $split[0], $split[1]);
-            $geofence = new Geofence($userFilter);
+            $geofence = new Geofence($userFilter, $this->api->connection);
             $auth = $geofence->authorize($rules);
             $finaleStatement = $factory->createFromAST($select, true)->getSql();
             if ($auth["access"] == Geofence::LIMIT_ACCESS) {

@@ -289,7 +289,7 @@ class Table extends AbstractApi
     public static function addTable(TableModel $table, stdClass $data, AbstractApi $caller): array
     {
         // Load pre extensions and run processAddTable
-        $caller->runPreExtension('processAddTable', $table);
+        $caller->runPreExtension(method: 'processAddTable', model: $table);
 
         $r = $table->create($data->name, null, null, true, $data->comment);
         // Add columns

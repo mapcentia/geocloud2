@@ -294,6 +294,52 @@ class Model
     }
 
     /**
+     * Runs $work in a transactional sandbox that is always rolled back.
+     *
+     * Use this for validation, dry runs, or temp-table inspection where
+     * you need transactional semantics for the SQL itself but never want
+     * the work to persist.
+     *
+     * If the connection is already in a transaction we wrap $work in a
+     * SAVEPOINT and ROLLBACK TO it — so we don't disturb the outer
+     * transaction. Otherwise we open a fresh transaction and roll it
+     * back at the end.
+     *
+     * Returns whatever $work returns. If $work throws, the rollback still
+     * runs and the exception propagates.
+     *
+     * @template T
+     * @param callable(): T $work
+     * @return T
+     * @throws \Throwable
+     */
+    public function withRollback(callable $work): mixed
+    {
+        $this->connect();
+        $pdo = $this->getPdoConnection();
+        if ($pdo->inTransaction()) {
+            $name = 'gc2_sp_' . bin2hex(random_bytes(6));
+            $pdo->exec("SAVEPOINT $name");
+            try {
+                return $work();
+            } finally {
+                try {
+                    $pdo->exec("ROLLBACK TO SAVEPOINT $name");
+                    $pdo->exec("RELEASE SAVEPOINT $name");
+                } catch (\Throwable $e) {
+                    error_log("withRollback savepoint cleanup failed: " . $e->getMessage());
+                }
+            }
+        }
+        $this->begin();
+        try {
+            return $work();
+        } finally {
+            $this->rollback();
+        }
+    }
+
+    /**
      * Rolls back any open transactions on every cached PDO connection.
      *
      * Why: in FrankenPHP worker mode self::$PdoConnections persists between

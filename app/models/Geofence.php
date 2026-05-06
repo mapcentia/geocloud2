@@ -88,68 +88,56 @@ class Geofence extends Model
         if (empty($filters["filter"])) {
             return true;
         }
-        $firstParam = true;
-        $rowCount = 0;
-        $model = new Model();
-        $model->connect();
-        $model->begin();
-        $factory = new StatementFactory(PDOCompatible: true);
-        $statement->returning[0] = "*";
-        $str1 = $factory->createFromAST($statement, true)->getSql();
-        $str = "create temporary table foo on commit drop as with updated_rows as (" . $str1 . ") select * from updated_rows";
-        if ($params) {
-            $typeFactory = new DefaultTypeConverterFactory();
-            $convertedParameters = [];
-            foreach ($params as $param) {
-                $paramTmp = [];
-                foreach ($param as $field => $value) {
-                    $type = gettype($value);
-                    if ($type == 'array' || $type == 'object') {
-                        $nativeType = $typeHints[$field] ?? 'json';
-                        try {
-                            $nativeValue = $typeFactory->getConverterForTypeSpecification($nativeType)->output($value);
-                        } catch (Exception) {
-                            throw new GC2Exception("The value couldn't be parsed as $nativeType", 406, null, "VALUE_PARSE_ERROR");
+        $this->withRollback(function () use ($statement, $params, $typeHints, $filters) {
+            $factory = new StatementFactory(PDOCompatible: true);
+            $statement->returning[0] = "*";
+            $str1 = $factory->createFromAST($statement, true)->getSql();
+            $createSql = "create temporary table foo on commit drop as with updated_rows as ($str1) select * from updated_rows";
+            $insertSql = "with updated_rows as ($str1) insert into foo select * from updated_rows";
+            $rowCount = 0;
+
+            if ($params) {
+                $typeFactory = new DefaultTypeConverterFactory();
+                $first = true;
+                foreach ($params as $param) {
+                    $converted = [];
+                    foreach ($param as $field => $value) {
+                        $type = gettype($value);
+                        if ($type === 'array' || $type === 'object') {
+                            $nativeType = $typeHints[$field] ?? 'json';
+                            try {
+                                $converted[$field] = $typeFactory->getConverterForTypeSpecification($nativeType)->output($value);
+                            } catch (Exception) {
+                                throw new GC2Exception("The value couldn't be parsed as $nativeType", 406, null, "VALUE_PARSE_ERROR");
+                            }
+                        } elseif ($type === 'boolean') {
+                            $converted[$field] = $typeFactory->getConverterForTypeSpecification($type)->output($value);
+                        } else {
+                            $converted[$field] = $value;
                         }
-                        $paramTmp[$field] = $nativeValue;
-                    } elseif ($type == 'boolean') {
-                        $nativeValue = $typeFactory->getConverterForTypeSpecification($type)->output($value);
-                        $paramTmp[$field] = $nativeValue;
-                    } else {
-                        $paramTmp[$field] = $value;
                     }
+                    $stmt = $this->prepare($first ? $createSql : $insertSql);
+                    $this->execute($stmt, $converted);
+                    $rowCount += $stmt->rowCount();
+                    $first = false;
                 }
-                $convertedParameters[] = $paramTmp;
+            } else {
+                $stmt = $this->prepare($createSql);
+                $this->execute($stmt);
+                $rowCount += $stmt->rowCount();
             }
-            $result = $model->prepare($str);
-            foreach ($convertedParameters as $param) {
-                // After first creation of tmp table we insert instead
-                if (!$firstParam) {
-                    $str = "with updated_rows as (" . $str1 . ") insert into foo select * from updated_rows";
-                    $result = $model->prepare($str);
-                }
-                $result->execute($param);
-                $firstParam = false;
-                $rowCount += $result->rowCount();
+
+            $countStmt = $this->prepare("select count(*) from foo where {$filters['filter']}");
+            $this->execute($countStmt);
+            $allowed = (int)($countStmt->fetchColumn() ?: 0);
+
+            if ($rowCount === 0) {
+                throw new Exception('COUNT 0 ERROR');
             }
-        } else {
-            $result = $model->prepare($str);
-            $this->execute($result);
-            $rowCount += $result->rowCount();
-        }
-
-        $select = "select count(*) from foo where {$filters['filter']}";
-        $res = $model->prepare($select);
-        $this->execute($res);
-        $row = $res->fetch();
-
-        if ($rowCount == 0) {
-            throw new Exception('COUNT 0 ERROR');
-        }
-        if ($rowCount > $row["count"]) {
-            throw new Exception('LIMIT ERROR');
-        }
-        $model->rollback();
+            if ($rowCount > $allowed) {
+                throw new Exception('LIMIT ERROR');
+            }
+        });
         return true;
     }
 
