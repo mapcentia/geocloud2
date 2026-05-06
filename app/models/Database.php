@@ -243,52 +243,45 @@ class Database extends Model
     public function changeOwner(string $db, string $newOwner): void
     {
         $model = new Model(connection: new Connection(database: $db));
-        $model->begin();
+        $model->withTransaction(function () use ($model, $db, $newOwner) {
+            //Database
+            $model->execQuery("ALTER DATABASE $db OWNER TO $newOwner");
 
-        //Database
-        $sql = "ALTER DATABASE $db OWNER TO $newOwner";
-        $model->execQuery($sql);
+            // Schema
+            $res = $model->execQuery("SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name<>'information_schema'");
+            $rows1 = $model->fetchAll($res);
 
-        // Schema
-        $sql = "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name<>'information_schema'";
-        $res = $model->execQuery($sql);
-        $rows1 = $model->fetchAll($res);
-
-        // tables
-        $sql = "SELECT '\"'||schemaname||'\".\"'||tablename||'\"' AS \"table\" FROM pg_tables WHERE schemaname NOT LIKE 'pg_%' AND schemaname<>'information_schema'";
-        $model->execQuery($sql);
-        $res = $model->execQuery($sql);
-        $rows2 = $model->fetchAll($res);
-
-        $sql = "SELECT '\"'||table_schema||'\".\"'||table_name||'\"' AS \"table\" FROM information_schema.views WHERE table_schema NOT LIKE 'pg_%' AND table_schema<>'information_schema'";
-        $res = $model->execQuery($sql);
-        $rows3 = $model->fetchAll($res);
-
-        $sql = "SELECT '\"'||sequence_schema||'\".\"'||sequence_name||'\"' AS \"table\" FROM information_schema.sequences WHERE sequence_schema NOT LIKE 'pg_%' AND sequence_schema<>'information_schema'";
-        $res = $model->execQuery($sql);
-        $rows4 = $model->fetchAll($res);
-
-        foreach ($rows1 as $row) {
-            $sql = "ALTER SCHEMA {$row["schema_name"]} OWNER TO $newOwner";
+            // tables
+            $sql = "SELECT '\"'||schemaname||'\".\"'||tablename||'\"' AS \"table\" FROM pg_tables WHERE schemaname NOT LIKE 'pg_%' AND schemaname<>'information_schema'";
             $model->execQuery($sql);
-        }
-        foreach ($rows1 as $row) {
-            $sql = "GRANT USAGE ON SCHEMA {$row["schema_name"]} TO $newOwner";
-            $model->execQuery($sql);
-        }
-        foreach ($rows2 as $row) {
-            $sql = "ALTER TABLE {$row["table"]} OWNER TO $newOwner";
-            $model->execQuery($sql);
-        }
-        foreach ($rows3 as $row) {
-            $sql = "ALTER TABLE {$row["table"]} OWNER TO $newOwner";
-            $model->execQuery($sql);
-        }
-        foreach ($rows4 as $row) {
-            $model->execQuery($sql);
-            $sql = "ALTER TABLE {$row["table"]} OWNER TO $newOwner";
-        }
-        $model->commit();
+            $res = $model->execQuery($sql);
+            $rows2 = $model->fetchAll($res);
+
+            $sql = "SELECT '\"'||table_schema||'\".\"'||table_name||'\"' AS \"table\" FROM information_schema.views WHERE table_schema NOT LIKE 'pg_%' AND table_schema<>'information_schema'";
+            $res = $model->execQuery($sql);
+            $rows3 = $model->fetchAll($res);
+
+            $sql = "SELECT '\"'||sequence_schema||'\".\"'||sequence_name||'\"' AS \"table\" FROM information_schema.sequences WHERE sequence_schema NOT LIKE 'pg_%' AND sequence_schema<>'information_schema'";
+            $res = $model->execQuery($sql);
+            $rows4 = $model->fetchAll($res);
+
+            foreach ($rows1 as $row) {
+                $model->execQuery("ALTER SCHEMA {$row["schema_name"]} OWNER TO $newOwner");
+            }
+            foreach ($rows1 as $row) {
+                $model->execQuery("GRANT USAGE ON SCHEMA {$row["schema_name"]} TO $newOwner");
+            }
+            foreach ($rows2 as $row) {
+                $model->execQuery("ALTER TABLE {$row["table"]} OWNER TO $newOwner");
+            }
+            foreach ($rows3 as $row) {
+                $model->execQuery("ALTER TABLE {$row["table"]} OWNER TO $newOwner");
+            }
+            foreach ($rows4 as $row) {
+                $model->execQuery($sql);
+                $sql = "ALTER TABLE {$row["table"]} OWNER TO $newOwner";
+            }
+        });
     }
 
     /**
@@ -343,40 +336,40 @@ class Database extends Model
         }
         $newName = self::toAscii($name, array(), "_");
         $this->connect();
-        $this->begin();
-        $whereClauseG = "f_table_schema=''$schema''";
-        $whereClauseR = "r_table_schema=''$schema''";
-        $query = "SELECT * FROM settings.getColumns('$whereClauseG','$whereClauseR') ORDER BY sort_id";
-        $res = $this->prepare($query);
-        $this->execute($res);
-        while ($row = $this->fetchRow($res)) {
-            $query = "UPDATE settings.geometry_columns_join SET _key_ = '$newName.{$row['f_table_name']}.{$row['f_geometry_column']}' WHERE _key_ ='{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}'";
-            $resUpdate = $this->prepare($query);
-            $resUpdate->execute();
-            $this->execute($resUpdate);
-        }
-        $query = "ALTER SCHEMA $schema RENAME TO $newName";
-        $res = $this->prepare($query);
-        $this->execute($res);
-        $setObj = new Setting(connection: $this->connection);
-        $settings = $setObj->getArray();
-        $extents = $settings->extents->$schema;
-        $center = $settings->center->$schema;
-        $zoom = $settings->zoom->$schema;
-        if ($extents) {
-            $settings->extents->$newName = $extents;
-            $settings->center->$newName = $center;
-            $settings->zoom->$newName = $zoom;
-            if (App::$param["encryptSettings"]) {
-                $pubKey = file_get_contents(App::$param["path"] . "app/conf/public.key");
-                $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($settings) . "', dearmor('$pubKey'))";
-            } else {
-                $sql = "UPDATE settings.viewer SET viewer='" . json_encode($settings) . "'";
-            }
-            $res = $this->prepare($sql);
+        $this->withTransaction(function () use ($schema, $newName) {
+            $whereClauseG = "f_table_schema=''$schema''";
+            $whereClauseR = "r_table_schema=''$schema''";
+            $query = "SELECT * FROM settings.getColumns('$whereClauseG','$whereClauseR') ORDER BY sort_id";
+            $res = $this->prepare($query);
             $this->execute($res);
-        }
-        $this->commit();
+            while ($row = $this->fetchRow($res)) {
+                $query = "UPDATE settings.geometry_columns_join SET _key_ = '$newName.{$row['f_table_name']}.{$row['f_geometry_column']}' WHERE _key_ ='{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}'";
+                $resUpdate = $this->prepare($query);
+                $resUpdate->execute();
+                $this->execute($resUpdate);
+            }
+            $query = "ALTER SCHEMA $schema RENAME TO $newName";
+            $res = $this->prepare($query);
+            $this->execute($res);
+            $setObj = new Setting(connection: $this->connection);
+            $settings = $setObj->getArray();
+            $extents = $settings->extents->$schema;
+            $center = $settings->center->$schema;
+            $zoom = $settings->zoom->$schema;
+            if ($extents) {
+                $settings->extents->$newName = $extents;
+                $settings->center->$newName = $center;
+                $settings->zoom->$newName = $zoom;
+                if (App::$param["encryptSettings"]) {
+                    $pubKey = file_get_contents(App::$param["path"] . "app/conf/public.key");
+                    $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($settings) . "', dearmor('$pubKey'))";
+                } else {
+                    $sql = "UPDATE settings.viewer SET viewer='" . json_encode($settings) . "'";
+                }
+                $res = $this->prepare($sql);
+                $this->execute($res);
+            }
+        });
         $response['success'] = true;
         $response['message'] = "$schema renamed to $newName";
         $response['data']['name'] = $newName;
@@ -399,18 +392,17 @@ class Database extends Model
             $response['code'] = 401;
             return $response;
         }
+        $work = function () use ($schema) {
+            $res = $this->prepare("DROP SCHEMA $schema CASCADE");
+            $this->execute($res);
+            $res = $this->prepare("DELETE FROM settings.geometry_columns_join WHERE _key_ LIKE '$schema.%'");
+            $this->execute($res);
+        };
         if ($commit) {
             $this->connect();
-            $this->begin();
-        }
-        $query = "DROP SCHEMA $schema CASCADE";
-        $res = $this->prepare($query);
-        $this->execute($res);
-        $query = "DELETE FROM settings.geometry_columns_join WHERE _key_ LIKE '$schema.%'";
-        $res = $this->prepare($query);
-        $this->execute($res);
-        if ($commit) {
-            $this->commit();
+            $this->withTransaction($work);
+        } else {
+            $work();
         }
         $response['success'] = true;
         $response['message'] = "$schema dropped";

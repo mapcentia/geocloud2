@@ -220,18 +220,22 @@ class Model
     /**
      * Executes a prepared PDO statement with the given parameters.
      *
+     * Rolls back any open transaction on any Throwable (not just
+     * PDOException) so a controller-level TypeError or RuntimeException
+     * can't leave a transaction hanging on a worker-shared PDO.
+     *
      * @param PDOStatement $statement The prepared PDO statement to be executed.
      * @param array $params An optional array of parameters to bind to the statement during execution.
      *
      * @return bool Always returns true if the statement executes successfully.
-     * @throws PDOException If the statement execution fails, the exception is thrown and the transaction (if active) is rolled back.
+     * @throws \Throwable If the statement execution fails, the exception is rethrown and the transaction (if active) is rolled back when $autoRollback is true.
      *
      */
     public function execute(PDOStatement $statement, array $params = [], bool $autoRollback = true): true
     {
         try {
             $statement->execute(empty($params) ? null : $params);
-        } catch (PDOException $e) {
+        } catch (\Throwable $e) {
             if ($autoRollback) {
                 $this->rollback();
             }
@@ -319,7 +323,7 @@ class Model
      * @param string $sql The SQL query to prepare.
      *
      * @return PDOStatement The prepared PDO statement.
-     * @throws PDOException If an error occurs while preparing the statement.
+     * @throws \Throwable If an error occurs while preparing the statement.
      */
     public function prepare(string $sql): PDOStatement
     {
@@ -327,7 +331,7 @@ class Model
         $this->getPdoConnection()->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         try {
             return $this->getPdoConnection()->prepare($sql);
-        } catch (PDOException $e) {
+        } catch (\Throwable $e) {
             $this->rollback();
             throw $e;
         }
@@ -368,7 +372,7 @@ class Model
                             // Return integer
                             $result = $this->getPdoConnection()->exec($query);
                     }
-                } catch (PDOException $e) {
+                } catch (\Throwable $e) {
                     $this->rollBack();
                     throw $e;
                 }

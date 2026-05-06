@@ -929,27 +929,18 @@ class Table extends Model
     public function addVersioning(): array
     {
         $this->clearCacheOnSchemaChanges();
-        $response = [];
-        $this->begin();
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_gid SERIAL NOT NULL";
-        $res = $this->prepare($sql);
-        $res->execute();
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_start_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()";
-        $res = $this->prepare($sql);
-        $res->execute();
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_end_date TIMESTAMP WITH TIME ZONE DEFAULT NULL";
-        $res = $this->prepare($sql);
-        $res->execute();
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_uuid UUID NOT NULL DEFAULT gen_random_uuid()";
-        $res = $this->prepare($sql);
-        $res->execute();
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_user VARCHAR(255)";
-        $res = $this->prepare($sql);
-        $res->execute();
-        $this->commit();
-        $response['success'] = true;
-        $response['message'] = "Table is now versioned";
-        return $response;
+        $this->withTransaction(function () {
+            foreach ([
+                "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_gid SERIAL NOT NULL",
+                "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_start_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()",
+                "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_end_date TIMESTAMP WITH TIME ZONE DEFAULT NULL",
+                "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_uuid UUID NOT NULL DEFAULT gen_random_uuid()",
+                "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_version_user VARCHAR(255)",
+            ] as $sql) {
+                $this->execute($this->prepare($sql));
+            }
+        });
+        return ['success' => true, 'message' => "Table is now versioned"];
     }
 
     /**
@@ -958,27 +949,18 @@ class Table extends Model
     public function removeVersioning(): array
     {
         $this->clearCacheOnSchemaChanges();
-        $response = [];
-        $this->begin();
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)}DROP COLUMN gc2_version_gid";
-        $res = $this->prepare($sql);
-        $res->execute();
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP COLUMN gc2_version_start_date";
-        $res = $this->prepare($sql);
-        $res->execute();
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP COLUMN gc2_version_end_date";
-        $res = $this->prepare($sql);
-        $res->execute();
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP COLUMN gc2_version_uuid";
-        $res = $this->prepare($sql);
-        $res->execute();
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP COLUMN gc2_version_user";
-        $res = $this->prepare($sql);
-        $res->execute();
-        $this->commit();
-        $response['success'] = true;
-        $response['message'] = "Versioning is removed";
-        return $response;
+        $this->withTransaction(function () {
+            foreach ([
+                "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)}DROP COLUMN gc2_version_gid",
+                "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP COLUMN gc2_version_start_date",
+                "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP COLUMN gc2_version_end_date",
+                "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP COLUMN gc2_version_uuid",
+                "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} DROP COLUMN gc2_version_user",
+            ] as $sql) {
+                $this->execute($this->prepare($sql));
+            }
+        });
+        return ['success' => true, 'message' => "Versioning is removed"];
     }
 
     /**
@@ -987,21 +969,16 @@ class Table extends Model
     public function addWorkflow(): array
     {
         $this->clearCacheOnSchemaChanges();
-        $response = [];
-        $this->begin();
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_status integer";
-        $res = $this->prepare($sql);
-        $res->execute();
-        $sql = "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_workflow hstore";
-        $res = $this->prepare($sql);
-        $res->execute();
-        $sql = "UPDATE {$this->doubleQuoteQualifiedName($this->table)} SET gc2_status = 3";
-        $res = $this->prepare($sql);
-        $res->execute();
-        $this->commit();
-        $response['success'] = true;
-        $response['message'] = "Table has now workflow";
-        return $response;
+        $this->withTransaction(function () {
+            foreach ([
+                "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_status integer",
+                "ALTER TABLE {$this->doubleQuoteQualifiedName($this->table)} ADD COLUMN gc2_workflow hstore",
+                "UPDATE {$this->doubleQuoteQualifiedName($this->table)} SET gc2_status = 3",
+            ] as $sql) {
+                $this->execute($this->prepare($sql));
+            }
+        });
+        return ['success' => true, 'message' => "Table has now workflow"];
     }
 
     /**
