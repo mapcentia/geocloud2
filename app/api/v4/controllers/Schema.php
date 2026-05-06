@@ -258,7 +258,7 @@ class Schema extends AbstractApi
     public function delete_index(): Response
     {
         if (!$this->route->jwt['data']['superUser']) {
-            throw new GC2Exception("", 403);
+            throw new GC2Exception("Only super users can delete schemas", 403);
         }
         $this->schemaObj->connect();
         $this->schemaObj->begin();
