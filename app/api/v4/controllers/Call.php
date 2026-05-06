@@ -117,32 +117,37 @@ class Call extends AbstractApi
         $api = new \app\models\Sql(connection: $this->connection);
         $result = [];
         $api->begin();
-        foreach ($decodedBody as $query) {
-            $query['convert_types'] = true;
-            $res = $rpc->run(user: $user, api:  $api, query: $query, subuser: !$isSuperUser, userGroup:  $userGroup);
-            if ($res !== null) {
-                $result[] = $res;
+        try {
+            foreach ($decodedBody as $query) {
+                $query['convert_types'] = true;
+                $res = $rpc->run(user: $user, api:  $api, query: $query, subuser: !$isSuperUser, userGroup:  $userGroup);
+                if ($res !== null) {
+                    $result[] = $res;
+                }
             }
-        }
-        // Check if dry-run is requested
-        if (Input::getDryRun() || $this->route->action == 'dry') {
+            // Check if dry-run is requested
+            if (Input::getDryRun() || $this->route->action == 'dry') {
+                $api->rollback();
+                $api->begin();
+                // In dry-run we interface with
+                $pres = new PreparedstatementModel(connection: $this->connection);
+                foreach ($result as $res) {
+                    $pres->updateRequest(name: $res['method'], request: $res['result']['_request']);
+                    $pres->updateOutputSchema(name: $res['method'], outputSchema: $this->extractSchema($res['result']));
+                    foreach ($res['params'] as $param => $value) {
+                        $type = $res['type_hints'][$param] ?? \app\models\Sql::phpTypeToPgType(gettype($value)) ?? "json";
+                        $inputSchema[$param] = ['type' => str_replace('[]', '', $type), 'array' => str_ends_with($type, '[]')];
+                    }
+                    if (!empty($inputSchema)) {
+                        $pres->updateInputSchema(name: $res['method'], inputSchema: $inputSchema);
+                    }
+                }
+            }
+            $api->commit();
+        } catch (\Throwable $e) {
             $api->rollback();
-            $api->begin();
-            // In dry-run we interface with
-            $pres = new PreparedstatementModel(connection: $this->connection);
-            foreach ($result as $res) {
-                $pres->updateRequest(name: $res['method'], request: $res['result']['_request']);
-                $pres->updateOutputSchema(name: $res['method'], outputSchema: $this->extractSchema($res['result']));
-                foreach ($res['params'] as $param => $value) {
-                    $type = $res['type_hints'][$param] ?? \app\models\Sql::phpTypeToPgType(gettype($value)) ?? "json";
-                    $inputSchema[$param] = ['type' => str_replace('[]', '', $type), 'array' => str_ends_with($type, '[]')];
-                }
-                if (!empty($inputSchema)) {
-                    $pres->updateInputSchema(name: $res['method'], inputSchema: $inputSchema);
-                }
-            }
+            throw $e;
         }
-        $api->commit();
         // Return response
         if (count($result) == 0) {
             return new NoContentResponse();

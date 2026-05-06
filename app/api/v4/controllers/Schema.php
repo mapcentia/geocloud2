@@ -168,46 +168,46 @@ class Schema extends AbstractApi
         $body = Input::getBody();
         $data = json_decode($body);
         $this->table[0] = new TableModel(null, connection: $this->connection);
-        $this->table[0]->begin();
         $list = [];
 
-        if (is_array($data)) {
-            foreach ($data as $datum) {
-                $this->table[0]->postgisschema = $datum->name;
-                $r = $this->schemaObj->createSchema($datum->name, $this->table[0]);
+        $this->table[0]->withTransaction(function () use (&$list, $data) {
+            if (is_array($data)) {
+                foreach ($data as $datum) {
+                    $this->table[0]->postgisschema = $datum->name;
+                    $r = $this->schemaObj->createSchema($datum->name, $this->table[0]);
+                    $list[] = $r['schema'];
+                    // Add tables
+                    if (!empty($datum->tables)) {
+                        foreach ($datum->tables as $table) {
+                            Table::addTable($this->table[0], $table, $this);
+                        }
+                    }
+                }
+            } else {
+                $this->table[0]->postgisschema = $data->name;
+                $r = $this->schemaObj->createSchema($data->name, $this->table[0]);
                 $list[] = $r['schema'];
+
+                // Add sequences and defer "OWNED BY" to after creation of tables
+                if (!empty($data->sequences)) {
+                    foreach ($data->sequences as $sequence) {
+                        Sequence::addSequence($this->table[0], $data->name, (array)$sequence, false);
+                    }
+                }
                 // Add tables
-                if (!empty($datum->tables)) {
-                    foreach ($datum->tables as $table) {
+                if (!empty($data->tables)) {
+                    foreach ($data->tables as $table) {
                         Table::addTable($this->table[0], $table, $this);
                     }
                 }
-            }
-        } else {
-            $this->table[0]->postgisschema = $data->name;
-            $r = $this->schemaObj->createSchema($data->name, $this->table[0]);
-            $list[] = $r['schema'];
-
-            // Add sequences and defer "OWNED BY" to after creation of tables
-            if (!empty($data->sequences)) {
-                foreach ($data->sequences as $sequence) {
-                    Sequence::addSequence($this->table[0], $data->name, (array)$sequence, false);
+                // Alter sequences so "OWNED BY" is set after creation of tables
+                if (!empty($data->sequences)) {
+                    foreach ($data->sequences as $sequence) {
+                        Sequence::alterSequence($this->table[0], $data->name, (array)$sequence, false);
+                    }
                 }
             }
-            // Add tables
-            if (!empty($data->tables)) {
-                foreach ($data->tables as $table) {
-                    Table::addTable($this->table[0], $table, $this);
-                }
-            }
-            // Alter sequences so "OWNED BY" is set after creation of tables
-            if (!empty($data->sequences)) {
-                foreach ($data->sequences as $sequence) {
-                    Sequence::alterSequence($this->table[0], $data->name, (array)$sequence, false);
-                }
-            }
-        }
-        $this->table[0]->commit();
+        });
         $baseUri = "/api/v4/schemas/";
         return $this->postResponse($baseUri, $list);
     }
@@ -261,11 +261,11 @@ class Schema extends AbstractApi
             throw new GC2Exception("Only super users can delete schemas", 403);
         }
         $this->schemaObj->connect();
-        $this->schemaObj->begin();
-        foreach ($this->schema as $schema) {
-            $this->schemaObj->deleteSchema($schema, false);
-        }
-        $this->schemaObj->commit();
+        $this->schemaObj->withTransaction(function () {
+            foreach ($this->schema as $schema) {
+                $this->schemaObj->deleteSchema($schema, false);
+            }
+        });
         return $this->deleteResponse();
     }
 

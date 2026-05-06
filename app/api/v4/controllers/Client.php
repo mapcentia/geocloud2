@@ -202,26 +202,26 @@ class Client extends AbstractApi
         $list = [];
         $body = Input::getBody();
         $data = json_decode($body, true);
-        $this->client->begin();
         if (!array_is_list($data)) {
             $data = [$data];
         }
-        foreach ($data as $datum) {
-            $arr = [
-                'id' => $datum['id'] ?? uniqid(),
-                'name' => $datum['name'],
-                'redirectUri' => $datum['redirect_uri'] ? json_encode($datum['redirect_uri']) : null,
-                'homepage' => $datum['homepage'] ?? null,
-                'description' => $datum['description'] ?? null,
-                'public' => $datum['public'] ?? false,
-                'confirm' => $datum['confirm'] ?? true,
-                'twoFactor' => $datum['two_factor'] ?? true,
-                'allowSignup' => $datum['allow_signup'] ?? false,
-                'socialSignup' => $datum['social_signup'] ?? false,
-            ];
-            $list[] = $this->client->insert(...$arr);
-        }
-        $this->client->commit();
+        $this->client->withTransaction(function () use (&$list, $data) {
+            foreach ($data as $datum) {
+                $arr = [
+                    'id' => $datum['id'] ?? uniqid(),
+                    'name' => $datum['name'],
+                    'redirectUri' => $datum['redirect_uri'] ? json_encode($datum['redirect_uri']) : null,
+                    'homepage' => $datum['homepage'] ?? null,
+                    'description' => $datum['description'] ?? null,
+                    'public' => $datum['public'] ?? false,
+                    'confirm' => $datum['confirm'] ?? true,
+                    'twoFactor' => $datum['two_factor'] ?? true,
+                    'allowSignup' => $datum['allow_signup'] ?? false,
+                    'socialSignup' => $datum['social_signup'] ?? false,
+                ];
+                $list[] = $this->client->insert(...$arr);
+            }
+        });
         $baseUri = "/api/v4/clients/";
         header("Location: $baseUri" . implode(",", array_map(fn($c) => $c['id'], $list)));
         $res = array_map(fn($l) => ['_links' => ['self' => $baseUri . $l['id']], 'secret' => $l['secret']], $list);
@@ -248,24 +248,24 @@ class Client extends AbstractApi
         $body = Input::getBody();
         $data = json_decode($body, true);
         $this->client->connect();
-        $this->client->begin();
-        foreach ($ids as $id) {
-            $arr = [
-                'id' => $id,
-                'newId' => $data['id'] ?? null,
-                'name' => $data['name'] ?? null,
-                'redirectUri' => isset($data['redirect_uri']) ? json_encode($data['redirect_uri']) : null,
-                'homepage' => $data['homepage'] ?? null,
-                'description' => $data['description'] ?? null,
-                'public' => $data['public'] ?? null,
-                'confirm' => $data['confirm'] ?? null,
-                'twoFactor' => $data['two_factor'] ?? null,
-                'allowSignup' => $data['allow_signup'] ?? null,
-                'socialSignup' => $data['social_signup'] ?? null,
-            ];
-            $list[] = $this->client->update(...$arr);
-        }
-        $this->client->commit();
+        $this->client->withTransaction(function () use (&$list, $ids, $data) {
+            foreach ($ids as $id) {
+                $arr = [
+                    'id' => $id,
+                    'newId' => $data['id'] ?? null,
+                    'name' => $data['name'] ?? null,
+                    'redirectUri' => isset($data['redirect_uri']) ? json_encode($data['redirect_uri']) : null,
+                    'homepage' => $data['homepage'] ?? null,
+                    'description' => $data['description'] ?? null,
+                    'public' => $data['public'] ?? null,
+                    'confirm' => $data['confirm'] ?? null,
+                    'twoFactor' => $data['two_factor'] ?? null,
+                    'allowSignup' => $data['allow_signup'] ?? null,
+                    'socialSignup' => $data['social_signup'] ?? null,
+                ];
+                $list[] = $this->client->update(...$arr);
+            }
+        });
         return $this->patchResponse('/api/v4/clients/', $list);
     }
 
@@ -281,11 +281,11 @@ class Client extends AbstractApi
         $id = $this->route->getParam("id");
         $ids = explode(',', $id);
         $this->client->connect();
-        $this->client->begin();
-        foreach ($ids as $id) {
-            $this->client->delete($id);
-        }
-        $this->client->commit();
+        $this->client->withTransaction(function () use ($ids) {
+            foreach ($ids as $id) {
+                $this->client->delete($id);
+            }
+        });
         return $this->deleteResponse();
     }
 

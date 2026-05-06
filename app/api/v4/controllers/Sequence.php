@@ -116,16 +116,16 @@ class Sequence extends AbstractApi
         $data = json_decode($body);
         $list = [];
         $this->table[0]->connect();
-        $this->table[0]->begin();
         if (is_array($data)) {
             $sequences = $data;
         } else {
             $sequences = [$data];
         }
-        foreach ($sequences as $datum) {
-            $list[] = self::addSequence($this->table[0], $this->schema[0], (array)$datum);
-        }
-        $this->table[0]->commit();
+        $this->table[0]->withTransaction(function () use (&$list, $sequences) {
+            foreach ($sequences as $datum) {
+                $list[] = self::addSequence($this->table[0], $this->schema[0], (array)$datum);
+            }
+        });
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/sequences/";
         return $this->postResponse($baseUri, $list);
     }
@@ -149,13 +149,13 @@ class Sequence extends AbstractApi
         $body = Input::getBody();
         $data = json_decode($body, true);
         $names = explode(',', $this->route->getParam("sequence"));
-        $this->table[0]->begin();
         $list = [];
 
-        foreach ($names as $name) {
-            $list[] = $this->table[0]->alterSequence($name, $this->schema[0], $data);
-        }
-        $this->table[0]->commit();
+        $this->table[0]->withTransaction(function () use (&$list, $names, $data) {
+            foreach ($names as $name) {
+                $list[] = $this->table[0]->alterSequence($name, $this->schema[0], $data);
+            }
+        });
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/sequences/";
         return $this->patchResponse($baseUri, $list);
 
@@ -170,11 +170,11 @@ class Sequence extends AbstractApi
     public function delete_index(): NoContentResponse
     {
         $names = explode(',', $this->route->getParam("sequence"));
-        $this->table[0]->begin();
-        foreach ($names as $name) {
-            $this->table[0]->deleteSequence($name, $this->schema[0]);
-        }
-        $this->table[0]->commit();
+        $this->table[0]->withTransaction(function () use ($names) {
+            foreach ($names as $name) {
+                $this->table[0]->deleteSequence($name, $this->schema[0]);
+            }
+        });
         return $this->deleteResponse();
 
     }

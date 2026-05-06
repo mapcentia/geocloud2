@@ -166,17 +166,17 @@ class Method extends AbstractApi
         } else {
             $methods = [$decodedBody];
         }
-        $this->pres->begin();
-        foreach ($methods as $m) {
-            $q = $m['q'];
-            $method = $m['method'];
-            $typeHints = $m['type_hints'];
-            $typeFormats = $m['type_formats'];
-            $outputFormat = $m['output_format'] ?? 'json';
-            $srs = $m['srs'] ?? 4326;
-            $list[] = $this->pres->createPreparedStatement($method, $q, $typeHints, $typeFormats, $outputFormat, $srs, $uid);
-        }
-        $this->pres->commit();
+        $this->pres->withTransaction(function () use (&$list, $methods, $uid) {
+            foreach ($methods as $m) {
+                $q = $m['q'];
+                $method = $m['method'];
+                $typeHints = $m['type_hints'];
+                $typeFormats = $m['type_formats'];
+                $outputFormat = $m['output_format'] ?? 'json';
+                $srs = $m['srs'] ?? 4326;
+                $list[] = $this->pres->createPreparedStatement($method, $q, $typeHints, $typeFormats, $outputFormat, $srs, $uid);
+            }
+        });
         return $this->postResponse("/api/v4/methods/", $list);
     }
 
@@ -202,12 +202,12 @@ class Method extends AbstractApi
         $body = json_decode(Input::getBody(), true);
 
         $this->pres->connect();
-        $this->pres->begin();
         $names = [];
-        foreach ($ids as $id) {
-            $names[] = $this->pres->updatePreparedStatement($id, $body['method'] ?? null, $body['q'] ?? null, $body['type_hints'] ?? null, $body['type_formats'] ?? null, $body['output_format'] ?? null, $body['srs'] ?? null, $uid, $isSuperUser);
-        }
-        $this->pres->commit();
+        $this->pres->withTransaction(function () use (&$names, $ids, $body, $uid, $isSuperUser) {
+            foreach ($ids as $id) {
+                $names[] = $this->pres->updatePreparedStatement($id, $body['method'] ?? null, $body['q'] ?? null, $body['type_hints'] ?? null, $body['type_formats'] ?? null, $body['output_format'] ?? null, $body['srs'] ?? null, $uid, $isSuperUser);
+            }
+        });
         return $this->patchResponse('/api/v4/methods/', array_map(fn($c) => $c['name'], $names));
     }
 
@@ -226,11 +226,11 @@ class Method extends AbstractApi
         $uid = $this->route->jwt["data"]["uid"];
         $isSuperUser = $this->route->jwt["data"]["superUser"];
         $ids = explode(',', $id);
-        $this->pres->begin();
-        foreach ($ids as $id) {
-            $this->pres->deletePreparedStatement($id, $uid, $isSuperUser);
-        }
-        $this->pres->commit();
+        $this->pres->withTransaction(function () use ($ids, $uid, $isSuperUser) {
+            foreach ($ids as $id) {
+                $this->pres->deletePreparedStatement($id, $uid, $isSuperUser);
+            }
+        });
         return $this->deleteResponse();
     }
 

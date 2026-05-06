@@ -132,21 +132,21 @@ class Sql extends AbstractApi
         }
         $result = [];
         // Execute SQL statements
-        $this->sqlApi->begin();
-        foreach ($decodedBody as $query) {
-            $srs = $query['srs'] ?? 4326;
-            $this->sqlApi->setSRS($srs);
-            $query['srs'] = $srs;
-            // In REST context the id is set
-            if (!isset($query['id'])) {
-                $query['id'] = Util::guid();
+        $this->sqlApi->withTransaction(function () use (&$result, $decodedBody, $user, $isSuperUser, $userGroup) {
+            foreach ($decodedBody as $query) {
+                $srs = $query['srs'] ?? 4326;
+                $this->sqlApi->setSRS($srs);
+                $query['srs'] = $srs;
+                // In REST context the id is set
+                if (!isset($query['id'])) {
+                    $query['id'] = Util::guid();
+                }
+                $res = $this->runStatement($query, $user, $isSuperUser, $userGroup);
+                if ($res !== null) {
+                    $result[] = $res;
+                }
             }
-            $res = $this->runStatement($query, $user, $isSuperUser, $userGroup);
-            if ($res !== null) {
-                $result[] = $res;
-            }
-        }
-        $this->sqlApi->commit();
+        });
         // Return response
         if (count($result) == 0) {
             return new NoContentResponse();

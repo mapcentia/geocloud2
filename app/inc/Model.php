@@ -265,6 +265,31 @@ class Model
     }
 
     /**
+     * Runs $work inside a database transaction.
+     *
+     * Begins the transaction, invokes the callable, commits on success, and
+     * rolls back on any Throwable before rethrowing. Returns whatever the
+     * callable returns.
+     *
+     * @template T
+     * @param callable(): T $work
+     * @return T
+     * @throws \Throwable
+     */
+    public function withTransaction(callable $work): mixed
+    {
+        $this->begin();
+        try {
+            $result = $work();
+            $this->commit();
+            return $result;
+        } catch (\Throwable $e) {
+            $this->rollback();
+            throw $e;
+        }
+    }
+
+    /**
      * Rolls back any open transactions on every cached PDO connection.
      *
      * Why: in FrankenPHP worker mode self::$PdoConnections persists between

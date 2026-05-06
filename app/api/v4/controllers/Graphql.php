@@ -126,9 +126,7 @@ class Graphql extends AbstractApi
         $variables = $payload['variables'] ?? [];
         $operationName = $payload['operationName'] ?? null;
         $api = new \app\models\Sql(connection: $this->connection);
-        $api->begin();
-        // Execute the query using webonyx/graphql-php
-        $result = $graphQl->run(
+        $result = $api->withTransaction(fn() => $graphQl->run(
             user: $user,
             api: $api,
             query: $query,
@@ -137,8 +135,7 @@ class Graphql extends AbstractApi
             userGroup: $userGroup,
             variables: is_array($variables) ? $variables : [],
             operationName: is_string($operationName) ? $operationName : null
-        );
-        $api->commit();
+        ));
 
         return new GetResponse(data: $result);
     }

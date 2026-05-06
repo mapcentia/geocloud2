@@ -115,15 +115,15 @@ class Privilege extends AbstractApi
         }
         $table = new Table(table: "settings.geometry_columns_join", connection: $this->connection);
         $table->connect();
-        $table->begin();
-        foreach ($data as $datum) {
-            $obj = new StdClass();
-            $obj->_key_ = $this->qualifiedName[0];
-            $obj->privileges = $datum['privilege'];
-            $obj->subuser = $datum['subuser'];
-            $layer->updatePrivileges($obj, $table);
-        }
-        $table->commit();
+        $table->withTransaction(function () use ($table, $layer, $data) {
+            foreach ($data as $datum) {
+                $obj = new StdClass();
+                $obj->_key_ = $this->qualifiedName[0];
+                $obj->privileges = $datum['privilege'];
+                $obj->subuser = $datum['subuser'];
+                $layer->updatePrivileges($obj, $table);
+            }
+        });
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/privileges/";
         return $this->emptyResponse();
     }

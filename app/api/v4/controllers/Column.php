@@ -160,23 +160,23 @@ class Column extends AbstractApi
         $data = json_decode($body);
         $list = [];
         $this->table[0]->connect();
-        $this->table[0]->begin();
         if (is_array($data)) {
             $columns = $data;
         } else {
             $columns = [$data];
         }
-        foreach ($columns as $datum) {
-            $list[] = self::addColumn(
-                table: $this->table[0],
-                column: $datum->name,
-                type: $datum->type,
-                defaultValue: $datum->default_value,
-                isNullable: $datum->is_nullable,
-                identity: $datum->identity_generation,
-                comment: $datum->comment);
-        }
-        $this->table[0]->commit();
+        $this->table[0]->withTransaction(function () use (&$list, $columns) {
+            foreach ($columns as $datum) {
+                $list[] = self::addColumn(
+                    table: $this->table[0],
+                    column: $datum->name,
+                    type: $datum->type,
+                    defaultValue: $datum->default_value,
+                    isNullable: $datum->is_nullable,
+                    identity: $datum->identity_generation,
+                    comment: $datum->comment);
+            }
+        });
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/columns/";
         return $this->postResponse($baseUri, $list);
     }
@@ -203,41 +203,41 @@ class Column extends AbstractApi
 
         $layer = new Layer(connection: $this->connection);
         $geomFields = $layer->getGeometryColumnsFromTable($this->schema[0], $this->unQualifiedName[0]);
-        $this->table[0]->begin();
         $r = [];
         $list = [];
 
-        foreach ($this->column as $oldColumnName) {
-            foreach ($geomFields as $geomField) {
-                $key = $this->qualifiedName[0] . '.' . $geomField;
-                $conf = json_decode($layer->getValueFromKey($key, 'fieldconf'));
-                $obj = $conf->{$oldColumnName} ?? new stdClass();
-                $obj->id = $oldColumnName;
-                $obj->column = $data->name ?? $oldColumnName;
-                $obj->type = $data->type;
-                $obj->is_nullable = $data->is_nullable; // Is set as Meta and will be set on table, if so
-                if (property_exists($data, 'comment')) {
-                    $obj->comment = $data->comment;
-                }
-                $r = $this->table[0]->updateColumn($obj, $key, false);
-                $list[] = $r['name'];
+        $this->table[0]->withTransaction(function () use (&$r, &$list, $layer, $geomFields, $data) {
+            foreach ($this->column as $oldColumnName) {
+                foreach ($geomFields as $geomField) {
+                    $key = $this->qualifiedName[0] . '.' . $geomField;
+                    $conf = json_decode($layer->getValueFromKey($key, 'fieldconf'));
+                    $obj = $conf->{$oldColumnName} ?? new stdClass();
+                    $obj->id = $oldColumnName;
+                    $obj->column = $data->name ?? $oldColumnName;
+                    $obj->type = $data->type;
+                    $obj->is_nullable = $data->is_nullable; // Is set as Meta and will be set on table, if so
+                    if (property_exists($data, 'comment')) {
+                        $obj->comment = $data->comment;
+                    }
+                    $r = $this->table[0]->updateColumn($obj, $key, false);
+                    $list[] = $r['name'];
 
-            }
-            $newName = $r["name"];
+                }
+                $newName = $r["name"];
 
-            // OK for views. Postgres is permissive with defaults on views. No effect
-            if (property_exists($data, "default_value")) {
-                if ($data->default_value === null) {
-                    $this->table[0]->dropDefaultValue($newName);
-                } else {
-                    $this->table[0]->addDefaultValue($newName, $data->default_value);
+                // OK for views. Postgres is permissive with defaults on views. No effect
+                if (property_exists($data, "default_value")) {
+                    if ($data->default_value === null) {
+                        $this->table[0]->dropDefaultValue($newName);
+                    } else {
+                        $this->table[0]->addDefaultValue($newName, $data->default_value);
+                    }
+                }
+                if (property_exists($data, "type")) {
+                    $this->table[0]->changeType($newName, $data->type);
                 }
             }
-            if (property_exists($data, "type")) {
-                $this->table[0]->changeType($newName, $data->type);
-            }
-        }
-        $this->table[0]->commit();
+        });
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/columns/";
         return $this->patchResponse($baseUri, $list);
     }
@@ -257,11 +257,11 @@ class Column extends AbstractApi
     public function delete_index(): NoContentResponse
     {
         $this->table[0] = new TableModel($this->qualifiedName[0], connection: $this->connection);
-        $this->table[0]->begin();
-        foreach ($this->column as $column) {
-            $this->table[0]->deleteColumn([$column], "");
-        }
-        $this->table[0]->commit();
+        $this->table[0]->withTransaction(function () {
+            foreach ($this->column as $column) {
+                $this->table[0]->deleteColumn([$column], "");
+            }
+        });
         return $this->deleteResponse();
     }
 

@@ -174,19 +174,19 @@ class Table extends AbstractApi
         $data = json_decode($body);
         $this->table[0] = new TableModel(table: null, connection: $this->connection);
         $this->table[0]->postgisschema = $this->schema[0];
-        $this->table[0]->begin();
         $list = [];
 
-        if (is_array($data)) {
-            foreach ($data as $datum) {
-                $r = self::addTable($this->table[0], (object)$datum, $this);
+        $this->table[0]->withTransaction(function () use (&$list, $data) {
+            if (is_array($data)) {
+                foreach ($data as $datum) {
+                    $r = self::addTable($this->table[0], (object)$datum, $this);
+                    $list[] = $r['tableName'];
+                }
+            } else {
+                $r = self::addTable($this->table[0], (object)$data, $this);
                 $list[] = $r['tableName'];
             }
-        } else {
-            $r = self::addTable($this->table[0], (object)$data, $this);
-            $list[] = $r['tableName'];
-        }
-        $this->table[0]->commit();
+        });
         new Layer(connection: $this->connection)->insertDefaultMeta();
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/";
         return $this->postResponse($baseUri, $list);
@@ -225,38 +225,38 @@ class Table extends AbstractApi
     public function patch_index(): Response
     {
         $layer = new Layer(connection: $this->connection);
-        $layer->begin();
         $body = Input::getBody();
         $data = json_decode($body);
         $r = [];
-        for ($i = 0; sizeof($this->unQualifiedName) > $i; $i++) {
-            if (isset($data->name) && $data->name != $this->unQualifiedName[$i]) {
-                $r[] = $layer->rename($this->qualifiedName[$i], $data->name)['name'];
-            }
-            $relName = $r[$i] ?? $this->unQualifiedName[$i];
-            if (isset($data->schema) && $data->schema != $this->schema[0]) {
-                if (!$this->route->jwt["data"]['superUser']) {
-                    throw new GC2Exception('Only super user can move tables between schemas');
+        $layer->withTransaction(function () use (&$r, $layer, $data) {
+            for ($i = 0; sizeof($this->unQualifiedName) > $i; $i++) {
+                if (isset($data->name) && $data->name != $this->unQualifiedName[$i]) {
+                    $r[] = $layer->rename($this->qualifiedName[$i], $data->name)['name'];
                 }
-                $layer->setSchema([$relName], $data->schema);
-            }
-            $schemaName = $data->schema ?? $this->schema[0];
-            // Set comment
-            if (property_exists($data, 'comment')) {
-                $layer->table = $schemaName . "." . $relName;
-                $layer->setTableComment($data->comment);
-            }
-            // Emit events
-            if (property_exists($data, 'emit_events')) {
-                if ($data->emit_events === true) {
-                    $layer->installNotifyTrigger($this->qualifiedName[$i]);
-                } elseif ($data->emit_events === false) {
-                    $layer->removeNotifyTrigger($this->qualifiedName[$i]);
+                $relName = $r[$i] ?? $this->unQualifiedName[$i];
+                if (isset($data->schema) && $data->schema != $this->schema[0]) {
+                    if (!$this->route->jwt["data"]['superUser']) {
+                        throw new GC2Exception('Only super user can move tables between schemas');
+                    }
+                    $layer->setSchema([$relName], $data->schema);
+                }
+                $schemaName = $data->schema ?? $this->schema[0];
+                // Set comment
+                if (property_exists($data, 'comment')) {
+                    $layer->table = $schemaName . "." . $relName;
+                    $layer->setTableComment($data->comment);
+                }
+                // Emit events
+                if (property_exists($data, 'emit_events')) {
+                    if ($data->emit_events === true) {
+                        $layer->installNotifyTrigger($this->qualifiedName[$i]);
+                    } elseif ($data->emit_events === false) {
+                        $layer->removeNotifyTrigger($this->qualifiedName[$i]);
+                    }
                 }
             }
-        }
+        });
         $schema = $data->schema ?? $this->schema[0];
-        $layer->commit();
         $baseUrl = "/api/v4/schemas/$schema/tables/";
         $list = count($r) > 0 ? $r : $this->unQualifiedName;
         return $this->patchResponse($baseUrl, $list);
@@ -274,11 +274,11 @@ class Table extends AbstractApi
     #[Override]
     public function delete_index(): Response
     {
-        $this->table[0]->begin();
-        foreach ($this->table as $t) {
-            $t->destroy();
-        }
-        $this->table[0]->commit();
+        $this->table[0]->withTransaction(function () {
+            foreach ($this->table as $t) {
+                $t->destroy();
+            }
+        });
         return $this->deleteResponse();
     }
 

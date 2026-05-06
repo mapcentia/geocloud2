@@ -122,17 +122,17 @@ class Index extends AbstractApi
         $body = Input::getBody();
         $data = json_decode($body);
         $list = [];
-        $this->table[0]->begin();
         if (!is_array($data)) {
             $data = [$data];
         }
-        foreach ($data as $datum) {
-            $name = $datum->name ?? null;
-            $method = $datum->method ?? "btree";
-            $columns = $datum->columns;
-            $list[] = self::addIndices($this->table[0], $columns, $method, $name);
-        }
-        $this->table[0]->commit();
+        $this->table[0]->withTransaction(function () use (&$list, $data) {
+            foreach ($data as $datum) {
+                $name = $datum->name ?? null;
+                $method = $datum->method ?? "btree";
+                $columns = $datum->columns;
+                $list[] = self::addIndices($this->table[0], $columns, $method, $name);
+            }
+        });
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/indices/";
         return $this->postResponse($baseUri, $list);
     }
@@ -182,11 +182,11 @@ class Index extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     public function delete_index(): Response
     {
-        $this->table[0]->begin();
-        foreach ($this->index as $index) {
-            $this->table[0]->dropIndex($index);
-        }
-        $this->table[0]->commit();
+        $this->table[0]->withTransaction(function () {
+            foreach ($this->index as $index) {
+                $this->table[0]->dropIndex($index);
+            }
+        });
         return $this->deleteResponse();
     }
 

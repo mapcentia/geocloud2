@@ -131,21 +131,21 @@ class Meta extends AbstractApi
         $body = Input::getBody();
         $data = json_decode($body, true);
         $geometryJoinTable = new \app\models\Table(table: "settings.geometry_columns_join", connection: $this->connection);
-        $geometryJoinTable->begin();
-        foreach ($data['relations'] as $key => $datum) {
-            $split = explode(".", $key);
-            $geomFields = (new Layer(connection: $this->connection))->getGeometryColumnsFromTable($split[0], $split[1]);
-            foreach ($geomFields as $geomField) {
-                if (count($split) == 3) {
-                    $key = $split[0] . '.' . $split[1] . '.' . $split[2];
-                } else {
-                    $key = $split[0] . '.' . $split[1] . '.' . $geomField;
+        $geometryJoinTable->withTransaction(function () use ($geometryJoinTable, $data) {
+            foreach ($data['relations'] as $key => $datum) {
+                $split = explode(".", $key);
+                $geomFields = (new Layer(connection: $this->connection))->getGeometryColumnsFromTable($split[0], $split[1]);
+                foreach ($geomFields as $geomField) {
+                    if (count($split) == 3) {
+                        $key = $split[0] . '.' . $split[1] . '.' . $split[2];
+                    } else {
+                        $key = $split[0] . '.' . $split[1] . '.' . $geomField;
+                    }
+                    $datum['_key_'] = $key;
+                    $geometryJoinTable->updateRecord(data: self::processRowReverse($datum), keyName: '_key_');
                 }
-                $datum['_key_'] = $key;
-                $geometryJoinTable->updateRecord(data: self::processRowReverse($datum), keyName: '_key_');
             }
-        }
-        $geometryJoinTable->commit();
+        });
         return new NoContentResponse();
     }
 

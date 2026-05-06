@@ -139,22 +139,22 @@ class User extends AbstractApi
         $list = [];
         $model = new UserModel();
         $data = json_decode(Input::getBody(), true) ?: [];
-        $model->begin();
         if (!array_is_list($data)) {
             $data = [$data];
         }
         $database = $this->route->jwt["data"]['database'];
         // Create users
-        foreach ($data as $user) {
-            $user['parentdb'] = $database;
-            $user['subuser'] = true;
-            $user["usergroup"] = $user["user_group"] ?? null;
-            // Load pre extensions and run processAddUser
-            $this->runPreExtension('processAddUser', $model);
-            $userName = self::convertUserObject($model->createUser($user)['data'])['name'];
-            $list[] = $userName;
-        }
-        $model->commit();
+        $model->withTransaction(function () use (&$list, $model, $data, $database) {
+            foreach ($data as $user) {
+                $user['parentdb'] = $database;
+                $user['subuser'] = true;
+                $user["usergroup"] = $user["user_group"] ?? null;
+                // Load pre extensions and run processAddUser
+                $this->runPreExtension('processAddUser', $model);
+                $userName = self::convertUserObject($model->createUser($user)['data'])['name'];
+                $list[] = $userName;
+            }
+        });
         // Create schemas for new users
         foreach ($data as $user) {
             try {
@@ -210,20 +210,20 @@ class User extends AbstractApi
                     $data['parentdb'] = $this->route->jwt["data"]['database'];
                 }
                 $model = new UserModel();
-                $model->begin();
-                $model->updateUser($data);
-                $model->commit();
+                $model->withTransaction(function () use ($model, $data) {
+                    $model->updateUser($data);
+                });
             } else {
                 $model = new UserModel($requestedUserId, $dataBase);
-                $model->begin();
-                $user = $model->getData();
-                if ($user["data"]["parentdb"] == $currentUserId) {
-                    $data["parentdb"] = $user["data"]["parentdb"];
-                    $model->updateUser($data);
-                } else {
-                    throw new Exception("Requested user is not the subuser of the currently authenticated user");
-                }
-                $model->commit();
+                $model->withTransaction(function () use ($model, &$data, $currentUserId) {
+                    $user = $model->getData();
+                    if ($user["data"]["parentdb"] == $currentUserId) {
+                        $data["parentdb"] = $user["data"]["parentdb"];
+                        $model->updateUser($data);
+                    } else {
+                        throw new Exception("Requested user is not the subuser of the currently authenticated user");
+                    }
+                });
             }
         }
         return $this->patchResponse('/api/v4/users/', $requestedUsers);
@@ -245,11 +245,11 @@ class User extends AbstractApi
         }
         $requestedUsers = explode(',', $this->route->getParam("user"));
         $model = new UserModel(userId: $this->route->jwt["data"]['uid']);
-        $model->begin();
-        foreach ($requestedUsers as $requestedUser) {
-            $model->deleteUser($requestedUser);
-        }
-        $model->commit();
+        $model->withTransaction(function () use ($model, $requestedUsers) {
+            foreach ($requestedUsers as $requestedUser) {
+                $model->deleteUser($requestedUser);
+            }
+        });
         return $this->deleteResponse();
     }
 

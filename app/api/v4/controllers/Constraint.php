@@ -145,21 +145,20 @@ class Constraint extends AbstractApi
         $data = json_decode($body);
         $list = [];
 
-        $this->table[0]->begin();
-
         if (!is_array($data)) {
             $data = [$data];
         }
-        foreach ($data as $datum) {
-            $name = $datum->name;
-            $type = $datum->constraint;
-            $columns = $datum->columns;
-            $check = $datum->check;
-            $referencedTable = $datum->referenced_table;
-            $referencedColumns = $datum->referenced_columns;
-            $list[] = self::addConstraint($this->table[0], $type, $columns, $check, $name, $referencedTable, $referencedColumns);
-        }
-        $this->table[0]->commit();
+        $this->table[0]->withTransaction(function () use (&$list, $data) {
+            foreach ($data as $datum) {
+                $name = $datum->name;
+                $type = $datum->constraint;
+                $columns = $datum->columns;
+                $check = $datum->check;
+                $referencedTable = $datum->referenced_table;
+                $referencedColumns = $datum->referenced_columns;
+                $list[] = self::addConstraint($this->table[0], $type, $columns, $check, $name, $referencedTable, $referencedColumns);
+            }
+        });
         $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/constraints/";
         return $this->postResponse($baseUri, $list);
     }
@@ -182,11 +181,11 @@ class Constraint extends AbstractApi
     #[OA\Response(response: 404, description: 'Not found')]
     public function delete_index(): Response
     {
-        $this->table[0]->begin();
-        foreach ($this->constraint as $constraint) {
-            $this->table[0]->dropConstraint($constraint);
-        }
-        $this->table[0]->commit();
+        $this->table[0]->withTransaction(function () {
+            foreach ($this->constraint as $constraint) {
+                $this->table[0]->dropConstraint($constraint);
+            }
+        });
         return $this->deleteResponse();
     }
 

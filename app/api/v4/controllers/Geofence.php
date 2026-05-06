@@ -184,15 +184,15 @@ class Geofence extends AbstractApi
         if (!array_is_list($data)) {
             $data = [$data];
         }
-        $this->geofence->begin();
-        foreach ($data as $datum) {
-            if (isset($datum['table'])) {
-                $datum['layer'] = $datum['table'];
-                unset($datum['table']);
+        $this->geofence->withTransaction(function () use (&$list, $data) {
+            foreach ($data as $datum) {
+                if (isset($datum['table'])) {
+                    $datum['layer'] = $datum['table'];
+                    unset($datum['table']);
+                }
+                $list[] = $this->geofence->create($datum)['data']['id'];
             }
-            $list[] = $this->geofence->create($datum)['data']['id'];
-        }
-        $this->geofence->commit();
+        });
         return $this->postResponse("/api/v4/rules/", $list);
     }
 
@@ -215,21 +215,21 @@ class Geofence extends AbstractApi
         $list = [];
         $body = Input::getBody();
         $data = json_decode($body, true);
-        $this->geofence->begin();
-        foreach ($ids as $id) {
-            if (!is_numeric($id)) {
-                throw new GC2Exception("Id is not a integer", 400, null, 'MISSING_ID');
+        $this->geofence->withTransaction(function () use (&$list, $ids, &$data) {
+            foreach ($ids as $id) {
+                if (!is_numeric($id)) {
+                    throw new GC2Exception("Id is not a integer", 400, null, 'MISSING_ID');
+                }
+                if (!empty($data['id'])) {
+                    $data["newId"] = $data['id'];
+                }
+                if (isset($data['table'])) {
+                    $data['layer'] = $data['table'];
+                    unset($data['table']);
+                }
+                $list[] = $this->geofence->update($id, $data);
             }
-            if (!empty($data['id'])) {
-                $data["newId"] = $data['id'];
-            }
-            if (isset($data['table'])) {
-                $data['layer'] = $data['table'];
-                unset($data['table']);
-            }
-            $list[] = $this->geofence->update($id, $data);
-        }
-        $this->geofence->commit();
+        });
         return $this->patchResponse('/api/v4/rules/', $list);
     }
 
@@ -244,14 +244,14 @@ class Geofence extends AbstractApi
     public function delete_index(): Response
     {
         $ids = explode(',', $this->route->getParam("id"));
-        $this->geofence->begin();
-        foreach ($ids as $id) {
-            if (!is_numeric($id)) {
-                throw new GC2Exception("Id is not a integer", 400, null, 'MISSING_ID');
+        $this->geofence->withTransaction(function () use ($ids) {
+            foreach ($ids as $id) {
+                if (!is_numeric($id)) {
+                    throw new GC2Exception("Id is not a integer", 400, null, 'MISSING_ID');
+                }
+                $this->geofence->delete((int)$id);
             }
-            $this->geofence->delete((int)$id);
-        }
-        $this->geofence->commit();
+        });
         return $this->deleteResponse();
     }
 
