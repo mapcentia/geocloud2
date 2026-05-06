@@ -265,6 +265,30 @@ class Model
     }
 
     /**
+     * Rolls back any open transactions on every cached PDO connection.
+     *
+     * Why: in FrankenPHP worker mode self::$PdoConnections persists between
+     * requests. If a controller throws between begin() and commit(), the
+     * transaction stays open and is inherited by the next request on the
+     * same connection. Call this in a finally around the per-request
+     * dispatch and after each worker iteration.
+     *
+     * @return void
+     */
+    public static function rollbackAllOpenTransactions(): void
+    {
+        foreach (self::$PdoConnections as $pdo) {
+            try {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+            } catch (\Throwable $e) {
+                error_log("rollbackAllOpenTransactions: " . $e->getMessage());
+            }
+        }
+    }
+
+    /**
      * Prepares an SQL statement for execution.
      *
      * @param string $sql The SQL query to prepare.

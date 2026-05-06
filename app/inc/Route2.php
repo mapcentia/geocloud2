@@ -166,8 +166,14 @@ class Route2
                     }
                 }
             }
-            $controller->validate();
-            $response = $controller->$action($r);
+            try {
+                $controller->validate();
+                $response = $controller->$action($r);
+            } finally {
+                // Roll back any transaction the controller left open on a
+                // cached PDO. Safe no-op when commit() already closed it.
+                Model::rollbackAllOpenTransactions();
+            }
             $data = $response->getData();
             $status = $response->getStatus();
             header("HTTP/1.0 $status " . Util::httpCodeText($status));

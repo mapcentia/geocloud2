@@ -593,7 +593,16 @@ if (function_exists('frankenphp_handle_request')) {
     $maxRequests = (int)($_SERVER['MAX_REQUESTS'] ?? 500);
     error_log("Starting worker");
     for ($nbRequests = 0; !$maxRequests || $nbRequests < $maxRequests; ++$nbRequests) {
-        $keepRunning = frankenphp_handle_request($handler);
+        try {
+            $keepRunning = frankenphp_handle_request($handler);
+        } finally {
+            // Safety net: roll back any transaction left open on a cached
+            // PDO before the worker reuses the connection on the next
+            // request. Route2 already does this per dispatch, but worker
+            // mode persists Model::$PdoConnections across requests so we
+            // also clean up here in case a non-v4 path opened one.
+            \app\inc\Model::rollbackAllOpenTransactions();
+        }
         error_log($keepRunning);
         // Call the garbage collector to reduce the chances of it being triggered in the middle of a page generation
         gc_collect_cycles();
