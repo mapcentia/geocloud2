@@ -8,29 +8,26 @@
 
 namespace app\models;
 
+use app\inc\Connection;
 use app\inc\Model;
 
 class Rule extends Model
 {
 
-    public function __construct()
+    public function __construct(?Connection $connection = null)
     {
-        parent::__construct();
+        parent::__construct($connection);
     }
 
     /**
      * @param Sql|null $conn
      * @return array
      */
-    public function get(?Sql $conn = null): array
+    public function get(): array
     {
         $sql = "SELECT * FROM settings.geofence order by priority";
-        if ($conn) {
-            $res = $conn->prepare($sql);
-        } else {
-            $res = $this->prepare($sql);
-        }
-        $res->execute();
+        $res = $this->prepare($sql);
+        $this->execute($res);
         $arr = [];
         while ($row = $this->fetchRow($res)) {
             $arr[] = $row;
