@@ -364,6 +364,38 @@ class Model
     }
 
     /**
+     * Issues DISCARD ALL on every cached PDO connection.
+     *
+     * Why: in FrankenPHP worker mode the same PDO is reused across
+     * requests from the same JWT user. DISCARD ALL clears session-level
+     * state that a previous request may have left behind: temp tables,
+     * SET (non-LOCAL) GUC values, prepared statements, LISTEN channels,
+     * cached plans and sequences. This is a defense-in-depth measure
+     * intended to be called once per worker iteration, after
+     * rollbackAllOpenTransactions(); DISCARD ALL itself cannot run in
+     * an open transaction.
+     *
+     * Failures (dead connection, PgBouncer rejecting it in transaction
+     * pooling mode, etc.) are logged and skipped — the next real query
+     * will re-establish the connection if needed.
+     *
+     * @return void
+     */
+    public static function resetSessionStateAllConnections(): void
+    {
+        foreach (self::$PdoConnections as $pdo) {
+            try {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                $pdo->exec('DISCARD ALL');
+            } catch (\Throwable $e) {
+                error_log("resetSessionStateAllConnections: " . $e->getMessage());
+            }
+        }
+    }
+
+    /**
      * Prepares an SQL statement for execution.
      *
      * @param string $sql The SQL query to prepare.

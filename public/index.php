@@ -591,6 +591,12 @@ $handler = static function () use ($routes) {
 if (function_exists('frankenphp_handle_request')) {
     ignore_user_abort(true);
     $maxRequests = (int)($_SERVER['MAX_REQUESTS'] ?? 500);
+    // Default true: clear session-level Postgres state between worker
+    // iterations (temp tables, SET, LISTEN, prepared statements, plans).
+    // Set workerDiscardSessionState to false in App config to disable
+    // — e.g. when running behind PgBouncer in transaction pooling mode
+    // where the pooler issues RESET ALL itself.
+    $discardSessionState = App::$param['workerDiscardSessionState'] ?? true;
     error_log("Starting worker");
     for ($nbRequests = 0; !$maxRequests || $nbRequests < $maxRequests; ++$nbRequests) {
         try {
@@ -602,6 +608,9 @@ if (function_exists('frankenphp_handle_request')) {
             // mode persists Model::$PdoConnections across requests so we
             // also clean up here in case a non-v4 path opened one.
             \app\inc\Model::rollbackAllOpenTransactions();
+            if ($discardSessionState) {
+                \app\inc\Model::resetSessionStateAllConnections();
+            }
         }
         error_log($keepRunning);
         // Call the garbage collector to reduce the chances of it being triggered in the middle of a page generation
