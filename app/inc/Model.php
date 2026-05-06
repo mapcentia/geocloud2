@@ -678,18 +678,31 @@ class Model
     /**
      * Checks if the PDO connection is successfully established.
      *
+     * If SELECT 1 fails while a transaction is open, the transaction may be
+     * in aborted state — every subsequent query would fail with
+     * "current transaction is aborted, commands ignored until end of
+     * transaction block". Roll back the leftover transaction and retry
+     * once before declaring the connection dead.
+     *
      * @return bool Returns true if the PDO connection is active and responsive, otherwise false.
      */
     private function isPdoConnected(): bool
     {
+        $pdo = $this->getPdoConnection();
         try {
             // Lightweight no-op query
-            $this->getPdoConnection()->query('SELECT 1');
+            $pdo->query('SELECT 1');
             return true;
         } catch (PDOException $e) {
-            // Could be connected, but the check above is aborted due to an error and no rollback
-            if ($this->getPdoConnection()->inTransaction()) {
-                return true;
+            if ($pdo->inTransaction()) {
+                try {
+                    $pdo->rollBack();
+                    $pdo->query('SELECT 1');
+                    return true;
+                } catch (PDOException $e2) {
+                    error_log("PDO connection unrecoverable after rollback: " . $e2->getMessage());
+                    return false;
+                }
             }
             error_log("PDO connection failed: " . $e->getMessage());
             return false;
