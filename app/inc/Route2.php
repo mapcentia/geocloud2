@@ -14,6 +14,7 @@ use app\api\v4\AcceptableMethods;
 use app\api\v4\AcceptableContentTypes;
 use app\api\v4\Controller;
 use app\api\v4\ApiInterface;
+use app\api\v4\Responses\StreamedResponse;
 use app\exceptions\GC2Exception;
 use Closure;
 use ReflectionClass;
@@ -176,7 +177,7 @@ class Route2
             }
             // Streaming branch: bypass JSON-encoding, let the callback
             // write directly to php://output.
-            if ($response instanceof \app\api\v4\Responses\StreamedResponse) {
+            if ($response instanceof StreamedResponse) {
                 header('HTTP/1.0 ' . $response->getStatus() . ' ' . Util::httpCodeText($response->getStatus()));
                 header('Content-Type: ' . $response->contentType);
                 ($response->callback)();
