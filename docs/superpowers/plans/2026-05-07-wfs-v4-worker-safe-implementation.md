@@ -865,7 +865,9 @@ private static function fromGet(\app\wfs\Context $ctx): self
     $outputFormat = self::normalizeOutputFormat($h['OUTPUTFORMAT'] ?? null, $version);
     $maxFeatures = isset($h['MAXFEATURES']) ? (int) $h['MAXFEATURES'] : null;
     $resultType = $h['RESULTTYPE'] ?? null;
-    $srs = $srsName ? \app\inc\WfsFilter::parseEpsgCode($srsName) : null;
+    // WfsFilter::parseEpsgCode returns ?string; Request::$srs is ?int — cast.
+    $epsgStr = $srsName ? \app\inc\WfsFilter::parseEpsgCode($srsName) : null;
+    $srs = $epsgStr !== null ? (int) $epsgStr : null;
     $filter = null;
     if (!empty($h['FILTER'])) {
         $filter = self::parseInlineFilter($h['FILTER']);
@@ -1065,7 +1067,9 @@ private static function fromXmlPost(\app\wfs\Context $ctx, string $body): self
 
     $typeNames = $typeNamesStr ? explode(',', rtrim($typeNamesStr, ',')) : null;
     $properties = $propertiesStr ? explode(',', rtrim($propertiesStr, ',')) : null;
-    $srs = $srsName ? \app\inc\WfsFilter::parseEpsgCode($srsName) : null;
+    // WfsFilter::parseEpsgCode returns ?string; Request::$srs is ?int — cast.
+    $epsgStr = $srsName ? \app\inc\WfsFilter::parseEpsgCode($srsName) : null;
+    $srs = $epsgStr !== null ? (int) $epsgStr : null;
 
     return new self(
         operation: $operation,
