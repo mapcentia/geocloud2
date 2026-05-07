@@ -18,22 +18,30 @@ final class NameSpaces
         return substr($str, $n);
     }
 
-    /** Strip xmlns:* attribute declarations from an XML body. */
+    /**
+     * Strips namespace prefixes from element tags and removes most attributes
+     * from an XML body, preserving a whitelist of WFS-protocol attributes
+     * (service, version, outputFormat, maxFeatures, resultType, typeName,
+     * srsName, fid, id) and the gml namespace. Direct port of the legacy
+     * server.php:dropNameSpace() so XML_Unserializer downstream behavior
+     * is unchanged.
+     */
     public static function dropNameSpace(string $xml): string
     {
-        return preg_replace('/\s+xmlns:[a-zA-Z0-9]+="[^"]*"/', '', $xml);
+        $xml = preg_replace('/ \w*(?:\:\w*?)?(?<!gml)(?<!service)(?<!version)(?<!outputFormat)(?<!maxFeatures)(?<!resultType)(?<!typeName)(?<!srsName)(?<!fid)(?<!id)=(\".*?\"|\'.*?\')/s', '', $xml);
+        $xml = preg_replace('/\<[a-z|0-9]*(?<!gml):(?:.*?)/', '<', $xml);
+        $xml = preg_replace('/\<\/[a-z|0-9]*(?<!gml):(?:.*?)/', '</', $xml);
+        return $xml;
     }
 
-    /** Strip namespace prefixes from a comma-separated list of qualified names. */
+    /**
+     * Strips all "prefix:" segments from a name. Also trims surrounding
+     * double quotes, which OpenLayers adds to ogc:PropertyName in WFS
+     * requests. Direct port of legacy server.php:dropAllNameSpaces().
+     */
     public static function dropAllNameSpaces(string $tag): string
     {
-        $parts = explode(',', $tag);
-        $out = [];
-        foreach ($parts as $p) {
-            $p = trim($p);
-            $colon = strpos($p, ':');
-            $out[] = $colon === false ? $p : substr($p, $colon + 1);
-        }
-        return implode(',', $out);
+        $tag = preg_replace('/[\w-]*:/', '', $tag);
+        return trim($tag, '"');
     }
 }
