@@ -92,15 +92,103 @@ final readonly class Request
         return strtoupper($fmt);
     }
 
-    /** @internal Stub for Task 8 — XML POST path; here for forward-reference. */
     private static function fromXmlPost(\app\wfs\Context $ctx, string $body): self
     {
-        throw new \LogicException('fromXmlPost not yet implemented (Task 8)');
+        // Legacy unserializer-based parsing (mirrors server.php lines 130-191)
+        set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__DIR__) . '/libs/PEAR');
+        require_once dirname(__DIR__) . '/libs/PEAR/XML/Unserializer.php';
+
+        // HACK from legacy: MapInfo 15 sends invalid XML
+        $clean = \app\wfs\helpers\NameSpaces::dropNameSpace($body);
+        $clean = str_replace(["\\n", 'xmlns:wfs="http://www.opengis.net/wfs"'], [' ', ' '], $clean);
+
+        $u = new \XML_Unserializer(['parseAttributes' => true, 'contentName' => '_content']);
+        $u->unserialize($clean);
+        $arr = $u->getUnserializedData();
+
+        $version = $arr['version'] ?? '1.1.0';
+        $service = $arr['service'] ?? 'WFS';
+        $maxFeatures = isset($arr['maxFeatures']) ? (int) $arr['maxFeatures'] : null;
+        $resultType = $arr['resultType'] ?? null;
+        $outputFormat = self::normalizeOutputFormat($arr['outputFormat'] ?? null, $version);
+
+        $rootName = strtoupper($u->getRootName());
+        $typeNamesStr = '';
+        $propertiesStr = '';
+        $filter = null;
+        $transactionBody = null;
+        $srsName = null;
+
+        switch ($rootName) {
+            case 'GETFEATURE':
+                $queries = $arr['Query'] ?? [];
+                if (!isset($queries[0])) $queries = [$queries];
+                foreach ($queries as $q) {
+                    $srsName = $q['srsName'] ?? $srsName;
+                    $tn = \app\wfs\helpers\NameSpaces::dropAllNameSpaces($q['typeName']);
+                    $typeNamesStr .= $tn . ',';
+                    $propsRaw = $q['PropertyName'] ?? null;
+                    if ($propsRaw !== null) {
+                        if (!is_array($propsRaw) || !isset($propsRaw[0])) {
+                            $propsRaw = [$propsRaw];
+                        }
+                        foreach ($propsRaw as $p) {
+                            $propertiesStr .= (str_contains($p, '.') ? $p : "$tn.$p") . ',';
+                        }
+                    }
+                    if (isset($q['Filter']) && is_array($q['Filter'])) {
+                        $filter = $q['Filter'];
+                    }
+                }
+                $operation = 'GETFEATURE';
+                break;
+            case 'DESCRIBEFEATURETYPE':
+                $typeNamesStr = (string)($arr['TypeName'] ?? '');
+                $operation = 'DESCRIBEFEATURETYPE';
+                break;
+            case 'GETCAPABILITIES':
+                $operation = 'GETCAPABILITIES';
+                break;
+            case 'TRANSACTION':
+                $operation = 'TRANSACTION';
+                $transactionBody = $arr;   // Insert/Update/Delete keys consumed by handler
+                break;
+            default:
+                $operation = '';
+        }
+
+        $typeNames = $typeNamesStr ? explode(',', rtrim($typeNamesStr, ',')) : null;
+        $properties = $propertiesStr ? explode(',', rtrim($propertiesStr, ',')) : null;
+        // WfsFilter::parseEpsgCode returns ?string; Request::$srs is ?int — cast.
+        $epsgStr = $srsName ? \app\inc\WfsFilter::parseEpsgCode($srsName) : null;
+        $srs = $epsgStr !== null ? (int) $epsgStr : null;
+
+        return new self(
+            operation: $operation,
+            version: $version,
+            service: $service,
+            outputFormat: $outputFormat,
+            typeNames: $typeNames,
+            properties: $properties,
+            featureIds: null,
+            bbox: null,
+            resultType: $resultType,
+            srsName: $srsName,
+            srs: $srs,
+            maxFeatures: $maxFeatures,
+            timeSlice: null,
+            filter: $filter,
+            transactionBody: $transactionBody,
+            rawPostBody: $body,
+        );
     }
 
-    /** @internal Stub for Task 8. */
     private static function parseInlineFilter(string $xml): array
     {
-        throw new \LogicException('parseInlineFilter not yet implemented (Task 8)');
+        set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__DIR__) . '/libs/PEAR');
+        require_once dirname(__DIR__) . '/libs/PEAR/XML/Unserializer.php';
+        $u = new \XML_Unserializer(['parseAttributes' => true, 'contentName' => '_content']);
+        $u->unserialize(\app\wfs\helpers\NameSpaces::dropNameSpace($xml));
+        return $u->getUnserializedData();
     }
 }

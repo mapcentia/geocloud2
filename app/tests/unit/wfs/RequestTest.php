@@ -72,6 +72,49 @@ class RequestTest extends Unit
         $this->assertSame(4326, $req->srs);
     }
 
+    public function testFromHttpPostGetFeatureXml(): void
+    {
+        $body = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<GetFeature service="WFS" version="1.1.0" maxFeatures="100">
+  <Query typeName="mytable">
+    <PropertyName>name</PropertyName>
+    <PropertyName>geom</PropertyName>
+  </Query>
+</GetFeature>
+XML;
+        $_GET = [];
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+
+        $req = Request::fromHttp($this->makeContext(), rawBody: $body);
+
+        $this->assertSame('GETFEATURE', $req->operation);
+        $this->assertSame('1.1.0', $req->version);
+        $this->assertSame(['mytable'], $req->typeNames);
+        $this->assertSame(100, $req->maxFeatures);
+        $this->assertContains('mytable.name', $req->properties);
+    }
+
+    public function testFromHttpPostTransactionXml(): void
+    {
+        $body = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<Transaction service="WFS" version="1.1.0">
+  <Insert>
+    <mytable><name>foo</name></mytable>
+  </Insert>
+</Transaction>
+XML;
+        $_GET = [];
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+
+        $req = Request::fromHttp($this->makeContext(), rawBody: $body);
+
+        $this->assertSame('TRANSACTION', $req->operation);
+        $this->assertNotNull($req->transactionBody);
+        $this->assertArrayHasKey('Insert', $req->transactionBody);
+    }
+
     private function makeContext(): \app\wfs\Context
     {
         return new \app\wfs\Context(
