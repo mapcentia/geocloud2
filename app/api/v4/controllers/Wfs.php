@@ -41,6 +41,12 @@ final class Wfs extends AbstractApi
         return $this->stream();
     }
 
+    // WFS uses GET and POST only. PUT/PATCH/DELETE are required by ApiInterface
+    // but rejected upstream by AcceptableMethods. Stub them to satisfy the contract.
+    public function put_index(): StreamedResponse    { return $this->stream(); }
+    public function patch_index(): StreamedResponse  { return $this->stream(); }
+    public function delete_index(): StreamedResponse { return $this->stream(); }
+
     public function validate(): void
     {
         // Auth & layer checks happen inside Server::dispatch; nothing to validate here
