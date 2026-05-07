@@ -595,10 +595,14 @@ final class GmlWriter
 
     public function bufferFlush(): void
     {
-        echo $this->buffer;
+        // Buffered mode is for atomic small responses (Transaction). The
+        // bytes go out when the request returns; we deliberately do NOT
+        // call flush()+ob_flush() here because that would drain test OB
+        // wrappers and isn't needed for production correctness.
+        $out = $this->buffer;
         $this->buffer = '';
         $this->buffering = false;
-        $this->flush();
+        echo $out;
     }
 
     /** Discards any pending buffered content (used before exception reports). */
