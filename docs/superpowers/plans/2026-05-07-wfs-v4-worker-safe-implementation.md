@@ -231,22 +231,59 @@ class NameSpacesTest extends Unit
         $this->assertSame('llo', NameSpaces::dropFirstChrs('hello', 2));
     }
 
-    public function testDropNameSpace(): void
+    public function testDropNameSpaceStripsNonWhitelistedAttributes(): void
     {
-        // Strip xmlns:foo="..." attributes; keep prefix on element names.
-        $in  = '<wfs:Filter xmlns:wfs="http://x"><PropertyName>a</PropertyName></wfs:Filter>';
+        $in  = '<wfs:GetFeature service="WFS" version="1.0.0" foo="bar" xmlns:wfs="http://x">';
         $out = NameSpaces::dropNameSpace($in);
+        $this->assertStringContainsString('service="WFS"', $out);
+        $this->assertStringContainsString('version="1.0.0"', $out);
+        $this->assertStringNotContainsString('foo="bar"', $out);
         $this->assertStringNotContainsString('xmlns:wfs', $out);
-        $this->assertStringContainsString('<wfs:Filter>', $out);
     }
 
-    public function testDropAllNameSpaces(): void
+    public function testDropNameSpaceStripsElementPrefixesExceptGml(): void
+    {
+        $in  = '<wfs:Query><gml:pos>1 2</gml:pos></wfs:Query>';
+        $out = NameSpaces::dropNameSpace($in);
+        $this->assertStringContainsString('<gml:pos>', $out);
+        $this->assertStringContainsString('</gml:pos>', $out);
+        $this->assertStringNotContainsString('<wfs:Query>', $out);
+        $this->assertStringNotContainsString('</wfs:Query>', $out);
+    }
+
+    public function testDropNameSpaceHandlesSingleQuotedAttributes(): void
+    {
+        $in  = "<root foo='bar' xmlns:wfs='http://x'>";
+        $out = NameSpaces::dropNameSpace($in);
+        $this->assertStringNotContainsString("foo='bar'", $out);
+        $this->assertStringNotContainsString('xmlns:wfs', $out);
+    }
+
+    public function testDropAllNameSpacesStripsPrefix(): void
     {
         $this->assertSame('Filter', NameSpaces::dropAllNameSpaces('wfs:Filter'));
-        $this->assertSame('foo,bar', NameSpaces::dropAllNameSpaces('ns:foo,ns:bar'));
+    }
+
+    public function testDropAllNameSpacesStripsAllPrefixSegments(): void
+    {
+        // Legacy uses /[\w-]*:/ globally — multiple "prefix:" segments removed.
+        $this->assertSame('bar', NameSpaces::dropAllNameSpaces('ns:foo:bar'));
+    }
+
+    public function testDropAllNameSpacesTrimsOpenLayersDoubleQuotes(): void
+    {
+        $this->assertSame('Filter', NameSpaces::dropAllNameSpaces('"wfs:Filter"'));
+        $this->assertSame('foo', NameSpaces::dropAllNameSpaces('"foo"'));
+    }
+
+    public function testDropAllNameSpacesPassesThroughUnprefixed(): void
+    {
+        $this->assertSame('Filter', NameSpaces::dropAllNameSpaces('Filter'));
     }
 }
 ```
+
+**Note on legacy parity:** `dropNameSpace` is the most invasive of these helpers — the legacy version doesn't just strip `xmlns:` attributes; it also strips non-whitelisted attributes and namespace prefixes from element tags. The downstream `XML_Unserializer` in `Request::fromHttp()` (Task 8) relies on this flattened form to produce its array shape. A simplified xmlns-only stripper would break XML body parsing for prefixed WFS POST requests.
 
 - [ ] **Step 2: Run, verify fail**
 
@@ -276,23 +313,31 @@ final class NameSpaces
         return substr($str, $n);
     }
 
-    /** Strip xmlns:* attribute declarations from an XML body. */
+    /**
+     * Strips namespace prefixes from element tags and removes most attributes
+     * from an XML body, preserving a whitelist of WFS-protocol attributes
+     * (service, version, outputFormat, maxFeatures, resultType, typeName,
+     * srsName, fid, id) and the gml namespace. Verbatim port of legacy
+     * server.php:dropNameSpace() — the XML_Unserializer downstream relies
+     * on element-prefix stripping, so simplified versions break parsing.
+     */
     public static function dropNameSpace(string $xml): string
     {
-        return preg_replace('/\s+xmlns:[a-zA-Z0-9]+="[^"]*"/', '', $xml);
+        $xml = preg_replace('/ \w*(?:\:\w*?)?(?<!gml)(?<!service)(?<!version)(?<!outputFormat)(?<!maxFeatures)(?<!resultType)(?<!typeName)(?<!srsName)(?<!fid)(?<!id)=(\".*?\"|\'.*?\')/s', '', $xml);
+        $xml = preg_replace('/\<[a-z|0-9]*(?<!gml):(?:.*?)/', '<', $xml);
+        $xml = preg_replace('/\<\/[a-z|0-9]*(?<!gml):(?:.*?)/', '</', $xml);
+        return $xml;
     }
 
-    /** Strip namespace prefixes from a comma-separated list of qualified names. */
+    /**
+     * Strips all "prefix:" segments from a name. Also trims surrounding
+     * double quotes — OpenLayers adds them to ogc:PropertyName values
+     * in WFS requests. Verbatim port of legacy server.php:dropAllNameSpaces().
+     */
     public static function dropAllNameSpaces(string $tag): string
     {
-        $parts = explode(',', $tag);
-        $out = [];
-        foreach ($parts as $p) {
-            $p = trim($p);
-            $colon = strpos($p, ':');
-            $out[] = $colon === false ? $p : substr($p, $colon + 1);
-        }
-        return implode(',', $out);
+        $tag = preg_replace('/[\w-]*:/', '', $tag);
+        return trim($tag, '"');
     }
 }
 ```
