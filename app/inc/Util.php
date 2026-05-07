@@ -226,6 +226,26 @@ class Util
     }
 
     /**
+     * @return string  e.g. "https://example.com" or "http://localhost:8080"
+     */
+    public static function host(): string
+    {
+        $port = $_SERVER['SERVER_PORT'] ?? '';
+        return self::protocol() . '://' . ($_SERVER['SERVER_NAME'] ?? '')
+            . ($port !== '' && $port !== '80' && $port !== '443' ? ":$port" : '');
+    }
+
+    /**
+     * @return string  Base URL + path prefix (strips "index.php" and deduplicates slashes)
+     */
+    public static function thePath(): string
+    {
+        $uri = str_replace('index.php', '', $_SERVER['REDIRECT_URL'] ?? $_SERVER['REQUEST_URI'] ?? '');
+        $uri = str_replace('//', '/', $uri);
+        return self::host() . $uri;
+    }
+
+    /**
      * @param string $ip
      * @param string $ipWithCidr
      * @return bool
