@@ -45,11 +45,22 @@ class WfsV4Cest
         $I->assertSame($golden, $body);
     }
 
-    public function getFeatureReachesStubHandler(\ApiTester $I): void
+    public function getFeatureReturnsFeatureCollection(\ApiTester $I): void
     {
-        $I->sendGet("/api/v4/wfs/{$this->db}/{$this->schema}/4326?service=WFS&version=1.1.0&request=GetFeature&typeName={$this->table}");
+        $I->sendGet("/api/v4/wfs/{$this->db}/{$this->schema}/4326?service=WFS&version=1.1.0&request=GetFeature&typeName={$this->table}&maxFeatures=2");
         $I->seeResponseCodeIs(HttpCode::OK);
-        $I->seeResponseContains('GetFeature not yet implemented');
+        $I->seeResponseContains('<wfs:FeatureCollection');
+        $I->seeResponseContains('numberOfFeatures="2"');
+        $I->seeResponseContains('<gml:featureMembers>');
+        $I->seeResponseContains('<' . $this->schema . ':' . $this->table . ' gml:id="' . $this->table . '.0">');
+    }
+
+    public function getFeatureMatchesGoldenFile(\ApiTester $I): void
+    {
+        $golden = file_get_contents(codecept_data_dir('wfs/golden/getfeature-polygon-1_1_0-v4.xml'));
+        $I->sendGet("/api/v4/wfs/{$this->db}/{$this->schema}/4326?service=WFS&version=1.1.0&request=GetFeature&typeName={$this->table}&maxFeatures=2");
+        $body = preg_replace('/timeStamp="[^"]*"/', 'timeStamp="REDACTED"', $I->grabResponse());
+        $I->assertSame($golden, $body);
     }
 
     public function describeFeatureTypeReturnsXsd(\ApiTester $I): void
