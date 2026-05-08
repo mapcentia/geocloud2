@@ -691,10 +691,10 @@ class Model
                 // The following is only set on tables
                 if (!$temp) {
                     if ($this->isTableOrView($_schema . '.' . $_table)['data'] == "TABLE") {
-                        $enabledPseudoNotNull = App::$param['enabledPseudoNotNull'] ?? false;
+                        $enablePseudoNotNull = App::$param['enabledPseudoNotNull'] ?? false;
                         $tmpArr["is_unique"] = !empty($index["is_unique"][$row["column_name"]]);
                         $tmpArr["is_primary"] = !empty($index["is_primary"][$row["column_name"]]);
-                        if (!$enabledPseudoNotNull) $tmpArr["is_nullable"] = !$row['not_null']; // For tables, we always set this form schema, not metadata
+                        if (!$enablePseudoNotNull) $tmpArr["is_nullable"] = !$row['not_null']; // For tables, we always set this form schema, not metadata
                         $tmpArr["default_value"] = $row['default_value'];
                         $tmpArr["identity_generation"] = $row['identity_generation'];
                         $tmpArr["index_method"] = !empty($index["index_method"][$row["column_name"]]) ? $index["index_method"][$row["column_name"]] : null;
