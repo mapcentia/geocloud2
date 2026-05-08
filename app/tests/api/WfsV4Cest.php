@@ -82,6 +82,23 @@ class WfsV4Cest
     }
 
     /**
+     * Phase 3 regression: the bootstrap shim that replaced the 2501-line
+     * procedural server.php must produce byte-equivalent output to the
+     * original (modulo timestamps and memory). The legacy golden was
+     * captured before the refactor in commit 87c126b6.
+     */
+    public function legacyEndpointMatchesPreRefactorGolden(\ApiTester $I): void
+    {
+        $golden = file_get_contents(codecept_data_dir('wfs/golden/getcapabilities-1_1_0-legacy.xml'));
+        $I->sendGet("/wfs/{$this->db}/{$this->schema}/4326?service=WFS&version=1.1.0&request=GetCapabilities");
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $body = $I->grabResponse();
+        $body = preg_replace('/timeStamp="[^"]*"/', 'timeStamp="REDACTED"', $body);
+        $body = preg_replace('/Memory used: \d+ KB/', 'Memory used: REDACTED', $body);
+        $I->assertSame($golden, $body);
+    }
+
+    /**
      * Streaming verification: GetFeature should use HTTP/1.1 chunked encoding
      * (no Content-Length header) so large datasets stream feature-by-feature.
      */
