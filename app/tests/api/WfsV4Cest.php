@@ -82,6 +82,18 @@ class WfsV4Cest
     }
 
     /**
+     * Streaming verification: GetFeature should use HTTP/1.1 chunked encoding
+     * (no Content-Length header) so large datasets stream feature-by-feature.
+     */
+    public function getFeatureUsesChunkedTransferEncoding(\ApiTester $I): void
+    {
+        $I->sendGet("/api/v4/wfs/{$this->db}/{$this->schema}/4326?service=WFS&version=1.1.0&request=GetFeature&typeName={$this->table}&maxFeatures=2");
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeHttpHeader('Transfer-Encoding', 'chunked');
+        $I->dontSeeHttpHeader('Content-Length');
+    }
+
+    /**
      * An invalid REQUEST value should produce an OWS exception report,
      * not a stub. This proves the Server-level error handling is wired up.
      */
