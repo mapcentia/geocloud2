@@ -108,6 +108,9 @@ final class Wfs extends AbstractApi
             }
         }
 
+        $srsParam = $this->route->getParam('srs');
+        $srs = $srsParam !== null && $srsParam !== '' ? (int) $srsParam : null;
+
         return new Context(
             connection: new Connection(user: $user, database: $database),
             database: $database,
@@ -118,6 +121,7 @@ final class Wfs extends AbstractApi
             host: Util::host(),
             thePath: Util::thePath(),
             startTime: microtime(true),
+            srs: $srs,
         );
     }
 }

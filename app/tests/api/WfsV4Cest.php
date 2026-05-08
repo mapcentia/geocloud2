@@ -21,16 +21,28 @@ class WfsV4Cest
     }
 
     /**
-     * Verifies the StreamedResponse → Route2 → Wfs controller → Server → handler
-     * chain works end-to-end. At this point handlers are stubs returning a
-     * comment that identifies which one ran.
+     * Verifies the GetCapabilities handler returns real WFS capabilities XML
+     * and that key structural markers are present.
      */
-    public function getCapabilitiesReachesStubHandler(\ApiTester $I): void
+    public function getCapabilitiesReturnsRealCapabilities(\ApiTester $I): void
     {
         $I->sendGet("/api/v4/wfs/{$this->db}/{$this->schema}/4326?service=WFS&version=1.1.0&request=GetCapabilities");
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeHttpHeader('Content-Type', 'text/xml; charset=UTF-8');
-        $I->seeResponseContains('GetCapabilities not yet implemented');
+        $I->seeResponseContains('<wfs:WFS_Capabilities');
+        $I->seeResponseContains('<FeatureTypeList>');
+        $I->seeResponseContains('<ows:Operation name="GetFeature">');
+    }
+
+    public function getCapabilitiesMatchesGoldenFile(\ApiTester $I): void
+    {
+        $golden = file_get_contents(codecept_data_dir('wfs/golden/getcapabilities-1_1_0.xml'));
+        $I->sendGet("/api/v4/wfs/{$this->db}/{$this->schema}/4326?service=WFS&version=1.1.0&request=GetCapabilities");
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $body = $I->grabResponse();
+        $body = preg_replace('/timeStamp="[^"]*"/', 'timeStamp="REDACTED"', $body);
+        $body = preg_replace('/Memory used: \d+ KB/', 'Memory used: REDACTED', $body);
+        $I->assertSame($golden, $body);
     }
 
     public function getFeatureReachesStubHandler(\ApiTester $I): void

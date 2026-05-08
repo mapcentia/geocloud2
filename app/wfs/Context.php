@@ -21,6 +21,7 @@ final class Context
         public readonly string $host,
         public readonly string $thePath,
         public readonly float  $startTime,
+        public readonly ?int   $srs = null,
     ) {}
 
     public function model(): Model
