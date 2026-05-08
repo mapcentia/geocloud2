@@ -789,7 +789,7 @@ class Table extends Model
             }
 
             // Set nullable
-            $enablePseudoNotNull = App::$param['enabledPseudoNotNull'] ?? false;
+            $enablePseudoNotNull = App::$param['enablePseudoNotNull'] ?? false;
             if (!$enablePseudoNotNull && $this->metaData[$value->id]["is_nullable"] != $value->is_nullable && !$onlyRename) {
                 $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ALTER \"$value->column\" " . ($value->is_nullable ? "DROP" : "SET") . " NOT NULL";
                 $res = $this->prepare($sql);
