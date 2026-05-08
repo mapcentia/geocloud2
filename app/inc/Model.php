@@ -534,7 +534,7 @@ class Model
                         attnum                           AS ordinal_position,
                         atttypid :: REGTYPE              AS udt_name,
                         typname,
-                        attnotnull                       AS is_nullable,
+                        attnotnull                       AS not_null,
                         format_type(atttypid, atttypmod) AS full_type,
                         pg_get_expr(d.adbin, d.adrelid)  AS default_value,
                     
@@ -598,7 +598,10 @@ class Model
             }
             $index = $this->getIndexes($_schema, $_table);
             $comments = $this->getColumnComments($_schema, $_table);
-            $fieldconf = !empty($this->geometryColumns["fieldconf"]) ? (array)json_decode($this->geometryColumns["fieldconf"]) : [];
+            $fieldconf = $this->getGeometryColumns($table, "fieldconf");
+            if (!empty($fieldconf)) {
+                $fieldconf = json_decode($fieldconf);
+            }
 
 
             while ($row = $this->fetchRow($res)) {
@@ -682,7 +685,7 @@ class Model
                     "max_bytes" => $row["max_bytes"],
                     "reference" => count($references) == 0 ? null : $references,
                     "restriction" => sizeof($foreignValues) > 0 ? $foreignValues : null,
-                    "is_nullable" => $fieldconf[$column]->is_nullable ?? null,
+                    "is_nullable" => $fieldconf->$column->is_nullable ?? null,
                 );
 
                 // The following is only set on tables
@@ -690,6 +693,7 @@ class Model
                     if ($this->isTableOrView($_schema . '.' . $_table)['data'] == "TABLE") {
                         $tmpArr["is_unique"] = !empty($index["is_unique"][$row["column_name"]]);
                         $tmpArr["is_primary"] = !empty($index["is_primary"][$row["column_name"]]);
+                        $tmpArr["is_nullable"] = !$row['not_null']; // For tables, we always set this form schema, not metadata
                         $tmpArr["default_value"] = $row['default_value'];
                         $tmpArr["identity_generation"] = $row['identity_generation'];
                         $tmpArr["index_method"] = !empty($index["index_method"][$row["column_name"]]) ? $index["index_method"][$row["column_name"]] : null;

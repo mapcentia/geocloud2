@@ -787,6 +787,8 @@ class Table extends Model
                 $response['message'] = "Updated";
                 $response['name'] = $value->id;
             }
+
+            // Set nullable
             if ($this->metaData[$value->id]["is_nullable"] != $value->is_nullable && !$onlyRename) {
                 $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ALTER \"$value->column\" " . ($value->is_nullable ? "DROP" : "SET") . " NOT NULL";
                 $res = $this->prepare($sql);
@@ -799,6 +801,7 @@ class Table extends Model
                     }
                 }
             }
+
             if ($this->metaData[$value->id]["desc"] !== $value->desc && !$onlyRename) {
                 if ($value->desc === "") {
                     $value->desc = null;
