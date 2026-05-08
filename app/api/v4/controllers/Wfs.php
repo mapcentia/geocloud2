@@ -68,7 +68,10 @@ final class Wfs extends AbstractApi
                 try {
                     $req = WfsRequest::fromHttp($ctx);
                     (new Server($ctx))->dispatch($req, $writer);
-                } catch (OwsException|ServiceException $e) {
+                } catch (\Throwable $e) {
+                    // Catch all so DB/protocol errors render as OWS exception
+                    // reports instead of bubbling up as 500. Matches legacy
+                    // server.php's broader catch.
                     ExceptionReport::render($e, $req?->version ?? '1.1.0', $writer);
                 }
             },

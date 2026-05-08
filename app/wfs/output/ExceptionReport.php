@@ -19,10 +19,17 @@ final class ExceptionReport
 
         $message = htmlspecialchars($e->getMessage(), ENT_XML1 | ENT_QUOTES);
 
-        if ($version === '1.1.0' && $e instanceof OwsException) {
-            $atts = $e->getAttributes();
-            $code = htmlspecialchars($atts['exceptionCode'] ?? 'NoApplicableCode', ENT_XML1 | ENT_QUOTES);
-            $locator = isset($atts['locator']) ? ' locator="' . htmlspecialchars($atts['locator'], ENT_XML1 | ENT_QUOTES) . '"' : '';
+        if ($version === '1.1.0') {
+            // OWS 1.1.0 format. Use OwsException attributes when available;
+            // otherwise produce a generic exception report (e.g. PDOException).
+            if ($e instanceof OwsException) {
+                $atts = $e->getAttributes();
+                $code = htmlspecialchars($atts['exceptionCode'] ?? 'NoApplicableCode', ENT_XML1 | ENT_QUOTES);
+                $locator = isset($atts['locator']) ? ' locator="' . htmlspecialchars($atts['locator'], ENT_XML1 | ENT_QUOTES) . '"' : '';
+            } else {
+                $code = 'NoApplicableCode';
+                $locator = '';
+            }
             $writer->write(
                 '<?xml version="1.0" encoding="UTF-8"?>'
                 . '<ows:ExceptionReport version="1.0.0" xmlns:ows="http://www.opengis.net/ows">'

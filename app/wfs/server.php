@@ -14,8 +14,6 @@ namespace app\wfs;
 
 use app\conf\App;
 use app\conf\Connection as StaticConnection;
-use app\exceptions\OwsException;
-use app\exceptions\ServiceException;
 use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Util;
@@ -62,7 +60,11 @@ function bootstrap_legacy_wfs(string $db, string $user, bool $parentUser): void
         $req = Request::fromHttp($ctx);
         (new Server($ctx))->dispatch($req, $writer);
         $writer->writeMemoryFooter();
-    } catch (OwsException|ServiceException $e) {
+    } catch (\Throwable $e) {
+        // Legacy server.php caught Exception (incl. PDOException) and rendered
+        // an OWS exception report rather than letting the request 500. Match
+        // that behaviour so misconfigured/empty URLs return a structured
+        // exception body, not a fatal error JSON.
         ExceptionReport::render($e, $req?->version ?? '1.1.0', $writer);
     }
 }
