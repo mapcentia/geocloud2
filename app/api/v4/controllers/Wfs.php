@@ -112,7 +112,7 @@ final class Wfs extends AbstractApi
         $srs = $srsParam !== null && $srsParam !== '' ? (int) $srsParam : null;
 
         return new Context(
-            connection: new Connection(user: $user, database: $database),
+            connection: new Connection(user: $user, database: $database, schema: $schema),
             database: $database,
             schema: $schema,
             user: $user,

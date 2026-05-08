@@ -71,7 +71,7 @@ final class DescribeFeatureType implements HandlerInterface
             }
             $cache[] = $table;
 
-            $tableObj = new \app\models\Table($postgisschema . "." . $table);
+            $tableObj = new \app\models\Table($postgisschema . "." . $table, connection: $this->ctx->connection);
             $primeryKey = $tableObj->primaryKey;
 
             $simpleType = false;

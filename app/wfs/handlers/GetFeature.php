@@ -88,7 +88,7 @@ final class GetFeature implements HandlerInterface
     {
         $postgisschema = $this->ctx->schema;
         $postgisObject = $this->ctx->model();
-        $tableObj      = new TableModel("{$postgisschema}.{$table}");
+        $tableObj      = new TableModel("{$postgisschema}.{$table}", connection: $this->ctx->connection);
 
         if (!$tableObj->exists) {
             throw new OwsException(
