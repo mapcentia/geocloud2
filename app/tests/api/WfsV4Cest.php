@@ -114,4 +114,49 @@ class WfsV4Cest
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseContains('<ows:ExceptionReport');
     }
+
+    /**
+     * WFS-T INSERT: inserts a polygon feature and verifies the TransactionSummary
+     * and InsertResults are correct. Cleans up by deleting the inserted row.
+     */
+    public function transactionInsertReturnsSummary(\ApiTester $I): void
+    {
+        $body = '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<Transaction service="WFS" version="1.1.0" xmlns="http://www.opengis.net/wfs">'
+            . '<Insert>'
+            . '<' . $this->table . ' xmlns="http://localhost/' . $this->db . '/' . $this->schema . '">'
+            . '<id>9999</id>'
+            . '<the_geom><gml:Polygon xmlns:gml="http://www.opengis.net/gml" srsName="urn:ogc:def:crs:EPSG::4326">'
+            . '<gml:exterior><gml:LinearRing>'
+            . '<gml:posList srsDimension="2">57 9 57 10 58 10 58 9 57 9</gml:posList>'
+            . '</gml:LinearRing></gml:exterior></gml:Polygon></the_geom>'
+            . '</' . $this->table . '>'
+            . '</Insert>'
+            . '</Transaction>';
+
+        $I->haveHttpHeader('Content-Type', 'text/xml');
+        $I->sendPost("/api/v4/wfs/{$this->db}/{$this->schema}/4326", $body);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseContains('<wfs:totalInserted>1</wfs:totalInserted>');
+        $I->seeResponseContains('<wfs:totalUpdated>0</wfs:totalUpdated>');
+        $I->seeResponseContains('<wfs:totalDeleted>0</wfs:totalDeleted>');
+        $I->seeResponseContains('<ogc:FeatureId fid="' . $this->table . '.');
+
+        // Cleanup: delete the inserted feature so the test is idempotent
+        preg_match('/<ogc:FeatureId fid="([^"]+)"\s*\/>/', $I->grabResponse(), $m);
+        if (!empty($m[1])) {
+            [, $insertedId] = explode('.', $m[1], 2);
+            $deleteBody = '<?xml version="1.0" encoding="UTF-8"?>'
+                . '<Transaction service="WFS" version="1.1.0" xmlns="http://www.opengis.net/wfs">'
+                . '<Delete typeName="' . $this->table . '">'
+                . '<Filter xmlns="http://www.opengis.net/ogc">'
+                . '<FeatureId fid="' . $this->table . '.' . $insertedId . '"/>'
+                . '</Filter>'
+                . '</Delete>'
+                . '</Transaction>';
+            $I->haveHttpHeader('Content-Type', 'text/xml');
+            $I->sendPost("/api/v4/wfs/{$this->db}/{$this->schema}/4326", $deleteBody);
+            $I->seeResponseContains('<wfs:totalDeleted>1</wfs:totalDeleted>');
+        }
+    }
 }
