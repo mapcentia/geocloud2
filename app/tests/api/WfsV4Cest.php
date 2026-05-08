@@ -52,11 +52,22 @@ class WfsV4Cest
         $I->seeResponseContains('GetFeature not yet implemented');
     }
 
-    public function describeFeatureTypeReachesStubHandler(\ApiTester $I): void
+    public function describeFeatureTypeReturnsXsd(\ApiTester $I): void
     {
         $I->sendGet("/api/v4/wfs/{$this->db}/{$this->schema}/4326?service=WFS&version=1.1.0&request=DescribeFeatureType&typeName={$this->table}");
         $I->seeResponseCodeIs(HttpCode::OK);
-        $I->seeResponseContains('DescribeFeatureType not yet implemented');
+        $I->seeResponseContains('<xsd:schema');
+        $I->seeResponseContains('targetNamespace="http://localhost/' . $this->db . '/' . $this->schema . '"');
+        $I->seeResponseContains('<xsd:complexType name="' . $this->table . 'Type">');
+        $I->seeResponseContains('substitutionGroup="gml:_Feature"');
+    }
+
+    public function describeFeatureTypeMatchesGoldenFile(\ApiTester $I): void
+    {
+        $golden = file_get_contents(codecept_data_dir('wfs/golden/describefeaturetype-polygon-1_1_0-v4.xml'));
+        $I->sendGet("/api/v4/wfs/{$this->db}/{$this->schema}/4326?service=WFS&version=1.1.0&request=DescribeFeatureType&typeName={$this->table}");
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertSame($golden, $I->grabResponse());
     }
 
     /**
