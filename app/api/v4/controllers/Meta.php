@@ -29,6 +29,7 @@ use Override;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Validator\Constraints as Assert;
+use Throwable;
 
 
 #[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
@@ -61,6 +62,7 @@ use Symfony\Component\Validator\Constraints as Assert;
                                 new OA\Property(property: 'alias', description: 'Display name used in clients/UI.', type: 'string'),
                                 new OA\Property(property: 'queryable', description: 'Whether the field can be queried/filtered.', type: 'boolean'),
                                 new OA\Property(property: 'sort_id', description: 'Sorting weight within the field list.', type: 'integer'),
+                                new OA\Property(property: 'properties', description: 'Free-form key/value or array metadata.', oneOf: [new OA\Schema(type: 'object'), new OA\Schema(type: 'array')]),
                             ],
                             type: 'object'
                         )
@@ -80,7 +82,7 @@ class Meta extends AbstractApi
         'numeric_precision', 'numeric_scale', 'max_bytes', 'is_unique',
         'default_value', 'type', 'is_nullable'];
 
-    private const array PUBLIC_PROPERTIES = ['alias', 'queryable', 'sort_id'];
+    private const array PUBLIC_PROPERTIES = ['alias', 'queryable', 'sort_id', 'properties'];
 
     public function __construct(public readonly Route2 $route, Connection $connection)
     {
@@ -121,6 +123,7 @@ class Meta extends AbstractApi
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      * @throws InvalidArgumentException
+     * @throws Throwable
      */
     #[OA\Patch(path: '/api/v4/meta', operationId: 'patchMetaData', summary: 'Update relation metadata', security: [['bearerAuth' => []]], tags: ['Metadata'])]
     #[OA\RequestBody(description: 'Metadata updates.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Meta"))]
@@ -134,7 +137,7 @@ class Meta extends AbstractApi
         $geometryJoinTable->withTransaction(function () use ($geometryJoinTable, $data) {
             foreach ($data['relations'] as $key => $datum) {
                 $split = explode(".", $key);
-                $geomFields = (new Layer(connection: $this->connection))->getGeometryColumnsFromTable($split[0], $split[1]);
+                $geomFields = new Layer(connection: $this->connection)->getGeometryColumnsFromTable($split[0], $split[1]);
                 foreach ($geomFields as $geomField) {
                     if (count($split) == 3) {
                         $key = $split[0] . '.' . $split[1] . '.' . $split[2];
@@ -168,7 +171,7 @@ class Meta extends AbstractApi
             "group" => "layergroup",
             "sort_id" => "sort_id",
             "tags" => "tags",
-            "properties" => "meta",
+            "properties" => "properties",
             "_uuid" => "uuid",
             "_schema" => "f_table_schema",
             "_rel" => "f_table_name",
@@ -204,12 +207,17 @@ class Meta extends AbstractApi
             "layergroup" => "group",
             "sort_id" => "sort_id",
             "tags" => "tags",
-            "meta" => "properties",
+            "properties" => "properties",
             "fieldconf" => "fields",
         ];
 
         foreach ($map as $rowKey => $inputKey) {
             if (isset($row[$inputKey])) {
+                if ($inputKey == "fields") {
+                    foreach ($row[$inputKey] as $field => $fieldData) {
+                        $row[$inputKey][$field]['properties'] = json_encode($row[$inputKey][$field]['properties'], true);
+                    }
+                }
                 $out[$rowKey] = $row[$inputKey];
             }
         }
@@ -271,6 +279,7 @@ class Meta extends AbstractApi
                                                 'alias' => new Assert\Optional(new Assert\Type('string')),
                                                 'queryable' => new Assert\Optional(new Assert\Type('boolean')),
                                                 'sort_id' => new Assert\Optional(new Assert\Type('integer')),
+                                                'properties' => new Assert\Optional(new Assert\Type('associative_array', 'This value should be of type object.')),
                                             ],
                                             allowExtraFields: false,
                                             allowMissingFields: true,

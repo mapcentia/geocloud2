@@ -379,6 +379,7 @@ class Layer extends Table
                     $fields[$key]['alias'] = $fieldConf[$key]['alias'];
                     $fields[$key]['queryable'] = (bool)$fieldConf[$key]['querable'];
                     $fields[$key]['sort_id'] = $fieldConf[$key]['sort_id'];
+                    $fields[$key]['properties'] = json_decode($fieldConf[$key]['properties'], true);
                 }
 
                 // Sort fields
