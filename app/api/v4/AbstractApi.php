@@ -349,7 +349,7 @@ abstract class AbstractApi implements ApiInterface
     {
         $filteredArray = [];
         foreach ($array as $key => $value) {
-            if (!is_string($key) || !str_starts_with($key, '_')) {
+            if ($key !='propeties' || !is_string($key) || !str_starts_with($key, '_')) {
                 $filteredArray[$key] = is_array($value) ? self::removeUnderscoreKeys($value) : $value;
             }
         }
