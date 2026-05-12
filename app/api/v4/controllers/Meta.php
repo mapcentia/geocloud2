@@ -171,7 +171,7 @@ class Meta extends AbstractApi
             "group" => "layergroup",
             "sort_id" => "sort_id",
             "tags" => "tags",
-            "properties" => "properties",
+            "properties" => "meta",
             "_uuid" => "uuid",
             "_schema" => "f_table_schema",
             "_rel" => "f_table_name",
@@ -207,7 +207,7 @@ class Meta extends AbstractApi
             "layergroup" => "group",
             "sort_id" => "sort_id",
             "tags" => "tags",
-            "properties" => "properties",
+            "meta" => "properties",
             "fieldconf" => "fields",
         ];
 
