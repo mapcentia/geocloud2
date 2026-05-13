@@ -61,7 +61,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 )]
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
-#[Controller(route: 'api/v4/schemas/[schema]', scope: Scope::SUPER_USER_ONLY)]
+#[Controller(route: 'api/v4/schemas/[schema]', scope: Scope::SUB_USER_ALLOWED)]
 class Schema extends AbstractApi
 {
 
