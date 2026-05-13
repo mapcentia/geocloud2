@@ -82,7 +82,7 @@ class Meta extends AbstractApi
         'numeric_precision', 'numeric_scale', 'max_bytes', 'is_unique',
         'default_value', 'type', 'is_nullable'];
 
-    private const array PUBLIC_PROPERTIES = ['alias', 'queryable', 'sort_id', 'properties'];
+    private const array PUBLIC_PROPERTIES = ['alias', 'queryable', 'sort_id', 'properties', 'desc'];
 
     public function __construct(public readonly Route2 $route, Connection $connection)
     {
@@ -170,6 +170,7 @@ class Meta extends AbstractApi
             "abstract" => "f_table_abstract",
             "group" => "layergroup",
             "sort_id" => "sort_id",
+            "desc" => "desc",
             "tags" => "tags",
             "properties" => "meta",
             "_uuid" => "uuid",
