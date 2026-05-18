@@ -381,6 +381,7 @@ class Layer extends Table
                     $fields[$key]['sort_id'] = $fieldConf[$key]['sort_id'];
                     $fields[$key]['desc'] = $fieldConf[$key]['desc'];
                     $fields[$key]['properties'] = json_decode($fieldConf[$key]['properties'], true);
+                    // restriction ??
                 }
 
                 // Sort fields

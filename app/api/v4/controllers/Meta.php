@@ -187,7 +187,14 @@ class Meta extends AbstractApi
 
         foreach ($map as $outKey => $rowKey) {
             if (isset($row[$rowKey])) {
-                $out[$outKey] = $row[$rowKey];
+                // Empty strings are filtered out
+                if ($outKey == "properties") {
+                    $out[$outKey] = array_filter((array)$row[$rowKey], function ($value) {
+                        return !empty($value);
+                    });
+                } else {
+                    $out[$outKey] = $row[$rowKey];
+                }
             }
         }
 
