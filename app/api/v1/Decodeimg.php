@@ -49,7 +49,7 @@ class Decodeimg extends Controller
         $record = $this->table->getRecordByPri(Input::getPath()->part(7))["data"];
         $dataUri = $record[Input::getPath()->part(6)];
         $index = Input::getPath()->part(8); // if array
-        if ( $index !== null) {
+        if ($index !== null) {
             $dataUri = json_decode($dataUri);
             $dataUri = $dataUri[$index] ?? null;
         }
@@ -63,7 +63,10 @@ class Decodeimg extends Controller
         }
         // PHP can read data URIs directly
         try {
-            readfile($dataUri);
+            // Guard against http URIs that can cause infinite loops
+            if (filter_var($dataUri, FILTER_VALIDATE_URL) === false) {
+                readfile($dataUri);
+            }
         } catch (Error $e) {
             throw new GC2Exception($e->getMessage(), 404, null, "VALUE_PARSE_ERROR");
         }
