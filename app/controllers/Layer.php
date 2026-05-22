@@ -76,6 +76,8 @@ class Layer extends Controller
                 return $response;
             }
         }
+        $qgisfile = new \app\models\Qgisfile($this->connection);
+        $qgisfile->project();
         return $this->geometryJoinTable->updateRecord($data['data'], "_key_", false, !empty(Input::getPath()->part(5)));
     }
 
