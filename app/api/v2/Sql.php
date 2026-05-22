@@ -175,6 +175,7 @@ class Sql extends Controller
         // Use bulk if content type is text/plain
         if (Input::getContentType() == Input::TEXT_PLAIN) {
             $dbSplit = explode("@", $r["user"]);
+            // TODO user with more than one @ is not supported yet
             if (sizeof($dbSplit) == 2) {
                 $this->subUser = $dbSplit[0];
             } elseif (!empty($_SESSION["subuser"])) {

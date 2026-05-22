@@ -2205,7 +2205,6 @@ function doParse(array $arr)
                 $statement = $factory->createFromAST($select, true);
                 $singleSql = $statement->getSql();
                 // Rewrite done
-                echo "\n<!-- $singleSql -->";
                 $select->dispatch($walkerRelation);
                 $usedRelations = $walkerRelation->getRelations();
                 if ($operation == "insert") {
@@ -2411,6 +2410,7 @@ function doParse(array $arr)
     $postgisObject->commit();
 
     $data = ob_get_clean();
+    error_log("WFS: " . $data);
     echo $data;
 }
 
