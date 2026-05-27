@@ -536,12 +536,13 @@ class Table extends Model
                             }
                             $value = json_encode($rec, JSON_UNESCAPED_UNICODE);
                         }
-                    } if ($key == "fieldconf") {
-                        $value = $value ?: "null";
-                        if (gettype($value) == "string") {
-                            $value = json_decode($value, true);
-                        }
+                    }
+                    if ($key == "fieldconf") {
+                        $value = $value ?: json_encode(null);
                         if (!$raw) {
+                            if (gettype($value) == "string") {
+                                $value = json_decode($value, true);
+                            }
                             $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["fieldconf"] ?? '[]', true);
                             foreach ($value as $fKey => $fValue) {
                                 if (isset($fValue['queryable'])) {
