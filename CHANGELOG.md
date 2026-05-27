@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.5.2] - 2026-27-5
+### Added
+- App.php option `enabledPseudoNotNull`, if set 'is_nullable' on tables is set from Meta and not schema. 
+  This makes it possible to use pseudo-not-null constraints in the Vidi editor.
+- App.php option `publicSchemas`, an array with schemas, which can be accessed with GET by all sub-users. Like getting schema definitions.
+
+### Fixed
+- Copy `Field settings` in `Copy properties` dialog.
+
 ## [2026.5.1] - 2026-8-5
 ### Fixed
 - Fix nullable column handling in metadata and schema updates.
