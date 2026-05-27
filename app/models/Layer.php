@@ -380,7 +380,7 @@ class Layer extends Table
                     $fields[$key]['queryable'] = (bool)$fieldConf[$key]['querable'];
                     $fields[$key]['sort_id'] = $fieldConf[$key]['sort_id'];
                     $fields[$key]['desc'] = $fieldConf[$key]['desc'];
-                    $fields[$key]['properties'] = json_decode($fieldConf[$key]['properties'], true);
+                    $fields[$key]['properties'] = !empty($fieldConf[$key]['properties']) ? json_decode($fieldConf[$key]['properties'], true) : null;
                     // restriction ??
                 }
 
