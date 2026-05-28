@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.5.3] - 2026-28-5
+### Fixed
+- SQL transactions without parameters didn't return data when using the RETURNING clause.
+
+### Changed
+- OpenAPI documentation for SQL API now has a response schema.
+
 ## [2026.5.2] - 2026-27-5
 ### Added
 - App.php option `enabledPseudoNotNull`, if set 'is_nullable' on tables is set from Meta and not schema. 
