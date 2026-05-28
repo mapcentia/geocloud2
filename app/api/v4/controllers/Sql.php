@@ -102,7 +102,7 @@ class Sql extends AbstractApi
     {
         parent::__construct(connection: $connection);
         $this->resource = 'sql';
-        $this->sqlApi = new \app\models\Sql(connection: $connection);
+        $this->sqlApi = new \app\models\Sql(connection: $this->connection);
     }
 
     public function get_index(): Response
