@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.5.4] - 2026-28-5
+### Fixed
+- The response for a RETURNING clause in v2 SQL API was changed. Reverted to the previous behavior.
+
+### Security
+- Add guard to restrict sub-users from accessing other sub-users' data.
+- Add schema ownership guard in `Privilege` controller.
+
 ## [2026.5.3] - 2026-28-5
 ### Fixed
 - SQL transactions without parameters didn't return data when using the RETURNING clause.
