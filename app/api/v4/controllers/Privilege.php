@@ -20,6 +20,7 @@ use app\inc\Input;
 use app\inc\Route2;
 use app\models\Layer;
 use app\models\Table;
+use Exception;
 use Override;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
@@ -144,9 +145,13 @@ class Privilege extends AbstractApi
         $schema = $this->route->getParam("schema");
         $body = Input::getBody();
 
+        if (!$this->route->jwt["data"]["superUser"] && $this->route->jwt["data"]["uid"] != $schema) {
+            throw new GC2Exception(message: "Sub-users can only modify privileges for their own schema.", code: 401, errorCode: "FORBIDDEN");
+        }
+
         // Patch and delete on collection is not allowed
         if (empty($table) && in_array(Input::getMethod(), ['patch', 'delete'])) {
-            throw new GC2Exception("", 406);
+            throw new GC2Exception("Patch and delete on a table collection is not allowed", 400);
         }
         // Throw exception if tried with table resource
         if (Input::getMethod() == 'post' && $table) {
