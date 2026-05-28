@@ -20,7 +20,7 @@ class Dbcheck extends Model
 
     public function isSchemaInstalled()
     {
-        $sql = "select 1 from settings.viewer";
+        $sql = "select from settings.viewer";
         $this->execQuery($sql);
         return true;
     }
@@ -34,7 +34,7 @@ class Dbcheck extends Model
 
     public function isViewInstalled()
     {
-        $sql = "select * from settings.geometry_columns_view";
+        $sql = "select from settings.geometry_columns_view limit 0";
         $this->execQuery($sql);
         return true;
     }
