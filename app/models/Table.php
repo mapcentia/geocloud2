@@ -456,22 +456,6 @@ class Table extends Model
     }
 
     /**
-     * Get the UUID of layer. Belongs in Layer class
-     * @param string $key
-     * @return array
-     */
-    public function getUuid(string $key): array
-    {
-        $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_=:key";
-        $res = $this->prepare($sql);
-        $res->execute(array("key" => $key));
-        $row = $this->fetchRow($res);
-        $response['success'] = true;
-        $response['uuid'] = $row["uuid"];
-        return $response;
-    }
-
-    /**
      * @param mixed $data
      * @param string $keyName
      * @param bool $raw
