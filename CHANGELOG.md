@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.5.5] - 2026-28-5
+### Fixed
+- Use settings.getColumns instead of hardcoded SQL query to settings.geometry_columns_view several places for performance.
+
 ## [2026.5.4] - 2026-28-5
 ### Fixed
 - The response for a RETURNING clause in v2 SQL API was changed. Reverted to the previous behavior.
