@@ -105,14 +105,14 @@ class User extends AbstractApi
         $requestedUser = $this->route->getParam("user");
         if (!$requestedUser) {
             if (!$this->route->jwt["data"]["superUser"]) {
-                throw new Exception($err);
+                throw new GC2Exception(message: $err, code: 401, errorCode: "FORBIDDEN");
             }
             return $this->getResponse($this->getAll()['users']);
         }
         $users = explode(',', $requestedUser);
         foreach ($users as $user) {
             if (!$this->route->jwt["data"]["superUser"] && $this->route->jwt["data"]["uid"] != $user) {
-                throw new Exception($err);
+                throw new GC2Exception(message: $err, code: 401, errorCode: "FORBIDDEN");
             }
             $userModelLocal = new UserModel($user, $this->route->jwt["data"]["database"]);
             $r[] = self::convertUserObject($userModelLocal->getData()["data"]);
