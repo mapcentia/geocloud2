@@ -160,6 +160,9 @@ class Sql extends Controller
         if (!empty($this->cacheInfo)) {
             $response["cache"] = $this->cacheInfo;
         }
+        if (!empty($response['returning'])) {
+            $response['returning'] = $response['returning']['data'];
+        }
         return $response;
     }
 
