@@ -160,6 +160,9 @@ class Sql extends Controller
         if (!empty($this->cacheInfo)) {
             $response["cache"] = $this->cacheInfo;
         }
+        if (!empty($response['returning'])) {
+            $response['returning'] = $response['returning']['data'];
+        }
         return $response;
     }
 
@@ -175,6 +178,7 @@ class Sql extends Controller
         // Use bulk if content type is text/plain
         if (Input::getContentType() == Input::TEXT_PLAIN) {
             $dbSplit = explode("@", $r["user"]);
+            // TODO user with more than one @ is not supported yet
             if (sizeof($dbSplit) == 2) {
                 $this->subUser = $dbSplit[0];
             } elseif (!empty($_SESSION["subuser"])) {

@@ -14,6 +14,7 @@ use app\api\v4\Responses\PatchResponse;
 use app\api\v4\Responses\PostResponse;
 use app\api\v4\Responses\RedirectResponse;
 use app\api\v4\Responses\TextResponse;
+use app\conf\App;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
@@ -78,7 +79,8 @@ abstract class AbstractApi implements ApiInterface
         if (!empty($this->schema)) {
             $this->doesSchemaExist();
         }
-        if (!$superUser && !($userName == $this->schema[0] || $this->schema[0] == "public")) {
+        $publicSchemas = App::$param['publicSchemas'] ?? [];
+        if (!$superUser && !($userName == $this->schema[0] || $this->schema[0] == "public" || (in_array($this->schema[0], $publicSchemas, true)) && Input::getMethod() == "get")) {
             throw new GC2Exception("Not authorized", 403, null, "UNAUTHORIZED");
         }
         if ($this->qualifiedName) {
@@ -349,7 +351,7 @@ abstract class AbstractApi implements ApiInterface
     {
         $filteredArray = [];
         foreach ($array as $key => $value) {
-            if (!is_string($key) || !str_starts_with($key, '_')) {
+            if ($key !='propeties' || !is_string($key) || !str_starts_with($key, '_')) {
                 $filteredArray[$key] = is_array($value) ? self::removeUnderscoreKeys($value) : $value;
             }
         }

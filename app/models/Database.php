@@ -13,6 +13,7 @@ use app\inc\Connection;
 use app\conf\Connection as StaticConnection;
 use app\inc\Model;
 use PDOException;
+use Throwable;
 
 
 /**
@@ -205,32 +206,28 @@ class Database extends Model
      *
      * @return array Returns an associative array containing the success status, relevant data, and,
      *               in case of an error, the error message and code.
+     * @throws Throwable
      */
     public function listAllSchemas(): array
     {
         $arr = [];
-        $sql = "SELECT count(*) AS count,f_table_schema FROM geometry_columns where f_table_schema not like 'pg_%' GROUP BY f_table_schema";
-        $res = $this->prepare($sql);
-        $this->execute($res);
-        while ($row = $this->fetchRow($res)) {
-            $count[$row['f_table_schema']] = $row['count'];
-        }
-        $sql = "SELECT nspname AS schema_name FROM pg_catalog.pg_namespace WHERE nspname NOT LIKE 'pg_%' AND nspname<>'settings' AND nspname<>'information_schema' AND nspname<>'sqlapi' ORDER BY nspname";
+        $sql = "SELECT n.nspname AS schema_name, count(c.oid) AS count
+            FROM pg_catalog.pg_namespace n
+            LEFT JOIN pg_catalog.pg_class c ON c.relnamespace = n.oid AND c.relkind IN ('r','v','m','f','p')
+            WHERE n.nspname NOT LIKE 'pg_%'
+              AND n.nspname NOT IN ('settings','information_schema','sqlapi')
+            GROUP BY n.nspname
+            ORDER BY n.nspname";
         $res = $this->prepare($sql);
         try {
             $this->execute($res);
         } catch (PDOException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 401;
-            return $response;
+            return ['success' => false, 'message' => $e->getMessage(), 'code' => 401];
         }
         while ($row = $this->fetchRow($res)) {
-            $arr[] = array("schema" => $row['schema_name'], "count" => $count[$row['schema_name']] ?? 0);
+            $arr[] = ['schema' => $row['schema_name'], 'count' => (int)$row['count']];
         }
-        $response['success'] = true;
-        $response['data'] = $arr;
-        return $response;
+        return ['success' => true, 'data' => $arr];
     }
 
     /**
@@ -239,6 +236,7 @@ class Database extends Model
      * @param string $db The name of the database to change the ownership for.
      * @param string $newOwner The name of the new owner to assign to the database and its objects.
      * @return void
+     * @throws Throwable
      */
     public function changeOwner(string $db, string $newOwner): void
     {

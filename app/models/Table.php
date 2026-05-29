@@ -456,22 +456,6 @@ class Table extends Model
     }
 
     /**
-     * Get the UUID of layer. Belongs in Layer class
-     * @param string $key
-     * @return array
-     */
-    public function getUuid(string $key): array
-    {
-        $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_=:key";
-        $res = $this->prepare($sql);
-        $res->execute(array("key" => $key));
-        $row = $this->fetchRow($res);
-        $response['success'] = true;
-        $response['uuid'] = $row["uuid"];
-        return $response;
-    }
-
-    /**
      * @param mixed $data
      * @param string $keyName
      * @param bool $raw
@@ -536,12 +520,13 @@ class Table extends Model
                             }
                             $value = json_encode($rec, JSON_UNESCAPED_UNICODE);
                         }
-                    } if ($key == "fieldconf") {
-                        $value = $value ?: "null";
-                        if (gettype($value) == "string") {
-                            $value = json_decode($value, true);
-                        }
+                    }
+                    if ($key == "fieldconf") {
+                        $value = $value ?: json_encode(null);
                         if (!$raw) {
+                            if (gettype($value) == "string") {
+                                $value = json_decode($value, true);
+                            }
                             $rec = json_decode($this->getRecordByPri($pKeyValue)["data"]["fieldconf"] ?? '[]', true);
                             foreach ($value as $fKey => $fValue) {
                                 if (isset($fValue['queryable'])) {
@@ -787,7 +772,10 @@ class Table extends Model
                 $response['message'] = "Updated";
                 $response['name'] = $value->id;
             }
-            if ($this->metaData[$value->id]["is_nullable"] != $value->is_nullable && !$onlyRename) {
+
+            // Set nullable
+            $enablePseudoNotNull = App::$param['enablePseudoNotNull'] ?? false;
+            if (!$enablePseudoNotNull && $this->metaData[$value->id]["is_nullable"] != $value->is_nullable && !$onlyRename) {
                 $sql = "ALTER TABLE " . $this->doubleQuoteQualifiedName($this->table) . " ALTER \"$value->column\" " . ($value->is_nullable ? "DROP" : "SET") . " NOT NULL";
                 $res = $this->prepare($sql);
                 try {
@@ -799,6 +787,7 @@ class Table extends Model
                     }
                 }
             }
+
             if ($this->metaData[$value->id]["desc"] !== $value->desc && !$onlyRename) {
                 if ($value->desc === "") {
                     $value->desc = null;

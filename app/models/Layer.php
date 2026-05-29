@@ -101,9 +101,13 @@ class Layer extends Table
      */
     public function getValueFromKey(string $_key_, string $column): ?string
     {
-        $sql = "select $column from $this->table where _key_=:key";
+        $split = explode(".", $_key_);
+        $schema = $split[0];
+        $table = $split[1];
+        $geom = $split[2];
+        $sql = "SELECT * FROM settings.getColumns('f_table_schema = ''$schema'' AND f_table_name = ''$table'' AND f_geometry_column = ''$geom''', 'r_table_schema = ''$schema'' AND r_table_name = ''$table'' AND r_raster_column = ''$geom''')";
         $res = $this->prepare($sql);
-        $this->execute($res, ['key' => $_key_]);
+        $this->execute($res);
         $row = $this->fetchRow($res);
         return $row[$column];
     }
@@ -379,6 +383,9 @@ class Layer extends Table
                     $fields[$key]['alias'] = $fieldConf[$key]['alias'];
                     $fields[$key]['queryable'] = (bool)$fieldConf[$key]['querable'];
                     $fields[$key]['sort_id'] = $fieldConf[$key]['sort_id'];
+                    $fields[$key]['desc'] = $fieldConf[$key]['desc'];
+                    $fields[$key]['properties'] = !empty($fieldConf[$key]['properties']) ? json_decode($fieldConf[$key]['properties'], true) : null;
+                    // restriction ??
                 }
 
                 // Sort fields
