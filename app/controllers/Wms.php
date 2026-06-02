@@ -48,11 +48,7 @@ class Wms extends Controller
 
         $this->rules = new Rule();
         $schema = Input::getPath()->part(3);
-        $db = Input::getPath()->part(2);
-        $dbSplit = explode("@", $db);
-        if (sizeof($dbSplit) == 2) {
-            $db = $dbSplit[1];
-        }
+        $db = Util::extractUserFromSubUserString(Input::getPath()->part(2))[1];
         $this->user = Session::getUser() ?? Input::getAuthUser() ?? $db;
         $trusted = false;
         foreach (App::$param["trustedAddresses"] as $address) {

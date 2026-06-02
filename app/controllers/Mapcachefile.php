@@ -155,9 +155,10 @@ class Mapcachefile extends Controller
             $arr = array();
             $includeSchemas = '';
             if (!empty(App::$param['mapCache']['include'])) {
-                $includeSchemas = "AND f_table_schema in ('" . implode("','", App::$param['mapCache']['include']) . "')";
+                $includeSchemasF = "AND f_table_schema in ('" . implode("','", App::$param['mapCache']['include']) . "')";
+                $includeSchemasR = "AND r_table_schema in ('" . implode("','", App::$param['mapCache']['include']) . "')";
             }
-            $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ NOTNULL $includeSchemas ORDER BY sort_id";
+            $sql = "SELECT * FROM settings.getColumns('f_table_schema NOTNULL AND f_table_name NOTNULL AND f_geometry_column NOTNULL $includeSchemasF', 'r_table_schema NOTNULL AND r_table_name NOTNULL AND r_raster_column NOTNULL $includeSchemasR')";
             $result = $postgisObject->execQuery($sql);
             while ($row = $postgisObject->fetchRow($result)) {
                 if ($row['f_table_schema'] != "sqlapi" && $row['enableows']) {

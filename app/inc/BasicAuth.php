@@ -40,6 +40,7 @@ final class BasicAuth
      * @param bool $isTransaction
      * @return void
      * @throws ServiceException|InvalidArgumentException
+     * @throws \Throwable
      */
     public function authenticate(string $layerName, bool $isTransaction): void
     {
@@ -61,13 +62,16 @@ final class BasicAuth
         $userGroup = !empty($settings["data"]->userGroups->{$this->user}) ? $settings["data"]->userGroups->{$this->user} : null;
 
         // AUTHENTICATION SUCCESSFUL
-        $schema = explode('.', $layerName)[0];
+        $split = explode(".", $layerName);
+        $schema = $split[0];
         if ($this->isSubuser && $this->user != $schema) {
-            $sql = "SELECT * FROM settings.geometry_columns_view WHERE _key_ LIKE :schema";
+            $schema = $split[0];
+            $table = $split[1];
+            $sql = "SELECT * FROM settings.getColumns('f_table_schema = ''$schema'' AND f_table_name = ''$table''', 'r_table_schema = ''$schema'' AND r_table_name = ''$table''')";
             $postgisObject = new Model(connection: $this->connection);
             $res = $postgisObject->prepare($sql);
             try {
-                $postgisObject->execute($res, array("schema" => $layerName . ".%"));
+                $postgisObject->execute($res);
             } catch (PDOException $e) {
                 throw new ServiceException($e->getMessage());
             }

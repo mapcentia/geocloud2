@@ -73,14 +73,7 @@ class Sql extends Controller
             $this->api = new \app\models\Sql();
             $this->api->connect();
         }
-        $dbSplit = explode("@", $r["user"]);
-        if (sizeof($dbSplit) == 2) {
-            $this->subUser = $dbSplit[0];
-            $database = $dbSplit[1];
-        } else {
-            $this->subUser = null;
-            $database = $dbSplit[0];
-        }
+        [$this->subUser, $database] = Util::extractUserFromSubUserString($r["user"]);
         $this->connection = new \app\inc\Connection(database: $database);
 
         // Check if body is JSON
@@ -160,6 +153,9 @@ class Sql extends Controller
         if (!empty($this->cacheInfo)) {
             $response["cache"] = $this->cacheInfo;
         }
+        if (!empty($response['returning'])) {
+            $response['returning'] = $response['returning']['data'];
+        }
         return $response;
     }
 
@@ -174,13 +170,9 @@ class Sql extends Controller
 
         // Use bulk if content type is text/plain
         if (Input::getContentType() == Input::TEXT_PLAIN) {
-            $dbSplit = explode("@", $r["user"]);
-            if (sizeof($dbSplit) == 2) {
-                $this->subUser = $dbSplit[0];
-            } elseif (!empty($_SESSION["subuser"])) {
+            [$this->subUser] = Util::extractUserFromSubUserString($r["user"]);
+            if (!empty($_SESSION["subuser"])) {
                 $this->subUser = $_SESSION["screen_name"];
-            } else {
-                $this->subUser = null;
             }
             // Set API key from headers
             Input::setParams(

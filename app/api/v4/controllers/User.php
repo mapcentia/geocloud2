@@ -101,14 +101,18 @@ class User extends AbstractApi
     public function get_index(): Response
     {
         $r = [];
+        $err = "Sub-users are not allowed to get information about other sub users";
         $requestedUser = $this->route->getParam("user");
         if (!$requestedUser) {
+            if (!$this->route->jwt["data"]["superUser"]) {
+                throw new GC2Exception(message: $err, code: 401, errorCode: "FORBIDDEN");
+            }
             return $this->getResponse($this->getAll()['users']);
         }
         $users = explode(',', $requestedUser);
         foreach ($users as $user) {
             if (!$this->route->jwt["data"]["superUser"] && $this->route->jwt["data"]["uid"] != $user) {
-                throw new Exception("Sub-users are not allowed to get information about other sub users");
+                throw new GC2Exception(message: $err, code: 401, errorCode: "FORBIDDEN");
             }
             $userModelLocal = new UserModel($user, $this->route->jwt["data"]["database"]);
             $r[] = self::convertUserObject($userModelLocal->getData()["data"]);
@@ -272,7 +276,7 @@ class User extends AbstractApi
     public function getAll(): array
     {
         $currentUserId = $this->route->jwt["data"]["database"];
-        $usersData = (new UserModel())->getSubusers($currentUserId)['data'];
+        $usersData = new UserModel()->getSubusers($currentUserId)['data'];
         return ['users' => array_map([$this, 'convertUserObject'], $usersData)];
     }
 

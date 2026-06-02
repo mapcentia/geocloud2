@@ -40,10 +40,18 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 #[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
-    schema: "Sql",
+    schema: "SqlRequest",
     description: "Execute SQL statements. Supports SELECT, INSERT, UPDATE, DELETE, and MERGE (no DDL or transaction control).",
-    required: [],
+    required: ["q"],
     properties: [
+        new OA\Property(
+            property: "id",
+            title: "Id",
+            description: "Unique identifier for the request. The server will return the same identifier in the response. 
+            Useful for tracking requests in a websocket context. If omitted the server will generate a random UUID in the response.",
+            type: "string",
+            example: "my_id",
+        ),
         new OA\Property(
             property: "q",
             title: "Query",
@@ -92,6 +100,74 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
     ],
     type: "object"
 )]
+#[OA\Schema(
+    schema: "SqlResponse",
+    description: "Response from executing SQL statements where output format is set to 'json'. Contains the result of the query and metadata.",
+    required: [],
+    properties: [
+        new OA\Property(
+            property: "id",
+            title: "Id",
+            description: "Unique identifier for the request, which is the same as the one in the request payload.
+            Useful for tracking requests in a websocket context.",
+            type: "string",
+            example: "my_id",
+        ),
+        new OA\Property(
+            property: "statement",
+            title: "Statement",
+            description: "The actual SQL statement that was executed after access rules was applied.",
+            type: "string",
+            example: "SELECT :my_date::date as my_date'",
+        ),
+        new OA\Property(
+            property: "affected_rows",
+            title: "Affected rows",
+            description: "If the query was an INSERT, UPDATE, or DELETE, the number of rows affected.",
+            type: "integer",
+            example: 1,
+        ),
+        new OA\Property(
+            property: "data",
+            title: "Data",
+            description: "Rows returned by the query.",
+            type: "array",
+            items: new OA\Items(type: "object"),
+            example: [["my_date" => "2011-04-01", "my_string" => "hello world"]],
+        ),
+        new OA\Property(
+            property: "schema",
+            title: "Schema",
+            description: "Column names and types of the query result.",
+            type: "object",
+            example: ["my_date" => ["type" => "date", "array" => false], "my_string" => ["type" => "string", "array" => false]],
+            additionalProperties: new OA\AdditionalProperties(ref: "#/components/schemas/SqlSchema"),
+        ),
+    ],
+    type: "object"
+)]
+#[OA\Schema(
+    schema: "SqlSchema",
+    description: "",
+    required: [],
+    properties: [
+        new OA\Property(
+            property: "type",
+            title: "Type",
+            description: "Type of the column.",
+            type: "string",
+            example: "date",
+        ),
+        new OA\Property(
+            property: "array",
+            title: "Is array",
+            description: "Is the column an array?",
+            type: "boolean",
+            example: false,
+        ),
+    ],
+    type: "object"
+)]
 #[AcceptableMethods(['POST', 'HEAD', 'OPTIONS'])]
 #[Controller(route: 'api/v4/sql', scope: Scope::SUB_USER_ALLOWED)]
 class Sql extends AbstractApi
@@ -102,7 +178,7 @@ class Sql extends AbstractApi
     {
         parent::__construct(connection: $connection);
         $this->resource = 'sql';
-        $this->sqlApi = new \app\models\Sql(connection: $connection);
+        $this->sqlApi = new \app\models\Sql(connection: $this->connection);
     }
 
     public function get_index(): Response
@@ -115,9 +191,9 @@ class Sql extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Post(path: '/api/v4/sql', operationId: 'postSql', description: "Execute SQL statements.", tags: ['Sql'])]
-    #[OA\RequestBody(description: 'SQL statement(s) to execute.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sql"))]
+    #[OA\RequestBody(description: 'SQL statement(s) to execute.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/SqlRequest"))]
     #[OA\Response(response: 200, description: 'Ok', content: [new OA\MediaType('application/json'), new OA\MediaType('application/gpx'), new OA\MediaType('application/octet-stream')])]
-    #[OA\Response(response: 500, description: 'Internal error. Most likely an SQL error.')]
+    #[OA\Response(response: 500, description: 'Internal error. Most likely an SQL error.', content: new OA\JsonContent(ref: "#/components/schemas/SqlResponse"))]
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', 'application/gpx', 'application/octet-stream', '*/*'])]
     #[Override]

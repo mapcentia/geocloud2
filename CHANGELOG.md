@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.5.5] - 2026-28-5
+### Fixed
+- Use settings.getColumns instead of hardcoded SQL query to settings.geometry_columns_view several places for performance.
+
+## [2026.5.4] - 2026-28-5
+### Fixed
+- The response for a RETURNING clause in v2 SQL API was changed. Reverted to the previous behavior.
+
+### Security
+- Add guard to restrict sub-users from accessing other sub-users' data.
+- Add schema ownership guard in `Privilege` controller.
+
+## [2026.5.3] - 2026-28-5
+### Fixed
+- SQL transactions without parameters didn't return data when using the RETURNING clause.
+
+### Changed
+- OpenAPI documentation for SQL API now has a response schema.
+
+## [2026.5.2] - 2026-27-5
+### Added
+- App.php option `enabledPseudoNotNull`, if set 'is_nullable' on tables is set from Meta and not schema. 
+  This makes it possible to use pseudo-not-null constraints in the Vidi editor.
+- App.php option `publicSchemas`, an array with schemas, which can be accessed with GET by all sub-users. Like getting schema definitions.
+
+### Fixed
+- Copy `Field settings` in `Copy properties` dialog.
+
 ## [2026.5.1] - 2026-8-5
 ### Fixed
 - Fix nullable column handling in metadata and schema updates.

@@ -588,14 +588,13 @@ class Sql extends Model
      */
     public function transaction(string $q, ?array $parameters = null, ?array $typeHints = null, bool $convertReturning = true, ?array $typeFormats = null): array
     {
-
         // Always wrapped as an array of parameters
         if ($parameters !== null && (!isset($parameters[0]) || !is_array($parameters[0]))) {
             $parameters = [$parameters];
         }
 
         $columnTypes = [];
-        $schema = [];;
+        $schema = [];
         $convertedParameters = [];
         // Convert JSON to native types
         if ($parameters) {
@@ -619,92 +618,73 @@ class Sql extends Model
             foreach ($convertedParameters as $parameter) {
                 $this->execute($result, $parameter);
                 if (count($columnTypes) == 0) {
-                    foreach (range(0, $result->columnCount() - 1) as $column_index) {
-                        if ($column_index < 0) {
-                            throw new Exception("No columns returned by query");
-                        }
-                        $meta = $result->getColumnMeta($column_index);
-                        if (!$meta) {
-                            break;
-                        }
-                        $columnTypes[$meta['name']] = $meta['native_type'];
-                        $schema[$meta['name']] = ['type' => $meta['native_type'], 'array' => str_starts_with($meta['native_type'], '_')];
-                    }
+                    [$columnTypes, $schema] = $this->extractColumnMeta($result);
                 }
                 $rows = $this->fetchAll($result, 'assoc');
-                if (!empty($rows)) {
-                    $tmp = null;
-                    foreach ($rows as $row) {
-                        foreach ($row as $field => $value) {
-                            try {
-                                $nativePgType = $typeHints[$field] ?? self::phpTypeToPgType(gettype($value)) ?? "json";
-                                $dateTimeFormat = $typeFormats[$field] ?? self::getFormat($nativePgType);
-                                $convertedValue = $this->convertFromNative($columnTypes[$field], $value, $dateTimeFormat);
-                                $tmp[$field] = $convertedValue;
-                            } catch (\Exception) {
-                                if ($columnTypes[$field] == 'geometry') {
-                                    $resultGeom = $this->prepare("select ST_AsGeoJSON(:v) as json");
-                                    $this->execute($resultGeom, ["v" => $value]);
-                                    $json = $this->fetchRow($resultGeom)['json'];
-                                    $value = !empty($json) ? json_decode($json) : null;
-                                }
-                                $tmp[$field] = $value;
-                            }
-
-                        }
-                        if ($tmp && sizeof($tmp) > 0) {
-                            $returning['data'][] = $tmp;
-                        }
-                    }
-                }
+                $returning = $this->convertRows($rows, $columnTypes, $schema, $typeHints, $typeFormats, $returning);
                 $affectedRows += $result->rowCount();
-                if ($returning) {
-                    $returning['schema'] = $schema;
-                }
             }
         } else {
             $this->execute($result);
-            foreach (range(0, $result->columnCount() - 1) as $column_index) {
-                if ($column_index < 0) {
-                    throw new Exception("No columns returned by query");
-                }
-                $meta = $result->getColumnMeta($column_index);
-                if (!$meta) {
-                    break;
-                }
-                $columnTypes[$meta['name']] = $meta['native_type'];
-            }
+            [$columnTypes, $schema] = $this->extractColumnMeta($result);
             $affectedRows += $result->rowCount();
-            $returningRaw = $result->fetchAll(PDO::FETCH_NAMED);
-            if (!empty($returningRaw[0])) {
-                foreach ($returningRaw as $row) {
-                    $tmp = null;
-                    foreach ($row as $field => $value) {
-                        try {
-                            $nativePgType = $typeHints[$field] ?? self::phpTypeToPgType(gettype($value)) ?? "json";
-                            $dateTimeFormat = $typeFormats[$field] ?? self::getFormat($nativePgType);
-                            $convertedValue = $this->convertFromNative($columnTypes[$field], $value, $dateTimeFormat);
-                            $tmp[$field] = $convertedValue;
-                        } catch (\Exception) {
-                            if ($columnTypes[$field] == 'geometry') {
-                                $resultGeom = $this->prepare("select ST_AsGeoJSON(:v) as json");
-                                $this->execute($resultGeom, ["v" => $value]);
-                                $json = $this->fetchRow($resultGeom)['json'];
-                                $value = !empty($json) ? json_decode($json) : null;
-                            }
-                            $tmp[$field] = $value;
-                        }
-                    }
-                    if ($tmp && sizeof($tmp) > 0) {
-                        $returning[] = $tmp;
-                    }
-                }
-            }
+            $rows = $result->fetchAll(PDO::FETCH_NAMED);
+            $returning = $this->convertRows($rows, $columnTypes, $schema, $typeHints, $typeFormats, $returning);
         }
         $response['success'] = true;
         $response['affected_rows'] = $affectedRows;
         $response['returning'] = $returning;
         return $response;
+    }
+
+    private function extractColumnMeta($result): array
+    {
+        $columnTypes = [];
+        $schema = [];
+        foreach (range(0, $result->columnCount() - 1) as $column_index) {
+            if ($column_index < 0) {
+                throw new Exception("No columns returned by query");
+            }
+            $meta = $result->getColumnMeta($column_index);
+            if (!$meta) {
+                break;
+            }
+            $columnTypes[$meta['name']] = $meta['native_type'];
+            $schema[$meta['name']] = ['type' => $meta['native_type'], 'array' => str_starts_with($meta['native_type'], '_')];
+        }
+        return [$columnTypes, $schema];
+    }
+
+    private function convertRows(array $rows, array $columnTypes, array $schema, ?array $typeHints, ?array $typeFormats, ?array $returning): ?array
+    {
+        if (empty($rows) || empty($rows[0])) {
+            return $returning;
+        }
+        foreach ($rows as $row) {
+            $tmp = null;
+            foreach ($row as $field => $value) {
+                try {
+                    $nativePgType = $typeHints[$field] ?? self::phpTypeToPgType(gettype($value)) ?? "json";
+                    $dateTimeFormat = $typeFormats[$field] ?? self::getFormat($nativePgType);
+                    $tmp[$field] = $this->convertFromNative($columnTypes[$field], $value, $dateTimeFormat);
+                } catch (\Exception) {
+                    if ($columnTypes[$field] == 'geometry') {
+                        $resultGeom = $this->prepare("select ST_AsGeoJSON(:v) as json");
+                        $this->execute($resultGeom, ["v" => $value]);
+                        $json = $this->fetchRow($resultGeom)['json'];
+                        $value = !empty($json) ? json_decode($json) : null;
+                    }
+                    $tmp[$field] = $value;
+                }
+            }
+            if ($tmp && sizeof($tmp) > 0) {
+                $returning['data'][] = $tmp;
+            }
+        }
+        if ($returning) {
+            $returning['schema'] = $schema;
+        }
+        return $returning;
     }
 
     /**
