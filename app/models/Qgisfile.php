@@ -55,23 +55,61 @@ class Qgisfile extends Model
         return ["success" => true, "message" => "Qgisfile written", "ch" => $path . $name];
     }
 
-    public function project() {
+    /**
+     * Build a complete QGIS <spatialrefsys> block from PostGIS spatial_ref_sys.
+     *
+     * A minimal block containing only <srid>/<authid> does NOT resolve to a valid CRS in
+     * QGIS Server: it then treats the layer as already being in the project CRS and skips
+     * reprojection, so features render at raw coordinate positions (geographically wrong).
+     * Supplying the WKT + proj4 definition lets QGIS reproject the layer to the requested SRS.
+     *
+     * @throws GC2Exception
+     */
+    private function spatialRefSys(int|string $srid): string
+    {
+        $res = $this->prepare("SELECT srtext, proj4text FROM spatial_ref_sys WHERE srid = :srid");
+        $this->execute($res, ["srid" => $srid]);
+        $row = $this->fetchRow($res);
+        $esc = fn(?string $v): string => str_replace(['&', '<', '>'], ['&amp;', '&lt;', '&gt;'], $v ?? '');
+        $srtext = $row['srtext'] ?? '';
+        $geographic = (stripos(ltrim($srtext), 'GEOGCS') === 0 || stripos(ltrim($srtext), 'GEOGCRS') === 0) ? 'true' : 'false';
+        return '<spatialrefsys nativeFormat="Wkt">'
+            . '<wkt>' . $esc($srtext) . '</wkt>'
+            . '<proj4>' . $esc($row['proj4text'] ?? '') . '</proj4>'
+            . '<srid>' . $srid . '</srid>'
+            . '<authid>EPSG:' . $srid . '</authid>'
+            . '<geographicflag>' . $geographic . '</geographicflag>'
+            . '</spatialrefsys>';
+    }
+
+    public function project($extent = null) {
 
         $qgs = '
         <qgis version="3.44.7-Solothurn">
-          <legend updateDrawingOrder="true">
-            <legendlayer name="%1$s.%2$s">
-              <filegroup open="true" hidden="false">
-                <legendlayerfile layerid="%1$s.%2$s" visible="1"/>
-              </filegroup>
-            </legendlayer>
-          </legend>
+          <extent>
+            <xmin>%11$f</xmin>
+            <ymin>%12$f</ymin>
+            <xmax>%13$f</xmax>
+            <ymax>%14$f</ymax>
+          </extent>
+          <projectcrs>
+            %17$s
+          </projectcrs>
           <projectlayers>
             <maplayer type="vector" geometry="%3$s" wkbType="%3$s" labelsEnabled="0" minScale="100000000">
+              <extent>
+                <xmin>%11$f</xmin>
+                <ymin>%12$f</ymin>
+                <xmax>%13$f</xmax>
+                <ymax>%14$f</ymax>
+              </extent>
               <id>%1$s.%2$s</id>
-              <datasource>dbname="%4$s" host=%5$s port=%6$s key="%7$s" srid=%8$s type=%3$s checkPrimaryKeyUnicity="0" table="%1$s"."%2$s" (%9$s)</datasource>
+              <datasource>dbname="%4$s" host=%5$s port=%6$s user="%15$s" password="%16$s" key="%7$s" srid=%8$s type=%3$s checkPrimaryKeyUnicity="0" table="%1$s"."%2$s" (%9$s)</datasource>
               <layername>%1$s.%2$s</layername>
               <provider encoding="">postgres</provider>
+              <srs>
+                %18$s
+              </srs>
               <!-- QML -->
               %10$s
             </maplayer>
@@ -411,12 +449,15 @@ def my_form_open(dialog, layer, feature):
   <mapTip enabled="1"></mapTip>
   <layerGeometryType>2</layerGeometryType>';
 
-        $result = sprintf($qgs, "public", "polygon", "Polygon", "mydb", "localhost", "5432", "gid", "25832", "the_geom", $qml);
+        if (!$extent) {
+            $layer = new Layer();
+            $extentResponse = $layer->getEstExtent("public.polygon.the_geom", "25832");
+            $extent = $extentResponse['extent'];
+        }
+
+        $result = sprintf($qgs, "public", "polygon", "Polygon", $this->connection->database, Connection::$param['postgishost'], Connection::$param['postgisport'], "gid", "25832", "the_geom", $qml, $extent['xmin'], $extent['ymin'], $extent['xmax'], $extent['ymax'], Connection::$param['postgisuser'], Connection::$param['postgispw'], $this->spatialRefSys("3857"), $this->spatialRefSys("25832"));
 
         $this->writeQgisfile($result, "polygon", "the_geom");
-
-
-
 
     }
 }
