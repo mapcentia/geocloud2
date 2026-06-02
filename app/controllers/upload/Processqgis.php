@@ -20,7 +20,6 @@ use app\models\Layer;
 use app\models\Spatial_ref_sys;
 use app\models\Table;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
-use stdClass;
 
 
 /**
@@ -143,16 +142,8 @@ class Processqgis extends Controller
                         parse_str($parsed["query"], $result);
                         $table = explode(":", $result["TYPENAME"])[1];
                     }
-
-                    $db = explode("/", $parsed["path"])[2];
-
-                    $split = explode("@", $db);
-                    if (sizeof($split) > 1) {
-                        $db = $split[1];
-                    }
-
+                    $db = Util::extractUserFromSubUserString(explode("/", $parsed["path"])[2])[1];
                     $fullTable = $schema . "." . $table;
-
                     $rec = $this->layer->getAll($db, true, $fullTable, false, false, false);
                     $pkey = $rec["data"][0]["pkey"];
                     $srid = $rec["data"][0]["srid"];

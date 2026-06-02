@@ -481,4 +481,24 @@ class Util
         $dash_str .= $password;
         return $dash_str;
     }
+
+    /**
+     * Extracts the main user and sub-user components from a string formatted as "mainUser@subUser".
+     *
+     * @param string $userString The input string containing the main user and sub-user, separated by '@'.
+     * @return array An array where the first element is the main user and the second element is the sub-user,
+     *               or null if no sub-user is present.
+     */
+    public static function extractUserFromSubUserString(string $userString): array
+    {
+        $separatorPosition = strrpos($userString, '@');
+        if ($separatorPosition === false) {
+            return [null, $userString];
+        }
+
+        return [
+            substr($userString, 0, $separatorPosition),
+            substr($userString, $separatorPosition + 1),
+        ];
+    }
 }

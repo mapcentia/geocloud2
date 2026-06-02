@@ -11,6 +11,7 @@ namespace app\controllers;
 use app\conf\App;
 use app\inc\Controller;
 use app\inc\Input;
+use app\inc\Util;
 
 class Mapcache extends Controller
 {
@@ -33,16 +34,8 @@ class Mapcache extends Controller
     {
         parent::__construct();
 
-        $this->db = Input::getPath()->part(2);
         $this->host = App::$param["mapCache"]["host"];
-
-        $dbSplit = explode("@", $this->db);
-        if (sizeof($dbSplit) == 2) {
-            $this->subUser = $dbSplit[0];
-            $this->db = $dbSplit[1];
-        } else {
-            $this->subUser = null;
-        }
+        [$this->subUser, $this->db] = Util::extractUserFromSubUserString(Input::getPath()->part(2));
     }
 
     /**
