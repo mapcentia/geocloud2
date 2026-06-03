@@ -80,7 +80,7 @@ class Meta extends AbstractApi
 {
     private const array PRIVATE_PROPERTIES = ['character_maximum_length',
         'numeric_precision', 'numeric_scale', 'max_bytes', 'is_unique',
-        'default_value', 'type', 'is_nullable'];
+        'default_value', 'type', 'is_nullable', 'restriction'];
 
     private const array PUBLIC_PROPERTIES = ['alias', 'queryable', 'sort_id', 'properties', 'desc'];
 
