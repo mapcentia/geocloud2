@@ -1446,6 +1446,12 @@ $(document).ready(function () {
                                                 },
                                                 {
                                                     xtype: 'textarea',
+                                                    fieldLabel: __('QML'),
+                                                    name: 'qml',
+                                                    value: r.data.qml
+                                                },
+                                                {
+                                                    xtype: 'textarea',
                                                     height: 100,
                                                     fieldLabel: __('View definition'),
                                                     name: 'viewdefinition',
@@ -1461,13 +1467,6 @@ $(document).ready(function () {
                                                 var f = Ext.getCmp('detailform');
                                                 if (f.form.isValid()) {
                                                     var values = f.form.getValues();
-
-                                                    for (var key in values) {
-                                                        if (values.hasOwnProperty(key)) {
-                                                            values[key] = encodeURIComponent(values[key]);
-                                                        }
-                                                    }
-
                                                     var param = {
                                                         data: values
                                                     };
@@ -1485,10 +1484,8 @@ $(document).ready(function () {
                                                             store.reload();
                                                             groupsStore.load();
                                                             App.setAlert(App.STATUS_NOTICE, __("Settings updated"));
-                                                            winMoreSettings.close();
                                                         },
                                                         failure: function (response) {
-                                                            winMoreSettings.close();
                                                             Ext.MessageBox.show({
                                                                 title: 'Failure',
                                                                 msg: __(Ext.decode(response.responseText).message),

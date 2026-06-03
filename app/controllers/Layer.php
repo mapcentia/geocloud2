@@ -64,7 +64,7 @@ class Layer extends Controller
      */
     public function put_records(): array
     {
-        $data = json_decode(urldecode(Input::get(null, true)), true);
+        $data = json_decode(Input::get(null, true), true);
         if (!is_array($data["data"][0])) {
             $data["data"] = [0 => $data["data"]];
         }

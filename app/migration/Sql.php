@@ -216,6 +216,7 @@ class Sql
                         payload JSONB,
                         created_at TIMESTAMPTZ NOT NULL DEFAULT now()
                     )";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN qml TEXT";
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
                     SELECT

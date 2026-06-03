@@ -575,6 +575,7 @@ $handler = static function () use ($routes) {
         $response["success"] = false;
         $response["message"] = $exception->getMessage();
         $response["file"] = $exception->getFile();
+        $response["code"] = $exception->getCode();
         if (getenv('MODE_ENV') == 'dev') {
             $response["file"] = $exception->getFile();
             $response["line"] = $exception->getLine();
