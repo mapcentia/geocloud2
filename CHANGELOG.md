@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.6.0] - 2026-3-6
+### Fixed
+- Update `Commit` v4 API to use `_schema` and `_rel` keys instead of `f_table_schema` and `f_table_name`.
+- Add `_restriction` to in`Meta` v4 API.
+- Refactor: centralize subuser and database string parsing using `Util::extractUserFromSubUserString`, so sub-user names with @ are not allowed.
+
 ## [2026.5.5] - 2026-28-5
 ### Fixed
 - Use settings.getColumns instead of hardcoded SQL query to settings.geometry_columns_view several places for performance.
