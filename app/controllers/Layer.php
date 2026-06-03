@@ -64,7 +64,7 @@ class Layer extends Controller
      */
     public function put_records(): array
     {
-        $data = json_decode(urldecode(Input::get(null, true)), true);
+        $data = json_decode(Input::get(null, true), true);
         if (!is_array($data["data"][0])) {
             $data["data"] = [0 => $data["data"]];
         }
@@ -76,8 +76,6 @@ class Layer extends Controller
                 return $response;
             }
         }
-        $qgisfile = new \app\models\Qgisfile($this->connection);
-        $qgisfile->project();
         return $this->geometryJoinTable->updateRecord($data['data'], "_key_", false, !empty(Input::getPath()->part(5)));
     }
 

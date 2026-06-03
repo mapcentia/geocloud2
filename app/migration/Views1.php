@@ -48,7 +48,8 @@ $sqls[] = "CREATE VIEW settings.geometry_columns_view AS
                         geometry_columns_join.note,
                         geometry_columns_join.legend_url,
                         geometry_columns_join.enableows,
-                        geometry_columns_join.class_cache
+                        geometry_columns_join.class_cache,
+                        geometry_columns_join.qml
                       FROM geometry_columns
                         LEFT JOIN
                         settings.geometry_columns_join ON geometry_columns_join._key_ =
@@ -102,8 +103,8 @@ $sqls[] = "CREATE VIEW settings.geometry_columns_view AS
                         geometry_columns_join.note,
                         geometry_columns_join.legend_url,
                         geometry_columns_join.enableows,
-                        geometry_columns_join.class_cache
-
+                        geometry_columns_join.class_cache,
+                        geometry_columns_join.qml
                       FROM raster_columns
                         LEFT JOIN
                         settings.geometry_columns_join ON geometry_columns_join._key_ =
@@ -158,8 +159,8 @@ $sqls[] = "CREATE VIEW settings.geometry_columns_view AS
                         geometry_columns_join.note,
                         geometry_columns_join.legend_url,
                         geometry_columns_join.enableows,
-                        geometry_columns_join.class_cache
-
+                        geometry_columns_join.class_cache,
+                        geometry_columns_join.qml
                       FROM non_postgis_tables
                         LEFT JOIN
                         settings.geometry_columns_join ON geometry_columns_join._key_ =
@@ -213,8 +214,8 @@ $sqls[] = "CREATE VIEW settings.geometry_columns_view AS
                         geometry_columns_join.note,
                         geometry_columns_join.legend_url,
                         geometry_columns_join.enableows,
-                        geometry_columns_join.class_cache
-
+                        geometry_columns_join.class_cache,
+                        geometry_columns_join.qml
                       FROM non_postgis_matviews
                         LEFT JOIN
                         settings.geometry_columns_join ON geometry_columns_join._key_ =
@@ -273,8 +274,8 @@ $sqls[] = "
                                 geometry_columns_join.note,
                                 geometry_columns_join.legend_url,
                                 geometry_columns_join.enableows,
-                                geometry_columns_join.class_cache
-
+                                geometry_columns_join.class_cache,
+                                geometry_columns_join.qml
                               FROM geometry_columns
                                 LEFT JOIN
                                 settings.geometry_columns_join ON geometry_columns_join._key_ =
@@ -330,8 +331,8 @@ $sqls[] = "
                                 geometry_columns_join.note,
                                 geometry_columns_join.legend_url,
                                 geometry_columns_join.enableows,
-                                geometry_columns_join.class_cache
-
+                                geometry_columns_join.class_cache,
+                                geometry_columns_join.qml
                               FROM raster_columns
                                 LEFT JOIN
                                 settings.geometry_columns_join ON geometry_columns_join._key_ =
@@ -388,8 +389,8 @@ $sqls[] = "
                                 geometry_columns_join.note,
                                 geometry_columns_join.legend_url,
                                 geometry_columns_join.enableows,
-                                geometry_columns_join.class_cache
-
+                                geometry_columns_join.class_cache,
+                                geometry_columns_join.qml
                               FROM non_postgis_tables
 
                               LEFT JOIN
@@ -447,8 +448,8 @@ $sqls[] = "
                                 geometry_columns_join.note,
                                 geometry_columns_join.legend_url,
                                 geometry_columns_join.enableows,
-                                geometry_columns_join.class_cache
-                                
+                                geometry_columns_join.class_cache,
+                                geometry_columns_join.qml
                               FROM non_postgis_matviews
 
                               LEFT JOIN
