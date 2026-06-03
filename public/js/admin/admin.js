@@ -3037,6 +3037,7 @@ $(document).ready(function () {
         Ext.getCmp("a11").removeAll();
         Ext.getCmp("a12").removeAll();
         Ext.getCmp("a13").removeAll();
+        Ext.getCmp("a14").removeAll();
         Ext.getCmp("layerStylePanel").disable();
         Ext.getCmp("classTabs").disable();
 
@@ -3285,6 +3286,10 @@ $(document).ready(function () {
         a13.remove(wmsLayer.legendForm);
         a13.add(wmsLayer.legendForm);
         a13.doLayout();
+        var a14 = Ext.getCmp("a14");
+        a14.remove(wmsLayer.qmlForm);
+        a14.add(wmsLayer.qmlForm);
+        a14.doLayout();
         updateLegend();
     };
 
@@ -3764,6 +3769,20 @@ $(document).ready(function () {
                                                                     {
                                                                         xtype: "panel",
                                                                         id: "a13"
+                                                                    },
+                                                                ]
+                                                            },{
+                                                                xtype: "panel",
+                                                                title: __('QML'),
+                                                                border: false,
+                                                                defaults: {
+                                                                    border: false,
+                                                                    bodyStyle: "padding : 7px"
+                                                                },
+                                                                items: [
+                                                                    {
+                                                                        xtype: "panel",
+                                                                        id: "a14"
                                                                     },
                                                                 ]
                                                             }
