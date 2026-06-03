@@ -96,7 +96,7 @@ class Qgisfile extends Model
             %17$s
           </projectcrs>
           <projectlayers>
-            <maplayer type="vector" geometry="%3$s" wkbType="%3$s" labelsEnabled="0" minScale="100000000">
+            <maplayer type="vector" geometry="%3$s" wkbType="%3$s" labelsEnabled="0" minScale="1000000000">
               <extent>
                 <xmin>%11$f</xmin>
                 <ymin>%12$f</ymin>
