@@ -212,18 +212,15 @@ classWizards.init = function (record) {
                                             allowBlank: true,
                                             value: (customIsSet && c) ? classWizards.setting.symbolSize : ""
                                         },
-                                        new Ext.ux.form.SpinnerField({
+                                        {
+                                            xtype: "combo",
+                                            store: wmsLayer.numFieldsForStore,
+                                            editable: true,
+                                            triggerAction: "all",
                                             name: "lineWidth",
-                                            minValue: 0,
-                                            maxValue: 10,
-                                            allowDecimals: false,
-                                            decimalPrecision: 0,
-                                            incrementValue: 1,
-                                            accelerate: true,
                                             allowBlank: true,
                                             value: (customIsSet && c) ? classWizards.setting.lineWidth : ""
-
-                                        }),
+                                        },
                                         {
                                             xtype: "combo",
                                             store: wmsLayer.numFieldsForStore,

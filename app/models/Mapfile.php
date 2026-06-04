@@ -412,7 +412,9 @@ SYMBOLS;
         if (!empty($class[$p . 'linecap'])) $s .= "LINECAP {$class[$p . 'linecap']}\n";
 
         // WIDTH
-        if (!empty($class[$p . 'width'])) $s .= "WIDTH {$class[$p . 'width']}\n";
+        if (!empty($class[$p . 'width'])) {
+            $s .= "WIDTH " . (is_numeric($class[$p . 'width']) ? $class[$p . 'width'] : "[{$class[$p . 'width']}]") . "\n";
+        }
 
         // COLOR
         if (!empty($class[$p . 'color'])) $s .= "COLOR " . Util::hex2RGB($class[$p . 'color'], true, " ") . "\n";

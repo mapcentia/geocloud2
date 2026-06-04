@@ -879,13 +879,11 @@ wmsClass.init = function (id) {
                 editable: true,
                 triggerAction: 'all'
             }), {}),
-            'width': new Ext.grid.GridEditor(new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: 0,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            }))),
+            'width': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                store: wmsLayer.numFieldsForStore,
+                editable: true,
+                triggerAction: 'all'
+            }), {}),
             'gap': new Ext.grid.GridEditor(new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: 0,
                 allowDecimals: false,
@@ -997,13 +995,11 @@ wmsClass.init = function (id) {
                 editable: true,
                 triggerAction: 'all'
             }), {}),
-            'overlaywidth': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: 0,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            })),
+            'overlaywidth': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+                store: wmsLayer.numFieldsForStore,
+                editable: true,
+                triggerAction: 'all'
+            }), {}),
             'overlaygap': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: 0,
                 allowDecimals: false,
