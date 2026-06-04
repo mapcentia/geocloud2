@@ -371,10 +371,8 @@ wmsLayer.init = function (record) {
                 handler: function () {
                     var f = Ext.getCmp('qmlForm');
                     if (f.form.isValid()) {
-                        var values = f.form.getValues();
-                        values.data = encodeURIComponent(values);
                         var param = {
-                            data: values
+                            data: f.form.getValues()
                         };
                         param = Ext.util.JSON.encode(param);
                         Ext.Ajax.request({
