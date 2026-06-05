@@ -82,8 +82,8 @@ class Table extends Model
             if ($this->exists) {
                 $this->geometryColumns = $this->getGeometryColumns($this->table, "*");
                 $this->metaData = $this->getMetaData($this->table, $temp, true, null, null, $getEnums, $lookupForeignTables);
-                $this->geomField = $this->geometryColumns["f_geometry_column"];
-                $this->geomType = $this->geometryColumns["type"];
+                $this->geomField = $this->geometryColumns["f_geometry_column"] ?? null;
+                $this->geomType = $this->geometryColumns["type"] ?? null;
                 $this->primaryKey = $this->getPrimeryKey($this->table);
                 $this->relType = $this->isTableOrView(($this->table))['data'];
                 $this->setType();

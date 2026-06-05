@@ -103,7 +103,9 @@ class Input
     public static function getJwtToken(): ?string
     {
         if (isset($_SERVER["HTTP_AUTHORIZATION"])) {
-            list($type, $data) = explode(" ", $_SERVER["HTTP_AUTHORIZATION"], 2);
+            $split = explode(" ", $_SERVER["HTTP_AUTHORIZATION"], 2);
+            $type = $split[0] ?? null;
+            $data = $split[1] ?? null;
             if (strcasecmp($type, "Bearer") == 0) {
                 return $data;
             } else {
