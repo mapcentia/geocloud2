@@ -125,12 +125,15 @@ class Event extends AbstractApi
     public function patch_index(): Response
     {
         $body = Input::getBody();
-        $data = json_decode($body);
+        $data = json_decode($body, true);
+        if (array_is_list($data) && count($data) > 1) {
+            throw new GC2Exception(message: "List is not supported. Only one object is supported.", code: 400, errorCode: "BAD_REQUEST");
+        }
         $list = [];
         foreach ($this->table as $table) {
-            if ($data->enabled === true) {
+            if (!empty($data['enabled'])) {
                 $table->installNotifyTrigger();
-            } elseif ($data->enabled === false) {
+            } elseif (isset($data['enabled'])) {
                 $table->removeNotifyTrigger();
             }
             $list[] = $table->tableWithOutSchema;
