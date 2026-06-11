@@ -204,7 +204,7 @@ class Geofence extends AbstractApi
     #[OA\Patch(path: '/api/v4/rules/{id}', operationId: 'patchRule', description: "Update existing rule(s).", tags: ['Rules'])]
     #[OA\Parameter(name: 'id', description: 'Rule identifier', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 2)]
     #[OA\RequestBody(description: 'Update rule', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Rule"))]
-    #[OA\Response(response: 204, description: "Rule updated")]
+    #[OA\Response(response: 303, description: "Rule updated")]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]

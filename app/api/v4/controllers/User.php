@@ -186,7 +186,7 @@ class User extends AbstractApi
     #[OA\Patch(path: '/api/v4/users/{name}', operationId: 'patchUser', description: "Update existing sub-user(s).", tags: ['Users'])]
     #[OA\Parameter(name: 'name', description: 'User identifier', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: "joe")]
     #[OA\RequestBody(description: 'User updates.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/User"))]
-    #[OA\Response(response: 204, description: "User updated")]
+    #[OA\Response(response: 303, description: "User updated")]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]

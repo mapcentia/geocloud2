@@ -187,7 +187,7 @@ class Method extends AbstractApi
     #[OA\Patch(path: '/api/v4/methods/{method}', operationId: 'patchRpc', description: "Update existing JSON-RPC method definitions.", tags: ['Methods'])]
     #[OA\Parameter(name: 'method', description: 'Method name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'myMethod')]
     #[OA\RequestBody(description: 'RPC method updates.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Method"))]
-    #[OA\Response(response: 204, description: 'Method updated')]
+    #[OA\Response(response: 303, description: 'Method updated')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json', 'application/json-rpc'])]

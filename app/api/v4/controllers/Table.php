@@ -217,7 +217,7 @@ class Table extends AbstractApi
             )
         ]
     ))]
-    #[OA\Response(response: 204, description: 'Table updated')]
+    #[OA\Response(response: 303, description: 'Table updated')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]
@@ -233,7 +233,7 @@ class Table extends AbstractApi
                 if (isset($data->name) && $data->name != $this->unQualifiedName[$i]) {
                     $r[] = $layer->rename($this->qualifiedName[$i], $data->name)['name'];
                 }
-                $relName = $r[$i] ?? $this->unQualifiedName[$i];
+                $relName = $r[$i] ?? $this->qualifiedName[$i];
                 if (isset($data->schema) && $data->schema != $this->schema[0]) {
                     if (!$this->route->jwt["data"]['superUser']) {
                         throw new GC2Exception('Only super user can move tables between schemas');

@@ -228,7 +228,7 @@ class Schema extends AbstractApi
             )
         ]
     ))]
-    #[OA\Response(response: 201, description: 'Created')]
+    #[OA\Response(response: 303, description: 'Renamed')]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]

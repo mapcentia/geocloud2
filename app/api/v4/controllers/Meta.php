@@ -134,7 +134,7 @@ class Meta extends AbstractApi
      */
     #[OA\Patch(path: '/api/v4/meta', operationId: 'patchMetaData', summary: 'Update relation metadata', security: [['bearerAuth' => []]], tags: ['Metadata'])]
     #[OA\RequestBody(description: 'Metadata updates.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Meta"))]
-    #[OA\Response(response: 204, description: "Metadata updated")]
+    #[OA\Response(response: 303, description: "Metadata updated")]
     #[OA\Response(response: 400, description: 'Bad request')]
     public function patch_index(): Response
     {
@@ -156,7 +156,8 @@ class Meta extends AbstractApi
                 }
             }
         });
-        return new NoContentResponse();
+        $baseUrl = "/api/v4/meta";
+        return $this->patchResponse($baseUrl);
     }
 
     static function processRows(array $rows): array

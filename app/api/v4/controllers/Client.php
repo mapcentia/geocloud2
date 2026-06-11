@@ -237,7 +237,7 @@ class Client extends AbstractApi
     #[OA\Patch(path: '/api/v4/clients/{id}', operationId: 'patchClient', description: "Update existing OAuth client(s).", tags: ['Clients'])]
     #[OA\Parameter(name: 'id', description: 'Id of client', in: 'path', required: true, example: '66f5005bd44c6')]
     #[OA\RequestBody(description: 'Fields to update. Partial update is allowed.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Client"))]
-    #[OA\Response(response: 204, description: "Client updated")]
+    #[OA\Response(response: 303, description: "Client updated")]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]

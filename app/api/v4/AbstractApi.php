@@ -390,17 +390,17 @@ abstract class AbstractApi implements ApiInterface
     /**
      * @throws GC2Exception
      */
-    protected function postResponse(string $baseUri, array $list): PostResponse
+    protected function postResponse(string $baseUri, array $list, string $postfix = ''): PostResponse
     {
-        return $this->prepareResponse('post', $baseUri, $list);
+        return $this->prepareResponse('post', $baseUri, $list, $postfix);
     }
 
     /**
      * @throws GC2Exception
      */
-    protected function patchResponse(string $baseUri, array $list = []): PatchResponse
+    protected function patchResponse(string $baseUri, array $list = [], string $postfix = ''): PatchResponse
     {
-        return $this->prepareResponse('patch', $baseUri, $list);
+        return $this->prepareResponse('patch', $baseUri, $list, $postfix);
     }
 
     protected function deleteResponse(): NoContentResponse
@@ -428,10 +428,15 @@ abstract class AbstractApi implements ApiInterface
     /**
      * @throws GC2Exception
      */
-    private function prepareResponse(string $method, string $baseUri, array $list = []): PostResponse|PatchResponse
+    private function prepareResponse(string $method, string $baseUri, array $list = [], string $postfix = ''): PostResponse|PatchResponse
     {
-        $location = $baseUri . implode(",", $list);
-        $res = array_map(fn($l) => ['_links' => ['self' => $baseUri . $l]], $list);
+        $location = $baseUri . implode(",", $list) . $postfix;
+        if (count($list) > 0) {
+            $res = array_map(fn($l) => ['_links' => ['self' => $baseUri . $l. $postfix]], $list);
+        }
+        else {
+            $res = ['_links' => ['self' => $baseUri . $postfix]];
+        }
         if ($method == 'patch') {
             return new PatchResponse(data: $res, location: $location);
         } elseif ($method == 'post') {

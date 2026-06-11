@@ -35,8 +35,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
-    schema: "Events",
-    description: "Events for a table.",
+    schema: "Event",
+    description: "Event for a table.",
     required: ["enabled"],
     properties: [
         new OA\Property(
@@ -76,14 +76,30 @@ class Event extends AbstractApi
     #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/events', operationId: 'getEvents', description: "Check if event trigger is enabled.", tags: ['Events'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'my_table')]
-    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Events"))]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(
+        oneOf: [
+            new OA\Schema(ref: "#/components/schemas/Client"),
+            new OA\Schema(
+                type: "array",
+                items: new OA\Items(ref: "#/components/schemas/Client")
+            )
+        ]
+    ))]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
     public function get_index(): Response
     {
-        return new GetResponse(["enabled"=> $this->table[0]->isNotifyTriggerInstalled()]);
+        $r = [];
+
+        foreach ($this->table as $table) {
+            $r[] = ["enabled" => $this->table[0]->isNotifyTriggerInstalled()];
+
+        }
+//        return new GetResponse(["enabled"=> $this->table[0]->isNotifyTriggerInstalled()]);
+        return $this->getResponse($r, single: count($r) == 1);
+
     }
 
     /**
@@ -92,8 +108,16 @@ class Event extends AbstractApi
     #[OA\Patch(path: '/api/v4/schemas/{schema}/tables/{table}/events', operationId: 'postEvents', description: "Install event trigger.", tags: ['Events'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, example: 'my_table')]
-    #[OA\RequestBody(description: 'Privileges.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Events"))]
-    #[OA\Response(response: 201, description: "Event trigger installed.")]
+    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(
+        oneOf: [
+            new OA\Schema(ref: "#/components/schemas/Event"),
+            new OA\Schema(
+                type: "array",
+                items: new OA\Items(ref: "#/components/schemas/Event")
+            )
+        ]
+    ))]
+    #[OA\Response(response: 303, description: "Event trigger installed.")]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]
@@ -102,12 +126,17 @@ class Event extends AbstractApi
     {
         $body = Input::getBody();
         $data = json_decode($body);
-        if ($data->enabled === true) {
-            $this->table[0]->installNotifyTrigger();
-        } elseif ($data->enabled === false) {
-            $this->table[0]->removeNotifyTrigger();
+        $list = [];
+        foreach ($this->table as $table) {
+            if ($data->enabled === true) {
+                $table->installNotifyTrigger();
+            } elseif ($data->enabled === false) {
+                $table->removeNotifyTrigger();
+            }
+            $list[] = $table->tableWithOutSchema;
         }
-        return new NoContentResponse();
+        $baseUrl = "/api/v4/schemas/{$this->schema[0]}/tables/";
+        return $this->patchResponse($baseUrl, $list, '/events');
     }
 
     public function delete_index(): Response
