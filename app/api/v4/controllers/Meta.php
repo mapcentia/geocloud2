@@ -99,6 +99,7 @@ class Meta extends AbstractApi
      */
     #[OA\Get(path: '/api/v4/meta/{query}', operationId: 'getMetaData', summary: 'Get relation metadata', security: [['bearerAuth' => []]], tags: ['Metadata'])]
     #[OA\Parameter(name: 'query', description: 'Schema-qualified relation name, schema name, or tag (tag:name). Comma-separated values are supported.', in: 'path', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'noRestriction', description: 'Leaves out column restrictions on the returned metadata. Restrictions can be quite extensive.', in: 'query', required: false, schema: new OA\Schema(type: 'boolean'), example: true)]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Meta"))]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
@@ -106,6 +107,11 @@ class Meta extends AbstractApi
     {
         $layers = new Layer(connection: $this->connection);
         $jwt = Jwt::validate()["data"];
+        if (!in_array(Input::get('noRestriction'), ['', 'true', '1', 't'], true)) {
+            $restriction = true; // Leave out column restrictions
+        } else {
+            $restriction = false;
+        }
         $res = $layers->getAll(
             db: $jwt["database"],
             auth: true,
@@ -113,6 +119,7 @@ class Meta extends AbstractApi
             parse: true,
             lookupForeignTables: false,
             jwt: $jwt,
+            restriction: $restriction,
         );
         $rows = $res["data"];
         $r = self::processRows($rows);

@@ -125,7 +125,7 @@ class Layer extends Table
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
      */
-    public function getAll(string $db, ?bool $auth, ?string $query = null, ?bool $includeExtent = false, ?bool $parse = false, ?bool $es = false, ?bool $lookupForeignTables = true, ?array $jwt = null): array
+    public function getAll(string $db, ?bool $auth, ?string $query = null, ?bool $includeExtent = false, ?bool $parse = false, ?bool $es = false, ?bool $lookupForeignTables = true, ?array $jwt = null, bool $restriction = true): array
     {
         // If user is signed in with another user than the requested,
         // when consider the user as not signed in.
@@ -373,7 +373,7 @@ class Layer extends Table
                 } else {
                     $fieldConf = [];
                 }
-                $fields = $this->getMetaData($rel, false, true, $restrictions, null, true, $lookupForeignTables);
+                $fields = $this->getMetaData($rel, false, $restriction, $restrictions, null, true, $lookupForeignTables);
 
                 foreach ($fields as $key => $field) {
                     // If column comment is empty, we output from field conf
