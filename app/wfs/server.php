@@ -640,8 +640,9 @@ function getCapabilities(\app\inc\Model $postgisObject)
             writeTag("open", null, "Title", null, True, False);
             echo $row["f_table_title"] ? "<![CDATA[" . $row["f_table_title"] . "]]>" : "";
             writeTag("close", null, "Title", null, False, True);
+            $comment = $postgisObject->getTableComment($row['f_table_schema'], $row['f_table_name']) ?? $row['f_table_abstract'];
             writeTag("open", null, "Abstract", null, True, False);
-            echo $row["f_table_abstract"] ? "<![CDATA[" . $row["f_table_abstract"] . "]]>" : "";
+            if (!empty($comment)) echo "<![CDATA[" . $comment . "]]>";
             writeTag("close", null, "Abstract", null, False, True);
             if ($version == "1.1.0") {
                 writeTag("open", "ows", "Keywords", null, True, False);
