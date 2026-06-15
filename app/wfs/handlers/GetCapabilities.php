@@ -288,8 +288,9 @@ final class GetCapabilities implements HandlerInterface
                 $writer->writeTag("open", null, "Title", null, false);
                 $writer->write($row["f_table_title"] ? "<![CDATA[" . $row["f_table_title"] . "]]>" : "");
                 $writer->writeTag("close", null, "Title", null, false);
-                $writer->writeTag("open", null, "Abstract", null, false);
-                $writer->write($row["f_table_abstract"] ? "<![CDATA[" . $row["f_table_abstract"] . "]]>" : "");
+                $writer->writeTag("open", null, "Abstract", null, True, False);
+                $comment = $postgisObject->getTableComment($row['f_table_schema'], $row['f_table_name']) ?? $row['f_table_abstract'];
+                if (!empty($comment)) echo "<![CDATA[" . $comment . "]]>";
                 $writer->writeTag("close", null, "Abstract", null, false);
                 if ($version == "1.1.0") {
                     $writer->writeTag("open", "ows", "Keywords", null, false);
