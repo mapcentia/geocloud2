@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wfs:WFS_Capabilities version="1.1.0"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xmlns="http://www.opengis.net/wfs"
+                    xmlns:wfs="http://www.opengis.net/wfs"
+                    xmlns:ows="http://www.opengis.net/ows"
+                    xmlns:gml="http://www.opengis.net/gml"
+                    xmlns:ogc="http://www.opengis.net/ogc"
+                    xmlns:xlink="http://www.w3.org/1999/xlink"
+                    xmlns:public="http://localhost/mydb/public"
+                    xsi:schemaLocation="http://www.opengis.net/wfs http://127.0.0.1:8081/geoserver/schemas/wfs/1.1.0/wfs.xsd http://inspire.ec.europa.eu/schemas/inspire_dls/1.0 http://inspire.ec.europa.eu/schemas/inspire_dls/1.0/inspire_dls.xsd"
+                    xmlns:inspire_dls="http://inspire.ec.europa.eu/schemas/inspire_dls/1.0"
+                    xmlns:inspire_common="http://inspire.ec.europa.eu/schemas/common/1.0"
+                    xmlns:martin="mapcentia.com" updateSequence="11">
+<ows:ServiceIdentification>
+    <ows:Title/>
+    <ows:Abstract/>
+    <ows:ServiceType>WFS</ows:ServiceType>
+    <ows:ServiceTypeVersion>1.1.0</ows:ServiceTypeVersion>
+    <ows:Fees/>
+    <ows:AccessConstraints/>
+</ows:ServiceIdentification>
+<ows:ServiceProvider>
+    <ows:ProviderName/>
+    <ows:ServiceContact>
+        <ows:IndividualName/>
+        <ows:PositionName/>
+        <ows:ContactInfo>
+            <ows:Phone>
+                <ows:Voice/>
+                <ows:Facsimile/>
+            </ows:Phone>
+            <ows:Address>
+                <ows:DeliveryPoint/>
+                <ows:City/>
+                <ows:AdministrativeArea/>
+                <ows:PostalCode/>
+                <ows:Country/>
+                <ows:ElectronicMailAddress/>
+            </ows:Address>
+        </ows:ContactInfo>
+    </ows:ServiceContact>
+</ows:ServiceProvider>
+<ows:OperationsMetadata>
+    <ows:Operation name="GetCapabilities">
+        <ows:DCP>
+            <ows:HTTP>
+                <ows:Get xlink:href="http://localhost/api/v4/wfs/mydb/public/4326?"/>
+                <ows:Post xlink:href="http://localhost/api/v4/wfs/mydb/public/4326?"/>
+            </ows:HTTP>
+        </ows:DCP>
+        <ows:Parameter name="AcceptVersions">
+            <ows:Value>1.0.0</ows:Value>
+            <ows:Value>1.1.0</ows:Value>
+        </ows:Parameter>
+        <ows:Parameter name="AcceptFormats">
+            <ows:Value>text/xml</ows:Value>
+        </ows:Parameter>
+        <ows:Parameter name="Sections">
+            <ows:Value>ServiceIdentification</ows:Value>
+            <ows:Value>ServiceProvider</ows:Value>
+            <ows:Value>OperationsMetadata</ows:Value>
+            <ows:Value>FeatureTypeList</ows:Value>
+            <ows:Value>Filter_Capabilities</ows:Value>
+        </ows:Parameter>
+    </ows:Operation>
+    <ows:Operation name="DescribeFeatureType">
+        <ows:DCP>
+            <ows:HTTP>
+                <ows:Get xlink:href="http://localhost/api/v4/wfs/mydb/public/4326?"/>
+                <ows:Post xlink:href="http://localhost/api/v4/wfs/mydb/public/4326?"/>
+            </ows:HTTP>
+        </ows:DCP>
+        <ows:Parameter name="outputFormat">
+            <ows:Value>text/xml; subtype=gml/3.1.1</ows:Value>
+        </ows:Parameter>
+    </ows:Operation>
+    <ows:Operation name="GetFeature">
+        <ows:DCP>
+            <ows:HTTP>
+                <ows:Get xlink:href="http://localhost/api/v4/wfs/mydb/public/4326?"/>
+                <ows:Post xlink:href="http://localhost/api/v4/wfs/mydb/public/4326?"/>
+            </ows:HTTP>
+        </ows:DCP>
+        <ows:Parameter name="resultType">
+            <ows:Value>results</ows:Value>
+            <ows:Value>hits</ows:Value>
+        </ows:Parameter>
+        <ows:Parameter name="outputFormat">
+            <ows:Value>GML2</ows:Value>
+            <ows:Value>gml3</ows:Value>
+        </ows:Parameter>
+        <ows:Constraint name="LocalTraverseXLinkScope">
+            <ows:Value>2</ows:Value>
+        </ows:Constraint>
+    </ows:Operation>
+    <ows:Operation name="Transaction">
+        <ows:DCP>
+            <ows:HTTP>
+                <ows:Get xlink:href="http://localhost/api/v4/wfs/mydb/public/4326?"/>
+                <ows:Post xlink:href="http://localhost/api/v4/wfs/mydb/public/4326?"/>
+            </ows:HTTP>
+        </ows:DCP>
+        <ows:Parameter name="inputFormat">
+            <ows:Value>text/xml; subtype=gml/3.1.1</ows:Value>
+        </ows:Parameter>
+        <ows:Parameter name="idgen">
+            <ows:Value>GenerateNew</ows:Value>
+            <ows:Value>UseExisting</ows:Value>
+            <!--<ows:Value>ReplaceDuplicate</ows:Value>-->
+        </ows:Parameter>
+        <ows:Parameter name="releaseAction">
+            <ows:Value>ALL</ows:Value>
+            <ows:Value>SOME</ows:Value>
+        </ows:Parameter>
+    </ows:Operation>
+</ows:OperationsMetadata>
+        <FeatureTypeList><Operations><Operation>Query</Operation><Operation>Insert</Operation><Operation>Update</Operation><Operation>Delete</Operation></Operations><FeatureType><Name>public:dagi_kommune10</Name><Title></Title><Abstract></Abstract><ows:Keywords><ows:Keyword></ows:Keyword></ows:Keywords><DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS><ows:WGS84BoundingBox><ows:LowerCorner>7.9785763798591 54.425720020022</ows:LowerCorner><ows:UpperCorner>15.620916217924 57.774566261575</ows:UpperCorner></ows:WGS84BoundingBox></FeatureType><FeatureType><Name>public:multipolygon</Name><Title></Title><Abstract><![CDATA[Dette er en commemy]]></Abstract><ows:Keywords><ows:Keyword></ows:Keyword></ows:Keywords><DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS><ows:WGS84BoundingBox><ows:LowerCorner>9.8306251974905 56.997590184964</ows:LowerCorner><ows:UpperCorner>10.023014185023 57.13928900199</ows:UpperCorner></ows:WGS84BoundingBox></FeatureType><FeatureType><Name>public:versionering</Name><Title></Title><Abstract></Abstract><ows:Keywords><ows:Keyword></ows:Keyword></ows:Keywords><DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS><ows:WGS84BoundingBox><ows:LowerCorner>9.4551011813674 56.891190958754</ows:LowerCorner><ows:UpperCorner>10.180885483024 57.308538672183</ows:UpperCorner></ows:WGS84BoundingBox></FeatureType><FeatureType><Name>public:punkt</Name><Title></Title><Abstract></Abstract><ows:Keywords><ows:Keyword></ows:Keyword></ows:Keywords><DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS><ows:WGS84BoundingBox><ows:LowerCorner>9.0730862694204 56.175919213872</ows:LowerCorner><ows:UpperCorner>9.9690579034197 56.379098958175</ows:UpperCorner></ows:WGS84BoundingBox></FeatureType><FeatureType><Name>public:polygon</Name><Title></Title><Abstract></Abstract><ows:Keywords><ows:Keyword></ows:Keyword></ows:Keywords><DefaultSRS>urn:x-ogc:def:crs:EPSG:4326</DefaultSRS><ows:WGS84BoundingBox><ows:LowerCorner>9.4551011813674 56.891190958754</ows:LowerCorner><ows:UpperCorner>10.180885483024 57.308538672183</ows:UpperCorner></ows:WGS84BoundingBox></FeatureType></FeatureTypeList><ogc:Filter_Capabilities><ogc:Spatial_Capabilities><ogc:GeometryOperands><ogc:GeometryOperand>gml:Envelope</ogc:GeometryOperand></ogc:GeometryOperands><ogc:SpatialOperators><ogc:SpatialOperator name="Intersects"/><ogc:SpatialOperator name="BBOX"/></ogc:SpatialOperators></ogc:Spatial_Capabilities><ogc:Scalar_Capabilities><ogc:LogicalOperators/><ogc:ComparisonOperators><ogc:ComparisonOperator>LessThan</ogc:ComparisonOperator><ogc:ComparisonOperator>GreaterThan</ogc:ComparisonOperator><ogc:ComparisonOperator>LessThanEqualTo</ogc:ComparisonOperator><ogc:ComparisonOperator>GreaterThanEqualTo</ogc:ComparisonOperator><ogc:ComparisonOperator>EqualTo</ogc:ComparisonOperator><ogc:ComparisonOperator>NotEqualTo</ogc:ComparisonOperator><ogc:ComparisonOperator>Like</ogc:ComparisonOperator><ogc:ComparisonOperator>Between</ogc:ComparisonOperator></ogc:ComparisonOperators></ogc:Scalar_Capabilities><ogc:Id_Capabilities><ogc:FID/><ogc:EID/></ogc:Id_Capabilities></ogc:Filter_Capabilities></wfs:WFS_Capabilities>
