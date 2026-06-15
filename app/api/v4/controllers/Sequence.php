@@ -140,7 +140,7 @@ class Sequence extends AbstractApi
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'sequence', description: 'Sequence names', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_sequences')]
     #[OA\RequestBody(description: 'Sequence', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sequence"))]
-    #[OA\Response(response: 204, description: "Sequence updated")]
+    #[OA\Response(response: 303, description: "Sequence updated")]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[Override]

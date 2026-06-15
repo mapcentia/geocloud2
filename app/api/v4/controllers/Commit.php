@@ -147,12 +147,12 @@ class Commit extends AbstractApi
             $rows = $res["data"];
             $out = Meta::processRows($rows);
             foreach ($out as $item) {
-                $file = $baseDir . '/meta/' . $item['f_table_schema'] . '.' . $item['f_table_name'] . '.json';
+                $file = $baseDir . '/meta/' . $item['_schema'] . '.' . $item['_rel'] . '.json';
                 file_put_contents($file, json_encode($item, JSON_PRETTY_PRINT));
                 // Check if template and write it out
                 $template = App::$param['path'] . '/app/conf/template.markdown';
                 if (is_file($template)) {
-                    $file = $repo->getRepositoryPath() . '/pages/' . preg_replace('/t_/', '', $item['f_table_name'], 1) . '.markdown';
+                    $file = $repo->getRepositoryPath() . '/pages/' . preg_replace('/t_/', '', $item['_rel'], 1) . '.markdown';
                     echo $file . "\n";
                     file_put_contents($file, file_get_contents($template));
                 }

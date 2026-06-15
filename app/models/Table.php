@@ -82,8 +82,8 @@ class Table extends Model
             if ($this->exists) {
                 $this->geometryColumns = $this->getGeometryColumns($this->table, "*");
                 $this->metaData = $this->getMetaData($this->table, $temp, true, null, null, $getEnums, $lookupForeignTables);
-                $this->geomField = $this->geometryColumns["f_geometry_column"];
-                $this->geomType = $this->geometryColumns["type"];
+                $this->geomField = $this->geometryColumns["f_geometry_column"] ?? null;
+                $this->geomType = $this->geometryColumns["type"] ?? null;
                 $this->primaryKey = $this->getPrimeryKey($this->table);
                 $this->relType = $this->isTableOrView(($this->table))['data'];
                 $this->setType();
@@ -521,6 +521,14 @@ class Table extends Model
                             $value = json_encode($rec, JSON_UNESCAPED_UNICODE);
                         }
                     }
+                    if ($key == "qml") {
+                        if (!empty($value)) {
+                            $qgisFile = new Qgisfile($this->connection);
+                            $qgisUrl = $qgisFile->project(qml: $value, schema: $keySplit[0], rel: $keySplit[1]);
+                            $valueArr['wmssource'] = $qgisUrl[0];
+                            $valueArr['wmsclientepsgs'] = $qgisUrl[1];
+                        }
+                    }
                     if ($key == "fieldconf") {
                         $value = $value ?: json_encode(null);
                         if (!$raw) {
@@ -543,12 +551,14 @@ class Table extends Model
                         }
                         if ($key == "f_table_abstract") {
                             $keySplit = explode(".", $data[0]['_key_']);
-                            (new Table($keySplit[0] . '.' . $keySplit[1], connection: $this->connection))->setTableComment($value);
+                            new Table($keySplit[0] . '.' . $keySplit[1], connection: $this->connection)->setTableComment($value);
                         }
                     }
                 }
                 $pairArr[] = "\"$key\"=:$key";
-                $valueArr[$key] = $value;
+                if (!isset($valueArr[$key])) {
+                    $valueArr[$key] = $value;
+                }
                 $keyArr[] = "\"$key\"";
                 $keyArr2[] = ":$key";
             }

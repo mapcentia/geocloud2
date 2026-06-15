@@ -100,7 +100,7 @@ class Privilege extends AbstractApi
     #[OA\RequestBody(description: 'Privileges.', required: true, content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/Privilege"),
         new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/Privilege"))])
     )]
-    #[OA\Response(response: 204, description: "Privileges updated")]
+    #[OA\Response(response: 303, description: "Privileges updated")]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]
@@ -125,8 +125,8 @@ class Privilege extends AbstractApi
                 $layer->updatePrivileges($obj, $table);
             }
         });
-        $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/privileges/";
-        return $this->emptyResponse();
+        $baseUri = "/api/v4/schemas/{$this->schema[0]}/tables/{$this->unQualifiedName[0]}/privileges";
+        return $this->patchResponse($baseUri);
     }
 
     #[Override] public function delete_index(): Response
@@ -143,6 +143,11 @@ class Privilege extends AbstractApi
     {
         $table = $this->route->getParam("table");
         $schema = $this->route->getParam("schema");
+
+        if (count(explode(',', $table)) > 1 || count(explode(',', $schema)) > 1) {
+            throw new GC2Exception(message: "This API can only get/patch privileges for a single table at a time.", code: 400, errorCode: "BAD_REQUEST");
+        }
+
         $body = Input::getBody();
 
         if (!$this->route->jwt["data"]["superUser"] && $this->route->jwt["data"]["uid"] != $schema) {

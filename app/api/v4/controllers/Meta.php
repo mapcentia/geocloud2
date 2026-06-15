@@ -80,7 +80,7 @@ class Meta extends AbstractApi
 {
     private const array PRIVATE_PROPERTIES = ['character_maximum_length',
         'numeric_precision', 'numeric_scale', 'max_bytes', 'is_unique',
-        'default_value', 'type', 'is_nullable'];
+        'default_value', 'type', 'is_nullable', 'restriction'];
 
     private const array PUBLIC_PROPERTIES = ['alias', 'queryable', 'sort_id', 'properties', 'desc'];
 
@@ -99,6 +99,7 @@ class Meta extends AbstractApi
      */
     #[OA\Get(path: '/api/v4/meta/{query}', operationId: 'getMetaData', summary: 'Get relation metadata', security: [['bearerAuth' => []]], tags: ['Metadata'])]
     #[OA\Parameter(name: 'query', description: 'Schema-qualified relation name, schema name, or tag (tag:name). Comma-separated values are supported.', in: 'path', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'noRestriction', description: 'Leaves out column restrictions on the returned metadata. Restrictions can be quite extensive.', in: 'query', required: false, schema: new OA\Schema(type: 'boolean'), example: true)]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Meta"))]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
@@ -106,6 +107,11 @@ class Meta extends AbstractApi
     {
         $layers = new Layer(connection: $this->connection);
         $jwt = Jwt::validate()["data"];
+        if (!in_array(Input::get('noRestriction'), ['', 'true', '1', 't'], true)) {
+            $restriction = true; // Leave out column restrictions
+        } else {
+            $restriction = false;
+        }
         $res = $layers->getAll(
             db: $jwt["database"],
             auth: true,
@@ -113,6 +119,7 @@ class Meta extends AbstractApi
             parse: true,
             lookupForeignTables: false,
             jwt: $jwt,
+            restriction: $restriction,
         );
         $rows = $res["data"];
         $r = self::processRows($rows);
@@ -127,7 +134,7 @@ class Meta extends AbstractApi
      */
     #[OA\Patch(path: '/api/v4/meta', operationId: 'patchMetaData', summary: 'Update relation metadata', security: [['bearerAuth' => []]], tags: ['Metadata'])]
     #[OA\RequestBody(description: 'Metadata updates.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Meta"))]
-    #[OA\Response(response: 204, description: "Metadata updated")]
+    #[OA\Response(response: 303, description: "Metadata updated")]
     #[OA\Response(response: 400, description: 'Bad request')]
     public function patch_index(): Response
     {
@@ -149,7 +156,8 @@ class Meta extends AbstractApi
                 }
             }
         });
-        return new NoContentResponse();
+        $baseUrl = "/api/v4/meta";
+        return $this->patchResponse($baseUrl);
     }
 
     static function processRows(array $rows): array

@@ -377,10 +377,18 @@ class Geometrycolums
             ),
         'enableows' =>
             array(
-                'num' => 35,
+                'num' => 45,
                 'type' => 'boolean',
                 'full_type' => 'boolean',
                 'is_nullable' => false,
+                'restriction' => NULL,
+            ),
+        'qml' =>
+            array(
+                'num' => 46,
+                'type' => 'text',
+                'full_type' => 'text',
+                'is_nullable' => true,
                 'restriction' => NULL,
             ),
     );

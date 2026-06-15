@@ -103,7 +103,9 @@ class Input
     public static function getJwtToken(): ?string
     {
         if (isset($_SERVER["HTTP_AUTHORIZATION"])) {
-            list($type, $data) = explode(" ", $_SERVER["HTTP_AUTHORIZATION"], 2);
+            $split = explode(" ", $_SERVER["HTTP_AUTHORIZATION"], 2);
+            $type = $split[0] ?? null;
+            $data = $split[1] ?? null;
             if (strcasecmp($type, "Bearer") == 0) {
                 return $data;
             } else {
@@ -148,12 +150,11 @@ class Input
      */
     public static function getAuthUser(): ?string
     {
-        $user = $_SERVER['PHP_AUTH_USER'] ?? null;
+        $input = $_SERVER['PHP_AUTH_USER'] ?? null;
+        if (!$input) return null;
         // Check for deprecated form: subuser@database
-        if (!empty($user) && str_contains($user, '@')) {
-            $user = explode('@', $user)[0];
-        }
-        return $user;
+        [$user, $db] = Util::extractUserFromSubUserString($input);
+        return $user ?? $db;
     }
 
     /**

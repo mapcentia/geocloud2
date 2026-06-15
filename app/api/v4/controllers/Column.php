@@ -191,7 +191,7 @@ class Column extends AbstractApi
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\Parameter(name: 'column', description: 'Column names', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_columns')]
     #[OA\RequestBody(description: 'Column', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Column"))]
-    #[OA\Response(response: 204, description: "Column updated")]
+    #[OA\Response(response: 303, description: "Column updated")]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableContentTypes(['application/json'])]

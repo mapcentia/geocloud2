@@ -461,6 +461,7 @@ $handler = static function () use ($routes) {
                 } catch (\Throwable $e) {
                     $redisPing = 'ERR:' . $e->getMessage();
                 }
+                /*
                 error_log(sprintf(
                     'JWT-DEBUG req#%d uri=%s method=%s mem=%s auth=%s redis=%s',
                     $nbRequests ?? -1,
@@ -470,6 +471,7 @@ $handler = static function () use ($routes) {
                     isset($_SERVER['HTTP_AUTHORIZATION']) ? 'YES('.strlen($_SERVER['HTTP_AUTHORIZATION']).')' : 'NO',
                     $redisPing
                 ));
+                */
                 try {
                     $jwt = Jwt::validate();
                 } catch (\Throwable $e) {
@@ -477,7 +479,7 @@ $handler = static function () use ($routes) {
                     throw $e;
                 }
                 $Route2->jwt = $jwt;
-                $conn = new \app\inc\Connection(user: $jwt["data"]["uid"], database: $jwt["data"]["database"]);
+                $conn = new \app\inc\Connection(user: $jwt["data"]["uid"] ?? null, database: $jwt["data"]["database"] ?? null);
                 foreach ($routes as $c => $r) {
                     if ($r->getScope() != Scope::PUBLIC) {
                         $Route2->add($r->getRoute(), new $c($Route2, $conn));
@@ -576,6 +578,7 @@ $handler = static function () use ($routes) {
         $response["success"] = false;
         $response["message"] = $exception->getMessage();
         $response["file"] = $exception->getFile();
+        $response["code"] = $exception->getCode();
         if (getenv('MODE_ENV') == 'dev') {
             $response["file"] = $exception->getFile();
             $response["line"] = $exception->getLine();

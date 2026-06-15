@@ -654,7 +654,7 @@ class Model
                             $foreignValues[] = ["value" => $value, "alias" => (string)$alias];
                         }
                     }
-                } elseif (isset($restrictions[$row["column_name"]]) && $restrictions[$row["column_name"]] == "*" && $getEnums) {
+                } elseif ($restriction && isset($restrictions[$row["column_name"]]) && $restrictions[$row["column_name"]] == "*" && $getEnums) {
                     $t = new Table($table);
                     foreach ($t->getGroupByAsArray($column)["data"] as $value) {
                         $foreignValues[] = ["value" => $value, "alias" => (string)$value];
@@ -684,7 +684,7 @@ class Model
                     "numeric_scale" => $row["numeric_scale"],
                     "max_bytes" => $row["max_bytes"],
                     "reference" => count($references) == 0 ? null : $references,
-                    "restriction" => sizeof($foreignValues) > 0 ? $foreignValues : null,
+                    "restriction" => sizeof($foreignValues) > 0 && $restriction ? $foreignValues : null,
                     "is_nullable" => $fieldconf->$column->is_nullable ?? null,
                 );
 
