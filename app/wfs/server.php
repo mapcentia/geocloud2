@@ -19,6 +19,7 @@ use app\inc\Input;
 use app\inc\Util;
 use app\wfs\output\ExceptionReport;
 use app\wfs\output\GmlWriter;
+use Throwable;
 
 function bootstrap_legacy_wfs(string $db, string $user, bool $parentUser): void
 {
@@ -52,15 +53,15 @@ function bootstrap_legacy_wfs(string $db, string $user, bool $parentUser): void
 
     $writer = new GmlWriter(
         gmlNameSpace:    $schema,
-        gmlNameSpaceUri: str_replace('https://', 'http://', "{$ctx->host}/{$db}/{$schema}"),
+        gmlNameSpaceUri: str_replace('https://', 'http://', "$ctx->host/$db/$schema"),
     );
 
     $req = null;
     try {
         $req = Request::fromHttp($ctx);
-        (new Server($ctx))->dispatch($req, $writer);
+        new Server($ctx)->dispatch($req, $writer);
         $writer->writeMemoryFooter();
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         // Legacy server.php caught Exception (incl. PDOException) and rendered
         // an OWS exception report rather than letting the request 500. Match
         // that behaviour so misconfigured/empty URLs return a structured
