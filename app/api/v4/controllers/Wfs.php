@@ -12,7 +12,6 @@ use app\api\v4\Responses\StreamedResponse;
 use app\api\v4\Scope;
 use app\conf\App;
 use app\exceptions\OwsException;
-use app\exceptions\ServiceException;
 use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Route2;
@@ -22,6 +21,7 @@ use app\wfs\Request as WfsRequest;
 use app\wfs\Server;
 use app\wfs\output\ExceptionReport;
 use app\wfs\output\GmlWriter;
+use Throwable;
 
 #[Controller(route: 'api/v4/wfs/{db}/{schema}/{srs}/[timeSlice]', scope: Scope::PUBLIC)]
 final class Wfs extends AbstractApi
@@ -31,11 +31,17 @@ final class Wfs extends AbstractApi
         parent::__construct($connection);
     }
 
+    /**
+     * @throws OwsException
+     */
     public function get_index(): StreamedResponse
     {
         return $this->stream();
     }
 
+    /**
+     * @throws OwsException
+     */
     public function post_index(): StreamedResponse
     {
         return $this->stream();
@@ -43,8 +49,19 @@ final class Wfs extends AbstractApi
 
     // WFS uses GET and POST only. PUT/PATCH/DELETE are required by ApiInterface
     // but rejected upstream by AcceptableMethods. Stub them to satisfy the contract.
+    /**
+     * @throws OwsException
+     */
     public function put_index(): StreamedResponse    { return $this->stream(); }
+
+    /**
+     * @throws OwsException
+     */
     public function patch_index(): StreamedResponse  { return $this->stream(); }
+
+    /**
+     * @throws OwsException
+     */
     public function delete_index(): StreamedResponse { return $this->stream(); }
 
     public function validate(): void
@@ -52,12 +69,15 @@ final class Wfs extends AbstractApi
         // Auth & layer checks happen inside Server::dispatch; nothing to validate here
     }
 
+    /**
+     * @throws OwsException
+     */
     private function stream(): StreamedResponse
     {
         $ctx = $this->buildContext();
         $writer = new GmlWriter(
             gmlNameSpace: $ctx->schema,
-            gmlNameSpaceUri: str_replace('https://', 'http://', "{$ctx->host}/{$ctx->database}/{$ctx->schema}"),
+            gmlNameSpaceUri: str_replace('https://', 'http://', "$ctx->host/$ctx->database/$ctx->schema"),
         );
 
         return new StreamedResponse(
@@ -67,8 +87,8 @@ final class Wfs extends AbstractApi
                 $req = null;
                 try {
                     $req = WfsRequest::fromHttp($ctx);
-                    (new Server($ctx))->dispatch($req, $writer);
-                } catch (\Throwable $e) {
+                    new Server($ctx)->dispatch($req, $writer);
+                } catch (Throwable $e) {
                     // Catch all so DB/protocol errors render as OWS exception
                     // reports instead of bubbling up as 500. Matches legacy
                     // server.php's broader catch.
@@ -78,6 +98,9 @@ final class Wfs extends AbstractApi
         );
     }
 
+    /**
+     * @throws OwsException
+     */
     private function buildContext(): Context
     {
         $jwtUser = $this->route->jwt['data']['uid'] ?? null;
