@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.6.2] - 2026-15-6
+### Fixed
+- Use table comments as fallback for abstract generation in WMS/WFS configurations.
+- Update v4 API response codes to use `303` for redirection across controllers and standardize patch response handling.
+
+### Added
+- Add `noRestriction` query parameter to Meta v4 API sp field restrictions can be disabled.
+
 ## [2026.6.1] - 2026-4-6
 ### Added
 - A QGIS QML style XML string can now be set in the layer dialog. GC2 will use this QML to create a minimal QGS project file for the layer. 
