@@ -16,7 +16,7 @@ class Authorization extends Model
 {
     const string USED_RELS_KEY = "checked_relations";
 
-    public function __construct(public ?Connection $connection)
+    public function __construct(public ?Connection $connection = null)
     {
         parent::__construct(connection: $connection);
     }
