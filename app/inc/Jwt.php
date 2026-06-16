@@ -135,7 +135,7 @@ abstract class Jwt
             "iat" => time(),
             "database" => $db,
             "superUser" => $isSuperUser,
-            "userGroup" => new User()->getFullInheritance($userGroup, $db),
+            "userGroup" => new User()->getFullInheritance($userGroup ?? [], $db),
             "response_type" => $access ? ResponseType::TOKEN->value : ResponseType::REFRESH->value,
             "properties" => $properties,
             "email" => $email,
