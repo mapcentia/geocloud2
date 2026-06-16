@@ -238,7 +238,7 @@ class Sql extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    private function runStatement(array $query, string $user, bool $isSuperUser, ?string $userGroup): ?array
+    private function runStatement(array $query, string $user, bool $isSuperUser, ?array $userGroup): ?array
     {
         $statement = new Statement(connection: $this->connection, convertReturning: true);
         $query['convert_types'] = $value['convert_types'] ?? true;

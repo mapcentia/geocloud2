@@ -157,7 +157,7 @@ class Session extends Model
         return $response;
     }
 
-    public function createOAuthResponse(string $db, string $user, bool $isSuperUser, bool $code, ?string $userGroup, ?string $codeChallenge = null, ?string $codeChallengeMethod = null, ?stdClass $properties = null, ?string $email = null): array
+    public function createOAuthResponse(string $db, string $user, bool $isSuperUser, bool $code, ?array $userGroup, ?string $codeChallenge = null, ?string $codeChallengeMethod = null, ?stdClass $properties = null, ?string $email = null): array
     {
         $superUserApiKey = (new Setting(new Connection(database: $db)))->getApiKeyForSuperUser();
         if (!$code) {
@@ -373,7 +373,7 @@ class Session extends Model
             $row['screenname'] = $userName = $jwt['uid'];
             $row['parentdb'] = $jwt["superUser"] ? null : $jwt['database']; // Important: Nullify parentdb for superusers
             $row['email'] = $jwt['email'];
-            $row['usergroup'] = $jwt['userGroup'];
+            $row['usergroup'] = json_encode($jwt['userGroup']);
             $row['properties'] = json_encode($jwt['properties']);
         }
         // Login successful.
@@ -424,7 +424,7 @@ class Session extends Model
         $_SESSION["subuser"] = (bool)$row['parentdb'];
         $_SESSION["properties"] = !empty($row["properties"]) ? json_decode($row["properties"]) : null;
         $_SESSION['email'] = $row['email'];
-        $_SESSION['usergroup'] = $row['usergroup'] ?: null;
+        $_SESSION['usergroup'] = !empty($row["usergroup"]) ? json_decode($row["usergroup"]) : null;
         $_SESSION['created'] = strtotime($row['created']);
         $_SESSION['postgisschema'] = $schema;
     }

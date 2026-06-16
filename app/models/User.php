@@ -21,6 +21,7 @@ use PDOException;
 use Postmark\PostmarkClient;
 use app\exceptions\GC2Exception;
 use Psr\Cache\InvalidArgumentException;
+use Throwable;
 
 /**
  * Class User
@@ -559,5 +560,98 @@ class User extends Model
             Cache::save($CachedString);
             return $defaultUser;
         }
+    }
+
+    /**
+     * Returns the full inheritance closure for a set of users.
+     *
+     * Users and groups are the same entity (like PostgreSQL roles): a user's
+     * `usergroup` column is a JSONB array holding the screen names of the
+     * groups/users it belongs to. Given a list of starting users, this walks
+     * the membership graph upward and returns a flat, de-duplicated list
+     * containing the starting users together with every group/user reachable
+     * through `usergroup`, and so on downwards. The graph may be a DAG (a user
+     * can belong to several groups, and groups can share parents); cycles are
+     * handled safely so traversal always terminates.
+     *
+     * @param array $users Starting users — screen name strings or user rows (with a "screenname"/"userid" key).
+     * @return array<int, string> Flat, de-duplicated list of screen names in breadth-first order.
+     * @throws Throwable
+     */
+    public function getFullInheritance(array $users, string $parentDb): array
+    {
+        $queue = [];
+        foreach ($users as $user) {
+            $name = $this->resolveScreenName($user);
+            if ($name !== null) {
+                $queue[] = $name;
+            }
+        }
+
+        $result = [];
+        $seen = [];
+        while ($queue) {
+            $name = array_shift($queue);
+            if (isset($seen[$name])) {
+                // Already expanded — skip to avoid looping on cycles/diamonds.
+                continue;
+            }
+            $seen[$name] = true;
+            $result[] = $name;
+            foreach ($this->getUserGroups($name, $parentDb) as $group) {
+                if (!isset($seen[$group])) {
+                    $queue[] = $group;
+                }
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Extracts a screen name from either a plain string or a user row.
+     */
+    private function resolveScreenName(mixed $user): ?string
+    {
+        if (is_array($user)) {
+            $name = $user['screenname'] ?? $user['userid'] ?? null;
+        } else {
+            $name = $user;
+        }
+        if (!is_string($name)) {
+            return null;
+        }
+        $name = trim($name);
+        return $name === '' ? null : $name;
+    }
+
+    /**
+     * Returns the groups/users a single user directly belongs to,
+     * i.e. the decoded `usergroup` JSONB array. Returns an empty array when the
+     * user has no groups or does not exist as a row.
+     *
+     * @return array<int, string>
+     * @throws Throwable
+     */
+    protected function getUserGroups(string $screenName, string $parentDb): array
+    {
+        // Scope by parentdb: screen names are only unique within a database, so the same
+        // name can exist in several parent databases. Without this scope fetchRow() may
+        // return a same-named user from another database and the inheritance chain breaks.
+        $query = "SELECT usergroup FROM users WHERE screenname = :screenName AND parentdb = :parentDb";
+        $res = $this->prepare($query);
+        $this->execute($res, [":screenName" => $screenName, ":parentDb" => $parentDb]);
+        $row = $this->fetchRow($res);
+        if (empty($row['usergroup'])) {
+            return [];
+        }
+        // usergroup is JSONB; PDO returns it as a string, but tolerate a pre-decoded array too.
+        $groups = is_array($row['usergroup']) ? $row['usergroup'] : json_decode($row['usergroup'], true);
+        if (!is_array($groups)) {
+            return [];
+        }
+        return array_values(array_filter(
+            array_map(fn($g) => is_string($g) ? trim($g) : null, $groups),
+            fn($g) => $g !== null && $g !== ''
+        ));
     }
 }

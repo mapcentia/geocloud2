@@ -12,10 +12,12 @@ use app\auth\types\ResponseType;
 use app\conf\App;
 use app\exceptions\GC2Exception;
 use app\models\Setting;
+use app\models\User;
 use Exception;
 use Firebase\JWT\Key;
 use Psr\Cache\InvalidArgumentException;
 use stdClass;
+use Throwable;
 
 
 /**
@@ -114,12 +116,17 @@ abstract class Jwt
      * @param string $db
      * @param string $userId
      * @param bool $isSuperUser
-     * @param string|null $userGroup
+     * @param array|null $userGroup
      * @param bool $access
      * @param bool $returnCode
+     * @param string|null $codeChallenge
+     * @param string|null $codeChallengeMethod
+     * @param stdClass|null $properties
+     * @param string|null $email
      * @return array
+     * @throws Throwable
      */
-    public static function createJWT(string $secret, string $db, string $userId, bool $isSuperUser, ?string $userGroup, bool $access = true, bool $returnCode = false, ?string $codeChallenge = null, ?string $codeChallengeMethod = null, ?stdClass $properties = null, ?string $email = null): array
+    public static function createJWT(string $secret, string $db, string $userId, bool $isSuperUser, ?array $userGroup, bool $access = true, bool $returnCode = false, ?string $codeChallenge = null, ?string $codeChallengeMethod = null, ?stdClass $properties = null, ?string $email = null): array
     {
         $token = [
             "iss" => App::$param["host"],
@@ -128,7 +135,7 @@ abstract class Jwt
             "iat" => time(),
             "database" => $db,
             "superUser" => $isSuperUser,
-            "userGroup" => $userGroup,
+            "userGroup" => new User()->getFullInheritance($userGroup, $db),
             "response_type" => $access ? ResponseType::TOKEN->value : ResponseType::REFRESH->value,
             "properties" => $properties,
             "email" => $email,
