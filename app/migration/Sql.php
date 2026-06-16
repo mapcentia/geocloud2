@@ -305,6 +305,13 @@ class Sql
         $sqls[] = "ALTER TABLE users ADD CONSTRAINT email_unique_for_parent UNIQUE  (parentdb, email)";
         $sqls[] = "ALTER TABLE public.users ALTER COLUMN email SET NOT NULL";
         $sqls[] = "ALTER TABLE users ADD COLUMN private_properties JSONB";
+        $sqls[] = "ALTER TABLE users ALTER COLUMN usergroup TYPE jsonb
+                        USING CASE
+                            WHEN usergroup IS NULL THEN NULL
+                            WHEN usergroup ~ '^\s*\[.*\]\s*$' THEN usergroup::jsonb
+                            ELSE jsonb_build_array(usergroup)
+                        END";
+//        $sqls[] = "ALTER TABLE users ALTER COLUMN usergroup TYPE varchar USING usergroup->>0";
 
         return $sqls;
     }
