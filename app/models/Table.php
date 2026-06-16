@@ -310,11 +310,7 @@ class Table extends Model
         while ($row = $this->fetchRow($result)) {
             $privileges = !empty($row["privileges"]) ? json_decode($row["privileges"], true) : [];
             $arr = [];
-            if (isset($_SESSION)) {
-                $userGroup = $_SESSION['usergroup'] ?? [];
-            } else {
-                $userGroup = [];
-            }
+            $userGroup = $_SESSION['usergroup'] ?? [];
             if (!empty($_SESSION["subuser"])) {
                 $extractedPrivilege = new Authorization()->extractHighestPrivilege($privileges, $_SESSION["screen_name"], $userGroup, $schema ?? $this->postgisschema);
                 $hasNone = $extractedPrivilege['privilege'] === "none";
@@ -554,7 +550,7 @@ class Table extends Model
                                     $fValue['querable'] = $fValue['queryable'];
                                     unset($fValue['queryable']);
                                 }
-                                $rec[$fKey] = array_merge($rec[$fKey] ?? [],$fValue);
+                                $rec[$fKey] = array_merge($rec[$fKey] ?? [], $fValue);
                             }
                             $value = json_encode($rec, JSON_UNESCAPED_UNICODE);
                         }
