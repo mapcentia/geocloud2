@@ -10,7 +10,9 @@ namespace app\inc;
 
 
 use app\exceptions\ServiceException;
+use app\models\Authorization;
 use app\models\Setting;
+use app\models\User;
 use PDOException;
 use Psr\Cache\InvalidArgumentException;
 
@@ -59,7 +61,8 @@ final class BasicAuth
                 self::setAuthHeader($setting->postgisdb);
             }
         }
-        $userGroup = !empty($settings["data"]->userGroups->{$this->user}) ? $settings["data"]->userGroups->{$this->user} : null;
+        $userGroup = !empty($settings["data"]->userGroups->{$this->user}) ? json_decode($settings["data"]->userGroups->{$this->user}) : [];
+        $userGroupFullChain = new User()->getFullInheritance($userGroup, $this->connection->database);
 
         // AUTHENTICATION SUCCESSFUL
         $split = explode(".", $layerName);
@@ -76,9 +79,11 @@ final class BasicAuth
                 throw new ServiceException($e->getMessage());
             }
             while ($row = $postgisObject->fetchRow($res)) {
-                $privileges = json_decode($row["privileges"]);
-                $prop = $userGroup ?: $this->user;
-                if ((!$privileges->$prop || $privileges->$prop == "none" || ($privileges->$prop == "read" && $isTransaction)) && ($prop != $schema)) {
+                $privileges = json_decode($row["privileges"], true);
+                $extractedPrivilege = new Authorization(connection: $this->connection)->extractHighestPrivilege($privileges, $this->user, $userGroupFullChain, $schema);
+                $isOwner = $extractedPrivilege['isOwner'];
+                $insufficient = ($extractedPrivilege['privilege'] === "none" || ($extractedPrivilege['privilege'] === "read" && $isTransaction));
+                if ($insufficient && !$isOwner) {
                     throw new ServiceException("You don't have privileges to this layer. Please contact the database owner, which can grant you privileges.");
                 }
             }
