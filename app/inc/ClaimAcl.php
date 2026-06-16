@@ -338,6 +338,17 @@ final class ClaimAcl
                 'matcher' => $matcher,
             ];
         }
+
+        // Fall back to __default when no claim-based membership matched,
+        // mirroring the fallback in collectMatches().
+        if (count($memberships) === 0 && isset($this->customMap['__default'])) {
+            $memberships[] = [
+                'key' => '__default',
+                'claim' => '__default',
+                'matcher' => '__default',
+            ];
+        }
+
         return $memberships;
     }
 
