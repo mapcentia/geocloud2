@@ -74,6 +74,7 @@ class Session extends Model
      * @return array<string, array<string, mixed>|bool|string|int>
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException|InvalidArgumentException
+     * @throws \Throwable
      */
     public function start(string $sUserID, string $pw, string|null $schema = "public", string|null $parentDb = null, bool $tokenOnly = false, GrantType $grantType = GrantType::PASSWORD): array
     {
@@ -135,7 +136,8 @@ class Session extends Model
                 }
                 $response['data']['api_key'] = (new Setting(new Connection(database: $response['data']['parentdb'])))->get()['data']->api_key;
             } else {
-                return $this->createOAuthResponse($response['data']['parentdb'], $response['data']['screen_name'], !$response['data']['subuser'], $grantType == GrantType::AUTHORIZATION_CODE, $response['data']['usergroup']);
+                $userGroupFullChain = new User()->getFullInheritance($response['data']['usergroup'] ?? [], $response['data']['parentdb']);
+                return $this->createOAuthResponse($response['data']['parentdb'], $response['data']['screen_name'], !$response['data']['subuser'], $grantType == GrantType::AUTHORIZATION_CODE, $userGroupFullChain);
             }
             // Insert into logins
             $this->logLogin($sUserID, $parentDb);
@@ -384,7 +386,7 @@ class Session extends Model
         // Fetch sub-users
         $this->setSubUsers();
 
-        $response['data']['api_key'] = (new Setting(new Connection(database: $response['data']['parentdb'])))->get()['data']->api_key;
+        $response['data']['api_key'] = new Setting(new Connection(database: $response['data']['parentdb']))->get()['data']->api_key;
 
         // Insert into logins
         $this->logLogin($userName, $parentDb);
@@ -414,9 +416,11 @@ class Session extends Model
      * @param array $row An associative array containing user data, such as zone, screenname, email, etc.
      * @param string|null $schema The database schema to assign to the session.
      * @return void
+     * @throws \Throwable
      */
     private static function setSessionVars(array $row, ?string $schema): void
     {
+
         $_SESSION['zone'] = $row['zone'];
         $_SESSION['auth'] = true;
         $_SESSION['screen_name'] = $row['screenname'];
@@ -424,7 +428,7 @@ class Session extends Model
         $_SESSION["subuser"] = (bool)$row['parentdb'];
         $_SESSION["properties"] = !empty($row["properties"]) ? json_decode($row["properties"]) : null;
         $_SESSION['email'] = $row['email'];
-        $_SESSION['usergroup'] = !empty($row["usergroup"]) ? json_decode($row["usergroup"]) : null;
+        $_SESSION['usergroup'] = !empty($row["usergroup"]) ? new User()->getFullInheritance(json_decode($row["usergroup"]), $row['parentdb']) : null;
         $_SESSION['created'] = strtotime($row['created']);
         $_SESSION['postgisschema'] = $schema;
     }
