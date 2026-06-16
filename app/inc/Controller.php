@@ -11,9 +11,12 @@ namespace app\inc;
 use app\conf\App;
 use app\exceptions\GC2Exception;
 use app\exceptions\ServiceException;
+use app\models\Authorization;
 use app\models\Layer;
 use app\models\Setting;
+use app\models\User;
 use Psr\Cache\InvalidArgumentException;
+use Throwable;
 
 /**
  * Class Controller
@@ -97,6 +100,7 @@ class Controller
      * @param string $user
      * @param string $key
      * @return bool
+     * @throws InvalidArgumentException
      */
     public function authApiKey(string $user, string $key): bool
     {
@@ -127,7 +131,7 @@ class Controller
         $postgisObject = new Model(connection: $this->connection);
         $auth = $postgisObject->getGeometryColumns($layer, "authentication");
         if ($auth == "Read/write" || !empty(Input::getAuthUser())) {
-            (new BasicAuth(connection: $this->connection))->authenticate($layer, false);
+            new BasicAuth(connection: $this->connection)->authenticate($layer, false);
         }
     }
 
@@ -139,31 +143,20 @@ class Controller
      * @param string|null $inputApiKey
      * @return array|null
      * @throws InvalidArgumentException
+     * @throws GC2Exception
+     * @throws Throwable
      */
     public function ApiKeyAuthLayer(string $layer, bool $transaction, array $rels, ?string $subUser = null, ?string $inputApiKey = null): ?array
     {
-        // Check if layer has schema prefix and add 'public' if no.
-        $bits = explode(".", $layer);
-        if (sizeof($bits) == 1) {
-            $schema = "public";
-            $unQualifiedName = $layer;
-            $layer = $schema . "." . $layer;
-        } else {
-            $schema = $bits[0];
-            $unQualifiedName = $bits[1];
-        }
-
-        $postgisObject = new Model(connection: $this->connection);
-        $settings = new Setting(connection: $this->connection);
-        $response = $settings->get();
-        $userGroup = $response["data"]->userGroups->$subUser ?? null;
+        $response = new Setting(connection: $this->connection)->get();
+        $userGroup = !empty($response["data"]->userGroups->$subUser) ? json_decode($response["data"]->userGroups->$subUser) : null;
+        $userGroupFullChain = new User()->getFullInheritance($userGroup, $this->connection->database);
         if ($subUser) {
             $apiKey = $response['data']->api_key_subuser->$subUser;
         } else {
             $apiKey = $response['data']->api_key;
         }
         $isKeyCorrect = $apiKey == $inputApiKey && $apiKey != false;
-
         $check = false;
         if (!empty($_SESSION["auth"])) {
             if ($subUser && $subUser == $_SESSION["screen_name"] && $_SESSION["parentdb"] == $this->connection->database) {
@@ -172,117 +165,12 @@ class Controller
                 $check = true;
             }
         }
-
         $isAuth = $isKeyCorrect || $check;
         $session = !empty($_SESSION["subuser"]) ? $_SESSION["screen_name"] . '@' . $_SESSION["parentdb"] : $_SESSION["screen_name"] ?? null;
-
-        $response = [];
+        $response = new Authorization(connection: $this->connection)->check(relName: $layer, transaction: $transaction, isAuth: $isAuth, subUser: $subUser, userGroup: $userGroupFullChain, rels: $rels);
         $response['is_auth'] = $isAuth;
-
-        $auth = $postgisObject->getGeometryColumns($layer, "authentication");
-
-        // We check if relation is a real table/view or similar or an alias.
-        // If its real and authentication is not set we throw an exception.
-        // This would be the case if relation is not in geometry_columns_join
-        try {
-            $postgisObject->isTableOrView($layer);
-            $isRelation = true;
-        } catch (GC2Exception $e) {
-            $isRelation = false;
-        }
-        if (empty($auth) && $isRelation) {
-            $response['success'] = false;
-            $response['message'] = $layer . " is a relation, but authentication is not set. It might be that the relation is not registered.";
-            $response['code'] = 403;
-            return $response;
-        }
-
-        if ($auth == "Read/write" || $auth == "Write") {
-            $rows = $postgisObject->getColumns($schema, $unQualifiedName);
-            foreach ($rows as $row) {
-                // Check if we got the right layer from the database
-                if (!$row["f_table_schema"] == $schema || !$row["f_table_name"] == $unQualifiedName) {
-                    continue;
-                }
-                if ($subUser) {
-                    $privileges = (array)json_decode($row["privileges"]);
-                    $response['auth_level'] = $auth;
-                    if ($isAuth) {
-                        $response['privileges'] = $privileges[$userGroup] ?? $privileges[$subUser] ?? null;
-                        $response['session'] = $session;
-                        $response[self::USED_RELS_KEY] = $rels;
-                        switch ($transaction) {
-                            case false:
-                                if ((empty($privileges[$userGroup ?: $subUser]) || (!empty($privileges[$userGroup ?: $subUser]) && $privileges[$userGroup ?: $subUser] == "none")) && ($subUser != $schema && $userGroup != $schema)) {
-                                    // Always let subusers read from layers open to all
-                                    if ($auth == "Write") {
-                                        $response['success'] = true;
-                                        $response['code'] = 200;
-                                        break;
-                                    }
-                                    $response['success'] = false;
-                                    $response['message'] = "You don't have privileges to see '$layer'. Please contact the database owner, which can grant you privileges.";
-                                    $response['code'] = 403;
-                                } else {
-                                    $response['success'] = true;
-                                    $response['code'] = 200;
-                                }
-                                break;
-                            default:
-                                if ((!$privileges[$userGroup ?: $subUser] || $privileges[$userGroup ?: $subUser] == "none" || $privileges[$userGroup ?: $subUser] == "read") && ($subUser != $schema && $userGroup != $schema)) {
-                                    $response['success'] = false;
-                                    $response['message'] = "You don't have privileges to edit '$layer'. Please contact the database owner, which can grant you privileges.";
-                                    $response['code'] = 403;
-                                } else {
-                                    $response['success'] = true;
-                                    $response['code'] = 200;
-                                }
-                                break;
-                        }
-                    } else {
-                        $response[self::USED_RELS_KEY] = $rels;
-                        $response['privileges'] = $privileges[$userGroup] ?? $privileges[$subUser];
-                        $response['session'] = $session;
-
-                        if ($auth == "Read/write" || ($transaction)) {
-                            $response['success'] = false;
-                            $response['message'] = "Forbidden";;
-                            $response['code'] = 403;
-                        } else {
-                            $response['success'] = true;
-                            $response['code'] = 200;
-                        }
-                    }
-                } else {
-                    $response['auth_level'] = $auth;
-                    $response[self::USED_RELS_KEY] = $rels;
-                    $response['session'] = $session;
-
-                    if ($auth == "Read/write" || ($transaction)) {
-                        if ($isAuth) {
-                            $response['success'] = true;
-                            $response['code'] = 200;
-                        } else {
-                            $response['success'] = false;
-                            $response['message'] = "Forbidden";;
-                            $response['code'] = 403;
-                        }
-                    } else {
-                        $response['success'] = true;
-                        $response['code'] = 200;
-                    }
-                }
-                return $response;
-            }
-        } else {
-            $response3['success'] = true;
-            $response3['session'] = $session;
-            $response3['auth_level'] = $auth;
-            $response3['is_auth'] = $isAuth;
-            $response3[self::USED_RELS_KEY] = $rels;
-            return $response3;
-        }
-        return null;
+        $response['session'] = $session;
+        return $response;
     }
 }
 
