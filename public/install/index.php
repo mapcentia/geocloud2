@@ -55,6 +55,9 @@ App::$param['host'] = App::$param['host'] ?? App::$param['protocol'] . "://" . $
 <main class='container py-4 flex-grow-1'>
     <h1 class="mb-3">GC2 Installation Overview</h1>
     <p class="text-muted">This page checks your environment and lists PostgreSQL databases. For each database, you can install required PostGIS extensions and GC2 schemas if missing.</p>
+    <div class="d-flex justify-content-end mb-3">
+        <a class="btn btn-primary" href="createdb.php"><i class="bi bi-plus-lg"></i> Create new database</a>
+    </div>
     <?php
     echo "<div class='alert alert-info'>Server API: " . php_sapi_name() . "</div>";
 
