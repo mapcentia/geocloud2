@@ -113,17 +113,22 @@ class Layer extends Table
     }
 
     /**
-     * @param string $db
-     * @param bool|null $auth
-     * @param string|null $query
-     * @param bool|null $includeExtent
-     * @param bool|null $parse
-     * @param bool|null $es
-     * @param bool|null $lookupForeignTables
-     * @param array|null $jwt
-     * @return array
-     * @throws GC2Exception
-     * @throws PhpfastcacheInvalidArgumentException
+     * Retrieves all available metadata and configuration for the specified database,
+     * applying filters and restrictions based on the parameters provided.
+     *
+     * @param string $db The name of the database to retrieve metadata from.
+     * @param bool|null $auth Indicates whether authentication restrictions should be applied.
+     * @param string|null $query An optional query string to filter results (e.g., schemata, layers, or tags).
+     * @param bool|null $includeExtent Whether to include the spatial extent of layers in the response.
+     * @param bool|null $parse Determines if the results should be parsed before returning.
+     * @param bool|null $es Indicates if connection to ElasticSearch should be checked.
+     * @param bool|null $lookupForeignTables Whether foreign table lookups should be performed.
+     * @param array|null $jwt Optional JWT for user-specific access restrictions.
+     * @param bool $restriction If true, applies additional access restrictions.
+     * @return array                            The metadata and configurations for the database, including cache, schema, layers, and other relevant information.
+     * @throws GC2Exception                     Thrown if authentication or authorization fails.
+     * @throws PDOException                     If an error occurs during database interaction.
+     * @throws PhpfastcacheLogicException       If an issue arises when handling cached responses.
      */
     public function getAll(string $db, ?bool $auth, ?string $query = null, ?bool $includeExtent = false, ?bool $parse = false, ?bool $es = false, ?bool $lookupForeignTables = true, ?array $jwt = null, bool $restriction = true): array
     {
@@ -426,9 +431,10 @@ class Layer extends Table
 
                 if ($subUser) {
                     $privileges = (array)json_decode($row["privileges"]);
-                    if (($privileges[$userGroup ?: $userName] != "none" && $privileges[$userGroup ?: $userName])) {
-                        $response['data'][] = $arr;
-                    } elseif ($userName == $schema || $userGroup == $schema) {
+                    $extractedPrivilege = new Authorization()->extractHighestPrivilege($privileges, $userName, $userGroup, $schema ?? $this->postgisschema);
+                    $hasNone = $extractedPrivilege['privilege'] === "none";
+                    $isOwner = $extractedPrivilege['isOwner'];
+                    if (!$hasNone || $isOwner) {
                         $response['data'][] = $arr;
                         // Always add layers with Write and None.
                     } elseif ($row["authentication"] == "None" || $row["authentication"] == "Write") {

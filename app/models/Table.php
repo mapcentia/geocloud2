@@ -223,9 +223,15 @@ class Table extends Model
     // TODO Move to layer model. This may belong to the Layer class
 
     /**
-     * @param bool $createKeyFrom
-     * @param string|null $schema
-     * @return array
+     * Retrieves records from the database with optional schema filtering and key creation.
+     * Retrieves records from the database with optional schema filtering and key creation.
+     *
+     * @param bool $createKeyFrom Indicates whether to create a key for each record.
+     * @param string|null $schema Optional schema name to filter the records. Defaults to null.
+     * @return array Returns an associative array containing the query results, including metadata and additional properties for each record.
+     * @throws PDOException If there is an error executing database queries.
+     * @throws Exception If there are errors in external system communication such as Elasticsearch.
+     * @throws \Throwable
      */
     public function getRecords(bool $createKeyFrom = false, ?string $schema = null): array
     {
@@ -302,16 +308,23 @@ class Table extends Model
         }
 
         while ($row = $this->fetchRow($result)) {
-            $privileges = !empty($row["privileges"]) ? json_decode($row["privileges"]) : null;
+            $privileges = !empty($row["privileges"]) ? json_decode($row["privileges"], true) : [];
             $arr = [];
             if (isset($_SESSION)) {
-                $prop = !empty($_SESSION['usergroup']) ? $_SESSION['usergroup'] : $_SESSION['screen_name'];
+                $userGroup = $_SESSION['usergroup'] ?? [];
             } else {
-                $prop = null;
+                $userGroup = [];
+            }
+            if (!empty($_SESSION["subuser"])) {
+                $extractedPrivilege = new Authorization()->extractHighestPrivilege($privileges, $_SESSION["screen_name"], $userGroup, $schema ?? $this->postgisschema);
+                $hasNone = $extractedPrivilege['privilege'] === "none";
+                $isOwner = $extractedPrivilege['isOwner'];
+            } else {
+                $hasNone = true;
+                $isOwner = false;
             }
 
-            if (empty($_SESSION["subuser"]) || ($prop == $this->postgisschema)
-                || (!empty($privileges->$prop) && $privileges->$prop != "none")) {
+            if (empty($_SESSION["subuser"]) || $isOwner || !$hasNone) {
                 $relType = "t"; // Default
                 foreach ($row as $key => $value) {
                     if (!empty($row['def']) && $key == "type" && $value == "GEOMETRY") {
