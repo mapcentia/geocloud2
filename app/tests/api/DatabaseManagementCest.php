@@ -368,6 +368,16 @@ class DatabaseManagementCest
         $I->seeXmlResponseMatchesXpath('/wfs:FeatureCollection/gml:featureMember');
     }
 
+    // Super user WFS GetFeature POST request to unprotected data source from outside session
+    public function shouldGetDataFromWfstAsSuperUserOutsideSessionUsingPost(ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'text/xml');
+        $I->sendPost('/wfs/' . $this->userId . '/public/25832', $this->getFeaturePostXml());
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseIsXml();
+        $I->seeXmlResponseMatchesXpath('/wfs:FeatureCollection/gml:featureMember');
+    }
+
     // Set Read and Write protection on the layer
     public function shouldChangeTheAuthenticationLevelFromWriteToReadwrite(ApiTester $I)
     {
@@ -413,12 +423,28 @@ class DatabaseManagementCest
         $I->seeResponseCodeIs(HttpCode::UNAUTHORIZED);
     }
 
+    // Super user WFS GetFeature POST request to protected data source from outside session
+    public function shouldNotGetDataFromWfstAsSuperUserOutsideSessionUsingPost(ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'text/xml');
+        $I->sendPost('/wfs/' . $this->userId . '/public/25832', $this->getFeaturePostXml());
+        $I->seeResponseCodeIs(HttpCode::UNAUTHORIZED);
+    }
+
     // Sub user WFS-t request to protected data source from outside session
     public function shouldNotGetDataFromWfstAsSubUserOutsideSession(ApiTester $I)
     {
         $I->sendGET('/wfs/' . $this->subUserId . "@" . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
         $I->seeResponseCodeIs(HttpCode::UNAUTHORIZED);
 
+    }
+
+    // Sub user WFS GetFeature POST request to protected data source from outside session
+    public function shouldNotGetDataFromWfstAsSubUserOutsideSessionUsingPost(ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'text/xml');
+        $I->sendPost('/wfs/' . $this->subUserId . "@" . $this->userId . '/public/25832', $this->getFeaturePostXml());
+        $I->seeResponseCodeIs(HttpCode::UNAUTHORIZED);
     }
 
     // Super user WFS-t request to protected data source from inside session
@@ -431,11 +457,33 @@ class DatabaseManagementCest
         $I->seeXmlResponseMatchesXpath('/wfs:FeatureCollection/gml:featureMember');
     }
 
+    // Super user WFS GetFeature POST request to protected data source from inside session
+    public function shouldGetDataFromWfstAsSuperUserInsideSessionUsingPost(ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->userAuthCookie);
+        $I->haveHttpHeader('Content-Type', 'text/xml');
+        $I->sendPost('/wfs/' . $this->userId . '/public/25832', $this->getFeaturePostXml());
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseIsXml();
+        $I->seeXmlResponseMatchesXpath('/wfs:FeatureCollection/gml:featureMember');
+    }
+
     // Sub user WFS-t request to protected data source from inside session
     public function shouldNotGetDataFromWfstAsSubUserInsideSession(ApiTester $I)
     {
         $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
         $I->sendGET('/wfs/' . $this->subUserId . "@" . $this->userId . '/public/25832?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=parkeringsomraade');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseIsXml();
+        $I->canSeeResponseContains('ExceptionReport');
+    }
+
+    // Sub user WFS GetFeature POST request to protected data source from inside session (no privileges yet)
+    public function shouldNotGetDataFromWfstAsSubUserInsideSessionUsingPost(ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
+        $I->haveHttpHeader('Content-Type', 'text/xml');
+        $I->sendPost('/wfs/' . $this->subUserId . "@" . $this->userId . '/public/25832', $this->getFeaturePostXml());
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsXml();
         $I->canSeeResponseContains('ExceptionReport');
@@ -616,6 +664,29 @@ class DatabaseManagementCest
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseIsXml();
         $I->seeXmlResponseMatchesXpath('/wfs:FeatureCollection/gml:featureMember');
+    }
+
+    // Sub user WFS GetFeature POST request to protected data source from inside session (with read privileges)
+    public function shouldGetDataFromWfstAsSubUserInsideSessionUsingPost(ApiTester $I)
+    {
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->subUserAuthCookie);
+        $I->haveHttpHeader('Content-Type', 'text/xml');
+        $I->sendPost('/wfs/' . $this->subUserId . "@" . $this->userId . '/public/25832', $this->getFeaturePostXml());
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseIsXml();
+        $I->seeXmlResponseMatchesXpath('/wfs:FeatureCollection/gml:featureMember');
+    }
+
+    /**
+     * WFS GetFeature request body sent as POST XML. Mirrors the GET GetFeature
+     * requests used elsewhere (SERVICE=WFS, VERSION=1.0.0, TYPENAME=parkeringsomraade).
+     */
+    private function getFeaturePostXml(): string
+    {
+        return '<?xml version="1.0" encoding="UTF-8"?>
+<wfs:GetFeature service="WFS" version="1.0.0" xmlns:wfs="http://www.opengis.net/wfs" xmlns:ogc="http://www.opengis.net/ogc" xmlns:gml="http://www.opengis.net/gml">
+    <wfs:Query typeName="parkeringsomraade"/>
+</wfs:GetFeature>';
     }
 
     public function shouldNotInsertFeatureFromWfstOutsideSession(ApiTester $I)
