@@ -113,6 +113,70 @@ XML;
         $this->assertSame('TRANSACTION', $req->operation);
         $this->assertNotNull($req->transactionBody);
         $this->assertArrayHasKey('Insert', $req->transactionBody);
+        // typeNames must be populated for transactions so the per-layer auth
+        // check in Server.php (which early-returns on empty typeNames) runs.
+        $this->assertSame(['mytable'], $req->typeNames);
+    }
+
+    public function testFromHttpPostTransactionUpdateSetsTypeNames(): void
+    {
+        $body = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<Transaction service="WFS" version="1.1.0" xmlns:ogc="http://www.opengis.net/ogc">
+  <Update typeName="mytable">
+    <Property><Name>name</Name><Value>foo</Value></Property>
+    <ogc:Filter><ogc:FeatureId fid="mytable.1"/></ogc:Filter>
+  </Update>
+</Transaction>
+XML;
+        $_GET = [];
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+
+        $req = Request::fromHttp($this->makeContext(), rawBody: $body);
+
+        $this->assertSame('TRANSACTION', $req->operation);
+        $this->assertSame(['mytable'], $req->typeNames);
+    }
+
+    public function testFromHttpPostTransactionDeleteSetsTypeNames(): void
+    {
+        $body = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<Transaction service="WFS" version="1.1.0" xmlns:ogc="http://www.opengis.net/ogc">
+  <Delete typeName="mytable">
+    <ogc:Filter><ogc:FeatureId fid="mytable.1"/></ogc:Filter>
+  </Delete>
+</Transaction>
+XML;
+        $_GET = [];
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+
+        $req = Request::fromHttp($this->makeContext(), rawBody: $body);
+
+        $this->assertSame('TRANSACTION', $req->operation);
+        $this->assertSame(['mytable'], $req->typeNames);
+    }
+
+    public function testFromHttpPostTransactionMultipleTypeNames(): void
+    {
+        $body = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<Transaction service="WFS" version="1.1.0" xmlns:ogc="http://www.opengis.net/ogc">
+  <Insert>
+    <mytable><name>foo</name></mytable>
+  </Insert>
+  <Delete typeName="other">
+    <ogc:Filter><ogc:FeatureId fid="other.1"/></ogc:Filter>
+  </Delete>
+</Transaction>
+XML;
+        $_GET = [];
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+
+        $req = Request::fromHttp($this->makeContext(), rawBody: $body);
+
+        $this->assertSame('TRANSACTION', $req->operation);
+        $this->assertSame(['mytable', 'other'], $req->typeNames);
     }
 
     private function makeContext(): \app\wfs\Context

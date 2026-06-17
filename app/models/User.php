@@ -577,6 +577,7 @@ class User extends Model
      * @param array $users Starting users — screen name strings or user rows (with a "screenname"/"userid" key).
      * @return array<int, string> Flat, de-duplicated list of screen names in breadth-first order.
      * @throws Throwable
+     * @TODO Cacheing
      */
     public function getFullInheritance(array $users, string $parentDb): array
     {

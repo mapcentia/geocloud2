@@ -187,6 +187,7 @@ class Controller
 
     /**
      * Authenticates and authorizes access to a specified layer based on API key, session data, and user group inheritance.
+     * Full subuser inheritance is resolved and included in the authorization process.
      *
      * @param string $layer The name of the layer to be accessed.
      * @param bool $transaction Indicates whether the operation involves a transactional context.
@@ -199,10 +200,10 @@ class Controller
     public function ApiKeyAuthLayer(string $layer, bool $transaction, array $rels, ?string $subUser = null, ?string $inputApiKey = null): ?array
     {
         $response = new Setting(connection: $this->connection)->get();
-        $userGroup = !empty($response["data"]->userGroups->$subUser) ? json_decode($response["data"]->userGroups->$subUser) : null;
-        $userGroupFullChain = new User()->getFullInheritance($userGroup, $this->connection->database);
         if ($subUser) {
             $apiKey = $response['data']->api_key_subuser->$subUser;
+            $group = !empty($response['data']->userGroups->$subUser) ? json_decode($response['data']->userGroups->$subUser) : null;
+            $userGroupFullChain = $group ? new User(connection: $this->connection)->getFullInheritance($group, $this->connection->database) : null;
         } else {
             $apiKey = $response['data']->api_key;
         }
@@ -217,7 +218,7 @@ class Controller
         }
         $isAuth = $isKeyCorrect || $check;
         $session = !empty($_SESSION["subuser"]) ? $_SESSION["screen_name"] . '@' . $_SESSION["parentdb"] : $_SESSION["screen_name"] ?? null;
-        $response = new Authorization(connection: $this->connection)->check(relName: $layer, transaction: $transaction, isAuth: $isAuth, subUser: $subUser, userGroup: $userGroupFullChain, rels: $rels);
+        $response = new Authorization(connection: $this->connection)->check(relName: $layer, transaction: $transaction, isAuth: $isAuth, subUser: $subUser, userGroup: $userGroupFullChain ?? null, rels: $rels);
         $response['is_auth'] = $isAuth;
         $response['session'] = $session;
         return $response;

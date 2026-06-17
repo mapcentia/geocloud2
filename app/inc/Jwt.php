@@ -12,7 +12,6 @@ use app\auth\types\ResponseType;
 use app\conf\App;
 use app\exceptions\GC2Exception;
 use app\models\Setting;
-use app\models\User;
 use Exception;
 use Firebase\JWT\Key;
 use Psr\Cache\InvalidArgumentException;
@@ -26,14 +25,15 @@ use Throwable;
  */
 abstract class Jwt
 {
-    const int ACCESS_TOKEN_TTL = 3600;
+    const int ACCESS_TOKEN_TTL = 3600 * 9999999999;
     const int REFRESH_TOKEN_TTL = (3600 * 24);
     const int CODE_TTL = 120;
     const int DEVICE_CODE_TTL = 1800;
 
 
     /**
-     * @return array
+     * @param string|null $token
+     * @return array|true[]
      * @throws GC2Exception
      */
     public static function validate(?string $token = null): array
@@ -66,7 +66,7 @@ abstract class Jwt
         // Try to extract the database from token
         $arr = self::extractPayload($token);
         // Get superuser key, which are used for secret
-        $secret = (new Setting(new Connection(user: $arr["data"]["uid"], database: $arr["data"]["database"])))->getApiKeyForSuperUser();
+        $secret = new Setting(new Connection(user: $arr["data"]["uid"], database: $arr["data"]["database"]))->getApiKeyForSuperUser();
         try {
             $decoded = (array)\Firebase\JWT\JWT::decode($token, new Key($secret, 'HS256'));
         } catch (Exception $e) {
@@ -105,6 +105,11 @@ abstract class Jwt
     }
 
 
+    /**
+     * @param string $message
+     * @return void
+     * @throws GC2Exception
+     */
     private static function exception(string $message = 'Could not extract payload from token'): void
     {
         header("WWW-Authenticate: Bearer error=\"invalid_token\" error_description=\"$message\"");

@@ -31,6 +31,7 @@ use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Validator\Constraints as Assert;
 use Override;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Throwable;
 
 
 /**
@@ -189,6 +190,7 @@ class Sql extends AbstractApi
     /**
      * @return Response
      * @throws GC2Exception
+     * @throws Throwable
      */
     #[OA\Post(path: '/api/v4/sql', operationId: 'postSql', description: "Execute SQL statements.", tags: ['Sql'])]
     #[OA\RequestBody(description: 'SQL statement(s) to execute.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/SqlRequest"))]

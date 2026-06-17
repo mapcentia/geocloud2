@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2025 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -24,7 +24,7 @@ readonly class Rpc
     /**
      * @throws RPCException
      */
-    function run(string $user, Sql $api, array $query, bool $subuser, ?string $userGroup): ?array
+    function run(string $user, Sql $api, array $query, bool $subuser, ?array $userGroup): ?array
     {
         $pres = new PreparedstatementModel(connection: $this->connection);;
         try {
