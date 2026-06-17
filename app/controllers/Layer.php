@@ -164,11 +164,10 @@ class Layer extends Controller
 
     /**
      * @return array
-     * @throws InvalidArgumentException|GC2Exception
      */
     public function get_privileges(): array
     {
-        $response = $this->auth($this->rel, array());
+        $response = $this->isOwner();
         return !$response['success'] ? $response : $this->layer->getPrivileges($this->rel);
     }
 
