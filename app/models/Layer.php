@@ -431,9 +431,10 @@ class Layer extends Table
 
                 if ($subUser) {
                     $privileges = (array)json_decode($row["privileges"]);
-                    $extractedPrivilege = new Authorization()->extractHighestPrivilege($privileges, $userName, $userGroup, $schema ?? $this->postgisschema);
-                    $hasNone = $extractedPrivilege['privilege'] === "none";
-                    $isOwner = $extractedPrivilege['isOwner'];
+                    $authorization = new Authorization(connection: $this->connection);
+                    $privilege = $authorization->extractHighestPrivilege($privileges, $userName, $userGroup);
+                    $isOwner = $authorization->isOwner($userName, $userGroup, $schema ?? $this->postgisschema);
+                    $hasNone = $privilege === "none";
                     if (!$hasNone || $isOwner) {
                         $response['data'][] = $arr;
                         // Always add layers with Write and None.
@@ -473,7 +474,6 @@ class Layer extends Table
             $response['success'] = true;
             $response['message'] = "geometry_columns_view fetched";
             $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
-            //   $CachedString->addTags([$cacheType, $this->postgisdb]);
             Cache::save($CachedString);
             $response["cache"]["hit"] = false;
         }

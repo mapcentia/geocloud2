@@ -1,50 +1,41 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *  
  */
 
 namespace app\controllers;
 
+use app\exceptions\GC2Exception;
 use app\inc\Controller;
 use app\inc\Input;
 use app\conf\Connection;
 use app\conf\App;
-use app\inc\Util;
 use app\models\Database;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Phpfastcache\Exceptions\PhpfastcacheLogicException;
+use Psr\Cache\InvalidArgumentException;
 
-
-/**
- * Class Tilecache
- * @package app\controllers
- */
 class Tilecache extends Controller
 {
-    /**
-     * @var string
-     */
-    private $db;
-
-    /**
-     * Tilecache constructor.
-     */
     function __construct()
     {
         parent::__construct();
-        $this->db = Util::extractUserFromSubUserString(Input::getPath()->part(2))[1];
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws PhpfastcacheLogicException
+     * @throws InvalidArgumentException
+     * @throws GC2Exception
      */
     public function delete_index(): array
     {
         $layer = new \app\models\Layer();
-        $cache = $layer->getAll(Database::getDb(), true, Input::getPath()->part(4), false, true, false)["data"][0]["def"]->cache;
+        $cache = $layer->getAll(Database::getDb(), true, Input::getPath()->part(4), false, true)["data"][0]["def"]->cache;
 
         // Default
         // =======
@@ -54,13 +45,12 @@ class Tilecache extends Controller
         switch ($cache) {
             case "sqlite":
                 if (Input::getPath()->part(4) === "schema") {
-                    $response = $this->auth(null, array());
+                    $response = $this->isOwner();
                     if (!$response['success']) {
                         return $response;
                     }
                     $schema = Input::getPath()->part(5);
                     $file = App::$param['path'] . "app/wms/mapcache/sqlite/" . Connection::$param["postgisdb"] . "/" . $schema . ".sqlite3";
-//                    die($file);
                     @unlink($file);
                     $response['success'] = true;
                     $response['message'] = "Tile cache for schema deleted";
@@ -91,7 +81,7 @@ class Tilecache extends Controller
 
             case "disk":
                 if (Input::getPath()->part(4) === "schema") {
-                    $response = $this->auth(null, array());
+                    $response = $this->isOwner();
                     if (!$response['success']) {
                         return $response;
                     }
@@ -119,7 +109,7 @@ class Tilecache extends Controller
                 $dba = dba_open(App::$param['path'] . "app/wms/mapcache/bdb/" . Connection::$param["postgisdb"] . "/" . "feature.polygon/bdb_feature.polygon.db", "c", "db4");
 
                 $key = dba_firstkey($dba);
-                while ($key !== false && $key !== null) {
+                while ($key !== false) {
                     dba_delete($key, $dba);
                     $key = dba_nextkey($dba);
                 }
@@ -134,13 +124,15 @@ class Tilecache extends Controller
 
     /**
      * @param string $layerName
-     * @return array<mixed>
+     * @return array
+     * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws PhpfastcacheLogicException
      */
     static function bust(string $layerName): array
     {
         $layer = new \app\models\Layer();
-        $cache = isset($layer->getAll(Database::getDb(), true, $layerName, false, true, false)["data"][0]["def"]->cache) ? $layer->getAll(Database::getDb(), true, $layerName, false, true, false)["data"][0]["def"]->cache : null;
+        $cache = isset($layer->getAll(Database::getDb(), true, $layerName, false, true)["data"][0]["def"]->cache) ? $layer->getAll(Database::getDb(), true, $layerName, false, true)["data"][0]["def"]->cache : null;
         $cache = $cache ?: App::$param["mapCache"]["type"];
         $response = [];
         $res = null;
@@ -168,14 +160,15 @@ class Tilecache extends Controller
 
     /**
      * @param string $layerName
-     * @return array<mixed>
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws GC2Exception
+     * @throws PhpfastcacheLogicException
      */
     private static function unlikeSQLiteFile(string $layerName): array
     {
         $layer = new \app\models\Layer();
-        $meta = $layer->getAll(Database::getDb(), true, $layerName, false, true, false);
-        if (isset($meta["data"][0]["def"]->lock) && $meta["data"][0]["def"]->lock == true) {
+        $meta = $layer->getAll(Database::getDb(), true, $layerName, false, true);
+        if (isset($meta["data"][0]["def"]->lock) && $meta["data"][0]["def"]->lock) {
             $response['success'] = false;
             $response['message'] = "The layer is locked in the tile cache. Unlock it in the Tile cache settings.";
             $response['code'] = '406';
@@ -192,24 +185,25 @@ class Tilecache extends Controller
     /**
      * @param string $dir
      * @param string $layerName
-     * @return array<mixed>
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws GC2Exception
+     * @throws PhpfastcacheLogicException
      */
     private static function unlinkTiles(string $dir, string $layerName): array
     {
         $layer = new \app\models\Layer();
-        $meta = $layer->getAll(Database::getDb(), true, $layerName, false, true, false);
-        if (isset($meta["data"][0]["def"]->lock) && $meta["data"][0]["def"]->lock == true) {
+        $meta = $layer->getAll(Database::getDb(), true, $layerName, false, true);
+        if (isset($meta["data"][0]["def"]->lock) && $meta["data"][0]["def"]->lock) {
             $response['success'] = false;
             $response['message'] = "The layer is locked in the tile cache. Unlock it in the Tile cache settings.";
             $response['code'] = '406';
             return $response;
         }
         if ($dir) {
-            exec("rm -R {$dir} 2> /dev/null");
-            if (strpos($dir, ".*") !== false) {
+            exec("rm -R $dir 2> /dev/null");
+            if (str_contains($dir, ".*")) {
                 $dir = str_replace(".*", "", $dir);
-                exec("rm -R {$dir} 2> /dev/null");
+                exec("rm -R $dir 2> /dev/null");
             }
             $response['success'] = true;
         } else {

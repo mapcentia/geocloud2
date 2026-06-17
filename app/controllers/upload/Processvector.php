@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2024 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -23,19 +23,14 @@ use app\models\Table;
 use app\models\Tile;
 use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Phpfastcache\Exceptions\PhpfastcacheLogicException;
 use Psr\Cache\InvalidArgumentException;
 use stdClass;
+use Throwable;
 use ZipArchive;
 
-/**
- * Class Processvector
- * @package app\controllers\upload
- */
 class Processvector extends Controller
 {
-    /**
-     * Processvector constructor.
-     */
     function __construct()
     {
         parent::__construct();
@@ -43,8 +38,11 @@ class Processvector extends Controller
 
     /**
      * @return array
-     * @throws PhpfastcacheInvalidArgumentException|GC2Exception
+     * @throws GC2Exception
      * @throws InvalidArgumentException
+     * @throws PhpfastcacheInvalidArgumentException
+     * @throws PhpfastcacheLogicException
+     * @throws Throwable
      */
     public function get_index(): array
     {
@@ -109,8 +107,6 @@ class Processvector extends Controller
             }
         }
 
-        $fileType = strtolower($zipCheck2[0]);
-
         $type = match ($type) {
             "point" => "point",
             "linestring" => "linestring",
@@ -125,7 +121,6 @@ class Processvector extends Controller
 
         $model = new Model();
         $tableExist = $model->doesRelationExists(Connection::$param["postgisschema"] . "." . $safeName);
-        $tableExist = $tableExist["success"];
 
         if ($tableExist && !$overwrite && !$delete && !$append) {
             throw new GC2Exception("'$safeName' exists already, use 'Overwrite'", 406);

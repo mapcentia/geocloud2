@@ -355,7 +355,7 @@ class Session extends Model
                                 'parentdb' => $parentDb,
                             ];
                             $user->updateUser(data: $data);
-                            $row['usergroup'] = $memberships;
+                            $row['usergroup'] = json_encode($memberships);
                         }
                         $user->commit();
                     }

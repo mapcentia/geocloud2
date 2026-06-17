@@ -72,10 +72,10 @@ class Authorization extends Model
                         'auth_level' => $auth,
                         self::USED_RELS_KEY => $rels,
                     ];
-                    $extractedPrivilege = $this->extractHighestPrivilege($privileges, $subUser, $userGroup, $schema);
-                    $hasNone = $extractedPrivilege['privilege'] === "none";
-                    $isOwner = $extractedPrivilege['isOwner'];
-                    $response['privileges'] = $extractedPrivilege['privilege'];
+                    $privilege = $this->extractHighestPrivilege($privileges, $subUser, $userGroup);
+                    $isOwner = $this->isOwner($subUser, $userGroup, $schema);
+                    $hasNone = $privilege === "none";
+                    $response['privileges'] = $privilege;
                     if ($isAuth) {
                         if (!$transaction) {
                             // Always let subusers read from layers open to all
@@ -88,7 +88,7 @@ class Authorization extends Model
                             return $this->success($response);
                         }
                         // transaction = write/edit
-                        $insufficient = ($extractedPrivilege['privilege'] === "none" || $extractedPrivilege['privilege'] === "read");
+                        $insufficient = ($privilege === "none" || $privilege === "read");
                         if ($insufficient && !$isOwner) {
                             throw new GC2Exception("Insufficient privileges to insert/update/delete: $qualifiedName", 403, null, "INSUFFICIENT_PRIVILEGES");
                         }
@@ -142,19 +142,17 @@ class Authorization extends Model
      *               - 'privilege': the highest privilege level among the user and their groups.
      *               - 'isOwner': a boolean indicating whether the user or any group they belong to is the owner.
      */
-    public function extractHighestPrivilege(array $privileges, string $subUser, ?array $groups, string $schema): array
+    public function extractHighestPrivilege(array $privileges, string $subUser, ?array $groups): string
     {
         $values[] = $privileges[$subUser] ?? 'none';
-        $isOwner = $subUser === $schema;
         if (is_array($groups) && count($groups) > 0) {
             foreach ($groups as $group) {
                 $values[] = $privileges[$group] ?? 'none';
-                $isOwner = $isOwner ?: $group === $schema;
             }
         }
         $rank = [
-            'none'  => 0,
-            'read'  => 1,
+            'none' => 0,
+            'read' => 1,
             'write' => 2,
         ];
         $highest = array_reduce(
@@ -162,10 +160,18 @@ class Authorization extends Model
             fn($carry, $item) => $rank[$item] > $rank[$carry] ? $item : $carry,
             'none'
         );
+        return $highest;
+    }
 
-        $res['privilege'] = $highest;
-        $res['isOwner'] = $isOwner;
-        return $res;
+    public function isOwner(string $subUser, ?array $groups, string $schema): bool
+    {
+        $isOwner = $subUser === $schema;
+        if (is_array($groups) && count($groups) > 0) {
+            foreach ($groups as $group) {
+                $isOwner = $isOwner ?: $group === $schema;
+            }
+        }
+        return $isOwner;
     }
 
     private function success(array $data): array

@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -22,7 +22,7 @@ class Workflow extends Controller
     /**
      * @var \app\models\Workflow
      */
-    public $workflow;
+    public \app\models\Workflow $workflow;
 
     function __construct()
     {
@@ -31,7 +31,7 @@ class Workflow extends Controller
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      */
     public function get_index(): array
     {
@@ -39,7 +39,7 @@ class Workflow extends Controller
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      */
     public function post_index(): array
     {
@@ -47,7 +47,7 @@ class Workflow extends Controller
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function put_index(): array

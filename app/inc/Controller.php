@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2023 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -24,21 +24,10 @@ use Throwable;
  */
 class Controller
 {
-    /**
-     * @var array
-     */
     public array $response;
-
-    /**
-     * @var string|null
-     */
-    protected ?string $sUser;
 
     const string USED_RELS_KEY = "checked_relations";
 
-    /**
-     * Controller constructor.
-     */
     function __construct(public Connection $connection = new Connection())
     {
         $this->response = [];
@@ -61,16 +50,49 @@ class Controller
     }
 
     /**
-     * @param string|null $key
-     * @param array<bool> $level
-     * @param bool $neverAllowSubUser
-     * @return array
+     * Determines if the current user has superuser privileges based on session data.
+     *
+     * @return array Returns an array containing the success status, message, and code.
+     *               If the user lacks superuser privileges, the array includes an error message and a 403 status code.
+     *               Otherwise, it indicates success.
      */
-    public function auth(?string $key = null, array $level = ["all" => true], bool $neverAllowSubUser = false): array
+    public function isSuperUser(): array
+    {
+        if ($_SESSION["subuser"]) {
+            $response['success'] = false;
+            $response['message'] = "You don't have privileges to do this.";
+            $response['code'] = 403;
+        } else {
+            $response['success'] = true;
+        }
+        return $response;
+    }
+
+    /**
+     * Authenticates a user or subuser based on a provided relation key, privilege levels, and other permissions.
+     *
+     * @param string $key The key used to retrieve privileges for authentication.
+     * @param array $level An associative array defining the required privilege levels. Defaults to ["all" => true].
+     * @param bool $neverAllowSubUser A flag indicating whether subusers should always be denied privileges. Defaults to false.
+     * @return array An associative array containing the success status, optional message, and HTTP status code.
+     * @throws InvalidArgumentException|GC2Exception
+     */
+    public function auth(string $key, array $level = ["all" => true], bool $neverAllowSubUser = false): array
     {
         $response = [];
-        $prop = $_SESSION['usergroup'] ?: $_SESSION['screen_name'];
-        if (($_SESSION["subuser"] && $prop == $this->connection->schema) && !$neverAllowSubUser) {
+        $privileges = json_decode(new Layer(connection: $this->connection)->getValueFromKey($key, "privileges"), true);
+        $authorization = new Authorization(connection: $this->connection);
+        $privilege = $authorization->extractHighestPrivilege(
+            privileges: $privileges ?? [],
+            subUser: $_SESSION["screen_name"],
+            groups: $_SESSION["usergroup"],
+        );
+        $isOwner = $authorization->isOwner(
+            subUser: $_SESSION["screen_name"],
+            groups: $_SESSION["usergroup"],
+            schema: $this->connection->schema
+        );
+        if (($_SESSION["subuser"] && $isOwner) && !$neverAllowSubUser) {
             $response['success'] = true;
         } elseif ($_SESSION["subuser"]) {
             $text = "You don't have privileges to do this. Please contact the database owner, who can grant you privileges.";
@@ -79,10 +101,7 @@ class Controller
                 $response['message'] = $text;
                 $response['code'] = 403;
             } else {
-                $layer = new Layer();
-                $privileges = json_decode($layer->getValueFromKey($key, "privileges"));
-                $subuserLevel = $privileges->$prop;
-                if (!isset($level[$subuserLevel])) {
+                if (!isset($level[$privilege])) {
                     $response['success'] = false;
                     $response['message'] = $text;
                     $response['code'] = 403;
@@ -97,9 +116,36 @@ class Controller
     }
 
     /**
-     * @param string $user
-     * @param string $key
-     * @return bool
+     * Determines if the current user is the owner of the resource or has the necessary privileges.
+     *
+     * @return array Returns an associative array containing the success status of the ownership check.
+     *               If the user is not the owner, additional keys 'message' and 'code' are included
+     *               to provide error information.
+     */
+    public function isOwner(): array
+    {
+        if (!$_SESSION["subuser"]) {
+            return ['success' => true];
+        }
+        $isOwner = new Authorization(connection: $this->connection)->isOwner(
+            subUser: $_SESSION["screen_name"],
+            groups: $_SESSION["usergroup"],
+            schema: $this->connection->schema
+        );
+        $response['success'] = $isOwner;
+        if (!$isOwner) {
+            $response['message'] = "You don't have privileges to do this.";
+            $response['code'] = 403;
+        }
+        return $response;
+    }
+
+    /**
+     * Authenticates an API key provided by a user against stored keys and trusted addresses.
+     *
+     * @param string $user The username or identifier associated with the API key.
+     * @param string $key The API key to be authenticated.
+     * @return bool Returns true if the API key is valid and associated with the trusted user, otherwise false.
      * @throws InvalidArgumentException
      */
     public function authApiKey(string $user, string $key): bool
@@ -122,11 +168,15 @@ class Controller
     }
 
     /**
-     * @param string $layer
-     * @param string $db
+     * Provides a basic HTTP authentication layer to secure a specified layer.
+     *
+     * @param string $layer The name of the layer to which the authentication layer should be applied.
+     * @return void
+     * @throws InvalidArgumentException
      * @throws ServiceException
+     * @throws Throwable
      */
-    public function basicHttpAuthLayer(string $layer, string $db): void
+    public function basicHttpAuthLayer(string $layer): void
     {
         $postgisObject = new Model(connection: $this->connection);
         $auth = $postgisObject->getGeometryColumns($layer, "authentication");
@@ -136,14 +186,14 @@ class Controller
     }
 
     /**
-     * @param string $layer
-     * @param bool $transaction
-     * @param array<string> $rels
-     * @param string|null $subUser
-     * @param string|null $inputApiKey
-     * @return array|null
-     * @throws InvalidArgumentException
-     * @throws GC2Exception
+     * Authenticates and authorizes access to a specified layer based on API key, session data, and user group inheritance.
+     *
+     * @param string $layer The name of the layer to be accessed.
+     * @param bool $transaction Indicates whether the operation involves a transactional context.
+     * @param array $rels An array of relationships relevant to the authorization process.
+     * @param string|null $subUser Optional sub-user identifier for specific API key validation and session checks.
+     * @param string|null $inputApiKey Optional input API key provided by the client for authentication.
+     * @return array|null Returns an array containing authorization details, including authentication status and session data, or null if authorization fails.
      * @throws Throwable
      */
     public function ApiKeyAuthLayer(string $layer, bool $transaction, array $rels, ?string $subUser = null, ?string $inputApiKey = null): ?array

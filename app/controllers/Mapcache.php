@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -10,33 +10,9 @@ namespace app\controllers;
 
 use app\conf\App;
 use app\inc\Controller;
-use app\inc\Input;
-use app\inc\Util;
 
 class Mapcache extends Controller
 {
-    /**
-     * @var string|null
-     */
-    private $db;
-
-    /**
-     * @var string
-     */
-    private $host;
-
-    /**
-     * @var string|null
-     */
-    private $subUser;
-
-    function __construct()
-    {
-        parent::__construct();
-
-        $this->host = App::$param["mapCache"]["host"];
-        [$this->subUser, $this->db] = Util::extractUserFromSubUserString(Input::getPath()->part(2));
-    }
 
     /**
      * @return array<string>
@@ -66,19 +42,7 @@ class Mapcache extends Controller
     {
         $arr = array();
         $pathToSources = App::$param['path'] . "app/conf/mapcache/sources/";
-        $sources = @scandir($pathToSources);
-        if (!empty($sources)) foreach ($sources as $source) {
-            $bits = explode(".", $source);
-            if ($bits[1] == "xml") {
-                $str = file_get_contents($pathToSources . $source);
-                $xml = simplexml_load_string($str);
-                if ($xml) {
-                    $arr[] = $str;
-                }
-            }
-        }
-
-        return $arr;
+        return self::extracted($pathToSources, $arr);
     }
 
     /**
@@ -88,11 +52,21 @@ class Mapcache extends Controller
     {
         $arr = array();
         $pathToTilesets = App::$param['path'] . "app/conf/mapcache/tilesets/";
-        $tilesets = @scandir($pathToTilesets);
-        if (!empty($tilesets)) foreach ($tilesets as $tileset) {
-            $bits = explode(".", $tileset);
+        return self::extracted($pathToTilesets, $arr);
+    }
+
+    /**
+     * @param string $pathToSources
+     * @param array $arr
+     * @return array
+     */
+    public static function extracted(string $pathToSources, array $arr): array
+    {
+        $sources = @scandir($pathToSources);
+        if (!empty($sources)) foreach ($sources as $source) {
+            $bits = explode(".", $source);
             if ($bits[1] == "xml") {
-                $str = file_get_contents($pathToTilesets . $tileset);
+                $str = file_get_contents($pathToSources . $source);
                 $xml = simplexml_load_string($str);
                 if ($xml) {
                     $arr[] = $str;

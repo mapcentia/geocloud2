@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2019 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -23,7 +23,7 @@ class Mapcachefile extends Controller
      * @param $file string
      * @return bool|null|string
      */
-    private function checkSumFile($file)
+    private function checkSumFile(string $file): bool|string|null
     {
         if (file_exists($file)) {
             $md5 = md5_file($file);

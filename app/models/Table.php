@@ -312,9 +312,10 @@ class Table extends Model
             $arr = [];
             $userGroup = $_SESSION['usergroup'] ?? [];
             if (!empty($_SESSION["subuser"])) {
-                $extractedPrivilege = new Authorization()->extractHighestPrivilege($privileges, $_SESSION["screen_name"], $userGroup, $schema ?? $this->postgisschema);
-                $hasNone = $extractedPrivilege['privilege'] === "none";
-                $isOwner = $extractedPrivilege['isOwner'];
+                $authorization = new Authorization(connection: $this->connection);
+                $privilege = $authorization->extractHighestPrivilege($privileges, $_SESSION["screen_name"], $userGroup);
+                $isOwner = $authorization->isOwner($_SESSION["screen_name"], $userGroup, $schema ?? $this->postgisschema);
+                $hasNone = $privilege === "none";
             } else {
                 $hasNone = true;
                 $isOwner = false;

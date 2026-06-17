@@ -1,49 +1,43 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
 
 namespace app\controllers;
 
+use app\exceptions\GC2Exception;
 use app\inc\Controller;
 use app\inc\Input;
 use app\inc\Util;
+use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
+use Throwable;
 
-/**
- * Class Layer
- * @package app\controllers
- */
 class Layer extends Controller
 {
-    /**
-     * @var \app\models\Layer
-     */
-    private $table;
-
-    /**
-     * @var \app\models\Table
-     */
-    private $geometryJoinTable;
+    private \app\models\Layer $layer;
+    private \app\models\Table $geometryJoinTable;
+    private readonly ?string $rel;
 
     function __construct()
     {
         parent::__construct();
-        $this->table = new \app\models\Layer();
+        $this->rel = Input::getPath()->part(4);
+        $this->layer = new \app\models\Layer();
         $this->geometryJoinTable = new \app\models\Table("settings.geometry_columns_join");
     }
 
     /**
-     * @return array<mixed>
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws PhpfastcacheInvalidArgumentException|Throwable
      */
     public function get_records(): array
     {
-        return $this->table->getRecords(true, Input::getPath()->part(4));
+        return $this->layer->getRecords(true, $this->rel);
     }
 
     /**
@@ -51,8 +45,8 @@ class Layer extends Controller
      */
     public function get_groups(): array
     {
-        $groups = $this->table->getGroups("layergroup");
-        if (array_search(array("group" => ""), $groups["data"]) !== false) unset($groups["data"][array_search(array("group" => ""), $groups["data"])]);
+        $groups = $this->layer->getGroups("layergroup");
+        if (in_array(array("group" => ""), $groups["data"])) unset($groups["data"][array_search(array("group" => ""), $groups["data"])]);
         $groups["data"] = array_values($groups["data"]);
         array_unshift($groups["data"], array("group" => ""));
         return $groups;
@@ -60,7 +54,7 @@ class Layer extends Controller
 
     /**
      * @return array
-     * @throws PhpfastcacheInvalidArgumentException|InvalidArgumentException
+     * @throws PhpfastcacheInvalidArgumentException|InvalidArgumentException|GC2Exception
      */
     public function put_records(): array
     {
@@ -80,163 +74,168 @@ class Layer extends Controller
     }
 
     /**
-     * @return array<mixed>
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws InvalidArgumentException|GC2Exception
      */
     public function delete_records(): array
     {
-        $input = json_decode(Input::get());
-        $response = $this->auth(null, array());
-        return (!$response['success']) ? $response : $this->table->delete($input->data);
+        $data = json_decode(Input::get());
+        $response = $this->isOwner();
+        return (!$response['success']) ? $response : $this->layer->delete($data->data);
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function get_columns(): array
     {
-        return $this->response = $this->table->getColumnsForExtGridAndStore();
+        return $this->response = $this->layer->getColumnsForExtGridAndStore();
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
      */
     public function get_columnswithkey(): array
     {
-        return $this->table->getColumnsForExtGridAndStore(true);
+        return $this->layer->getColumnsForExtGridAndStore(true);
     }
 
     /**
-     * @return array<mixed>
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws InvalidArgumentException|GC2Exception
      */
     public function get_elasticsearch(): array
     {
-        $response = $this->auth(Input::getPath()->part(4), array("read" => true, "write" => true, "all" => true));
-        return !$response['success'] ? $response : $this->table->getElasticsearchMapping(Input::getPath()->part(4));
+        $response = $this->auth($this->rel, array("read" => true, "write" => true, "all" => true));
+        return !$response['success'] ? $response : $this->layer->getElasticsearchMapping($this->rel);
     }
 
     /**
-     * @return array<mixed>
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws InvalidArgumentException|GC2Exception
      */
     public function put_elasticsearch(): array
     {
         $response = $this->auth(Input::getPath()->part(5));
-        return !$response['success'] ? $response : $this->table->updateElasticsearchMapping(json_decode(Input::get())->data, Input::getPath()->part(5));
+        return !$response['success'] ? $response : $this->layer->updateElasticsearchMapping(json_decode(Input::get())->data, Input::getPath()->part(5));
     }
 
     /**
      * @param string $_key_
      * @param string $column
      * @return string|null
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws PDOException
      */
     public function getValueFromKey(string $_key_, string $column): ?string
     {
-        return $this->table->getValueFromKey($_key_, $column);
+        return $this->layer->getValueFromKey($_key_, $column);
     }
 
     /**
      * @return array
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws InvalidArgumentException|GC2Exception
      */
     public function put_name(): array
     {
-        $response = $this->auth(null, array());
-        $this->table->begin();
-        $res = !$response['success'] ? $response : $this->table->rename(urldecode(Input::getPath()->part(4)), json_decode(Input::get(), true)['data']['name']);
-        $this->table->commit();
+        $data = json_decode(Input::get(), true);
+        $response = $this->auth($data['id'], array());
+        $this->layer->begin();
+        $res = !$response['success'] ? $response : $this->layer->rename(urldecode($this->rel), $data['data']['name']);
+        $this->layer->commit();
         return $res;
     }
 
     /**
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException|GC2Exception
      */
     public function put_schema(): array
     {
         $input = json_decode(Input::get());
-        $response = $this->auth(null, array(), true); // Never sub-user
-        $this->table->begin();
-        $res = !$response['success'] ? $response : $this->table->setSchema($input->data->tables, $input->data->schema);
-        $this->table->commit();
+        $response = $this->isSuperUser(); // Never sub-user
+        $this->layer->begin();
+        $res = !$response['success'] ? $response : $this->layer->setSchema($input->data->tables, $input->data->schema);
+        $this->layer->commit();
         return $res;
     }
 
     /**
-     * @return array<mixed>
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws InvalidArgumentException|GC2Exception
      */
     public function get_privileges(): array
     {
-        $response = $this->auth(null, array());
-        return !$response['success'] ? $response : $this->table->getPrivileges(Input::getPath()->part(4));
+        $response = $this->auth($this->rel, array());
+        return !$response['success'] ? $response : $this->layer->getPrivileges($this->rel);
     }
 
     /**
-     * @return array<mixed>
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws InvalidArgumentException|GC2Exception
      */
     public function put_privileges(): array
     {
-        $response = $this->auth(null, array());
-        return !$response['success'] ? $response : $this->table->updatePrivileges(json_decode(Input::get())->data);
+        $data = json_decode(Input::get())->data;
+        $response = $this->auth($data->_key_, array());
+        return !$response['success'] ? $response : $this->layer->updatePrivileges($data);
     }
 
     /**
-     * @return array<mixed>
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws InvalidArgumentException|GC2Exception
      */
     public function put_copymeta(): array
     {
-        $response = $this->auth(Input::getPath()->part(4));
-        return !$response['success'] ? $response : $this->table->copyMeta(Input::getPath()->part(4), json_decode(Input::get())->data);
+        $response = $this->auth($this->rel);
+        return !$response['success'] ? $response : $this->layer->copyMeta($this->rel, json_decode(Input::get())->data);
     }
 
     /**
-     * @return array<mixed>
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws InvalidArgumentException|GC2Exception
      */
     public function get_roles(): array
     {
-        $response = $this->auth(null, array());
-        return !$response['success'] ? $response : $this->table->getRoles(Input::getPath()->part(4));
+        $response = $this->auth($this->rel, []);
+        return !$response['success'] ? $response : $this->layer->getRoles($this->rel);
     }
 
     /**
      * @return array
      * @throws PhpfastcacheInvalidArgumentException
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException|GC2Exception
      */
     public function put_roles(): array
     {
-        $response = $this->auth(null, array());
-        return !$response['success'] ? $response : $this->table->updateRoles(json_decode(Input::get())->data);
+        $response = $this->isOwner();
+        return !$response['success'] ? $response : $this->layer->updateRoles(json_decode(Input::get())->data);
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      */
     public function get_tags(): array
     {
-        return $this->table->getTags();
+        return $this->layer->getTags();
     }
 
+    /**
+     * @throws InvalidArgumentException|GC2Exception
+     */
     public function post_view(): array
     {
         $data = json_decode(Input::get(), true);
-        $response = $this->auth(null, array());
+        $response = $this->isOwner();
         if (!$response['success']) {
             return $response;
         }
         if ($data['mat']) {
-            $this->table->createMatView(Util::base64urlDecode($data['q']), $data['name']);
+            $this->layer->createMatView(Util::base64urlDecode($data['q']), $data['name']);
         } else {
-            $this->table->createView(Util::base64urlDecode($data['q']), $data['name']);
+            $this->layer->createView(Util::base64urlDecode($data['q']), $data['name']);
         }
         return ['success' => true];
     }

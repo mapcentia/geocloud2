@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2021 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -13,23 +13,15 @@ use app\conf\Connection;
 use app\conf\App;
 use app\inc\Controller;
 
-/**
- * Class Vector
- * @package app\controllers\upload
- */
 class Vector extends Controller
 {
-
-    /**
-     * Vector constructor.
-     */
     function __construct()
     {
         parent::__construct();
     }
 
     /**
-     * @return array<bool|string>
+     * @return array
      */
     public function post_index(): array
     {
@@ -70,7 +62,7 @@ class Vector extends Controller
             $tmpfilePath = $targetDir . DIRECTORY_SEPARATOR . $file;
 
             // If temp file is current file proceed to the next
-            if ($tmpfilePath == "{$filePath}.part") {
+            if ($tmpfilePath == "$filePath.part") {
                 continue;
             }
 
@@ -82,7 +74,7 @@ class Vector extends Controller
 
         closedir($dir);
         // Open temp file
-        if (!$out = @fopen("{$filePath}.part", $chunks ? "ab" : "wb")) {
+        if (!$out = @fopen("$filePath.part", $chunks ? "ab" : "wb")) {
             return [
                 "success" => false,
                 "code" => "400",
@@ -127,7 +119,7 @@ class Vector extends Controller
         // Check if file has been uploaded
         if (!$chunks || $chunk == $chunks - 1) {
             // Strip the temp .part suffix off
-            rename("{$filePath}.part", $filePath);
+            rename("$filePath.part", $filePath);
         }
         return [
             "success" => true,

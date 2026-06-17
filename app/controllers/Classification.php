@@ -8,16 +8,18 @@
 
 namespace app\controllers;
 
+use app\exceptions\GC2Exception;
 use app\inc\Controller;
 use app\inc\Input;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Psr\Cache\InvalidArgumentException;
 
 class Classification extends Controller
 {
     private \app\models\Classification $class;
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws PhpfastcacheInvalidArgumentException|GC2Exception
      */
     function __construct()
     {
@@ -27,7 +29,9 @@ class Classification extends Controller
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public function get_index(): array
     {
@@ -37,7 +41,9 @@ class Classification extends Controller
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public function post_index(): array
     {
@@ -46,7 +52,9 @@ class Classification extends Controller
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public function put_index(): array
     {
@@ -57,7 +65,9 @@ class Classification extends Controller
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public function delete_index(): array
     {
@@ -66,7 +76,9 @@ class Classification extends Controller
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public function put_unique(): array
     {
@@ -75,7 +87,9 @@ class Classification extends Controller
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public function put_single(): array
     {
@@ -84,7 +98,9 @@ class Classification extends Controller
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public function put_equal(): array
     {
@@ -93,7 +109,9 @@ class Classification extends Controller
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public function put_quantile(): array
     {
@@ -102,7 +120,9 @@ class Classification extends Controller
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public function put_cluster(): array
     {
@@ -111,7 +131,9 @@ class Classification extends Controller
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
+     * @return array
+     * @throws GC2Exception
+     * @throws InvalidArgumentException
      */
     public function put_copy(): array
     {

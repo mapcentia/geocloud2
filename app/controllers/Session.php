@@ -14,13 +14,20 @@ use app\inc\Controller;
 class Session extends Controller
 {
 
-    public function get_log()
+    /**
+     * @return array
+     */
+    public function get_log(): array
     {
         $response['data'] = \app\inc\Session::getLog();
         $response['success'] = true;
         return $response;
     }
-    public function get_user()
+
+    /**
+     * @return array
+     */
+    public function get_user(): array
     {
         $response['data']['db'] = $_SESSION['screen_name'];
         $response['data']['subuser'] = $_SESSION["subuser"];

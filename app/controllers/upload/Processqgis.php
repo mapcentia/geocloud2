@@ -10,6 +10,7 @@ namespace app\controllers\upload;
 
 use app\conf\App;
 use app\conf\Connection;
+use app\exceptions\GC2Exception;
 use app\inc\Controller;
 use app\inc\Input;
 use app\inc\Model;
@@ -19,34 +20,17 @@ use app\controllers\Tilecache;
 use app\models\Layer;
 use app\models\Spatial_ref_sys;
 use app\models\Table;
+use Exception;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Phpfastcache\Exceptions\PhpfastcacheLogicException;
+use Psr\Cache\InvalidArgumentException;
 
-
-/**
- * Class Processqgis
- * @package app\controllers\upload
- */
 class Processqgis extends Controller
 {
-    /**
-     * @var Table
-     */
-    private $table;
-
-    /**
-     * @var Layer
-     */
-    private $layer;
-
-    /**
-     * @var \app\models\Qgis
-     */
-    private $qgis;
-
-    /**
-     * @var string
-     */
-    private $sridStr;
+    private Table $table;
+    private Layer $layer;
+    private \app\models\Qgis $qgis;
+    private string $sridStr;
 
     function __construct()
     {
@@ -58,11 +42,14 @@ class Processqgis extends Controller
     }
 
     /**
-     * @param array<string>|null $file
-     * @return array<mixed>
+     * @param array|null $file
+     * @return array
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws PhpfastcacheLogicException
+     * @throws InvalidArgumentException
+     * @throws GC2Exception
      */
-    public function get_index(array $file = null): array
+    public function get_index(?array $file = null): array
     {
         $file = !empty($file) ? $file[0] : Input::get("file");
         $filePath = App::$param['path'] . "/app/tmp/" . Connection::$param["postgisdb"] . "/__qgis/" . $file;
@@ -73,8 +60,8 @@ class Processqgis extends Controller
         $wmsNames = [];
         $wmsSrids = [];
         $treeOrder = [];
-        $createWms = Input::get("createWms") == "true" ? true : false;
-        $createComp = Input::get("createComp") == "true" ? true : false;
+        $createWms = Input::get("createWms") == "true";
+        $createComp = Input::get("createComp") == "true";
 
         if (!$qgs) {
             return array("success" => false, "code" => 400, "message" => "Could not read qgs file");
@@ -82,7 +69,6 @@ class Processqgis extends Controller
 
         $ver = explode(".", $qgs->attributes()["version"]);
 
-        $majorVer = $ver[0];
         $minorVer = $ver[1];
 
         foreach ($qgs->projectlayers[0]->maplayer as $maplayer) {
@@ -103,16 +89,16 @@ class Processqgis extends Controller
                     $fullTable = $schema . "." . $table;
 
                     $db = Database::getDb();
-                    $rec = $this->layer->getAll($db, true, $fullTable, false, false, false);
+                    $rec = $this->layer->getAll($db, true, $fullTable);
                     $pkey = $rec["data"][0]["pkey"];
                     $srid = $rec["data"][0]["srid"];
                     $type = $rec["data"][0]["type"];
                     $f_geometry_column = $rec["data"][0]["f_geometry_column"];
 
                     // Check if layer is versioned and if so, add a WHERE clause.
-                    $where = $this->layer->doesColumnExist("{$schema}.{$table}", "gc2_version_gid")["exists"] ? "gc2_version_end_date IS NULL" : "";
+                    $where = $this->layer->doesColumnExist("$schema.$table", "gc2_version_gid")["exists"] ? "gc2_version_end_date IS NULL" : "";
 
-                    $PGDataSource = "dbname={$db} host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " sslmode=disable key='{$pkey}' srid={$srid} type={$type} table=\"{$schema}\".\"{$table}\" ({$f_geometry_column}) sql={$where}";
+                    $PGDataSource = "dbname=$db host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " sslmode=disable key='$pkey' srid=$srid type=$type table=\"$schema\".\"$table\" ($f_geometry_column) sql=$where";
 
                     preg_match("/table=\S*/", $dataSource, $matches);
                     $maplayer->datasource = $PGDataSource;
@@ -144,7 +130,7 @@ class Processqgis extends Controller
                     }
                     $db = Util::extractUserFromSubUserString(explode("/", $parsed["path"])[2])[1];
                     $fullTable = $schema . "." . $table;
-                    $rec = $this->layer->getAll($db, true, $fullTable, false, false, false);
+                    $rec = $this->layer->getAll($db, true, $fullTable);
                     $pkey = $rec["data"][0]["pkey"];
                     $srid = $rec["data"][0]["srid"];
                     $type = $rec["data"][0]["type"];
@@ -160,14 +146,14 @@ class Processqgis extends Controller
                     $arrN[] = $fullTable;
 
                     // Check if layer is versioned and if so, add a WHERE clause.
-                    $where = $this->layer->doesColumnExist("{$schema}.{$table}", "gc2_version_gid")["exists"] ? "gc2_version_end_date IS NULL" : "";
+                    $where = $this->layer->doesColumnExist("$schema.$table", "gc2_version_gid")["exists"] ? "gc2_version_end_date IS NULL" : "";
 
-                    $PGDataSource = "dbname={$db} host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " sslmode=disable key='{$pkey}' srid={$srid} type={$type} table=\"{$schema}\".\"{$table}\" ({$f_geometry_column}) sql={$where}";
+                    $PGDataSource = "dbname=$db host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " sslmode=disable key='$pkey' srid=$srid type=$type table=\"$schema\".\"$table\" ($f_geometry_column) sql=$where";
 
                     $maplayer->srs->spatialrefsys = "";
                     $maplayer->srs->spatialrefsys->proj4 = $proj4text;
                     $maplayer->srs->spatialrefsys->srid = $srid;
-                    $maplayer->srs->spatialrefsys->authid = "EPSG:{$srid}";
+                    $maplayer->srs->spatialrefsys->authid = "EPSG:$srid";
                     $maplayer->provider = "postgres";
                     $maplayer->datasource = $PGDataSource;
                     $maplayer->layername = $fullTable;
@@ -177,7 +163,7 @@ class Processqgis extends Controller
 
                 case "wms":
                     if ($createWms) {
-                        $layerName = Connection::$param["postgisschema"] . "." . Model::toAscii(is_numeric(mb_substr((string)$maplayer->layername, 0, 1, 'utf-8')) ? "_" . (string)$maplayer->layername : (string)$maplayer->layername, array(), "_");
+                        $layerName = Connection::$param["postgisschema"] . "." . Model::toAscii(is_numeric(mb_substr((string)$maplayer->layername, 0, 1, 'utf-8')) ? "_" . $maplayer->layername : (string)$maplayer->layername, array(), "_");
                         $srid = (string)$maplayer->srs->spatialrefsys->srid;
                         $wmsSrids[] = $srid;
                         $wmsNames[] = $layerName;
@@ -298,9 +284,12 @@ class Processqgis extends Controller
         return ["success" => true, "version" => $minorVer, "message" => "Qgs file parsed", "reloaded" => $reloaded, "ch" => $path . $name, "layers" => $layers, "urls" => $urls];
     }
 
-    public static function reload()
+    /**
+     * @return bool|string
+     * @throws Exception
+     */
+    public static function reload(): bool|string
     {
-        $res = Util::wget(App::$param["qgisServer"]["api"] . "/reload");
-        return $res;
+        return Util::wget(App::$param["qgisServer"]["api"] . "/reload");
     }
 }
