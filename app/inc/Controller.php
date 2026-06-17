@@ -218,7 +218,18 @@ class Controller
         }
         $isAuth = $isKeyCorrect || $check;
         $session = !empty($_SESSION["subuser"]) ? $_SESSION["screen_name"] . '@' . $_SESSION["parentdb"] : $_SESSION["screen_name"] ?? null;
-        $response = new Authorization(connection: $this->connection)->check(relName: $layer, transaction: $transaction, isAuth: $isAuth, subUser: $subUser, userGroup: $userGroupFullChain ?? null, rels: $rels);
+        try {
+            $response = new Authorization(connection: $this->connection)->check(relName: $layer, transaction: $transaction, isAuth: $isAuth, subUser: $subUser, userGroup: $userGroupFullChain ?? null, rels: $rels);
+        } catch (GC2Exception $e) {
+            // Denials are returned as a structured failure (not thrown) so the
+            // caller can surface is_auth/session; callers branch on success.
+            $response = [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'code' => $e->getCode() ?: 403,
+                'errorCode' => $e->getErrorCode(),
+            ];
+        }
         $response['is_auth'] = $isAuth;
         $response['session'] = $session;
         return $response;

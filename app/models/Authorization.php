@@ -150,14 +150,17 @@ class Authorization extends Model
                 $values[] = $privileges[$group] ?? 'none';
             }
         }
+        // Per-user/group privilege vocabulary stored on layers is
+        // "none" / "read" / "read/write" (see Layer::updatePrivileges).
         $rank = [
             'none' => 0,
             'read' => 1,
             'write' => 2,
+            'read/write' => 2,
         ];
         $highest = array_reduce(
             $values,
-            fn($carry, $item) => $rank[$item] > $rank[$carry] ? $item : $carry,
+            fn($carry, $item) => ($rank[$item] ?? 0) > ($rank[$carry] ?? 0) ? $item : $carry,
             'none'
         );
         return $highest;
