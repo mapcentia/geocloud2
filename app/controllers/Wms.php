@@ -314,17 +314,22 @@ class Wms extends Controller
                     $mergedQuery['BBOX'] = $query['BBOX'];
                     $mergedQuery['WIDTH'] = $query['WIDTH'];
                     $mergedQuery['HEIGHT'] = $query['HEIGHT'];
-                    $mergedQuery['VERSION'] = $query['VERSION'];
-                    // Set SRS or CRS (WMS version 1.1.0 and 1.3.0)
-                    $bits = explode('.', $query['VERSION']);
+                    // Set SRS or CRS (WMS version 1.1.0 and 1.3.0) Version is taken from the source
+                    $bits = explode('.', $source['query']['VERSION']);
                     if ((int)$bits[1] < 3) {
-                        $mergedQuery['SRS'] = $query['SRS'];
+                        $mergedQuery['SRS'] = $query['SRS'] ?? $query['CRS'];
+                        unset($mergedQuery['CRS']);
                     } else {
-                        $mergedQuery['CRS'] = $query['CRS'];
+                        $mergedQuery['CRS'] = $query['SRS'] ?? $query['CRS'];
+                        unset($mergedQuery['SRS']);
                     }
                     // Set REQUEST TO GetMap
                     $mergedQuery['REQUEST'] = 'GetMap';
-                    $url = $source['scheme'] . "://" . $source['host'] . $source['path'] . '?' . http_build_query($mergedQuery);
+                    $credentials = '';
+                    if (!empty($source['user']) && !empty($source['pass'])) {
+                        $credentials = $source['user'] . ":" . $source['pass'] . "@";
+                    }
+                    $url = $source['scheme'] . "://" . $credentials . $source['host'] . $source['path'] . '?' . http_build_query($mergedQuery);
                     $useWmsSource = true;
                 }
                 if (!$useWmsSource) {
