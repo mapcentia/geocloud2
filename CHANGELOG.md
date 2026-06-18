@@ -8,6 +8,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [2026.6.3] - 2026-18-6
 ### Fixed
 - Refactor WMS GetMap request handling: improve CRS and SRS fallback logic, add support for HTTP Basic Authentication credentials in source URL generation.
+- Refactor WFS-t server for worker mode – no more globals.
 
 ## [2026.6.2] - 2026-15-6
 ### Fixed

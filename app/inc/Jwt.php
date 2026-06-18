@@ -25,7 +25,7 @@ use Throwable;
  */
 abstract class Jwt
 {
-    const int ACCESS_TOKEN_TTL = 3600 * 9999999999;
+    const int ACCESS_TOKEN_TTL = 3600;
     const int REFRESH_TOKEN_TTL = (3600 * 24);
     const int CODE_TTL = 120;
     const int DEVICE_CODE_TTL = 1800;
@@ -33,7 +33,7 @@ abstract class Jwt
 
     /**
      * @param string|null $token
-     * @return array|true[]
+     * @return array
      * @throws GC2Exception
      */
     public static function validate(?string $token = null): array
