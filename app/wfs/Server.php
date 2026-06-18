@@ -38,15 +38,8 @@ final class Server
         $this->validateProtocol($req);
         if ($req->operation !== 'GETCAPABILITIES') {
             $this->checkLayerEnabled($req);
-            try {
                 $this->basicAuthPerLayer($req);
-            } catch (InvalidArgumentException) {
 
-            } catch (ServiceException) {
-
-            } catch (Throwable) {
-
-            }
         }
 
         $class = self::HANDLERS[$req->operation]

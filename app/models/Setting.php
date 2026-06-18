@@ -278,7 +278,7 @@ class Setting extends Model
             $arr = $this->getArray();
             if (!empty($_SESSION["subuser"])) {
                 $arr->pw = $arr->pw_subuser->{$_SESSION["screen_name"]} ?? null;
-                $arr->api_key = isset($arr->api_key_subuser) ? $arr->api_key_subuser->{$user} : null;
+                $arr->api_key = isset($arr->api_key_subuser) ? ($arr->api_key_subuser->{$_SESSION["screen_name"]} ?? null) : null;
                 if (isset($arr->pw_subuser)) unset($arr->pw_subuser);
             }
             // If user has no key, we generate one.
