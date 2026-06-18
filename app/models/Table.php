@@ -786,6 +786,7 @@ class Table extends Model
                 $res->execute();
                 $value->column = $safeColumn;
                 unset($fieldconfArr[$value->id]);
+                $value->id = $value->column;
                 $response['message'] = "Renamed";
                 $response['name'] = $safeColumn;
             } else {
@@ -808,7 +809,7 @@ class Table extends Model
                 }
             }
 
-            if ($this->metaData[$value->id]["desc"] !== $value->desc && !$onlyRename) {
+            if ($this->metaData[$value->id]["comment"] !== $value->desc && !$onlyRename) {
                 if ($value->desc === "") {
                     $value->desc = null;
                 }
