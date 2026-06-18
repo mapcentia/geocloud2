@@ -18,7 +18,6 @@ use Psr\Cache\InvalidArgumentException;
 class Table extends Controller
 {
     private \app\models\Table $table;
-    private readonly string $rel;
 
     /**
      * @throws PhpfastcacheInvalidArgumentException
@@ -27,8 +26,7 @@ class Table extends Controller
     function __construct()
     {
         parent::__construct();
-        $this->rel = Input::getPath()->part(4);
-        $this->table = new \app\models\Table($this->rel, false, true, false);
+        $this->table = new \app\models\Table(Input::getPath()->part(4), false, true, false);
     }
 
     /**
@@ -41,7 +39,7 @@ class Table extends Controller
         // Set layer editable
         $join = new \app\models\Table("settings.geometry_columns_join");
         $key = Connection::$param["postgisschema"] . '.' . $name['tableName'] . '.the_geom';
-        $response = $this->auth($this->rel);
+        $response = $this->isOwner();
         $data['_key_'] = $key;
         $data['editable'] = true;
         return (!$response['success']) ? $response : $join->updateRecord($data, "_key_");
@@ -147,7 +145,7 @@ class Table extends Controller
      */
     public function put_workflow(): array
     {
-        $response = $this->auth($this->rel);
+        $response = $this->auth(Input::getPath()->part(4));
         return (!$response['success']) ? $response : $this->table->addWorkflow();
     }
 
@@ -168,7 +166,7 @@ class Table extends Controller
     {
         $response = $this->auth(Input::getPath()->part(5), array("read" => true, "write" => true, "all" => true));
         return (!$response['success']) ? $response : $this->table->getData(
-            $this->rel,
+            Input::getPath()->part(4),
             Input::get("start") ?: "0",
             Input::get("limit") ?: "100"
         );
@@ -218,7 +216,7 @@ class Table extends Controller
     public function get_depend(): array
     {
         $this->table = new \app\models\table(Input::getPath()->part(4));
-        $response = $this->auth($this->rel, array("write" => true, "all" => true));
+        $response = $this->auth(Input::getPath()->part(4), array("write" => true, "all" => true));
         return (!$response['success']) ? $response : $this->table->getDependTree();
     }
 }

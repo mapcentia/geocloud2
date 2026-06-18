@@ -22,6 +22,7 @@ use PDOException;
 use PDOStatement;
 use PgSql\Result;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Throwable;
 use TypeError;
 
 
@@ -228,14 +229,14 @@ class Model
      * @param array $params An optional array of parameters to bind to the statement during execution.
      *
      * @return bool Always returns true if the statement executes successfully.
-     * @throws \Throwable If the statement execution fails, the exception is rethrown and the transaction (if active) is rolled back when $autoRollback is true.
+     * @throws Throwable If the statement execution fails, the exception is rethrown and the transaction (if active) is rolled back when $autoRollback is true.
      *
      */
     public function execute(PDOStatement $statement, array $params = [], bool $autoRollback = true): true
     {
         try {
             $statement->execute(empty($params) ? null : $params);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             if ($autoRollback) {
                 $this->rollback();
             }
@@ -278,7 +279,7 @@ class Model
      * @template T
      * @param callable(): T $work
      * @return T
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function withTransaction(callable $work): mixed
     {
@@ -287,7 +288,7 @@ class Model
             $result = $work();
             $this->commit();
             return $result;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->rollback();
             throw $e;
         }
@@ -311,7 +312,7 @@ class Model
      * @template T
      * @param callable(): T $work
      * @return T
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function withRollback(callable $work): mixed
     {
@@ -326,7 +327,7 @@ class Model
                 try {
                     $pdo->exec("ROLLBACK TO SAVEPOINT $name");
                     $pdo->exec("RELEASE SAVEPOINT $name");
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     error_log("withRollback savepoint cleanup failed: " . $e->getMessage());
                 }
             }
@@ -357,7 +358,7 @@ class Model
                 if ($pdo->inTransaction()) {
                     $pdo->rollBack();
                 }
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 error_log("rollbackAllOpenTransactions: " . $e->getMessage());
             }
         }
@@ -389,7 +390,7 @@ class Model
                     $pdo->rollBack();
                 }
                 $pdo->exec('DISCARD ALL');
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 error_log("resetSessionStateAllConnections: " . $e->getMessage());
             }
         }
@@ -401,7 +402,7 @@ class Model
      * @param string $sql The SQL query to prepare.
      *
      * @return PDOStatement The prepared PDO statement.
-     * @throws \Throwable If an error occurs while preparing the statement.
+     * @throws Throwable If an error occurs while preparing the statement.
      */
     public function prepare(string $sql): PDOStatement
     {
@@ -409,7 +410,7 @@ class Model
         $this->getPdoConnection()->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         try {
             return $this->getPdoConnection()->prepare($sql);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->rollback();
             throw $e;
         }
@@ -450,7 +451,7 @@ class Model
                             // Return integer
                             $result = $this->getPdoConnection()->exec($query);
                     }
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     $this->rollBack();
                     throw $e;
                 }
@@ -500,6 +501,7 @@ class Model
      * @return array
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws Throwable
      */
     public function getMetaData(string $table, bool $temp = false, bool $restriction = true, ?array $restrictions = null, ?string $cacheKey = null, bool $getEnums = true, bool $lookupForeignTables = true): array
     {
