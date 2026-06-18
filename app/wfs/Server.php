@@ -9,6 +9,7 @@
  * caller (legacy adapter or v4 controller) is responsible for rendering
  * the exception report.
  */
+
 namespace app\wfs;
 
 use app\exceptions\OwsException;
@@ -22,13 +23,15 @@ use Throwable;
 final class Server
 {
     private const array HANDLERS = [
-        'GETCAPABILITIES'     => handlers\GetCapabilities::class,
+        'GETCAPABILITIES' => handlers\GetCapabilities::class,
         'DESCRIBEFEATURETYPE' => handlers\DescribeFeatureType::class,
-        'GETFEATURE'          => handlers\GetFeature::class,
-        'TRANSACTION'         => handlers\Transaction::class,
+        'GETFEATURE' => handlers\GetFeature::class,
+        'TRANSACTION' => handlers\Transaction::class,
     ];
 
-    public function __construct(private readonly Context $ctx) {}
+    public function __construct(private readonly Context $ctx)
+    {
+    }
 
     /**
      * @throws OwsException
@@ -38,7 +41,7 @@ final class Server
         $this->validateProtocol($req);
         if ($req->operation !== 'GETCAPABILITIES') {
             $this->checkLayerEnabled($req);
-                $this->basicAuthPerLayer($req);
+            $this->basicAuthPerLayer($req);
 
         }
 

@@ -31,6 +31,7 @@ abstract class Jwt
 
 
     /**
+     * @param string|null $token
      * @return array
      * @throws GC2Exception
      */
