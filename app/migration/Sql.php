@@ -276,7 +276,7 @@ class Sql
                     ";
 
         // --- History tracking: settings.key_value ---
-        $sqls[] = "CREATE TABLE settings.key_value_history (LIKE settings.key_value)";
+        $sqls[] = "CREATE TABLE IF NOT EXISTS settings.key_value_history (LIKE settings.key_value)";
         $sqls[] = "ALTER TABLE settings.key_value_history ADD COLUMN IF NOT EXISTS history_id BIGSERIAL";
         $sqls[] = "ALTER TABLE settings.key_value_history ADD COLUMN IF NOT EXISTS history_operation CHAR(1)";
         $sqls[] = "ALTER TABLE settings.key_value_history ADD COLUMN IF NOT EXISTS history_db_user TEXT";
