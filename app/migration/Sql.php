@@ -309,6 +309,15 @@ SQL;
         $sqls[] = "DROP TRIGGER IF EXISTS key_value_history_tr ON settings.key_value";
         $sqls[] = "CREATE TRIGGER key_value_history_tr AFTER INSERT OR UPDATE OR DELETE ON settings.key_value FOR EACH ROW EXECUTE FUNCTION settings.history_trigger()";
 
+        // --- History tracking: settings.geometry_columns_join ---
+        $sqls[] = "CREATE TABLE IF NOT EXISTS settings.geometry_columns_join_history (LIKE settings.geometry_columns_join)";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join_history ADD COLUMN IF NOT EXISTS history_id BIGSERIAL";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join_history ADD COLUMN IF NOT EXISTS history_operation CHAR(1)";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join_history ADD COLUMN IF NOT EXISTS history_db_user TEXT";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join_history ADD COLUMN IF NOT EXISTS history_timestamp TIMESTAMPTZ DEFAULT now()";
+        $sqls[] = "DROP TRIGGER IF EXISTS geometry_columns_join_history_tr ON settings.geometry_columns_join";
+        $sqls[] = "CREATE TRIGGER geometry_columns_join_history_tr AFTER INSERT OR UPDATE OR DELETE ON settings.geometry_columns_join FOR EACH ROW EXECUTE FUNCTION settings.history_trigger()";
+
         include 'Views1.php';
         return $sqls;
     }
