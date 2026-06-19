@@ -331,6 +331,9 @@ ADD entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
+# Symlink Dashboard
+RUN ln -s /var/www/geocloud2/dashboard/build/ /var/www/geocloud2/public/dashboard
+
 # Final CMD
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
@@ -356,8 +359,7 @@ COPY conf/gc2/Connection.php /var/www/geocloud2/app/conf/
 # Build dashboard
 RUN cd dashboard \
     && npm install \
-    && npm run build \
-    && ln -s /var/www/geocloud2/dashboard/build/ /var/www/geocloud2/public/dashboard
+    && npm run build
 
 # VOLUME for geocloud2 if you want persistence
 VOLUME /var/www/geocloud2

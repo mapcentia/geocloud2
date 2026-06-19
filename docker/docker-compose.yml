@@ -4,7 +4,7 @@ networks:
 
 services:
   mapserver:
-    image: mapcentia/gc2core8:mapserver
+    image: mapcentia/gc2:php8.4-1
     privileged: true
     build:
       context: .
@@ -12,6 +12,7 @@ services:
       target: mapserver
       args:
         - ECW_VERSION=3
+        - PHP_VERSION=8.4
   gc2core:
     image: gc2core
     restart: unless-stopped
@@ -22,6 +23,7 @@ services:
       target: dev
       args:
         - ECW_VERSION=3
+        - PHP_VERSION=8.4
     volumes:
       - ../:/var/www/geocloud2
     networks:
