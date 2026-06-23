@@ -5,7 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [2026.6.4] - 2026-18-6
+## [2026.6.5] - 2026-23-6
+### Fixed
+- MapFile: Introduce `addSquareBracket` utility function to cleanly handle non-numeric values.
+  Wraps the provided value with square brackets if it is not numeric.
+  If the value already contains square brackets, they are trimmed first before reapplying them.
+
+## [2026.6.4] - 2026-23-6
 ### CHANGED
 - Update UUID defaults to use `uuid_generate_v4()` instead of `gen_random_uuid()` from the uuid-ossp extension.
   The latter is not available on all PostgreSQL versions.
