@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.6.4] - 2026-18-6
+### CHANGED
+- Update UUID defaults to use `uuid_generate_v4()` instead of `gen_random_uuid()` from the uuid-ossp extension.
+  The latter is not available on all PostgreSQL versions.
+
 ## [2026.6.3] - 2026-18-6
 ### Added
 - Add change history for `settings.key_value` and `settings.geometry_columns_join`. Each table now has a mirrored `*_history` table populated by an `AFTER` trigger (`settings.history_trigger()`) that records every INSERT/UPDATE/DELETE with the operation, DB user, and timestamp.
