@@ -174,7 +174,6 @@ class Sql
         $sqls[] = "alter table settings.clients add created timestamptz default now() not null";
         $sqls[] = "alter table settings.clients alter redirect_uri DROP NOT NULL";
         $sqls[] = "INSERT INTO settings.clients (id, name, description, redirect_uri) values ('gc2-cli', 'gc2-cli', 'Client for use in CLI','[\"http://127.0.0.1:5657/auth/callback\"]')";
-        $sqls[] = "UPDATE settings.clients SET redirect_uri = '[\"http://127.0.0.1:5657/auth/callback\",\"http://localhost:8080\",\"http://localhost:4000/callback\"]' WHERE id = 'gc2-cli'";
         $sqls[] = "create table settings.cost
                     (
                         id        serial,
