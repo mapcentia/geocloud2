@@ -14,8 +14,6 @@ use app\inc\Controller;
 use app\inc\Globals;
 use app\inc\Input;
 use mapObj;
-use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
-use Phpfastcache\Exceptions\PhpfastcacheLogicException;
 
 
 /**
@@ -138,7 +136,6 @@ class Legend extends Controller
         $html = "";
         if (is_array($this->legendArr)) {
             foreach ($this->legendArr as $layer) {
-                //$html .= "<div class=\"legend legend-container\"><div class=\"legend legend-header\"><b>" . $layer['title'] . "<b></div>";
                 $html .= "<table class=\"legend legend-body\">";
                 if (is_array($layer['classes'])) {
                     foreach ($layer['classes'] as $class) {
@@ -167,11 +164,13 @@ class Legend extends Controller
                 {
                     if (is_array($layer['classes'])) {
                         foreach ($layer['classes'] as $class) {
-                            $classes[] = array(
-                                "name" => $class['name'],
-                                "expression" => $class['expression'],
-                                "img" => $class['img']
-                            );
+                            if ($class['name']) {
+                                $classes[] = array(
+                                    "name" => $class['name'],
+                                    "expression" => $class['expression'],
+                                    "img" => $class['img']
+                                );
+                            }
                         }
                     }
                     $json[] = array("id" => $key, "classes" => $classes);
