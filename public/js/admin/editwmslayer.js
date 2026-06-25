@@ -285,7 +285,6 @@ wmsLayer.init = function (record) {
                     var f = Ext.getCmp('legendForm');
                     if (f.form.isValid()) {
                         var values = f.form.getValues();
-                        values.legend_url = encodeURIComponent(values.legend_url);
                         var param = {
                             data: values
                         };
