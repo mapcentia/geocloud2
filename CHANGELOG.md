@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.6.6] - 2026-29-6
+### FIXED
+- Remove `encodeURIComponent` from the Image URL widget in GC2 Admin. Before this change, the widget incorrectly encoded the image URL.
+- Classes without names are skipped in the JSON legend API. They are already skipped in the HTML legend API.
+- In the SQL API, the mimetype of bytea fields is no longer resolved from reading the first chunks of the bytea. This could be very slow for compressed toasted tables. The resolution is now deferred until the decoding is actually performed in the decode API.
+
 ## [2026.6.5] - 2026-23-6
 ### Fixed
 - MapFile: Introduce `addSquareBracket` utility function to cleanly handle non-numeric values.
