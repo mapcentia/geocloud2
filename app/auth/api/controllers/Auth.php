@@ -61,7 +61,7 @@ class Auth extends AbstractApi
             }
 
             $uris = $clientData[0]['redirect_uri'];
-            if ($_GET['redirect_uri'] && !in_array($_GET['redirect_uri'], $uris, true)) {
+            if (!empty($_GET['redirect_uri']) && !in_array($_GET['redirect_uri'], $uris, true)) {
                 $error = "invalid_client";
                 $errorDesc = "Client with identifier '{$_GET['client_id']}' is not registered with redirect uri: {$_GET['redirect_uri']} ";
                 return $this->error($error, $errorDesc);
@@ -72,7 +72,7 @@ class Auth extends AbstractApi
             // Check client secret
             if (!$clientData[0]['public']) {
                 try {
-                    $client->verifySecret($_GET['client_id'], $_GET['client_secret']);
+                    $client->verifySecret($_GET['client_id'], $_GET['client_secret'] ?? null);
                 } catch (Exception) {
                     $error = "invalid_client";
                     $errorDesc = "Client secret doesn't match what was expected";
@@ -80,8 +80,8 @@ class Auth extends AbstractApi
                 }
             }
             $code = $_GET['response_type'] == 'code';
-            $codeChallenge = $_GET['code_challenge'];
-            $codeChallengeMethod = $_GET['code_challenge_method'];
+            $codeChallenge = $_GET['code_challenge'] ?? null;
+            $codeChallengeMethod = $_GET['code_challenge_method'] ?? null;
             $data = (new SessionModel())->createOAuthResponse($_SESSION['parentdb'], $_SESSION['screen_name'], !$_SESSION['subuser'], $code, $_SESSION['usergroup'], $codeChallenge, $codeChallengeMethod, $_SESSION['properties'], $_SESSION['email']);
             $params = [];
             if ($code) {
@@ -91,7 +91,7 @@ class Auth extends AbstractApi
                 $params['token_type'] = $data['token_type'];
                 $params['expires_in'] = $data['expires_in'];
             }
-            if ($_GET['state']) {
+            if (!empty($_GET['state'])) {
                 $params['state'] = $_GET['state'];
             }
             $paramsStr = http_build_query($params);
@@ -106,7 +106,7 @@ class Auth extends AbstractApi
                 return $this->redirectResponse("$redirectUri$separator$paramsStr");
             }
         } else {
-            if ($_GET['parentdb']) {
+            if (!empty($_GET['parentdb'])) {
                 $client = new Client(connection: new Connection(database: $_GET['parentdb']));
                 // Check client id
                 try {

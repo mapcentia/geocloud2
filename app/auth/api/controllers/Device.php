@@ -36,7 +36,7 @@ class Device extends AbstractApi
         $backend = Session::isAuth() ? 'device' : 'signin';
 
         echo "<main class='form-signin w-100 m-auto'>";
-        echo "<div hx-trigger='load' hx-target='this' hx-target='this' hx-post='/$backend'></div>";
+        echo "<div hx-trigger='load' hx-target='this' hx-post='/$backend'></div>";
         echo "<div id='alert'></div>";
         echo "</main>";
 
