@@ -62,7 +62,7 @@ abstract class AbstractSocialLogin extends AbstractApi
      * Fetch a verified primary email for the authenticated provider user.
      * Returns null when no usable verified email can be determined.
      */
-    abstract protected function fetchVerifiedEmail(Client $client, string $accessToken): ?string;
+    abstract protected function fetchVerifiedEmail(Client $client, string $accessToken, array $cfg): ?string;
 
     /**
      * Initiates the OAuth flow.
@@ -126,7 +126,7 @@ abstract class AbstractSocialLogin extends AbstractApi
                 return $this->emptyResponse();
             }
 
-            $email = $this->fetchVerifiedEmail($client, $accessToken);
+            $email = $this->fetchVerifiedEmail($client, $accessToken, $cfg);
             if (!$email) {
                 echo 'Could not determine a verified email from your ' . htmlspecialchars($this->providerLabel()) . ' account';
                 return $this->emptyResponse();

@@ -11,17 +11,26 @@ use app\api\v4\Controller;
 use app\api\v4\Scope;
 use GuzzleHttp\Client;
 
-#[Controller(route: 'google/(start)|(callback)', scope: Scope::PUBLIC)]
-class Google extends AbstractSocialLogin
+#[Controller(route: 'gitlab/(start)|(callback)', scope: Scope::PUBLIC)]
+class Gitlab extends AbstractSocialLogin
 {
     protected function providerKey(): string
     {
-        return 'google';
+        return 'gitlab';
     }
 
     protected function providerLabel(): string
     {
-        return 'Google';
+        return 'GitLab';
+    }
+
+    /**
+     * Base URL of the GitLab instance. Defaults to gitlab.com, but can be
+     * overridden in config for self-hosted instances.
+     */
+    private function baseUrl(array $cfg): string
+    {
+        return rtrim($cfg['baseUrl'] ?? 'https://gitlab.com', '/');
     }
 
     protected function authorizeUrl(string $state, string $callback, array $cfg): string
@@ -32,15 +41,13 @@ class Google extends AbstractSocialLogin
             'response_type' => 'code',
             'scope' => 'openid email profile',
             'state' => $state,
-            'access_type' => 'online',
-            'prompt' => 'select_account',
         ];
-        return 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query($params);
+        return $this->baseUrl($cfg) . '/oauth/authorize?' . http_build_query($params);
     }
 
     protected function exchangeCodeForToken(Client $client, string $code, string $callback, array $cfg): ?string
     {
-        $res = $client->post('https://oauth2.googleapis.com/token', [
+        $res = $client->post($this->baseUrl($cfg) . '/oauth/token', [
             'form_params' => [
                 'client_id' => $cfg['clientId'],
                 'client_secret' => $cfg['clientSecret'],
@@ -55,14 +62,14 @@ class Google extends AbstractSocialLogin
 
     protected function fetchVerifiedEmail(Client $client, string $accessToken, array $cfg): ?string
     {
-        $res = $client->get('https://openidconnect.googleapis.com/v1/userinfo', [
+        $res = $client->get($this->baseUrl($cfg) . '/oauth/userinfo', [
             'headers' => ['Authorization' => "Bearer $accessToken"],
         ]);
         $info = json_decode((string)$res->getBody(), true);
         if (!is_array($info) || empty($info['email'])) {
             return null;
         }
-        // Only accept a Google-verified email
+        // Only accept a GitLab-verified email
         if (array_key_exists('email_verified', $info) && !filter_var($info['email_verified'], FILTER_VALIDATE_BOOLEAN)) {
             return null;
         }

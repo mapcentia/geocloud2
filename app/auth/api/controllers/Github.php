@@ -49,7 +49,7 @@ class Github extends AbstractSocialLogin
         return $body['access_token'] ?? null;
     }
 
-    protected function fetchVerifiedEmail(Client $client, string $accessToken): ?string
+    protected function fetchVerifiedEmail(Client $client, string $accessToken, array $cfg): ?string
     {
         $authHeaders = ['Authorization' => "Bearer $accessToken", 'User-Agent' => 'gc2-app'];
 

@@ -204,7 +204,7 @@ foreach (glob(dirname(__FILE__) . "/../app/api/v4/controllers/*.php") as $filena
 $handler = static function () use ($routes) {
     setHeaders();
     try {
-        if (in_array(Input::getPath()->part(1), ['api', 'auth', 'signin', 'signup', 'signout', 'forgot', 'activation', 'device', 'github', 'google'])) {
+        if (in_array(Input::getPath()->part(1), ['api', 'auth', 'signin', 'signup', 'signout', 'forgot', 'activation', 'device', 'github', 'google', 'gitlab'])) {
 
             if ($db = Input::getPath()->part(4)) {
                 Database::setDb($db); // Default
