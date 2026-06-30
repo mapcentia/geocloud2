@@ -230,7 +230,7 @@ abstract class Jwt
         $characters = 'BCDFGHJKLMNPQRSTVWXZ';
         $randomString = '';
         for ($i = 0; $i < 8; $i++) {
-            $randomString .= $characters[rand(0, strlen($characters) - 1)];
+            $randomString .= $characters[random_int(0, strlen($characters) - 1)];
         }
         return substr($randomString, 0, 4) . '-' . substr($randomString, 4, 4);
     }

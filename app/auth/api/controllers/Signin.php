@@ -72,7 +72,7 @@ class Signin extends AbstractApi
                 // Create key/value
                 $val = Jwt::generateUserCode();
                 $key = '__twofactor_' . md5($_POST['user']) . '_' . $_POST['database'];
-                $userObj->cacheCode($key, $val);
+                $userObj->cacheCode($key, $val, 600);
                 // Send email
                 $client = new PostmarkClient(App::$param["notification"]["key"]);
                 if (empty($email)) {
@@ -110,7 +110,7 @@ class Signin extends AbstractApi
             $key = '__twofactor_' . md5($_POST['user']) . '_' . $_POST['database'];
             try {
                 $val = $userObj->getCode($key);
-                if ($val !== $_POST['tf_code']) {
+                if (!hash_equals((string)$val, (string)$_POST['tf_code'])) {
                     echo $this->twig->render('signin.html.twig', [...$res, ...$_POST]);
                     echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'One-time code is wrong']) . "</div>";
                     return $this->emptyResponse();

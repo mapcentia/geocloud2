@@ -61,7 +61,7 @@ class Auth extends AbstractApi
             }
 
             $uris = $clientData[0]['redirect_uri'];
-            if ($_GET['redirect_uri'] && !in_array($_GET['redirect_uri'], $uris)) {
+            if ($_GET['redirect_uri'] && !in_array($_GET['redirect_uri'], $uris, true)) {
                 $error = "invalid_client";
                 $errorDesc = "Client with identifier '{$_GET['client_id']}' is not registered with redirect uri: {$_GET['redirect_uri']} ";
                 return $this->error($error, $errorDesc);
@@ -149,7 +149,7 @@ class Auth extends AbstractApi
 
     private function error(string $error, string $errorDesc): Response
     {
-        echo "[$error] $errorDesc";
+        echo "[" . htmlspecialchars($error, ENT_QUOTES) . "] " . htmlspecialchars($errorDesc, ENT_QUOTES);
 //                $paramsStr = http_build_query(['error' => $error, 'error_description' => $errorDesc]);
 //                $header = "Location: $redirectUri$separator$paramsStr";
 //                header($header);

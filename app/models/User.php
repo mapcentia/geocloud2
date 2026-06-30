@@ -512,10 +512,10 @@ class User extends Model
         $this->execute($res, [":code" => $code]);
     }
 
-    public function cacheCode(string $key, mixed $value): void
+    public function cacheCode(string $key, mixed $value, int $ttl = 3600): void
     {
         $CachedString = Cache::getItem($key);
-        $CachedString->set($value)->expiresAfter(3600);
+        $CachedString->set($value)->expiresAfter($ttl);
         Cache::save($CachedString);
     }
 
