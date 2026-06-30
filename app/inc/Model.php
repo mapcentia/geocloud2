@@ -906,7 +906,7 @@ class Model
      */
     public static function toAscii(string $str, ?array $replace = [], string $delimiter = '-', string $delimiterRegex = "/[\/_|+ -]+/", bool $skipEmail = true): string
     {
-        if (filter_var($str, FILTER_VALIDATE_EMAIL) !== false && $skipEmail) {
+        if (filter_var($str, FILTER_VALIDATE_EMAIL) !== false && $skipEmail && empty(App::$param['dontUseEmailForSubusers'])) {
             return $str;
         }
         if (!empty($replace)) {
