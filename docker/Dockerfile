@@ -285,6 +285,12 @@ RUN crontab -l 2>/dev/null | { cat; echo "* * * * * php -f /var/www/geocloud2/ap
 RUN crontab -l 2>/dev/null | { cat; echo "0 6 * * * php -f /var/www/geocloud2/app/scripts/job_report.php 1>> /dev/null 2>&1"; } | crontab
 # Run scheduler
 RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data php -f /var/www/geocloud2/app/scripts/scheduler.php 1>> /dev/null 2>&1"; } | crontab
+# Functions: enqueue due scheduled invocations, dispatch DB-event triggers, run the queue.
+# All three are DB/HTTP only (with functionRunner=HttpFunctionRunner the worker just
+# calls the gc2-function-runner service), so they run safely as www-data.
+RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data php -f /var/www/geocloud2/app/scripts/function_scheduler.php 1>> /dev/null 2>&1"; } | crontab
+RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data php -f /var/www/geocloud2/app/scripts/function_event_dispatcher.php 1>> /dev/null 2>&1"; } | crontab
+RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data php -f /var/www/geocloud2/app/scripts/function_worker.php 1>> /dev/null 2>&1"; } | crontab
 
 # (Optional) finalize crontab
 RUN crontab -l 2>/dev/null | { cat; echo ""; } | crontab

@@ -77,3 +77,6 @@ public/js/admin/build/
 
 # WSL / Windows download metadata
 *:Zone.Identifier
+
+# Go function-runner build artifact
+/function-runner/gc2-function-runner

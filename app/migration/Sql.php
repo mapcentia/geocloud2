@@ -314,6 +314,88 @@ SQL;
         $sqls[] = "DROP TRIGGER IF EXISTS geometry_columns_join_history_tr ON settings.geometry_columns_join";
         $sqls[] = "CREATE TRIGGER geometry_columns_join_history_tr AFTER INSERT OR UPDATE OR DELETE ON settings.geometry_columns_join FOR EACH ROW EXECUTE FUNCTION settings.history_trigger()";
 
+        // --- Lambda-like functions (gVisor runtime) ---
+        $sqls[] = "CREATE TABLE settings.functions
+                    (
+                      uuid          UUID                      NOT NULL  DEFAULT uuid_generate_v4()  PRIMARY KEY,
+                      name          CHARACTER VARYING(255)    NOT NULL,
+                      runtime       CHARACTER VARYING(64)     NOT NULL,
+                      handler       CHARACTER VARYING(255)    NOT NULL,
+                      code          TEXT                      NOT NULL,
+                      code_sha      CHARACTER VARYING(64)     NOT NULL,
+                      env           JSONB,
+                      memory_mb     INTEGER                   NOT NULL  DEFAULT 128,
+                      timeout_s     INTEGER                   NOT NULL  DEFAULT 30,
+                      triggers      JSONB,
+                      input_schema  JSONB,
+                      output_schema JSONB,
+                      version       INTEGER                   NOT NULL  DEFAULT 1,
+                      username      CHARACTER VARYING(255),
+                      created       TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT now(),
+                      updated       TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT now(),
+                      CONSTRAINT functions_name_unique UNIQUE (name)
+                    )";
+        $sqls[] = "CREATE TABLE settings.function_invocations
+                    (
+                      uuid          UUID                      NOT NULL  DEFAULT uuid_generate_v4()  PRIMARY KEY,
+                      function_name CHARACTER VARYING(255)    NOT NULL,
+                      status        CHARACTER VARYING(32)     NOT NULL  DEFAULT 'pending',
+                      request       JSONB,
+                      response      JSONB,
+                      logs          TEXT,
+                      error         TEXT,
+                      duration_ms   INTEGER,
+                      username      CHARACTER VARYING(255),
+                      created       TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT now(),
+                      finished      TIMESTAMP WITH TIME ZONE,
+                      CHECK (status IN ('pending', 'running', 'succeeded', 'failed'))
+                    )";
+        $sqls[] = "CREATE INDEX function_invocations_function_name_idx ON settings.function_invocations (function_name)";
+        // Async invocations (Phase 2): queue via the table itself.
+        $sqls[] = "ALTER TABLE settings.function_invocations ADD COLUMN invocation_type VARCHAR(16) NOT NULL DEFAULT 'sync'";
+        $sqls[] = "ALTER TABLE settings.function_invocations ADD COLUMN context JSONB";
+        $sqls[] = "CREATE INDEX function_invocations_pending_idx ON settings.function_invocations (created) WHERE status = 'pending' AND invocation_type = 'async'";
+        // Triggers (Phase 3): owner identity for system-triggered runs + schedule bookkeeping.
+        $sqls[] = "ALTER TABLE settings.functions ADD COLUMN owner_context JSONB";
+        $sqls[] = "ALTER TABLE settings.functions ADD COLUMN last_scheduled_at TIMESTAMP WITH TIME ZONE";
+
+        // Multi-file bundles: 'inline' (code column is source) or 'zip' (code is a base64 zip).
+        $sqls[] = "ALTER TABLE settings.functions ADD COLUMN package VARCHAR(16) NOT NULL DEFAULT 'inline'";
+
+        // DB-event triggers: a durable queue (owned by function_event_dispatcher,
+        // separate from settings.outbox which the realtime listener drains) plus a
+        // trigger function that writes row changes to it.
+        $sqls[] = "CREATE TABLE settings.function_event_queue
+                    (
+                      id          BIGSERIAL PRIMARY KEY,
+                      op          CHAR(1)   NOT NULL CHECK (op IN ('I', 'U', 'D')),
+                      schema_name TEXT      NOT NULL,
+                      table_name  TEXT      NOT NULL,
+                      pk_column   TEXT      NOT NULL,
+                      pk_value    TEXT      NOT NULL,
+                      payload     JSONB,
+                      created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+                    )";
+        $sqls[] = <<<'SQL'
+CREATE OR REPLACE FUNCTION _gc2_function_event() RETURNS TRIGGER AS $$
+DECLARE
+  t text;
+  snap jsonb;
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    EXECUTE 'SELECT $1.' || TG_ARGV[0] USING OLD INTO t;
+    snap := row_to_json(OLD)::jsonb;
+  ELSE
+    EXECUTE 'SELECT $1.' || TG_ARGV[0] USING NEW INTO t;
+    snap := row_to_json(NEW)::jsonb;
+  END IF;
+  INSERT INTO settings.function_event_queue (op, schema_name, table_name, pk_column, pk_value, payload)
+  VALUES (left(TG_OP, 1), TG_ARGV[1], TG_ARGV[2], TG_ARGV[0], t, snap);
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+SQL;
+
         include 'Views1.php';
         return $sqls;
     }
