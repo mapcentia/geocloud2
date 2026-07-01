@@ -80,3 +80,7 @@ public/js/admin/build/
 
 # Go function-runner build artifact
 /function-runner/gc2-function-runner
+
+# Python bytecode
+__pycache__/
+*.pyc
