@@ -36,8 +36,7 @@ foreach ($dbs as $db) {
         continue;
     }
     try {
-        Database::setDb($db);
-        $enqueued = (new FunctionScheduler(new Connection(database: $db)))->enqueueDue($now);
+        $enqueued = new FunctionScheduler(new Connection(database: $db))->enqueueDue($now);
         if ($enqueued > 0) {
             echo "$db: enqueued=$enqueued\n";
             $total += $enqueued;

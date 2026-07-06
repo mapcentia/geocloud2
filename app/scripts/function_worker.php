@@ -39,8 +39,7 @@ foreach ($dbs as $db) {
         continue;
     }
     try {
-        Database::setDb($db);
-        $summary = (new FunctionWorker(new Connection(database: $db)))->processPending($batchPerDb);
+        $summary = new FunctionWorker(new Connection(database: $db))->processPending($batchPerDb);
         if ($summary['processed'] > 0) {
             echo "$db: processed={$summary['processed']} ok={$summary['succeeded']} failed={$summary['failed']}\n";
             foreach ($totals as $k => $v) {
