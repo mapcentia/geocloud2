@@ -2,7 +2,7 @@
 FROM golang:1.23-bookworm AS build
 WORKDIR /src
 COPY go.mod ./
-COPY main.go ./
+COPY *.go ./
 COPY agents ./agents
 RUN CGO_ENABLED=0 go build -buildvcs=false -ldflags "-s -w" -o /out/gc2-function-runner .
 
