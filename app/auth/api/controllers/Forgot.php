@@ -43,7 +43,7 @@ class Forgot extends AbstractApi
             $key = '__forgot_' . md5($_GET['user']);
             try {
                 $val = $userObj->getCode($key);
-                if ($val[0] !== $_GET['key']) {
+                if (!hash_equals((string)$val[0], (string)$_GET['key'])) {
                     echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Could not find the key.']) . "</div>";
                     return $this->emptyResponse();
                 }
@@ -76,7 +76,7 @@ class Forgot extends AbstractApi
             $key = '__forgot_' . md5($_POST['userid']);
             try {
                 $val = $userObj->getCode($key);
-                if ($val[0] !== $_POST['key']) {
+                if (!hash_equals((string)$val[0], (string)$_POST['key'])) {
                     echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Wrong key']) . "</div>";
                     return $this->emptyResponse();
                 }
@@ -131,9 +131,9 @@ class Forgot extends AbstractApi
             if ($user) {
                 echo "<div id='alert' hx-swap-oob='true'></div>";
                 // Create key and send mail
-                $val = uniqid();
+                $val = bin2hex(random_bytes(32));
                 $key= '__forgot_' . md5($user);
-                $userObj->cacheCode($key, [$val, $parentdb]);
+                $userObj->cacheCode($key, [$val, $parentdb], 1800);
                 $url = App::$param["host"] . "/forgot?key=$val&user=$user" . (!empty($parentdb) ? "&parentdb=$parentdb" : '');
                 try {
                     $client = new PostmarkClient(App::$param["notification"]["key"]);

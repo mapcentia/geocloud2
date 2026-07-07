@@ -62,7 +62,6 @@ class Sql
                     )";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN elasticsearch TEXT";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN uuid UUID NOT NULL DEFAULT uuid_generate_v4()";
-        $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER COLUMN uuid set DEFAULT gen_random_uuid()";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN tags JSON";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN meta JSON";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN wmsclientepsgs TEXT";
@@ -98,7 +97,6 @@ class Sql
                       created   TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE,
                       CONSTRAINT name_unique UNIQUE (name)
                     )";
-        $sqls[] = "ALTER TABLE settings.prepared_statements ALTER COLUMN uuid set DEFAULT gen_random_uuid()";
         $sqls[] = "ALTER TABLE settings.qgis_files ADD COLUMN old BOOLEAN DEFAULT FALSE";
         $sqls[] = "CREATE TABLE settings.seed_jobs
                     (
@@ -108,7 +106,6 @@ class Sql
                       host      CHARACTER VARYING(255)    NOT NULL,
                       created   TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE
                     )";
-        $sqls[] = "ALTER TABLE settings.seed_jobs ALTER COLUMN uuid set DEFAULT gen_random_uuid()";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN legend_url VARCHAR(255)";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ALTER roles TYPE JSONB USING roles::jsonb";
         $sqls[] = "CREATE TABLE settings.geofence
@@ -177,7 +174,6 @@ class Sql
         $sqls[] = "alter table settings.clients add created timestamptz default now() not null";
         $sqls[] = "alter table settings.clients alter redirect_uri DROP NOT NULL";
         $sqls[] = "INSERT INTO settings.clients (id, name, description, redirect_uri) values ('gc2-cli', 'gc2-cli', 'Client for use in CLI','[\"http://127.0.0.1:5657/auth/callback\"]')";
-        $sqls[] = "UPDATE settings.clients SET redirect_uri = '[\"http://127.0.0.1:5657/auth/callback\",\"http://localhost:8080\",\"http://localhost:4000/callback\"]' WHERE id = 'gc2-cli'";
         $sqls[] = "create table settings.cost
                     (
                         id        serial,
@@ -274,6 +270,131 @@ class Sql
                       NOT (t.table_schema :: TEXT = 'public' :: TEXT AND t.table_name :: TEXT = 'non_postgis_matviews' :: TEXT) AND
                       NOT t.table_schema :: TEXT = 'pg_catalog' :: TEXT AND NOT t.table_schema :: TEXT = 'information_schema' :: TEXT;
                     ";
+
+        // --- History tracking: settings.key_value ---
+        $sqls[] = "CREATE TABLE IF NOT EXISTS settings.key_value_history (LIKE settings.key_value)";
+        $sqls[] = "ALTER TABLE settings.key_value_history ADD COLUMN IF NOT EXISTS history_id BIGSERIAL";
+        $sqls[] = "ALTER TABLE settings.key_value_history ADD COLUMN IF NOT EXISTS history_operation CHAR(1)";
+        $sqls[] = "ALTER TABLE settings.key_value_history ADD COLUMN IF NOT EXISTS history_db_user TEXT";
+        $sqls[] = "ALTER TABLE settings.key_value_history ADD COLUMN IF NOT EXISTS history_timestamp TIMESTAMPTZ DEFAULT now()";
+        $sqls[] = <<<'SQL'
+CREATE OR REPLACE FUNCTION settings.history_trigger() RETURNS trigger
+LANGUAGE plpgsql AS $FN$
+DECLARE
+    hist_table text := TG_TABLE_NAME || '_history';
+    rec        record;
+    seq        text;
+    payload    jsonb;
+BEGIN
+    rec := CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+    seq := pg_get_serial_sequence('settings.' || hist_table, 'history_id');
+    payload := to_jsonb(rec) || jsonb_build_object(
+        'history_id',        nextval(seq),
+        'history_operation', left(TG_OP, 1),
+        'history_db_user',   current_user,
+        'history_timestamp', now()
+    );
+    EXECUTE format(
+        'INSERT INTO settings.%I SELECT (jsonb_populate_record(NULL::settings.%I, $1)).*',
+        hist_table, hist_table
+    ) USING payload;
+    RETURN NULL;
+END;
+$FN$
+SQL;
+        $sqls[] = "DROP TRIGGER IF EXISTS key_value_history_tr ON settings.key_value";
+        $sqls[] = "CREATE TRIGGER key_value_history_tr AFTER INSERT OR UPDATE OR DELETE ON settings.key_value FOR EACH ROW EXECUTE FUNCTION settings.history_trigger()";
+
+        // --- History tracking: settings.geometry_columns_join ---
+        $sqls[] = "CREATE TABLE IF NOT EXISTS settings.geometry_columns_join_history (LIKE settings.geometry_columns_join)";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join_history ADD COLUMN IF NOT EXISTS history_id BIGSERIAL";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join_history ADD COLUMN IF NOT EXISTS history_operation CHAR(1)";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join_history ADD COLUMN IF NOT EXISTS history_db_user TEXT";
+        $sqls[] = "ALTER TABLE settings.geometry_columns_join_history ADD COLUMN IF NOT EXISTS history_timestamp TIMESTAMPTZ DEFAULT now()";
+        $sqls[] = "DROP TRIGGER IF EXISTS geometry_columns_join_history_tr ON settings.geometry_columns_join";
+        $sqls[] = "CREATE TRIGGER geometry_columns_join_history_tr AFTER INSERT OR UPDATE OR DELETE ON settings.geometry_columns_join FOR EACH ROW EXECUTE FUNCTION settings.history_trigger()";
+
+        // --- Lambda-like functions (gVisor runtime) ---
+        $sqls[] = "CREATE TABLE settings.functions
+                    (
+                      uuid          UUID                      NOT NULL  DEFAULT uuid_generate_v4()  PRIMARY KEY,
+                      name          CHARACTER VARYING(255)    NOT NULL,
+                      runtime       CHARACTER VARYING(64)     NOT NULL,
+                      handler       CHARACTER VARYING(255)    NOT NULL,
+                      code          TEXT                      NOT NULL,
+                      code_sha      CHARACTER VARYING(64)     NOT NULL,
+                      env           JSONB,
+                      memory_mb     INTEGER                   NOT NULL  DEFAULT 128,
+                      timeout_s     INTEGER                   NOT NULL  DEFAULT 30,
+                      triggers      JSONB,
+                      input_schema  JSONB,
+                      output_schema JSONB,
+                      version       INTEGER                   NOT NULL  DEFAULT 1,
+                      username      CHARACTER VARYING(255),
+                      created       TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT now(),
+                      updated       TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT now(),
+                      CONSTRAINT functions_name_unique UNIQUE (name)
+                    )";
+        $sqls[] = "CREATE TABLE settings.function_invocations
+                    (
+                      uuid          UUID                      NOT NULL  DEFAULT uuid_generate_v4()  PRIMARY KEY,
+                      function_name CHARACTER VARYING(255)    NOT NULL,
+                      status        CHARACTER VARYING(32)     NOT NULL  DEFAULT 'pending',
+                      request       JSONB,
+                      response      JSONB,
+                      logs          TEXT,
+                      error         TEXT,
+                      duration_ms   INTEGER,
+                      username      CHARACTER VARYING(255),
+                      created       TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT now(),
+                      finished      TIMESTAMP WITH TIME ZONE,
+                      CHECK (status IN ('pending', 'running', 'succeeded', 'failed'))
+                    )";
+        $sqls[] = "CREATE INDEX function_invocations_function_name_idx ON settings.function_invocations (function_name)";
+        // Async invocations (Phase 2): queue via the table itself.
+        $sqls[] = "ALTER TABLE settings.function_invocations ADD COLUMN invocation_type VARCHAR(16) NOT NULL DEFAULT 'sync'";
+        $sqls[] = "ALTER TABLE settings.function_invocations ADD COLUMN context JSONB";
+        $sqls[] = "CREATE INDEX function_invocations_pending_idx ON settings.function_invocations (created) WHERE status = 'pending' AND invocation_type = 'async'";
+        // Triggers (Phase 3): owner identity for system-triggered runs + schedule bookkeeping.
+        $sqls[] = "ALTER TABLE settings.functions ADD COLUMN owner_context JSONB";
+        $sqls[] = "ALTER TABLE settings.functions ADD COLUMN last_scheduled_at TIMESTAMP WITH TIME ZONE";
+
+        // Multi-file bundles: 'inline' (code column is source) or 'zip' (code is a base64 zip).
+        $sqls[] = "ALTER TABLE settings.functions ADD COLUMN package VARCHAR(16) NOT NULL DEFAULT 'inline'";
+
+        // DB-event triggers: a durable queue (owned by function_event_dispatcher,
+        // separate from settings.outbox which the realtime listener drains) plus a
+        // trigger function that writes row changes to it.
+        $sqls[] = "CREATE TABLE settings.function_event_queue
+                    (
+                      id          BIGSERIAL PRIMARY KEY,
+                      op          CHAR(1)   NOT NULL CHECK (op IN ('I', 'U', 'D')),
+                      schema_name TEXT      NOT NULL,
+                      table_name  TEXT      NOT NULL,
+                      pk_column   TEXT      NOT NULL,
+                      pk_value    TEXT      NOT NULL,
+                      payload     JSONB,
+                      created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+                    )";
+        $sqls[] = <<<'SQL'
+CREATE OR REPLACE FUNCTION _gc2_function_event() RETURNS TRIGGER AS $$
+DECLARE
+  t text;
+  snap jsonb;
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    EXECUTE 'SELECT $1.' || TG_ARGV[0] USING OLD INTO t;
+    snap := row_to_json(OLD)::jsonb;
+  ELSE
+    EXECUTE 'SELECT $1.' || TG_ARGV[0] USING NEW INTO t;
+    snap := row_to_json(NEW)::jsonb;
+  END IF;
+  INSERT INTO settings.function_event_queue (op, schema_name, table_name, pk_column, pk_value, payload)
+  VALUES (left(TG_OP, 1), TG_ARGV[1], TG_ARGV[2], TG_ARGV[0], t, snap);
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+SQL;
 
         include 'Views1.php';
         return $sqls;

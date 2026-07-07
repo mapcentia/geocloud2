@@ -60,3 +60,27 @@ public/apps/widgets/gc2map/js
 public/api
 admin.php
 /public/dashboard
+
+# Python virtualenv (repo root)
+/venv/
+/bin/
+/lib64
+
+# Build artifacts
+dashboard/build/
+docs/_build/
+public/js/admin/build/
+
+# Runtime / process files
+/supervisord.log
+/supervisord.pid
+
+# WSL / Windows download metadata
+*:Zone.Identifier
+
+# Go function-runner build artifact
+/function-runner/gc2-function-runner
+
+# Python bytecode
+__pycache__/
+*.pyc

@@ -12,6 +12,7 @@ use app\conf\Connection;
 use app\inc\Model;
 use app\inc\Util;
 use PDOException;
+use PDOStatement;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException;
 
@@ -40,7 +41,7 @@ class Mapfile extends Model
      */
     public function transformBbox(int $targetSrid): array
     {
-        $sql = "WITH box AS (SELECT ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),{$targetSrid})) AS a) SELECT ST_xmin(a) AS xmin, ST_ymin(a) AS ymin, ST_xmax(a) AS xmax, ST_ymax(a) AS ymax FROM box";
+        $sql = "WITH box AS (SELECT ST_extent(st_transform(ST_MakeEnvelope({$this->bbox[0]},{$this->bbox[1]},{$this->bbox[2]},{$this->bbox[3]},3857),$targetSrid)) AS a) SELECT ST_xmin(a) AS xmin, ST_ymin(a) AS ymin, ST_xmax(a) AS xmax, ST_ymax(a) AS ymax FROM box";
         $result = $this->prepare($sql);
         try {
             $result->execute();
@@ -54,7 +55,7 @@ class Mapfile extends Model
     /**
      * Fetch all OWS-enabled layers for the current schema.
      */
-    public function getOwsLayerRows(): \PDOStatement
+    public function getOwsLayerRows(): PDOStatement
     {
         $sql = "SELECT * FROM settings.getColumns('f_table_schema=''{$this->connection->schema}'' AND enableows=true','raster_columns.r_table_schema=''{$this->connection->schema}'' AND enableows=true') ORDER BY sort_id";
         return $this->execQuery($sql);
@@ -63,6 +64,7 @@ class Mapfile extends Model
     /**
      * Prepare all shared layer data needed for both WMS and WFS mapfile generation.
      * Returns null if the layer should be skipped.
+     * @throws \Throwable
      */
     public function prepareLayerData(array $row, bool $filterBytea = false): ?array
     {
@@ -205,7 +207,7 @@ class Mapfile extends Model
     {
         $s = "user=" . $this->connection->user;
         $s .= " dbname=" . $this->connection->database;
-            $s .= " host=" . $this->mapServerHost;
+        $s .= " host=" . $this->mapServerHost;
         $s .= " port=" . $this->connection->port;
         if ($this->connection->password) {
             $s .= " password=" . $this->connection->password;
@@ -412,9 +414,8 @@ SYMBOLS;
         if (!empty($class[$p . 'linecap'])) $s .= "LINECAP {$class[$p . 'linecap']}\n";
 
         // WIDTH
-        if (!empty($class[$p . 'width'])) {
-            $s .= "WIDTH " . (is_numeric($class[$p . 'width']) ? $class[$p . 'width'] : "[{$class[$p . 'width']}]") . "\n";
-        }
+        if (!empty($class[$p . 'width'])) $s .= "WIDTH " . self::addSquareBracket($class[$p . 'width']) . "\n";
+
 
         // COLOR
         if (!empty($class[$p . 'color'])) $s .= "COLOR " . Util::hex2RGB($class[$p . 'color'], true, " ") . "\n";
@@ -426,9 +427,7 @@ SYMBOLS;
         if (!empty($class[$p . 'style_opacity'])) $s .= "OPACITY {$class[$p . 'style_opacity']}\n";
 
         // SIZE
-        if (!empty($class[$p . 'size'])) {
-            $s .= "SIZE " . (is_numeric($class[$p . 'size']) ? $class[$p . 'size'] : "[{$class[$p . 'size']}]") . "\n";
-        }
+        if (!empty($class[$p . 'size'])) $s .= "SIZE " . self::addSquareBracket($class[$p . 'size']) . "\n";
 
         // ANGLE
         if (!empty($class[$p . 'angle'])) {
@@ -463,8 +462,8 @@ SYMBOLS;
 
     private function renderOffsetPair(array $class, string $xKey, string $yKey): string
     {
-        $x = !empty($class[$xKey]) ? (is_numeric($class[$xKey]) ? $class[$xKey] : "[{$class[$xKey]}]") : "0";
-        $y = !empty($class[$yKey]) ? (is_numeric($class[$yKey]) ? $class[$yKey] : "[{$class[$yKey]}]") : "0";
+        $x = !empty($class[$xKey]) ? self::addSquareBracket($class[$xKey]) : "0";
+        $y = !empty($class[$yKey]) ? self::addSquareBracket($class[$yKey]) : "0";
         return "{$x} {$y}";
     }
 
@@ -488,7 +487,7 @@ SYMBOLS;
 
         // SIZE
         if (!empty($class[$p . 'size'])) {
-            $s .= "SIZE " . (is_numeric($class[$p . 'size']) ? $class[$p . 'size'] : "[{$class[$p . 'size']}]") . "\n";
+            $s .= "SIZE " . self::addSquareBracket($class[$p . 'size']) . "\n";
         } else {
             $s .= "SIZE 11\n";
         }
@@ -619,7 +618,19 @@ SYMBOLS;
     }
 
     /**
-     * @throws PhpfastcacheInvalidArgumentException
+     * Wraps the provided value with square brackets if it is not numeric.
+     * If the value already contains square brackets, they are trimmed first before reapplying them.
+     *
+     * @param string|int|float $value The input value to process, which can be of any type.
+     * @return string|int|float The input value wrapped with square brackets if it is not numeric.
+     */
+    private static function addSquareBracket(string|int|float $value): string|int|float
+    {
+        if (is_numeric($value)) return $value;
+        return '[' . trim($value, "[]") . ']';
+    }
+
+    /**
      */
     public function generateWms(): string
     {
@@ -914,7 +925,7 @@ SYMBOLS;
             if (!empty($fields)) {
                 foreach ($fields as $field => $name) {
                     if (isset($layerData['filteredMeta'][$field]) && !empty($name["mouseover"])) {
-                        $fieldsArr[] = "\\\"{$field}\\\":\\\"[{$field}]\\\"";
+                        $fieldsArr[] = "\\\"$field\\\":\\\"[$field]\\\"";
                     }
                 }
             }

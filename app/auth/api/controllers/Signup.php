@@ -38,7 +38,7 @@ class Signup extends AbstractApi
     public function get_index(): Response
     {
         $socialSignup = !empty(App::$param['socialSignup']);
-        if ($_GET['parentdb']) {
+        if (!empty($_GET['parentdb'])) {
             $requiredParams = ['client_id', 'parentdb'];
             foreach ($requiredParams as $requiredParam) {
                 if (!array_key_exists($requiredParam, $_GET)) {
@@ -66,7 +66,7 @@ class Signup extends AbstractApi
 
         $vals = [
             'parentdb' => $_GET['parentdb'] ?? '',
-            'client_id' => $_GET['client_id'],
+            'client_id' => $_GET['client_id'] ?? null,
             'redirect_uri' => $_GET['redirect_uri'] ?? null,
             'action' => 'signup',
             'social_signup' => $socialSignup ? 'true' : 'false',
@@ -92,7 +92,7 @@ class Signup extends AbstractApi
                 // Create key/value
                 $val = Jwt::generateUserCode();
                 $key = '__twofactor_' . md5($_POST['name']) . '_' . $_POST['parentdb'];
-                $userObj->cacheCode($key, $val);
+                $userObj->cacheCode($key, $val, 600);
                 // Send email
                 $client = new PostmarkClient(App::$param["notification"]["key"]);
                 $html = $this->twig->render('email_twofactor.html.twig', [
@@ -127,7 +127,7 @@ class Signup extends AbstractApi
                 $key = '__twofactor_' . md5($_POST['name']) . '_' . $_POST['parentdb'];
                 try {
                     $val = $userObj->getCode($key);
-                    if ($val !== $_POST['tf_code']) {
+                    if (!hash_equals((string)$val, (string)$_POST['tf_code'])) {
                         echo $this->twig->render('signup.html.twig', [...$_POST, ...$_GET]);
                         echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Wrong one-time code']) . "</div>";
                         return $this->emptyResponse();
@@ -167,7 +167,7 @@ class Signup extends AbstractApi
 
     private function error(string $error, string $errorDesc): Response
     {
-        echo "[$error] $errorDesc";
+        echo "[" . htmlspecialchars($error, ENT_QUOTES) . "] " . htmlspecialchars($errorDesc, ENT_QUOTES);
 //                $paramsStr = http_build_query(['error' => $error, 'error_description' => $errorDesc]);
 //                $header = "Location: $redirectUri$separator$paramsStr";
 //                header($header);

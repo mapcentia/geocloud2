@@ -5,7 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.7.0] - 2026-7-7
+### Changed
+- Add fallback ordering on meta.fields by `_value` when `_order` is empty.
+
+## [2026.6.6] - 2026-29-6
+### FIXED
+- Remove `encodeURIComponent` from the Image URL widget in GC2 Admin. Before this change, the widget incorrectly encoded the image URL.
+- Classes without names are skipped in the JSON legend API. They are already skipped in the HTML legend API.
+- In the SQL API, the mimetype of bytea fields is no longer resolved from reading the first chunks of the bytea. This could be very slow for compressed toasted tables. The resolution is now deferred until the decoding is actually performed in the decode API.
+
+## [2026.6.5] - 2026-23-6
+### Fixed
+- MapFile: Introduce `addSquareBracket` utility function to cleanly handle non-numeric values.
+  Wraps the provided value with square brackets if it is not numeric.
+  If the value already contains square brackets, they are trimmed first before reapplying them.
+
+## [2026.6.4] - 2026-23-6
+### CHANGED
+- Update UUID defaults to use `uuid_generate_v4()` instead of `gen_random_uuid()` from the uuid-ossp extension.
+  The latter is not available on all PostgreSQL versions.
+
 ## [2026.6.3] - 2026-18-6
+### Added
+- Add change history for `settings.key_value` and `settings.geometry_columns_join`. Each table now has a mirrored `*_history` table populated by an `AFTER` trigger (`settings.history_trigger()`) that records every INSERT/UPDATE/DELETE with the operation, DB user, and timestamp.
+
 ### Fixed
 - Refactor WMS GetMap request handling: improve CRS and SRS fallback logic, add support for HTTP Basic Authentication credentials in source URL generation.
 - Refactor WFS-t server for worker mode – no more globals.

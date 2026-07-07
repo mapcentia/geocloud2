@@ -4,7 +4,7 @@ networks:
 
 services:
   mapserver:
-    image: mapcentia/gc2core8:mapserver
+    image: mapcentia/gc2:php8.4-1
     privileged: true
     build:
       context: .
@@ -12,6 +12,7 @@ services:
       target: mapserver
       args:
         - ECW_VERSION=3
+        - PHP_VERSION=8.4
   gc2core:
     image: gc2core
     restart: unless-stopped
@@ -22,6 +23,7 @@ services:
       target: dev
       args:
         - ECW_VERSION=3
+        - PHP_VERSION=8.4
     volumes:
       - ../:/var/www/geocloud2
     networks:
@@ -71,6 +73,26 @@ services:
     env_file: conn.env
     extra_hosts:
       - host.docker.internal:host-gateway
+  function-runner:
+    image: gc2-function-runner
+    build:
+      context: ../function-runner/.
+      dockerfile: Dockerfile
+    # For real gVisor isolation either run this service under the runsc runtime
+    # (uncomment `runtime: runsc` once the host's container runtime registers it)
+    # or set GC2_RUNNER_SANDBOX to a `docker run --runtime=runsc ...` launcher.
+    # runtime: runsc
+    environment:
+      GC2_RUNNER_ADDR: ":8090"
+      GC2_RUNNER_TOKEN: "change-me-shared-secret"
+      # GC2_RUNNER_SANDBOX: '["unshare","-rn","--"]'
+      GC2_RUNNER_POOL: "1"             # warm pools (skip cold start)
+      GC2_RUNNER_POOL_MAX: "8"         # max concurrent invocations
+    networks:
+      - default
+      - internal
+    expose:
+      - 8090
   redis:
     image: redis
     restart: unless-stopped

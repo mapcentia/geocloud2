@@ -242,9 +242,8 @@ class Sql extends Model
                     // Convert data URLs to HTTP. Read the first bytes to get the mimetype.
                     $priKeyName = $this->getPrimeryKey($rel)['attname'];
                     $rowValue = App::$param['host'] . "/api/v1/decodeimg/" . $this->postgisdb . "/" . str_replace('"', '', $rel) . "/" . $key . "/";
-                    $fieldsArr[] = "'$rowValue'||$priKeyName||'?mimetype='||SPLIT_PART(SPLIT_PART(encode(substring(\"$key\" from 0 for 100),'escape'),';',1),':',2) as \"$key\"";
+                    $fieldsArr[] = "'$rowValue'||$priKeyName as \"$key\"";
                 } else {
-//                    $fieldsArr[] = "\"$key\"";
                     $fieldsArr[] = "encode(\"$key\",'escape') as \"$key\"";
                 }
             } elseif ($type == "_bytea") {
@@ -252,7 +251,7 @@ class Sql extends Model
                     // Convert data URLs to HTTP. Read the first bytes to get the mimetype.
                     $priKeyName = $this->getPrimeryKey($rel)['attname'];
                     $rowValue = App::$param['host'] . "/api/v1/decodeimg/" . $this->postgisdb . "/" . str_replace('"', '', $rel) . "/" . $key . "/";
-                    $fieldsArr[] = "(SELECT (array_agg('$rowValue' || $priKeyName || '/' || (i - 1) || '?mimetype=' || SPLIT_PART(SPLIT_PART(encode(substring(f from 0 for 100), 'escape'), ';', 1), ':', 2))) FROM unnest(\"$key\") WITH ORDINALITY AS t(f, i)) as \"$key\"";
+                    $fieldsArr[] = "(SELECT (array_agg('$rowValue' || $priKeyName || '/' || (i - 1) ORDER BY i)) FROM generate_series(1, array_length(\"$key\", 1)) AS i) as \"$key\"";
                 } else {
                     $fieldsArr[] = "\"$key\"";
                 }

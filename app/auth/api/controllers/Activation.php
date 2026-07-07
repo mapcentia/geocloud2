@@ -75,7 +75,7 @@ class Activation extends AbstractApi
                 $client = new PostmarkClient(App::$param["notification"]["key"]);
                 // Build an attractive HTML email. We avoid adding Twig here to keep models framework-agnostic.
                 $html = $this->twig->render('email_activation.html.twig', [
-                    'app_name' => App::$param['ap'] ?? 'GC2',
+                    'app_name' => App::$param['appName'] ?? 'GC2',
                     'code' => $code,
                     'recipient_email' => $_POST['email'],
                     'expires_in' => '10 minutes',
