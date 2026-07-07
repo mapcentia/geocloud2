@@ -9,6 +9,7 @@
 ini_set("display_errors", "no");
 //ini_set("display_errors", "yes");
 error_reporting(E_ERROR | E_WARNING | E_PARSE | E_DEPRECATED | E_USER_DEPRECATED);
+
 //error_reporting(E_ALL);
 
 use app\api\v4\Controller;
@@ -448,19 +449,28 @@ $handler = static function () use ($routes) {
             $Route2 = new Route2();
             // Rate limit per JWT token for all API v4 routes
             RateLimiter::consumeForJwt(Input::getJwtToken(), App::$param['apiV4']['rateLimitPerMinute'] ?? 120);
+            // At this point we just validate the token, but we do not yet know if the user is allowed to access the API
+            try {
+                $jwt = Jwt::validate();
+                $Route2->jwt = $jwt;
+                $validationError = null;
+            } catch (\Throwable $e) {
+                error_log('JWT-DEBUG validate failed: ' . get_class($e) . ': ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+                $jwt = null;
+                $validationError = $e;
+            }
+
             // First, go through PUBLIC routes before validating the token
             foreach ($routes as $c => $r) {
                 if ($r->getScope() == Scope::PUBLIC) {
+                    if ($jwt) $Route2->jwt = $jwt;
                     $Route2->add($r->getRoute(), new $c($Route2, new \app\inc\Connection()));
                 }
             }
             // Then go through non-PUBLIC routes
             if (!$Route2->isMatched) {
-                try {
-                    $jwt = Jwt::validate();
-                } catch (\Throwable $e) {
-                    error_log('JWT-DEBUG validate failed: ' . get_class($e) . ': ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
-                    throw $e;
+                if ($validationError) {
+                    throw $validationError;
                 }
                 $Route2->jwt = $jwt;
                 $conn = new \app\inc\Connection(user: $jwt["data"]["uid"] ?? null, database: $jwt["data"]["database"] ?? null);
