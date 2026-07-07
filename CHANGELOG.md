@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.7.0] - 2026-7-7
+### Changed
+- Add fallback ordering on meta.fields by `_value` when `_order` is empty.
+
 ## [2026.6.6] - 2026-29-6
 ### FIXED
 - Remove `encodeURIComponent` from the Image URL widget in GC2 Admin. Before this change, the widget incorrectly encoded the image URL.
