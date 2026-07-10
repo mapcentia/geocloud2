@@ -31,6 +31,8 @@ $database = new Database();
 $dbs = $only ? [$only] : $database->listAllDbs()['data'];
 $total = 0;
 
+echo "EVENT SCHEDULER START: " . date('Y-m-d H:i:s') . "\n";
+
 foreach ($dbs as $db) {
     if (in_array($db, $skip, true)) {
         continue;
