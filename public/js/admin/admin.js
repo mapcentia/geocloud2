@@ -3033,8 +3033,6 @@ $(document).ready(function () {
         Ext.getCmp("a6").removeAll();
         Ext.getCmp("a8").removeAll();
         Ext.getCmp("a9").removeAll();
-        Ext.getCmp("a10").removeAll();
-        Ext.getCmp("a11").removeAll();
         Ext.getCmp("a12").removeAll();
         Ext.getCmp("a13").removeAll();
         Ext.getCmp("a14").removeAll();
@@ -3268,18 +3266,12 @@ $(document).ready(function () {
         var a3 = Ext.getCmp("a3");
         var a8 = Ext.getCmp("a8");
         var a9 = Ext.getCmp("a9");
-        var a10 = Ext.getCmp("a10");
-        var a11 = Ext.getCmp("a11");
         a3.remove(wmsClass.grid);
         a8.remove(wmsClass.grid2);
         a9.remove(wmsClass.grid3);
-        a10.remove(wmsClass.grid4);
-        a11.remove(wmsClass.grid5);
         a3.doLayout();
         a8.doLayout();
         a9.doLayout();
-        a10.doLayout();
-        a11.doLayout();
 
         Ext.getCmp("layerStyleTabs").activate(activeTab);
         var a13 = Ext.getCmp("a13");
@@ -3637,44 +3629,8 @@ $(document).ready(function () {
                                                                                 {
                                                                                     text: '<i class="fa fa-check"></i> ' + __('Update'),
                                                                                     handler: function () {
-                                                                                        var grid = Ext.getCmp("propGrid");
-                                                                                        var grid2 = Ext.getCmp("propGrid2");
-                                                                                        var grid3 = Ext.getCmp("propGrid3");
-                                                                                        var grid4 = Ext.getCmp("propGrid4");
-                                                                                        var grid5 = Ext.getCmp("propGrid5");
-                                                                                        var source = grid.getSource();
-                                                                                        jQuery.extend(source, grid2.getSource());
-                                                                                        jQuery.extend(source, grid3.getSource());
-                                                                                        jQuery.extend(source, grid4.getSource());
-                                                                                        jQuery.extend(source, grid5.getSource());
-                                                                                        var param = {
-                                                                                            data: source
-                                                                                        };
-                                                                                        param = Ext.util.JSON.encode(param);
-
-                                                                                        Ext.Ajax.request({
-                                                                                            url: '/controllers/classification/index/' + wmsClasses.table + '/' + wmsClass.classId,
-                                                                                            method: 'put',
-                                                                                            params: param,
-                                                                                            headers: {
-                                                                                                'Content-Type': 'application/json; charset=utf-8'
-                                                                                            },
-                                                                                            success: function (response) {
-                                                                                                App.setAlert(App.STATUS_OK, __("Style is updated"));
-                                                                                                writeFiles(wmsClasses.table, map);
-                                                                                                wmsClasses.store.load();
-                                                                                                store.load();
-                                                                                            },
-                                                                                            failure: function (response) {
-                                                                                                Ext.MessageBox.show({
-                                                                                                    title: 'Failure',
-                                                                                                    msg: __(Ext.decode(response.responseText).message),
-                                                                                                    buttons: Ext.MessageBox.OK,
-                                                                                                    width: 400,
-                                                                                                    height: 300,
-                                                                                                    icon: Ext.MessageBox.ERROR
-                                                                                                });
-                                                                                            }
+                                                                                        wmsClass.save(function () {
+                                                                                            store.load();
                                                                                         });
                                                                                     }
                                                                                 }
@@ -3688,24 +3644,13 @@ $(document).ready(function () {
                                                                                 {
                                                                                     xtype: "panel",
                                                                                     id: "a8",
-                                                                                    title: "Symbol1"
+                                                                                    title: "Symbols"
                                                                                 },
                                                                                 {
                                                                                     xtype: "panel",
                                                                                     id: "a9",
-                                                                                    title: "Symbol2"
-                                                                                },
-                                                                                {
-                                                                                    xtype: "panel",
-                                                                                    id: "a10",
-                                                                                    title: "Label1"
-                                                                                },
-                                                                                {
-                                                                                    xtype: "panel",
-                                                                                    id: "a11",
-                                                                                    title: "Label2"
+                                                                                    title: "Labels"
                                                                                 }
-
                                                                             ]
                                                                         }]
                                                                     }
