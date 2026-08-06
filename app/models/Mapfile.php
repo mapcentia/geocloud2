@@ -392,129 +392,96 @@ SYMBOLS;
     }
 
     /**
-     * Render a MapServer STYLE block.
-     * @param string $prefix '' for primary style, 'overlay' for overlay style
+     * Render a MapServer STYLE block from a single style entry (new format, un-prefixed keys).
      */
-    public function renderStyle(array $class, string $prefix = ''): string
+    public static function renderStyle(array $style): string
     {
-        $p = $prefix;
         $s = "STYLE\n";
 
-        // SYMBOL
-        if (!empty($class[$p . 'symbol'])) {
-            $sym = $class[$p . 'symbol'];
+        if (!empty($style['symbol'])) {
+            $sym = $style['symbol'];
             $d = str_starts_with($sym, "[") ? "" : "'";
             $s .= "SYMBOL {$d}{$sym}{$d}\n";
         }
+        if (!empty($style['pattern'])) $s .= "PATTERN {$style['pattern']} END\n";
+        if (!empty($style['linecap'])) $s .= "LINECAP {$style['linecap']}\n";
+        if (!empty($style['width'])) $s .= "WIDTH " . self::addSquareBracket($style['width']) . "\n";
+        if (!empty($style['color'])) $s .= "COLOR " . Util::hex2RGB($style['color'], true, " ") . "\n";
+        if (!empty($style['outlinecolor'])) $s .= "OUTLINECOLOR " . Util::hex2RGB($style['outlinecolor'], true, " ") . "\n";
+        if (!empty($style['style_opacity'])) $s .= "OPACITY {$style['style_opacity']}\n";
+        if (!empty($style['size'])) $s .= "SIZE " . self::addSquareBracket($style['size']) . "\n";
 
-        // PATTERN
-        if (!empty($class[$p . 'pattern'])) $s .= "PATTERN {$class[$p . 'pattern']} END\n";
-
-        // LINECAP
-        if (!empty($class[$p . 'linecap'])) $s .= "LINECAP {$class[$p . 'linecap']}\n";
-
-        // WIDTH
-        if (!empty($class[$p . 'width'])) $s .= "WIDTH " . self::addSquareBracket($class[$p . 'width']) . "\n";
-
-
-        // COLOR
-        if (!empty($class[$p . 'color'])) $s .= "COLOR " . Util::hex2RGB($class[$p . 'color'], true, " ") . "\n";
-
-        // OUTLINECOLOR
-        if (!empty($class[$p . 'outlinecolor'])) $s .= "OUTLINECOLOR " . Util::hex2RGB($class[$p . 'outlinecolor'], true, " ") . "\n";
-
-        // OPACITY
-        if (!empty($class[$p . 'style_opacity'])) $s .= "OPACITY {$class[$p . 'style_opacity']}\n";
-
-        // SIZE
-        if (!empty($class[$p . 'size'])) $s .= "SIZE " . self::addSquareBracket($class[$p . 'size']) . "\n";
-
-        // ANGLE
-        if (!empty($class[$p . 'angle'])) {
-            $angle = $class[$p . 'angle'];
+        if (!empty($style['angle'])) {
+            $angle = $style['angle'];
             if (is_numeric($angle) && ((int)$angle > 360 || (int)$angle < -360)) $angle = '0';
             $s .= (is_numeric($angle) || strtolower($angle) == "auto")
                 ? "ANGLE {$angle}\n"
                 : "ANGLE [{$angle}]\n";
         }
 
-        // GAP
-        if (!empty($class[$p . 'gap'])) $s .= "GAP {$class[$p . 'gap']}\n";
+        if (!empty($style['gap'])) $s .= "GAP {$style['gap']}\n";
+        if (!empty($style['geomtransform'])) $s .= "GEOMTRANSFORM '{$style['geomtransform']}'\n";
+        if (!empty($style['minsize'])) $s .= "MINSIZE {$style['minsize']}\n";
+        if (!empty($style['maxsize'])) $s .= "MAXSIZE {$style['maxsize']}\n";
 
-        // GEOMTRANSFORM
-        if (!empty($class[$p . 'geomtransform'])) $s .= "GEOMTRANSFORM '{$class[$p . 'geomtransform']}'\n";
-
-        // MINSIZE / MAXSIZE (primary style only)
-        if ($prefix === '') {
-            if (!empty($class['minsize'])) $s .= "MINSIZE {$class['minsize']}\n";
-            if (!empty($class['maxsize'])) $s .= "MAXSIZE {$class['maxsize']}\n";
-        }
-
-        // OFFSET
-        $s .= "OFFSET " . $this->renderOffsetPair($class, $p . 'style_offsetx', $p . 'style_offsety') . "\n";
-
-        // POLAROFFSET
-        $s .= "POLAROFFSET " . $this->renderOffsetPair($class, $p . 'style_polaroffsetr', $p . 'style_polaroffsetd') . "\n";
+        $s .= "OFFSET " . self::renderOffsetPair($style, 'style_offsetx', 'style_offsety') . "\n";
+        $s .= "POLAROFFSET " . self::renderOffsetPair($style, 'style_polaroffsetr', 'style_polaroffsetd') . "\n";
 
         $s .= "\nEND # style\n";
         return $s;
     }
 
-    private function renderOffsetPair(array $class, string $xKey, string $yKey): string
+    private static function renderOffsetPair(array $entry, string $xKey, string $yKey): string
     {
-        $x = !empty($class[$xKey]) ? self::addSquareBracket($class[$xKey]) : "0";
-        $y = !empty($class[$yKey]) ? self::addSquareBracket($class[$yKey]) : "0";
+        $x = !empty($entry[$xKey]) ? self::addSquareBracket($entry[$xKey]) : "0";
+        $y = !empty($entry[$yKey]) ? self::addSquareBracket($entry[$yKey]) : "0";
         return "{$x} {$y}";
     }
 
     /**
-     * Render a MapServer LABEL block.
-     * @param string $num '' for label 1, '2' for label 2
+     * Render a MapServer LABEL block from a single label entry (new format, un-prefixed keys).
+     * $n is the 1-based label index, used only in the comment markers that
+     * Wms.php's disableLabels sed command targets.
      */
-    public function renderLabel(array $class, string $layerName, string $num = ''): string
+    public static function renderLabel(array $label, string $layerName, int $n): string
     {
-        $enableKey = "label" . $num;
-        if (empty($class[$enableKey])) return '';
-
-        $p = "label{$num}_";
-        $n = $num ?: '1';
+        if (empty($label['on'])) return '';
 
         $s = "#START_LABEL{$n}_{$layerName}\n\n";
         $s .= "LABEL\n";
-        if (!empty($class[$p . 'text'])) $s .= "TEXT '{$class[$p . 'text']}'\n";
+        if (!empty($label['text'])) $s .= "TEXT '{$label['text']}'\n";
         $s .= "TYPE truetype\n";
-        $s .= "FONT " . ($class[$p . 'font'] ?: "arial") . ($class[$p . 'fontweight'] ?: "normal") . "\n";
+        $s .= "FONT " . (!empty($label['font']) ? $label['font'] : "arial")
+            . (!empty($label['fontweight']) ? $label['fontweight'] : "normal") . "\n";
 
-        // SIZE
-        if (!empty($class[$p . 'size'])) {
-            $s .= "SIZE " . self::addSquareBracket($class[$p . 'size']) . "\n";
+        if (!empty($label['size'])) {
+            $s .= "SIZE " . self::addSquareBracket($label['size']) . "\n";
         } else {
             $s .= "SIZE 11\n";
         }
 
-        $s .= "COLOR " . (!empty($class[$p . 'color']) ? Util::hex2RGB($class[$p . 'color'], true, " ") : "1 1 1") . "\n";
-        $s .= "OUTLINECOLOR " . (!empty($class[$p . 'outlinecolor']) ? Util::hex2RGB($class[$p . 'outlinecolor'], true, " ") : "255 255 255") . "\n";
+        $s .= "COLOR " . (!empty($label['color']) ? Util::hex2RGB($label['color'], true, " ") : "1 1 1") . "\n";
+        $s .= "OUTLINECOLOR " . (!empty($label['outlinecolor']) ? Util::hex2RGB($label['outlinecolor'], true, " ") : "255 255 255") . "\n";
         $s .= "SHADOWSIZE 2 2\n";
         $s .= "ANTIALIAS true\n";
-        $s .= "FORCE " . (!empty($class[$p . 'force']) ? "true" : "false") . "\n";
-        $s .= "POSITION " . (!empty($class[$p . 'position']) ? $class[$p . 'position'] : "auto") . "\n";
+        $s .= "FORCE " . (!empty($label['force']) ? "true" : "false") . "\n";
+        $s .= "POSITION " . (!empty($label['position']) ? $label['position'] : "auto") . "\n";
         $s .= "PARTIALS false\n";
         $s .= "MINSIZE 1\n";
 
-        if (!empty($class[$p . 'maxsize'])) $s .= "MAXSIZE {$class[$p . 'maxsize']}\n";
-        if (!empty($class[$p . 'maxscaledenom'])) $s .= "MAXSCALEDENOM {$class[$p . 'maxscaledenom']}\n";
-        if (!empty($class[$p . 'minscaledenom'])) $s .= "MINSCALEDENOM {$class[$p . 'minscaledenom']}\n";
-        if (!empty($class[$p . 'buffer'])) $s .= "BUFFER {$class[$p . 'buffer']}\n";
-        if (!empty($class[$p . 'repeatdistance'])) $s .= "REPEATDISTANCE {$class[$p . 'repeatdistance']}\n";
-        if (!empty($class[$p . 'minfeaturesize'])) $s .= "MINFEATURESIZE {$class[$p . 'minfeaturesize']}\n";
+        if (!empty($label['maxsize'])) $s .= "MAXSIZE {$label['maxsize']}\n";
+        if (!empty($label['maxscaledenom'])) $s .= "MAXSCALEDENOM {$label['maxscaledenom']}\n";
+        if (!empty($label['minscaledenom'])) $s .= "MINSCALEDENOM {$label['minscaledenom']}\n";
+        if (!empty($label['buffer'])) $s .= "BUFFER {$label['buffer']}\n";
+        if (!empty($label['repeatdistance'])) $s .= "REPEATDISTANCE {$label['repeatdistance']}\n";
+        if (!empty($label['minfeaturesize'])) $s .= "MINFEATURESIZE {$label['minfeaturesize']}\n";
 
-        if (!empty($class[$p . 'expression'])) {
-            $s .= "EXPRESSION ({$class[$p . 'expression']})\n";
+        if (!empty($label['expression'])) {
+            $s .= "EXPRESSION ({$label['expression']})\n";
         }
 
-        // ANGLE
-        if (!empty($class[$p . 'angle'])) {
-            $angle = $class[$p . 'angle'];
+        if (!empty($label['angle'])) {
+            $angle = $label['angle'];
             if (is_numeric($angle) && ((int)$angle > 360 || (int)$angle < -360)) $angle = '0';
             $s .= (is_numeric($angle) || $angle == 'auto' || $angle == 'auto2' || $angle == 'follow')
                 ? "ANGLE {$angle}\n"
@@ -522,25 +489,16 @@ SYMBOLS;
         }
 
         $s .= "WRAP \"\\n\"\n\n";
-        $s .= "OFFSET " . (!empty($class[$p . 'offsetx']) ? $class[$p . 'offsetx'] : "0") . " " . (!empty($class[$p . 'offsety']) ? $class[$p . 'offsety'] : "0") . "\n\n\n";
+        $s .= "OFFSET " . (!empty($label['offsetx']) ? $label['offsetx'] : "0") . " " . (!empty($label['offsety']) ? $label['offsety'] : "0") . "\n\n\n";
 
         // Label background style
         $s .= "STYLE\n";
-        if (!empty($class[$p . 'backgroundcolor'])) {
-            $bgColor = Util::hex2RGB($class[$p . 'backgroundcolor'], true, " ");
+        if (!empty($label['backgroundcolor'])) {
+            $bgColor = Util::hex2RGB($label['backgroundcolor'], true, " ");
             $s .= "GEOMTRANSFORM 'labelpoly'\n";
             $s .= "COLOR {$bgColor}\n";
-            if ($num === '') {
-                // Label 1: always output outline + width with default
-                $s .= "OUTLINECOLOR {$bgColor}\n";
-                $s .= "WIDTH " . ($class[$p . 'backgroundpadding'] ?: "1") . "\n";
-            } else {
-                // Label 2: only if padding is set
-                if (!empty($class[$p . 'backgroundpadding'])) {
-                    $s .= "OUTLINECOLOR {$bgColor}\n";
-                    $s .= "WIDTH {$class[$p . 'backgroundpadding']}\n";
-                }
-            }
+            $s .= "OUTLINECOLOR {$bgColor}\n";
+            $s .= "WIDTH " . (!empty($label['backgroundpadding']) ? $label['backgroundpadding'] : "1") . "\n";
         }
         $s .= "END # STYLE\n";
         $s .= "END\n";
@@ -548,7 +506,7 @@ SYMBOLS;
         return $s;
     }
 
-    public function renderLeader(array $class): string
+    public static function renderLeader(array $class): string
     {
         if (empty($class['leader'])) return '';
 
