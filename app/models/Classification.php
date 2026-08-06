@@ -141,6 +141,7 @@ class Classification extends Model
         $response['success'] = true;
         $row = $this->fetchRow($res);
         $arr = $arr2 = !empty($row['class']) && is_array(json_decode($row['class'], true)) ? json_decode($row['class'], true) : [];
+        $arr = array_map([self::class, 'normalizeClass'], $arr);
         for ($i = 0; $i < sizeof($arr); $i++) {
             $last = 10000;
             foreach ($arr2 as $key => $value) {
@@ -178,22 +179,8 @@ class Classification extends Model
                 $arr[$key] = "";
             }
         }
-        $props = [
-            "name" => "Unnamed Class",
-            "label" => false,
-            "label_text" => "",
-            "label2_text" => "",
-            "force_label" => false,
-            "color" => "#FF0000",
-            "outlinecolor" => "#FF0000",
-            "size" => "2",
-            "width" => "1"];
-        foreach ($arr as $ignored) {
-            foreach ($props as $key2 => $value2) {
-                if (!isset($arr[$key2])) {
-                    $arr[$key2] = $value2;
-                }
-            }
+        if (!isset($arr['name'])) {
+            $arr['name'] = "Unnamed Class";
         }
         $response['data'] = array($arr);
         return $response;
