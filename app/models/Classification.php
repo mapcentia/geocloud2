@@ -717,33 +717,16 @@ class Classification extends Model
             $symbol = $data->symbol ?? "circle";
             $size = $data->symbolSize ?? 10;
         }
-        return (object)[
-            "sortid" => $sortid,
-            "name" => $name,
-            "expression" => $expression,
-            "label" => !empty($data->labelText),
-            "label_size" => !empty($data->labelSize) ? $data->labelSize : "",
-            "label_color" => !empty($data->labelColor) ? $data->labelColor : "",
+        $styles = [(object)[
+            "sortid" => 10,
+            "name" => "Symbol 1",
             "color" => $color,
             "outlinecolor" => !empty($outlineColor) ? $outlineColor : "",
             "symbol" => $symbol,
             "angle" => !empty($data->angle) ? $data->angle : "",
             "size" => $size,
             "width" => !empty($data->lineWidth) ? $data->lineWidth : "",
-            "overlaycolor" => !empty($data->overlayColor) ? $data->overlayColor : "",
-            "overlayoutlinecolor" => "",
-            "overlaysymbol" => !empty($data->overlaySymbol) ? $data->overlaySymbol : "",
-            "overlaysize" => !empty($data->overlaySize) ? $data->overlaySize : "",
-            "overlaywidth" => "",
-            "label_text" => !empty($data->labelText) ? $data->labelText : "",
-            "label_position" => !empty($data->labelPosition) ? $data->labelPosition : "",
-            "label_font" => !empty($data->labelFont) ? $data->labelFont : "",
-            "label_fontweight" => !empty($data->labelFontWeight) ? $data->labelFontWeight : "",
-            "label_angle" => !empty($data->labelAngle) ? $data->labelAngle : "",
-            "label_backgroundcolor" => !empty($data->labelBackgroundcolor) ? $data->labelBackgroundcolor : "",
             "style_opacity" => !empty($data->opacity) ? $data->opacity : "",
-            "overlaystyle_opacity" => !empty($data->overlayOpacity) ? $data->overlayOpacity : "",
-            "label_force" => !empty($data->force) ? $data->force : "",
             "gap" => !empty($data->gap) ? $data->gap : "",
             "minsize" => !empty($data->minsize) ? $data->minsize : "",
             "maxsize" => !empty($data->maxsize) ? $data->maxsize : "",
@@ -751,17 +734,53 @@ class Classification extends Model
             "style_offsety" => !empty($data->style_offsety) ? $data->style_offsety : "",
             "style_polaroffsetr" => !empty($data->style_polaroffsetr) ? $data->style_polaroffsetr : "",
             "style_polaroffsetd" => !empty($data->style_polaroffsetd) ? $data->style_polaroffsetd : "",
-            "label_outlinecolor" => !empty($data->label_outlinecolor) ? $data->label_outlinecolor : "",
-            "label_buffer" => !empty($data->label_buffer) ? $data->label_buffer : "",
-            "label_repeatdistance" => !empty($data->label_repeatdistance) ? $data->label_repeatdistance : "",
-            "label_backgroundpadding" => !empty($data->label_backgroundpadding) ? $data->label_backgroundpadding : "",
-            "label_offsetx" => !empty($data->label_offsetx) ? $data->label_offsetx : "",
-            "label_offsety" => !empty($data->label_offsety) ? $data->label_offsety : "",
-            "label_expression" => !empty($data->label_expression) ? $data->label_expression : "",
-            "label_maxsize" => !empty($data->label_maxsize) ? $data->label_maxsize : "",
-            "label_minfeaturesize" => !empty($data->label_minfeaturesize) ? $data->label_minfeaturesize : "",
-            "label_minscaledenom" => !empty($data->label_minscaledenom) ? $data->label_minscaledenom : "",
-            "label_maxscaledenom" => !empty($data->label_maxscaledenom) ? $data->label_maxscaledenom : "",
+        ]];
+        if (!empty($data->overlayColor) || !empty($data->overlaySymbol) || !empty($data->overlaySize) || !empty($data->overlayOpacity)) {
+            $styles[] = (object)[
+                "sortid" => 20,
+                "name" => "Symbol 2",
+                "color" => !empty($data->overlayColor) ? $data->overlayColor : "",
+                "outlinecolor" => "",
+                "symbol" => !empty($data->overlaySymbol) ? $data->overlaySymbol : "",
+                "size" => !empty($data->overlaySize) ? $data->overlaySize : "",
+                "width" => "",
+                "style_opacity" => !empty($data->overlayOpacity) ? $data->overlayOpacity : "",
+            ];
+        }
+        $labels = [];
+        if (!empty($data->labelText)) {
+            $labels[] = (object)[
+                "sortid" => 10,
+                "name" => "Label 1",
+                "on" => true,
+                "text" => $data->labelText,
+                "size" => !empty($data->labelSize) ? $data->labelSize : "",
+                "color" => !empty($data->labelColor) ? $data->labelColor : "",
+                "position" => !empty($data->labelPosition) ? $data->labelPosition : "",
+                "font" => !empty($data->labelFont) ? $data->labelFont : "",
+                "fontweight" => !empty($data->labelFontWeight) ? $data->labelFontWeight : "",
+                "angle" => !empty($data->labelAngle) ? $data->labelAngle : "",
+                "backgroundcolor" => !empty($data->labelBackgroundcolor) ? $data->labelBackgroundcolor : "",
+                "force" => !empty($data->force),
+                "outlinecolor" => !empty($data->label_outlinecolor) ? $data->label_outlinecolor : "",
+                "buffer" => !empty($data->label_buffer) ? $data->label_buffer : "",
+                "repeatdistance" => !empty($data->label_repeatdistance) ? $data->label_repeatdistance : "",
+                "backgroundpadding" => !empty($data->label_backgroundpadding) ? $data->label_backgroundpadding : "",
+                "offsetx" => !empty($data->label_offsetx) ? $data->label_offsetx : "",
+                "offsety" => !empty($data->label_offsety) ? $data->label_offsety : "",
+                "expression" => !empty($data->label_expression) ? $data->label_expression : "",
+                "maxsize" => !empty($data->label_maxsize) ? $data->label_maxsize : "",
+                "minfeaturesize" => !empty($data->label_minfeaturesize) ? $data->label_minfeaturesize : "",
+                "minscaledenom" => !empty($data->label_minscaledenom) ? $data->label_minscaledenom : "",
+                "maxscaledenom" => !empty($data->label_maxscaledenom) ? $data->label_maxscaledenom : "",
+            ];
+        }
+        return (object)[
+            "sortid" => $sortid,
+            "name" => $name,
+            "expression" => $expression,
+            "styles" => $styles,
+            "labels" => $labels,
         ];
     }
 }

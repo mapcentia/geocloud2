@@ -133,4 +133,57 @@ class ClassificationFormatTest extends Unit
         $result = Classification::normalizeClass((array)$new);
         $this->assertEquals("#008000", $result['styles'][0]['color']);
     }
+
+    public function testCreateClassEmitsNewFormat(): void
+    {
+        $data = (object)[
+            "labelText" => "[navn]", "labelSize" => "9", "labelPosition" => "cc",
+            "symbol" => "circle", "symbolSize" => "50", "opacity" => "25",
+            "overlayColor" => "#00FF00", "overlaySymbol" => "circle",
+            "overlaySize" => "35", "overlayOpacity" => "70", "force" => true,
+        ];
+        $c = (array)Classification::createClass("POINT", "Cluster", "[cnt]>1", 20, "#00FF00", $data);
+        $this->assertEquals("Cluster", $c['name']);
+        $this->assertEquals("[cnt]>1", $c['expression']);
+        $this->assertEquals(20, $c['sortid']);
+        $this->assertArrayNotHasKey('color', $c);          // no flat legacy keys
+        $this->assertArrayNotHasKey('label_text', $c);
+        $this->assertArrayNotHasKey('overlaycolor', $c);
+
+        $styles = array_map(fn($o) => (array)$o, $c['styles']);
+        $this->assertCount(2, $styles);
+        $this->assertEquals("#00FF00", $styles[0]['color']);
+        $this->assertEquals("circle", $styles[0]['symbol']);
+        $this->assertEquals("50", $styles[0]['size']);
+        $this->assertEquals("25", $styles[0]['style_opacity']);
+        $this->assertEquals(10, $styles[0]['sortid']);
+        $this->assertEquals("#00FF00", $styles[1]['color']);
+        $this->assertEquals("35", $styles[1]['size']);
+        $this->assertEquals("70", $styles[1]['style_opacity']);
+        $this->assertEquals(20, $styles[1]['sortid']);
+
+        $labels = array_map(fn($o) => (array)$o, $c['labels']);
+        $this->assertCount(1, $labels);
+        $this->assertTrue($labels[0]['on']);
+        $this->assertEquals("[navn]", $labels[0]['text']);
+        $this->assertEquals("9", $labels[0]['size']);
+        $this->assertEquals("cc", $labels[0]['position']);
+        $this->assertTrue($labels[0]['force']);
+    }
+
+    public function testCreateClassWithoutOverlayOrLabel(): void
+    {
+        $c = (array)Classification::createClass("POLYGON", "Simple", null, 10, "#FF0000", (object)[]);
+        $this->assertCount(1, $c['styles']);
+        $this->assertEquals("#FF0000", ((array)$c['styles'][0])['color']);
+        $this->assertEquals([], $c['labels']);
+    }
+
+    public function testCreateClassPointDefaults(): void
+    {
+        $c = (array)Classification::createClass("POINT", "P", null, 10, "#FF0000", (object)[]);
+        $s = (array)$c['styles'][0];
+        $this->assertEquals("circle", $s['symbol']);
+        $this->assertEquals(10, $s['size']);
+    }
 }
