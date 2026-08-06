@@ -34,6 +34,9 @@ $database = new Database();
 $totals = ['processed' => 0, 'succeeded' => 0, 'failed' => 0];
 
 $dbs = $only ? [$only] : $database->listAllDbs()['data'];
+
+echo "FUNCTION WORKER START: " . date('Y-m-d H:i:s') . "\n";
+
 foreach ($dbs as $db) {
     if (in_array($db, $skip, true)) {
         continue;
