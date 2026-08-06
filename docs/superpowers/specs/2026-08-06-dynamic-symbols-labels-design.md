@@ -77,6 +77,7 @@ A **static, shared, idempotent** helper — `Classification::normalizeClass(arra
 - `renderStyle(array $style): string`: takes a style object directly instead of (class, prefix). `minsize`/`maxsize` are rendered for **all** styles (currently primary-only; MapServer supports them per STYLE).
 - `renderLabel(array $label, string $layerName, int $n): string`: takes a label object; `$n` is only used in the `#START_LABEL{n}_...` comment markers. The Label2 background quirk (outline/width only when padding set) is normalized to the Label1 behavior: when `backgroundcolor` is set, always emit `OUTLINECOLOR` and `WIDTH` (default 1).
 - `renderClasses()`: loops `styles` and `labels` sorted numerically by `sortid` (stable sort — equal `sortid` preserves array order). Both `renderStyle` and `renderLabel` know only the new format.
+- **`Wms.php` disableLabels feature:** `app/controllers/Wms.php:288-294` strips label blocks from the tmp mapfile with `sed` using the `#START_LABEL1_`/`#START_LABEL2_` markers. With N labels the two hardcoded sed commands are replaced by one using `#START_LABEL[0-9]*_` / `#END_LABEL[0-9]*_` ranges, which also covers old on-disk mapfiles that still carry the LABEL1/LABEL2 markers.
 
 ## 4. Frontend
 
