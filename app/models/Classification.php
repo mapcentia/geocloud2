@@ -55,6 +55,76 @@ class Classification extends Model
         }
     }
 
+    public const STYLE_KEYS = ['color', 'outlinecolor', 'symbol', 'size', 'width', 'angle', 'gap',
+        'style_opacity', 'pattern', 'linecap', 'geomtransform', 'minsize', 'maxsize',
+        'style_offsetx', 'style_offsety', 'style_polaroffsetr', 'style_polaroffsetd'];
+
+    public const LABEL_KEYS = ['force', 'text', 'minscaledenom', 'maxscaledenom', 'position', 'size',
+        'color', 'outlinecolor', 'buffer', 'repeatdistance', 'angle', 'backgroundcolor',
+        'backgroundpadding', 'offsetx', 'offsety', 'font', 'fontweight', 'expression',
+        'maxsize', 'minfeaturesize'];
+
+    /**
+     * Convert a class object from the legacy flat format (Symbol1/Symbol2/Label1/Label2 keys)
+     * to the new format with styles[] and labels[] arrays. Idempotent: new-format input passes
+     * through unchanged (apart from null values inside entries becoming empty strings and the
+     * styles/labels keys being guaranteed to exist). Legacy flat keys are always stripped.
+     */
+    public static function normalizeClass(array $class): array
+    {
+        // Normalize any nested stdClass objects to plain arrays
+        $class = json_decode(json_encode($class), true);
+        $hasNewFormat = isset($class['styles']) || isset($class['labels']);
+
+        $legacyStyles = [];
+        foreach ([['', 10, 'Symbol 1'], ['overlay', 20, 'Symbol 2']] as [$prefix, $sortid, $name]) {
+            $style = [];
+            foreach (self::STYLE_KEYS as $key) {
+                if (!empty($class[$prefix . $key])) {
+                    $style[$key] = $class[$prefix . $key];
+                }
+                unset($class[$prefix . $key]);
+            }
+            if (!empty($style)) {
+                $legacyStyles[] = array_merge(['sortid' => $sortid, 'name' => $name], $style);
+            }
+        }
+
+        $legacyLabels = [];
+        foreach ([['label', 10, 'Label 1'], ['label2', 20, 'Label 2']] as [$prefix, $sortid, $name]) {
+            $label = [];
+            foreach (self::LABEL_KEYS as $key) {
+                if (!empty($class[$prefix . '_' . $key])) {
+                    $label[$key] = $class[$prefix . '_' . $key];
+                }
+                unset($class[$prefix . '_' . $key]);
+            }
+            $on = !empty($class[$prefix]);
+            unset($class[$prefix]);
+            if ($on || !empty($label)) {
+                $legacyLabels[] = array_merge(['sortid' => $sortid, 'name' => $name, 'on' => $on], $label);
+            }
+        }
+
+        if ($hasNewFormat) {
+            $class['styles'] = $class['styles'] ?? [];
+            $class['labels'] = $class['labels'] ?? [];
+        } else {
+            $class['styles'] = $legacyStyles;
+            $class['labels'] = $legacyLabels;
+        }
+
+        foreach (['styles', 'labels'] as $k) {
+            foreach ($class[$k] as $i => $entry) {
+                if (!is_array($entry)) continue;
+                foreach ($entry as $prop => $v) {
+                    if ($v === null) $class[$k][$i][$prop] = "";
+                }
+            }
+        }
+        return $class;
+    }
+
     /**
      * Retrieves all records from the settings.geometry_columns_join table for a specific layer,
      * processes and structures the data, and returns the result.
