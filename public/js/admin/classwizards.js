@@ -1702,8 +1702,6 @@ classWizards.clearAfterUpdate = function () {
     Ext.getCmp("a3").removeAll();
     Ext.getCmp("a8").removeAll();
     Ext.getCmp("a9").removeAll();
-    Ext.getCmp("a10").removeAll();
-    Ext.getCmp("a11").removeAll();
     wmsClasses.grid.getSelectionModel().clearSelections();
     Ext.getCmp("classTabs").disable();
 }
