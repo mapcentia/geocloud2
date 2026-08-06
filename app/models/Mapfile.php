@@ -523,10 +523,16 @@ SYMBOLS;
     /**
      * Render all CLASS blocks for a layer.
      */
-    public function renderClasses(array $classData, array $layerArr, string $layerName): string
+    /**
+     * Render all CLASS blocks for a layer. Accepts classes in either the legacy flat
+     * format or the new styles[]/labels[] format — each class is normalized first,
+     * so raw, non-converted JSON from the database renders correctly.
+     */
+    public static function renderClasses(array $classData, array $layerArr, string $layerName): string
     {
         $s = '';
         foreach ($classData as $class) {
+            $class = Classification::normalizeClass((array)$class);
             $s .= "CLASS\n";
 
             // NAME
@@ -547,17 +553,27 @@ SYMBOLS;
             if (!empty($class['class_maxscaledenom'])) $s .= "MAXSCALEDENOM {$class['class_maxscaledenom']}\n";
             if (!empty($class['class_minscaledenom'])) $s .= "MINSCALEDENOM {$class['class_minscaledenom']}\n";
 
-            // Primary style + overlay style
-            $s .= $this->renderStyle($class);
-            $s .= $this->renderStyle($class, 'overlay');
+            // Styles, ordered by sortid (usort is stable in PHP 8)
+            $styles = $class['styles'];
+            usort($styles, fn($a, $b) => (int)($a['sortid'] ?? 0) <=> (int)($b['sortid'] ?? 0));
+            foreach ($styles as $style) {
+                $s .= self::renderStyle($style);
+            }
 
-            // Labels
-            $s .= $this->renderLabel($class, $layerName);
-            $s .= "#LABEL2\n";
-            $s .= $this->renderLabel($class, $layerName, '2');
+            // Labels, ordered by sortid, numbered sequentially for the markers
+            $labels = $class['labels'];
+            usort($labels, fn($a, $b) => (int)($a['sortid'] ?? 0) <=> (int)($b['sortid'] ?? 0));
+            $n = 1;
+            foreach ($labels as $label) {
+                $rendered = self::renderLabel($label, $layerName, $n);
+                if ($rendered !== '') {
+                    $s .= $rendered;
+                    $n++;
+                }
+            }
 
             // Leader
-            $s .= $this->renderLeader($class);
+            $s .= self::renderLeader($class);
 
             $s .= "END # Class\n";
         }

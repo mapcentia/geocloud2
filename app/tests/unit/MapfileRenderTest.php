@@ -77,4 +77,70 @@ class MapfileRenderTest extends Unit
         $sPad = Mapfile::renderLabel(["on" => true, "backgroundcolor" => "#FFFFFF", "backgroundpadding" => "3"], "s.t", 2);
         $this->assertStringContainsString("WIDTH 3\n", $sPad);
     }
+
+    public function testRenderClassesWithNewFormatMultipleStylesAndLabels(): void
+    {
+        $classes = [[
+            "name" => "c1",
+            "expression" => "[t]=1",
+            "styles" => [
+                ["sortid" => 30, "name" => "top", "color" => "#0000FF"],
+                ["sortid" => 10, "name" => "bottom", "color" => "#FF0000"],
+                ["sortid" => 20, "name" => "middle", "color" => "#00FF00"],
+            ],
+            "labels" => [
+                ["sortid" => 20, "on" => true, "text" => "[b]"],
+                ["sortid" => 10, "on" => true, "text" => "[a]"],
+                ["sortid" => 30, "on" => false, "text" => "[c]"],
+            ],
+        ]];
+        $s = Mapfile::renderClasses($classes, ["data" => [["theme_column" => ""]]], "s.t");
+        $this->assertStringContainsString("CLASS\n", $s);
+        $this->assertStringContainsString("NAME 'c1'\n", $s);
+        // styles ordered by sortid: red, green, blue
+        $red = strpos($s, "COLOR 255 0 0");
+        $green = strpos($s, "COLOR 0 255 0");
+        $blue = strpos($s, "COLOR 0 0 255");
+        $this->assertNotFalse($red);
+        $this->assertTrue($red < $green && $green < $blue);
+        // labels ordered by sortid, numbered sequentially, off-label skipped
+        $a = strpos($s, "TEXT '[a]'");
+        $b = strpos($s, "TEXT '[b]'");
+        $this->assertTrue($a < $b);
+        $this->assertStringContainsString("#START_LABEL1_s.t", $s);
+        $this->assertStringContainsString("#START_LABEL2_s.t", $s);
+        $this->assertStringNotContainsString("TEXT '[c]'", $s);
+        $this->assertStringContainsString("END # Class\n", $s);
+    }
+
+    public function testRenderClassesWithRawLegacyFormat(): void
+    {
+        // Non-converted JSON straight from the DB must render correctly
+        $classes = [[
+            "sortid" => 10,
+            "name" => "legacy",
+            "color" => "#FF0000",
+            "overlaycolor" => "#00FF00",
+            "label" => true,
+            "label_text" => "[navn]",
+            "label2" => true,
+            "label2_text" => "[vejnavn]",
+        ]];
+        $s = Mapfile::renderClasses($classes, ["data" => [["theme_column" => ""]]], "s.t");
+        $this->assertStringContainsString("COLOR 255 0 0", $s);
+        $this->assertStringContainsString("COLOR 0 255 0", $s);
+        $this->assertStringContainsString("TEXT '[navn]'", $s);
+        $this->assertStringContainsString("TEXT '[vejnavn]'", $s);
+        $this->assertStringContainsString("#START_LABEL1_s.t", $s);
+        $this->assertStringContainsString("#START_LABEL2_s.t", $s);
+    }
+
+    public function testRenderClassesEmptyStylesAndLabels(): void
+    {
+        $s = Mapfile::renderClasses([["name" => "empty", "styles" => [], "labels" => []]],
+            ["data" => [["theme_column" => ""]]], "s.t");
+        $this->assertStringContainsString("CLASS\n", $s);
+        $this->assertStringNotContainsString("STYLE\n", $s);
+        $this->assertStringNotContainsString("LABEL\n", $s);
+    }
 }
