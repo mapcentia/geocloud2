@@ -287,9 +287,9 @@ class Wms extends Controller
                 }
                 if ($disableLabels) {
                     $useFilters = true;
-                    $sedCmd = 'sed -i "/#START_LABEL1_' . $split[0] . '.' . $split[1] . '/,/#END_LABEL1_' . $split[0] . '.' . $split[1] . '/c\ " ' . $tmpMapFile;
-                    shell_exec($sedCmd);
-                    $sedCmd = 'sed -i "/#START_LABEL2_' . $split[0] . '.' . $split[1] . '/,/#END_LABEL2_' . $split[0] . '.' . $split[1] . '/c\ " ' . $tmpMapFile;
+                    // Strip every numbered label block (#START_LABEL<n>_… to #END_LABEL<n>_…) for the layer.
+                    // The [0-9]* covers any label count, including old mapfiles with only LABEL1/LABEL2.
+                    $sedCmd = 'sed -i "/#START_LABEL[0-9]*_' . $split[0] . '.' . $split[1] . '/,/#END_LABEL[0-9]*_' . $split[0] . '.' . $split[1] . '/c\ " ' . $tmpMapFile;
                     shell_exec($sedCmd);
                 }
                 $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=$tmpMapFile&{$_SERVER["QUERY_STRING"]}";
