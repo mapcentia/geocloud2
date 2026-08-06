@@ -136,6 +136,8 @@ wmsClasses.init = function (record) {
                             Ext.getCmp("a8").remove(wmsClass.grid2);
                             Ext.getCmp("a9").remove(wmsClass.grid3);
                             wmsClasses.grid.getSelectionModel().clearSelections();
+                            wmsClass.classId = null;
+                            Ext.getCmp("classTabs").disable();
                             writeFiles(wmsClasses.table);
                         },
                         failure: function (response) {
@@ -231,6 +233,8 @@ wmsClasses.onDelete = function () {
             Ext.getCmp("a3").remove(wmsClass.grid);
             Ext.getCmp("a8").remove(wmsClass.grid2);
             Ext.getCmp("a9").remove(wmsClass.grid3);
+            wmsClass.classId = null;
+            Ext.getCmp("classTabs").disable();
         } else {
             return false;
         }
@@ -259,7 +263,10 @@ wmsClass.LABEL_FIELDS = ['on', 'text', 'force', 'minscaledenom', 'maxscaledenom'
     'minfeaturesize'];
 
 wmsClass.save = function (onSuccess) {
-    var data = Ext.getCmp("propGrid") ? Ext.getCmp("propGrid").getSource() : {};
+    if (wmsClass.classId === null || !wmsClass.loaded || !Ext.getCmp("propGrid")) {
+        return;
+    }
+    var data = Ext.getCmp("propGrid").getSource();
     data.styles = wmsClass.styles;
     data.labels = wmsClass.labels;
     Ext.Ajax.request({
@@ -346,6 +353,7 @@ wmsClass.init = function (id) {
     wmsClass.classId = id;
     wmsClass.styles = [];
     wmsClass.labels = [];
+    wmsClass.loaded = false;
 
     var buildStylePropertyNames = function () {
         return {
@@ -638,9 +646,11 @@ wmsClass.init = function (id) {
             leader_color: 'Leader: color'
         },
         customRenderers: {
+            leader: checkboxRender,
             leader_color: cc
         },
         customEditors: {
+            'leader': new Ext.grid.GridEditor(new Ext.form.Checkbox({}), {}),
             'sortid': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: -100,
                 maxValue: 9999,
@@ -894,10 +904,12 @@ wmsClass.init = function (id) {
                 Ext.each(baseFields, function (f) {
                     baseSource[f] = (data[f] !== undefined && data[f] !== null) ? data[f] : "";
                 });
+                baseSource.leader = !!data.leader;
                 baseGrid.setSource(baseSource);
             }
             wmsClass.grid2.reloadList();
             wmsClass.grid3.reloadList();
+            wmsClass.loaded = true;
         },
         failure: function (response) {
             Ext.MessageBox.show({

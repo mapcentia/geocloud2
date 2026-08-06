@@ -5,10 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [Unreleased]
+### Changed
+- **Dynamic symbols and labels.** Classes now support an arbitrary number of symbols and labels (`styles[]`/`labels[]` with `sortid` ordering) instead of the fixed Symbol1/Symbol2/Label1/Label2. The admin class editor has three tabs: Base, Symbols, Labels — the latter two with Add/Delete like the Classes grid. The legacy flat format is converted on read (editor) and in-memory during mapfile generation, so existing data keeps working without migration.
+
 ## [2026.7.0] - 2026-7-7
 ### Changed
 - Add fallback ordering on meta.fields by `_value` when `_order` is empty.
-- **Dynamic symbols and labels.** Classes now support an arbitrary number of symbols and labels (`styles[]`/`labels[]` with `sortid` ordering) instead of the fixed Symbol1/Symbol2/Label1/Label2. The admin class editor has three tabs: Base, Symbols, Labels — the latter two with Add/Delete like the Classes grid. The legacy flat format is converted on read (editor) and in-memory during mapfile generation, so existing data keeps working without migration.
 
 ## [2026.6.6] - 2026-29-6
 ### FIXED
