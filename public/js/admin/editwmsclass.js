@@ -135,8 +135,6 @@ wmsClasses.init = function (record) {
                             Ext.getCmp("a3").remove(wmsClass.grid);
                             Ext.getCmp("a8").remove(wmsClass.grid2);
                             Ext.getCmp("a9").remove(wmsClass.grid3);
-                            Ext.getCmp("a10").remove(wmsClass.grid4);
-                            Ext.getCmp("a11").remove(wmsClass.grid5);
                             wmsClasses.grid.getSelectionModel().clearSelections();
                             writeFiles(wmsClasses.table);
                         },
@@ -167,7 +165,7 @@ wmsClasses.init = function (record) {
         ],
         listeners: {
             rowclick: function () {
-                var record = wmsClasses.grid.getSelectionModel().getSelected(), a3, a8, a9, a10, a11;
+                var record = wmsClasses.grid.getSelectionModel().getSelected();
 
                 Ext.getCmp("classTabs").enable();
 
@@ -177,37 +175,23 @@ wmsClasses.init = function (record) {
                     return false;
                 }
                 var activeTab = Ext.getCmp("classTabs").getActiveTab();
-                a3 = Ext.getCmp("a3");
-                a8 = Ext.getCmp("a8");
-                a9 = Ext.getCmp("a9");
-                a10 = Ext.getCmp("a10");
-                a11 = Ext.getCmp("a11");
+                var a3 = Ext.getCmp("a3"), a8 = Ext.getCmp("a8"), a9 = Ext.getCmp("a9");
                 a3.remove(wmsClass.grid);
                 a8.remove(wmsClass.grid2);
                 a9.remove(wmsClass.grid3);
-                a10.remove(wmsClass.grid4);
-                a11.remove(wmsClass.grid5);
                 wmsClass.grid = null;
                 wmsClass.grid2 = null;
                 wmsClass.grid3 = null;
-                wmsClass.grid4 = null;
-                wmsClass.grid5 = null;
                 wmsClass.init(record.get("id"));
                 a3.add(wmsClass.grid);
                 a8.add(wmsClass.grid2);
                 a9.add(wmsClass.grid3);
-                a10.add(wmsClass.grid4);
-                a11.add(wmsClass.grid5);
                 Ext.getCmp("classTabs").activate(0);
                 a3.doLayout();
                 Ext.getCmp("classTabs").activate(1);
                 a8.doLayout();
                 Ext.getCmp("classTabs").activate(2);
                 a9.doLayout();
-                Ext.getCmp("classTabs").activate(3);
-                a10.doLayout();
-                Ext.getCmp("classTabs").activate(4);
-                a11.doLayout();
                 Ext.getCmp("classTabs").activate(activeTab);
 
             }
@@ -247,8 +231,6 @@ wmsClasses.onDelete = function () {
             Ext.getCmp("a3").remove(wmsClass.grid);
             Ext.getCmp("a8").remove(wmsClass.grid2);
             Ext.getCmp("a9").remove(wmsClass.grid3);
-            Ext.getCmp("a10").remove(wmsClass.grid4);
-            Ext.getCmp("a11").remove(wmsClass.grid5);
         } else {
             return false;
         }
@@ -265,19 +247,49 @@ wmsClasses.onWrite = function (store, action, result, transaction, rs) {
     }
 };
 
-function test() {
-    message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows=5' cols='31'>" + response.message + "</textarea>";
-    Ext.MessageBox.show({
-        title: 'Failure',
-        msg: message,
-        buttons: Ext.MessageBox.OK,
-        width: 400,
-        height: 300,
-        icon: Ext.MessageBox.ERROR
-    });
-}
-
 Ext.namespace('wmsClass');
+
+wmsClass.STYLE_FIELDS = ['color', 'outlinecolor', 'pattern', 'linecap', 'symbol', 'size', 'width',
+    'angle', 'gap', 'style_opacity', 'geomtransform', 'minsize', 'maxsize',
+    'style_offsetx', 'style_offsety', 'style_polaroffsetr', 'style_polaroffsetd'];
+
+wmsClass.LABEL_FIELDS = ['on', 'text', 'force', 'minscaledenom', 'maxscaledenom', 'position', 'size',
+    'font', 'fontweight', 'color', 'outlinecolor', 'buffer', 'repeatdistance', 'angle',
+    'backgroundcolor', 'backgroundpadding', 'offsetx', 'offsety', 'expression', 'maxsize',
+    'minfeaturesize'];
+
+wmsClass.save = function (onSuccess) {
+    var data = Ext.getCmp("propGrid") ? Ext.getCmp("propGrid").getSource() : {};
+    data.styles = wmsClass.styles;
+    data.labels = wmsClass.labels;
+    Ext.Ajax.request({
+        url: '/controllers/classification/index/' + wmsClasses.table + '/' + wmsClass.classId,
+        method: 'put',
+        params: Ext.util.JSON.encode({data: data}),
+        headers: {
+            'Content-Type': 'application/json; charset=utf-8'
+        },
+        success: function () {
+            App.setAlert(App.STATUS_OK, __("Style is updated"));
+            writeFiles(wmsClasses.table);
+            wmsClasses.store.load();
+            if (onSuccess) {
+                onSuccess();
+            }
+        },
+        failure: function (response) {
+            Ext.MessageBox.show({
+                title: 'Failure',
+                msg: __(Ext.decode(response.responseText).message),
+                buttons: Ext.MessageBox.OK,
+                width: 400,
+                height: 300,
+                icon: Ext.MessageBox.ERROR
+            });
+        }
+    });
+};
+
 wmsClass.init = function (id) {
     var checkboxRender = function (d) {
         var checked = d ? 'property-grid-check-on' : '';
@@ -330,502 +342,13 @@ wmsClass.init = function (id) {
         editable: false,
         triggerAction: 'all'
     });
+
     wmsClass.classId = id;
-    wmsClass.store = new Ext.data.JsonStore({
-        autoLoad: true,
-        url: '/controllers/classification/index/' + wmsClasses.table + '/' + id,
-        storeId: 'configStore',
-        successProperty: 'success',
-        root: 'data',
-        fields: [
-            {
-                name: 'sortid'
-            },
-            {
-                name: 'name'
-            },
-            {
-                name: 'expression'
-            },
-            {
-                name: 'class_minscaledenom'
-            },
-            {
-                name: 'class_maxscaledenom'
-            },
+    wmsClass.styles = [];
+    wmsClass.labels = [];
 
-            // Base style start
-            {
-                name: 'color'
-            },
-            {
-                name: 'outlinecolor'
-            },
-            {
-                name: 'symbol'
-            },
-            {
-                name: 'size'
-            },
-            {
-                name: 'width'
-            },
-            {
-                name: 'angle'
-            },
-            {
-                name: 'gap'
-            },
-            {
-                name: 'style_opacity'
-            },
-            {
-                name: "pattern"
-            },
-            {
-                name: "linecap"
-            },
-            {
-                name: "geomtransform"
-            },
-            {
-                name: "minsize"
-            },
-            {
-                name: "maxsize"
-            },
-            {
-                name: "style_offsetx"
-            },
-            {
-                name: "style_offsety"
-            },
-            {
-                name: "style_polaroffsetr"
-            },
-            {
-                name: "style_polaroffsetd"
-            },
-            // Label start
-            {
-                name: 'label',
-                type: 'boolean'
-            },
-            {
-                name: 'label_force',
-                type: 'boolean'
-            },
-            {
-                name: 'label_minscaledenom'
-            },
-            {
-                name: 'label_maxscaledenom'
-            },
-            {
-                name: 'label_position'
-            },
-            {
-                name: 'label_size'
-            },
-            {
-                name: 'label_color'
-            },
-            {
-                name: 'label_outlinecolor'
-            },
-            {
-                name: 'label_buffer'
-            },
-            {
-                name: "label_text"
-            },
-            {
-                name: "label_repeatdistance"
-            },
-            {
-                name: "label_angle"
-            },
-            {
-                name: "label_backgroundcolor"
-            },
-            {
-                name: "label_backgroundpadding"
-            },
-            {
-                name: "label_offsetx"
-            },
-            {
-                name: "label_offsety"
-            },
-            {
-                name: "label_font"
-            },
-            {
-                name: "label_fontweight"
-            },
-            {
-                name: "label_expression"
-            },
-            {
-                name: "label_maxsize"
-            },
-            {
-                name: "label_minfeaturesize"
-            },
-
-            // label22 start
-            {
-                name: 'label2',
-                type: 'boolean'
-            },
-            {
-                name: 'label2_force',
-                type: 'boolean'
-            },
-            {
-                name: 'label2_minscaledenom'
-            },
-            {
-                name: 'label2_maxscaledenom'
-            },
-            {
-                name: 'label2_position'
-            },
-            {
-                name: 'label2_size'
-            },
-            {
-                name: 'label2_color'
-            },
-            {
-                name: 'label2_outlinecolor'
-            },
-            {
-                name: 'label2_buffer'
-            },
-            {
-                name: "label2_text"
-            },
-            {
-                name: "label2_repeatdistance"
-            },
-            {
-                name: "label2_angle"
-            },
-            {
-                name: "label2_backgroundcolor"
-            },
-            {
-                name: "label2_backgroundpadding"
-            },
-            {
-                name: "label2_offsetx"
-            },
-            {
-                name: "label2_offsety"
-            },
-            {
-                name: "label2_font"
-            },
-            {
-                name: "label2_fontweight"
-            },
-            {
-                name: "label2_expression"
-            },
-            {
-                name: "label2_maxsize"
-            },
-            {
-                name: "label2_minfeaturesize"
-            },
-
-            // Leader start
-            {
-                name: 'leader',
-                type: 'boolean'
-            },
-            {
-                name: 'leader_gridstep'
-            },
-            {
-                name: 'leader_maxdistance'
-            },
-            {
-                name: 'leader_color'
-            },
-            // Overlay style start
-            {
-                name: 'overlaycolor'
-            },
-            {
-                name: 'overlayoutlinecolor'
-            },
-            {
-                name: 'overlaysymbol'
-            },
-            {
-                name: 'overlaysize'
-            },
-            {
-                name: 'overlaywidth'
-            },
-            {
-                name: 'overlayangle'
-            },
-            {
-                name: 'overlaygap'
-            },
-            {
-                name: 'overlaystyle_opacity'
-            },
-            {
-                name: "overlaypattern"
-            },
-            {
-                name: "overlaylinecap"
-            },
-            {
-                name: "overlaygeomtransform"
-            },
-            {
-                name: "overlayminsize"
-            },
-            {
-                name: "overlaymaxsize"
-            },
-            {
-                name: "overlaystyle_offsetx"
-            },
-            {
-                name: "overlaystyle_offsety"
-            },
-            ,
-            {
-                name: "overlaystyle_polaroffsetr"
-            },
-            {
-                name: "overlaystyle_polaroffsetd"
-            }
-        ],
-        listeners: {
-            load: {
-                fn: function (store, records, options) {
-                    // get the property grid component
-                    var propGrid = Ext.getCmp('propGrid');
-                    var propGrid2 = Ext.getCmp('propGrid2');
-                    var propGrid3 = Ext.getCmp('propGrid3');
-                    var propGrid4 = Ext.getCmp('propGrid4');
-                    var propGrid5 = Ext.getCmp('propGrid5');
-                    // make sure the property grid exists
-                    if (propGrid) {
-                        delete propGrid.getStore().sortInfo;
-                        propGrid.getColumnModel().getColumnById('name').sortable = false;
-                        var obj1 = {}, arr1 = [
-                            'sortid',
-                            'name',
-                            'expression',
-                            'class_minscaledenom',
-                            'class_maxscaledenom',
-                            'leader',
-                            'leader_gridstep',
-                            'leader_maxdistance',
-                            'leader_color'
-
-                        ];
-                        Ext.each(arr1, function (i, v) {
-                            obj1[i] = store.getAt(0).data[i];
-                        })
-                        propGrid.setSource(obj1);
-                    }
-                    if (propGrid2) {
-                        delete propGrid2.getStore().sortInfo;
-                        propGrid2.getColumnModel().getColumnById('name').sortable = false;
-                        var obj2 = {}, arr2 = [
-                            'color',
-                            'outlinecolor',
-                            'pattern',
-                            'linecap',
-                            'symbol',
-                            'size',
-                            'width',
-                            'angle',
-                            'gap',
-                            'style_opacity',
-                            'geomtransform',
-                            'minsize',
-                            'maxsize',
-                            'style_offsetx',
-                            'style_offsety',
-                            'style_polaroffsetr',
-                            'style_polaroffsetd'
-                        ];
-                        Ext.each(arr2, function (i, v) {
-                            obj2[i] = store.getAt(0).data[i];
-                        });
-                        propGrid2.setSource(obj2);
-                    }
-                    if (propGrid3) {
-                        delete propGrid3.getStore().sortInfo;
-                        propGrid3.getColumnModel().getColumnById('name').sortable = false;
-                        var obj3 = {}, arr3 = [
-                            'overlaycolor',
-                            'overlayoutlinecolor',
-                            'overlaypattern',
-                            'overlaylinecap',
-                            'overlaysymbol',
-                            'overlaysize',
-                            'overlaywidth',
-                            'overlayangle',
-                            'overlaygap',
-                            'overlaystyle_opacity',
-                            'overlaygeomtransform',
-                            'overlayminsize',
-                            'overlaymaxsize',
-                            'overlaystyle_offsetx',
-                            'overlaystyle_offsety',
-                            'overlaystyle_polaroffsetr',
-                            'overlaystyle_polaroffsetd'
-                        ];
-                        Ext.each(arr3, function (i, v) {
-                            obj3[i] = store.getAt(0).data[i];
-                        });
-                        propGrid3.setSource(obj3);
-                    }
-                    if (propGrid4) {
-                        delete propGrid4.getStore().sortInfo;
-                        propGrid4.getColumnModel().getColumnById('name').sortable = false;
-                        var obj4 = {}, arr4 = [
-                            'label',
-                            'label_text',
-                            'label_force',
-                            'label_minscaledenom',
-                            'label_maxscaledenom',
-                            'label_position',
-                            'label_size',
-                            'label_font',
-                            'label_fontweight',
-                            'label_color',
-                            'label_outlinecolor',
-                            'label_buffer',
-                            'label_repeatdistance',
-                            'label_angle',
-                            'label_backgroundcolor',
-                            'label_backgroundpadding',
-                            'label_offsetx',
-                            'label_offsety',
-                            'label_expression',
-                            'label_maxsize',
-                            'label_minfeaturesize'
-                        ];
-                        Ext.each(arr4, function (i, v) {
-                            obj4[i] = store.getAt(0).data[i];
-                        });
-                        propGrid4.setSource(obj4);
-                    }
-                    if (propGrid5) {
-                        delete propGrid5.getStore().sortInfo;
-                        propGrid5.getColumnModel().getColumnById('name').sortable = false;
-                        var obj5 = {}, arr5 = [
-                            'label2',
-                            'label2_text',
-                            'label2_force',
-                            'label2_minscaledenom',
-                            'label2_maxscaledenom',
-                            'label2_position',
-                            'label2_size',
-                            'label2_font',
-                            'label2_fontweight',
-                            'label2_color',
-                            'label2_outlinecolor',
-                            'label2_buffer',
-                            'label2_repeatdistance',
-                            'label2_angle',
-                            'label2_backgroundcolor',
-                            'label2_backgroundpadding',
-                            'label2_offsetx',
-                            'label2_offsety',
-                            'label2_expression',
-                            'label2_maxsize',
-                            'label2_minfeaturesize'
-                        ];
-                        Ext.each(arr5, function (i, v) {
-                            obj5[i] = store.getAt(0).data[i];
-                        });
-                        propGrid5.setSource(obj5);
-                    }
-                }
-            }
-        }
-    });
-    wmsClass.grid = new Ext.grid.PropertyGrid({
-        id: 'propGrid',
-        modal: false,
-        region: 'center',
-        border: false,
-        propertyNames: {
-            sortid: 'Sort id',
-            name: 'Name',
-            expression: 'Expression',
-            class_minscaledenom: __('Min scale denominator') + __("Maximum scale at which this CLASS is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
-            class_maxscaledenom: __('Max scale denominator') + __("Minimum scale at which this CLASS is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
-            leader: 'Leader: on',
-            leader_gridstep: 'Leader: gridstep',
-            leader_maxdistance: 'Leader: maxdistance',
-            leader_color: 'Leader: color'
-        },
-        customRenderers: {
-            leader_color: cc
-        },
-        customEditors: {
-            'sortid': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: -100,
-                maxValue: 9999,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            })),
-            'class_minscaledenom': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: 0,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            })),
-            'class_maxscaledenom': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: 0,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            })),
-            'leader_gridstep': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: 0,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            })),
-            'leader_maxdistance': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: 0,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            })),
-            'leader_color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {})
-        },
-        viewConfig: {
-            forceFit: true
-        }
-    });
-    wmsClass.grid2 = new Ext.grid.PropertyGrid({
-        id: 'propGrid2',
-        modal: false,
-        region: 'center',
-        border: false,
-        propertyNames: {
+    var buildStylePropertyNames = function () {
+        return {
             outlinecolor: 'Outline color',
             symbol: 'Symbol',
             color: 'Color',
@@ -843,20 +366,11 @@ wmsClass.init = function (id) {
             style_offsety: 'Offset Y' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - Y", true),
             style_polaroffsetr: 'Polar offset radius' + __("Offset given in polar coordinates - radius/distance.", true),
             style_polaroffsetd: 'Polar offset angle' + __("Offset given in polar coordinates - angle (counter clockwise).", true)
-        },
-        customRenderers: {
-            color: cc,
-            outlinecolor: cc
-        },
-        customEditors: {
-            'sortid': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: -100,
-                maxValue: 9999,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            }), {}),
+        };
+    };
+
+    var buildStyleEditors = function () {
+        return {
             'color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
             'symbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
@@ -938,167 +452,40 @@ wmsClass.init = function (id) {
                 editable: true,
                 triggerAction: 'all'
             }), {})
-        },
-        viewConfig: {
-            forceFit: true
-        }
-    });
-    wmsClass.grid3 = new Ext.grid.PropertyGrid({
-        id: 'propGrid3',
-        modal: false,
-        region: 'center',
-        border: false,
-        propertyNames: {
-            overlaywidth: 'Line width',
-            overlayoutlinecolor: 'Outline color',
-            overlaysymbol: 'Symbol',
-            overlaycolor: 'Color',
-            overlaysize: 'Size',
-            overlayangle: 'Angle',
-            overlaygap: 'Gap' + __("specifies the distance between SYMBOLs (center to center) for decorated lines and polygon fills in layer SIZEUNITS. For polygon fills, GAP specifies the distance between SYMBOLs in both the X and the Y direction. For lines, the centers of the SYMBOLs are placed on the line. For lines, a negative GAP value will cause the symbols’ X axis to be aligned relative to the tangent of the line. For lines, a positive GAP value aligns the symbols’ X axis relative to the X axis of the output device.", true),
-            overlaystyle_opacity: 'Opacity',
-            overlaylinecap: 'line cap' + __('Sets the line cap type for lines. Default is round.', true),
-            overlaypattern: 'Pattern' + __('Used to define a dash pattern for line work (lines, polygon outlines, hatch lines, …). The numbers (doubles) specify the lengths of the dashes and gaps of the dash pattern in layer SIZEUNITS. When scaling of symbols is in effect (SYMBOLSCALEDENOM is specified for the LAYER), the numbers specify the lengths of the dashes and gaps in layer SIZEUNITS at the map scale 1:SYMBOLSCALEDENOM.', true),
-            overlaygeomtransform: 'Geomtransform',
-            overlayminsize: 'Min size' + __("Minimum size in pixels to draw a symbol. Default is 0. The value can also be a decimal value (and not only integer)", true),
-            overlaymaxsize: 'Max size' + __("Maximum size in pixels to draw a symbol. Default is 500. The value can also be a decimal value (and not only integer)", true),
-            overlaystyle_offsetx: 'Offset X' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - x", true),
-            overlaystyle_offsety: 'Offset Y' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - Y", true),
-            overlaystyle_polaroffsetr: 'Polar offset radius' + __("Offset given in polar coordinates - radius/distance.", true),
-            overlaystyle_polaroffsetd: 'Polar offset angle' + __("Offset given in polar coordinates - angle (counter clockwise).", true)
-        },
-        customRenderers: {
-            overlaycolor: cc,
-            overlayoutlinecolor: cc,
-            label_position: Ext.util.Format.comboRenderer(labelPositionCombo)
-        },
-        customEditors: {
-            'overlaylinecap': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['round', 'butt', 'square'],
-                editable: false,
-                triggerAction: 'all'
-            }), {}),
-            'overlaycolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'overlayoutlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'overlaysymbol': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['', 'circle', 'square', 'triangle', 'hatch1', 'dashed1', 'dot-dot', 'dashed-line-short', 'dashed-line-long', 'dash-dot', 'dash-dot-dot', 'arrow', 'arrow2'],
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'overlaygeomtransform': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: ['', 'bbox', 'centroid', 'end', 'labelpnt', 'labelpoly', 'start', 'vertices'],
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'overlaysize': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.numFieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'overlaywidth': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.numFieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'overlaygap': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: 0,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            })),
-            'overlayangle': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.numFieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'overlaystyle_opacity': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: 0,
-                maxValue: 100,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            })),
-            'overlayminsize': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: 0,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            })),
-            'overlaymaxsize': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: 0,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            })),
-            'overlaystyle_offsetx': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.numFieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'overlaystyle_offsety': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.numFieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'overlaystyle_polaroffsetr': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.numFieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'overlaystyle_polaroffsetd': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.numFieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {})
-        },
-        viewConfig: {
-            forceFit: true
-        }
-    });
-    wmsClass.grid4 = new Ext.grid.PropertyGrid({
-        id: 'propGrid4',
-        modal: false,
-        region: 'center',
-        border: false,
-        propertyNames: {
-            label: 'On',
-            label_force: 'Force',
-            label_minscaledenom: __('Min scale denominator') + __("Minimum scale at which this LABEL is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
-            label_maxscaledenom: __('Max scale denominator') + __("Maximum scale at which this LABEL is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
-            label_position: 'Position',
-            label_color: 'Color',
-            label_outlinecolor: 'Outline color',
-            label_buffer: 'Buffer',
-            label_text: 'Text',
-            label_size: 'Size',
-            label_angle: 'Angle',
-            label_repeatdistance: 'Repeat distance',
-            label_backgroundcolor: 'Background',
-            label_backgroundpadding: 'Padding',
-            label_offsetx: 'Offset X',
-            label_offsety: 'Offset Y',
-            label_font: 'Font',
-            label_fontweight: 'Font weight',
-            label_expression: 'Expression',
-            label_maxsize: 'Max size' + __("Maximum font size to use when scaling text (pixels). Default is 256.", true),
-            label_minfeaturesize: 'Min feature size' + __("Minimum size a feature must be to be labeled. Given in pixels. For line data the overall length of the displayed line is used, for polygons features the smallest dimension of the bounding box is used. “Auto” keyword tells MapServer to only label features that are larger than their corresponding label.", true)
-        },
-        customRenderers: {
-            label: checkboxRender,
-            label_force: checkboxRender,
-            label_color: cc,
-            label_outlinecolor: cc,
-            label_backgroundcolor: cc,
-            label_position: Ext.util.Format.comboRenderer(labelPositionCombo)
-        },
-        customEditors: {
-            'label': new Ext.grid.GridEditor(new Ext.form.Checkbox({}), {}),
-            'label_force': new Ext.grid.GridEditor(new Ext.form.Checkbox({}), {}),
-            'label_offsetx': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+        };
+    };
+
+    var buildLabelPropertyNames = function () {
+        return {
+            on: 'On',
+            force: 'Force',
+            minscaledenom: __('Min scale denominator') + __("Minimum scale at which this LABEL is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
+            maxscaledenom: __('Max scale denominator') + __("Maximum scale at which this LABEL is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
+            position: 'Position',
+            color: 'Color',
+            outlinecolor: 'Outline color',
+            buffer: 'Buffer',
+            text: 'Text',
+            size: 'Size',
+            angle: 'Angle',
+            repeatdistance: 'Repeat distance',
+            backgroundcolor: 'Background',
+            backgroundpadding: 'Padding',
+            offsetx: 'Offset X',
+            offsety: 'Offset Y',
+            font: 'Font',
+            fontweight: 'Font weight',
+            expression: 'Expression',
+            maxsize: 'Max size' + __("Maximum font size to use when scaling text (pixels). Default is 256.", true),
+            minfeaturesize: 'Min feature size' + __("Minimum size a feature must be to be labeled. Given in pixels. For line data the overall length of the displayed line is used, for polygons features the smallest dimension of the bounding box is used. “Auto” keyword tells MapServer to only label features that are larger than their corresponding label.", true)
+        };
+    };
+
+    var buildLabelEditors = function () {
+        return {
+            'on': new Ext.grid.GridEditor(new Ext.form.Checkbox({}), {}),
+            'force': new Ext.grid.GridEditor(new Ext.form.Checkbox({}), {}),
+            'offsetx': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: -100,
                 maxValue: 100,
                 allowDecimals: false,
@@ -1106,7 +493,7 @@ wmsClass.init = function (id) {
                 incrementValue: 1,
                 accelerate: true
             }), {}),
-            'label_offsety': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+            'offsety': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: -100,
                 maxValue: 100,
                 allowDecimals: false,
@@ -1114,41 +501,41 @@ wmsClass.init = function (id) {
                 incrementValue: 1,
                 accelerate: true
             }), {}),
-            'label_size': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+            'size': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 store: wmsLayer.numFieldsForStore,
                 editable: true,
                 triggerAction: 'all'
             }), {}),
-            'label_angle': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+            'angle': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 store: wmsLayer.numFieldsForStore,
                 editable: true,
                 triggerAction: 'all'
             }), {}),
-            'label_minscaledenom': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+            'minscaledenom': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: 0,
                 allowDecimals: false,
                 decimalPrecision: 0,
                 incrementValue: 1,
                 accelerate: true
             })),
-            'label_maxscaledenom': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+            'maxscaledenom': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: 0,
                 allowDecimals: false,
                 decimalPrecision: 0,
                 incrementValue: 1,
                 accelerate: true
             })),
-            'label_buffer': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+            'buffer': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: 0,
                 allowDecimals: false,
                 decimalPrecision: 0,
                 incrementValue: 1,
                 accelerate: true
             })),
-            'label_position': new Ext.grid.GridEditor(labelPositionCombo, {
+            'position': new Ext.grid.GridEditor(labelPositionCombo, {
                 renderer: Ext.util.Format.comboRenderer(labelPositionCombo)
             }),
-            'label_font': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+            'font': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 displayField: 'name',
                 valueField: 'value',
                 mode: 'local',
@@ -1167,7 +554,7 @@ wmsClass.init = function (id) {
                     ]
                 })
             }), {}),
-            'label_fontweight': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+            'fontweight': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 displayField: 'name',
                 valueField: 'value',
                 mode: 'local',
@@ -1193,16 +580,16 @@ wmsClass.init = function (id) {
                     ]
                 })
             }), {}),
-            'label_repeatdistance': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+            'repeatdistance': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: 0,
                 allowDecimals: false,
                 decimalPrecision: 0,
                 incrementValue: 1,
                 accelerate: true
             })),
-            'label_color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'label_backgroundcolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'label_backgroundpadding': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+            'color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
+            'backgroundcolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
+            'backgroundpadding': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: 0,
                 maxValue: 15,
                 allowDecimals: false,
@@ -1210,208 +597,317 @@ wmsClass.init = function (id) {
                 incrementValue: 1,
                 accelerate: true
             }), {}),
-            'label_outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'label_text': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+            'outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
+            'text': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 store: wmsLayer.fieldsForStoreBrackets,
                 editable: true,
                 triggerAction: 'all'
             }), {}),
-            'label_maxsize': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+            'maxsize': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: 0,
                 allowDecimals: false,
                 decimalPrecision: 0,
                 incrementValue: 1,
                 accelerate: true
             })),
-            'label_minfeaturesize': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+            'minfeaturesize': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
+                decimalPrecision: 0,
+                incrementValue: 1,
+                accelerate: true
+            }))
+        };
+    };
+
+    // ---------- Base tab ----------
+    wmsClass.grid = new Ext.grid.PropertyGrid({
+        id: 'propGrid',
+        modal: false,
+        region: 'center',
+        border: false,
+        propertyNames: {
+            sortid: 'Sort id',
+            name: 'Name',
+            expression: 'Expression',
+            class_minscaledenom: __('Min scale denominator') + __("Maximum scale at which this CLASS is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
+            class_maxscaledenom: __('Max scale denominator') + __("Minimum scale at which this CLASS is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
+            leader: 'Leader: on',
+            leader_gridstep: 'Leader: gridstep',
+            leader_maxdistance: 'Leader: maxdistance',
+            leader_color: 'Leader: color'
+        },
+        customRenderers: {
+            leader_color: cc
+        },
+        customEditors: {
+            'sortid': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: -100,
+                maxValue: 9999,
+                allowDecimals: false,
+                decimalPrecision: 0,
+                incrementValue: 1,
+                accelerate: true
+            })),
+            'class_minscaledenom': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: 0,
                 allowDecimals: false,
                 decimalPrecision: 0,
                 incrementValue: 1,
                 accelerate: true
             })),
+            'class_maxscaledenom': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
+                decimalPrecision: 0,
+                incrementValue: 1,
+                accelerate: true
+            })),
+            'leader_gridstep': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
+                decimalPrecision: 0,
+                incrementValue: 1,
+                accelerate: true
+            })),
+            'leader_maxdistance': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+                minValue: 0,
+                allowDecimals: false,
+                decimalPrecision: 0,
+                incrementValue: 1,
+                accelerate: true
+            })),
+            'leader_color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {})
         },
         viewConfig: {
             forceFit: true
         }
     });
-    wmsClass.grid5 = new Ext.grid.PropertyGrid({
-        id: 'propGrid5',
-        modal: false,
-        region: 'center',
-        border: false,
-        propertyNames: {
-            label2: 'On',
-            label2_force: 'Force',
-            label2_minscaledenom: __('Min scale denominator') + __("Minimum scale at which this LABEL is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
-            label2_maxscaledenom: __('Max scale denominator') + __("Maximum scale at which this LABEL is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
-            label2_position: 'Position',
-            label2_color: 'Color',
-            label2_outlinecolor: 'Outline color',
-            label2_buffer: 'Buffer',
-            label2_text: 'Text',
-            label2_size: 'Size',
-            label2_angle: 'Angle',
-            label2_repeatdistance: 'Repeat distance',
-            label2_backgroundcolor: 'Background',
-            label2_backgroundpadding: 'Padding',
-            label2_offsetx: 'Offset X',
-            label2_offsety: 'Offset Y',
-            label2_font: 'Font',
-            label2_fontweight: 'Font weight',
-            label2_expression: 'Expression',
-            label2_maxsize: 'Max size' + __("Maximum font size to use when scaling text (pixels). Default is 256.", true),
-            label2_minfeaturesize: 'Min feature size' + __("Minimum size a feature must be to be labeled. Given in pixels. For line data the overall length of the displayed line is used, for polygons features the smallest dimension of the bounding box is used. “Auto” keyword tells MapServer to only label features that are larger than their corresponding label.", true)
-        },
-        customRenderers: {
-            label2: checkboxRender,
-            label2_force: checkboxRender,
-            label2_color: cc,
-            label2_outlinecolor: cc,
-            label2_backgroundcolor: cc,
-            label2_position: Ext.util.Format.comboRenderer(labelPositionCombo)
 
-        },
-        customEditors: {
-            'label2': new Ext.grid.GridEditor(new Ext.form.Checkbox({}), {}),
-            'label2_force': new Ext.grid.GridEditor(new Ext.form.Checkbox({}), {}),
-            'label2_offsetx': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: -100,
-                maxValue: 100,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            }), {}),
-            'label2_offsety': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: -100,
-                maxValue: 100,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            }), {}),
-            'label2_size': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.numFieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'label2_angle': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.numFieldsForStore,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'label2_minscaledenom': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: 0,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            })),
-            'label2_maxscaledenom': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: 0,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            })),
-            'label2_buffer': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: 0,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            })),
-            'label2_position': new Ext.grid.GridEditor(labelPositionCombo, {
-                renderer: Ext.util.Format.comboRenderer(labelPositionCombo)
+    // ---------- Shared master/detail builder ----------
+    // kind: 'styles' | 'labels'
+    var buildItemPanel = function (kind, propGridId, propertyNames, customEditors, customRenderers, fields) {
+        var listStore = new Ext.data.JsonStore({
+            fields: ['idx', 'sortid', 'name'],
+            data: []
+        });
+        var currentIdx = null;
+        var arr = function () {
+            return wmsClass[kind];
+        };
+        var reload = function (selectIdx) {
+            var rows = [];
+            Ext.each(arr(), function (item, i) {
+                rows.push({idx: i, sortid: item.sortid, name: item.name || ""});
+            });
+            listStore.loadData(rows);
+            if (selectIdx !== undefined && selectIdx !== null) {
+                var record = listStore.getAt(selectIdx);
+                if (record) {
+                    listGrid.getSelectionModel().selectRecords([record]);
+                    showItem(selectIdx);
+                }
+            }
+        };
+        var propGrid = new Ext.grid.PropertyGrid({
+            id: propGridId,
+            region: 'center',
+            border: false,
+            propertyNames: propertyNames,
+            customEditors: customEditors,
+            customRenderers: customRenderers,
+            viewConfig: {
+                forceFit: true
+            },
+            source: {},
+            listeners: {
+                propertychange: function (source, recordId, value) {
+                    if (currentIdx !== null && arr()[currentIdx]) {
+                        arr()[currentIdx][recordId] = value;
+                    }
+                }
+            }
+        });
+        var showItem = function (idx) {
+            currentIdx = idx;
+            var item = arr()[idx] || {};
+            var source = {};
+            Ext.each(fields, function (f) {
+                if (f === 'on' || f === 'force') {
+                    source[f] = !!item[f];
+                } else {
+                    source[f] = (item[f] !== undefined && item[f] !== null) ? item[f] : "";
+                }
+            });
+            delete propGrid.getStore().sortInfo;
+            propGrid.getColumnModel().getColumnById('name').sortable = false;
+            propGrid.setSource(source);
+        };
+        var listGrid = new Ext.grid.EditorGridPanel({
+            region: 'north',
+            height: 120,
+            split: true,
+            border: false,
+            store: listStore,
+            clicksToEdit: 2,
+            sm: new Ext.grid.RowSelectionModel({
+                singleSelect: true
             }),
-            'label2_font': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                displayField: 'name',
-                valueField: 'value',
-                mode: 'local',
-                triggerAction: "all",
-                editable: false,
-                store: new Ext.data.JsonStore({
-                    fields: ['name', 'value'],
-                    data: [
-                        {
-                            name: 'Arial',
-                            value: 'arial'
-                        }, {
-                            name: 'Courier new',
-                            value: 'courier'
+            viewConfig: {
+                forceFit: true
+            },
+            cm: new Ext.grid.ColumnModel({
+                defaults: {
+                    sortable: false,
+                    menuDisabled: true
+                },
+                columns: [
+                    {
+                        header: "Sort id",
+                        dataIndex: "sortid",
+                        width: 50,
+                        editor: new Ext.ux.form.SpinnerField({
+                            minValue: -100,
+                            maxValue: 9999,
+                            allowDecimals: false,
+                            decimalPrecision: 0,
+                            incrementValue: 1,
+                            accelerate: true
+                        })
+                    },
+                    {
+                        header: "Name",
+                        dataIndex: "name",
+                        editor: new Ext.form.TextField({})
+                    }
+                ]
+            }),
+            tbar: [
+                {
+                    text: '<i class="fa fa-plus"></i> ' + __("Add"),
+                    handler: function () {
+                        var maxSort = 0;
+                        Ext.each(arr(), function (item) {
+                            var v = parseInt(item.sortid, 10);
+                            if (!isNaN(v) && v > maxSort) {
+                                maxSort = v;
+                            }
+                        });
+                        var entry = {sortid: maxSort + 10, name: ""};
+                        if (kind === 'labels') {
+                            entry.on = true;
                         }
-                    ]
-                })
+                        arr().push(entry);
+                        wmsClass.save(function () {
+                            reload(arr().length - 1);
+                        });
+                    }
+                },
+                '-',
+                {
+                    text: '<i class="fa fa-cut"></i> ' + __("Delete"),
+                    handler: function () {
+                        var record = listGrid.getSelectionModel().getSelected();
+                        if (!record) {
+                            return false;
+                        }
+                        Ext.MessageBox.confirm(__('Confirm'), __('Are you sure you want to delete it?'), function (btn) {
+                            if (btn === "yes") {
+                                arr().splice(record.data.idx, 1);
+                                currentIdx = null;
+                                propGrid.setSource({});
+                                wmsClass.save(function () {
+                                    reload();
+                                });
+                            }
+                        });
+                    }
+                }
+            ],
+            listeners: {
+                rowclick: function (grid, rowIndex) {
+                    showItem(listStore.getAt(rowIndex).data.idx);
+                },
+                afteredit: function (e) {
+                    var item = arr()[e.record.data.idx];
+                    if (item) {
+                        item[e.field] = e.value;
+                    }
+                }
+            }
+        });
+        var panel = new Ext.Panel({
+            layout: 'border',
+            border: false,
+            items: [listGrid, propGrid]
+        });
+        panel.reloadList = reload;
+        return panel;
+    };
 
-            }), {}),
-            'label2_fontweight': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                displayField: 'name',
-                valueField: 'value',
-                mode: 'local',
-                triggerAction: "all",
-                editable: false,
-                store: new Ext.data.JsonStore({
-                    fields: ['name', 'value'],
-                    data: [
-                        {
-                            name: 'Normal',
-                            value: 'normal'
-                        }, {
-                            name: 'Bold',
-                            value: 'bold'
-                        }, {
-                            name: 'Italic',
-                            value: 'italic'
-                        },
-                        {
-                            name: 'Bold italic',
-                            value: 'bolditalic'
-                        }
-                    ]
-                })
-            }), {}),
-            'label2_repeatdistance': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: 0,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            })),
-            'label2_color': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'label2_outlinecolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'label2_backgroundcolor': new Ext.grid.GridEditor(new Ext.form.ColorField({}), {}),
-            'label2_backgroundpadding': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: 0,
-                maxValue: 15,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            }), {}),
-            'label2_text': new Ext.grid.GridEditor(new Ext.form.ComboBox({
-                store: wmsLayer.fieldsForStoreBrackets,
-                editable: true,
-                triggerAction: 'all'
-            }), {}),
-            'label2_maxsize': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: 0,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            })),
-            'label2_minfeaturesize': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
-                minValue: 0,
-                allowDecimals: false,
-                decimalPrecision: 0,
-                incrementValue: 1,
-                accelerate: true
-            })),
+    // ---------- Symbols tab ----------
+    wmsClass.grid2 = buildItemPanel(
+        'styles',
+        'symbolProps',
+        buildStylePropertyNames(),
+        buildStyleEditors(),
+        {
+            color: cc,
+            outlinecolor: cc
         },
-        viewConfig: {
-            forceFit: true
+        wmsClass.STYLE_FIELDS
+    );
+
+    // ---------- Labels tab ----------
+    wmsClass.grid3 = buildItemPanel(
+        'labels',
+        'labelProps',
+        buildLabelPropertyNames(),
+        buildLabelEditors(),
+        {
+            on: checkboxRender,
+            force: checkboxRender,
+            color: cc,
+            outlinecolor: cc,
+            backgroundcolor: cc,
+            position: Ext.util.Format.comboRenderer(labelPositionCombo)
+        },
+        wmsClass.LABEL_FIELDS
+    );
+
+    // ---------- Load data ----------
+    Ext.Ajax.request({
+        url: '/controllers/classification/index/' + wmsClasses.table + '/' + id,
+        method: 'get',
+        success: function (response) {
+            var data = Ext.decode(response.responseText).data[0];
+            wmsClass.styles = data.styles || [];
+            wmsClass.labels = data.labels || [];
+            var baseGrid = Ext.getCmp('propGrid');
+            if (baseGrid) {
+                delete baseGrid.getStore().sortInfo;
+                baseGrid.getColumnModel().getColumnById('name').sortable = false;
+                var baseSource = {}, baseFields = [
+                    'sortid', 'name', 'expression', 'class_minscaledenom', 'class_maxscaledenom',
+                    'leader', 'leader_gridstep', 'leader_maxdistance', 'leader_color'
+                ];
+                Ext.each(baseFields, function (f) {
+                    baseSource[f] = (data[f] !== undefined && data[f] !== null) ? data[f] : "";
+                });
+                baseGrid.setSource(baseSource);
+            }
+            wmsClass.grid2.reloadList();
+            wmsClass.grid3.reloadList();
+        },
+        failure: function (response) {
+            Ext.MessageBox.show({
+                title: 'Failure',
+                msg: __(Ext.decode(response.responseText).message),
+                buttons: Ext.MessageBox.OK,
+                width: 400,
+                height: 300,
+                icon: Ext.MessageBox.ERROR
+            });
         }
     });
 };
-
