@@ -232,6 +232,14 @@ class Classification extends Model
 
         $existingClass = $existingClass ? json_decode($tableObj->getGeometryColumns($this->layer, "*")["class"], true) : [];
         $cachedClass = $classCache ? json_decode($classCache, true) : [];
+
+        // Normalize all three inputs to the new styles[]/labels[] format before merging, so the
+        // merge never mixes legacy flat keys with new-format keys and externally-edited legacy
+        // values are not silently discarded.
+        $existingClass = array_map([self::class, 'normalizeClass'], $existingClass);
+        $cachedClass = array_map([self::class, 'normalizeClass'], $cachedClass);
+        $newClass = array_map([self::class, 'normalizeClass'], $newClass);
+
         $mergedClass = $this->mergeClasses($cachedClass, $existingClass, $newClass);
 
         $merged['_key_'] = $this->layer;
@@ -253,7 +261,7 @@ class Classification extends Model
      * @param array $newClass The new class definitions to merge into the existing state.
      * @return array The merged array of class definitions, preserving external changes and incorporating valid updates.
      */
-    function mergeClasses(array $cachedClass, array $existingClass, array $newClass): array
+    static function mergeClasses(array $cachedClass, array $existingClass, array $newClass): array
     {
         // Helper to map by name for comparison
         $byName = function ($arr) {

@@ -186,4 +186,79 @@ class ClassificationFormatTest extends Unit
         $this->assertEquals("circle", $s['symbol']);
         $this->assertEquals(10, $s['size']);
     }
+
+    public function testMergeClassesPreservesExternalEditAfterNormalization(): void
+    {
+        // cached and existing both start as legacy-flat; existing was then edited externally
+        // (color changed). Both must be normalized before merging so the comparison is done
+        // on the styles[] array, not on mismatched flat vs. new-format keys.
+        $cached = [[
+            "name" => "c",
+            "color" => "#FF0000",
+            "label" => true,
+            "label_text" => "[a]",
+        ]];
+        $existing = [[
+            "name" => "c",
+            "color" => "#00FF00", // externally edited
+            "label" => true,
+            "label_text" => "[a]",
+        ]];
+        $incoming = [[
+            "name" => "c",
+            "styles" => [["sortid" => 10, "name" => "Symbol 1", "color" => "#0000FF"]],
+            "labels" => [],
+        ]];
+
+        $cachedNorm = array_map([Classification::class, 'normalizeClass'], $cached);
+        $existingNorm = array_map([Classification::class, 'normalizeClass'], $existing);
+        $incomingNorm = array_map([Classification::class, 'normalizeClass'], $incoming);
+
+        $result = Classification::mergeClasses($cachedNorm, $existingNorm, $incomingNorm);
+
+        $this->assertCount(1, $result);
+        $class = $result[0];
+        // No flat legacy keys must survive on the merged class
+        $this->assertArrayNotHasKey('color', $class);
+        $this->assertArrayNotHasKey('label', $class);
+        $this->assertArrayNotHasKey('label_text', $class);
+        // existing != cached for 'styles' as a whole -> external edit wins wholesale
+        $this->assertEquals("#00FF00", $class['styles'][0]['color']);
+    }
+
+    public function testMergeClassesWizardWinsWhenUnedited(): void
+    {
+        // cached and existing are identical (unedited legacy) -> the wizard's incoming styles
+        // should be applied.
+        $cached = [[
+            "name" => "c",
+            "color" => "#FF0000",
+            "label" => true,
+            "label_text" => "[a]",
+        ]];
+        $existing = [[
+            "name" => "c",
+            "color" => "#FF0000",
+            "label" => true,
+            "label_text" => "[a]",
+        ]];
+        $incoming = [[
+            "name" => "c",
+            "styles" => [["sortid" => 10, "name" => "Symbol 1", "color" => "#0000FF"]],
+            "labels" => [],
+        ]];
+
+        $cachedNorm = array_map([Classification::class, 'normalizeClass'], $cached);
+        $existingNorm = array_map([Classification::class, 'normalizeClass'], $existing);
+        $incomingNorm = array_map([Classification::class, 'normalizeClass'], $incoming);
+
+        $result = Classification::mergeClasses($cachedNorm, $existingNorm, $incomingNorm);
+
+        $this->assertCount(1, $result);
+        $class = $result[0];
+        $this->assertArrayNotHasKey('color', $class);
+        $this->assertArrayNotHasKey('label', $class);
+        $this->assertArrayNotHasKey('label_text', $class);
+        $this->assertEquals("#0000FF", $class['styles'][0]['color']);
+    }
 }

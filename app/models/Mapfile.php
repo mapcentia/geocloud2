@@ -521,9 +521,6 @@ SYMBOLS;
     }
 
     /**
-     * Render all CLASS blocks for a layer.
-     */
-    /**
      * Render all CLASS blocks for a layer. Accepts classes in either the legacy flat
      * format or the new styles[]/labels[] format — each class is normalized first,
      * so raw, non-converted JSON from the database renders correctly.
