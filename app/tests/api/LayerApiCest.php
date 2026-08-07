@@ -15,6 +15,8 @@ class LayerApiCest
     private $classId;
     private $styleId;
     private $labelId;
+    private $subUserName;
+    private $subUserAccessToken;
 
     public function __construct()
     {
@@ -23,6 +25,7 @@ class LayerApiCest
         $this->password = 'A1abcabcabc';
         $this->userEmail = 'layerapitest' . $this->date->getTimestamp() . '@example.com';
         $this->schemaName = 'layer_api_test_' . $this->date->getTimestamp();
+        $this->subUserName = 'layerapisub' . $this->date->getTimestamp();
     }
 
     private function auth(ApiTester $I): void
@@ -364,5 +367,47 @@ class LayerApiCest
         // Wrong type for on
         $I->sendPOST($base, json_encode(['on' => 'yes']));
         $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+    }
+
+    public function shouldForbidSubUserOnForeignSchema(ApiTester $I)
+    {
+        // Create a sub-user under the super user (session cookie flow)
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/session/start', json_encode([
+            'user' => $this->userId,
+            'password' => $this->password,
+            'schema' => 'public',
+        ]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $sessionCookie = $I->capturePHPSESSID();
+        $I->assertFalse(empty($sessionCookie));
+
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $sessionCookie);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/user', json_encode([
+            'name' => $this->subUserName,
+            'email' => 'sub' . $this->userEmail,
+            'password' => $this->password,
+            'subuser' => true,
+        ]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $subUserId = json_decode($I->grabResponse())->data->screenname;
+
+        $I->deleteHeader('Cookie');
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v4/oauth', json_encode([
+            'grant_type' => 'password',
+            'username' => $subUserId,
+            'password' => $this->password,
+            'database' => $this->userId,
+            'client_id' => 'gc2-cli',
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $this->subUserAccessToken = json_decode($I->grabResponse())->access_token;
+
+        $I->haveHttpHeader('Accept', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->subUserAccessToken);
+        $I->sendGET('/api/v4/layers/' . $this->layerKey);
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
     }
 }
