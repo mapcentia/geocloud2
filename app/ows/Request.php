@@ -31,12 +31,13 @@ final readonly class Request
      */
     public static function fromHttp(): self
     {
-        $method = strtoupper(Input::getMethod());
+        $method = strtoupper(Input::getMethod() ?? 'GET');
         $queryString = Input::getQueryString();
+        parse_str($queryString, $query);
         if ($method === 'GET') {
-            return self::parse('GET', (array) Input::get(), $queryString, null);
+            return self::parse('GET', $query, $queryString, null);
         }
-        return self::parse('POST', (array) Input::get(), $queryString, Input::getBody());
+        return self::parse('POST', $query, $queryString, Input::getBody());
     }
 
     /**

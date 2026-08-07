@@ -63,4 +63,22 @@ class RequestTest extends Unit
         $this->expectException(\app\exceptions\ServiceException::class);
         Request::parse('POST', [], '', '<?xml version="1.0"?><wfs:GetFeature xmlns:wfs="http://www.opengis.net/wfs"/>');
     }
+
+    public function testFromHttpReadsQueryFromUrlOnPost(): void
+    {
+        $filters = rtrim(strtr(base64_encode(json_encode(['test.roads' => ['type=1']])), '+/', '-_'), '=');
+        $prevMethod = $_SERVER['REQUEST_METHOD'] ?? null;
+        $prevQs = $_SERVER['QUERY_STRING'] ?? null;
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['QUERY_STRING'] = 'SERVICE=WFS&LAYERS=test.roads&filters=' . $filters;
+        try {
+            $r = \app\ows\Request::fromHttp();
+            $this->assertEquals('wfs', $r->service);
+            $this->assertEquals(['test.roads'], $r->layers);
+            $this->assertEquals(['test.roads' => ['(type=1)']], $r->filters);
+        } finally {
+            if ($prevMethod === null) unset($_SERVER['REQUEST_METHOD']); else $_SERVER['REQUEST_METHOD'] = $prevMethod;
+            if ($prevQs === null) unset($_SERVER['QUERY_STRING']); else $_SERVER['QUERY_STRING'] = $prevQs;
+        }
+    }
 }
