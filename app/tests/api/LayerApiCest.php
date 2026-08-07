@@ -310,4 +310,59 @@ class LayerApiCest
         $I->sendPOST($base, json_encode(['id' => 'cafebabe', 'color' => '#fff']));
         $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
     }
+
+    public function shouldCrudLabels(ApiTester $I)
+    {
+        $this->auth($I);
+        $base = '/api/v4/layers/' . $this->layerKey . '/classes/' . $this->classId . '/labels';
+
+        // Collection GET — one label from the layer POST
+        $I->sendGET($base);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $response = json_decode($I->grabResponse(), true);
+        $I->assertCount(1, $response);
+        $I->assertEquals($this->labelId, $response[0]['id']);
+        $I->assertTrue($response[0]['on']);
+
+        // POST
+        $I->sendPOST($base, json_encode(['on' => false, 'text' => '[name]', 'color' => '#000000']));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $newLabelId = basename($I->grabHttpHeader('Location'));
+        $I->assertMatchesRegularExpression('/^[0-9a-f]{8}$/', $newLabelId);
+        $I->sendGET($base . '/' . $newLabelId);
+        $response = json_decode($I->grabResponse(), true);
+        $I->assertEquals(20, $response['sortid']); // 10 exists → default 20
+        $I->assertFalse($response['on']);
+
+        // PATCH — toggle on
+        $I->stopFollowingRedirects();
+        $I->sendPatch($base . '/' . $newLabelId, json_encode(['on' => true]));
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $I->startFollowingRedirects();
+        $I->sendGET($base . '/' . $newLabelId);
+        $response = json_decode($I->grabResponse(), true);
+        $I->assertTrue($response['on']);
+        $I->assertEquals('[name]', $response['text']);
+
+        // DELETE
+        $I->sendDELETE($base . '/' . $newLabelId);
+        $I->seeResponseCodeIs(HttpCode::NO_CONTENT);
+        $I->sendGET($base . '/' . $newLabelId);
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+    }
+
+    public function shouldRejectBadLabelRequests(ApiTester $I)
+    {
+        $this->auth($I);
+        $base = '/api/v4/layers/' . $this->layerKey . '/classes/' . $this->classId . '/labels';
+        // Unknown label id
+        $I->sendGET($base . '/deadbeef');
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        // Unknown property key
+        $I->sendPOST($base, json_encode(['no_such_key' => '1']));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        // Wrong type for on
+        $I->sendPOST($base, json_encode(['on' => 'yes']));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+    }
 }

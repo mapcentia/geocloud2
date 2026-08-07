@@ -176,6 +176,7 @@ class LayerClass extends AbstractLayerApi
             ]);
             $collection->fields['labels'] = new Assert\Optional([
                 new Assert\Type('array'),
+                new Assert\All([Label::getAssert()]),
             ]);
         }
         return $collection;
