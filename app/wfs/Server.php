@@ -42,8 +42,6 @@ final class Server
         $this->validateProtocol($req);
         if ($req->operation !== 'GETCAPABILITIES') {
             $this->checkLayerEnabled($req);
-            $this->basicAuthPerLayer($req);
-
         }
 
         $class = self::HANDLERS[$req->operation]
@@ -91,31 +89,6 @@ final class Server
                     'Layer is not enabled',
                     attributes: ['exceptionCode' => 'InvalidParameterValue', 'locator' => 'typename']
                 );
-            }
-        }
-    }
-
-    /**
-     * @throws ServiceException
-     * @throws Throwable
-     * @throws InvalidArgumentException
-     */
-    private function basicAuthPerLayer(Request $req): void
-    {
-        if ($this->ctx->trusted || empty($req->typeNames)) return;
-        $model = $this->ctx->model();
-        $isTransaction = $req->operation === 'TRANSACTION';
-        foreach ($req->typeNames as $tn) {
-            $auth = $model->getGeometryColumns("{$this->ctx->schema}.$tn", 'authentication');
-            $needsAuth = $auth === 'Read/write'
-                || ($isTransaction && ($auth === 'Write' || $auth === 'Read/write'))
-                || !empty(Input::getAuthUser());
-            if ($needsAuth) {
-                if ($this->ctx->withToken) {
-                    new Authorization(connection: $this->ctx->connection)->check(relName: "{$this->ctx->schema}.$tn", transaction: $isTransaction, isAuth: true, subUser: $this->ctx->user, userGroup: $this->ctx->userGroup, rels: []);
-                } else {
-                    new BasicAuth(connection: $this->ctx->connection)->authenticate("{$this->ctx->schema}.$tn", $isTransaction);
-                }
             }
         }
     }

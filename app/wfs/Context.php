@@ -19,7 +19,6 @@ final class Context
         public readonly ?string $userGroup,
         public readonly bool   $parentUser,
         public readonly bool   $trusted,
-        public readonly bool   $withToken,
         public readonly string $host,
         public readonly string $thePath,
         public readonly float  $startTime,

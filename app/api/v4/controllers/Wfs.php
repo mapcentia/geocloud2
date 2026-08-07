@@ -16,6 +16,7 @@ use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Route2;
 use app\inc\Util;
+use app\models\Authorization;
 use app\wfs\Context;
 use app\wfs\Request as WfsRequest;
 use app\wfs\Server;
@@ -87,6 +88,7 @@ final class Wfs extends AbstractApi
                 $req = null;
                 try {
                     $req = WfsRequest::fromHttp($ctx);
+                    $this->authorizeLayers($ctx, $req);
                     new Server($ctx)->dispatch($req, $writer);
                 } catch (Throwable $e) {
                     // Catch all so DB/protocol errors render as OWS exception
@@ -103,29 +105,9 @@ final class Wfs extends AbstractApi
      */
     private function buildContext(): Context
     {
-        $jwtUser = $this->route->jwt['data']['uid'] ?? null;
-        $jwtDb = $this->route->jwt['data']['database'] ?? null;
-        $jwtGroup = $this->route->jwt['data']['userGroup'] ?? null;
-
-        if ($jwtUser && $jwtDb) {
-            $user = $jwtUser;
-            $database = $jwtDb;
-            $userGroup = $jwtGroup;
-            $withToken = true;
-        } else {
-            $withToken = false;
-            $authUser = Input::getAuthUser();
-            $database = $this->route->getParam('database');
-            if (!$authUser && empty($database)) {
-                throw new OwsException(
-                    'Authentication required',
-                    attributes: ['exceptionCode' => 'NoApplicableCode']
-                );
-            }
-            // For anonymous-readable layers, use the database name as the implicit user.
-            // BasicAuth is invoked per-layer inside Server::dispatch when actually needed.
-            $user = $authUser ?: $database;
-        }
+        $user = $this->route->jwt['data']['uid'];
+        $database = $this->route->jwt['data']['database'];
+        $userGroup = $this->route->jwt['data']['userGroup'];
 
         $schema = $this->route->getParam('schema');
         $parentUser = $user === $database;
@@ -149,11 +131,34 @@ final class Wfs extends AbstractApi
             userGroup: $userGroup ?? null,
             parentUser: $parentUser,
             trusted: $trusted,
-            withToken: $withToken,
             host: Util::host(),
             thePath: Util::thePath(),
             startTime: microtime(true),
             srs: $srs,
         );
+    }
+
+    private function authorizeLayers(\app\wfs\Context $ctx, WfsRequest $req): void
+    {
+        if ($ctx->trusted) {
+            return;
+        }
+        $model = $ctx->model();
+        $isTransaction = $req->operation === 'TRANSACTION';
+        foreach ($req->typeNames as $layer) {
+            $rel = "$ctx->schema." . $this->tableOf($layer);
+            $auth = $model->getGeometryColumns($rel, 'authentication');
+            if ($auth === 'Read/write') {
+                new Authorization(connection: $ctx->connection)->check(
+                    relName: $rel, transaction: $isTransaction, isAuth: true,
+                    subUser: $ctx->user, userGroup: $ctx->userGroup, rels: []
+                );
+            }
+        }
+    }
+    private function tableOf(string $layer): string
+    {
+        $bits = explode('.', $layer);
+        return $bits[1] ?? $bits[0];
     }
 }

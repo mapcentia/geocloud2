@@ -14,11 +14,14 @@ namespace app\wfs;
 
 use app\conf\App;
 use app\conf\Connection as StaticConnection;
+use app\inc\BasicAuth;
 use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Util;
+use app\models\Authorization;
 use app\wfs\output\ExceptionReport;
 use app\wfs\output\GmlWriter;
+use app\wfs\Request as WfsRequest;
 use Throwable;
 
 function bootstrap_legacy_wfs(string $db, string $user, bool $parentUser): void
@@ -46,7 +49,6 @@ function bootstrap_legacy_wfs(string $db, string $user, bool $parentUser): void
         userGroup: null,
         parentUser: $parentUser,
         trusted: $trusted,
-        withToken: false,
         host: Util::host(),
         thePath: Util::thePath(),
         startTime: microtime(true),
@@ -61,6 +63,7 @@ function bootstrap_legacy_wfs(string $db, string $user, bool $parentUser): void
     $req = null;
     try {
         $req = Request::fromHttp($ctx);
+        authorizeLayers($ctx, $req);
         new Server($ctx)->dispatch($req, $writer);
         $writer->writeMemoryFooter();
     } catch (Throwable $e) {
@@ -70,4 +73,24 @@ function bootstrap_legacy_wfs(string $db, string $user, bool $parentUser): void
         // exception body, not a fatal error JSON.
         ExceptionReport::render($e, $req?->version ?? '1.1.0', $writer);
     }
+}
+function authorizeLayers(\app\wfs\Context $ctx, WfsRequest $req): void
+{
+    if ($ctx->trusted) {
+        return;
+    }
+    $model = $ctx->model();
+    $isTransaction = $req->operation === 'TRANSACTION';
+    foreach ($req->typeNames as $layer) {
+        $rel = "$ctx->schema." . tableOf($layer);
+        $auth = $model->getGeometryColumns($rel, 'authentication');
+        if ($auth === 'Read/write' || !empty(Input::getAuthUser())) {
+            new BasicAuth(connection: $ctx->connection)->authenticate($rel, $isTransaction);
+        }
+    }
+}
+function tableOf(string $layer): string
+{
+    $bits = explode('.', $layer);
+    return $bits[1] ?? $bits[0];
 }
