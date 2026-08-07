@@ -35,7 +35,7 @@ final class GetFeature implements HandlerInterface
     {
         $srs = $this->ctx->srs ?? $req->srs;
         if (!$srs) {
-            throw new OwsException('You need to specify a srid in the URL.');
+//            throw new OwsException('You need to specify a srid in the URL.');
         }
         if (empty($req->typeNames)) {
             throw new OwsException(
@@ -103,7 +103,7 @@ final class GetFeature implements HandlerInterface
 
         // Load per-column configuration
         $fieldConfArr = json_decode(
-            (string) (new \app\controllers\Layer())->getValueFromKey("{$postgisschema}.{$table}.{$geomField}", 'fieldconf'),
+            (string) new Layer(connection: $this->ctx->connection)->getValueFromKey("{$postgisschema}.{$table}.{$geomField}", 'fieldconf'),
             true
         ) ?? [];
 

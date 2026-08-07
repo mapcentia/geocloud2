@@ -23,7 +23,7 @@ use app\wfs\output\ExceptionReport;
 use app\wfs\output\GmlWriter;
 use Throwable;
 
-#[Controller(route: 'api/v4/wfs/{db}/{schema}/{srs}/[timeSlice]', scope: Scope::PUBLIC)]
+#[Controller(route: 'api/v4/wfs/schema/{schema}/[srs]/[timeSlice]', scope: Scope::SUB_USER_ALLOWED)]
 final class Wfs extends AbstractApi
 {
     public function __construct(public Route2 $route, Connection $connection)
@@ -105,13 +105,17 @@ final class Wfs extends AbstractApi
     {
         $jwtUser = $this->route->jwt['data']['uid'] ?? null;
         $jwtDb = $this->route->jwt['data']['database'] ?? null;
+        $jwtGroup = $this->route->jwt['data']['userGroup'] ?? null;
 
         if ($jwtUser && $jwtDb) {
             $user = $jwtUser;
             $database = $jwtDb;
+            $userGroup = $jwtGroup;
+            $withToken = true;
         } else {
+            $withToken = false;
             $authUser = Input::getAuthUser();
-            $database = $this->route->getParam('db');
+            $database = $this->route->getParam('database');
             if (!$authUser && empty($database)) {
                 throw new OwsException(
                     'Authentication required',
@@ -142,8 +146,10 @@ final class Wfs extends AbstractApi
             database: $database,
             schema: $schema,
             user: $user,
+            userGroup: $userGroup ?? null,
             parentUser: $parentUser,
             trusted: $trusted,
+            withToken: $withToken,
             host: Util::host(),
             thePath: Util::thePath(),
             startTime: microtime(true),
