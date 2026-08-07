@@ -125,6 +125,11 @@ class LayerApiCest
         $I->sendGET('/api/v4/layers/' . $this->layerKey);
         $response = json_decode($I->grabResponse(), true);
         $I->assertEquals($this->classId, $response['classes'][0]['id']);
+
+        // Mutations must regenerate the mapfile of the layer's schema (not just public)
+        $mapfile = '/var/www/geocloud2/app/wms/mapfiles/' . $this->userId . '_' . $this->schemaName . '_wms.map';
+        $I->assertFileExists($mapfile);
+        $I->assertStringContainsString('Main roads', file_get_contents($mapfile));
     }
 
     public function shouldPatchLayerProperties(ApiTester $I)

@@ -46,10 +46,16 @@ abstract class AbstractLayerApi extends AbstractApi
 
     /**
      * Regenerates the WMS and WFS mapfiles — the API equivalent of the GUI's writeFiles().
+     *
+     * Mapfile generation is scoped to $connection->schema (defaults to 'public' otherwise), so
+     * we clone the connection with the layer's own schema before instantiating the model —
+     * otherwise mutations would regenerate the 'public' mapfiles instead of the layer's.
      */
     protected function writeMapFiles(): void
     {
-        $mapfile = new MapfileModel(connection: $this->connection);
+        $connection = clone $this->connection;
+        $connection->schema = explode('.', $this->layerKey)[0];
+        $mapfile = new MapfileModel(connection: $connection);
         $mapfile->writeMapfile($mapfile->generateWms(), 'wms');
         $mapfile->writeMapfile($mapfile->generateWfs(), 'wfs');
     }
