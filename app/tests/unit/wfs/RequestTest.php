@@ -120,9 +120,10 @@ XML;
         return new \app\wfs\Context(
             connection: new \app\inc\Connection(database: 'mydb'),
             database: 'mydb', schema: 'public', user: 'alice',
-            parentUser: false, trusted: true,
-            host: 'http://example.com', thePath: 'http://example.com/wfs/mydb/public',
-            startTime: 0.0,
+            userGroup: null, parentUser: false,
+            trusted: true, withToken: false,
+            host: 'http://example.com',
+            thePath: 'http://example.com/wfs/mydb/public', startTime: 0.0,
         );
     }
 }

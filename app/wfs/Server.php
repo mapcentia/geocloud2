@@ -16,6 +16,7 @@ use app\exceptions\OwsException;
 use app\exceptions\ServiceException;
 use app\inc\BasicAuth;
 use app\inc\Input;
+use app\models\Authorization;
 use app\wfs\output\GmlWriter;
 use Psr\Cache\InvalidArgumentException;
 use Throwable;
@@ -110,7 +111,11 @@ final class Server
                 || ($isTransaction && ($auth === 'Write' || $auth === 'Read/write'))
                 || !empty(Input::getAuthUser());
             if ($needsAuth) {
-                new BasicAuth()->authenticate("{$this->ctx->schema}.$tn", $isTransaction);
+                if ($this->ctx->withToken) {
+                    new Authorization(connection: $this->ctx->connection)->check(relName: "{$this->ctx->schema}.$tn", transaction: $isTransaction, isAuth: true, subUser: $this->ctx->user, userGroup: $this->ctx->userGroup, rels: []);
+                } else {
+                    new BasicAuth(connection: $this->ctx->connection)->authenticate("{$this->ctx->schema}.$tn", $isTransaction);
+                }
             }
         }
     }

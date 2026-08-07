@@ -40,15 +40,17 @@ function bootstrap_legacy_wfs(string $db, string $user, bool $parentUser): void
 
     $ctx = new Context(
         connection: new Connection(database: $db, schema: $schema),
-        database:   $db,
-        schema:     $schema,
-        user:       $user,
+        database: $db,
+        schema: $schema,
+        user: $user,
+        userGroup: null,
         parentUser: $parentUser,
-        trusted:    $trusted,
-        host:       Util::host(),
-        thePath:    Util::thePath(),
-        startTime:  microtime(true),
-        srs:        $srs,
+        trusted: $trusted,
+        withToken: false,
+        host: Util::host(),
+        thePath: Util::thePath(),
+        startTime: microtime(true),
+        srs: $srs,
     );
 
     $writer = new GmlWriter(
