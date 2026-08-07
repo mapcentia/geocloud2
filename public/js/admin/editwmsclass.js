@@ -697,6 +697,16 @@ wmsClass.init = function (id) {
     // ---------- Shared master/detail builder ----------
     // kind: 'styles' | 'labels'
     var buildItemPanel = function (kind, propGridId, propertyNames, customEditors, customRenderers, fields) {
+        propertyNames.sortid = 'Sort id';
+        propertyNames.name = 'Name';
+        customEditors['sortid'] = new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+            minValue: -100,
+            maxValue: 9999,
+            allowDecimals: false,
+            decimalPrecision: 0,
+            incrementValue: 1,
+            accelerate: true
+        }));
         var listStore = new Ext.data.JsonStore({
             fields: ['idx', 'sortid', 'name'],
             data: []
@@ -734,6 +744,13 @@ wmsClass.init = function (id) {
                 propertychange: function (source, recordId, value) {
                     if (currentIdx !== null && arr()[currentIdx]) {
                         arr()[currentIdx][recordId] = value;
+                        if (recordId === 'sortid' || recordId === 'name') {
+                            var rIdx = listStore.findExact('idx', currentIdx);
+                            if (rIdx !== -1) {
+                                listStore.getAt(rIdx).set(recordId, value);
+                                listStore.getAt(rIdx).commit();
+                            }
+                        }
                     }
                 }
             }
@@ -742,7 +759,7 @@ wmsClass.init = function (id) {
             currentIdx = idx;
             var item = arr()[idx] || {};
             var source = {};
-            Ext.each(fields, function (f) {
+            Ext.each(['sortid', 'name'].concat(fields), function (f) {
                 if (f === 'on' || f === 'force') {
                     source[f] = !!item[f];
                 } else {
@@ -753,13 +770,12 @@ wmsClass.init = function (id) {
             propGrid.getColumnModel().getColumnById('name').sortable = false;
             propGrid.setSource(source);
         };
-        var listGrid = new Ext.grid.EditorGridPanel({
+        var listGrid = new Ext.grid.GridPanel({
             region: 'north',
             height: 120,
             split: true,
             border: false,
             store: listStore,
-            clicksToEdit: 2,
             sm: new Ext.grid.RowSelectionModel({
                 singleSelect: true
             }),
@@ -775,20 +791,11 @@ wmsClass.init = function (id) {
                     {
                         header: "Sort id",
                         dataIndex: "sortid",
-                        width: 50,
-                        editor: new Ext.ux.form.SpinnerField({
-                            minValue: -100,
-                            maxValue: 9999,
-                            allowDecimals: false,
-                            decimalPrecision: 0,
-                            incrementValue: 1,
-                            accelerate: true
-                        })
+                        width: 50
                     },
                     {
                         header: "Name",
-                        dataIndex: "name",
-                        editor: new Ext.form.TextField({})
+                        dataIndex: "name"
                     }
                 ]
             }),
@@ -837,12 +844,6 @@ wmsClass.init = function (id) {
             listeners: {
                 rowclick: function (grid, rowIndex) {
                     showItem(listStore.getAt(rowIndex).data.idx);
-                },
-                afteredit: function (e) {
-                    var item = arr()[e.record.data.idx];
-                    if (item) {
-                        item[e.field] = e.value;
-                    }
                 }
             }
         });
