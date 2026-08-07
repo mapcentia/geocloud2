@@ -1,0 +1,6 @@
+<qgis>
+  <maplayer>
+    <datasource>dbname='mydb' table="test"."roads" (the_geom) sql=</datasource>
+    <labeling labelsEnabled="1"/>
+  </maplayer>
+</qgis>

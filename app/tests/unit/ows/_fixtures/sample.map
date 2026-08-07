@@ -1,0 +1,18 @@
+MAP
+  LAYER
+    NAME "test.roads"
+    DATA "the_geom FROM (SELECT * FROM test.roads /*FILTER_test.roads*/) as foo USING UNIQUE gid"
+    CLASS
+      #START_LABEL1_test.roads
+      LABEL
+        TEXT "[name]"
+      END
+      #END_LABEL1_test.roads
+      #START_LABEL2_test.roads
+      LABEL
+        TEXT "[ref]"
+      END
+      #END_LABEL2_test.roads
+    END
+  END
+END
