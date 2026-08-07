@@ -157,11 +157,12 @@ class Style extends AbstractLayerApi
         if (Input::getMethod() == 'post' && $entry) {
             $this->postWithResource();
         }
+        $this->rejectEmptyArrayPost($body);
         $this->validateRequest(self::getAssert(), $body, Input::getMethod());
         $this->initiateLayer($layer);
         $this->classId = $class;
         $existing = array_column($this->classification->getEntries($class, 'styles'), 'id'); // throws CLASS_NOT_FOUND
-        $this->entryIds = $entry ? explode(',', $entry) : null;
+        $this->entryIds = $entry ? array_values(array_unique(explode(',', $entry))) : null;
         foreach ($this->entryIds ?? [] as $id) {
             if (!in_array($id, $existing, true)) {
                 throw new GC2Exception("Style not found", 404, null, "STYLE_NOT_FOUND");

@@ -148,6 +148,30 @@ class LayerApiCest
         $I->assertEquals('50000', $response['properties']['maxscaledenom']); // key-merge keeps others
     }
 
+    public function shouldRoundtripSingleQuoteInPropertiesWithoutSqlInjection(ApiTester $I)
+    {
+        $this->auth($I);
+        $I->stopFollowingRedirects();
+        $I->sendPatch('/api/v4/layers/' . $this->layerKey, json_encode([
+            'properties' => ['theme_column' => "quote'test"],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $I->startFollowingRedirects();
+
+        $I->sendGET('/api/v4/layers/' . $this->layerKey);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $response = json_decode($I->grabResponse(), true);
+        $I->assertEquals("quote'test", $response['properties']['theme_column']);
+
+        // Restore back to a benign value so later tests aren't affected
+        $I->stopFollowingRedirects();
+        $I->sendPatch('/api/v4/layers/' . $this->layerKey, json_encode([
+            'properties' => ['theme_column' => ''],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $I->startFollowingRedirects();
+    }
+
     public function shouldListLayers(ApiTester $I)
     {
         $this->auth($I);
@@ -255,6 +279,9 @@ class LayerApiCest
         // POST without name
         $I->sendPOST('/api/v4/layers/' . $this->layerKey . '/classes', json_encode(['sortid' => 1]));
         $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        // POST an empty array must not be treated as a no-op success
+        $I->sendPOST('/api/v4/layers/' . $this->layerKey . '/classes', json_encode([]));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
     }
 
     public function shouldCrudStyles(ApiTester $I)
@@ -316,6 +343,10 @@ class LayerApiCest
         $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
         // Client-supplied id
         $I->sendPOST($base, json_encode(['id' => 'cafebabe', 'color' => '#fff']));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        // POST an empty array must not be treated as a no-op success (it would otherwise
+        // report every pre-existing style id as newly created — array_slice(..., -0) bug)
+        $I->sendPOST($base, json_encode([]));
         $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
     }
 

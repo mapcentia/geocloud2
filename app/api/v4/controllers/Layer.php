@@ -15,6 +15,7 @@ use app\api\v4\AcceptableMethods;
 use app\api\v4\Controller;
 use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
+use app\conf\App;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
@@ -90,7 +91,8 @@ class Layer extends AbstractLayerApi
         }
         $superUser = $this->route->jwt['data']['superUser'];
         $uid = $this->route->jwt['data']['uid'];
-        $schemas = $superUser ? null : array_values(array_unique([$uid, 'public']));
+        $publicSchemas = App::$param['publicSchemas'] ?? [];
+        $schemas = $superUser ? null : array_values(array_unique(array_merge([$uid, 'public'], $publicSchemas)));
         $keys = new LayerModel(connection: $this->connection)->getLayerKeys($schemas);
         if (in_array(Input::get('namesOnly'), ['', 'true', '1', 't'], true)) {
             return $this->getResponse(array_map(fn($k) => ['name' => $k], $keys));
@@ -115,8 +117,9 @@ class Layer extends AbstractLayerApi
         $data = json_decode(Input::getBody(), true);
         $items = array_is_list($data) ? $data : [$data];
         $list = [];
+        $schemas = [];
         $model = new TableModel(null, connection: $this->connection);
-        $model->withTransaction(function () use (&$list, $items) {
+        $model->withTransaction(function () use (&$list, &$schemas, $items) {
             foreach ($items as $item) {
                 $this->initiateLayer($item['name']);
                 if (isset($item['properties'])) {
@@ -126,9 +129,12 @@ class Layer extends AbstractLayerApi
                     $this->classification->replaceClasses($item['classes']);
                 }
                 $list[] = $item['name'];
+                $schemas[explode('.', $item['name'])[0]] = true;
             }
         });
-        $this->writeMapFiles();
+        foreach (array_keys($schemas) as $schema) {
+            $this->writeMapFiles($schema);
+        }
         return $this->postResponse('/api/v4/layers/', $list);
     }
 
@@ -170,6 +176,7 @@ class Layer extends AbstractLayerApi
         if (Input::getMethod() == 'post' && $layer) {
             $this->postWithResource();
         }
+        $this->rejectEmptyArrayPost($body);
         $this->validateRequest(self::getAssert(), $body, Input::getMethod());
         if (!empty($layer)) {
             $this->initiateLayer($layer);

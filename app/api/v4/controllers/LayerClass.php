@@ -151,9 +151,10 @@ class LayerClass extends AbstractLayerApi
         if (Input::getMethod() == 'post' && $class) {
             $this->postWithResource();
         }
+        $this->rejectEmptyArrayPost($body);
         $this->validateRequest(self::getAssert(), $body, Input::getMethod());
         $this->initiateLayer($layer);
-        $this->classIds = $class ? explode(',', $class) : null;
+        $this->classIds = $class ? array_values(array_unique(explode(',', $class))) : null;
         foreach ($this->classIds ?? [] as $id) {
             $this->classification->getClassById($id); // throws CLASS_NOT_FOUND
         }

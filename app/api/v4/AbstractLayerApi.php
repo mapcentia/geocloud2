@@ -9,6 +9,7 @@
 namespace app\api\v4;
 
 use app\exceptions\GC2Exception;
+use app\inc\Input;
 use app\models\Classification;
 use app\models\Layer as LayerModel;
 use app\models\Mapfile as MapfileModel;
@@ -48,15 +49,40 @@ abstract class AbstractLayerApi extends AbstractApi
      * Regenerates the WMS and WFS mapfiles — the API equivalent of the GUI's writeFiles().
      *
      * Mapfile generation is scoped to $connection->schema (defaults to 'public' otherwise), so
-     * we clone the connection with the layer's own schema before instantiating the model —
+     * we clone the connection with the target schema before instantiating the model —
      * otherwise mutations would regenerate the 'public' mapfiles instead of the layer's.
+     *
+     * @param string|null $schema Schema to regenerate mapfiles for. Defaults to the current
+     *                            layer's schema (derived from $this->layerKey) when omitted.
      */
-    protected function writeMapFiles(): void
+    protected function writeMapFiles(?string $schema = null): void
     {
         $connection = clone $this->connection;
-        $connection->schema = explode('.', $this->layerKey)[0];
+        $connection->schema = $schema ?? explode('.', $this->layerKey)[0];
         $mapfile = new MapfileModel(connection: $connection);
         $mapfile->writeMapfile($mapfile->generateWms(), 'wms');
         $mapfile->writeMapfile($mapfile->generateWfs(), 'wfs');
+    }
+
+    /**
+     * Rejects a POST body that is an empty JSON array.
+     *
+     * Symfony's Collection validator treats an empty array as trivially valid when every field
+     * is Optional, so `POST []` would otherwise pass validate() as a no-op. For styles/labels
+     * that additionally made Classification::insertEntries() report every existing entry's id
+     * (array_slice(..., -count($entries)) with count 0 slices from index 0, i.e. the whole
+     * array), so the 201 Location would wrongly claim pre-existing entries were just created.
+     *
+     * @throws GC2Exception
+     */
+    protected function rejectEmptyArrayPost(?string $body): void
+    {
+        if (Input::getMethod() !== 'post') {
+            return;
+        }
+        $data = $body === null ? null : json_decode($body, true);
+        if (is_array($data) && $data === []) {
+            throw new GC2Exception("POST body must not be an empty array", 400, null, "EMPTY_ARRAY_BODY");
+        }
     }
 }

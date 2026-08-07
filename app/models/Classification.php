@@ -295,6 +295,9 @@ class Classification extends Model
      */
     public function insertEntries(string $classId, string $kind, array $entries): array
     {
+        if (count($entries) === 0) {
+            return [];
+        }
         $classes = $this->getAllWithIds();
         foreach ($classes as $i => $class) {
             if ($class['id'] === $classId) {

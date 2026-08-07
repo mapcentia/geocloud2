@@ -120,9 +120,9 @@ class Tile extends Model
             $newData[$k] = (isset($data->$k) || (property_exists($data, $k) && $data->$k === null)) ? $data->$k : $oldData["data"][0][$k];
         }
         $newData = json_encode($newData);
-        $sql = "UPDATE settings.geometry_columns_join SET def='$newData' WHERE _key_=:layer";
+        $sql = "UPDATE settings.geometry_columns_join SET def=:def WHERE _key_=:layer";
         $res = $this->prepare($sql);
-        $this->execute($res, ['layer' => $this->table]);
+        $this->execute($res, ['def' => $newData, 'layer' => $this->table]);
         $response['success'] = true;
         $response['message'] = "Def updated";
         return $response;
