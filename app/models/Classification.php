@@ -479,7 +479,7 @@ class Classification extends Model
         $mergedClass = $this->mergeClasses($cachedClass, $existingClass, $newClass);
 
         $merged['_key_'] = $this->layer;
-        $merged['class'] = $mergedClass;
+        $merged['class'] = self::ensureIds($mergedClass);
         $tableObj->updateRecord($merged, '_key_');
 
         $cached['_key_'] = $this->layer;
@@ -497,6 +497,23 @@ class Classification extends Model
      * @param array $newClass The new class definitions to merge into the existing state.
      * @return array The merged array of class definitions, preserving external changes and incorporating valid updates.
      */
+    /**
+     * Removes every `id` key, recursively, from a value. Used to make comparisons
+     * between stored classes (which carry server-assigned ids) and wizard-cache
+     * classes (which do not) id-agnostic.
+     */
+    private static function stripIds(mixed $value): mixed
+    {
+        if (!is_array($value)) {
+            return $value;
+        }
+        unset($value['id']);
+        foreach ($value as $key => $item) {
+            $value[$key] = self::stripIds($item);
+        }
+        return $value;
+    }
+
     static function mergeClasses(array $cachedClass, array $existingClass, array $newClass): array
     {
         // Helper to map by name for comparison
@@ -529,8 +546,10 @@ class Classification extends Model
                 foreach ($incoming[$name] as $prop => $newVal) {
                     $cachedVal = $cached[$name][$prop] ?? null;
                     $existingVal = $existing[$name][$prop] ?? null;
-                    // Only update property if not changed externally (existing == cached)
-                    if ($existingVal === $cachedVal) {
+                    // Only update property if not changed externally (existing == cached).
+                    // Server-assigned ids never count as an external edit — the wizard
+                    // cache does not carry them.
+                    if (self::stripIds($existingVal) === self::stripIds($cachedVal)) {
                         $target[$prop] = $newVal;
                     }
                     // else: keep the externally modified value
@@ -569,7 +588,7 @@ class Classification extends Model
     {
         $classes = array_map([self::class, 'normalizeClass'], $this->readRawClasses());
         $classes[] = ["name" => "Unnamed class"];
-        $this->store(json_encode($classes, JSON_UNESCAPED_UNICODE));
+        $this->store(json_encode(self::ensureIds($classes), JSON_UNESCAPED_UNICODE));
         $response['success'] = true;
         $response['message'] = "Inserted one class";
         return $response;
@@ -593,7 +612,7 @@ class Classification extends Model
             }
             $classes[$id][$k] = $v;
         }
-        $this->store(json_encode($classes, JSON_UNESCAPED_UNICODE));
+        $this->store(json_encode(self::ensureIds($classes), JSON_UNESCAPED_UNICODE));
         $response['success'] = true;
         $response['message'] = "Updated one class";
         return $response;
@@ -610,7 +629,7 @@ class Classification extends Model
     {
         $classes = array_map([self::class, 'normalizeClass'], $this->readRawClasses());
         array_splice($classes, $id, 1);
-        $this->store(json_encode($classes, JSON_UNESCAPED_UNICODE));
+        $this->store(json_encode(self::ensureIds($classes), JSON_UNESCAPED_UNICODE));
         $response['success'] = true;
         $response['message'] = "Deleted one class";
         return $response;

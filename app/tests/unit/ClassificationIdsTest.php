@@ -103,4 +103,27 @@ class ClassificationIdsTest extends Unit
         $this->assertEquals(10, Classification::nextSortId([["name" => "no sortid"]]));
         $this->assertEquals(30, Classification::nextSortId([["sortid" => "20"]]));
     }
+
+    public function testMergeClassesIgnoresIdsWhenComparing(): void
+    {
+        // Stored classes carry ids, the wizard cache does not. The comparison that decides
+        // "was this edited externally?" must ignore ids, or every wizard re-run would treat
+        // all classes as externally modified and stop applying wizard updates.
+        $cached = [
+            ["name" => "A", "styles" => [["sortid" => 10, "color" => "#008000"]], "labels" => []],
+        ];
+        $existing = [
+            ["id" => "aaaaaaaa", "name" => "A",
+                "styles" => [["id" => "bbbbbbbb", "sortid" => 10, "color" => "#008000"]], "labels" => []],
+        ];
+        $incoming = [
+            ["name" => "A", "styles" => [["sortid" => 10, "color" => "#ff0000"]], "labels" => []],
+        ];
+        $merged = Classification::mergeClasses($cached, $existing, $incoming);
+        $this->assertEquals("#ff0000", $merged[0]['styles'][0]['color']);
+        // A genuinely external edit is still preserved
+        $existing[0]['styles'][0]['color'] = "#0000ff";
+        $merged = Classification::mergeClasses($cached, $existing, $incoming);
+        $this->assertEquals("#0000ff", $merged[0]['styles'][0]['color']);
+    }
 }

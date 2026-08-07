@@ -488,4 +488,36 @@ class LayerApiCest
         $I->assertEquals($classIdBefore, $response['classes'][0]['id']);
         $I->assertEquals('Main roads renamed', $response['classes'][0]['name']);
     }
+
+    public function shouldAssignIdsOnLegacySave(ApiTester $I)
+    {
+        // Start a legacy session as the super user
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/session/start', json_encode([
+            'user' => $this->userId,
+            'password' => $this->password,
+            'schema' => $this->schemaName,
+        ]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $sessionCookie = $I->capturePHPSESSID();
+
+        // Save a new style without an id through the legacy GUI path
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $sessionCookie);
+        $I->haveHttpHeader('Content-Type', 'application/json; charset=utf-8');
+        $I->sendPUT('/controllers/classification/index/' . $this->layerKey . '/0', json_encode([
+            'data' => ['styles' => [['name' => 'Added via GUI', 'color' => '#123456']]],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseContainsJson(['success' => true]);
+
+        // Read back through the legacy controller (which never assigns ids on read):
+        // the id must have been assigned at save time
+        $I->sendGET('/controllers/classification/index/' . $this->layerKey);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $response = json_decode($I->grabResponse(), true);
+        $style = $response['data'][0]['styles'][0];
+        $I->assertEquals('Added via GUI', $style['name']);
+        $I->assertMatchesRegularExpression('/^[0-9a-f]{8}$/', $style['id'] ?? '');
+        $I->deleteHeader('Cookie');
+    }
 }
