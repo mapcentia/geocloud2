@@ -288,7 +288,7 @@ classWizards.init = function (record) {
                                             incrementValue: 1,
                                             accelerate: true,
                                             allowBlank: true,
-                                            value: (customIsSet && c) ? classWizards.setting.opacity : ""
+                                            value: (customIsSet && c) ? (classWizards.setting.opacity || classWizards.setting.style_opacity) : ""
                                         }),
                                         new Ext.form.ComboBox({
                                             store: ['', 'bbox', 'centroid', 'end', 'labelpnt', 'labelpoly', 'start', 'vertices'],
@@ -365,7 +365,7 @@ classWizards.init = function (record) {
                                             triggerAction: "all",
                                             name: "offsetx",
                                             allowBlank: true,
-                                            value: (customIsSet && c) ? classWizards.setting.offsetx : ""
+                                            value: (customIsSet && c) ? (classWizards.setting.offsetx || classWizards.setting.style_offsetx) : ""
                                         },
                                         {
                                             xtype: "combo",
@@ -374,7 +374,7 @@ classWizards.init = function (record) {
                                             triggerAction: "all",
                                             name: "offsety",
                                             allowBlank: true,
-                                            value: (customIsSet && c) ? classWizards.setting.offsety : ""
+                                            value: (customIsSet && c) ? (classWizards.setting.offsety || classWizards.setting.style_offsety) : ""
                                         },
                                         {
                                             xtype: "combo",
@@ -383,7 +383,7 @@ classWizards.init = function (record) {
                                             triggerAction: "all",
                                             name: "polaroffsetr",
                                             allowBlank: true,
-                                            value: (customIsSet && c) ? classWizards.setting.polaroffsetr : ""
+                                            value: (customIsSet && c) ? (classWizards.setting.polaroffsetr || classWizards.setting.style_polaroffsetr) : ""
                                         },
                                         {
                                             xtype: "combo",
@@ -392,7 +392,7 @@ classWizards.init = function (record) {
                                             triggerAction: "all",
                                             name: "polaroffsetd",
                                             allowBlank: true,
-                                            value: (customIsSet && c) ? classWizards.setting.polaroffsetd : ""
+                                            value: (customIsSet && c) ? (classWizards.setting.polaroffsetd || classWizards.setting.style_polaroffsetd) : ""
                                         },
                                     ]
                                 },
