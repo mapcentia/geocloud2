@@ -17,7 +17,7 @@ class MapfileRenderTest extends Unit
         $s = Mapfile::renderStyle([
             "sortid" => 10, "name" => "Fill",
             "color" => "#008000", "outlinecolor" => "#000000", "width" => "2",
-            "symbol" => "circle", "size" => "10", "style_opacity" => "50",
+            "symbol" => "circle", "size" => "10", "opacity" => "50",
         ]);
         $this->assertStringContainsString("STYLE\n", $s);
         $this->assertStringContainsString("COLOR 0 128 0\n", $s);
@@ -40,9 +40,15 @@ class MapfileRenderTest extends Unit
 
     public function testRenderStyleColumnDrivenValuesGetBrackets(): void
     {
-        $s = Mapfile::renderStyle(["width" => "mycol", "style_offsetx" => "xcol"]);
+        $s = Mapfile::renderStyle(["width" => "mycol", "offsetx" => "xcol"]);
         $this->assertStringContainsString("WIDTH [mycol]\n", $s);
         $this->assertStringContainsString("OFFSET [xcol] 0\n", $s);
+    }
+
+    public function testRenderStylePolarOffsetAndScaleDenomKeys(): void
+    {
+        $s = Mapfile::renderStyle(["polaroffsetr" => "5", "polaroffsetd" => "6"]);
+        $this->assertStringContainsString("POLAROFFSET 5 6\n", $s);
     }
 
     public function testRenderLabelOffReturnsEmpty(): void
@@ -142,5 +148,51 @@ class MapfileRenderTest extends Unit
         $this->assertStringContainsString("CLASS\n", $s);
         $this->assertStringNotContainsString("STYLE\n", $s);
         $this->assertStringNotContainsString("LABEL\n", $s);
+    }
+
+    public function testRenderClassesFromLegacyFlatFormatRendersOffsetsOpacityAndScaleDenom(): void
+    {
+        // Raw legacy-flat JSON straight from the DB: style_* keys on the class, plus
+        // class_minscaledenom/class_maxscaledenom.
+        $classes = [[
+            "name" => "legacy",
+            "color" => "#FF0000",
+            "style_opacity" => "40",
+            "style_offsetx" => "3",
+            "style_offsety" => "4",
+            "style_polaroffsetr" => "5",
+            "style_polaroffsetd" => "6",
+            "class_minscaledenom" => "1000",
+            "class_maxscaledenom" => "50000",
+        ]];
+        $s = Mapfile::renderClasses($classes, ["data" => [["theme_column" => ""]]], "s.t");
+        $this->assertStringContainsString("OPACITY 40\n", $s);
+        $this->assertStringContainsString("OFFSET 3 4\n", $s);
+        $this->assertStringContainsString("POLAROFFSET 5 6\n", $s);
+        $this->assertStringContainsString("MINSCALEDENOM 1000\n", $s);
+        $this->assertStringContainsString("MAXSCALEDENOM 50000\n", $s);
+    }
+
+    public function testRenderClassesFromInterimNewFormatRendersOffsetsOpacityAndScaleDenom(): void
+    {
+        // Interim format already persisted by the current code: styles[] entries carrying
+        // style_* keys, and a class carrying class_minscaledenom/class_maxscaledenom.
+        $classes = [[
+            "name" => "interim",
+            "class_minscaledenom" => "2000",
+            "class_maxscaledenom" => "60000",
+            "styles" => [[
+                "sortid" => 10, "name" => "Symbol 1", "color" => "#FF0000",
+                "style_opacity" => "45", "style_offsetx" => "7", "style_offsety" => "8",
+                "style_polaroffsetr" => "9", "style_polaroffsetd" => "11",
+            ]],
+            "labels" => [],
+        ]];
+        $s = Mapfile::renderClasses($classes, ["data" => [["theme_column" => ""]]], "s.t");
+        $this->assertStringContainsString("OPACITY 45\n", $s);
+        $this->assertStringContainsString("OFFSET 7 8\n", $s);
+        $this->assertStringContainsString("POLAROFFSET 9 11\n", $s);
+        $this->assertStringContainsString("MINSCALEDENOM 2000\n", $s);
+        $this->assertStringContainsString("MAXSCALEDENOM 60000\n", $s);
     }
 }

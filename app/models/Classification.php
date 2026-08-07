@@ -56,8 +56,29 @@ class Classification extends Model
     }
 
     public const STYLE_KEYS = ['color', 'outlinecolor', 'symbol', 'size', 'width', 'angle', 'gap',
-        'style_opacity', 'pattern', 'linecap', 'geomtransform', 'minsize', 'maxsize',
-        'style_offsetx', 'style_offsety', 'style_polaroffsetr', 'style_polaroffsetd'];
+        'opacity', 'pattern', 'linecap', 'geomtransform', 'minsize', 'maxsize',
+        'offsetx', 'offsety', 'polaroffsetr', 'polaroffsetd'];
+
+    /**
+     * Maps the new unprefixed style keys to their legacy flat-format names (used only
+     * on the base class object, optionally prefixed with 'overlay' for the second symbol).
+     */
+    private const STYLE_KEY_LEGACY = [
+        'opacity' => 'style_opacity',
+        'offsetx' => 'style_offsetx',
+        'offsety' => 'style_offsety',
+        'polaroffsetr' => 'style_polaroffsetr',
+        'polaroffsetd' => 'style_polaroffsetd',
+    ];
+
+    /**
+     * Maps new unprefixed class-level keys to the legacy/interim key they replace.
+     * These are identically named in both the legacy-flat and interim-new formats.
+     */
+    private const CLASS_KEY_LEGACY = [
+        'minscaledenom' => 'class_minscaledenom',
+        'maxscaledenom' => 'class_maxscaledenom',
+    ];
 
     public const LABEL_KEYS = ['force', 'text', 'minscaledenom', 'maxscaledenom', 'position', 'size',
         'color', 'outlinecolor', 'buffer', 'repeatdistance', 'angle', 'backgroundcolor',
@@ -76,14 +97,27 @@ class Classification extends Model
         $class = json_decode(json_encode($class), true);
         $hasNewFormat = isset($class['styles']) || isset($class['labels']);
 
+        // Class-level scale denominators: class_minscaledenom/class_maxscaledenom are named
+        // identically in both the legacy-flat and interim-new formats, so a single rename
+        // pass covers both. If both old and new keys are present, the new key wins.
+        foreach (self::CLASS_KEY_LEGACY as $new => $old) {
+            if (array_key_exists($old, $class)) {
+                if (!array_key_exists($new, $class)) {
+                    $class[$new] = $class[$old];
+                }
+                unset($class[$old]);
+            }
+        }
+
         $legacyStyles = [];
         foreach ([['', 10, 'Symbol 1'], ['overlay', 20, 'Symbol 2']] as [$prefix, $sortid, $name]) {
             $style = [];
             foreach (self::STYLE_KEYS as $key) {
-                if (!empty($class[$prefix . $key])) {
-                    $style[$key] = $class[$prefix . $key];
+                $legacyKey = $prefix . (self::STYLE_KEY_LEGACY[$key] ?? $key);
+                if (!empty($class[$legacyKey])) {
+                    $style[$key] = $class[$legacyKey];
                 }
-                unset($class[$prefix . $key]);
+                unset($class[$legacyKey]);
             }
             if (!empty($style)) {
                 $legacyStyles[] = array_merge(['sortid' => $sortid, 'name' => $name], $style);
@@ -117,9 +151,23 @@ class Classification extends Model
         foreach (['styles', 'labels'] as $k) {
             foreach ($class[$k] as $i => $entry) {
                 if (!is_array($entry)) continue;
-                foreach ($entry as $prop => $v) {
-                    if ($v === null) $class[$k][$i][$prop] = "";
+                // Interim-new-format rename pass: styles[] entries may still carry the old
+                // style_* keys as persisted by earlier versions of this code. New key wins
+                // when both are present.
+                if ($k === 'styles') {
+                    foreach (self::STYLE_KEY_LEGACY as $new => $old) {
+                        if (array_key_exists($old, $entry)) {
+                            if (!array_key_exists($new, $entry)) {
+                                $entry[$new] = $entry[$old];
+                            }
+                            unset($entry[$old]);
+                        }
+                    }
                 }
+                foreach ($entry as $prop => $v) {
+                    if ($v === null) $entry[$prop] = "";
+                }
+                $class[$k][$i] = $entry;
             }
         }
         return $class;
@@ -986,14 +1034,14 @@ class Classification extends Model
             "angle" => !empty($data->angle) ? $data->angle : "",
             "size" => $size,
             "width" => !empty($data->lineWidth) ? $data->lineWidth : "",
-            "style_opacity" => !empty($data->opacity) ? $data->opacity : "",
+            "opacity" => !empty($data->opacity) ? $data->opacity : "",
             "gap" => !empty($data->gap) ? $data->gap : "",
             "minsize" => !empty($data->minsize) ? $data->minsize : "",
             "maxsize" => !empty($data->maxsize) ? $data->maxsize : "",
-            "style_offsetx" => !empty($data->style_offsetx) ? $data->style_offsetx : "",
-            "style_offsety" => !empty($data->style_offsety) ? $data->style_offsety : "",
-            "style_polaroffsetr" => !empty($data->style_polaroffsetr) ? $data->style_polaroffsetr : "",
-            "style_polaroffsetd" => !empty($data->style_polaroffsetd) ? $data->style_polaroffsetd : "",
+            "offsetx" => !empty($data->offsetx) ? $data->offsetx : "",
+            "offsety" => !empty($data->offsety) ? $data->offsety : "",
+            "polaroffsetr" => !empty($data->polaroffsetr) ? $data->polaroffsetr : "",
+            "polaroffsetd" => !empty($data->polaroffsetd) ? $data->polaroffsetd : "",
         ]];
         if (!empty($data->overlayColor) || !empty($data->overlaySymbol) || !empty($data->overlaySize) || !empty($data->overlayOpacity)) {
             $styles[] = (object)[
@@ -1004,7 +1052,7 @@ class Classification extends Model
                 "symbol" => !empty($data->overlaySymbol) ? $data->overlaySymbol : "",
                 "size" => !empty($data->overlaySize) ? $data->overlaySize : "",
                 "width" => "",
-                "style_opacity" => !empty($data->overlayOpacity) ? $data->overlayOpacity : "",
+                "opacity" => !empty($data->overlayOpacity) ? $data->overlayOpacity : "",
             ];
         }
         $labels = [];

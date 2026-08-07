@@ -53,9 +53,95 @@ class ClassificationFormatTest extends Unit
         $this->assertEquals("Symbol 2", $result['styles'][1]['name']);
         $this->assertEquals("#FF0000", $result['styles'][1]['color']);
         $this->assertEquals("circle", $result['styles'][1]['symbol']);
-        $this->assertEquals("70", $result['styles'][1]['style_opacity']);
+        $this->assertEquals("70", $result['styles'][1]['opacity']);
         $this->assertEquals("5", $result['styles'][1]['minsize']);
         $this->assertArrayNotHasKey('overlaycolor', $result);
+    }
+
+    public function testConvertsLegacyFlatPrefixedKeysToUnprefixed(): void
+    {
+        // Legacy flat format: class-level style_*/overlaystyle_* and class_minscaledenom keys
+        // must all convert to the new unprefixed names.
+        $legacy = [
+            "name" => "c",
+            "color" => "#008000",
+            "style_opacity" => "40",
+            "style_offsetx" => "3",
+            "style_offsety" => "4",
+            "style_polaroffsetr" => "5",
+            "style_polaroffsetd" => "6",
+            "overlaycolor" => "#FF0000",
+            "overlaystyle_opacity" => "70",
+            "class_minscaledenom" => "1000",
+            "class_maxscaledenom" => "50000",
+        ];
+        $result = Classification::normalizeClass($legacy);
+        $this->assertEquals("40", $result['styles'][0]['opacity']);
+        $this->assertEquals("3", $result['styles'][0]['offsetx']);
+        $this->assertEquals("4", $result['styles'][0]['offsety']);
+        $this->assertEquals("5", $result['styles'][0]['polaroffsetr']);
+        $this->assertEquals("6", $result['styles'][0]['polaroffsetd']);
+        $this->assertEquals("70", $result['styles'][1]['opacity']);
+        $this->assertEquals("1000", $result['minscaledenom']);
+        $this->assertEquals("50000", $result['maxscaledenom']);
+        $this->assertArrayNotHasKey('style_opacity', $result['styles'][0]);
+        $this->assertArrayNotHasKey('style_offsetx', $result['styles'][0]);
+        $this->assertArrayNotHasKey('class_minscaledenom', $result);
+        $this->assertArrayNotHasKey('class_maxscaledenom', $result);
+        $this->assertArrayNotHasKey('style_opacity', $result);
+    }
+
+    public function testInterimNewFormatPrefixedKeysNormalizeIdempotently(): void
+    {
+        // Interim format already persisted by the current code: styles[] entries carrying
+        // style_* keys, and a class carrying class_minscaledenom/class_maxscaledenom.
+        $interim = [
+            "name" => "c",
+            "class_maxscaledenom" => "20000",
+            "styles" => [
+                ["sortid" => 10, "name" => "Symbol 1", "color" => "#008000", "style_offsetx" => "7", "style_opacity" => "55"],
+            ],
+            "labels" => [],
+        ];
+        $result = Classification::normalizeClass($interim);
+        $this->assertEquals("7", $result['styles'][0]['offsetx']);
+        $this->assertEquals("55", $result['styles'][0]['opacity']);
+        $this->assertEquals("20000", $result['maxscaledenom']);
+        $this->assertArrayNotHasKey('style_offsetx', $result['styles'][0]);
+        $this->assertArrayNotHasKey('style_opacity', $result['styles'][0]);
+        $this->assertArrayNotHasKey('class_maxscaledenom', $result);
+
+        // Idempotent: normalizing the already-normalized result changes nothing.
+        $again = Classification::normalizeClass($result);
+        $this->assertEquals($result, $again);
+    }
+
+    public function testNewKeyWinsWhenBothOldAndNewPresentOnStyleEntry(): void
+    {
+        $mixed = [
+            "name" => "c",
+            "styles" => [
+                ["sortid" => 10, "style_opacity" => "10", "opacity" => "90"],
+            ],
+            "labels" => [],
+        ];
+        $result = Classification::normalizeClass($mixed);
+        $this->assertEquals("90", $result['styles'][0]['opacity']);
+        $this->assertArrayNotHasKey('style_opacity', $result['styles'][0]);
+    }
+
+    public function testNewKeyWinsWhenBothOldAndNewPresentOnClass(): void
+    {
+        $mixed = [
+            "name" => "c",
+            "styles" => [],
+            "labels" => [],
+            "class_minscaledenom" => "1",
+            "minscaledenom" => "999",
+        ];
+        $result = Classification::normalizeClass($mixed);
+        $this->assertEquals("999", $result['minscaledenom']);
+        $this->assertArrayNotHasKey('class_minscaledenom', $result);
     }
 
     public function testNoEmptyOverlayStyleCreated(): void
@@ -155,11 +241,11 @@ class ClassificationFormatTest extends Unit
         $this->assertEquals("#00FF00", $styles[0]['color']);
         $this->assertEquals("circle", $styles[0]['symbol']);
         $this->assertEquals("50", $styles[0]['size']);
-        $this->assertEquals("25", $styles[0]['style_opacity']);
+        $this->assertEquals("25", $styles[0]['opacity']);
         $this->assertEquals(10, $styles[0]['sortid']);
         $this->assertEquals("#00FF00", $styles[1]['color']);
         $this->assertEquals("35", $styles[1]['size']);
-        $this->assertEquals("70", $styles[1]['style_opacity']);
+        $this->assertEquals("70", $styles[1]['opacity']);
         $this->assertEquals(20, $styles[1]['sortid']);
 
         $labels = array_map(fn($o) => (array)$o, $c['labels']);

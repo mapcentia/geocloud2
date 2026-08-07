@@ -408,7 +408,7 @@ SYMBOLS;
         if (!empty($style['width'])) $s .= "WIDTH " . self::addSquareBracket($style['width']) . "\n";
         if (!empty($style['color'])) $s .= "COLOR " . Util::hex2RGB($style['color'], true, " ") . "\n";
         if (!empty($style['outlinecolor'])) $s .= "OUTLINECOLOR " . Util::hex2RGB($style['outlinecolor'], true, " ") . "\n";
-        if (!empty($style['style_opacity'])) $s .= "OPACITY {$style['style_opacity']}\n";
+        if (!empty($style['opacity'])) $s .= "OPACITY {$style['opacity']}\n";
         if (!empty($style['size'])) $s .= "SIZE " . self::addSquareBracket($style['size']) . "\n";
 
         if (!empty($style['angle'])) {
@@ -424,8 +424,8 @@ SYMBOLS;
         if (!empty($style['minsize'])) $s .= "MINSIZE {$style['minsize']}\n";
         if (!empty($style['maxsize'])) $s .= "MAXSIZE {$style['maxsize']}\n";
 
-        $s .= "OFFSET " . self::renderOffsetPair($style, 'style_offsetx', 'style_offsety') . "\n";
-        $s .= "POLAROFFSET " . self::renderOffsetPair($style, 'style_polaroffsetr', 'style_polaroffsetd') . "\n";
+        $s .= "OFFSET " . self::renderOffsetPair($style, 'offsetx', 'offsety') . "\n";
+        $s .= "POLAROFFSET " . self::renderOffsetPair($style, 'polaroffsetr', 'polaroffsetd') . "\n";
 
         $s .= "\nEND # style\n";
         return $s;
@@ -547,8 +547,8 @@ SYMBOLS;
             }
 
             // Scale denominators
-            if (!empty($class['class_maxscaledenom'])) $s .= "MAXSCALEDENOM {$class['class_maxscaledenom']}\n";
-            if (!empty($class['class_minscaledenom'])) $s .= "MINSCALEDENOM {$class['class_minscaledenom']}\n";
+            if (!empty($class['maxscaledenom'])) $s .= "MAXSCALEDENOM {$class['maxscaledenom']}\n";
+            if (!empty($class['minscaledenom'])) $s .= "MINSCALEDENOM {$class['minscaledenom']}\n";
 
             // Styles, ordered by sortid (usort is stable in PHP 8)
             $styles = $class['styles'];

@@ -254,8 +254,8 @@ wmsClasses.onWrite = function (store, action, result, transaction, rs) {
 Ext.namespace('wmsClass');
 
 wmsClass.STYLE_FIELDS = ['color', 'outlinecolor', 'pattern', 'linecap', 'symbol', 'size', 'width',
-    'angle', 'gap', 'style_opacity', 'geomtransform', 'minsize', 'maxsize',
-    'style_offsetx', 'style_offsety', 'style_polaroffsetr', 'style_polaroffsetd'];
+    'angle', 'gap', 'opacity', 'geomtransform', 'minsize', 'maxsize',
+    'offsetx', 'offsety', 'polaroffsetr', 'polaroffsetd'];
 
 wmsClass.LABEL_FIELDS = ['on', 'text', 'force', 'minscaledenom', 'maxscaledenom', 'position', 'size',
     'font', 'fontweight', 'color', 'outlinecolor', 'buffer', 'repeatdistance', 'angle',
@@ -364,16 +364,16 @@ wmsClass.init = function (id) {
             width: 'Line width',
             angle: 'Angle',
             gap: 'Gap' + __("specifies the distance between SYMBOLs (center to center) for decorated lines and polygon fills in layer SIZEUNITS. For polygon fills, GAP specifies the distance between SYMBOLs in both the X and the Y direction. For lines, the centers of the SYMBOLs are placed on the line. For lines, a negative GAP value will cause the symbols’ X axis to be aligned relative to the tangent of the line. For lines, a positive GAP value aligns the symbols’ X axis relative to the X axis of the output device.", true),
-            style_opacity: 'Opacity',
+            opacity: 'Opacity',
             linecap: 'line cap' + __('Sets the line cap type for lines. Default is round.', true),
             pattern: 'Pattern' + __('Used to define a dash pattern for line work (lines, polygon outlines, hatch lines, …). The numbers (doubles) specify the lengths of the dashes and gaps of the dash pattern in layer SIZEUNITS. When scaling of symbols is in effect (SYMBOLSCALEDENOM is specified for the LAYER), the numbers specify the lengths of the dashes and gaps in layer SIZEUNITS at the map scale 1:SYMBOLSCALEDENOM.', true),
             geomtransform: 'Geomtransform',
             minsize: 'Min size' + __("Minimum size in pixels to draw a symbol. Default is 0. The value can also be a decimal value (and not only integer)", true),
             maxsize: 'Max size' + __("Maximum size in pixels to draw a symbol. Default is 500. The value can also be a decimal value (and not only integer)", true),
-            style_offsetx: 'Offset X' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - x", true),
-            style_offsety: 'Offset Y' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - Y", true),
-            style_polaroffsetr: 'Polar offset radius' + __("Offset given in polar coordinates - radius/distance.", true),
-            style_polaroffsetd: 'Polar offset angle' + __("Offset given in polar coordinates - angle (counter clockwise).", true)
+            offsetx: 'Offset X' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - x", true),
+            offsety: 'Offset Y' + __("Geometry offset values in layer SIZEUNITS. In the general case, SIZEUNITS will be pixels. The parameter corresponds to a shift on the horizontal - Y", true),
+            polaroffsetr: 'Polar offset radius' + __("Offset given in polar coordinates - radius/distance.", true),
+            polaroffsetd: 'Polar offset angle' + __("Offset given in polar coordinates - angle (counter clockwise).", true)
         };
     };
 
@@ -413,7 +413,7 @@ wmsClass.init = function (id) {
                 incrementValue: 1,
                 accelerate: true
             }))),
-            'style_opacity': new Ext.grid.GridEditor(new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+            'opacity': new Ext.grid.GridEditor(new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: 0,
                 maxValue: 100,
                 allowDecimals: false,
@@ -440,22 +440,22 @@ wmsClass.init = function (id) {
                 incrementValue: 1,
                 accelerate: true
             }))),
-            'style_offsetx': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+            'offsetx': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 store: wmsLayer.numFieldsForStore,
                 editable: true,
                 triggerAction: 'all'
             }), {}),
-            'style_offsety': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+            'offsety': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 store: wmsLayer.numFieldsForStore,
                 editable: true,
                 triggerAction: 'all'
             }), {}),
-            'style_polaroffsetr': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+            'polaroffsetr': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 store: wmsLayer.numFieldsForStore,
                 editable: true,
                 triggerAction: 'all'
             }), {}),
-            'style_polaroffsetd': new Ext.grid.GridEditor(new Ext.form.ComboBox({
+            'polaroffsetd': new Ext.grid.GridEditor(new Ext.form.ComboBox({
                 store: wmsLayer.numFieldsForStore,
                 editable: true,
                 triggerAction: 'all'
@@ -638,8 +638,8 @@ wmsClass.init = function (id) {
             sortid: 'Sort id',
             name: 'Name',
             expression: 'Expression',
-            class_minscaledenom: __('Min scale denominator') + __("Minimum scale at which this CLASS is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
-            class_maxscaledenom: __('Max scale denominator') + __("Maximum scale at which this CLASS is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
+            minscaledenom: __('Min scale denominator') + __("Minimum scale at which this CLASS is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
+            maxscaledenom: __('Max scale denominator') + __("Maximum scale at which this CLASS is drawn. Scale is given as the denominator of the actual scale fraction, for example for a map at a scale of 1:24,000 use 24000.", true),
             leader: 'Leader: on',
             leader_gridstep: 'Leader: gridstep',
             leader_maxdistance: 'Leader: maxdistance',
@@ -659,14 +659,14 @@ wmsClass.init = function (id) {
                 incrementValue: 1,
                 accelerate: true
             })),
-            'class_minscaledenom': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+            'minscaledenom': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: 0,
                 allowDecimals: false,
                 decimalPrecision: 0,
                 incrementValue: 1,
                 accelerate: true
             })),
-            'class_maxscaledenom': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
+            'maxscaledenom': new Ext.grid.GridEditor(new Ext.ux.form.SpinnerField({
                 minValue: 0,
                 allowDecimals: false,
                 decimalPrecision: 0,
@@ -899,7 +899,7 @@ wmsClass.init = function (id) {
                 delete baseGrid.getStore().sortInfo;
                 baseGrid.getColumnModel().getColumnById('name').sortable = false;
                 var baseSource = {}, baseFields = [
-                    'sortid', 'name', 'expression', 'class_minscaledenom', 'class_maxscaledenom',
+                    'sortid', 'name', 'expression', 'minscaledenom', 'maxscaledenom',
                     'leader', 'leader_gridstep', 'leader_maxdistance', 'leader_color'
                 ];
                 Ext.each(baseFields, function (f) {
