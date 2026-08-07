@@ -19,7 +19,6 @@ class ContextTest extends Unit
             userGroup: null,
             parentUser: false,
             trusted: true,
-            withToken: false,
             host: 'http://example.com',
             thePath: 'http://example.com/wfs/mydb/public',
             startTime: 1700000000.0,
@@ -40,7 +39,7 @@ class ContextTest extends Unit
             connection: $conn,
             database: 'mydb', schema: 'public', user: 'alice',
             userGroup: null, parentUser: false,
-            trusted: false, withToken: false, host: '',
+            trusted: false, host: '',
             thePath: '', startTime: 0.0,
         );
         $m = $ctx->model();

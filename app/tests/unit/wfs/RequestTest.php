@@ -121,7 +121,7 @@ XML;
             connection: new \app\inc\Connection(database: 'mydb'),
             database: 'mydb', schema: 'public', user: 'alice',
             userGroup: null, parentUser: false,
-            trusted: true, withToken: false,
+            trusted: true,
             host: 'http://example.com',
             thePath: 'http://example.com/wfs/mydb/public', startTime: 0.0,
         );
