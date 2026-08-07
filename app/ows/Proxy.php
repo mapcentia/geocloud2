@@ -27,7 +27,7 @@ final class Proxy
 
     private function mapfilesDir(): string
     {
-        return App::$param['path'] . '/app/wms/mapfiles/';
+        return rtrim(App::$param['path'], '/') . '/app/wms/mapfiles/';
     }
 
     /**

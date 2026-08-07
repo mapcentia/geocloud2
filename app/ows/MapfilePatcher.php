@@ -73,7 +73,7 @@ final class MapfilePatcher
     {
         $ext = str_ends_with($sourcePath, '.qgs') ? 'qgs' : 'map';
         $name = bin2hex(random_bytes(16));
-        $tmp = App::$param['path'] . "/app/tmp/$name.$ext";
+        $tmp = rtrim(App::$param['path'], '/') . "/app/tmp/$name.$ext";
         file_put_contents($tmp, $patchedContent);
         return $tmp;
     }
