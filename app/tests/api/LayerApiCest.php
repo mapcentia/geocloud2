@@ -248,4 +248,66 @@ class LayerApiCest
         $I->sendPOST('/api/v4/layers/' . $this->layerKey . '/classes', json_encode(['sortid' => 1]));
         $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
     }
+
+    public function shouldCrudStyles(ApiTester $I)
+    {
+        $this->auth($I);
+        $base = '/api/v4/layers/' . $this->layerKey . '/classes/' . $this->classId . '/styles';
+
+        // Collection GET — one style from the layer POST
+        $I->sendGET($base);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $response = json_decode($I->grabResponse(), true);
+        $I->assertCount(1, $response);
+        $I->assertEquals($this->styleId, $response[0]['id']);
+
+        // Single GET
+        $I->sendGET($base . '/' . $this->styleId);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $response = json_decode($I->grabResponse(), true);
+        $I->assertEquals('#008000', $response['color']);
+
+        // POST without sortid → defaults to highest + 10 (10 exists)
+        $I->sendPOST($base, json_encode(['color' => '#ff0000', 'width' => '4']));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $newStyleId = basename($I->grabHttpHeader('Location'));
+        $I->assertMatchesRegularExpression('/^[0-9a-f]{8}$/', $newStyleId);
+        $I->sendGET($base . '/' . $newStyleId);
+        $response = json_decode($I->grabResponse(), true);
+        $I->assertEquals(20, $response['sortid']);
+
+        // PATCH sortid to reorder
+        $I->stopFollowingRedirects();
+        $I->sendPatch($base . '/' . $newStyleId, json_encode(['sortid' => 5]));
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $I->startFollowingRedirects();
+        $I->sendGET($base . '/' . $newStyleId);
+        $response = json_decode($I->grabResponse(), true);
+        $I->assertEquals(5, $response['sortid']);
+        $I->assertEquals('#ff0000', $response['color']); // merge keeps other keys
+
+        // DELETE
+        $I->sendDELETE($base . '/' . $newStyleId);
+        $I->seeResponseCodeIs(HttpCode::NO_CONTENT);
+        $I->sendGET($base . '/' . $newStyleId);
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+    }
+
+    public function shouldRejectBadStyleRequests(ApiTester $I)
+    {
+        $this->auth($I);
+        $base = '/api/v4/layers/' . $this->layerKey . '/classes/' . $this->classId . '/styles';
+        // Unknown style id
+        $I->sendGET($base . '/deadbeef');
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        // Unknown class id in path
+        $I->sendGET('/api/v4/layers/' . $this->layerKey . '/classes/deadbeef/styles');
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        // Unknown property key
+        $I->sendPOST($base, json_encode(['no_such_key' => '1']));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        // Client-supplied id
+        $I->sendPOST($base, json_encode(['id' => 'cafebabe', 'color' => '#fff']));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+    }
 }

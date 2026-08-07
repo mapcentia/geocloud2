@@ -172,6 +172,7 @@ class LayerClass extends AbstractLayerApi
         if (Input::getMethod() == 'post') {
             $collection->fields['styles'] = new Assert\Optional([
                 new Assert\Type('array'),
+                new Assert\All([Style::getAssert()]),
             ]);
             $collection->fields['labels'] = new Assert\Optional([
                 new Assert\Type('array'),
