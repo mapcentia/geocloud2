@@ -108,6 +108,47 @@ class OwsApiCest
         $I->assertStringContainsString('image/png', $ct);
     }
 
+    // Regression (CRITICAL 1): authorizeLayers() used to always pass the JWT
+    // user as subUser, forcing the sub-user privilege branch in Authorization::check
+    // even for the database OWNER, so any Read/write layer 403'd the owner's own
+    // GetMap requests. The owner token from shouldPrepareUserTokenSchemaAndLayer
+    // IS the database (parentUser=true), so this must succeed once the layer is
+    // Read/write protected.
+    public function shouldAllowOwnerToGetMapOnReadWriteProtectedLayer(ApiTester $I)
+    {
+        // Set the layer's authentication level to Read/write. The SQL API denies writes
+        // to unregistered/system relations (settings.*), so use the legacy session-authenticated
+        // layer-records endpoint, same as DatabaseManagementCest::shouldChangeTheAuthenticationLevelFromWriteToReadwrite.
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/session/start', json_encode([
+            'user' => $this->userId, 'password' => $this->password, 'schema' => $this->schemaName,
+        ]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $sessionCookie = $I->capturePHPSESSID();
+        $I->assertFalse(empty($sessionCookie));
+
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $sessionCookie);
+        $I->sendPUT('/controllers/layer/records/' . $this->schemaName . '.roads.the_geom', json_encode([
+            'data' => [
+                'authentication' => 'Read/write',
+                '_key_' => $this->schemaName . '.roads.the_geom',
+            ],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->deleteHeader('Cookie');
+
+        $qs = 'SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=' . $this->schemaName . '.roads'
+            . '&CRS=EPSG:4326&BBOX=-1,-1,1,1&WIDTH=64&HEIGHT=64&FORMAT=image/png&STYLES=';
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
+        $I->sendGET('/api/v4/ows/schema/' . $this->schemaName . '?' . $qs);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $ct = strtolower($I->grabHttpHeader('Content-Type'));
+        $body = $I->grabResponse();
+        $I->assertStringContainsString('image/png', $ct);
+        $I->assertStringNotContainsStringIgnoringCase('Insufficient privileges', $body);
+        $I->assertStringNotContainsStringIgnoringCase('ServiceExceptionReport', $body);
+    }
+
     public function shouldReturnServiceExceptionForUnknownLayer(ApiTester $I)
     {
         $qs = 'SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=' . $this->schemaName . '.nope'

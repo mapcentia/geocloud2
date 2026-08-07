@@ -29,10 +29,13 @@ final class SourceResolver
             // $layer is "schema.table"; column key is _key_ = schema.table.geom
             $bits = explode('.', $layer);
             $table = $bits[1] ?? $bits[0];
+            // Match on the schema/table segments explicitly (not a LIKE pattern) so
+            // "_" and "%" in a schema/table name aren't treated as SQL wildcards.
             $sql = "SELECT wmssource FROM settings.geometry_columns_join
-                    WHERE _key_ LIKE :key ORDER BY _key_ LIMIT 1";
+                    WHERE split_part(_key_, '.', 1) = :schema AND split_part(_key_, '.', 2) = :table
+                    ORDER BY _key_ LIMIT 1";
             $res = $model->prepare($sql);
-            $model->execute($res, ['key' => "$schema.$table.%"]);
+            $model->execute($res, ['schema' => $schema, 'table' => $table]);
             $row = $model->fetchRow($res);
             $map[$layer] = $row['wmssource'] ?? null;
         }

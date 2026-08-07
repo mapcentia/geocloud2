@@ -14,7 +14,6 @@ use app\api\v4\Responses\StreamedResponse;
 use app\api\v4\Scope;
 use app\conf\App;
 use app\exceptions\ServiceException;
-use app\inc\BasicAuth;
 use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Route2;
@@ -22,7 +21,6 @@ use app\inc\UserFilter;
 use app\inc\Util;
 use app\models\Authorization;
 use app\models\Geofence;
-use app\inc\Model;
 use app\models\Rule;
 use app\ows\Context;
 use app\ows\Proxy;
@@ -79,12 +77,18 @@ final class Ows extends AbstractApi
                     $req = OwsRequest::fromHttp();
                     $this->authorizeLayers($ctx, $req);
                     $filters = $this->applyRules($ctx, $req);
-                    [$url, $tmp] = new Proxy($ctx)->resolve($req, $filters);
-                    new Proxy($ctx)->run($url, $req);
+                    $proxy = new Proxy($ctx);
+                    [$url, $tmp] = $proxy->resolve($req, $filters);
+                    $proxy->run($url, $req);
                 } catch (Throwable $e) {
+                    error_log((string) $e);
                     // Pre-stream errors render as an OGC ServiceException report.
-                    header('Content-Type: text/xml');
-                    echo new ServiceException($e->getMessage())->getReport();
+                    // Don't leak internals (filesystem paths, TypeErrors, etc.) to clients.
+                    $msg = $e instanceof ServiceException ? $e->getMessage() : 'Internal error';
+                    if (!headers_sent()) {
+                        header('Content-Type: text/xml');
+                        echo new ServiceException($msg)->getReport();
+                    }
                 } finally {
                     if ($tmp) {
                         @unlink($tmp);
@@ -138,7 +142,7 @@ final class Ows extends AbstractApi
             if ($auth === 'Read/write' || !empty(Input::getAuthUser())) {
                 new Authorization(connection: $ctx->connection)->check(
                     relName: $rel, transaction: $isTransaction, isAuth: true,
-                    subUser: $ctx->user, userGroup: $ctx->userGroup, rels: []
+                    subUser: $ctx->parentUser ? null : $ctx->user, userGroup: $ctx->userGroup, rels: []
                 );
             }
         }

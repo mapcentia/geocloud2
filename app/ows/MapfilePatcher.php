@@ -8,6 +8,7 @@
 namespace app\ows;
 
 use app\conf\App;
+use app\exceptions\ServiceException;
 
 /**
  * Patches a tmp copy of a MapServer mapfile or a QGIS project with per-layer
@@ -22,7 +23,12 @@ final class MapfilePatcher
             [$schema, $table] = self::split($layer);
             if (!empty($filters[$layer])) {
                 $where = 'WHERE ' . implode(' AND ', $filters[$layer]);
-                $content = str_replace("/*FILTER_$schema.$table*/", $where, $content);
+                $content = str_replace("/*FILTER_$schema.$table*/", $where, $content, $count);
+                if ($count === 0) {
+                    // Fail closed: a filter was required for this layer but the marker
+                    // wasn't found (e.g. wmssource/bitmapsource layer or a name mismatch).
+                    throw new ServiceException("Filter could not be applied for layer $layer");
+                }
             }
             if ($disableLabels) {
                 // Remove every numbered label block for this layer, inclusive of the
@@ -44,10 +50,20 @@ final class MapfilePatcher
             [$schema, $table] = self::split($layer);
             if (!empty($filters[$layer])) {
                 $where = self::xmlEscape(implode(' AND ', $filters[$layer]));
+                // $where is spliced into a preg_replace REPLACEMENT string below, where
+                // '$' and '\' are backreference metacharacters, not literal text. Escape
+                // them on top of the XML escaping so a filter value like "a$1b\c" can't
+                // expand into a backreference and corrupt the filter.
+                $whereRep = str_replace(['\\', '$'], ['\\\\', '\\$'], $where);
                 // Replace sql=...< on the datasource line for table="schema"."table"
                 $pattern = '/(table="' . preg_quote($schema, '/') . '"\."' . preg_quote($table, '/')
                          . '"[^>]*?sql=)[^<]*(<)/';
-                $content = preg_replace($pattern, '${1}' . $where . '${2}', $content);
+                $content = preg_replace($pattern, '${1}' . $whereRep . '${2}', $content, -1, $count);
+                if ($count === 0) {
+                    // Fail closed: a filter was required for this layer but the
+                    // datasource line wasn't found (e.g. a name mismatch).
+                    throw new ServiceException("Filter could not be applied for layer $layer");
+                }
             }
         }
         if ($disableLabels) {

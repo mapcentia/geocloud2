@@ -36,8 +36,6 @@ final class Proxy
      */
     public function resolve(Request $req, array $filters): array
     {
-        $resolver = SourceResolver::fromLayers($this->ctx->model(), $this->ctx->schema, $req->layers);
-
         // POST (WFS-T XML): always MapServer against the static/tmp mapfile, patched
         // only for rule-derived filters. Never QGS, external WMS, labels, or query string.
         if ($req->method === 'POST') {
@@ -50,6 +48,8 @@ final class Proxy
             }
             return [self::MAPSERV . "?map=$path", null];
         }
+
+        $resolver = SourceResolver::fromLayers($this->ctx->model(), $this->ctx->schema, $req->layers);
 
         // GET decision matrix. Compute the QGS path over ALL layers first (legacy order)
         // so the multi-layer guard is reachable, then disable QGS for multi-layer.
@@ -158,6 +158,10 @@ final class Proxy
             ]);
         }
         curl_exec($ch);
+        if (curl_errno($ch)) {
+            // Response bytes may already be streamed; just log, nothing left to send.
+            error_log('OWS proxy curl error: ' . curl_error($ch));
+        }
         curl_close($ch);
     }
 }

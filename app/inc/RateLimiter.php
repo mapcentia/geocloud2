@@ -26,11 +26,15 @@ class RateLimiter
      * @param int|null $maxPerMinute The maximum number of allowed requests per minute.
      *                               Defaults to a configured value if null. If set to a non-positive
      *                               value, rate limiting is disabled.
+     * @param string $bucket Counter bucket name. Callers that should not share a rate-limit
+     *                       counter with the default v4 API traffic (e.g. OWS tile/GetMap
+     *                       requests) must pass a distinct bucket so heavy traffic on one
+     *                       doesn't 429 the other.
      *
      * @return void
      * @throws GC2Exception
      */
-    public static function consumeForJwt(?string $jwtToken, ?int $maxPerMinute = null): void
+    public static function consumeForJwt(?string $jwtToken, ?int $maxPerMinute = null, string $bucket = 'api'): void
     {
         if (!$jwtToken) {
             // No token -> nothing to limit here (v4 endpoints that require token will fail elsewhere if missing)
@@ -45,23 +49,23 @@ class RateLimiter
 
         $mode = strtolower(App::$param['apiV4']['rateLimitMode'] ?? 'fixed');
         if ($mode === 'sliding') {
-            self::consumeSlidingWindow($jwtToken, $limit, (int)(App::$param['apiV4']['rateLimitWindowSeconds'] ?? 60));
+            self::consumeSlidingWindow($jwtToken, $limit, (int)(App::$param['apiV4']['rateLimitWindowSeconds'] ?? 60), $bucket);
             return;
         }
 
         // Default: fixed window per minute
-        self::consumeFixedWindow($jwtToken, $limit);
+        self::consumeFixedWindow($jwtToken, $limit, $bucket);
     }
 
     /**
      * Fixed-window limiting per calendar minute
      * @throws GC2Exception
      */
-    private static function consumeFixedWindow(string $jwtToken, int $limit): void
+    private static function consumeFixedWindow(string $jwtToken, int $limit, string $bucket): void
     {
         $hash = substr(hash('sha256', $jwtToken), 0, 32);
-        $bucket = (new DateTime('now'))->format('YmdHi'); // fixed window per minute
-        $key = "ratelimit_v4_fw_{$hash}{$bucket}";
+        $window = (new DateTime('now'))->format('YmdHi'); // fixed window per minute
+        $key = "ratelimit_v4_fw_{$bucket}_{$hash}{$window}";
 
         $item = Cache::getItem($key);
         $count = 0;
@@ -82,7 +86,7 @@ class RateLimiter
      * Stores a small map of second=>count for the recent window.
      * @throws GC2Exception
      */
-    private static function consumeSlidingWindow(string $jwtToken, int $limit, int $windowSeconds = 60): void
+    private static function consumeSlidingWindow(string $jwtToken, int $limit, int $windowSeconds, string $bucket): void
     {
         if ($windowSeconds <= 0) {
             $windowSeconds = 60;
@@ -92,7 +96,7 @@ class RateLimiter
         $cutoff = $now - ($windowSeconds - 1);
 
         $hash = substr(hash('sha256', $jwtToken), 0, 32);
-        $key = "ratelimit_v4_sw_$hash";
+        $key = "ratelimit_v4_sw_{$bucket}_$hash";
 
         $item = Cache::getItem($key);
         $bucket = [];

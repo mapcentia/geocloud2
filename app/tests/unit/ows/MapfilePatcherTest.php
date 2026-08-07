@@ -1,4 +1,5 @@
 <?php
+use app\exceptions\ServiceException;
 use app\ows\MapfilePatcher;
 use Codeception\Test\Unit;
 
@@ -57,5 +58,38 @@ class MapfilePatcherTest extends Unit
         );
         $this->assertStringContainsString("sql=name = &apos;a&amp;b&apos;<", $out);
         $this->assertStringNotContainsString('\\&', $out);
+    }
+
+    // Regression: $ and \ in a filter value must not be expanded as a preg_replace
+    // backreference in the replacement string (IMPORTANT 3).
+    public function testQgsFilterWithDollarAndBackslashIsNotExpandedAsBackreference(): void
+    {
+        $out = MapfilePatcher::patchQgsContent(
+            $this->qgs(), ['test.roads' => ["col = 'a\$1b\\c'"]], false, ['test.roads']
+        );
+        $this->assertStringContainsString("sql=col = &apos;a\$1b\\c&apos;<", $out);
+        // No stray/duplicated backreference expansion or extra backslashes
+        $this->assertStringNotContainsString('\\\\c', $out);
+        $this->assertStringNotContainsString('1b1b', $out);
+    }
+
+    // Regression: a filter for a layer whose FILTER marker is absent from the
+    // mapfile must fail closed (throw), never silently apply no filter (IMPORTANT 5).
+    public function testMapfileFilterThrowsWhenMarkerAbsent(): void
+    {
+        $this->expectException(ServiceException::class);
+        MapfilePatcher::patchMapfileContent(
+            $this->map(), ['test.other' => ["name = 'x'"]], false, ['test.other']
+        );
+    }
+
+    // Same fail-closed behaviour for the QGIS project path when the datasource
+    // line for the layer isn't found (IMPORTANT 5).
+    public function testQgsFilterThrowsWhenDatasourceLineAbsent(): void
+    {
+        $this->expectException(ServiceException::class);
+        MapfilePatcher::patchQgsContent(
+            $this->qgs(), ['test.other' => ["name = 'x'"]], false, ['test.other']
+        );
     }
 }
