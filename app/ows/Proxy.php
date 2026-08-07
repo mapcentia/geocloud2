@@ -37,16 +37,33 @@ final class Proxy
     public function resolve(Request $req, array $filters): array
     {
         $resolver = SourceResolver::fromLayers($this->ctx->model(), $this->ctx->schema, $req->layers);
-        $qgs = count($req->layers) > 1 ? null : $resolver->qgsFilePath();
+
+        // POST (WFS-T XML): always MapServer against the static/tmp mapfile, patched
+        // only for rule-derived filters. Never QGS, external WMS, labels, or query string.
+        if ($req->method === 'POST') {
+            $path = $this->mapfilesDir() . $this->mapfileName($req);
+            if (!empty($filters)) {
+                $content = file_get_contents($path);
+                $patched = MapfilePatcher::patchMapfileContent($content, $filters, false, $req->layers);
+                $tmp = new MapfilePatcher()->writeTmp($path, $patched);
+                return [self::MAPSERV . "?map=$tmp", $tmp];
+            }
+            return [self::MAPSERV . "?map=$path", null];
+        }
+
+        // GET decision matrix. Compute the QGS path over ALL layers first (legacy order)
+        // so the multi-layer guard is reachable, then disable QGS for multi-layer.
+        $qgsAll = $resolver->qgsFilePath();
         $useFilters = !empty($filters) || $req->disableLabels;
 
         // Legacy guard: filters/rules + QGS + multiple layers is not allowed.
-        if ($useFilters && $qgs && count($req->layers) > 1) {
+        if ($useFilters && $qgsAll && count($req->layers) > 1) {
             throw new ServiceException(
                 "One or more layers are served by QGIS Server. Filters and rules don't work "
                 . "with multiple layers, where one or more is QGIS backed."
             );
         }
+        $qgs = count($req->layers) > 1 ? null : $qgsAll;
 
         if ($useFilters) {
             if ($qgs && count($req->layers) === 1) {
@@ -81,9 +98,13 @@ final class Proxy
         parse_str(parse_url($req->queryString)['path'] ?? $req->queryString, $query);
         $query = array_change_key_case($query, CASE_UPPER);
         $merged = array_merge($query, $source['query']);
-        $merged['BBOX'] = $query['BBOX'] ?? '';
-        $merged['WIDTH'] = $query['WIDTH'] ?? '';
-        $merged['HEIGHT'] = $query['HEIGHT'] ?? '';
+        foreach (['BBOX', 'WIDTH', 'HEIGHT'] as $k) {
+            if (isset($query[$k])) {
+                $merged[$k] = $query[$k];
+            } else {
+                unset($merged[$k]);
+            }
+        }
         $bits = explode('.', $source['query']['VERSION'] ?? '1.1.0');
         if ((int) ($bits[1] ?? 1) < 3) {
             $merged['SRS'] = $query['SRS'] ?? $query['CRS'] ?? '';
