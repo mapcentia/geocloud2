@@ -126,6 +126,59 @@ class Classification extends Model
     }
 
     /**
+     * Generates a short random id (8 hex chars) for classes, styles and labels.
+     */
+    public static function generateId(): string
+    {
+        return bin2hex(random_bytes(4));
+    }
+
+    /**
+     * Normalizes every class (see normalizeClass) and assigns a missing `id` to each
+     * class and to each entry in its styles/labels arrays. Idempotent: existing ids
+     * are never changed. Ids are unique among classes and among entries within a class.
+     */
+    public static function ensureIds(array $classes): array
+    {
+        $classes = array_values(array_map([self::class, 'normalizeClass'], $classes));
+        $classIds = array_filter(array_column($classes, 'id'));
+        foreach ($classes as $i => $class) {
+            if (empty($class['id'])) {
+                do {
+                    $id = self::generateId();
+                } while (in_array($id, $classIds, true));
+                $classIds[] = $id;
+                $classes[$i]['id'] = $id;
+            }
+            foreach (['styles', 'labels'] as $kind) {
+                $entryIds = array_filter(array_column($classes[$i][$kind], 'id'));
+                foreach ($classes[$i][$kind] as $j => $entry) {
+                    if (empty($entry['id'])) {
+                        do {
+                            $id = self::generateId();
+                        } while (in_array($id, $entryIds, true));
+                        $entryIds[] = $id;
+                        $classes[$i][$kind][$j]['id'] = $id;
+                    }
+                }
+            }
+        }
+        return $classes;
+    }
+
+    /**
+     * Default sortid for a new entry: highest existing sortid + 10 (10 when empty).
+     */
+    public static function nextSortId(array $entries): int
+    {
+        $max = 0;
+        foreach ($entries as $entry) {
+            $max = max($max, (int)($entry['sortid'] ?? 0));
+        }
+        return $max + 10;
+    }
+
+    /**
      * Retrieves all records from the settings.geometry_columns_join table for a specific layer,
      * processes and structures the data, and returns the result.
      *
