@@ -179,6 +179,186 @@ class Classification extends Model
     }
 
     /**
+     * Reads the raw class JSON for the layer.
+     */
+    private function readRawClasses(): array
+    {
+        $sql = "SELECT class FROM settings.geometry_columns_join WHERE _key_=:layer";
+        $res = $this->prepare($sql);
+        $this->execute($res, ['layer' => $this->layer]);
+        $row = $this->fetchRow($res);
+        return !empty($row['class']) && is_array(json_decode($row['class'], true)) ? json_decode($row['class'], true) : [];
+    }
+
+    /**
+     * Returns all classes in normalized form with ids on classes, styles and labels.
+     * Missing ids are persisted back, so ids are stable from the first call onward.
+     */
+    public function getAllWithIds(): array
+    {
+        $raw = $this->readRawClasses();
+        $classes = self::ensureIds($raw);
+        if ($classes !== $raw) {
+            $this->store(json_encode($classes));
+        }
+        return $classes;
+    }
+
+    /**
+     * @throws GC2Exception
+     */
+    public function getClassById(string $id): array
+    {
+        foreach ($this->getAllWithIds() as $class) {
+            if ($class['id'] === $id) {
+                return $class;
+            }
+        }
+        throw new GC2Exception("Class not found", 404, null, "CLASS_NOT_FOUND");
+    }
+
+    /**
+     * Replaces the whole class array (declarative provisioning). Ids are assigned.
+     */
+    public function replaceClasses(array $classes): array
+    {
+        $classes = self::ensureIds($classes);
+        $this->store(json_encode($classes));
+        return $classes;
+    }
+
+    /**
+     * Appends new classes and returns their ids. A missing sortid defaults to
+     * highest existing + 10.
+     */
+    public function insertClasses(array $newClasses): array
+    {
+        $classes = $this->getAllWithIds();
+        $count = count($classes);
+        foreach ($newClasses as $newClass) {
+            if (!isset($newClass['sortid']) || $newClass['sortid'] === '') {
+                $newClass['sortid'] = self::nextSortId($classes);
+            }
+            $classes[] = $newClass;
+        }
+        $classes = self::ensureIds($classes);
+        $this->store(json_encode($classes));
+        return array_column(array_slice($classes, $count), 'id');
+    }
+
+    /**
+     * Key-merges $props into the class. `id`, `styles` and `labels` are ignored.
+     * @throws GC2Exception
+     */
+    public function patchClassById(string $id, array $props): void
+    {
+        unset($props['id'], $props['styles'], $props['labels']);
+        $classes = $this->getAllWithIds();
+        foreach ($classes as $i => $class) {
+            if ($class['id'] === $id) {
+                $classes[$i] = array_merge($class, $props);
+                $this->store(json_encode($classes));
+                return;
+            }
+        }
+        throw new GC2Exception("Class not found", 404, null, "CLASS_NOT_FOUND");
+    }
+
+    /**
+     * @throws GC2Exception
+     */
+    public function deleteClassById(string $id): void
+    {
+        $classes = $this->getAllWithIds();
+        foreach ($classes as $i => $class) {
+            if ($class['id'] === $id) {
+                array_splice($classes, $i, 1);
+                $this->store(json_encode($classes));
+                return;
+            }
+        }
+        throw new GC2Exception("Class not found", 404, null, "CLASS_NOT_FOUND");
+    }
+
+    /**
+     * @throws GC2Exception
+     */
+    public function getEntries(string $classId, string $kind): array
+    {
+        return $this->getClassById($classId)[$kind];
+    }
+
+    /**
+     * Appends entries to a class's styles or labels and returns their ids.
+     * A missing sortid defaults to highest existing + 10.
+     * @throws GC2Exception
+     */
+    public function insertEntries(string $classId, string $kind, array $entries): array
+    {
+        $classes = $this->getAllWithIds();
+        foreach ($classes as $i => $class) {
+            if ($class['id'] === $classId) {
+                foreach ($entries as $entry) {
+                    if (!isset($entry['sortid']) || $entry['sortid'] === '') {
+                        $entry['sortid'] = self::nextSortId($classes[$i][$kind]);
+                    }
+                    $classes[$i][$kind][] = $entry;
+                }
+                $classes = self::ensureIds($classes);
+                $this->store(json_encode($classes));
+                return array_column(array_slice($classes[$i][$kind], -count($entries)), 'id');
+            }
+        }
+        throw new GC2Exception("Class not found", 404, null, "CLASS_NOT_FOUND");
+    }
+
+    /**
+     * Key-merges $props into a style/label entry. `id` is ignored.
+     * @throws GC2Exception
+     */
+    public function patchEntryById(string $classId, string $kind, string $id, array $props): void
+    {
+        unset($props['id']);
+        $classes = $this->getAllWithIds();
+        foreach ($classes as $i => $class) {
+            if ($class['id'] !== $classId) {
+                continue;
+            }
+            foreach ($class[$kind] as $j => $entry) {
+                if ($entry['id'] === $id) {
+                    $classes[$i][$kind][$j] = array_merge($entry, $props);
+                    $this->store(json_encode($classes));
+                    return;
+                }
+            }
+            throw new GC2Exception(ucfirst(rtrim($kind, 's')) . " not found", 404, null, strtoupper(rtrim($kind, 's')) . "_NOT_FOUND");
+        }
+        throw new GC2Exception("Class not found", 404, null, "CLASS_NOT_FOUND");
+    }
+
+    /**
+     * @throws GC2Exception
+     */
+    public function deleteEntryById(string $classId, string $kind, string $id): void
+    {
+        $classes = $this->getAllWithIds();
+        foreach ($classes as $i => $class) {
+            if ($class['id'] !== $classId) {
+                continue;
+            }
+            foreach ($class[$kind] as $j => $entry) {
+                if ($entry['id'] === $id) {
+                    array_splice($classes[$i][$kind], $j, 1);
+                    $this->store(json_encode($classes));
+                    return;
+                }
+            }
+            throw new GC2Exception(ucfirst(rtrim($kind, 's')) . " not found", 404, null, strtoupper(rtrim($kind, 's')) . "_NOT_FOUND");
+        }
+        throw new GC2Exception("Class not found", 404, null, "CLASS_NOT_FOUND");
+    }
+
+    /**
      * Retrieves all records from the settings.geometry_columns_join table for a specific layer,
      * processes and structures the data, and returns the result.
      *
