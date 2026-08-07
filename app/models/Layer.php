@@ -967,4 +967,32 @@ class Layer extends Table
         $response['count'] = $res->rowCount();
         return $response;
     }
+
+    /**
+     * Checks whether a layer row exists in settings.geometry_columns_join.
+     */
+    public function doesLayerExist(string $key): bool
+    {
+        $sql = "SELECT 1 FROM settings.geometry_columns_join WHERE _key_=:key";
+        $res = $this->prepare($sql);
+        $this->execute($res, ['key' => $key]);
+        return (bool)$this->fetchRow($res);
+    }
+
+    /**
+     * Returns the _key_ of every layer, optionally restricted to a list of schemas.
+     */
+    public function getLayerKeys(?array $schemas = null): array
+    {
+        if ($schemas === null) {
+            $sql = "SELECT _key_ FROM settings.geometry_columns_join ORDER BY _key_";
+            $res = $this->prepare($sql);
+            $this->execute($res);
+        } else {
+            $sql = "SELECT _key_ FROM settings.geometry_columns_join WHERE split_part(_key_, '.', 1) = ANY(:schemas) ORDER BY _key_";
+            $res = $this->prepare($sql);
+            $this->execute($res, ['schemas' => '{' . implode(',', $schemas) . '}']);
+        }
+        return array_column($this->fetchAll($res, "assoc"), '_key_');
+    }
 }
