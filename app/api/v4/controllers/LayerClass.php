@@ -35,6 +35,12 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(property: "expression", title: "Expression", description: "MapServer class expression.", type: "string", example: "[type]='road'"),
         new OA\Property(property: "styles", title: "Styles", description: "Style entries.", type: "array", items: new OA\Items(ref: "#/components/schemas/Style")),
         new OA\Property(property: "labels", title: "Labels", description: "Label entries.", type: "array", items: new OA\Items(ref: "#/components/schemas/Label")),
+        new OA\Property(property: "class_minscaledenom", title: "Min scale denominator", description: "Minimum scale denominator at which this class is drawn. Maps to MapServer CLASS MINSCALEDENOM. Numeric value stored as a string.", type: "string", example: "1"),
+        new OA\Property(property: "class_maxscaledenom", title: "Max scale denominator", description: "Maximum scale denominator at which this class is drawn. Maps to MapServer CLASS MAXSCALEDENOM. Numeric value stored as a string.", type: "string", example: "500000"),
+        new OA\Property(property: "leader", title: "Leader: on", description: "Enables a MapServer LEADER block that connects a label to its feature with a line when the label must be offset from its anchor.", type: "boolean", example: true),
+        new OA\Property(property: "leader_gridstep", title: "Leader: gridstep", description: "Grid step used to search for a valid label position around the feature. Maps to LEADER GRIDSTEP. Defaults to 5 when leader is on and this is empty. Numeric value stored as a string.", type: "string", example: "5"),
+        new OA\Property(property: "leader_maxdistance", title: "Leader: maxdistance", description: "Maximum distance, in pixels, the label may be moved from the feature via the leader line. Maps to LEADER MAXDISTANCE. Defaults to 30 when leader is on and this is empty. Numeric value stored as a string.", type: "string", example: "30"),
+        new OA\Property(property: "leader_color", title: "Leader: color", description: "Color of the leader line. Maps to the LEADER STYLE COLOR. Defaults to black when leader is on and this is empty.", type: "string", example: "#000000"),
     ],
     type: "object"
 )]
