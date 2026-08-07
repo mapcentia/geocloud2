@@ -47,6 +47,15 @@ class MapfilePatcherTest extends Unit
 
     public function testXmlEscape(): void
     {
-        $this->assertStringContainsString('&apos;', MapfilePatcher::xmlEscape("a'b"));
+        $this->assertEquals("a&amp;b&apos;c", MapfilePatcher::xmlEscape("a&b'c"));
+    }
+
+    public function testQgsFilterEscapesSpecialCharsWithoutBackslash(): void
+    {
+        $out = MapfilePatcher::patchQgsContent(
+            $this->qgs(), ['test.roads' => ["name = 'a&b'"]], false, ['test.roads']
+        );
+        $this->assertStringContainsString("sql=name = &apos;a&amp;b&apos;<", $out);
+        $this->assertStringNotContainsString('\\&', $out);
     }
 }

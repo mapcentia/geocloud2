@@ -59,8 +59,8 @@ final class MapfilePatcher
     public static function xmlEscape(string $string): string
     {
         return str_replace(
-            ['&', '<', '>', '\'', '"', '/'],
-            ['\&amp;', '\&lt;', '\&gt;', '\&apos;', '\&quot;', '\/'],
+            ['&', '<', '>', '\'', '"'],
+            ['&amp;', '&lt;', '&gt;', '&apos;', '&quot;'],
             $string
         );
     }
