@@ -186,8 +186,8 @@ class Layer extends AbstractLayerApi
             ]);
             $collection->fields['classes'] = new Assert\Optional([
                 new Assert\Type('array'),
+                new Assert\All([LayerClass::getAssert()]),
             ]);
-            // Tightened to LayerClass::getAssert() in the classes controller task
         }
         $collection->fields['properties'] = new Assert\Optional([
             new Assert\Collection(array_map(fn($k) => new Assert\Optional(), array_flip(TileModel::DEF_KEYS))),

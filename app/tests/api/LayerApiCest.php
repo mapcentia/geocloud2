@@ -174,4 +174,78 @@ class LayerApiCest
         $I->sendPOST('/api/v4/layers/' . $this->layerKey, json_encode(['name' => $this->layerKey]));
         $I->seeResponseCodeIs(HttpCode::NOT_ACCEPTABLE);
     }
+
+    public function shouldCrudClasses(ApiTester $I)
+    {
+        $this->auth($I);
+        // Collection GET
+        $I->sendGET('/api/v4/layers/' . $this->layerKey . '/classes');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $response = json_decode($I->grabResponse(), true);
+        $I->assertCount(2, $response);
+
+        // Single GET
+        $I->sendGET('/api/v4/layers/' . $this->layerKey . '/classes/' . $this->classId);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $response = json_decode($I->grabResponse(), true);
+        $I->assertEquals('Main roads', $response['name']);
+
+        // POST a new class with nested style
+        $I->sendPOST('/api/v4/layers/' . $this->layerKey . '/classes', json_encode([
+            'name' => 'Paths',
+            'styles' => [['color' => '#0000ff']],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $location = $I->grabHttpHeader('Location');
+        $newClassId = basename($location);
+        $I->assertMatchesRegularExpression('/^[0-9a-f]{8}$/', $newClassId);
+
+        // sortid defaulted to highest existing + 10 (10 and 20 exist)
+        $I->sendGET('/api/v4/layers/' . $this->layerKey . '/classes/' . $newClassId);
+        $response = json_decode($I->grabResponse(), true);
+        $I->assertEquals(30, $response['sortid']);
+        $I->assertCount(1, $response['styles']);
+
+        // PATCH (key-merge)
+        $I->stopFollowingRedirects();
+        $I->sendPatch('/api/v4/layers/' . $this->layerKey . '/classes/' . $newClassId, json_encode([
+            'sortid' => 5,
+        ]));
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $I->startFollowingRedirects();
+        $I->sendGET('/api/v4/layers/' . $this->layerKey . '/classes/' . $newClassId);
+        $response = json_decode($I->grabResponse(), true);
+        $I->assertEquals(5, $response['sortid']);
+        $I->assertEquals('Paths', $response['name']); // merge keeps other keys
+
+        // DELETE
+        $I->sendDELETE('/api/v4/layers/' . $this->layerKey . '/classes/' . $newClassId);
+        $I->seeResponseCodeIs(HttpCode::NO_CONTENT);
+        $I->sendGET('/api/v4/layers/' . $this->layerKey . '/classes/' . $newClassId);
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+    }
+
+    public function shouldRejectBadClassRequests(ApiTester $I)
+    {
+        $this->auth($I);
+        // Unknown class id
+        $I->sendGET('/api/v4/layers/' . $this->layerKey . '/classes/deadbeef');
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        // Client-supplied id
+        $I->sendPOST('/api/v4/layers/' . $this->layerKey . '/classes', json_encode([
+            'name' => 'X', 'id' => 'cafebabe',
+        ]));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        // styles in PATCH body
+        $I->sendPatch('/api/v4/layers/' . $this->layerKey . '/classes/' . $this->classId, json_encode([
+            'styles' => [],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        // PATCH on collection
+        $I->sendPatch('/api/v4/layers/' . $this->layerKey . '/classes', json_encode(['name' => 'X']));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        // POST without name
+        $I->sendPOST('/api/v4/layers/' . $this->layerKey . '/classes', json_encode(['sortid' => 1]));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+    }
 }
