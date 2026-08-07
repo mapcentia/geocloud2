@@ -447,8 +447,15 @@ $handler = static function () use ($routes) {
             // V4 with OAuth and Route2
             //==========================
             $Route2 = new Route2();
-            // Rate limit per JWT token for all API v4 routes
-            RateLimiter::consumeForJwt(Input::getJwtToken(), App::$param['apiV4']['rateLimitPerMinute'] ?? 120);
+            // Rate limit per JWT token for all API v4 routes. OWS (tile/GetMap)
+            // traffic gets a higher, separately configurable limit.
+            $isOws = str_starts_with(Input::getPath()->part(1) . '/' . Input::getPath()->part(2) . '/' . Input::getPath()->part(3), 'api/v4/ows');
+            RateLimiter::consumeForJwt(
+                Input::getJwtToken(),
+                $isOws
+                    ? (App::$param['apiV4']['owsRateLimitPerMinute'] ?? 1200)
+                    : (App::$param['apiV4']['rateLimitPerMinute'] ?? 120)
+            );
             // At this point we just validate the token, but we do not yet know if the user is allowed to access the API
             try {
                 $jwt = Jwt::validate();
