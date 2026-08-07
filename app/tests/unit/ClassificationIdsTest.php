@@ -74,6 +74,28 @@ class ClassificationIdsTest extends Unit
         $this->assertMatchesRegularExpression('/^[0-9a-f]{8}$/', $result[0]['labels'][0]['id']);
     }
 
+    public function testEnsureIdsReplacesNonStringIds(): void
+    {
+        $classes = [
+            [
+                "id" => 3,
+                "name" => "A",
+                "styles" => [["id" => 1, "color" => "#008000"]],
+                "labels" => [],
+            ],
+            [
+                "id" => "aaaaaaaa",
+                "name" => "B",
+                "styles" => [],
+                "labels" => [],
+            ],
+        ];
+        $result = Classification::ensureIds($classes);
+        $this->assertMatchesRegularExpression('/^[0-9a-f]{8}$/', $result[0]['id']);
+        $this->assertMatchesRegularExpression('/^[0-9a-f]{8}$/', $result[0]['styles'][0]['id']);
+        $this->assertEquals("aaaaaaaa", $result[1]['id']);
+    }
+
     public function testNextSortId(): void
     {
         $this->assertEquals(10, Classification::nextSortId([]));

@@ -415,4 +415,46 @@ class LayerApiCest
         $I->sendGET('/api/v4/layers/' . $this->layerKey);
         $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
     }
+
+    public function shouldPreserveClassIdsAcrossLegacyControllerSave(ApiTester $I)
+    {
+        // Read the fixed class id via the v4 API before touching anything
+        $this->auth($I);
+        $I->sendGET('/api/v4/layers/' . $this->layerKey);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $response = json_decode($I->grabResponse(), true);
+        $classIdBefore = $response['classes'][0]['id'];
+        $I->assertMatchesRegularExpression('/^[0-9a-f]{8}$/', $classIdBefore);
+
+        // Start a legacy session as the super user (owner of the schema)
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/session/start', json_encode([
+            'user' => $this->userId,
+            'password' => $this->password,
+            'schema' => $this->schemaName,
+        ]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $sessionCookie = $I->capturePHPSESSID();
+        $I->assertFalse(empty($sessionCookie));
+
+        // Save class 0 through the legacy GUI controller path, exactly as
+        // editwmsclass.js's wmsClass.save() does: PUT .../classification/index/{key}/{classId}
+        // with a JSON body of {data: <class object>}
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $sessionCookie);
+        $I->haveHttpHeader('Content-Type', 'application/json; charset=utf-8');
+        $I->sendPUT('/controllers/classification/index/' . $this->layerKey . '/0', json_encode([
+            'data' => ['name' => 'Main roads renamed'],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseContainsJson(['success' => true]);
+
+        // Drop the session cookie and re-check via the v4 API with the bearer token
+        $I->deleteHeader('Cookie');
+        $this->auth($I);
+        $I->sendGET('/api/v4/layers/' . $this->layerKey);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $response = json_decode($I->grabResponse(), true);
+        $I->assertEquals($classIdBefore, $response['classes'][0]['id']);
+        $I->assertEquals('Main roads renamed', $response['classes'][0]['name']);
+    }
 }

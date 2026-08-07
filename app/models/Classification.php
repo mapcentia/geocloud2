@@ -143,7 +143,7 @@ class Classification extends Model
         $classes = array_values(array_map([self::class, 'normalizeClass'], $classes));
         $classIds = array_filter(array_column($classes, 'id'));
         foreach ($classes as $i => $class) {
-            if (empty($class['id'])) {
+            if (empty($class['id']) || !is_string($class['id'])) {
                 do {
                     $id = self::generateId();
                 } while (in_array($id, $classIds, true));
@@ -153,7 +153,7 @@ class Classification extends Model
             foreach (['styles', 'labels'] as $kind) {
                 $entryIds = array_filter(array_column($classes[$i][$kind], 'id'));
                 foreach ($classes[$i][$kind] as $j => $entry) {
-                    if (empty($entry['id'])) {
+                    if (empty($entry['id']) || !is_string($entry['id'])) {
                         do {
                             $id = self::generateId();
                         } while (in_array($id, $entryIds, true));
@@ -564,9 +564,9 @@ class Classification extends Model
      */
     public function insert(): array
     {
-        $classes = $this->getAll();
-        $classes['data'][] = ["name" => "Unnamed class"];
-        $this->store(json_encode($classes['data'], JSON_UNESCAPED_UNICODE));
+        $classes = array_map([self::class, 'normalizeClass'], $this->readRawClasses());
+        $classes[] = ["name" => "Unnamed class"];
+        $this->store(json_encode($classes, JSON_UNESCAPED_UNICODE));
         $response['success'] = true;
         $response['message'] = "Inserted one class";
         return $response;
@@ -583,11 +583,14 @@ class Classification extends Model
      */
     public function update(int $id, object $data): array
     {
-        $classes = $this->getAll();
+        $classes = array_map([self::class, 'normalizeClass'], $this->readRawClasses());
         foreach ((array)$data as $k => $v) {
-            $classes['data'][$id][$k] = $v;
+            if ($k === 'id') {
+                continue; // the client's positional id must never overwrite the stored fixed id
+            }
+            $classes[$id][$k] = $v;
         }
-        $this->store(json_encode($classes['data'], JSON_UNESCAPED_UNICODE));
+        $this->store(json_encode($classes, JSON_UNESCAPED_UNICODE));
         $response['success'] = true;
         $response['message'] = "Updated one class";
         return $response;
@@ -602,15 +605,9 @@ class Classification extends Model
      */
     public function destroy(int $id): array // Geometry columns
     {
-        $arr = [];
-        $classes = $this->getAll();
-        unset($classes['data'][$id]);
-        foreach ($classes['data'] as $value) { // Reindex array
-            unset($value['id']);
-            $arr[] = $value;
-        }
-        $classes['data'] = $arr;
-        $this->store(json_encode($classes['data'], JSON_UNESCAPED_UNICODE));
+        $classes = array_map([self::class, 'normalizeClass'], $this->readRawClasses());
+        array_splice($classes, $id, 1);
+        $this->store(json_encode($classes, JSON_UNESCAPED_UNICODE));
         $response['success'] = true;
         $response['message'] = "Deleted one class";
         return $response;
