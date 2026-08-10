@@ -128,7 +128,6 @@ final class WfsNoToken extends AbstractApi
         // For anonymous-readable layers, use the database name as the implicit user.
         // BasicAuth is invoked per-layer inside Server::dispatch when actually needed.
         $user = $authUser ?: $database;
-        $parentUser = $user === $database;
 
         $trusted = false;
         foreach ((App::$param['trustedAddresses'] ?? []) as $address) {
@@ -147,7 +146,7 @@ final class WfsNoToken extends AbstractApi
             schema: $schema,
             user: $user,
             userGroup: $userGroup ?? null,
-            parentUser: $parentUser,
+            parentUser:  $user === $database,
             trusted: $trusted,
             host: Util::host(),
             thePath: Util::thePath(),
