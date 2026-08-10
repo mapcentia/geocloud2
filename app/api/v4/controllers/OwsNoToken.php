@@ -124,12 +124,21 @@ final class OwsNoToken extends AbstractApi
             }
         }
 
+        $connection = new Connection(user: $user, database: $database, schema: $schema);
+        // A Basic-auth header sets the request identity ($user, parentUser) above,
+        // but per-layer auth only runs for requests that carry a layer. Verify the
+        // credentials here so a fabricated header can't be trusted as identity on
+        // layer-less requests (GetCapabilities).
+        if (!$trusted) {
+            new BasicAuth(connection: $connection)->verifyCredentials();
+        }
+
         return new Context(
-            connection: new Connection(user: $user, database: $database, schema: $schema),
+            connection: $connection,
             database: $database,
             schema: $schema,
             user: $user,
-            userGroup: $userGroup ?? null,
+            userGroup: null,
             parentUser: $user === $database,
             trusted: $trusted,
             host: Util::host(),
@@ -141,10 +150,17 @@ final class OwsNoToken extends AbstractApi
         if ($ctx->trusted || empty($req->layers)) return;
         $model = $ctx->model();
         foreach ($req->layers as $tn) {
-            $auth = $model->getGeometryColumns($tn, 'authentication');
+            // The route pins the schema; normalize the (possibly unqualified or
+            // differently-qualified) request layer to "schema.table" so the auth
+            // check runs against the relation MapServer will actually serve.
+            // Mirrors Ows::authorizeLayers and this file's applyRules. Passing a
+            // raw unqualified name to BasicAuth would silently skip the subuser
+            // privilege check (its split on '.' yields an empty table name).
+            $rel = "{$ctx->schema}." . $this->tableOf($tn);
+            $auth = $model->getGeometryColumns($rel, 'authentication');
             $needsAuth = $auth === 'Read/write' || !empty(Input::getAuthUser());
             if ($needsAuth) {
-                new BasicAuth(connection: $ctx->connection)->authenticate($tn, false);
+                new BasicAuth(connection: $ctx->connection)->authenticate($rel, false);
             }
         }
     }
@@ -161,9 +177,16 @@ final class OwsNoToken extends AbstractApi
         $rule = new Rule(connection: $ctx->connection);
         $rules = $rule->get();
         $model = $ctx->model();
+        // Geofence identity: an authenticated Basic-auth user is themselves, an
+        // anonymous request is "*". Mirrors legacy Wms::setFilterFromRules. Note
+        // $ctx->user falls back to the database name for anonymous requests
+        // (used as the connection identity), which must NOT reach the geofence
+        // or a parent-user rule would match unauthenticated traffic. These
+        // public routes never start a session, so Basic auth is the only signal.
+        $geofenceUser = !empty(Input::getAuthUser()) ? $ctx->user : '*';
         foreach ($req->layers as $layer) {
             $table = $this->tableOf($layer);
-            $userFilter = new UserFilter($ctx->user, 'ows', 'select', '*', $ctx->schema, $table);
+            $userFilter = new UserFilter($geofenceUser, 'ows', 'select', '*', $ctx->schema, $table);
             $geofence = new Geofence($userFilter);
             $auth = $geofence->authorize($rules);
             if (isset($auth['access'])) {

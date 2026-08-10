@@ -86,6 +86,40 @@ final class BasicAuth
     }
 
     /**
+     * Verifies the presented HTTP Basic credentials against the stored viewer
+     * password WITHOUT any per-layer privilege check, and challenges with a 401
+     * when credentials are present but wrong. No-op for anonymous requests (no
+     * Authorization header) or when a matching session already exists.
+     *
+     * Use this to establish a trustworthy identity before per-layer auth fires:
+     * requests that carry no layer (e.g. WFS/WMS GetCapabilities) never reach
+     * authenticate(), so without this a fabricated Authorization header would be
+     * trusted as the request identity.
+     *
+     * @throws InvalidArgumentException
+     */
+    public function verifyCredentials(): void
+    {
+        if ($this->isSession && ($_SESSION['parentdb'] ?? null) == $this->connection->database) {
+            return; // already authenticated via session
+        }
+        $user = Input::getAuthUser();
+        if (empty($user)) {
+            return; // anonymous — no identity claimed, nothing to verify
+        }
+        $setting = new Setting(connection: $this->connection);
+        $settings = $setting->get();
+        $password = Input::getAuthPw();
+        $isSubuser = $user != $setting->postgisdb;
+        $passwordCheck = $isSubuser
+            ? ($settings["data"]->pw_subuser->{$user} ?? null)
+            : ($settings["data"]->pw ?? null);
+        if (empty($password) || empty($passwordCheck) || Setting::encryptPw($password) !== $passwordCheck) {
+            self::setAuthHeader($setting->postgisdb);
+        }
+    }
+
+    /**
      * Sets the HTTP authentication headers for Basic Authentication
      * and terminates the script with an unauthorized response.
      *

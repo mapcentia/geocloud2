@@ -261,7 +261,7 @@ final class GetCapabilities implements HandlerInterface
             throw new OwsException($e->getMessage(), 'NoApplicableCode');
         }
 
-        $settings = new Setting();
+        $settings = new Setting(connection: $this->ctx->connection);
         $extents = $settings->get()["data"]->extents;
         $bbox = is_object($extents) && property_exists($extents, $postgisschema)
             ? $extents->$postgisschema

@@ -21,8 +21,10 @@ use app\wfs\Request as WfsRequest;
 use app\wfs\Server;
 use app\wfs\output\ExceptionReport;
 use app\wfs\output\GmlWriter;
+use OpenApi\Attributes as OA;
 use Throwable;
 
+#[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[Controller(route: 'api/v4/wfs/schema/{schema}/srs/[srs]/[timeSlice]', scope: Scope::SUB_USER_ALLOWED)]
 final class Wfs extends AbstractApi
 {
@@ -34,6 +36,21 @@ final class Wfs extends AbstractApi
     /**
      * @throws OwsException
      */
+    #[OA\Get(path: '/api/v4/wfs/schema/{schema}/srs/{srs}/{timeSlice}', operationId: 'getWfs', description: "Token-authenticated WFS endpoint (GetCapabilities, DescribeFeatureType, GetFeature). Anonymous and HTTP-Basic clients use /api/v4/wfs/schema/{schema}/database/{database}.", tags: ['Wfs'])]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'srs', description: 'Output EPSG code (SRID). Optional path segment.', in: 'path', required: false, schema: new OA\Schema(type: 'integer'), example: 25832)]
+    #[OA\Parameter(name: 'timeSlice', description: 'Version time slice (ISO date) for versioned layers. Optional path segment.', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: '2020-01-01')]
+    #[OA\Parameter(name: 'SERVICE', description: 'OGC service.', in: 'query', required: true, schema: new OA\Schema(type: 'string', default: 'WFS'), example: 'WFS')]
+    #[OA\Parameter(name: 'REQUEST', description: 'WFS operation.', in: 'query', required: true, schema: new OA\Schema(type: 'string', enum: ['GetCapabilities', 'DescribeFeatureType', 'GetFeature']), example: 'GetFeature')]
+    #[OA\Parameter(name: 'VERSION', description: 'WFS protocol version.', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['1.0.0', '1.1.0'], default: '1.1.0'), example: '1.1.0')]
+    #[OA\Parameter(name: 'TYPENAME', description: 'Feature type (table) name(s), comma-separated.', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'my_table')]
+    #[OA\Parameter(name: 'OUTPUTFORMAT', description: 'Output format.', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'gml3')]
+    #[OA\Parameter(name: 'SRSNAME', description: 'Requested output CRS.', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'urn:ogc:def:crs:EPSG::25832')]
+    #[OA\Parameter(name: 'BBOX', description: 'Bounding-box filter (minx,miny,maxx,maxy).', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: '724000,6174000,725000,6175000')]
+    #[OA\Parameter(name: 'MAXFEATURES', description: 'Maximum number of features to return.', in: 'query', required: false, schema: new OA\Schema(type: 'integer'), example: 100)]
+    #[OA\Parameter(name: 'FILTER', description: 'OGC Filter Encoding XML.', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Response(response: 200, description: 'WFS response (Capabilities, schema, or GML feature collection) streamed as XML', content: new OA\MediaType('text/xml'))]
+    #[OA\Response(response: 401, description: 'Unauthorized — missing or invalid token')]
     public function get_index(): StreamedResponse
     {
         return $this->stream();
@@ -42,6 +59,13 @@ final class Wfs extends AbstractApi
     /**
      * @throws OwsException
      */
+    #[OA\Post(path: '/api/v4/wfs/schema/{schema}/srs/{srs}/{timeSlice}', operationId: 'postWfs', description: "WFS POST endpoint for XML-encoded GetFeature and Transaction (WFS-T) requests.", tags: ['Wfs'])]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'srs', description: 'Output EPSG code (SRID). Optional path segment.', in: 'path', required: false, schema: new OA\Schema(type: 'integer'), example: 25832)]
+    #[OA\Parameter(name: 'timeSlice', description: 'Version time slice (ISO date) for versioned layers. Optional path segment.', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: '2020-01-01')]
+    #[OA\RequestBody(description: 'WFS XML document (GetFeature query or Transaction).', required: true, content: new OA\MediaType('text/xml', schema: new OA\Schema(type: 'string')))]
+    #[OA\Response(response: 200, description: 'WFS response (feature collection or transaction summary) streamed as XML', content: new OA\MediaType('text/xml'))]
+    #[OA\Response(response: 401, description: 'Unauthorized — missing or invalid token')]
     public function post_index(): StreamedResponse
     {
         return $this->stream();

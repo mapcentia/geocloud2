@@ -127,7 +127,7 @@ final class Transaction implements HandlerInterface
                 if (!$this->ctx->trusted) {
                     $auth = $model->getGeometryColumns("{$this->ctx->schema}.{$typeName}", 'authentication');
                     if ($auth === 'Write' || $auth === 'Read/write' || !empty(Input::getAuthUser())) {
-                        (new BasicAuth())->authenticate("{$this->ctx->schema}.{$typeName}", true);
+                        (new BasicAuth(connection: $this->ctx->connection))->authenticate("{$this->ctx->schema}.{$typeName}", true);
                     }
                 }
 
@@ -138,7 +138,7 @@ final class Transaction implements HandlerInterface
                 );
 
                 if ($model->getGeometryColumns("{$this->ctx->schema}.{$typeName}", 'editable')) {
-                    Tilecache::bust("{$this->ctx->schema}.{$typeName}");
+                    Tilecache::bust("{$this->ctx->schema}.{$typeName}", $this->ctx->connection);
                     $sql = $this->composeInsertSql($typeName, $fields, $values, $primary['attname'], $gc2WorkflowFlag, $tableObj, $layerModel);
                     $stmt = $model->prepare($sql);
                     $model->execute($stmt);
@@ -255,7 +255,7 @@ final class Transaction implements HandlerInterface
             if (!$this->ctx->trusted) {
                 $auth = $model->getGeometryColumns("{$this->ctx->schema}.{$typeName}", 'authentication');
                 if ($auth === 'Write' || $auth === 'Read/write' || !empty(Input::getAuthUser())) {
-                    (new BasicAuth())->authenticate("{$this->ctx->schema}.{$typeName}", true);
+                    (new BasicAuth(connection: $this->ctx->connection))->authenticate("{$this->ctx->schema}.{$typeName}", true);
                 }
             }
 
@@ -263,7 +263,7 @@ final class Transaction implements HandlerInterface
                 continue; // skip non-editable, legacy silently records in $notEditable
             }
 
-            Tilecache::bust("{$this->ctx->schema}.{$typeName}");
+            Tilecache::bust("{$this->ctx->schema}.{$typeName}", $this->ctx->connection);
             $tableSrid = $model->getGeometryColumns("{$this->ctx->schema}.{$typeName}", 'srid');
             $originalFeature = null;
 
@@ -452,7 +452,7 @@ final class Transaction implements HandlerInterface
             if (!$this->ctx->trusted) {
                 $auth = $model->getGeometryColumns("{$this->ctx->schema}.{$typeName}", 'authentication');
                 if ($auth === 'Write' || $auth === 'Read/write' || !empty(Input::getAuthUser())) {
-                    (new BasicAuth())->authenticate("{$this->ctx->schema}.{$typeName}", true);
+                    (new BasicAuth(connection: $this->ctx->connection))->authenticate("{$this->ctx->schema}.{$typeName}", true);
                 }
             }
 
@@ -460,7 +460,7 @@ final class Transaction implements HandlerInterface
                 continue; // skip non-editable
             }
 
-            Tilecache::bust("{$this->ctx->schema}.{$typeName}");
+            Tilecache::bust("{$this->ctx->schema}.{$typeName}", $this->ctx->connection);
             $where = WfsFilter::explode($hey['Filter'], null, null, $primary['attname']);
 
             if ($tableObj->versioning) {

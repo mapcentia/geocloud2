@@ -137,21 +137,24 @@ class Tilecache extends Controller
      * @return array<mixed>
      * @throws PhpfastcacheInvalidArgumentException
      */
-    static function bust(string $layerName): array
+    static function bust(string $layerName, ?\app\inc\Connection $connection = null): array
     {
-        $layer = new \app\models\Layer();
-        $cache = isset($layer->getAll(Database::getDb(), true, $layerName, false, true, false)["data"][0]["def"]->cache) ? $layer->getAll(Database::getDb(), true, $layerName, false, true, false)["data"][0]["def"]->cache : null;
+        // Prefer an explicit connection (worker/FrankenPHP-safe) over the process
+        // -global "current database"; fall back to the global for legacy callers.
+        $db = $connection ? $connection->database : Database::getDb();
+        $layer = $connection ? new \app\models\Layer(connection: $connection) : new \app\models\Layer();
+        $cache = isset($layer->getAll($db, true, $layerName, false, true, false)["data"][0]["def"]->cache) ? $layer->getAll($db, true, $layerName, false, true, false)["data"][0]["def"]->cache : null;
         $cache = $cache ?: App::$param["mapCache"]["type"];
         $response = [];
         $res = null;
 
         switch ($cache) {
             case "sqlite":
-                $res = self::unlikeSQLiteFile($layerName);
+                $res = self::unlikeSQLiteFile($layerName, $connection);
                 break;
             case "disk":
-                $dir = App::$param['path'] . "app/wms/mapcache/disk/" . Connection::$param["postgisdb"] . "/" . $layerName;
-                $res = self::unlinkTiles($dir, $layerName);
+                $dir = App::$param['path'] . "app/wms/mapcache/disk/" . $db . "/" . $layerName;
+                $res = self::unlinkTiles($dir, $layerName, $connection);
                 break;
         }
 
@@ -171,18 +174,19 @@ class Tilecache extends Controller
      * @return array<mixed>
      * @throws PhpfastcacheInvalidArgumentException
      */
-    private static function unlikeSQLiteFile(string $layerName): array
+    private static function unlikeSQLiteFile(string $layerName, ?\app\inc\Connection $connection = null): array
     {
-        $layer = new \app\models\Layer();
-        $meta = $layer->getAll(Database::getDb(), true, $layerName, false, true, false);
+        $db = $connection ? $connection->database : Database::getDb();
+        $layer = $connection ? new \app\models\Layer(connection: $connection) : new \app\models\Layer();
+        $meta = $layer->getAll($db, true, $layerName, false, true, false);
         if (isset($meta["data"][0]["def"]->lock) && $meta["data"][0]["def"]->lock == true) {
             $response['success'] = false;
             $response['message'] = "The layer is locked in the tile cache. Unlock it in the Tile cache settings.";
             $response['code'] = '406';
             return $response;
         }
-        $file1 = App::$param['path'] . "app/wms/mapcache/sqlite/" . Connection::$param["postgisdb"] . "/" . $layerName . ".sqlite3";
-        $file2 = App::$param['path'] . "app/wms/mapcache/sqlite/" . Connection::$param["postgisdb"] . "/" . $layerName . ".json.sqlite3";
+        $file1 = App::$param['path'] . "app/wms/mapcache/sqlite/" . $db . "/" . $layerName . ".sqlite3";
+        $file2 = App::$param['path'] . "app/wms/mapcache/sqlite/" . $db . "/" . $layerName . ".json.sqlite3";
         @unlink($file1);
         @unlink($file2);
         $response['success'] = true;
@@ -195,10 +199,11 @@ class Tilecache extends Controller
      * @return array<mixed>
      * @throws PhpfastcacheInvalidArgumentException
      */
-    private static function unlinkTiles(string $dir, string $layerName): array
+    private static function unlinkTiles(string $dir, string $layerName, ?\app\inc\Connection $connection = null): array
     {
-        $layer = new \app\models\Layer();
-        $meta = $layer->getAll(Database::getDb(), true, $layerName, false, true, false);
+        $db = $connection ? $connection->database : Database::getDb();
+        $layer = $connection ? new \app\models\Layer(connection: $connection) : new \app\models\Layer();
+        $meta = $layer->getAll($db, true, $layerName, false, true, false);
         if (isset($meta["data"][0]["def"]->lock) && $meta["data"][0]["def"]->lock == true) {
             $response['success'] = false;
             $response['message'] = "The layer is locked in the tile cache. Unlock it in the Tile cache settings.";
