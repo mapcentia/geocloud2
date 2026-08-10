@@ -55,7 +55,7 @@ class Classification extends Model
         }
     }
 
-    public const STYLE_KEYS = ['color', 'outlinecolor', 'symbol', 'size', 'width', 'angle', 'gap',
+    public const STYLE_KEYS = ['id','color', 'outlinecolor', 'symbol', 'size', 'width', 'angle', 'gap',
         'opacity', 'pattern', 'linecap', 'geomtransform', 'minsize', 'maxsize',
         'offsetx', 'offsety', 'polaroffsetr', 'polaroffsetd'];
 
@@ -80,10 +80,19 @@ class Classification extends Model
         'maxscaledenom' => 'class_maxscaledenom',
     ];
 
-    public const LABEL_KEYS = ['force', 'text', 'minscaledenom', 'maxscaledenom', 'position', 'size',
+    public const LABEL_KEYS = ['id', 'force', 'text', 'minscaledenom', 'maxscaledenom', 'position', 'size',
         'color', 'outlinecolor', 'buffer', 'repeatdistance', 'angle', 'backgroundcolor',
         'backgroundpadding', 'offsetx', 'offsety', 'font', 'fontweight', 'expression',
         'maxsize', 'minfeaturesize'];
+
+    /**
+     * The subset of LABEL_KEYS that are ALSO legitimate class-level keys and must therefore
+     * survive normalization: the shared class id, the class filter EXPRESSION and the class
+     * scale denominators. Every other label key found bare on a class is a stray leftover
+     * from the oldest flat format (before label props were namespaced/moved into labels[])
+     * and is stripped — e.g. `force` (MapServer LABEL FORCE) is never a class property.
+     */
+    private const CLASS_LEVEL_LABEL_KEYS = ['id', 'expression', 'minscaledenom', 'maxscaledenom'];
 
     /**
      * Convert a class object from the legacy flat format (Symbol1/Symbol2/Label1/Label2 keys)
@@ -113,6 +122,10 @@ class Classification extends Model
         foreach ([['', 10, 'Symbol 1'], ['overlay', 20, 'Symbol 2']] as [$prefix, $sortid, $name]) {
             $style = [];
             foreach (self::STYLE_KEYS as $key) {
+                // `id` is in STYLE_KEYS for entry validation, but the bare `id` on a class is
+                // the class's own id — not a legacy flat style key. Never move/strip it here,
+                // or the class id would be reassigned on every normalize (breaking stable ids).
+                if ($key === 'id') continue;
                 $legacyKey = $prefix . (self::STYLE_KEY_LEGACY[$key] ?? $key);
                 if (!empty($class[$legacyKey])) {
                     $style[$key] = $class[$legacyKey];
@@ -128,6 +141,7 @@ class Classification extends Model
         foreach ([['label', 10, 'Label 1'], ['label2', 20, 'Label 2']] as [$prefix, $sortid, $name]) {
             $label = [];
             foreach (self::LABEL_KEYS as $key) {
+                if ($key === 'id') continue; // entry-validation key, not a legacy flat label key
                 if (!empty($class[$prefix . '_' . $key])) {
                     $label[$key] = $class[$prefix . '_' . $key];
                 }
@@ -146,6 +160,14 @@ class Classification extends Model
         } else {
             $class['styles'] = $legacyStyles;
             $class['labels'] = $legacyLabels;
+        }
+
+        // Strip label-only keys left bare on the class by the oldest flat format (before
+        // label props were namespaced under label_/label2_ or moved into labels[]). They
+        // belong only on label entries; the class-level LEADER family is kept as MapServer
+        // reads it from the class.
+        foreach (array_diff(self::LABEL_KEYS, self::CLASS_LEVEL_LABEL_KEYS) as $strayKey) {
+            unset($class[$strayKey]);
         }
 
         foreach (['styles', 'labels'] as $k) {

@@ -173,7 +173,7 @@ class LayerClass extends AbstractLayerApi
             ? new Assert\Required([new Assert\Type('string'), new Assert\NotBlank()])
             : new Assert\Optional([new Assert\Type('string'), new Assert\NotBlank()]);
         $collection->fields['sortid'] = new Assert\Optional([new Assert\Type('integer')]);
-        foreach (['expression', 'minscaledenom', 'maxscaledenom', 'leader', 'leader_gridstep', 'leader_maxdistance', 'leader_color'] as $key) {
+        foreach (['id', 'expression', 'minscaledenom', 'maxscaledenom', 'leader', 'leader_gridstep', 'leader_maxdistance', 'leader_color'] as $key) {
             $collection->fields[$key] = new Assert\Optional();
         }
         if (Input::getMethod() == 'post') {

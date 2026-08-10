@@ -177,6 +177,45 @@ class ClassificationFormatTest extends Unit
         $this->assertArrayNotHasKey('label2', $result);
     }
 
+    // The oldest flat format stored label properties bare on the class (no label_ prefix).
+    // Such stray label-only keys must be stripped on normalization — `force` (MapServer
+    // LABEL FORCE) is never a class-level property — while genuine class-level keys and the
+    // class-level LEADER family are preserved. Mirrors real interim-new-format DB rows.
+    public function testStripsStrayBareLabelKeysFromClass(): void
+    {
+        $legacy = [
+            "name" => "c",
+            "styles" => [["name" => "Symbol 1", "color" => "#008000", "sortid" => 10]],
+            "labels" => [],
+            // stray label-only keys left bare on the class
+            "force" => true,
+            "text" => "[name]",
+            "position" => "cc",
+            // genuine class-level keys that must survive
+            "expression" => "foo=1",
+            "minscaledenom" => "10",
+            "maxscaledenom" => "500",
+            // class-level LEADER family (MapServer reads these from the class) must survive
+            "leader" => true,
+            "leader_color" => "#111111",
+            "leader_gridstep" => "5",
+            "leader_maxdistance" => "30",
+        ];
+        $result = Classification::normalizeClass($legacy);
+
+        $this->assertArrayNotHasKey('force', $result);
+        $this->assertArrayNotHasKey('text', $result);
+        $this->assertArrayNotHasKey('position', $result);
+
+        $this->assertEquals("foo=1", $result['expression']);
+        $this->assertEquals("10", $result['minscaledenom']);
+        $this->assertEquals("500", $result['maxscaledenom']);
+        $this->assertTrue($result['leader']);
+        $this->assertEquals("#111111", $result['leader_color']);
+        $this->assertEquals("5", $result['leader_gridstep']);
+        $this->assertEquals("30", $result['leader_maxdistance']);
+    }
+
     public function testNoLabelEntryWhenDisabledAndEmpty(): void
     {
         $legacy = ["name" => "c", "color" => "#008000", "label" => false, "label_text" => ""];
