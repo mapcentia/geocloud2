@@ -13,7 +13,6 @@ use app\api\v4\Scope;
 use app\conf\App;
 use app\exceptions\OwsException;
 use app\inc\Connection;
-use app\inc\Input;
 use app\inc\Route2;
 use app\inc\Util;
 use app\models\Authorization;
@@ -24,7 +23,7 @@ use app\wfs\output\ExceptionReport;
 use app\wfs\output\GmlWriter;
 use Throwable;
 
-#[Controller(route: 'api/v4/wfs/schema/{schema}/[srs]/[timeSlice]', scope: Scope::SUB_USER_ALLOWED)]
+#[Controller(route: 'api/v4/wfs/schema/{schema}/srs/[srs]/[timeSlice]', scope: Scope::SUB_USER_ALLOWED)]
 final class Wfs extends AbstractApi
 {
     public function __construct(public Route2 $route, Connection $connection)
