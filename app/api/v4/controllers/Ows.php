@@ -84,7 +84,7 @@ final class Ows extends AbstractApi
                     error_log((string) $e);
                     // Pre-stream errors render as an OGC ServiceException report.
                     // Don't leak internals (filesystem paths, TypeErrors, etc.) to clients.
-                    $msg = $e instanceof ServiceException ? $e->getMessage() : 'Internal error';
+                    $msg = $e->getMessage();
                     if (!headers_sent()) {
                         header('Content-Type: text/xml');
                         echo new ServiceException($msg)->getReport();
