@@ -1,27 +1,23 @@
 <?php
 /**
- * Long description for file
- *
- * Long description for file (if any)...
- *
- * @category   API
- * @package    app\controllers
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2021 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
- * @since      File available since Release 2013.1
  *
  */
 
 namespace app\controllers\upload;
 
 use app\conf\App;
+use app\exceptions\GC2Exception;
 use app\inc\Controller;
 use app\inc\Model;
 use app\inc\Response;
 use app\conf\Connection;
 use app\inc\Session;
 use app\models\Classification;
+use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Psr\Cache\InvalidArgumentException;
 
 class Processraster extends Controller
 {
@@ -33,7 +29,13 @@ class Processraster extends Controller
         parent::__construct();
     }
 
-    public function get_index()
+    /**
+     * @return array
+     * @throws PhpfastcacheInvalidArgumentException
+     * @throws InvalidArgumentException
+     * @throws GC2Exception
+     */
+    public function get_index(): array
     {
         $dir = App::$param['path'] . "app/tmp/" . Connection::$param["postgisdb"] . "/__raster";
         $safeName = Model::toAscii($_REQUEST['name'], array(), "_");
@@ -70,14 +72,14 @@ class Processraster extends Controller
         }
 
         foreach ($out as $line) {
-            if (strpos($line, 'ERROR') !== false) {
+            if (str_contains($line, 'ERROR')) {
                 $err = true;
                 break;
             }
         }
         if (!$err) {
             $response['success'] = true;
-            $response['message'] = "Raster layer <b>{$safeName}</b> is created";
+            $response['message'] = "Raster layer <b>$safeName</b> is created";
 
             $key = Connection::$param["postgisschema"] . "." . $safeName . ".rast";
             $class = new Classification($key);

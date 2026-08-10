@@ -216,6 +216,23 @@ class ClaimAclTest extends Unit
         $this->assertContains("nested->attr->value", $keys);
     }
 
+    public function testDefaultMembershipFallback(): void
+    {
+        // When no claim matches a membership rule, the __default membership key applies.
+        $noMatchClaims = (object)["groups" => ["none"]];
+
+        $keys = $this->auth->allMembershipKeys($noMatchClaims);
+        $this->assertNotNull($keys, "Default membership fallback returns keys");
+        $this->assertContains("__default", $keys, "Default membership key applies when no claim matches");
+    }
+
+    public function testMatchingClaimsSkipDefaultMembership(): void
+    {
+        // When at least one claim matches, the __default membership is NOT added (fallback only).
+        $keys = $this->auth->allMembershipKeys($this->claims);
+        $this->assertNotContains("__default", $keys, "Default membership is fallback-only");
+    }
+
     public function testAllTablePermissions(): void
     {
         $all = $this->auth->allTablePermissions($this->claims);

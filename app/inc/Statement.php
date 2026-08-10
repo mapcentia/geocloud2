@@ -20,7 +20,7 @@ class Statement
 {
     private string|null $q;
     private ?string $subUser;
-    private ?string $userGroup;
+    private ?array $userGroup;
     private Sql $sql;
     private array $cacheInfo;
     private array $params;
@@ -42,7 +42,7 @@ class Statement
      * @return array|null The processed response, including additional metadata such as cache information and memory usage.
      * @throws GC2Exception
      */
-    public function run(string $user, Sql $api, array $query, bool $subuser, ?string $userGroup): ?array
+    public function run(string $user, Sql $api, array $query, bool $subuser, ?array $userGroup): ?array
     {
         $this->sql = $api;
         if ($subuser) {
@@ -118,7 +118,7 @@ class Statement
             }
         }
         foreach ($usedRelationsWithType as $rel => $type) {
-            $authResponse = (new Authorization(connection: $this->connection))->check(relName: $rel, transaction: $type == "t", isAuth: true, subUser: $this->subUser, userGroup: $this->userGroup, rels: $usedRelationsWithType);
+            $authResponse = new Authorization(connection: $this->connection)->check(relName: $rel, transaction: $type == "t", isAuth: true, subUser: $this->subUser, userGroup: $this->userGroup, rels: $usedRelationsWithType);
             if (!$authResponse["success"]) {
                 return $authResponse;
             }

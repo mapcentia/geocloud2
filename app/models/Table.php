@@ -223,9 +223,15 @@ class Table extends Model
     // TODO Move to layer model. This may belong to the Layer class
 
     /**
-     * @param bool $createKeyFrom
-     * @param string|null $schema
-     * @return array
+     * Retrieves records from the database with optional schema filtering and key creation.
+     * Retrieves records from the database with optional schema filtering and key creation.
+     *
+     * @param bool $createKeyFrom Indicates whether to create a key for each record.
+     * @param string|null $schema Optional schema name to filter the records. Defaults to null.
+     * @return array Returns an associative array containing the query results, including metadata and additional properties for each record.
+     * @throws PDOException If there is an error executing database queries.
+     * @throws Exception If there are errors in external system communication such as Elasticsearch.
+     * @throws \Throwable
      */
     public function getRecords(bool $createKeyFrom = false, ?string $schema = null): array
     {
@@ -302,16 +308,20 @@ class Table extends Model
         }
 
         while ($row = $this->fetchRow($result)) {
-            $privileges = !empty($row["privileges"]) ? json_decode($row["privileges"]) : null;
+            $privileges = !empty($row["privileges"]) ? json_decode($row["privileges"], true) : [];
             $arr = [];
-            if (isset($_SESSION)) {
-                $prop = !empty($_SESSION['usergroup']) ? $_SESSION['usergroup'] : $_SESSION['screen_name'];
+            $userGroup = $_SESSION['usergroup'] ?? [];
+            if (!empty($_SESSION["subuser"])) {
+                $authorization = new Authorization(connection: $this->connection);
+                $privilege = $authorization->extractHighestPrivilege($privileges, $_SESSION["screen_name"], $userGroup);
+                $isOwner = $authorization->isOwner($_SESSION["screen_name"], $userGroup, $schema ?? $this->postgisschema);
+                $hasNone = $privilege === "none";
             } else {
-                $prop = null;
+                $hasNone = true;
+                $isOwner = false;
             }
 
-            if (empty($_SESSION["subuser"]) || ($prop == $this->postgisschema)
-                || (!empty($privileges->$prop) && $privileges->$prop != "none")) {
+            if (empty($_SESSION["subuser"]) || $isOwner || !$hasNone) {
                 $relType = "t"; // Default
                 foreach ($row as $key => $value) {
                     if (!empty($row['def']) && $key == "type" && $value == "GEOMETRY") {
@@ -541,7 +551,7 @@ class Table extends Model
                                     $fValue['querable'] = $fValue['queryable'];
                                     unset($fValue['queryable']);
                                 }
-                                $rec[$fKey] = array_merge($rec[$fKey] ?? [],$fValue);
+                                $rec[$fKey] = array_merge($rec[$fKey] ?? [], $fValue);
                             }
                             $value = json_encode($rec, JSON_UNESCAPED_UNICODE);
                         }
@@ -776,6 +786,7 @@ class Table extends Model
                 $res->execute();
                 $value->column = $safeColumn;
                 unset($fieldconfArr[$value->id]);
+                $value->id = $value->column;
                 $response['message'] = "Renamed";
                 $response['name'] = $safeColumn;
             } else {
@@ -798,7 +809,7 @@ class Table extends Model
                 }
             }
 
-            if ($this->metaData[$value->id]["desc"] !== $value->desc && !$onlyRename) {
+            if ($this->metaData[$value->id]["comment"] !== $value->desc && !$onlyRename) {
                 if ($value->desc === "") {
                     $value->desc = null;
                 }

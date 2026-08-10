@@ -15,7 +15,7 @@ class Mapfile extends Controller
 {
     /**
      * @return array<array<bool|string>>
-     * @throws PhpfastcacheInvalidArgumentException
+     * @throws PhpfastcacheInvalidArgumentException|\Psr\Cache\InvalidArgumentException
      */
     public function get_index(): array
     {

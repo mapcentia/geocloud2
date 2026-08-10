@@ -76,7 +76,7 @@ class Wms extends Controller
                 foreach ($this->layers as $layer) {
                     // Strip name space if any
                     $layer = sizeof(explode(":", $layer)) > 1 ? explode(":", $layer)[1] : $layer;
-                    $this->basicHttpAuthLayer($layer, $db);
+                    $this->basicHttpAuthLayer($layer);
                 }
             }
             try {
@@ -100,7 +100,7 @@ class Wms extends Controller
                     $this->layers[] = $layer;
                     // If IP not trusted, when check auth on layer
                     if (!$trusted) {
-                        $this->basicHttpAuthLayer($layer, $db);
+                        $this->basicHttpAuthLayer($layer);
                     }
                 }
                 if (!empty($query->attributes()['typeNames'][0])) {
@@ -111,7 +111,7 @@ class Wms extends Controller
                         $this->layers[] = $layer;
                         // If IP not trusted, when check auth on layer
                         if (!$trusted) {
-                            $this->basicHttpAuthLayer($layer, $db);
+                            $this->basicHttpAuthLayer($layer);
                         }
                     }
                 }

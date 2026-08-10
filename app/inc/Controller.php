@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2023 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -11,9 +11,12 @@ namespace app\inc;
 use app\conf\App;
 use app\exceptions\GC2Exception;
 use app\exceptions\ServiceException;
+use app\models\Authorization;
 use app\models\Layer;
 use app\models\Setting;
+use app\models\User;
 use Psr\Cache\InvalidArgumentException;
+use Throwable;
 
 /**
  * Class Controller
@@ -21,21 +24,10 @@ use Psr\Cache\InvalidArgumentException;
  */
 class Controller
 {
-    /**
-     * @var array
-     */
     public array $response;
-
-    /**
-     * @var string|null
-     */
-    protected ?string $sUser;
 
     const string USED_RELS_KEY = "checked_relations";
 
-    /**
-     * Controller constructor.
-     */
     function __construct(public Connection $connection = new Connection())
     {
         $this->response = [];
@@ -58,16 +50,49 @@ class Controller
     }
 
     /**
-     * @param string|null $key
-     * @param array<bool> $level
-     * @param bool $neverAllowSubUser
-     * @return array
+     * Determines if the current user has superuser privileges based on session data.
+     *
+     * @return array Returns an array containing the success status, message, and code.
+     *               If the user lacks superuser privileges, the array includes an error message and a 403 status code.
+     *               Otherwise, it indicates success.
      */
-    public function auth(?string $key = null, array $level = ["all" => true], bool $neverAllowSubUser = false): array
+    public function isSuperUser(): array
+    {
+        if ($_SESSION["subuser"]) {
+            $response['success'] = false;
+            $response['message'] = "You don't have privileges to do this.";
+            $response['code'] = 403;
+        } else {
+            $response['success'] = true;
+        }
+        return $response;
+    }
+
+    /**
+     * Authenticates a user or subuser based on a provided relation key, privilege levels, and other permissions.
+     *
+     * @param string $key The key used to retrieve privileges for authentication.
+     * @param array $level An associative array defining the required privilege levels. Defaults to ["all" => true].
+     * @param bool $neverAllowSubUser A flag indicating whether subusers should always be denied privileges. Defaults to false.
+     * @return array An associative array containing the success status, optional message, and HTTP status code.
+     * @throws InvalidArgumentException|GC2Exception
+     */
+    public function auth(string $key, array $level = ["all" => true], bool $neverAllowSubUser = false): array
     {
         $response = [];
-        $prop = $_SESSION['usergroup'] ?: $_SESSION['screen_name'];
-        if (($_SESSION["subuser"] && $prop == $this->connection->schema) && !$neverAllowSubUser) {
+        $privileges = json_decode(new Layer(connection: $this->connection)->getValueFromKey($key, "privileges"), true);
+        $authorization = new Authorization(connection: $this->connection);
+        $privilege = $authorization->extractHighestPrivilege(
+            privileges: $privileges ?? [],
+            subUser: $_SESSION["screen_name"],
+            groups: $_SESSION["usergroup"],
+        );
+        $isOwner = $authorization->isOwner(
+            subUser: $_SESSION["screen_name"],
+            groups: $_SESSION["usergroup"],
+            schema: $this->connection->schema
+        );
+        if (($_SESSION["subuser"] && $isOwner) && !$neverAllowSubUser) {
             $response['success'] = true;
         } elseif ($_SESSION["subuser"]) {
             $text = "You don't have privileges to do this. Please contact the database owner, who can grant you privileges.";
@@ -76,10 +101,7 @@ class Controller
                 $response['message'] = $text;
                 $response['code'] = 403;
             } else {
-                $layer = new Layer();
-                $privileges = json_decode($layer->getValueFromKey($key, "privileges"));
-                $subuserLevel = $privileges->$prop;
-                if (!isset($level[$subuserLevel])) {
+                if (!isset($level[$privilege])) {
                     $response['success'] = false;
                     $response['message'] = $text;
                     $response['code'] = 403;
@@ -94,9 +116,37 @@ class Controller
     }
 
     /**
-     * @param string $user
-     * @param string $key
-     * @return bool
+     * Determines if the current user is the owner of the resource or has the necessary privileges.
+     *
+     * @return array Returns an associative array containing the success status of the ownership check.
+     *               If the user is not the owner, additional keys 'message' and 'code' are included
+     *               to provide error information.
+     */
+    public function isOwner(): array
+    {
+        if (!$_SESSION["subuser"]) {
+            return ['success' => true];
+        }
+        $isOwner = new Authorization(connection: $this->connection)->isOwner(
+            subUser: $_SESSION["screen_name"],
+            groups: $_SESSION["usergroup"],
+            schema: $this->connection->schema
+        );
+        $response['success'] = $isOwner;
+        if (!$isOwner) {
+            $response['message'] = "You don't have privileges to do this.";
+            $response['code'] = 403;
+        }
+        return $response;
+    }
+
+    /**
+     * Authenticates an API key provided by a user against stored keys and trusted addresses.
+     *
+     * @param string $user The username or identifier associated with the API key.
+     * @param string $key The API key to be authenticated.
+     * @return bool Returns true if the API key is valid and associated with the trusted user, otherwise false.
+     * @throws InvalidArgumentException
      */
     public function authApiKey(string $user, string $key): bool
     {
@@ -118,52 +168,46 @@ class Controller
     }
 
     /**
-     * @param string $layer
-     * @param string $db
+     * Provides a basic HTTP authentication layer to secure a specified layer.
+     *
+     * @param string $layer The name of the layer to which the authentication layer should be applied.
+     * @return void
+     * @throws InvalidArgumentException
      * @throws ServiceException
+     * @throws Throwable
      */
-    public function basicHttpAuthLayer(string $layer, string $db): void
+    public function basicHttpAuthLayer(string $layer): void
     {
         $postgisObject = new Model(connection: $this->connection);
         $auth = $postgisObject->getGeometryColumns($layer, "authentication");
         if ($auth == "Read/write" || !empty(Input::getAuthUser())) {
-            (new BasicAuth(connection: $this->connection))->authenticate($layer, false);
+            new BasicAuth(connection: $this->connection)->authenticate($layer, false);
         }
     }
 
     /**
-     * @param string $layer
-     * @param bool $transaction
-     * @param array<string> $rels
-     * @param string|null $subUser
-     * @param string|null $inputApiKey
-     * @return array|null
-     * @throws InvalidArgumentException
+     * Authenticates and authorizes access to a specified layer based on API key, session data, and user group inheritance.
+     * Full subuser inheritance is resolved and included in the authorization process.
+     *
+     * @param string $layer The name of the layer to be accessed.
+     * @param bool $transaction Indicates whether the operation involves a transactional context.
+     * @param array $rels An array of relationships relevant to the authorization process.
+     * @param string|null $subUser Optional sub-user identifier for specific API key validation and session checks.
+     * @param string|null $inputApiKey Optional input API key provided by the client for authentication.
+     * @return array|null Returns an array containing authorization details, including authentication status and session data, or null if authorization fails.
+     * @throws Throwable
      */
     public function ApiKeyAuthLayer(string $layer, bool $transaction, array $rels, ?string $subUser = null, ?string $inputApiKey = null): ?array
     {
-        // Check if layer has schema prefix and add 'public' if no.
-        $bits = explode(".", $layer);
-        if (sizeof($bits) == 1) {
-            $schema = "public";
-            $unQualifiedName = $layer;
-            $layer = $schema . "." . $layer;
-        } else {
-            $schema = $bits[0];
-            $unQualifiedName = $bits[1];
-        }
-
-        $postgisObject = new Model(connection: $this->connection);
-        $settings = new Setting(connection: $this->connection);
-        $response = $settings->get();
-        $userGroup = $response["data"]->userGroups->$subUser ?? null;
+        $response = new Setting(connection: $this->connection)->get();
         if ($subUser) {
             $apiKey = $response['data']->api_key_subuser->$subUser;
+            $group = !empty($response['data']->userGroups->$subUser) ? json_decode($response['data']->userGroups->$subUser) : null;
+            $userGroupFullChain = $group ? new User(connection: $this->connection)->getFullInheritance($group, $this->connection->database) : null;
         } else {
             $apiKey = $response['data']->api_key;
         }
         $isKeyCorrect = $apiKey == $inputApiKey && $apiKey != false;
-
         $check = false;
         if (!empty($_SESSION["auth"])) {
             if ($subUser && $subUser == $_SESSION["screen_name"] && $_SESSION["parentdb"] == $this->connection->database) {
@@ -172,117 +216,23 @@ class Controller
                 $check = true;
             }
         }
-
         $isAuth = $isKeyCorrect || $check;
         $session = !empty($_SESSION["subuser"]) ? $_SESSION["screen_name"] . '@' . $_SESSION["parentdb"] : $_SESSION["screen_name"] ?? null;
-
-        $response = [];
-        $response['is_auth'] = $isAuth;
-
-        $auth = $postgisObject->getGeometryColumns($layer, "authentication");
-
-        // We check if relation is a real table/view or similar or an alias.
-        // If its real and authentication is not set we throw an exception.
-        // This would be the case if relation is not in geometry_columns_join
         try {
-            $postgisObject->isTableOrView($layer);
-            $isRelation = true;
+            $response = new Authorization(connection: $this->connection)->check(relName: $layer, transaction: $transaction, isAuth: $isAuth, subUser: $subUser, userGroup: $userGroupFullChain ?? null, rels: $rels);
         } catch (GC2Exception $e) {
-            $isRelation = false;
+            // Denials are returned as a structured failure (not thrown) so the
+            // caller can surface is_auth/session; callers branch on success.
+            $response = [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'code' => $e->getCode() ?: 403,
+                'errorCode' => $e->getErrorCode(),
+            ];
         }
-        if (empty($auth) && $isRelation) {
-            $response['success'] = false;
-            $response['message'] = $layer . " is a relation, but authentication is not set. It might be that the relation is not registered.";
-            $response['code'] = 403;
-            return $response;
-        }
-
-        if ($auth == "Read/write" || $auth == "Write") {
-            $rows = $postgisObject->getColumns($schema, $unQualifiedName);
-            foreach ($rows as $row) {
-                // Check if we got the right layer from the database
-                if (!$row["f_table_schema"] == $schema || !$row["f_table_name"] == $unQualifiedName) {
-                    continue;
-                }
-                if ($subUser) {
-                    $privileges = (array)json_decode($row["privileges"]);
-                    $response['auth_level'] = $auth;
-                    if ($isAuth) {
-                        $response['privileges'] = $privileges[$userGroup] ?? $privileges[$subUser] ?? null;
-                        $response['session'] = $session;
-                        $response[self::USED_RELS_KEY] = $rels;
-                        switch ($transaction) {
-                            case false:
-                                if ((empty($privileges[$userGroup ?: $subUser]) || (!empty($privileges[$userGroup ?: $subUser]) && $privileges[$userGroup ?: $subUser] == "none")) && ($subUser != $schema && $userGroup != $schema)) {
-                                    // Always let subusers read from layers open to all
-                                    if ($auth == "Write") {
-                                        $response['success'] = true;
-                                        $response['code'] = 200;
-                                        break;
-                                    }
-                                    $response['success'] = false;
-                                    $response['message'] = "You don't have privileges to see '$layer'. Please contact the database owner, which can grant you privileges.";
-                                    $response['code'] = 403;
-                                } else {
-                                    $response['success'] = true;
-                                    $response['code'] = 200;
-                                }
-                                break;
-                            default:
-                                if ((!$privileges[$userGroup ?: $subUser] || $privileges[$userGroup ?: $subUser] == "none" || $privileges[$userGroup ?: $subUser] == "read") && ($subUser != $schema && $userGroup != $schema)) {
-                                    $response['success'] = false;
-                                    $response['message'] = "You don't have privileges to edit '$layer'. Please contact the database owner, which can grant you privileges.";
-                                    $response['code'] = 403;
-                                } else {
-                                    $response['success'] = true;
-                                    $response['code'] = 200;
-                                }
-                                break;
-                        }
-                    } else {
-                        $response[self::USED_RELS_KEY] = $rels;
-                        $response['privileges'] = $privileges[$userGroup] ?? $privileges[$subUser];
-                        $response['session'] = $session;
-
-                        if ($auth == "Read/write" || ($transaction)) {
-                            $response['success'] = false;
-                            $response['message'] = "Forbidden";;
-                            $response['code'] = 403;
-                        } else {
-                            $response['success'] = true;
-                            $response['code'] = 200;
-                        }
-                    }
-                } else {
-                    $response['auth_level'] = $auth;
-                    $response[self::USED_RELS_KEY] = $rels;
-                    $response['session'] = $session;
-
-                    if ($auth == "Read/write" || ($transaction)) {
-                        if ($isAuth) {
-                            $response['success'] = true;
-                            $response['code'] = 200;
-                        } else {
-                            $response['success'] = false;
-                            $response['message'] = "Forbidden";;
-                            $response['code'] = 403;
-                        }
-                    } else {
-                        $response['success'] = true;
-                        $response['code'] = 200;
-                    }
-                }
-                return $response;
-            }
-        } else {
-            $response3['success'] = true;
-            $response3['session'] = $session;
-            $response3['auth_level'] = $auth;
-            $response3['is_auth'] = $isAuth;
-            $response3[self::USED_RELS_KEY] = $rels;
-            return $response3;
-        }
-        return null;
+        $response['is_auth'] = $isAuth;
+        $response['session'] = $session;
+        return $response;
     }
 }
 

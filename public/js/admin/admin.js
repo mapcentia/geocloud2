@@ -1028,7 +1028,8 @@ $(document).ready(function () {
                                                         if (!record.data.group) {
                                                             disabled = "";
                                                         } else {
-                                                            disabled = "disabled";
+                                                            // disabled = "disabled";
+                                                            disabled = "";
                                                         }
                                                         var retval =
                                                             '<input ' + disabled + ' data-key="' + _key_ + '" data-subuser="' + record.data.subuser + '" onclick="updatePrivileges(this.getAttribute(\'data-subuser\'),this.getAttribute(\'data-key\'),this.value)" type="radio" value="none" name="' + rowIndex + '"' + ((val === 'none' && !multiple) ? ' checked="checked"' : '') + '>&nbsp;' + __('None') + '&nbsp;&nbsp;&nbsp;' +

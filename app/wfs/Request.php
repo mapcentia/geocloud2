@@ -152,6 +152,11 @@ final readonly class Request
             case 'TRANSACTION':
                 $operation = 'TRANSACTION';
                 $transactionBody = $arr;   // Insert/Update/Delete keys consumed by handler
+                // Extract the affected type names so the per-layer auth/enableows
+                // checks in Server.php run (they early-return on empty typeNames).
+                foreach (self::transactionTypeNames($arr) as $tn) {
+                    $typeNamesStr .= $tn . ',';
+                }
                 break;
             default:
                 $operation = '';
@@ -178,9 +183,50 @@ final readonly class Request
             maxFeatures: $maxFeatures,
             timeSlice: null,
             filter: $filter,
-            transactionBody: $transactionBody,
+                transactionBody: $transactionBody,
             rawPostBody: $body,
         );
+    }
+
+    /**
+     * Collect the type names touched by a WFS-T transaction body, mirroring how
+     * {@see \app\wfs\handlers\Transaction} reads them: for Insert the type name is
+     * the array key of each feature member, for Update/Delete it is the `typeName`
+     * attribute. Duplicates are removed while preserving first-seen order.
+     *
+     * @param array<string,mixed> $body
+     * @return list<string>
+     */
+    private static function transactionTypeNames(array $body): array
+    {
+        $names = [];
+        foreach (['Insert', 'Update', 'Delete'] as $op) {
+            if (!isset($body[$op]) || !is_array($body[$op])) {
+                continue;
+            }
+            $members = $body[$op];
+            // Normalize a single member to a list (mirrors the handler wrapping).
+            if (!isset($members[0])) {
+                $members = [$members];
+            }
+            foreach ($members as $member) {
+                if (!is_array($member)) {
+                    continue;
+                }
+                if ($op === 'Insert') {
+                    // The type name is the key of each array-valued entry;
+                    // scalar entries (srsName/handle) are skipped.
+                    foreach ($member as $key => $feature) {
+                        if (is_array($feature)) {
+                            $names[] = \app\wfs\helpers\NameSpaces::dropAllNameSpaces((string) $key);
+                        }
+                    }
+                } elseif (isset($member['typeName'])) {
+                    $names[] = \app\wfs\helpers\NameSpaces::dropAllNameSpaces((string) $member['typeName']);
+                }
+            }
+        }
+        return array_values(array_unique($names));
     }
 
     private static function parseInlineFilter(string $xml): array

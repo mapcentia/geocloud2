@@ -16,6 +16,7 @@ use Exception;
 use Firebase\JWT\Key;
 use Psr\Cache\InvalidArgumentException;
 use stdClass;
+use Throwable;
 
 
 /**
@@ -65,7 +66,7 @@ abstract class Jwt
         // Try to extract the database from token
         $arr = self::extractPayload($token);
         // Get superuser key, which are used for secret
-        $secret = (new Setting(new Connection(user: $arr["data"]["uid"], database: $arr["data"]["database"])))->getApiKeyForSuperUser();
+        $secret = new Setting(new Connection(user: $arr["data"]["uid"], database: $arr["data"]["database"]))->getApiKeyForSuperUser();
         try {
             $decoded = (array)\Firebase\JWT\JWT::decode($token, new Key($secret, 'HS256'));
         } catch (Exception $e) {
@@ -104,6 +105,11 @@ abstract class Jwt
     }
 
 
+    /**
+     * @param string $message
+     * @return void
+     * @throws GC2Exception
+     */
     private static function exception(string $message = 'Could not extract payload from token'): void
     {
         header("WWW-Authenticate: Bearer error=\"invalid_token\" error_description=\"$message\"");
@@ -115,12 +121,17 @@ abstract class Jwt
      * @param string $db
      * @param string $userId
      * @param bool $isSuperUser
-     * @param string|null $userGroup
+     * @param array|null $userGroup
      * @param bool $access
      * @param bool $returnCode
+     * @param string|null $codeChallenge
+     * @param string|null $codeChallengeMethod
+     * @param stdClass|null $properties
+     * @param string|null $email
      * @return array
+     * @throws Throwable
      */
-    public static function createJWT(string $secret, string $db, string $userId, bool $isSuperUser, ?string $userGroup, bool $access = true, bool $returnCode = false, ?string $codeChallenge = null, ?string $codeChallengeMethod = null, ?stdClass $properties = null, ?string $email = null): array
+    public static function createJWT(string $secret, string $db, string $userId, bool $isSuperUser, ?array $userGroup, bool $access = true, bool $returnCode = false, ?string $codeChallenge = null, ?string $codeChallengeMethod = null, ?stdClass $properties = null, ?string $email = null): array
     {
         $token = [
             "iss" => App::$param["host"],

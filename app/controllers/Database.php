@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2018 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -11,51 +11,61 @@ namespace app\controllers;
 use app\inc\Controller;
 use app\inc\Input;
 use app\conf\Connection;
+use Throwable;
 
 class Database extends Controller
 {
-    private $db;
-    private $request;
+    private \app\models\Database $db;
 
     function __construct()
     {
         parent::__construct();
-
-        $this->request = Input::getPath();
         $this->db = new \app\models\Database();
     }
 
-    public function get_schemas()
+    /**
+     * @return array
+     * @throws Throwable
+     */
+    public function get_schemas(): array
     {
         return $this->db->listAllSchemas();
     }
 
-    public function post_schemas()
+    /**
+     * @return array
+     */
+    public function post_schemas(): array
     {
-        $response = $this->auth(null, array(), true); // Never sub-user
+        $response = $this->isSuperUser(); // Never sub-user
         return (!$response['success']) ? $response : $this->db->createSchema(Input::get('schema'));
     }
 
-    public function put_schema()
+    /**
+     * @return array
+     */
+    public function put_schema(): array
     {
-        $response = $this->auth(null, array(), true); // Never sub-user
+        $response =$this->isSuperUser(); // Never sub-user
         return (!$response['success']) ? $response : $this->db->renameSchema(Connection::$param['postgisschema'], json_decode(Input::get())->data->name);
     }
 
-    public function delete_schema()
+    /**
+     * @return array
+     */
+    public function delete_schema(): array
     {
-        $response = $this->auth(null, array(), true); // Never sub-user
+        $response = $this->isSuperUser(); // Never sub-user
         return (!$response['success']) ? $response : $this->db->deleteSchema(Connection::$param['postgisschema']);
     }
 
-    public function get_exist()
+    /**
+     * @return array
+     */
+    public function get_exist(): array
     {
         \app\models\Database::setDb("mapcentia");
         $this->db = new \app\models\Database();
         return $this->db->doesDbExist(Input::getPath()->part(4));
-    }
-    public function get_createschema(){
-        $response = $this->auth();
-        return (!$response['success']) ? $response : $this->db->createSchema(Input::get('schema'));
     }
 }
