@@ -30,7 +30,7 @@ use Throwable;
 
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
 #[AcceptableMethods(['GET', 'POST', 'HEAD', 'OPTIONS'])]
-#[Controller(route: 'api/v4/wfs/schema/{schema}/database/{database}/srs/[srs]/[timeSlice]', scope: Scope::PUBLIC)]
+#[Controller(route: 'api/v4/wfs/schema/{schema}/database/{database}/srs/[srs]/ts/[timeSlice]', scope: Scope::PUBLIC)]
 final class WfsNoToken extends AbstractApi
 {
     public function __construct(public Route2 $route, Connection $connection)
