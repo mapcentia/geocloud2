@@ -72,6 +72,19 @@ use Symfony\Component\Validator\Constraints as Assert;
             type: "boolean",
             example: true,
         ),
+        new OA\Property(
+            property: "user_group",
+            title: "Groups",
+            description: "Groups the sub-user belongs to (each group is itself a sub-user name). Per-layer "
+                . "privileges are inherited from all groups in the full, transitive chain — the highest "
+                . "privilege wins. On POST/PATCH send a JSON array of group names; a JSON-array string is "
+                . "also accepted for back-compat, and null clears the membership. GET returns a decoded array "
+                . "(or null).",
+            type: "array",
+            items: new OA\Items(type: "string"),
+            nullable: true,
+            example: ["editors", "gis_admins"],
+        ),
     ],
     type: "object"
 )]
