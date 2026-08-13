@@ -96,6 +96,47 @@ class ClassificationIdsTest extends Unit
         $this->assertEquals("aaaaaaaa", $result[1]['id']);
     }
 
+    public function testEnsureIdsDedupesDuplicateClassIds(): void
+    {
+        $classes = [
+            ["id" => "dupe0000", "name" => "A", "styles" => [], "labels" => []],
+            ["id" => "dupe0000", "name" => "B", "styles" => [], "labels" => []],
+            ["id" => "keep1111", "name" => "C", "styles" => [], "labels" => []],
+        ];
+        $result = Classification::ensureIds($classes);
+        // First occurrence keeps the id; the duplicate is reassigned a fresh unique one.
+        $this->assertEquals("dupe0000", $result[0]['id']);
+        $this->assertNotEquals("dupe0000", $result[1]['id']);
+        $this->assertMatchesRegularExpression('/^[0-9a-f]{8}$/', $result[1]['id']);
+        // An unrelated valid id further down is never clobbered by the reassignment.
+        $this->assertEquals("keep1111", $result[2]['id']);
+        // All class ids are now unique.
+        $ids = array_column($result, 'id');
+        $this->assertCount(count($ids), array_unique($ids));
+        // Idempotent afterwards.
+        $this->assertEquals($result, Classification::ensureIds($result));
+    }
+
+    public function testEnsureIdsDedupesDuplicateEntryIdsPerKind(): void
+    {
+        $classes = [[
+            "id" => "class000", "name" => "A",
+            "styles" => [
+                ["id" => "same2222", "color" => "#008000"],
+                ["id" => "same2222", "color" => "#ff0000"],
+            ],
+            // A label may reuse a style's id (different addressing scope) and is left untouched.
+            "labels" => [["id" => "same2222", "on" => true, "text" => "[name]"]],
+        ]];
+        $result = Classification::ensureIds($classes);
+        $this->assertEquals("same2222", $result[0]['styles'][0]['id']);
+        $this->assertNotEquals("same2222", $result[0]['styles'][1]['id']);
+        $styleIds = array_column($result[0]['styles'], 'id');
+        $this->assertCount(count($styleIds), array_unique($styleIds));
+        // Labels are a separate scope, so the label keeps the id shared with a style.
+        $this->assertEquals("same2222", $result[0]['labels'][0]['id']);
+    }
+
     public function testNextSortId(): void
     {
         $this->assertEquals(10, Classification::nextSortId([]));

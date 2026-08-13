@@ -204,36 +204,62 @@ class Classification extends Model
     }
 
     /**
-     * Normalizes every class (see normalizeClass) and assigns a missing `id` to each
-     * class and to each entry in its styles/labels arrays. Idempotent: existing ids
-     * are never changed. Ids are unique among classes and among entries within a class.
+     * Normalizes every class (see normalizeClass) and assigns an `id` to each class and to each
+     * entry in its styles/labels arrays. A valid, unique existing id is kept (idempotent); an
+     * empty, non-string, or DUPLICATE id is replaced with a fresh unique one — for a duplicate the
+     * first occurrence keeps its id and later occurrences are reassigned. Ids are unique among
+     * classes and among entries within a class (per kind).
      */
     public static function ensureIds(array $classes): array
     {
         $classes = array_values(array_map([self::class, 'normalizeClass'], $classes));
-        $classIds = array_filter(array_column($classes, 'id'));
+
+        $reservedClassIds = self::existingIds($classes);
+        $assignedClassIds = [];
         foreach ($classes as $i => $class) {
-            if (empty($class['id']) || !is_string($class['id'])) {
-                do {
-                    $id = self::generateId();
-                } while (in_array($id, $classIds, true));
-                $classIds[] = $id;
-                $classes[$i]['id'] = $id;
-            }
+            $classes[$i]['id'] = self::resolveId($class['id'] ?? null, $assignedClassIds, $reservedClassIds);
             foreach (['styles', 'labels'] as $kind) {
-                $entryIds = array_filter(array_column($classes[$i][$kind], 'id'));
+                $reservedEntryIds = self::existingIds($classes[$i][$kind]);
+                $assignedEntryIds = [];
                 foreach ($classes[$i][$kind] as $j => $entry) {
-                    if (empty($entry['id']) || !is_string($entry['id'])) {
-                        do {
-                            $id = self::generateId();
-                        } while (in_array($id, $entryIds, true));
-                        $entryIds[] = $id;
-                        $classes[$i][$kind][$j]['id'] = $id;
-                    }
+                    $classes[$i][$kind][$j]['id'] = self::resolveId($entry['id'] ?? null, $assignedEntryIds, $reservedEntryIds);
                 }
             }
         }
         return $classes;
+    }
+
+    /**
+     * The non-empty string `id` values present in a list of classes or entries.
+     *
+     * @return array<int, string>
+     */
+    private static function existingIds(array $items): array
+    {
+        return array_values(array_filter(
+            array_column($items, 'id'),
+            fn($id) => is_string($id) && $id !== ''
+        ));
+    }
+
+    /**
+     * Returns a usable id for an entry: the given id when it is a non-empty string not already
+     * assigned in this scope, otherwise a freshly generated id that collides with neither an
+     * already-assigned id nor any reserved (pre-existing) id. The chosen id is appended to
+     * $assigned.
+     *
+     * @param array<int, string> $assigned  ids already committed in this scope (mutated)
+     * @param array<int, string> $reserved  all pre-existing ids in this scope (avoided when generating)
+     */
+    private static function resolveId(mixed $id, array &$assigned, array $reserved): string
+    {
+        if (empty($id) || !is_string($id) || in_array($id, $assigned, true)) {
+            do {
+                $id = self::generateId();
+            } while (in_array($id, $assigned, true) || in_array($id, $reserved, true));
+        }
+        $assigned[] = $id;
+        return $id;
     }
 
     /**
