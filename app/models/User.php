@@ -185,7 +185,8 @@ class User extends Model
         $name = Util::format($data['name']);
         $email = Util::format($data['email']);
         $password = Util::format($data['password']);
-        $group = (empty($data['usergroup']) ? null : Util::format($data['usergroup']));
+        $groupArr = self::toGroupArray($data['usergroup'] ?? null);
+        $group = $groupArr === null ? null : json_encode($groupArr, JSON_UNESCAPED_UNICODE);
         $zone = (empty($data['zone']) ? null : Util::format($data['zone']));
         $parentDb = (empty($data['parentdb']) ? null : Util::format($data['parentdb']));
         $properties = (empty($data['properties']) ? null : $data['properties']);
@@ -368,13 +369,11 @@ class User extends Model
         if ($hasPrivateProperties) $sQuery .= ", private_properties=:sPrivateProperties";
         $sQuery .= ", default_user=:sDefault";
         if (array_key_exists('usergroup', $data)) {
-            $userGroup = $data["usergroup"];
-            if (is_null($userGroup)) {
-                $userGroups[$user] = null;
-            } else {
-                $userGroups = Session::getByKey("usergroups") ?? [];
-                $userGroups[$user] = !empty($userGroup) ? $userGroup : null;
-            }
+            // Accept a JSON array, a JSON-array string (back-compat) or null; store as JSONB.
+            $groupArr = self::toGroupArray($data["usergroup"]);
+            $userGroup = $groupArr === null ? null : json_encode($groupArr, JSON_UNESCAPED_UNICODE);
+            $userGroups = Session::getByKey("usergroups") ?? [];
+            $userGroups[$user] = $userGroup; // JSON string or null (session cache, legacy shape)
             $sQuery .= ", usergroup=:sUsergroup";
             Session::set("usergroups", $userGroups);
         }
@@ -391,8 +390,7 @@ class User extends Model
             $res->bindParam(":sEmail", $email);
         }
         if (array_key_exists('usergroup', $data)) {
-            $str = $userGroup !== "" ? $userGroup : null;
-            $res->bindParam(":sUsergroup", $str);
+            $res->bindParam(":sUsergroup", $userGroup);
         }
         if ($hasProperties) {
             $res->bindParam(":sProperties", $properties);
@@ -579,6 +577,33 @@ class User extends Model
      * @throws Throwable
      * @TODO Cacheing
      */
+    /**
+     * Normalizes a user_group value to a list of non-empty group-name strings, or null.
+     * Accepts an array, a JSON-array string (back-compat), or a plain string (treated as a
+     * single group name); null / empty / whitespace collapses to null (clears membership).
+     *
+     * @return array<int, string>|null
+     */
+    public static function toGroupArray(mixed $value): ?array
+    {
+        if (is_string($value)) {
+            $trimmed = trim($value);
+            if ($trimmed === '') {
+                return null;
+            }
+            $decoded = json_decode($trimmed, true);
+            $value = is_array($decoded) ? $decoded : [$trimmed];
+        }
+        if (!is_array($value)) {
+            return null;
+        }
+        $groups = array_values(array_filter(
+            array_map(fn($g) => is_string($g) ? trim($g) : null, $value),
+            fn($g) => $g !== null && $g !== ''
+        ));
+        return $groups === [] ? null : $groups;
+    }
+
     public function getFullInheritance(array $users, string $parentDb): array
     {
         $queue = [];

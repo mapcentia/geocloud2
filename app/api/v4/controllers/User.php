@@ -261,7 +261,7 @@ class User extends AbstractApi
     {
         return [
             "name" => $user['screenName'] ?? $user['screenname'] ?? $user['userid'],
-            "user_group" => $user["usergroup"] ?? null,
+            "user_group" => UserModel::toGroupArray($user["usergroup"] ?? null),
             "email" => $user["email"] ?? null,
             "properties" => $user["properties"] ?? null,
             "private_properties" => $user["private_properties"] ?? null,
@@ -296,6 +296,25 @@ class User extends AbstractApi
         if (Input::getMethod() == 'post' && $user) {
             $this->postWithResource();
         }
+        // Back-compat: a JSON-array string for user_group is decoded to an array so it passes the
+        // "optional array of strings" validation below. Element/shape checks are left to the
+        // assert (so e.g. a non-string element is rejected); the model normalizes for storage.
+        $decodeBackCompat = static function (array $obj): array {
+            if (array_key_exists('user_group', $obj) && is_string($obj['user_group'])) {
+                $d = json_decode($obj['user_group'], true);
+                if (is_array($d)) {
+                    $obj['user_group'] = $d;
+                }
+            }
+            return $obj;
+        };
+        $decoded = json_decode($body, true);
+        if (is_array($decoded)) {
+            $decoded = array_is_list($decoded)
+                ? array_map(fn($item) => is_array($item) ? $decodeBackCompat($item) : $item, $decoded)
+                : $decodeBackCompat($decoded);
+            $body = json_encode($decoded);
+        }
         $collection = self::getAssert();
         $this->validateRequest($collection, $body, Input::getMethod());
     }
@@ -313,6 +332,13 @@ class User extends AbstractApi
                 //new Assert\PasswordStrength(minScore: 4),
             ]),
             'user_group' => new Assert\Optional([
+                new Assert\AtLeastOneOf([
+                    new Assert\IsNull(),
+                    new Assert\Sequentially([
+                        new Assert\Type('array'),
+                        new Assert\All([new Assert\Type('string')]),
+                    ]),
+                ]),
             ]),
             'properties' => new Assert\Optional([
                 new Assert\Type('array'),
