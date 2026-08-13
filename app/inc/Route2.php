@@ -227,7 +227,45 @@ class Route2
                 return null;
             }
         }
-        return ['literals' => $e, 'params' => $r, 'action' => $action];
+        // Specificity: how many trailing route segments the request did not fill
+        // (omitted optionals / optional tail). 0 means an exact structural fit.
+        // A more specific (lower) match wins over a parent/child optional-tail match.
+        return [
+            'literals' => $e,
+            'params' => $r,
+            'action' => $action,
+            'omitted' => $sizeOfRouteSignature - sizeof($requestSignature),
+        ];
+    }
+
+    /**
+     * Orders route candidates most-specific first for a request: the fewest omitted
+     * trailing segments wins, ties keep the given (scan) order. Non-matching routes
+     * sink to the end (they are no-ops when dispatched). Keys (controller classes)
+     * are preserved.
+     *
+     * @param array<string, mixed> $routes  map of controller-class => route object (with getRoute())
+     * @return array<string, mixed>
+     */
+    public static function orderBySpecificity(array $routes, string $requestUri): array
+    {
+        $indexed = [];
+        $seq = 0;
+        foreach ($routes as $class => $route) {
+            $match = self::matchSignature($route->getRoute(), $requestUri);
+            $indexed[] = [
+                'class' => $class,
+                'route' => $route,
+                'omitted' => $match['omitted'] ?? PHP_INT_MAX,
+                'seq' => $seq++,
+            ];
+        }
+        usort($indexed, fn($a, $b) => [$a['omitted'], $a['seq']] <=> [$b['omitted'], $b['seq']]);
+        $ordered = [];
+        foreach ($indexed as $entry) {
+            $ordered[$entry['class']] = $entry['route'];
+        }
+        return $ordered;
     }
 
     /**

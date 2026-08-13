@@ -471,12 +471,15 @@ $handler = static function () use ($routes) {
                 $validationError = $e;
             }
 
+            // Route candidates are dispatched most-specific first (fewest omitted
+            // trailing segments), so a parent route (…/tables/{table}) is not shadowed
+            // by a child whose optional tail can be omitted (…/tables/{table}/columns/[column]).
+            $requestUriForOrder = trim(strtok($_SERVER["REQUEST_URI"], '?'), "/");
             // First, go through PUBLIC routes before validating the token
-            foreach ($routes as $c => $r) {
-                if ($r->getScope() == Scope::PUBLIC) {
-                    if ($jwt) $Route2->jwt = $jwt;
-                    $Route2->add($r->getRoute(), new $c($Route2, new \app\inc\Connection()));
-                }
+            $publicRoutes = array_filter($routes, fn($r) => $r->getScope() == Scope::PUBLIC);
+            foreach (Route2::orderBySpecificity($publicRoutes, $requestUriForOrder) as $c => $r) {
+                if ($jwt) $Route2->jwt = $jwt;
+                $Route2->add($r->getRoute(), new $c($Route2, new \app\inc\Connection()));
             }
             // Then go through non-PUBLIC routes
             if (!$Route2->isMatched) {
@@ -485,10 +488,9 @@ $handler = static function () use ($routes) {
                 }
                 $Route2->jwt = $jwt;
                 $conn = new \app\inc\Connection(user: $jwt["data"]["uid"] ?? null, database: $jwt["data"]["database"] ?? null);
-                foreach ($routes as $c => $r) {
-                    if ($r->getScope() != Scope::PUBLIC) {
-                        $Route2->add($r->getRoute(), new $c($Route2, $conn));
-                    }
+                $nonPublicRoutes = array_filter($routes, fn($r) => $r->getScope() != Scope::PUBLIC);
+                foreach (Route2::orderBySpecificity($nonPublicRoutes, $requestUriForOrder) as $c => $r) {
+                    $Route2->add($r->getRoute(), new $c($Route2, $conn));
                 }
             }
             if ($Route2->isMatched) {
