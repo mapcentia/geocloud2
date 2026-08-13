@@ -12,10 +12,13 @@ use app\exceptions\ServiceException;
 
 final class Proxy
 {
-    private const MAPSERV = 'http://127.0.0.1/cgi-bin/mapserv.fcgi';
-    private const QGIS = 'http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi';
+    private $mapserv;
+    private $qgis;
 
-    public function __construct(private readonly Context $ctx) {}
+    public function __construct(private readonly Context $ctx) {
+        $this->mapserv = (App::$param['mapServer']['host'] ?? 'http://127.0.0.1') . '/cgi-bin/mapserv.fcgi';
+        $this->qgis = (App::$param['mapServer']['host'] ?? 'http://127.0.0.1') . '/cgi-bin/qgis_mapserv.fcgi';
+    }
 
     private function mapfileName(Request $req): string
     {
@@ -44,9 +47,9 @@ final class Proxy
                 $content = file_get_contents($path);
                 $patched = MapfilePatcher::patchMapfileContent($content, $filters, false, $req->layers);
                 $tmp = new MapfilePatcher()->writeTmp($path, $patched);
-                return [self::MAPSERV . "?map=$tmp", $tmp];
+                return [$this->mapserv . "?map=$tmp", $tmp];
             }
-            return [self::MAPSERV . "?map=$path", null];
+            return [$this->mapserv . "?map=$path", null];
         }
 
         $resolver = SourceResolver::fromLayers($this->ctx->model(), $this->ctx->schema, $req->layers);
@@ -70,18 +73,18 @@ final class Proxy
                 $content = file_get_contents($qgs);
                 $patched = MapfilePatcher::patchQgsContent($content, $filters, $req->disableLabels, $req->layers);
                 $tmp = new MapfilePatcher()->writeTmp($qgs, $patched);
-                return [self::QGIS . "?map=$tmp&{$req->queryString}", $tmp];
+                return [$this->qgis . "?map=$tmp&{$req->queryString}", $tmp];
             }
             $path = $this->mapfilesDir() . $this->mapfileName($req);
             $content = file_get_contents($path);
             $patched = MapfilePatcher::patchMapfileContent($content, $filters, $req->disableLabels, $req->layers);
             $tmp = new MapfilePatcher()->writeTmp($path, $patched);
-            return [self::MAPSERV . "?map=$tmp&{$req->queryString}", $tmp];
+            return [$this->mapserv. "?map=$tmp&{$req->queryString}", $tmp];
         }
 
         // No filters/labels
         if ($qgs && $req->service !== 'utfgrid') {
-            return [self::QGIS . "?map=$qgs&{$req->queryString}", null];
+            return [$this->qgis . "?map=$qgs&{$req->queryString}", null];
         }
 
         // External WMS source passthrough (single layer only)
@@ -90,7 +93,7 @@ final class Proxy
         }
 
         $path = $this->mapfilesDir() . $this->mapfileName($req);
-        return [self::MAPSERV . "?map=$path&{$req->queryString}", null];
+        return [$this->mapserv . "?map=$path&{$req->queryString}", null];
     }
 
     private function externalWmsUrl(array $source, Request $req): string
