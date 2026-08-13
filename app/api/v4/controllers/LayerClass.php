@@ -158,7 +158,7 @@ class LayerClass extends AbstractLayerApi
             $this->postWithResource();
         }
         $this->rejectEmptyArrayPost($body);
-        $this->validateRequest(self::getAssert(), $body, Input::getMethod());
+        $this->validateRequest(self::getAssert(allowId: false), $body, Input::getMethod());
         $this->initiateLayer($layer);
         $this->classIds = $class ? array_values(array_unique(explode(',', $class))) : null;
         foreach ($this->classIds ?? [] as $id) {
@@ -166,24 +166,33 @@ class LayerClass extends AbstractLayerApi
         }
     }
 
-    static public function getAssert(): Assert\Collection
+    /**
+     * @param bool $allowId Whether a client-supplied `id` is accepted. True for the declarative
+     *   full-layer replace (ids round-trip and are preserved); false for the sub-resource create
+     *   path, where ids are server-assigned so a client-supplied id is rejected.
+     */
+    static public function getAssert(bool $allowId = true): Assert\Collection
     {
         $collection = new Assert\Collection([]);
         $collection->fields['name'] = Input::getMethod() == 'post'
             ? new Assert\Required([new Assert\Type('string'), new Assert\NotBlank()])
             : new Assert\Optional([new Assert\Type('string'), new Assert\NotBlank()]);
         $collection->fields['sortid'] = new Assert\Optional([new Assert\Type('integer')]);
-        foreach (['id', 'expression', 'minscaledenom', 'maxscaledenom', 'leader', 'leader_gridstep', 'leader_maxdistance', 'leader_color'] as $key) {
+        $keys = ['expression', 'minscaledenom', 'maxscaledenom', 'leader', 'leader_gridstep', 'leader_maxdistance', 'leader_color'];
+        if ($allowId) {
+            $keys[] = 'id';
+        }
+        foreach ($keys as $key) {
             $collection->fields[$key] = new Assert\Optional();
         }
         if (Input::getMethod() == 'post') {
             $collection->fields['styles'] = new Assert\Optional([
                 new Assert\Type('array'),
-                new Assert\All([Style::getAssert()]),
+                new Assert\All([Style::getAssert($allowId)]),
             ]);
             $collection->fields['labels'] = new Assert\Optional([
                 new Assert\Type('array'),
-                new Assert\All([Label::getAssert()]),
+                new Assert\All([Label::getAssert($allowId)]),
             ]);
         }
         return $collection;

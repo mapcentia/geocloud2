@@ -173,7 +173,7 @@ class Style extends AbstractLayerApi
             $this->postWithResource();
         }
         $this->rejectEmptyArrayPost($body);
-        $this->validateRequest(self::getAssert(), $body, Input::getMethod());
+        $this->validateRequest(self::getAssert(allowId: false), $body, Input::getMethod());
         $this->initiateLayer($layer);
         $this->classId = $class;
         $existing = array_column($this->classification->getEntries($class, 'styles'), 'id'); // throws CLASS_NOT_FOUND
@@ -185,12 +185,20 @@ class Style extends AbstractLayerApi
         }
     }
 
-    static public function getAssert(): Assert\Collection
+    /**
+     * @param bool $allowId Whether a client-supplied `id` is accepted. True when nested under a
+     *   full-layer replace (ids round-trip); false on the sub-resource create path, where a
+     *   client-supplied id is rejected because ids are server-assigned.
+     */
+    static public function getAssert(bool $allowId = true): Assert\Collection
     {
         $collection = new Assert\Collection([]);
         $collection->fields['sortid'] = new Assert\Optional([new Assert\Type('integer')]);
         $collection->fields['name'] = new Assert\Optional([new Assert\Type('string')]);
         foreach (Classification::STYLE_KEYS as $key) {
+            if ($key === 'id' && !$allowId) {
+                continue;
+            }
             $collection->fields[$key] = new Assert\Optional();
         }
         return $collection;
