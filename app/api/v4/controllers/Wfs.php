@@ -25,7 +25,7 @@ use OpenApi\Attributes as OA;
 use Throwable;
 
 #[OA\SecurityScheme(securityScheme: 'bearerAuth', type: 'http', name: 'bearerAuth', in: 'header', bearerFormat: 'JWT', scheme: 'bearer')]
-#[Controller(route: 'api/v4/wfs/schema/{schema}/srs/[srs]/[timeSlice]', scope: Scope::SUB_USER_ALLOWED)]
+#[Controller(route: 'api/v4/wfs/schema/{schema}/srs/[srs]/ts/[timeSlice]', scope: Scope::SUB_USER_ALLOWED)]
 final class Wfs extends AbstractApi
 {
     public function __construct(public Route2 $route, Connection $connection)

@@ -46,48 +46,14 @@ class Route2
         if ($this->isMatched) {
             return;
         }
-        $signatureMatch = true;
-        $e = [];
-        $r = [];
-        $action = "index";
         $time_start = Util::microtime_float();
-        $uri = trim($uri, "/");
         $requestUri = trim(strtok($_SERVER["REQUEST_URI"], '?'), "/");
 
-        $routeSignature = explode("/", $uri);
-        $requestSignature = explode("/", $requestUri);
-        $sizeOfRouteSignature = sizeof($routeSignature);
-
-        if (sizeof($requestSignature) > sizeof($routeSignature)) {
-            $signatureMatch = false;
-        } else {
-            for ($i = 0; $i < $sizeOfRouteSignature; $i++) {
-                if ($routeSignature[$i][0] == '{' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == '}') {
-                    if (isset($requestSignature[$i])) {
-                        $r[trim($routeSignature[$i], "{}")] = trim($requestSignature[$i], "{}");
-                    } else {
-                        $signatureMatch = false;
-                    }
-                } else if ($routeSignature[$i][0] == '[' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == ']') {
-                    if (isset($requestSignature[$i])) {
-                        $r[trim($routeSignature[$i], "[]")] = trim($requestSignature[$i], "[]");
-                    }
-                } else if ($routeSignature[$i][0] == '(' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == ')') {
-                    if (isset($requestSignature[$i])) {
-                        $action = trim($requestSignature[$i], "()");
-                    }
-                } else if (isset($requestSignature[$i]) && $requestSignature[$i] == $routeSignature[$i]) {
-                    $e[] = $requestSignature[$i];
-                } else if (isset($routeSignature[$i + 1]) && isset($requestSignature[$i + 1][0]) && $requestSignature[$i + 1][0] != "[") {
-                    $signatureMatch = $requestSignature[$i] == $routeSignature[$i];
-                } else {
-                    $signatureMatch = false;
-                }
-                if (!$signatureMatch) {
-                    break;
-                }
-            }
-        }
+        $match = self::matchSignature($uri, $requestUri);
+        $signatureMatch = $match !== null;
+        $e = $match['literals'] ?? [];
+        $r = $match['params'] ?? [];
+        $action = $match['action'] ?? "index";
 
         if ($signatureMatch) {
             $this->isMatched = true;
@@ -207,6 +173,83 @@ class Route2
                 echo json_encode($data, JSON_UNESCAPED_UNICODE);
             }
         }
+    }
+
+    /**
+     * Match a request URI against a route signature.
+     *
+     * Segment types: {name} required parameter, [name] optional parameter,
+     * (name) action, anything else a literal. The request may stop short of
+     * the route as long as every remaining route segment is optional or a
+     * literal label immediately followed by an optional segment, e.g.
+     * srs/[srs]/ts/[timeSlice] matches both .../srs/4326/ts/12.00.00 and
+     * an URI ending right before /srs.
+     *
+     * @param string $uri route signature
+     * @param string $requestUri request URI without query string
+     * @return array{literals: array<string>, params: array<string,string>, action: string}|null null on miss
+     */
+    public static function matchSignature(string $uri, string $requestUri): ?array
+    {
+        $uri = trim($uri, "/");
+        $requestUri = trim($requestUri, "/");
+        $e = [];
+        $r = [];
+        $action = "index";
+
+        $routeSignature = explode("/", $uri);
+        $requestSignature = explode("/", $requestUri);
+        $sizeOfRouteSignature = sizeof($routeSignature);
+
+        if (sizeof($requestSignature) > $sizeOfRouteSignature) {
+            return null;
+        }
+        for ($i = 0; $i < $sizeOfRouteSignature; $i++) {
+            if ($routeSignature[$i][0] == '{' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == '}') {
+                if (isset($requestSignature[$i])) {
+                    $r[trim($routeSignature[$i], "{}")] = trim($requestSignature[$i], "{}");
+                } else {
+                    return null;
+                }
+            } else if ($routeSignature[$i][0] == '[' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == ']') {
+                if (isset($requestSignature[$i])) {
+                    $r[trim($routeSignature[$i], "[]")] = trim($requestSignature[$i], "[]");
+                }
+            } else if ($routeSignature[$i][0] == '(' && $routeSignature[$i][strlen($routeSignature[$i]) - 1] == ')') {
+                if (isset($requestSignature[$i])) {
+                    $action = trim($requestSignature[$i], "()");
+                }
+            } else if (isset($requestSignature[$i]) && $requestSignature[$i] == $routeSignature[$i]) {
+                $e[] = $requestSignature[$i];
+            } else if (!isset($requestSignature[$i]) && self::restIsOptional($routeSignature, $i)) {
+                break;
+            } else {
+                return null;
+            }
+        }
+        return ['literals' => $e, 'params' => $r, 'action' => $action];
+    }
+
+    /**
+     * True if every route segment from $from on can be omitted: optional
+     * [name]/(name) segments or a literal label right before an optional one.
+     */
+    private static function restIsOptional(array $routeSignature, int $from): bool
+    {
+        $size = sizeof($routeSignature);
+        for ($i = $from; $i < $size; $i++) {
+            $seg = $routeSignature[$i];
+            $last = $seg[strlen($seg) - 1];
+            if (($seg[0] == '[' && $last == ']') || ($seg[0] == '(' && $last == ')')) {
+                continue;
+            }
+            $next = $routeSignature[$i + 1] ?? null;
+            if ($next !== null && $next[0] == '[' && $next[strlen($next) - 1] == ']') {
+                continue;
+            }
+            return false;
+        }
+        return true;
     }
 
     /**
