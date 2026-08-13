@@ -16,7 +16,7 @@ final class Context
         public readonly string $database,
         public readonly string $schema,
         public readonly string $user,
-        public readonly ?string $userGroup,
+        public readonly ?array $userGroup,
         public readonly bool   $parentUser,
         public readonly bool   $trusted,
         public readonly string $host,
