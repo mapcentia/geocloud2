@@ -38,9 +38,11 @@ class GraphQL
     private string $schema;
     private SqlModel $api;
     private bool $subuser;
-    private ?string $userGroup;
+    private ?array $userGroup;
     private string $opType;
     private array $typeCache = [];
+    /** @var array<string, array{toCol: array<string,string>, toField: array<string,string>}> */
+    private array $fieldMaps = [];
 
     function __construct(private readonly Connection $connection, private readonly bool $convertReturning = true)
     {
@@ -56,13 +58,13 @@ class GraphQL
      * @param string $query
      * @param string $schema
      * @param bool $subuser
-     * @param string|null $userGroup
+     * @param array<int,string>|null $userGroup
      * @param array $variables
      * @param string|null $operationName
      * @return array{data: array|null, errors?: array}
      * @throws GraphQLException|PhpfastcacheInvalidArgumentException
      */
-    public function run(string $user, SqlModel $api, string $query, string $schema, bool $subuser, ?string $userGroup, array $variables, ?string $operationName = null): array
+    public function run(string $user, SqlModel $api, string $query, string $schema, bool $subuser, ?array $userGroup, array $variables, ?string $operationName = null): array
     {
         $this->user = $user;
         $this->api = $api;
@@ -444,12 +446,17 @@ class GraphQL
             'fields' => function () use ($schema, $table, $t) {
                 try {
                     $fields = [];
+                    $toField = $this->fieldMap($schema, $table)['toField'];
                     foreach ($t->metaData ?? [] as $col => $info) {
                         $type = isset($info['is_primary']) && $info['is_primary'] === true ? Type::ID() : $this->getGraphQLType($info['typname']);
                         if (isset($info['is_nullable']) && $info['is_nullable'] === false) {
                             $type = Type::nonNull($type);
                         }
-                        $fields[$col] = ['type' => $type, 'description' => self::sanitizeDescription($info['comment'] ?? null)];
+                        // Postgres column names may contain characters (e.g. '.') that are not
+                        // valid GraphQL field names; expose a sanitized name and map it back to
+                        // the physical column in the SQL layer (see fieldMap/selectionToPhysical).
+                        $field = $toField[$col] ?? $col;
+                        $fields[$field] = ['type' => $type, 'description' => self::sanitizeDescription($info['comment'] ?? null)];
                     }
                     // Add relationships
                     $fkMap = $this->buildForeignMap($schema, $table);
@@ -655,6 +662,88 @@ class GraphQL
         return '"' . str_replace('"', '""', $name) . '"';
     }
 
+    /**
+     * Bidirectional map between physical Postgres column names and GraphQL-valid field names
+     * for a table, cached per request. Columns whose name is already a valid GraphQL identifier
+     * keep their name; the rest are sanitized (invalid chars -> '_', leading digit prefixed with
+     * '_'), with collisions resolved by a numeric suffix.
+     *
+     * @return array{toCol: array<string,string>, toField: array<string,string>}
+     */
+    private function fieldMap(string $schema, string $table): array
+    {
+        $key = "$schema.$table";
+        if (isset($this->fieldMaps[$key])) {
+            return $this->fieldMaps[$key];
+        }
+        $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
+        $cols = array_keys($t->metaData ?? []);
+        $toCol = [];
+        $toField = [];
+        $used = [];
+        // Pass 1: reserve already-valid identifiers unchanged (so a sanitized name never
+        // steals a name that is a real column further down).
+        foreach ($cols as $col) {
+            if (preg_match('/^[_A-Za-z][_0-9A-Za-z]*$/', $col)) {
+                $toCol[$col] = $col;
+                $toField[$col] = $col;
+                $used[$col] = true;
+            }
+        }
+        // Pass 2: sanitize the invalid ones, avoiding collisions with reserved/generated names.
+        foreach ($cols as $col) {
+            if (isset($toField[$col])) {
+                continue;
+            }
+            $field = self::sanitizeFieldName($col, $used);
+            $toCol[$field] = $col;
+            $toField[$col] = $field;
+            $used[$field] = true;
+        }
+        return $this->fieldMaps[$key] = ['toCol' => $toCol, 'toField' => $toField];
+    }
+
+    /**
+     * Turns an arbitrary column name into a valid, unused GraphQL field name.
+     *
+     * @param array<string,bool> $used names already taken (mutated with the returned name)
+     */
+    private static function sanitizeFieldName(string $col, array &$used): string
+    {
+        $s = preg_replace('/[^_0-9A-Za-z]/', '_', $col);
+        if ($s === '' || !preg_match('/^[_A-Za-z]/', $s)) {
+            $s = '_' . $s;
+        }
+        $base = $s;
+        $n = 2;
+        while (isset($used[$s])) {
+            $s = $base . '_' . $n++;
+        }
+        return $s;
+    }
+
+    /**
+     * Rewrites a selection tree's scalar field names from their sanitized GraphQL names to the
+     * physical column names, so the existing SQL builders (which key everything by physical
+     * column) work unchanged. Nested relation fields (not columns) are left untouched. mapRows
+     * re-keys the output back to the sanitized names.
+     */
+    private function selectionToPhysical(?array $selection, string $schema, string $table): ?array
+    {
+        if (!is_array($selection)) {
+            return $selection;
+        }
+        $toCol = $this->fieldMap($schema, $table)['toCol'];
+        $out = [];
+        foreach ($selection as $alias => $v) {
+            if (isset($v['name'], $toCol[$v['name']])) {
+                $v['name'] = $toCol[$v['name']];
+            }
+            $out[$alias] = $v;
+        }
+        return $out;
+    }
+
     private static function camelToSnake(string $input): string
     {
         return strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $input));
@@ -754,6 +843,9 @@ class GraphQL
 
         // Schema can be overridden via arguments
         $schema = $args['schema'] ?? $schema;
+
+        // Selection field names -> physical column names (mapRows re-keys the output back).
+        $selection = $this->selectionToPhysical($selection, $schema, $table);
 
         $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
         $metaCols = array_keys($t->metaData ?? []);
@@ -874,6 +966,10 @@ class GraphQL
             $tableField = substr($tableField, 3);
         }
         $table = self::camelToSnake($tableField);
+
+        // Map sanitized GraphQL field names in the selection back to physical column names,
+        // so the SQL below (keyed by physical columns) works unchanged. mapRows re-keys output.
+        $selection = $this->selectionToPhysical($selection, $schema, $table);
 
         // Setup table metadata and columns
         $t = new TableModel(table: $schema . '.' . $table, lookupForeignTables: false, connection: $this->connection);
@@ -1082,6 +1178,7 @@ class GraphQL
     private function handleInsert(string $table, array $args, ?array $selection): mixed
     {
         $schema = $this->schema;
+        $selection = $this->selectionToPhysical($selection, $schema, $table);
         $objects = $args['objects'] ?? [];
         $isSingle = false;
         if (isset($args['object'])) {
@@ -1131,6 +1228,7 @@ class GraphQL
     private function handleUpdate(string $table, array $args, ?array $selection): array
     {
         $schema = $this->schema;
+        $selection = $this->selectionToPhysical($selection, $schema, $table);
         $where = $args['where'] ?? [];
         $set = $args['data'] ?? [];
         $idVal = $args['id'] ?? null;
@@ -1187,6 +1285,7 @@ class GraphQL
     private function handleDelete(string $table, array $args, ?array $selection): array
     {
         $schema = $this->schema;
+        $selection = $this->selectionToPhysical($selection, $schema, $table);
         $where = $args['where'] ?? [];
         $idVal = $args['id'] ?? null;
         $pkWhere = null;
@@ -1264,10 +1363,14 @@ class GraphQL
             $fkMap = $this->buildForeignMap($schema, $table);
         }
 
+        // Rows are keyed by physical column names; re-key scalars back to the sanitized
+        // GraphQL field names so the (sanitized) output type resolves them.
+        $toField = $this->fieldMap($schema, $table)['toField'];
+
         foreach ($rows as &$row) {
             $mappedRow = [];
             foreach ($selColumns as $name) {
-                $mappedRow[$name] = $row[$name] ?? null;
+                $mappedRow[$toField[$name] ?? $name] = $row[$name] ?? null;
             }
             if (!empty($nested)) {
                 foreach ($nested as $alias => $v) {
