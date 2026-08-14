@@ -55,9 +55,8 @@ final class BasicAuth
             }
             if (!empty($this->user) && isset($password)) {
                 $this->isSubuser = $this->user != $setting->postgisdb;
-                $passwordCheck = !$this->isSubuser ? $settings["data"]->pw : $settings["data"]->pw_subuser->{$this->user};
             }
-            if (empty($this->user) || empty($password) || empty($passwordCheck) || Setting::encryptPw($password) !== $passwordCheck) {
+            if (empty($this->user) || empty($password) || !$this->verifyPassword($this->user, $password, $settings, $setting->postgisdb)) {
                 self::setAuthHeader($setting->postgisdb);
             }
         }
@@ -116,13 +115,62 @@ final class BasicAuth
         $setting = new Setting(connection: $this->connection);
         $settings = $setting->get();
         $password = Input::getAuthPw();
-        $isSubuser = $user != $setting->postgisdb;
-        $passwordCheck = $isSubuser
-            ? ($settings["data"]->pw_subuser->{$user} ?? null)
-            : ($settings["data"]->pw ?? null);
-        if (empty($password) || empty($passwordCheck) || Setting::encryptPw($password) !== $passwordCheck) {
+        if (empty($password) || !$this->verifyPassword($user, $password, $settings, $setting->postgisdb)) {
             self::setAuthHeader($setting->postgisdb);
         }
+    }
+
+    /**
+     * Verifies an HTTP Basic password for WFS/OWS. The primary auth system (the user's login
+     * password in the users table — legacy md5 or bcrypt, plus the master password) is checked
+     * first. When App::$param['httpBasicViewerFallback'] is true (default), it then falls back to
+     * the legacy per-database "viewer" password in settings.viewer. Set the flag to false to
+     * disable the viewer fallback entirely.
+     *
+     * @param array<string, mixed> $settings The decoded settings.viewer document (from Setting::get()).
+     */
+    private function verifyPassword(string $user, string $password, array $settings, string $db): bool
+    {
+        if ($this->primaryAuth($user, $password, $db)) {
+            return true;
+        }
+        if (\app\conf\App::$param['httpBasicViewerFallback'] ?? true) {
+            $isSubuser = $user !== $db;
+            $check = $isSubuser
+                ? ($settings["data"]->pw_subuser->{$user} ?? null)
+                : ($settings["data"]->pw ?? null);
+            if (!empty($check) && Setting::encryptPw($password) === $check) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks a password against the primary auth system: the user's row in the (mapcentia) users
+     * table, matching either the legacy md5 hash or a bcrypt hash, or the configured master
+     * password. Mirrors Session::start(). Returns false when the user has no row.
+     */
+    private function primaryAuth(string $user, string $password, string $db): bool
+    {
+        $pw = Util::format($password);
+        // A super-user's row has parentdb NULL (screenname == db); a sub-user's parentdb is the db.
+        $parentDb = $user === $db ? null : $db;
+        $model = new Model(connection: new Connection(database: Globals::$userDatabase));
+        $res = $model->prepare("SELECT pw FROM users WHERE screenname = :u AND parentdb IS NOT DISTINCT FROM :p");
+        try {
+            $model->execute($res, [":u" => $user, ":p" => $parentDb]);
+        } catch (PDOException) {
+            return false;
+        }
+        $row = $model->fetchRow($res);
+        if (empty($row['pw'])) {
+            return false;
+        }
+        if ($row['pw'] === Setting::encryptPw($pw) || password_verify($pw, $row['pw'])) {
+            return true;
+        }
+        return !empty(\app\conf\App::$param['masterPw']) && Setting::encryptPw($pw) === \app\conf\App::$param['masterPw'];
     }
 
     /**
