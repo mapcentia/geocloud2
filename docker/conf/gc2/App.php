@@ -61,6 +61,12 @@ class App
         // Master password for admin. MD5 hashed.
         "masterPw" => null,
 
+        // HTTP Basic auth for WFS/OWS is checked against the primary auth system
+        // (the user's login password in the users table) first. When true, it also
+        // falls back to the legacy per-database "viewer" password in settings.viewer.
+        // Set to false to disable the viewer fallback entirely once it is no longer used.
+        "httpBasicViewerFallback" => true,
+
         // Available baselayer
         "baseLayers" => array(
             array("id" => "osm", "name" => "OSM"),
