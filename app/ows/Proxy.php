@@ -30,7 +30,8 @@ final class Proxy
 
     private function mapfilesDir(): string
     {
-        return rtrim(App::$param['path'], '/') . '/app/wms/mapfiles/';
+//        return rtrim(App::$param['path'], '/') . '/app/wms/mapfiles/';
+        return '/var/www/geocloud2/app/wms/mapfiles/';
     }
 
     /**
