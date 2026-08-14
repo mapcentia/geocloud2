@@ -55,4 +55,36 @@ class UtilTest extends Unit
         $result = Util::extractUserFromSubUserString("@user");
         $this->assertEquals(["", "user"], $result);
     }
+
+    public function testThePathStripsQueryString(): void
+    {
+        $host = ($_SERVER['HTTPS'] ?? null) ? 'https://' : 'http://';
+        $host .= $_SERVER['HTTP_HOST'] ?? '';
+        $savedRedirect = $_SERVER['REDIRECT_URL'] ?? null;
+        $savedRequest = $_SERVER['REQUEST_URI'] ?? null;
+
+        // FrankenPHP/Caddy: only REQUEST_URI is set and it carries the query string.
+        // The raw "&" must never reach the WFS Capabilities xlink:href values.
+        unset($_SERVER['REDIRECT_URL']);
+        $_SERVER['REQUEST_URI'] = '/api/v4/wfs/schema/test/database/mydb/srs/25832?SERVICE=WFS&REQUEST=GetCapabilities';
+        $path = Util::thePath();
+        $this->assertStringNotContainsString('?', $path);
+        $this->assertStringNotContainsString('&', $path);
+        $this->assertEquals($host . '/api/v4/wfs/schema/test/database/mydb/srs/25832', $path);
+
+        // Apache mod_rewrite: REDIRECT_URL is already path-only — unchanged.
+        $_SERVER['REDIRECT_URL'] = '/api/v4/wfs/schema/test/database/mydb/srs/25832';
+        $this->assertEquals($host . '/api/v4/wfs/schema/test/database/mydb/srs/25832', Util::thePath());
+
+        if ($savedRedirect === null) {
+            unset($_SERVER['REDIRECT_URL']);
+        } else {
+            $_SERVER['REDIRECT_URL'] = $savedRedirect;
+        }
+        if ($savedRequest === null) {
+            unset($_SERVER['REQUEST_URI']);
+        } else {
+            $_SERVER['REQUEST_URI'] = $savedRequest;
+        }
+    }
 }

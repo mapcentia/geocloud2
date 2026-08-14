@@ -236,11 +236,16 @@ class Util
     }
 
     /**
-     * @return string  Base URL + path prefix (strips "index.php" and deduplicates slashes)
+     * @return string  Base URL + path prefix (strips the query string, "index.php" and deduplicates slashes)
      */
     public static function thePath(): string
     {
-        $uri = str_replace('index.php', '', $_SERVER['REDIRECT_URL'] ?? $_SERVER['REQUEST_URI'] ?? '');
+        $uri = $_SERVER['REDIRECT_URL'] ?? $_SERVER['REQUEST_URI'] ?? '';
+        // Drop any query string. On Apache mod_rewrite REDIRECT_URL is already path-only, but on
+        // FrankenPHP/Caddy only REQUEST_URI is set and it carries "?SERVICE=WFS&REQUEST=..." — that
+        // raw "&" would land unescaped in the WFS Capabilities xlink:href values and break the XML.
+        $uri = explode('?', $uri, 2)[0];
+        $uri = str_replace('index.php', '', $uri);
         $uri = str_replace('//', '/', $uri);
         return self::host() . $uri;
     }
