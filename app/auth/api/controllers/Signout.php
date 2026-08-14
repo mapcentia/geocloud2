@@ -33,11 +33,10 @@ class Signout extends AbstractApi
     public function get_index(): Response
     {
         (new \app\models\Session())->stop();
-        $r = null;
         $encoded = Input::get('redirect_uri');
-        if ($encoded) {
-            $r = urldecode(Input::get('redirect_uri'));
-        }
+        // Default to the app root so a sign-out without redirect_uri still redirects
+        // cleanly instead of passing null to redirectResponse().
+        $r = $encoded ? urldecode($encoded) : '/';
         return $this->redirectResponse(location: $r);
     }
 

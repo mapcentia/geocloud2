@@ -152,7 +152,15 @@ class Session extends Model
      */
     public function stop(): array
     {
+        // The /signout route dispatch does not start a session itself, so load the
+        // (Redis-backed) session first — otherwise session_unset() operates on an empty
+        // in-memory array and the real server session survives the sign-out.
+        \app\inc\Session::start();
+        $_SESSION = [];
         session_unset();
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_destroy();
+        }
         $response = [];
         $response['success'] = true;
         $response['message'] = "Session stopped";
