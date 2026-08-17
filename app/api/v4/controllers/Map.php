@@ -18,6 +18,7 @@ use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
+use app\inc\Model;
 use app\inc\Route2;
 use app\models\Setting as SettingModel;
 use Override;
@@ -33,10 +34,10 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "center",
             title: "Center",
-            description: "Map center as [x, y] in EPSG:3857.",
+            description: "Map center as [longitude, latitude] in EPSG:4326.",
             type: "array",
             items: new OA\Items(type: "number"),
-            example: [1386651.0, 7503372.0],
+            example: [12.4571, 55.7906],
             nullable: true,
         ),
         new OA\Property(
@@ -50,10 +51,10 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(
             property: "extent",
             title: "Extent",
-            description: "Map extent as [minx, miny, maxx, maxy] in EPSG:3857.",
+            description: "Map extent as [minx, miny, maxx, maxy] in EPSG:4326. This is used to set the initial extent of the map and to set the extent in OWS services.",
             type: "array",
             items: new OA\Items(type: "number"),
-            example: [1354000.0, 7478000.0, 1419000.0, 7528000.0],
+            example: [8.0, 54.5, 15.5, 57.5],
             nullable: true,
         ),
     ],
@@ -63,6 +64,12 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[Controller(route: 'api/v4/map/schema/{schema}', scope: Scope::SUB_USER_ALLOWED)]
 class Map extends AbstractApi
 {
+    // The API surface speaks EPSG:4326 (lon/lat), while the values are stored in EPSG:3857 in
+    // settings.viewer so the legacy GUI endpoint (/controllers/setting/extent) keeps working.
+    // center/extent are transformed at the API boundary; zoom is unitless and passes through.
+    private const int API_SRS = 4326;
+    private const int STORAGE_SRS = 3857;
+
     public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
@@ -84,6 +91,13 @@ class Map extends AbstractApi
     {
         $setting = new SettingModel(connection: $this->connection);
         $config = $setting->getMapConfig($this->schema[0]);
+        // Stored in EPSG:3857 → return in EPSG:4326.
+        if (is_array($config['center']) && count($config['center']) === 2) {
+            $config['center'] = $this->transformPoint($config['center'], self::STORAGE_SRS, self::API_SRS);
+        }
+        if (is_array($config['extent']) && count($config['extent']) === 4) {
+            $config['extent'] = $this->transformExtent($config['extent'], self::STORAGE_SRS, self::API_SRS);
+        }
         $config['_links'] = ['self' => '/api/v4/map/schema/' . $this->schema[0]];
         return $this->getResponse([$config], single: true);
     }
@@ -105,9 +119,49 @@ class Map extends AbstractApi
     public function patch_index(): Response
     {
         $data = json_decode(Input::getBody(), true) ?? [];
+        // Received in EPSG:4326 → store in EPSG:3857.
+        if (array_key_exists('center', $data) && is_array($data['center'])) {
+            $data['center'] = $this->transformPoint($data['center'], self::API_SRS, self::STORAGE_SRS);
+        }
+        if (array_key_exists('extent', $data) && is_array($data['extent'])) {
+            $data['extent'] = $this->transformExtent($data['extent'], self::API_SRS, self::STORAGE_SRS);
+        }
         $setting = new SettingModel(connection: $this->connection);
         $setting->updateMapConfig($this->schema[0], $data);
         return $this->patchResponse('/api/v4/map/schema/', [$this->schema[0]]);
+    }
+
+    /**
+     * Transforms a [x, y] point between SRIDs using PostGIS.
+     *
+     * @param array<float|int> $point
+     * @return array<float>
+     */
+    private function transformPoint(array $point, int $from, int $to): array
+    {
+        $model = new Model(connection: $this->connection);
+        $sql = "SELECT ST_X(p) AS x, ST_Y(p) AS y FROM (SELECT ST_Transform(ST_SetSRID(ST_MakePoint(:x, :y), " . (int)$from . "), " . (int)$to . ") AS p) AS t";
+        $res = $model->prepare($sql);
+        $model->execute($res, [':x' => (float)$point[0], ':y' => (float)$point[1]]);
+        $row = $model->fetchRow($res);
+        return [(float)$row['x'], (float)$row['y']];
+    }
+
+    /**
+     * Transforms a [minx, miny, maxx, maxy] extent between SRIDs using PostGIS.
+     *
+     * @param array<float|int> $extent
+     * @return array<float>
+     */
+    private function transformExtent(array $extent, int $from, int $to): array
+    {
+        $model = new Model(connection: $this->connection);
+        $sql = "SELECT ST_XMin(g) AS minx, ST_YMin(g) AS miny, ST_XMax(g) AS maxx, ST_YMax(g) AS maxy "
+            . "FROM (SELECT ST_Transform(ST_MakeEnvelope(:minx, :miny, :maxx, :maxy, " . (int)$from . "), " . (int)$to . ") AS g) AS t";
+        $res = $model->prepare($sql);
+        $model->execute($res, [':minx' => (float)$extent[0], ':miny' => (float)$extent[1], ':maxx' => (float)$extent[2], ':maxy' => (float)$extent[3]]);
+        $row = $model->fetchRow($res);
+        return [(float)$row['minx'], (float)$row['miny'], (float)$row['maxx'], (float)$row['maxy']];
     }
 
     /**
