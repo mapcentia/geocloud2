@@ -203,16 +203,13 @@ class Map extends AbstractApi
 
     public function post_index(): Response
     {
-        throw new GC2Exception("Method not allowed", 405, null, "METHOD_NOT_ALLOWED");
     }
 
     public function put_index(): Response
     {
-        throw new GC2Exception("Method not allowed", 405, null, "METHOD_NOT_ALLOWED");
     }
 
     public function delete_index(): Response
     {
-        throw new GC2Exception("Method not allowed", 405, null, "METHOD_NOT_ALLOWED");
     }
 }
