@@ -186,6 +186,62 @@ class Setting extends Model
     }
 
     /**
+     * Reads the per-schema map view configuration (center, zoom, extent) from settings.viewer.
+     * Worker-safe: the schema is passed explicitly instead of being read from the process-global
+     * connection schema. Missing values are returned as null.
+     *
+     * @return array{center: array<float>|null, zoom: int|float|null, extent: array<float>|null}
+     * @throws InvalidArgumentException
+     */
+    public function getMapConfig(string $schema): array
+    {
+        $arr = $this->getArray();
+        return [
+            'center' => $arr->center->$schema ?? null,
+            'zoom' => $arr->zoom->$schema ?? null,
+            'extent' => $arr->extents->$schema ?? null,
+        ];
+    }
+
+    /**
+     * Updates the per-schema map view configuration (center, zoom, extent) in settings.viewer.
+     * Only the keys present in $data are touched, so a partial (PATCH) update leaves the others
+     * untouched. Worker-safe: the schema is passed explicitly instead of being read from the
+     * process-global connection schema, and the document is written back with a bound parameter.
+     *
+     * @param array{extent?: array<float>|null, center?: array<float>|null, zoom?: int|float|null} $data
+     * @throws InvalidArgumentException
+     */
+    public function updateMapConfig(string $schema, array $data): void
+    {
+        $arr = $this->getArray();
+        if (array_key_exists('extent', $data)) {
+            $obj = (array)($arr->extents ?? new stdClass());
+            $obj[$schema] = $data['extent'];
+            $arr->extents = (object)$obj;
+        }
+        if (array_key_exists('center', $data)) {
+            $obj = (array)($arr->center ?? new stdClass());
+            $obj[$schema] = $data['center'];
+            $arr->center = (object)$obj;
+        }
+        if (array_key_exists('zoom', $data)) {
+            $obj = (array)($arr->zoom ?? new stdClass());
+            $obj[$schema] = $data['zoom'];
+            $arr->zoom = (object)$obj;
+        }
+        if (App::$param["encryptSettings"]) {
+            $pubKey = file_get_contents(App::$param["path"] . "app/conf/public.key");
+            $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt(:viewer, dearmor('$pubKey'))";
+        } else {
+            $sql = "UPDATE settings.viewer SET viewer=:viewer";
+        }
+        $res = $this->prepare($sql);
+        $this->execute($res, [":viewer" => json_encode($arr)]);
+        $this->clearCacheOnSchemaChanges();
+    }
+
+    /**
      * @param object $extentrestrict
      * @return array
      * @throws InvalidArgumentException
