@@ -832,67 +832,72 @@ class Model
      */
     function getGeometryColumns(string $table, string $field): mixed
     {
-        $response = [];
-
-        $_schema = sizeof(explode(".", $table)) > 1 ? explode(".", $table)[0] : "";
-
-        $_table = sizeof(explode(".", $table)) > 1 ? explode(".", $table)[1] : $table;
-
-        if (!$_schema) {
-            $_schema = $this->postgisschema ?: "";
+        $cacheType = "geometryColumns";
+        $cacheRel = md5($table . '_' . $field);
+        $cacheId = $this->connection->database . "_" . $cacheRel . "_" . $cacheType;
+        $CachedString = Cache::getItem($cacheId);
+        if ($CachedString != null && $CachedString->isHit()) {
+            return $CachedString->get();
         } else {
-            $_schema = str_replace(".", "", $_schema);
-        }
-
-        $row = $this->getColumns($_schema, $_table)[0] ?? null;
-
-        if (!$row) {
-            return null;
-        } else {
-            $this->theGeometry = $row['type'];
-        }
-        if ($field == 'f_geometry_column') {
-            $response = $row['f_geometry_column'];
-        }
-        if ($field == 'srid') {
-            $response = $row['srid'];
-        }
-        if ($field == 'type') {
-            $arr = isset($row['def']) ? json_decode($row['def'], true) : [];
-            if (isset($arr['geotype']) && ($arr['geotype']) && $arr['geotype'] != "Default") {
-                $response = $arr['geotype'];
+            $response = [];
+            $_schema = sizeof(explode(".", $table)) > 1 ? explode(".", $table)[0] : "";
+            $_table = sizeof(explode(".", $table)) > 1 ? explode(".", $table)[1] : $table;
+            if (!$_schema) {
+                $_schema = $this->postgisschema ?: "";
             } else {
-                $response = $row['type'];
+                $_schema = str_replace(".", "", $_schema);
             }
+            $row = $this->getColumns($_schema, $_table)[0] ?? null;
+            if (!$row) {
+                return null;
+            } else {
+                $this->theGeometry = $row['type'];
+            }
+            if ($field == 'f_geometry_column') {
+                $response = $row['f_geometry_column'];
+            }
+            if ($field == 'srid') {
+                $response = $row['srid'];
+            }
+            if ($field == 'type') {
+                $arr = isset($row['def']) ? json_decode($row['def'], true) : [];
+                if (isset($arr['geotype']) && ($arr['geotype']) && $arr['geotype'] != "Default") {
+                    $response = $arr['geotype'];
+                } else {
+                    $response = $row['type'];
+                }
+            }
+            if ($field == 'tweet') {
+                $response = $row['tweet'];
+            }
+            if ($field == 'editable') {
+                $response = $row['editable'];
+            }
+            if ($field == 'authentication') {
+                $response = $row['authentication'];
+            }
+            if ($field == 'fieldconf') {
+                $response = $row['fieldconf'];
+            }
+            if ($field == 'def') {
+                $response = $row['def'];
+            }
+            if ($field == 'id') {
+                $response = $row['id'];
+            }
+            if ($field == 'elasticsearch') {
+                $response = $row['elasticsearch'];
+            }
+            if ($field == 'featureid') {
+                $response = $row['featureid'];
+            }
+            if ($field == '*') {
+                $response = $row;
+            }
+            $CachedString->set($response)->expiresAfter(Globals::$cacheTtl);
+            Cache::save($CachedString);
+            return $response;
         }
-        if ($field == 'tweet') {
-            $response = $row['tweet'];
-        }
-        if ($field == 'editable') {
-            $response = $row['editable'];
-        }
-        if ($field == 'authentication') {
-            $response = $row['authentication'];
-        }
-        if ($field == 'fieldconf') {
-            $response = $row['fieldconf'];
-        }
-        if ($field == 'def') {
-            $response = $row['def'];
-        }
-        if ($field == 'id') {
-            $response = $row['id'];
-        }
-        if ($field == 'elasticsearch') {
-            $response = $row['elasticsearch'];
-        }
-        if ($field == 'featureid') {
-            $response = $row['featureid'];
-        }
-        if ($field == '*') {
-            $response = $row;
-        }
-        return $response;
     }
 
 
