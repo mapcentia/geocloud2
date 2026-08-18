@@ -73,14 +73,20 @@ class MapcacheWipeApiCest
         $I->seeResponseCodeIs(HttpCode::CREATED);
     }
 
-    // sqlite: the tileset's .sqlite3 file is unlinked synchronously.
-    public function fullSqliteWipeIsSynchronous(ApiTester $I)
+    // sqlite: the tileset's tiles are emptied in place (DELETE FROM tiles), NOT unlinked, so a
+    // MapCache instance that this process can't reload keeps the same file and re-seeds on demand.
+    public function fullSqliteWipeEmptiesInPlace(ApiTester $I)
     {
         $this->setCache($I, 'sqlite');
         $dir = $this->mapcacheDir() . 'sqlite/' . $this->userId;
         @mkdir($dir, 0777, true);
         $file = $dir . '/' . $this->tileset . '.sqlite3';
-        file_put_contents($file, 'x');
+        // A minimal MapCache sqlite cache: a "tiles" table with one row.
+        $pdo = new PDO('sqlite:' . $file);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $pdo->exec('CREATE TABLE tiles(tileset text, grid text, x integer, y integer, z integer, data blob, dim text, ctime datetime, primary key(tileset,grid,x,y,z,dim))');
+        $pdo->exec("INSERT INTO tiles(tileset,grid,x,y,z,dim) VALUES('t','g',0,0,0,'')");
+        $pdo = null;
         exec('chown -R www-data:www-data ' . escapeshellarg($dir));
 
         $this->del($I);
@@ -88,7 +94,10 @@ class MapcacheWipeApiCest
         $data = json_decode($I->grabResponse(), true);
         $I->assertSame('sqlite', $data['backend']);
         $I->assertSame('wipe', $data['mode']);
-        $I->assertFileDoesNotExist($file);
+        // The file survives (so MapCache's open handle stays valid) and the tiles are gone.
+        $I->assertFileExists($file);
+        $check = new PDO('sqlite:' . $file);
+        $I->assertSame(0, (int)$check->query('SELECT count(*) FROM tiles')->fetchColumn());
     }
 
     // disk: the tileset directory is removed (renamed instantly, deleted in the background) → 202.

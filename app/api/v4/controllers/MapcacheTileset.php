@@ -28,6 +28,8 @@ use app\models\Authorization;
 use app\models\Tileseeder;
 use app\models\User;
 use OpenApi\Attributes as OA;
+use PDO;
+use PDOException;
 use Override;
 
 /**
@@ -179,13 +181,30 @@ final class MapcacheTileset extends AbstractApi
         };
     }
 
-    /** Removes the tileset's SQLite database and its WAL/SHM/journal sidecars. Synchronous, O(1). */
+    /**
+     * Empties the tileset's SQLite tile store (DELETE FROM tiles) rather than unlinking the file.
+     * MapCache may run on a separate instance that this process cannot reload, and it caches the open
+     * sqlite handle — an unlinked file would not be recreated (and no new tiles cached) until a
+     * reload, whereas emptying it keeps the same file so MapCache re-seeds on demand. DELETE without a
+     * WHERE uses SQLite's truncate optimization, so it stays fast even for millions of tiles (the
+     * freed pages are reused as the cache refills; the file is intentionally not VACUUMed/shrunk).
+     */
     private function wipeSqlite(string $dbFile, string $tileset): Response
     {
+        if (!is_file($dbFile)) {
+            return $this->completed('sqlite', $tileset, 0); // never seeded — nothing to empty
+        }
         $removed = 0;
-        foreach (['', '-wal', '-shm', '-journal'] as $suffix) {
-            if (is_file($dbFile . $suffix) && @unlink($dbFile . $suffix)) {
-                $removed++;
+        try {
+            $pdo = new PDO('sqlite:' . $dbFile);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $pdo->setAttribute(PDO::ATTR_TIMEOUT, 5); // wait briefly if MapCache is mid-write
+            $removed = (int)$pdo->exec('DELETE FROM tiles');
+            $pdo = null;
+        } catch (PDOException $e) {
+            // A file with no "tiles" table has never cached anything — nothing to empty.
+            if (!str_contains($e->getMessage(), 'no such table')) {
+                throw new GC2Exception('Could not empty the SQLite tile cache: ' . $e->getMessage(), 500, null, 'CACHE_WIPE_FAILED');
             }
         }
         return $this->completed('sqlite', $tileset, $removed);
