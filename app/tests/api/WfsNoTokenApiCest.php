@@ -3,11 +3,11 @@
 use Codeception\Util\HttpCode;
 
 /**
- * Tests app/api/v4/controllers/WfsNoToken.php — anonymous and HTTP Basic
- * access to the v4 WFS endpoint (for clients like QGIS that send no bearer
- * token). Layers default to authentication level 'Write': reads are anonymous,
- * transactions require Basic auth. 'Read/write' layers require Basic auth for
- * reads as well.
+ * Tests app/api/v4/controllers/Wfs.php — the merged v4 WFS endpoint serving
+ * Bearer-token, HTTP Basic and anonymous clients (like QGIS) on one route.
+ * Layers default to authentication level 'Write': reads are anonymous,
+ * transactions require credentials. 'Read/write' layers require credentials
+ * for reads as well.
  */
 class WfsNoTokenApiCest
 {
@@ -170,6 +170,45 @@ class WfsNoTokenApiCest
         $I->assertStringContainsString('alpha', $body);
     }
 
+    // A presented Bearer token must be valid — a garbage token is not silently
+    // downgraded to anonymous access. Jwt::validate sends a WWW-Authenticate
+    // Bearer challenge (401) and the body is an OWS exception report.
+    public function shouldRejectInvalidBearerToken(ApiTester $I)
+    {
+        $I->haveHttpHeader('Authorization', 'Bearer not-a-jwt');
+        $I->sendGET($this->endpoint() . '?SERVICE=WFS&REQUEST=GetFeature&VERSION=1.1.0&TYPENAME=poi');
+        $I->seeResponseCodeIs(HttpCode::UNAUTHORIZED);
+        $I->seeHttpHeader('WWW-Authenticate');
+        $I->assertStringContainsStringIgnoringCase('Exception', $I->grabResponse());
+        $I->deleteHeader('Authorization');
+    }
+
+    // A valid token for ANOTHER database must not authorize requests against
+    // this database (mirrors the OWS/MapCache database check).
+    public function shouldRejectTokenForWrongDatabase(ApiTester $I)
+    {
+        $otherName = 'Wfs other user ' . $this->date->getTimestamp();
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/user', json_encode([
+            'name' => $otherName, 'email' => 'wfsother' . $this->date->getTimestamp() . '@example.com',
+            'password' => $this->password,
+        ]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $otherId = json_decode($I->grabResponse())->data->screenname;
+        $I->sendPOST('/api/v4/oauth', json_encode([
+            'grant_type' => 'password', 'username' => $otherId, 'password' => $this->password,
+            'database' => $otherId, 'client_id' => 'gc2-cli',
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $otherToken = json_decode($I->grabResponse())->access_token;
+
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $otherToken);
+        $I->sendGET($this->endpoint() . '?SERVICE=WFS&REQUEST=GetFeature&VERSION=1.1.0&TYPENAME=poi');
+        $I->seeResponseCodeIs(HttpCode::OK); // streamed; the error renders as an XML report body
+        $I->assertStringContainsString('Token is not valid for this database', $I->grabResponse());
+        $I->deleteHeader('Authorization');
+    }
+
     // Layers default to authentication 'Write': anonymous reads are fine, but a
     // WFS-T Transaction must trigger a Basic auth challenge.
     public function shouldRejectAnonymousTransactionOnWriteLayer(ApiTester $I)
@@ -189,6 +228,21 @@ class WfsNoTokenApiCest
         $body = $I->grabResponse();
         $I->assertStringContainsString('TransactionResponse', $body);
         $I->assertStringNotContainsStringIgnoringCase('ExceptionReport', $body);
+    }
+
+    // The owner's Bearer token authorizes a transaction on the 'Write' layer
+    // via Authorization::check — exercising the token branch of the per-layer
+    // auth, where a transaction on a 'Write' layer requires credentials.
+    public function shouldAcceptTransactionWithBearerToken(ApiTester $I)
+    {
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
+        $I->haveHttpHeader('Content-Type', 'application/xml');
+        $I->sendPOST($this->endpoint(), $this->transactionXml('token_insert'));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $body = $I->grabResponse();
+        $I->assertStringContainsString('TransactionResponse', $body);
+        $I->assertStringNotContainsStringIgnoringCase('ExceptionReport', $body);
+        $I->deleteHeader('Authorization');
     }
 
     public function shouldSeeInsertedFeatureAnonymously(ApiTester $I)
@@ -240,6 +294,19 @@ class WfsNoTokenApiCest
     public function shouldServeGetFeatureOnReadWriteLayerWithBasicAuth(ApiTester $I)
     {
         $I->amHttpAuthenticated($this->userId, $this->password);
+        $I->sendGET($this->endpoint() . '?SERVICE=WFS&REQUEST=GetFeature&VERSION=1.1.0&TYPENAME=poi');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $body = $I->grabResponse();
+        $I->assertStringContainsString('FeatureCollection', $body);
+        $I->assertStringContainsString('alpha', $body);
+        $I->deleteHeader('Authorization');
+    }
+
+    // The owner's Bearer token also authorizes reads on the 'Read/write' layer
+    // (the token branch of the per-layer auth for protected reads).
+    public function shouldServeGetFeatureOnReadWriteLayerWithBearerToken(ApiTester $I)
+    {
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
         $I->sendGET($this->endpoint() . '?SERVICE=WFS&REQUEST=GetFeature&VERSION=1.1.0&TYPENAME=poi');
         $I->seeResponseCodeIs(HttpCode::OK);
         $body = $I->grabResponse();

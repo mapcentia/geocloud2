@@ -27,6 +27,11 @@ class OwsApiCest
         $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
     }
 
+    private function endpoint(): string
+    {
+        return '/api/v4/ows/schema/' . $this->schemaName . '/database/' . $this->userId;
+    }
+
     public function shouldPrepareUserTokenSchemaAndLayer(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
@@ -63,10 +68,45 @@ class OwsApiCest
         $I->seeResponseCodeIs(HttpCode::CREATED);
     }
 
-    public function shouldRejectAnonymous(ApiTester $I)
+    // A presented Bearer token must be valid — a garbage token is not silently
+    // downgraded to anonymous access. Jwt::validate sends a WWW-Authenticate
+    // Bearer challenge (401) and the body is an OGC ServiceException report.
+    public function shouldRejectInvalidToken(ApiTester $I)
     {
-        $I->sendGET('/api/v4/ows/schema/' . $this->schemaName . '?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0');
-        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST); // no token
+        $I->haveHttpHeader('Authorization', 'Bearer not-a-jwt');
+        $I->sendGET($this->endpoint() . '?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0');
+        $I->seeResponseCodeIs(HttpCode::UNAUTHORIZED);
+        $I->seeHttpHeader('WWW-Authenticate');
+        $I->assertStringContainsStringIgnoringCase('ServiceException', $I->grabResponse());
+        $I->deleteHeader('Authorization');
+    }
+
+    // A valid token for ANOTHER database must not authorize requests against
+    // this database (mirrors the MapCache proxy's database check).
+    public function shouldRejectTokenForWrongDatabase(ApiTester $I)
+    {
+        $otherName = 'Ows api other user ' . $this->date->getTimestamp();
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/user', json_encode([
+            'name' => $otherName, 'email' => 'owsapiother' . $this->date->getTimestamp() . '@example.com',
+            'password' => $this->password,
+        ]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $otherId = json_decode($I->grabResponse())->data->screenname;
+        $I->sendPOST('/api/v4/oauth', json_encode([
+            'grant_type' => 'password', 'username' => $otherId, 'password' => $this->password,
+            'database' => $otherId, 'client_id' => 'gc2-cli',
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $otherToken = json_decode($I->grabResponse())->access_token;
+
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $otherToken);
+        $I->sendGET($this->endpoint() . '?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $body = $I->grabResponse();
+        $I->assertStringContainsStringIgnoringCase('ServiceException', $body);
+        $I->assertStringContainsString('Token is not valid for this database', $body);
+        $I->deleteHeader('Authorization');
     }
 
     public function shouldServeGetCapabilitiesMatchingLegacy(ApiTester $I)
@@ -75,7 +115,7 @@ class OwsApiCest
 
         // v4 (token)
         $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
-        $I->sendGET('/api/v4/ows/schema/' . $this->schemaName . '?' . $qs);
+        $I->sendGET($this->endpoint() . '?' . $qs);
         $I->seeResponseCodeIs(HttpCode::OK);
         $v4 = $I->grabResponse();
         $I->deleteHeader('Authorization');
@@ -101,7 +141,7 @@ class OwsApiCest
         $qs = 'SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=' . $this->schemaName . '.roads'
             . '&CRS=EPSG:4326&BBOX=-1,-1,1,1&WIDTH=64&HEIGHT=64&FORMAT=image/png&STYLES=';
         $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
-        $I->sendGET('/api/v4/ows/schema/' . $this->schemaName . '?' . $qs);
+        $I->sendGET($this->endpoint() . '?' . $qs);
         $I->seeResponseCodeIs(HttpCode::OK);
         $ct = strtolower($I->grabHttpHeader('Content-Type'));
         // Empty table still produces a valid PNG (MapServer draws a blank image)
@@ -140,7 +180,7 @@ class OwsApiCest
         $qs = 'SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=' . $this->schemaName . '.roads'
             . '&CRS=EPSG:4326&BBOX=-1,-1,1,1&WIDTH=64&HEIGHT=64&FORMAT=image/png&STYLES=';
         $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
-        $I->sendGET('/api/v4/ows/schema/' . $this->schemaName . '?' . $qs);
+        $I->sendGET($this->endpoint() . '?' . $qs);
         $I->seeResponseCodeIs(HttpCode::OK);
         $ct = strtolower($I->grabHttpHeader('Content-Type'));
         $body = $I->grabResponse();
@@ -157,7 +197,7 @@ class OwsApiCest
         $qs = 'SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=' . $this->schemaName . '.roads'
             . '&CRS=EPSG:4326&BBOX=-1,-1,1,1&WIDTH=64&HEIGHT=64&FORMAT=image/png&STYLES=';
         $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
-        $I->sendGET('/api/v4/ows/schema/' . $this->schemaName . '?' . $qs);
+        $I->sendGET($this->endpoint() . '?' . $qs);
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->assertStringContainsString('image/png', strtolower($I->grabHttpHeader('Content-Type')));
         $I->assertStringNotContainsStringIgnoringCase('ServiceExceptionReport', $I->grabResponse());
@@ -168,7 +208,7 @@ class OwsApiCest
         $qs = 'SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=' . $this->schemaName . '.nope'
             . '&CRS=EPSG:4326&BBOX=-1,-1,1,1&WIDTH=8&HEIGHT=8&FORMAT=image/png&STYLES=';
         $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
-        $I->sendGET('/api/v4/ows/schema/' . $this->schemaName . '?' . $qs);
+        $I->sendGET($this->endpoint() . '?' . $qs);
         $I->seeResponseCodeIs(HttpCode::OK);
         // MapServer returns an XML ServiceException for an unknown layer
         $I->assertStringContainsStringIgnoringCase('ServiceException', $I->grabResponse());
@@ -182,7 +222,7 @@ class OwsApiCest
         $qs = 'SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=' . $this->schemaName . '.roads'
             . '&CRS=EPSG:4326&BBOX=-1,-1,1,1&WIDTH=8&HEIGHT=8&FORMAT=image/png&STYLES=&filters=' . $filters;
         $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
-        $I->sendGET('/api/v4/ows/schema/' . $this->schemaName . '?' . $qs);
+        $I->sendGET($this->endpoint() . '?' . $qs);
         $I->seeResponseCodeIs(HttpCode::OK);
         // Tmp files are cleaned up in the controller's finally block.
         $leftovers = glob('/var/www/geocloud2/app/tmp/*.map');

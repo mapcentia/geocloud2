@@ -123,8 +123,9 @@ final class Transaction implements HandlerInterface
                     throw new OwsException("You don't have a role in the workflow of '{$typeName}'");
                 }
 
-                // Per-layer HTTP basic authentication
-                if (!$this->ctx->trusted) {
+                // Per-layer HTTP basic authentication (token identities were
+                // already authorized per typeName in the controller)
+                if (!$this->ctx->trusted && !$this->ctx->tokenAuth) {
                     $auth = $model->getGeometryColumns("{$this->ctx->schema}.{$typeName}", 'authentication');
                     if ($auth === 'Write' || $auth === 'Read/write' || !empty(Input::getAuthUser())) {
                         (new BasicAuth(connection: $this->ctx->connection))->authenticate("{$this->ctx->schema}.{$typeName}", true);
@@ -251,8 +252,9 @@ final class Transaction implements HandlerInterface
                 throw new OwsException("You don't have a role in the workflow of '{$typeName}'");
             }
 
-            // Per-layer HTTP basic authentication
-            if (!$this->ctx->trusted) {
+            // Per-layer HTTP basic authentication (token identities were
+            // already authorized per typeName in the controller)
+            if (!$this->ctx->trusted && !$this->ctx->tokenAuth) {
                 $auth = $model->getGeometryColumns("{$this->ctx->schema}.{$typeName}", 'authentication');
                 if ($auth === 'Write' || $auth === 'Read/write' || !empty(Input::getAuthUser())) {
                     (new BasicAuth(connection: $this->ctx->connection))->authenticate("{$this->ctx->schema}.{$typeName}", true);
@@ -448,8 +450,9 @@ final class Transaction implements HandlerInterface
                 throw new OwsException("You don't have a role in the workflow of '{$typeName}'");
             }
 
-            // Per-layer HTTP basic authentication
-            if (!$this->ctx->trusted) {
+            // Per-layer HTTP basic authentication (token identities were
+            // already authorized per typeName in the controller)
+            if (!$this->ctx->trusted && !$this->ctx->tokenAuth) {
                 $auth = $model->getGeometryColumns("{$this->ctx->schema}.{$typeName}", 'authentication');
                 if ($auth === 'Write' || $auth === 'Read/write' || !empty(Input::getAuthUser())) {
                     (new BasicAuth(connection: $this->ctx->connection))->authenticate("{$this->ctx->schema}.{$typeName}", true);

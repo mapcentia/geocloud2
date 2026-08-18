@@ -23,6 +23,9 @@ final class Context
         public readonly string $thePath,
         public readonly float  $startTime,
         public readonly ?int   $srs = null,
+        /** True when the request identity is a validated Bearer token — per-layer auth then ran
+         *  via Authorization::check in the controller, so handlers must not challenge Basic. */
+        public readonly bool   $tokenAuth = false,
     ) {}
 
     public function model(): Model

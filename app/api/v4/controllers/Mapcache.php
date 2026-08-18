@@ -232,7 +232,7 @@ final class Mapcache extends AbstractApi
                 subUser: $subUser, userGroup: $jwt['userGroup'] ?? null, rels: []
             );
         } else {
-            // Anonymous or HTTP Basic — mirror OwsNoToken::basicAuthPerLayer.
+            // Anonymous or HTTP Basic — mirror Ows::authorizeLayers.
             $user = $basicUser ?: $database;
             $connection = new Connection(user: $user, database: $database, schema: $schema);
             $auth = new Model(connection: $connection)->getGeometryColumns($layer, 'authentication');
