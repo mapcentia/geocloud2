@@ -239,10 +239,6 @@ RUN wget -qO - https://qgis.org/downloads/qgis-2022.gpg.key \
 # Symlink fonts for QGIS server (slightly corrected syntax)
 RUN ln -s /usr/share/fonts /usr/lib/x86_64-linux-gnu/fonts
 
-# Add watch_mapcache_changes.sh and reload.js
-COPY watch_mapcache_changes.sh /watch_mapcache_changes.sh
-RUN chmod +x /watch_mapcache_changes.sh
-COPY reload.js /reload.js
 
 RUN mkdir /mapcache \
     && cp /root/mapcache/mapcache.xml /mapcache/ 2>/dev/null || true
@@ -281,6 +277,9 @@ RUN crontab -l 2>/dev/null | { cat; echo "0 0 * * * php -f /var/www/geocloud2/ap
 RUN crontab -l 2>/dev/null | { cat; echo "0 0 * * * php -f /var/www/geocloud2/app/scripts/clean_scheduler_tables.php 1>> /dev/null 2>&1"; } | crontab
 # Purge locks
 RUN crontab -l 2>/dev/null | { cat; echo "* * * * * php -f /var/www/geocloud2/app/scripts/purge_locks.php > /var/www/geocloud2/public/logs/purge_locks.log"; } | crontab
+# Keep app/wms/mapcache/mapcache.conf in sync with the per-database MapCache xml files (replaces the
+# watch_mapcache_changes.sh + reload.js watcher). Runs as root: it validates and gracefully reloads Apache.
+RUN crontab -l 2>/dev/null | { cat; echo "* * * * * php -f /var/www/geocloud2/app/scripts/mapcache_conf.php >> /var/www/geocloud2/public/logs/mapcache_conf.log 2>&1"; } | crontab
 # Create scheduler report once a day
 RUN crontab -l 2>/dev/null | { cat; echo "0 6 * * * php -f /var/www/geocloud2/app/scripts/job_report.php 1>> /dev/null 2>&1"; } | crontab
 # Run scheduler
