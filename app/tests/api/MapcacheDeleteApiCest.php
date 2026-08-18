@@ -72,25 +72,26 @@ class MapcacheDeleteApiCest
         $I->seeResponseCodeIs(HttpCode::UNAUTHORIZED);
     }
 
-    // Authorized, but the database has no generated MapCache config yet.
-    public function deleteReturns404WhenNoConfig(ApiTester $I)
+    // A SCOPED delete needs the MapCache config (mapcache_seed reads it); missing config → 404.
+    public function scopedDeleteReturns404WhenNoConfig(ApiTester $I)
     {
+        @unlink($this->configPath());
         $this->bearer($I);
-        $I->sendDELETE('/api/v4/mapcache/database/' . $this->userId . '/tileset/s1.roads');
+        $I->sendDELETE('/api/v4/mapcache/database/' . $this->userId . '/tileset/s1.roads?zoom=0,0');
         $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
     }
 
-    // With a config present, an unknown tileset is 404.
-    public function deleteReturns404ForUnknownTileset(ApiTester $I)
+    // With a config present, a scoped delete for an unknown tileset is 404.
+    public function scopedDeleteReturns404ForUnknownTileset(ApiTester $I)
     {
         file_put_contents($this->configPath(), "<mapcache>\n  <tileset name=\"s1.roads\"/>\n</mapcache>\n");
         $this->bearer($I);
-        $I->sendDELETE('/api/v4/mapcache/database/' . $this->userId . '/tileset/s1.other');
+        $I->sendDELETE('/api/v4/mapcache/database/' . $this->userId . '/tileset/s1.other?zoom=0,0');
         $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
     }
 
-    // The happy path: authorized, config + tileset present → 202 with a job uuid and echoed scope.
-    public function deleteStartsBackgroundJob(ApiTester $I)
+    // A SCOPED delete (bbox/zoom) runs mapcache_seed as a background job → 202 with uuid/pid/scope.
+    public function scopedDeleteStartsSeedJob(ApiTester $I)
     {
         file_put_contents($this->configPath(), "<mapcache>\n  <tileset name=\"s1.roads\"/>\n</mapcache>\n");
         $this->bearer($I);
@@ -100,6 +101,7 @@ class MapcacheDeleteApiCest
         $I->seeResponseIsJson();
         $data = json_decode($I->grabResponse(), true);
         $I->assertTrue($data['success']);
+        $I->assertSame('seed', $data['mode']);
         $I->assertNotEmpty($data['uuid']);
         $I->assertGreaterThan(0, $data['pid']);
         $I->assertSame('s1.roads', $data['tileset']);

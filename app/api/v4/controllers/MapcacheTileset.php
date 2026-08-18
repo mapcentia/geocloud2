@@ -11,6 +11,7 @@ use app\api\v4\AbstractApi;
 use app\api\v4\AcceptableMethods;
 use app\api\v4\Controller;
 use app\api\v4\Responses\AcceptedResponse;
+use app\api\v4\Responses\GetResponse;
 use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
 use app\conf\App;
@@ -51,17 +52,18 @@ final class MapcacheTileset extends AbstractApi
         $this->resource = 'mapcache';
     }
 
-    #[OA\Delete(path: '/api/v4/mapcache/database/{database}/tileset/{tileset}', operationId: 'deleteMapcacheTileset', description: "Delete a MapCache tileset's cached tiles (optionally scoped by extent and zoom). Runs mapcache_seed -m delete as a background job. Requires write/owner authorization.", tags: ['Mapcache'])]
+    #[OA\Delete(path: '/api/v4/mapcache/database/{database}/tileset/{tileset}', operationId: 'deleteMapcacheTileset', description: "Delete a MapCache tileset's cached tiles. A FULL delete (no bbox/zoom) wipes the backend store directly — synchronous for sqlite/bdb (200), background for disk (202); s3/memcache are not supported for a full delete (400 — use a scoped delete or TTL/lifecycle). A SCOPED delete (bbox and/or zoom) runs mapcache_seed -m delete as a background job (202). Requires write/owner authorization.", tags: ['Mapcache'])]
     #[OA\Parameter(name: 'database', description: 'Database name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_database')]
     #[OA\Parameter(name: 'tileset', description: 'Tileset name, i.e. the layer "schema.table" (vector variants "schema.table.mvt"/".json").', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema.roads')]
-    #[OA\Parameter(name: 'bbox', description: 'Optional extent to delete: minx,miny,maxx,maxy in the grid SRS.', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: '890000,7260000,1730000,7870000')]
-    #[OA\Parameter(name: 'zoom', description: 'Optional zoom range to delete: minzoom,maxzoom (or a single zoom).', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: '0,12')]
-    #[OA\Parameter(name: 'grid', description: 'Grid name (default g20).', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'g20')]
-    #[OA\Response(response: 202, description: 'Deletion job started')]
-    #[OA\Response(response: 400, description: 'Bad request')]
+    #[OA\Parameter(name: 'bbox', description: 'Optional extent to delete (triggers a scoped mapcache_seed delete): minx,miny,maxx,maxy in the grid SRS.', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: '890000,7260000,1730000,7870000')]
+    #[OA\Parameter(name: 'zoom', description: 'Optional zoom range to delete (triggers a scoped mapcache_seed delete): minzoom,maxzoom (or a single zoom).', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: '0,12')]
+    #[OA\Parameter(name: 'grid', description: 'Grid name for a scoped delete (default g20).', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'g20')]
+    #[OA\Response(response: 200, description: 'Tile cache deleted (synchronous backend wipe)')]
+    #[OA\Response(response: 202, description: 'Deletion job started (scoped seed, or background disk wipe)')]
+    #[OA\Response(response: 400, description: 'Bad request, or full delete unsupported for the backend (s3/memcache)')]
     #[OA\Response(response: 401, description: 'Authentication required')]
     #[OA\Response(response: 403, description: 'Not authorized')]
-    #[OA\Response(response: 404, description: 'Database cache config or tileset not found')]
+    #[OA\Response(response: 404, description: 'Database cache config or tileset not found (scoped delete)')]
     #[Override]
     public function delete_index(): Response
     {
@@ -76,15 +78,6 @@ final class MapcacheTileset extends AbstractApi
         // Authorize before revealing whether the config/tileset exists.
         $this->requireWrite($database, $layer);
 
-        $config = App::$param['path'] . 'app/wms/mapcache/' . $database . '.xml';
-        if (!is_file($config)) {
-            throw new GC2Exception('No tile cache configuration for this database', 404, null, 'NOT_FOUND');
-        }
-        // The tileset must exist in the generated config, else mapcache_seed would error.
-        if (!str_contains((string)file_get_contents($config), '<tileset name="' . $tileset . '"')) {
-            throw new GC2Exception('Tileset not found', 404, null, 'NOT_FOUND');
-        }
-
         // Read the URL query string directly: Input::get() parses the request BODY for DELETE, so
         // ?bbox=&zoom=&grid= would otherwise be silently ignored (a full-tileset delete).
         $query = [];
@@ -96,8 +89,33 @@ final class MapcacheTileset extends AbstractApi
         $bbox = self::parseBbox($query['bbox'] ?? null);
         $zoom = self::parseZoom($query['zoom'] ?? null);
 
-        // Launch mapcache_seed detached. escapeshellarg on every interpolated value; the seed
-        // process writes to its own log and its pid is captured for tracking/killing.
+        // Hybrid strategy. mapcache_seed -m delete iterates the whole grid coordinate space (it does
+        // not enumerate existing tiles), so a full-tileset delete over a deep grid never terminates.
+        // Therefore: a SCOPED delete (bbox/zoom) — where the coordinate space is bounded — goes to
+        // mapcache_seed; a FULL delete wipes the backend store directly (O(existing tiles)).
+        if ($bbox !== null || $zoom !== null) {
+            return $this->seedDelete($database, $tileset, $grid, $bbox, $zoom);
+        }
+        return $this->wipeBackend($database, $tileset, $layer);
+    }
+
+    /**
+     * Scoped delete via a detached mapcache_seed -m delete background job (works for every backend
+     * because the bounded extent/zoom keeps the coordinate iteration small). Tracked in
+     * settings.seed_jobs; returns 202 with the job uuid/pid.
+     *
+     * @throws GC2Exception|\Throwable
+     */
+    private function seedDelete(string $database, string $tileset, string $grid, ?string $bbox, ?string $zoom): Response
+    {
+        $config = App::$param['path'] . 'app/wms/mapcache/' . $database . '.xml';
+        if (!is_file($config)) {
+            throw new GC2Exception('No tile cache configuration for this database', 404, null, 'NOT_FOUND');
+        }
+        if (!str_contains((string)file_get_contents($config), '<tileset name="' . $tileset . '"')) {
+            throw new GC2Exception('Tileset not found', 404, null, 'NOT_FOUND');
+        }
+
         $uuid = Util::guid();
         $log = App::$param['path'] . 'public/logs/seeder_' . $uuid . '.log';
         $cmd = '/usr/bin/nohup /usr/local/bin/mapcache_seed'
@@ -116,7 +134,6 @@ final class MapcacheTileset extends AbstractApi
         if ($pid <= 0) {
             throw new GC2Exception('Failed to start the tile cache deletion job', 500, null, 'JOB_START_FAILED');
         }
-
         new Tileseeder(connection: new Connection(database: $database))->insert([
             'uuid' => $uuid,
             'name' => 'delete ' . $tileset,
@@ -126,7 +143,9 @@ final class MapcacheTileset extends AbstractApi
 
         return new AcceptedResponse([
             'success' => true,
-            'message' => 'Tile cache deletion started',
+            'mode' => 'seed',
+            'message' => 'Scoped tile cache deletion started',
+            'backend' => $this->cacheType($database, preg_replace('/\.(mvt|json)$/i', '', $tileset)),
             'uuid' => $uuid,
             'pid' => $pid,
             'tileset' => $tileset,
@@ -134,6 +153,115 @@ final class MapcacheTileset extends AbstractApi
             'scope' => ['bbox' => $bbox, 'zoom' => $zoom],
             '_links' => ['self' => '/api/v4/mapcache/database/' . $database . '/tileset/' . $tileset],
         ]);
+    }
+
+    /**
+     * Full-tileset delete by wiping the backend store directly, dispatched on the tileset's cache
+     * type. File-based backends are removed by their known layout (see Mapcachefile). s3/memcache
+     * can't be wiped cheaply here, so they are steered to a scoped delete or TTL/lifecycle expiry.
+     *
+     * @throws GC2Exception
+     */
+    private function wipeBackend(string $database, string $tileset, string $layer): Response
+    {
+        $cache = $this->cacheType($database, $layer);
+        $base = App::$param['path'] . 'app/wms/mapcache/';
+        return match ($cache) {
+            'sqlite' => $this->wipeSqlite($base . 'sqlite/' . $database . '/' . $tileset . '.sqlite3', $tileset),
+            'disk' => $this->wipeDiskDir($base . 'disk/' . $database . '/' . $tileset, $tileset),
+            'bdb' => $this->wipeDir($base . 'bdb/' . $database . '/' . $tileset, $tileset, 'bdb'),
+            's3', 'memcache' => throw new GC2Exception(
+                "Full delete is not supported for the '$cache' cache backend. Use a scoped delete "
+                . "(?bbox=…&zoom=…)" . ($cache === 's3' ? ' or an S3 lifecycle rule.' : '; memcache entries expire via TTL.'),
+                400, null, 'UNSUPPORTED_BACKEND'
+            ),
+            default => throw new GC2Exception("Unknown cache backend '$cache'", 400, null, 'UNKNOWN_BACKEND'),
+        };
+    }
+
+    /** Removes the tileset's SQLite database and its WAL/SHM/journal sidecars. Synchronous, O(1). */
+    private function wipeSqlite(string $dbFile, string $tileset): Response
+    {
+        $removed = 0;
+        foreach (['', '-wal', '-shm', '-journal'] as $suffix) {
+            if (is_file($dbFile . $suffix) && @unlink($dbFile . $suffix)) {
+                $removed++;
+            }
+        }
+        return $this->completed('sqlite', $tileset, $removed);
+    }
+
+    /**
+     * Removes a disk tileset directory. To avoid blocking on a directory that may hold millions of
+     * tile files, it is renamed to a tombstone (instant) and deleted in a detached background rm.
+     */
+    private function wipeDiskDir(string $dir, string $tileset): Response
+    {
+        if (!is_dir($dir)) {
+            return $this->completed('disk', $tileset, 0);
+        }
+        $uuid = Util::guid();
+        $tombstone = $dir . '.deleting-' . $uuid;
+        if (!@rename($dir, $tombstone)) {
+            exec('rm -rf ' . escapeshellarg($dir)); // fallback: synchronous
+            return $this->completed('disk', $tileset, 1);
+        }
+        exec('/usr/bin/nohup rm -rf ' . escapeshellarg($tombstone) . ' > /dev/null 2>&1 &');
+        return new AcceptedResponse([
+            'success' => true,
+            'mode' => 'wipe',
+            'message' => 'Tile cache deletion started (disk directory removed in background)',
+            'backend' => 'disk',
+            'uuid' => $uuid,
+            'tileset' => $tileset,
+        ]);
+    }
+
+    /** Removes a cache directory (bdb) synchronously. */
+    private function wipeDir(string $dir, string $tileset, string $backend): Response
+    {
+        $existed = is_dir($dir);
+        if ($existed) {
+            exec('rm -rf ' . escapeshellarg($dir));
+        }
+        return $this->completed($backend, $tileset, $existed ? 1 : 0);
+    }
+
+    private function completed(string $backend, string $tileset, int $removed): Response
+    {
+        return new GetResponse([
+            'success' => true,
+            'mode' => 'wipe',
+            'message' => 'Tile cache deleted',
+            'backend' => $backend,
+            'tileset' => $tileset,
+            'removed' => $removed,
+        ]);
+    }
+
+    /**
+     * The tileset's cache backend: the layer's def.cache, else the configured default. Read directly
+     * from settings.geometry_columns_join (not the cached getColumns) so a just-changed cache type is
+     * never served stale — deleting the wrong backend would silently leave the real cache in place.
+     */
+    private function cacheType(string $database, string $layer): string
+    {
+        [$schema, $table] = array_pad(explode('.', $layer, 2), 2, '');
+        $model = new Model(connection: new Connection(database: $database));
+        // geometry_columns_join has an extra "<schema>.<table>.gc2_non_postgis" row with a NULL def
+        // alongside the real geometry-column row, so require a non-null def.
+        $res = $model->prepare(
+            "SELECT def FROM settings.geometry_columns_join "
+            . "WHERE split_part(_key_, '.', 1) = :s AND split_part(_key_, '.', 2) = :t AND def IS NOT NULL LIMIT 1"
+        );
+        $model->execute($res, [':s' => $schema, ':t' => $table]);
+        $row = $model->fetchRow($res);
+        $cache = null;
+        if (!empty($row['def'])) {
+            $def = json_decode((string)$row['def']);
+            $cache = $def->cache ?? null;
+        }
+        return $cache ?: (App::$param['mapCache']['type'] ?? 'sqlite');
     }
 
     /**
