@@ -143,12 +143,14 @@ class Layer extends AbstractLayerApi
         $items = array_is_list($data) ? $data : [$data];
         $list = [];
         $schemas = [];
+        $mapCacheAffected = false;
         $model = new TableModel(null, connection: $this->connection);
-        $model->withTransaction(function () use (&$list, &$schemas, $items) {
+        $model->withTransaction(function () use (&$list, &$schemas, &$mapCacheAffected, $items) {
             foreach ($items as $item) {
                 $this->initiateLayer($item['name']);
                 if (isset($item['properties'])) {
                     new TileModel(table: $item['name'], connection: $this->connection)->update((object)$item['properties']);
+                    $mapCacheAffected = $mapCacheAffected || self::affectsMapCache($item['properties']);
                 }
                 if (isset($item['classes'])) {
                     $this->classification->replaceClasses($item['classes']);
@@ -159,6 +161,11 @@ class Layer extends AbstractLayerApi
         });
         foreach (array_keys($schemas) as $schema) {
             $this->writeMapFiles($schema);
+        }
+        // The MapCache config covers every layer in the database and is expensive, so only rewrite
+        // it when a caching-relevant property changed — not for styling/classes.
+        if ($mapCacheAffected) {
+            $this->writeMapCacheFile();
         }
         return $this->postResponse('/api/v4/layers/', $list);
     }
@@ -181,6 +188,11 @@ class Layer extends AbstractLayerApi
             new TileModel(table: $this->layerKey, connection: $this->connection)->update((object)$data['properties']);
         }
         $this->writeMapFiles();
+        // Only rewrite the (whole-database, expensive) MapCache config when a caching-relevant
+        // property changed.
+        if (isset($data['properties']) && self::affectsMapCache($data['properties'])) {
+            $this->writeMapCacheFile();
+        }
         return $this->patchResponse('/api/v4/layers/', [$this->layerKey]);
     }
 

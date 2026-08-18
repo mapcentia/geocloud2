@@ -12,7 +12,9 @@ use app\exceptions\GC2Exception;
 use app\inc\Input;
 use app\models\Classification;
 use app\models\Layer as LayerModel;
+use app\models\Mapcachefile as MapcachefileModel;
 use app\models\Mapfile as MapfileModel;
+use Throwable;
 
 /**
  * Shared behavior for the api/v4/layers/... controllers: layer-key validation,
@@ -62,6 +64,46 @@ abstract class AbstractLayerApi extends AbstractApi
         $mapfile = new MapfileModel(connection: $connection);
         $mapfile->writeMapfile($mapfile->generateWms(), 'wms');
         $mapfile->writeMapfile($mapfile->generateWfs(), 'wfs');
+    }
+
+    /**
+     * The subset of layer `def` keys whose value ends up in the generated MapCache config
+     * (see Mapcachefile::layerSettings). Classes, styles and labels — i.e. the styling that goes
+     * into the WMS/WFS mapfiles — do NOT appear in the MapCache config, so they never require it to
+     * be rewritten (a styling change only makes already-cached tiles stale, which is a cache-delete
+     * concern, not a config concern).
+     */
+    public const array MAPCACHE_RELEVANT_KEYS = [
+        'cache', 'format', 'ttl', 'auto_expire', 'meta_size', 'meta_buffer', 'layers', 's3_tile_set',
+    ];
+
+    /**
+     * True when a layer-properties update touches a key that changes the MapCache config, i.e. when
+     * rewriting it is warranted. Unlike the mapfiles, the MapCache config covers every layer in the
+     * database and is expensive to generate, so this gate keeps it from being rewritten on
+     * styling-only or otherwise MapCache-irrelevant changes.
+     *
+     * @param array<string,mixed>|null $properties the layer "properties" (def) in the request
+     */
+    public static function affectsMapCache(?array $properties): bool
+    {
+        return is_array($properties)
+            && !empty(array_intersect(array_keys($properties), self::MAPCACHE_RELEVANT_KEYS));
+    }
+
+    /**
+     * Regenerates the per-database MapCache config (all layers in the database). Best-effort: a
+     * failure is logged, not surfaced, so a tilecache-config hiccup never fails an otherwise
+     * successful layer update. Mapcachefile::write() is a no-op when the content is unchanged.
+     */
+    protected function writeMapCacheFile(): void
+    {
+        try {
+            $model = new MapcachefileModel(connection: $this->connection);
+            $model->write($model->generate());
+        } catch (Throwable $e) {
+            error_log('MapCache config regeneration failed: ' . $e);
+        }
     }
 
     /**
