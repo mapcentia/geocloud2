@@ -9,6 +9,7 @@
 
 namespace app\models;
 
+use app\inc\Connection;
 use app\inc\Model;
 use Exception;
 use PDOException;
@@ -18,9 +19,9 @@ class Tileseeder extends Model
     /**
      * Tileseeder constructor.
      */
-    function __construct()
+    function __construct(?Connection $connection = null)
     {
-        parent::__construct();
+        parent::__construct(connection: $connection);
     }
 
     /**
@@ -31,7 +32,7 @@ class Tileseeder extends Model
     {
         $sql = "INSERT INTO settings.seed_jobs (uuid, name, pid, host) VALUES (:uuid, :name, :pid, :host) RETURNING *";
         $res = $this->prepare($sql);
-        $arr = ["uuid" => $data["uuid"], "name" => $data["name"], "pid" => $data["pid"], "host" => $_SERVER["SERVER_ADDR"]];
+        $arr = ["uuid" => $data["uuid"], "name" => $data["name"], "pid" => $data["pid"], "host" => $data["host"] ?? ($_SERVER["SERVER_ADDR"] ?? "")];
         $res->execute($arr);
     }
 
