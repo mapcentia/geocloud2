@@ -21,9 +21,12 @@ use stdClass;
  */
 class Mapcachefile extends Model
 {
+    private string $path;
     function __construct(?\app\inc\Connection $connection = null)
     {
         parent::__construct(connection: $connection);
+        $this->path = App::$param['mapCache']['path'] ?? App::$param['path'];
+
     }
 
     /**
@@ -181,7 +184,6 @@ class Mapcachefile extends Model
     private function renderHeader(): string
     {
         $db = $this->connection->database;
-        $path = App::$param['path'];
         $host = App::$param['host'] ?? '';
 
         $s = "<mapcache>\n";
@@ -196,12 +198,12 @@ class Mapcachefile extends Model
         $s .= "    <url>$host/mapcache/$db</url>\n";
         $s .= "  </metadata>\n";
         $s .= "  <cache name=\"sqlite\" type=\"sqlite3\">\n";
-        $s .= "    <dbfile>{$path}app/wms/mapcache/sqlite/$db/{tileset}.sqlite3</dbfile>\n";
+        $s .= "    <dbfile>{$this->path}app/wms/mapcache/sqlite/$db/{tileset}.sqlite3</dbfile>\n";
         $s .= "    <symlink_blank/>\n";
         $s .= "    <creation_retry>3</creation_retry>\n";
         $s .= "  </cache>\n";
         $s .= "  <cache name=\"disk\" type=\"disk\">\n";
-        $s .= "    <base>{$path}app/wms/mapcache/disk/$db/</base>\n";
+        $s .= "    <base>{$this->path}app/wms/mapcache/disk/$db/</base>\n";
         $s .= "    <symlink_blank/>\n";
         $s .= "    <creation_retry>3</creation_retry>\n";
         $s .= "  </cache>\n";
@@ -273,13 +275,13 @@ class Mapcachefile extends Model
      */
     private function ensureBdbBase(string $table): string
     {
-        $base = App::$param['path'] . "app/wms/mapcache/bdb/";
+        $base = $this->path . "app/wms/mapcache/bdb/";
         foreach ([$base, $base . $this->connection->database . "/", $base . $this->connection->database . "/" . $table] as $dir) {
             if (!file_exists($dir)) {
                 @mkdir($dir);
             }
         }
-        return App::$param['path'] . "app/wms/mapcache/bdb/" . $this->connection->database . "/" . $table;
+        return $this->path . "app/wms/mapcache/bdb/" . $this->connection->database . "/" . $table;
     }
 
     private function mapserverUrl(string $schema, string $type, bool $trailingAmp = true): string
@@ -383,7 +385,7 @@ class Mapcachefile extends Model
      */
     public function write(string $content): array
     {
-        $file = App::$param['path'] . "app/wms/mapcache/" . $this->connection->database . ".xml";
+        $file = $this->path . "app/wms/mapcache/" . $this->connection->database . ".xml";
         $changed = !file_exists($file) || md5_file($file) != md5($content);
         if ($changed) {
             @unlink($file);
