@@ -14,6 +14,7 @@ use app\api\v4\Responses\StreamedResponse;
 use app\api\v4\Scope;
 use app\conf\App;
 use app\exceptions\ServiceException;
+use app\inc\Cache;
 use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Route2;
@@ -33,6 +34,9 @@ use Throwable;
 #[Controller(route: 'api/v4/ows/schema/{schema}', scope: Scope::SUB_USER_ALLOWED)]
 final class Ows extends AbstractApi
 {
+    /** Seconds to cache a per-layer allow decision (OWS/WMS tiles are hit many times per second). */
+    private const int AUTH_CACHE_TTL = 60;
+
     public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
@@ -134,16 +138,28 @@ final class Ows extends AbstractApi
         if ($ctx->trusted) {
             return;
         }
+        // Cache the allow decision per (identity, layer) for AUTH_CACHE_TTL, mirroring the MapCache
+        // proxy: a cache hit skips both the authentication lookup and the per-layer check. The
+        // identity is the bearer token, so a revoked/rotated token stops being trusted within the TTL.
+        $identity = 'j:' . hash('sha256', (string)Input::getJwtToken());
         $model = $ctx->model();
-        $isTransaction = false; // OWS GetMap/GetFeature are read
         foreach ($req->layers as $layer) {
             $rel = "$ctx->schema." . $this->tableOf($layer);
+            $cacheKey = $ctx->database . '_owsauth_' . hash('sha256', $identity . '|' . $rel);
+            $item = Cache::getItem($cacheKey);
+            if ($item !== null && $item->isHit() && $item->get() === true) {
+                continue; // allow decision cached
+            }
             $auth = $model->getGeometryColumns($rel, 'authentication');
             if ($auth === 'Read/write' || !empty(Input::getAuthUser())) {
                 new Authorization(connection: $ctx->connection)->check(
-                    relName: $rel, transaction: $isTransaction, isAuth: true,
+                    relName: $rel, transaction: false, isAuth: true,
                     subUser: $ctx->parentUser ? null : $ctx->user, userGroup: $ctx->userGroup, rels: []
                 );
+            }
+            if ($item !== null) {
+                $item->set(true)->expiresAfter(self::AUTH_CACHE_TTL);
+                Cache::save($item);
             }
         }
     }

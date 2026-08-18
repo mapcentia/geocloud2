@@ -16,6 +16,7 @@ use app\conf\App;
 use app\exceptions\OwsException;
 use app\exceptions\ServiceException;
 use app\inc\BasicAuth;
+use app\inc\Cache;
 use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Route2;
@@ -34,6 +35,9 @@ use Throwable;
 #[Controller(route: 'api/v4/ows/schema/{schema}/database/{database}', scope: Scope::PUBLIC)]
 final class OwsNoToken extends AbstractApi
 {
+    /** Seconds to cache a per-layer allow decision (OWS/WMS tiles are hit many times per second). */
+    private const int AUTH_CACHE_TTL = 60;
+
     public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
@@ -148,6 +152,14 @@ final class OwsNoToken extends AbstractApi
     private function basicAuthPerLayer(Context $ctx, OwsRequest $req): void
     {
         if ($ctx->trusted || empty($req->layers)) return;
+        // Cache the allow decision per (Basic credentials, layer) for AUTH_CACHE_TTL, mirroring the
+        // MapCache proxy: a cache hit skips both the authentication lookup and the per-layer Basic
+        // auth. A wrong password is never cached as an allow — BasicAuth::authenticate() challenges
+        // before we reach the cache. ANONYMOUS requests are deliberately NOT cached: an allow cached
+        // for "*" would keep serving a layer that has just been switched to Read/write until the TTL
+        // expired, so anonymous access is re-evaluated on every request.
+        $authUser = Input::getAuthUser();
+        $identity = $authUser ? 'b:' . hash('sha256', $authUser . ':' . (Input::getAuthPw() ?? '')) : null;
         $model = $ctx->model();
         foreach ($req->layers as $tn) {
             // The route pins the schema; normalize the (possibly unqualified or
@@ -157,10 +169,18 @@ final class OwsNoToken extends AbstractApi
             // raw unqualified name to BasicAuth would silently skip the subuser
             // privilege check (its split on '.' yields an empty table name).
             $rel = "{$ctx->schema}." . $this->tableOf($tn);
+            $item = $identity !== null ? Cache::getItem($ctx->database . '_owsauth_' . hash('sha256', $identity . '|' . $rel)) : null;
+            if ($item !== null && $item->isHit() && $item->get() === true) {
+                continue; // allow decision cached
+            }
             $auth = $model->getGeometryColumns($rel, 'authentication');
-            $needsAuth = $auth === 'Read/write' || !empty(Input::getAuthUser());
+            $needsAuth = $auth === 'Read/write' || !empty($authUser);
             if ($needsAuth) {
                 new BasicAuth(connection: $ctx->connection)->authenticate($rel, false);
+            }
+            if ($item !== null) {
+                $item->set(true)->expiresAfter(self::AUTH_CACHE_TTL);
+                Cache::save($item);
             }
         }
     }

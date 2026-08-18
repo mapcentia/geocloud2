@@ -149,6 +149,20 @@ class OwsApiCest
         $I->assertStringNotContainsStringIgnoringCase('ServiceExceptionReport', $body);
     }
 
+    // The per-layer allow decision is cached for 60s. The previous test already served (and cached)
+    // this token on the Read/write layer; a second identical request must be served from the cached
+    // allow — same result, exercising the cache-hit path.
+    public function shouldServeGetMapFromCachedAuthDecision(ApiTester $I)
+    {
+        $qs = 'SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=' . $this->schemaName . '.roads'
+            . '&CRS=EPSG:4326&BBOX=-1,-1,1,1&WIDTH=64&HEIGHT=64&FORMAT=image/png&STYLES=';
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
+        $I->sendGET('/api/v4/ows/schema/' . $this->schemaName . '?' . $qs);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertStringContainsString('image/png', strtolower($I->grabHttpHeader('Content-Type')));
+        $I->assertStringNotContainsStringIgnoringCase('ServiceExceptionReport', $I->grabResponse());
+    }
+
     public function shouldReturnServiceExceptionForUnknownLayer(ApiTester $I)
     {
         $qs = 'SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=' . $this->schemaName . '.nope'
