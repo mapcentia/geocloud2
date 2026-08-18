@@ -21,12 +21,9 @@ use stdClass;
  */
 class Mapcachefile extends Model
 {
-    private string $path;
     function __construct(?\app\inc\Connection $connection = null)
     {
         parent::__construct(connection: $connection);
-        $this->path = App::$param['mapCache']['path'] ?? App::$param['path'];
-
     }
 
     /**
@@ -142,16 +139,6 @@ class Mapcachefile extends Model
         return $s;
     }
 
-    public static function renderBdbCache(string $name, string $base): string
-    {
-        $s = "  <cache name=\"$name\" type=\"bdb\">\n";
-        $s .= "    <base>$base</base>\n";
-        $s .= "    <symlink_blank/>\n";
-        $s .= "    <creation_retry>3</creation_retry>\n";
-        $s .= "  </cache>\n";
-        return $s;
-    }
-
     /**
      * An s3 cache element. $tileSetPath is the first path segment of the
      * object url — the database name for the shared cache, or the layer's
@@ -184,6 +171,7 @@ class Mapcachefile extends Model
     private function renderHeader(): string
     {
         $db = $this->connection->database;
+        $path = App::$param['mapCache']['path'] ?? App::$param['path'];
         $host = App::$param['host'] ?? '';
 
         $s = "<mapcache>\n";
@@ -198,12 +186,12 @@ class Mapcachefile extends Model
         $s .= "    <url>$host/mapcache/$db</url>\n";
         $s .= "  </metadata>\n";
         $s .= "  <cache name=\"sqlite\" type=\"sqlite3\">\n";
-        $s .= "    <dbfile>{$this->path}app/wms/mapcache/sqlite/$db/{tileset}.sqlite3</dbfile>\n";
+        $s .= "    <dbfile>{$path}app/wms/mapcache/sqlite/$db/{tileset}.sqlite3</dbfile>\n";
         $s .= "    <symlink_blank/>\n";
         $s .= "    <creation_retry>3</creation_retry>\n";
         $s .= "  </cache>\n";
         $s .= "  <cache name=\"disk\" type=\"disk\">\n";
-        $s .= "    <base>{$this->path}app/wms/mapcache/disk/$db/</base>\n";
+        $s .= "    <base>{$path}app/wms/mapcache/disk/$db/</base>\n";
         $s .= "    <symlink_blank/>\n";
         $s .= "    <creation_retry>3</creation_retry>\n";
         $s .= "  </cache>\n";
@@ -270,20 +258,6 @@ class Mapcachefile extends Model
         return $s;
     }
 
-    /**
-     * Create the nested bdb cache directory for a table and return it.
-     */
-    private function ensureBdbBase(string $table): string
-    {
-        $base = $this->path . "app/wms/mapcache/bdb/";
-        foreach ([$base, $base . $this->connection->database . "/", $base . $this->connection->database . "/" . $table] as $dir) {
-            if (!file_exists($dir)) {
-                @mkdir($dir);
-            }
-        }
-        return $this->path . "app/wms/mapcache/bdb/" . $this->connection->database . "/" . $table;
-    }
-
     private function mapserverUrl(string $schema, string $type, bool $trailingAmp = true): string
     {
         return App::$param['mapCache']['wmsHost'] . "/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/"
@@ -327,10 +301,6 @@ class Mapcachefile extends Model
 
             $s .= "\n  <!-- $table -->\n";
 
-            if ($cache == 'bdb') {
-                $cache = "bdb_" . $table;
-                $s .= self::renderBdbCache($cache, $this->ensureBdbBase($table));
-            }
             if ($cache == 's3' && $set['s3TileSet']) {
                 $cache = "s3_" . $table;
                 $s .= self::renderS3Cache($cache, $set['s3TileSet'], perTileSet: false);
@@ -347,8 +317,7 @@ class Mapcachefile extends Model
                 title: $set['title'], abstract: $set['abstract'], wgs84bbox: $wgs84bbox);
 
             // MVT and JSON tiles come from the schema's WFS mapfile. The
-            // per-layer bdb/s3 cache override only applies to the PNG tileset.
-            $vectorCache = $set['cache'] == 'bdb' ? $cache : $set['cache'];
+            $vectorCache =  $set['cache'];
             foreach ([['mvt', 'MVT', $mvtEnabled], ['json', 'JSON', $jsonEnabled]] as [$ext, $format, $enabled]) {
                 if (!$enabled) {
                     continue;
@@ -365,7 +334,7 @@ class Mapcachefile extends Model
             $schemaUrl = empty(App::$param['useQgisForMergedLayers'][$schema])
                 ? $this->mapserverUrl($schema, 'wms')
                 : App::$param['mapCache']['wmsHost'] . "/cgi-bin/qgis_mapserv.fcgi?map=/var/www/geocloud2/app/wms/qgsfiles/parsed_"
-                    . App::$param['useQgisForMergedLayers'][$schema] . "&transparent=true";
+                . App::$param['useQgisForMergedLayers'][$schema] . "&transparent=true";
             $s .= self::renderWmsSource($schema, 'image/png', implode(',', $layers), $schemaUrl);
             $s .= self::renderTileset($schema, $schema, $defaultCache, $gridNames, 'PNG', 60,
                 metaSize: 3, metaBuffer: 0, title: $schema);
@@ -385,7 +354,7 @@ class Mapcachefile extends Model
      */
     public function write(string $content): array
     {
-        $file = $this->path . "app/wms/mapcache/" . $this->connection->database . ".xml";
+        $file = App::$param['path'] . "app/wms/mapcache/" . $this->connection->database . ".xml";
         $changed = !file_exists($file) || md5_file($file) != md5($content);
         if ($changed) {
             @unlink($file);
