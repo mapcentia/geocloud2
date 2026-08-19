@@ -137,7 +137,14 @@ class Session extends Model
                 $response['data']['api_key'] = (new Setting(new Connection(database: $response['data']['parentdb'])))->get()['data']->api_key;
             } else {
                 $userGroupFullChain = new User()->getFullInheritance($response['data']['usergroup'] ?? [], $response['data']['parentdb']);
-                return $this->createOAuthResponse($response['data']['parentdb'], $response['data']['screen_name'], !$response['data']['subuser'], $grantType == GrantType::AUTHORIZATION_CODE, $userGroupFullChain);
+                return $this->createOAuthResponse(
+                    db: $response['data']['parentdb'],
+                    user: $response['data']['screen_name'],
+                    isSuperUser:  !$response['data']['subuser'],
+                    code: $grantType == GrantType::AUTHORIZATION_CODE,
+                    userGroup:  $userGroupFullChain,
+                    properties: $response['data']['properties'],
+                );
             }
             // Insert into logins
             $this->logLogin($sUserID, $parentDb);
@@ -436,7 +443,7 @@ class Session extends Model
         $_SESSION["subuser"] = (bool)$row['parentdb'];
         $_SESSION["properties"] = !empty($row["properties"]) ? json_decode($row["properties"]) : null;
         $_SESSION['email'] = $row['email'];
-        $_SESSION['usergroup'] = !empty($row["usergroup"]) ? new User()->getFullInheritance(json_decode($row["usergroup"]), $row['parentdb']) : null;
+        $_SESSION['usergroup'] = $_SESSION["subuser"] ? new User()->getFullInheritance(json_decode($row["usergroup"]), $row['parentdb']) : null;
         $_SESSION['created'] = strtotime($row['created']);
         $_SESSION['postgisschema'] = $schema;
     }
