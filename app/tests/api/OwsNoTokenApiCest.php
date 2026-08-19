@@ -3,10 +3,11 @@
 use Codeception\Util\HttpCode;
 
 /**
- * Tests app/api/v4/controllers/OwsNoToken.php — anonymous and HTTP Basic
- * access to the v4 OWS endpoint (WMS/WFS/UTFGRID) for clients like QGIS that
- * send no bearer token. Layers default to authentication level 'Write':
- * reads are anonymous; 'Read/write' layers require Basic auth for reads.
+ * Tests the token-less flows of app/api/v4/controllers/Ows.php — anonymous and
+ * HTTP Basic access to the v4 OWS endpoint (WMS/WFS/UTFGRID) for clients like
+ * QGIS that send no bearer token. Layers default to authentication level
+ * 'Write': reads are anonymous; 'Read/write' layers require Basic auth for
+ * reads. Token flows are covered by OwsApiCest.
  */
 class OwsNoTokenApiCest
 {
