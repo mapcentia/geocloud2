@@ -35,7 +35,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     required: ["name"],
     properties: [
         new OA\Property(property: "name", title: "Name", description: "Layer key: schema.table.geometry_column.", type: "string", example: "my_schema.my_table.the_geom"),
-        new OA\Property(property: "properties", title: "Properties", description: "Layer properties (the def JSON). All values are stored as strings (empty string when unset), except where noted.", type: "object", properties: [
+        new OA\Property(property: "properties", title: "Properties", description: "Layer properties (the def JSON). All values are stored as strings (empty string when unset), except where noted.", properties: [
             new OA\Property(property: "theme_column", title: "Class item", description: "Column (attribute) evaluated against each class's expression. Maps to MapServer LAYER CLASSITEM. Empty means classes are matched without a CLASSITEM (e.g. numeric/logical expressions only).", type: "string", example: "type"),
             new OA\Property(property: "label_column", title: "Label item", description: "Column whose value is exposed to legacy label text/expressions. Maps to MapServer LAYER LABELITEM.", type: "string", example: "name"),
             new OA\Property(property: "opacity", title: "Opacity", description: "Layer opacity percentage (0-100), applied via a MapServer LAYER COMPOSITE OPACITY block. Numeric value stored as a string.", type: "string", example: "80"),
@@ -60,7 +60,7 @@ use Symfony\Component\Validator\Constraints as Assert;
             new OA\Property(property: "s3_tile_set", title: "S3 tile set name", description: "Overrides the tile-set path segment used when cache is 's3'. Defaults to the layer name when empty.", type: "string", example: "my_tileset"),
             new OA\Property(property: "label_no_clip", title: "No clipping of labels", description: "Skips clipping of shapes when determining label anchor points (MapServer PROCESSING \"LABEL_NO_CLIP=True\"), avoiding label position jitter and duplicate labels across tiled requests.", type: "boolean", example: true),
             new OA\Property(property: "polyline_no_clip", title: "No clipping of polylines", description: "Skips clipping of shapes when rendering styled (dashed/symbolised) lines (MapServer PROCESSING \"POLYLINE_NO_CLIP=True\"), avoiding style discontinuities and edge effects across tiled requests.", type: "boolean", example: false),
-        ]),
+        ], type: "object"),
         new OA\Property(property: "classes", title: "Classes", description: "Classes with styles and labels.", type: "array", items: new OA\Items(ref: "#/components/schemas/LayerClass")),
     ],
     type: "object"
@@ -149,6 +149,7 @@ class Layer extends AbstractLayerApi
             foreach ($items as $item) {
                 $this->initiateLayer($item['name']);
                 if (isset($item['properties'])) {
+                    $item['properties']['cache'] = !empty($item['properties']['cache']) ? $item['properties']['cache'] : App::$param['mapCache']['type'];
                     new TileModel(table: $item['name'], connection: $this->connection)->update((object)$item['properties']);
                     $mapCacheAffected = $mapCacheAffected || self::affectsMapCache($item['properties']);
                 }
