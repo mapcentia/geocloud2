@@ -4,7 +4,7 @@ networks:
 
 services:
   mapserver:
-    image: mapcentia/gc2:php8.4-1
+    image: mapcentia/mapserver:php8.4-1
     privileged: true
     build:
       context: .
@@ -13,8 +13,18 @@ services:
       args:
         - ECW_VERSION=3
         - PHP_VERSION=8.4
-  gc2core:
-    image: gc2core
+  gc2:
+    image: mapcentia/gc2:php8.4-1
+    privileged: true
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: cron
+      args:
+        - ECW_VERSION=3
+        - PHP_VERSION=8.4
+  dev:
+    image: dev
     restart: unless-stopped
     privileged: true
     build:
@@ -37,7 +47,6 @@ services:
     env_file: conn.env
     extra_hosts:
       - host.docker.internal:host-gateway
-
   gc2core_frankenphp:
     image: centia-io:http
     privileged: true
@@ -54,7 +63,6 @@ services:
     env_file: conn.env
     extra_hosts:
       - host.docker.internal:host-gateway
-
   event:
     image: event
     build:
@@ -103,7 +111,6 @@ services:
       - "6379:6379"
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
-
   postgres:
     image: postgis/postgis:16-3.4
     container_name: postgres
@@ -116,7 +123,6 @@ services:
     networks:
       - default
       - internal
-
   keycloak:
     image: quay.io/keycloak/keycloak:26.3.3
     command:

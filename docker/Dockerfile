@@ -145,7 +145,7 @@ WORKDIR /gdal-$GDAL_VERSION/build
 
 # Build GDAL with ECW and LibKML
 ENV GDAL_PYTHON_BINDINGS_WITHOUT_NUMPY=YES
-RUN cmake -DWITH_PYTHON=YES -DWITH_LIBKML=YES -DWITH_ECW=/usr/local/ -DCMAKE_BUILD_TYPE=Release .. \
+RUN cmake -DBUILD_PYTHON_BINDINGS=OFF -DWITH_LIBKML=YES -DWITH_ECW=/usr/local/ -DCMAKE_BUILD_TYPE=Release .. \
     && cmake --build . -j"$(nproc)" \
     && cmake --build . --target install \
     && ln -s /usr/local/bin/ogr2ogr /usr/bin/ogr2ogr
@@ -268,32 +268,6 @@ RUN a2disconf other-vhosts-access-log
 # Opcache config
 COPY conf/fpm/opcache.ini /etc/php/${PHP_VERSION}/mods-available/
 
-###############################################################################
-# Cron jobs
-###############################################################################
-# Clean up job for app/tmp
-RUN crontab -l 2>/dev/null | { cat; echo "0 0 * * * php -f /var/www/geocloud2/app/scripts/clean_tmp_dir.php 1>> /dev/null 2>&1"; } | crontab
-# Clean up job for tmp tables
-RUN crontab -l 2>/dev/null | { cat; echo "0 0 * * * php -f /var/www/geocloud2/app/scripts/clean_scheduler_tables.php 1>> /dev/null 2>&1"; } | crontab
-# Purge locks
-RUN crontab -l 2>/dev/null | { cat; echo "* * * * * php -f /var/www/geocloud2/app/scripts/purge_locks.php > /var/www/geocloud2/public/logs/purge_locks.log"; } | crontab
-# Keep app/wms/mapcache/mapcache.conf in sync with the per-database MapCache xml files (replaces the
-# watch_mapcache_changes.sh + reload.js watcher). Runs as root: it validates and gracefully reloads Apache.
-RUN crontab -l 2>/dev/null | { cat; echo "* * * * * php -f /var/www/geocloud2/app/scripts/mapcache_conf.php >> /var/www/geocloud2/public/logs/mapcache_conf.log 2>&1"; } | crontab
-# Create scheduler report once a day
-RUN crontab -l 2>/dev/null | { cat; echo "0 6 * * * php -f /var/www/geocloud2/app/scripts/job_report.php 1>> /dev/null 2>&1"; } | crontab
-# Run scheduler
-RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data php -f /var/www/geocloud2/app/scripts/scheduler.php 1>> /dev/null 2>&1"; } | crontab
-# Functions: enqueue due scheduled invocations, dispatch DB-event triggers, run the queue.
-# All three are DB/HTTP only (with functionRunner=HttpFunctionRunner the worker just
-# calls the gc2-function-runner service), so they run safely as www-data.
-RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data php -f /var/www/geocloud2/app/scripts/function_scheduler.php 1>> /dev/null 2>&1"; } | crontab
-RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data php -f /var/www/geocloud2/app/scripts/function_event_dispatcher.php 1>> /dev/null 2>&1"; } | crontab
-RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data php -f /var/www/geocloud2/app/scripts/function_worker.php 1>> /dev/null 2>&1"; } | crontab
-
-# (Optional) finalize crontab
-RUN crontab -l 2>/dev/null | { cat; echo ""; } | crontab
-
 # ogr2postgis
 RUN git clone --branch gui https://github.com/mapcentia/ogr2postgis.git \
     && cd ogr2postgis \
@@ -343,9 +317,37 @@ RUN ln -s /var/www/geocloud2/dashboard/build/ /var/www/geocloud2/public/dashboar
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
 ###############################################################################
+# Cron jobs Stage
+###############################################################################
+FROM mapserver AS cron
+
+# Clean up job for app/tmp
+RUN crontab -l 2>/dev/null | { cat; echo "0 0 * * * php -f /var/www/geocloud2/app/scripts/clean_tmp_dir.php 1 > /proc/1/fd/1 2>&1"; } | crontab
+# Clean up job for tmp tables
+RUN crontab -l 2>/dev/null | { cat; echo "0 0 * * * php -f /var/www/geocloud2/app/scripts/clean_scheduler_tables.php 1 > /proc/1/fd/1 2>&1"; } | crontab
+# Purge locks
+RUN crontab -l 2>/dev/null | { cat; echo "* * * * * php -f /var/www/geocloud2/app/scripts/purge_locks.php > /proc/1/fd/1 2>&1"; } | crontab
+# Keep app/wms/mapcache/mapcache.conf in sync with the per-database MapCache xml files (replaces the
+# watch_mapcache_changes.sh + reload.js watcher). Runs as root: it validates and gracefully reloads Apache.
+RUN crontab -l 2>/dev/null | { cat; echo "* * * * * php -f /var/www/geocloud2/app/scripts/mapcache_conf.php  > /proc/1/fd/1 2>&1"; } | crontab
+# Create scheduler report once a day
+RUN crontab -l 2>/dev/null | { cat; echo "0 6 * * * php -f /var/www/geocloud2/app/scripts/job_report.php 1 > /proc/1/fd/1 2>&1"; } | crontab
+# Run scheduler
+RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data php -f /var/www/geocloud2/app/scripts/scheduler.php 1 > /proc/1/fd/1 2>&1"; } | crontab
+# Functions: enqueue due scheduled invocations, dispatch DB-event triggers, run the queue.
+# All three are DB/HTTP only (with functionRunner=HttpFunctionRunner the worker just
+# calls the gc2-function-runner service), so they run safely as www-data.
+RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data php -f /var/www/geocloud2/app/scripts/function_scheduler.php 1 > /proc/1/fd/1 2>&1"; } | crontab
+RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data php -f /var/www/geocloud2/app/scripts/function_event_dispatcher.php 1 > /proc/1/fd/1 2>&1"; } | crontab
+RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data php -f /var/www/geocloud2/app/scripts/function_worker.php 1 > /proc/1/fd/1 2>&1"; } | crontab
+
+# (Optional) finalize crontab
+RUN crontab -l 2>/dev/null | { cat; echo ""; } | crontab
+
+###############################################################################
 # Dev Stage (final)
 ###############################################################################
-FROM mapserver AS dev
+FROM cron AS dev
 
 ARG PHP_VERSION
 ENV PHP_VERSION=${PHP_VERSION}
