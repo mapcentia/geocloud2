@@ -48,7 +48,7 @@ final class Wfs extends AbstractApi
         parent::__construct($connection);
     }
 
-    #[OA\Get(path: '/api/v4/wfs/schema/{schema}/database/{database}/srs/{srs}/{timeSlice}', operationId: 'getWfs', description: "WFS endpoint (GetCapabilities, DescribeFeatureType, GetFeature). Accepts Bearer token, HTTP Basic and anonymous clients; protected layers challenge token-less requests with HTTP Basic auth.", tags: ['Wfs'])]
+    #[OA\Get(path: '/api/v4/wfs/schema/{schema}/database/{database}/srs/{srs}/ts/{timeSlice}', operationId: 'getWfs', description: "WFS endpoint (GetCapabilities, DescribeFeatureType, GetFeature). Accepts Bearer token, HTTP Basic and anonymous clients; protected layers challenge token-less requests with HTTP Basic auth.", tags: ['Wfs'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'database', description: 'Database name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_database')]
     #[OA\Parameter(name: 'srs', description: 'Output EPSG code (SRID). Optional path segment.', in: 'path', required: false, schema: new OA\Schema(type: 'integer'), example: 25832)]
@@ -69,7 +69,7 @@ final class Wfs extends AbstractApi
         return $this->stream();
     }
 
-    #[OA\Post(path: '/api/v4/wfs/schema/{schema}/database/{database}/srs/{srs}/{timeSlice}', operationId: 'postWfs', description: "WFS POST endpoint for XML-encoded GetFeature and Transaction (WFS-T) requests. Accepts Bearer token, HTTP Basic and anonymous clients; transactions on a protected layer require credentials.", tags: ['Wfs'])]
+    #[OA\Post(path: '/api/v4/wfs/schema/{schema}/database/{database}/srs/{srs}/ts/{timeSlice}', operationId: 'postWfs', description: "WFS POST endpoint for XML-encoded GetFeature and Transaction (WFS-T) requests. Accepts Bearer token, HTTP Basic and anonymous clients; transactions on a protected layer require credentials.", tags: ['Wfs'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'database', description: 'Database name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_database')]
     #[OA\Parameter(name: 'srs', description: 'Output EPSG code (SRID). Optional path segment.', in: 'path', required: false, schema: new OA\Schema(type: 'integer'), example: 25832)]
