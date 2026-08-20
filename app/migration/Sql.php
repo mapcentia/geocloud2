@@ -214,6 +214,8 @@ class Sql
                         created_at TIMESTAMPTZ NOT NULL DEFAULT now()
                     )";
         $sqls[] = "ALTER TABLE settings.geometry_columns_join ADD COLUMN qml TEXT";
+        $sqls[] = "ALTER TABLE settings.key_value ADD COLUMN owner VARCHAR(256)";
+        $sqls[] = "ALTER TABLE settings.key_value ADD COLUMN public BOOLEAN DEFAULT FALSE";
         $sqls[] = "DROP VIEW non_postgis_matviews CASCADE";
         $sqls[] = "CREATE VIEW non_postgis_matviews AS
                     SELECT
