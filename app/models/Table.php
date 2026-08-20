@@ -129,6 +129,12 @@ class Table extends Model
             $this->postgisdb . '_' . md5($relName) . '*',
             $this->postgisdb . '*_meta_*',
             $this->postgisdb . '*_legend_*',
+            // getGeometryColumns() caches per (rel, field) under a *_geometryColumns key
+            // (md5(rel.'_'.field), so the md5(relName) pattern above never matches it) and is
+            // consulted before getColumns(). Leaving it stale keeps serving the old
+            // 'authentication' level — a security window where a layer switched to Read/write
+            // still answers anonymous WFS/OWS reads until the TTL expires.
+            $this->postgisdb . '*_geometryColumns',
         ];
         Cache::deleteByPatterns($patterns);
     }

@@ -604,8 +604,11 @@ class User extends Model
         return $groups === [] ? null : $groups;
     }
 
-    public function getFullInheritance(array $users, string $parentDb): array
+    public function getFullInheritance(?array $users, string $parentDb): array
     {
+        if ($users === null) {
+            return [];
+        }
         $queue = [];
         foreach ($users as $user) {
             $name = $this->resolveScreenName($user);

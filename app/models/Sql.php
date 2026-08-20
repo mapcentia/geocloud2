@@ -382,8 +382,6 @@ class Sql extends Model
 
             // NDJSON output
             // ==============
-
-            header('Content-type: text/plain; charset=utf-8');
             $i = 0;
             $json = "";
             $bulkSize = 1000;
@@ -428,7 +426,6 @@ class Sql extends Model
             // CSV output
             // ================
 
-            header('Content-type: text/plain; charset=utf-8');
             $withGeom = $geoformat;
             $separator = ";";
             $first = true;
@@ -552,7 +549,6 @@ class Sql extends Model
             $csv = implode("\n", $lines);
 
             if ($format == "csv") {
-                header("Content-Type: text/csv");
                 header('Content-Disposition: attachment; filename="file.csv"');
                 ob_clean();
                 flush();
@@ -573,7 +569,6 @@ class Sql extends Model
             fclose($handle);
             unlink($file);
             $objWriter = new Xlsx($objPHPExcel);
-            header('Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             header('Content-Disposition: attachment; filename="file.xlsx"');
             $objWriter->save('php://output');
             return [];
