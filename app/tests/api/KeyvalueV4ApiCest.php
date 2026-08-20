@@ -26,6 +26,7 @@ class KeyvalueV4ApiCest
     private $subPrivate;
     private $subPublic;
     private $legacyKey;
+    private $projKey;
 
     public function __construct()
     {
@@ -37,6 +38,7 @@ class KeyvalueV4ApiCest
         $this->subPrivate = 'sub_private_' . $ts;
         $this->subPublic = 'sub_public_' . $ts;
         $this->legacyKey = 'legacy_' . $ts;
+        $this->projKey = 'proj_' . $ts;
     }
 
     private function asSuper(ApiTester $I): void
@@ -263,6 +265,72 @@ class KeyvalueV4ApiCest
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->sendDELETE('/api/v4/keyvalue/' . $this->legacyKey);
         $I->seeResponseCodeIs(HttpCode::NO_CONTENT);
+    }
+
+    // ---- paths (JSON projection) -----------------------------------------
+
+    public function shouldCreateProjectionKey(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendPOST('/api/v4/keyvalue/' . $this->projKey, json_encode([
+            'value' => ['user' => ['name' => 'Alice', 'age' => 30], 'active' => true],
+            'public' => true,
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+    }
+
+    // A single ?paths projects one JSON sub-tree, keyed by the path string.
+    public function shouldProjectSinglePath(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendGET('/api/v4/keyvalue/' . $this->projKey . '?paths=user.name');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseContainsJson(['key' => $this->projKey, 'value' => ['user.name' => 'Alice']]);
+    }
+
+    // Multiple paths (semicolon-separated) each project their own sub-tree.
+    public function shouldProjectMultiplePaths(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendGET('/api/v4/keyvalue/' . $this->projKey . '?paths=user.name,active');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseContainsJson(['value' => ['user.name' => 'Alice', 'active' => true]]);
+    }
+
+    // A path may point at a whole object, not just a leaf.
+    public function shouldProjectWholeObjectPath(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendGET('/api/v4/keyvalue/' . $this->projKey . '?paths=user');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseContainsJson(['value' => ['user' => ['name' => 'Alice', 'age' => 30]]]);
+    }
+
+    // A public projected key is reachable by a sub-user too.
+    public function shouldProjectPathForSubUserOnPublicKey(ApiTester $I)
+    {
+        $this->asSub($I);
+        $I->sendGET('/api/v4/keyvalue/' . $this->projKey . '?paths=active');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseContainsJson(['value' => ['active' => true]]);
+    }
+
+    // Injection safety: a quote in a path segment must be bound, not interpolated.
+    // It simply matches no JSON key (null) instead of producing a SQL error.
+    public function shouldHandleQuoteInPathSafely(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendGET('/api/v4/keyvalue/' . $this->projKey . '?paths=na%27me');
+        $I->seeResponseCodeIs(HttpCode::OK);
+    }
+
+    // An empty path or empty segment is rejected rather than silently ignored.
+    public function shouldRejectEmptyPathSegment(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendGET('/api/v4/keyvalue/' . $this->projKey . '?paths=user..name');
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->seeResponseContainsJson(['errorCode' => 'INVALID_PATHS']);
     }
 
     // ---- validation ------------------------------------------------------

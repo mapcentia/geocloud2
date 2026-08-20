@@ -85,6 +85,7 @@ class Keyvalue extends AbstractApi
      */
     #[OA\Get(path: '/api/v4/keyvalue/{key}', operationId: 'getKeyvalue', description: "Get a key, or list all visible keys.", tags: ['Keyvalue'])]
     #[OA\Parameter(name: 'key', description: 'Key to fetch', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'my_key')]
+    #[OA\Parameter(name: 'paths', description: "Project only the named JSON sub-trees of the value. Comma-separated paths, each a dot-separated segment sequence, e.g. 'user.name,active'. The result value is keyed by each path string.", in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'user.name,active')]
     #[OA\Response(response: 200, description: 'Ok')]
     #[OA\Response(response: 404, description: 'Not found')]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -94,8 +95,9 @@ class Keyvalue extends AbstractApi
         $key = $this->route->getParam('key');
         $uid = $this->route->jwt["data"]["uid"];
         $isSuperUser = $this->route->jwt["data"]["superUser"];
+        $paths = empty($_GET['paths']) ? null : $this->parsePaths($_GET['paths']);
 
-        $data = $this->keyValue->getForUser($key, $uid, $isSuperUser);
+        $data = $this->keyValue->getForUser($key, $uid, $isSuperUser, $paths);
         if (!empty($key)) {
             if (empty($data)) {
                 throw new GC2Exception("Not found", 404, null, "KEY_NOT_FOUND");
@@ -103,6 +105,31 @@ class Keyvalue extends AbstractApi
             return $this->getResponse([$this->present($data)], single: true);
         }
         return $this->getResponse(array_map(fn($r) => $this->present($r), $data));
+    }
+
+    /**
+     * Parses and validates the ?paths projection parameter into a list of path
+     * strings. Paths are comma-separated; each path is a dot-separated segment
+     * sequence. Each path must be non-empty and every segment must be non-empty;
+     * the segments themselves are bound as parameters downstream.
+     *
+     * @return array<string>
+     * @throws GC2Exception On an empty path or an empty segment.
+     */
+    private function parsePaths(string $raw): array
+    {
+        $paths = explode(',', $raw);
+        foreach ($paths as $path) {
+            if ($path === '') {
+                throw new GC2Exception("A path in 'paths' is empty.", 400, null, "INVALID_PATHS");
+            }
+            foreach (explode('.', $path) as $segment) {
+                if ($segment === '') {
+                    throw new GC2Exception("A path segment in 'paths' is empty.", 400, null, "INVALID_PATHS");
+                }
+            }
+        }
+        return $paths;
     }
 
     /**

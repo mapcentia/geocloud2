@@ -43,14 +43,37 @@ class Keyvalue extends Model
      * @param string|null $key Single key to fetch, or null to list all visible keys.
      * @param string $uid Authenticated principal (owner) — the JWT uid.
      * @param bool $isSuperUser
+     * @param array<string>|null $paths Optional JSON projection: a list of paths,
+     *        each a dot-separated segment sequence (e.g. "user.name"). Only the
+     *        named sub-trees are returned, keyed by the path string. Every segment
+     *        is bound as a parameter (never interpolated), so the paths are safe
+     *        even though they are client-supplied.
      * @return array<mixed> Rows shaped as id,key,value,owner,public. A single-key
      *                      fetch returns one row or [] when not found/visible.
      * @throws Exception
      */
-    public function getForUser(?string $key, string $uid, bool $isSuperUser): array
+    public function getForUser(?string $key, string $uid, bool $isSuperUser, ?array $paths = null): array
     {
         $params = [];
-        $sql = "SELECT id, key, value, owner, public FROM settings.key_value WHERE 1=1";
+        $valueSelect = "value";
+        if (!empty($paths)) {
+            $parts = [];
+            foreach ($paths as $i => $path) {
+                $segmentPlaceholders = [];
+                foreach (explode('.', $path) as $j => $segment) {
+                    $ph = "p_{$i}_{$j}";
+                    $segmentPlaceholders[] = ":$ph";
+                    $params[$ph] = $segment;
+                }
+                $keyPh = "pk_{$i}";
+                $params[$keyPh] = $path;
+                // #> takes a text[] path; both the object key (the path string) and
+                // every segment are bound, so nothing client-supplied reaches the SQL text.
+                $parts[] = ":$keyPh, value #> ARRAY[" . implode(",", $segmentPlaceholders) . "]::text[]";
+            }
+            $valueSelect = "json_build_object(" . implode(",", $parts) . ")";
+        }
+        $sql = "SELECT id, key, $valueSelect AS value, owner, public FROM settings.key_value WHERE 1=1";
         if ($key !== null) {
             $sql .= " AND key = :key";
             $params["key"] = $key;
