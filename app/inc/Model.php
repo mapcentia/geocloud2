@@ -759,8 +759,13 @@ class Model
             case "PDO" :
                 if (empty($this->getPdoConnection()) || !$this->isPdoConnected()) {
                     error_log("Connecting to " . $this->connection->database . " on " . $this->connection->host . " as " . $this->connection->user);
-                    $this->setPdoConnection(new PDO(dsn: "pgsql:dbname={$this->connection->database};host={$this->connection->host};port={$this->connection->port}", username: $this->connection->user, password: $this->connection->password, options: [PDO::ATTR_EMULATE_PREPARES => true]));
-                    $this->execQuery("set client_encoding='UTF8'");
+                    // client_encoding is passed as a libpq connection parameter rather than a
+                    // loose "SET client_encoding" after connect. A post-connect SET runs as its
+                    // own autocommit statement and, under PgBouncer transaction pooling, is not
+                    // guaranteed to stick to the backend that later serves a transaction.
+                    // client_encoding is one of the startup parameters PgBouncer tracks natively,
+                    // so setting it on the connection string is both pool-safe and per-session correct.
+                    $this->setPdoConnection(new PDO(dsn: "pgsql:dbname={$this->connection->database};host={$this->connection->host};port={$this->connection->port};client_encoding=UTF8", username: $this->connection->user, password: $this->connection->password, options: [PDO::ATTR_EMULATE_PREPARES => true]));
                 }
                 break;
         }

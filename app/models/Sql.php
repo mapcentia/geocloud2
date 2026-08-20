@@ -262,8 +262,13 @@ class Sql extends Model
         $fieldsStr = implode(",", $fieldsArr);
         $sql = "SELECT $fieldsStr FROM ($q) AS foo LIMIT $limit";
         // Settings from App.php
+        // SET LOCAL keeps the override scoped to the current transaction. A plain
+        // SET would persist on the backend after COMMIT and — under PgBouncer
+        // transaction pooling — leak into the next client that reuses the connection,
+        // relying on server_reset_query to clean it up. This runs inside the SQL
+        // API's withTransaction(), so LOCAL is both correct and pool-safe.
         if (!empty(App::$param["SqlApiSettings"]["work_mem"])) {
-            $this->execQuery("SET work_mem TO '" . App::$param["SqlApiSettings"]["work_mem"] . "'");
+            $this->execQuery("SET LOCAL work_mem TO '" . App::$param["SqlApiSettings"]["work_mem"] . "'");
         }
         $this->execQuery("SET LOCAL statement_timeout = " . (App::$param["SqlApiSettings"]["statement_timeout"] ?? "60000"));
         $this->execQuery("SET LOCAL idle_in_transaction_session_timeout = 300000");
