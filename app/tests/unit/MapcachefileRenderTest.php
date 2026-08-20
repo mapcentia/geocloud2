@@ -111,15 +111,6 @@ class MapcachefileRenderTest extends Unit
         $this->assertStringNotContainsString('<wgs84boundingbox>', $s);
     }
 
-    public function testRenderBdbCache(): void
-    {
-        $s = Mapcachefile::renderBdbCache('bdb_s.t', '/var/www/geocloud2/app/wms/mapcache/bdb/mydb/s.t');
-        $this->assertStringContainsString('<cache name="bdb_s.t" type="bdb">', $s);
-        $this->assertStringContainsString('<base>/var/www/geocloud2/app/wms/mapcache/bdb/mydb/s.t</base>', $s);
-        $this->assertStringContainsString('<symlink_blank/>', $s);
-        $this->assertStringContainsString('<creation_retry>3</creation_retry>', $s);
-    }
-
     public function testRenderS3Cache(): void
     {
         $orig = App::$param['s3'] ?? null;

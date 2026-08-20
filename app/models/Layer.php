@@ -40,6 +40,7 @@ class Layer extends Table
     {
         $patterns = [
             $this->postgisdb . '*_meta_*',
+            $this->postgisdb . '*_geometryColumns',
         ];
         Cache::deleteByPatterns($patterns);
     }
