@@ -10,6 +10,10 @@
  *
  * It rebuilds the desired MapCacheAlias list from the *.xml files and:
  *   - does nothing (no Apache reload) when the content is unchanged,
+ *   - reloads when a "{db}.xml" is added or removed, AND when the CONTENT of an existing xml
+ *     changes: a sha1 fingerprint of all the xml files is embedded in mapcache.conf as a comment,
+ *     so an edited xml (which leaves the alias list identical) still changes the file and triggers
+ *     the reload — mod_mapcache only picks up xml changes on an Apache reload,
  *   - writes the new content atomically,
  *   - validates the resulting Apache config with `apachectl configtest` and REVERTS if it is
  *     invalid, so a broken MapCache xml (e.g. an unsupported cache backend) can never take Apache
@@ -41,15 +45,20 @@ if ($lock === false || !flock($lock, LOCK_EX | LOCK_NB)) {
 // basename without the .xml extension (handles names containing dots, unlike a split on ".").
 $xmls = glob($dir . "/*.xml") ?: [];
 sort($xmls);
-$lines = [""];
+$aliasLines = [];
+$fingerprintParts = [];
 foreach ($xmls as $xml) {
     $db = basename($xml, ".xml");
     if ($db === "") {
         continue;
     }
-    $lines[] = "MapCacheAlias /mapcache/$db $xml";
+    $aliasLines[] = "MapCacheAlias /mapcache/$db $xml";
+    // Fingerprint the xml CONTENT so that editing an existing file (which leaves the alias
+    // list unchanged) still changes mapcache.conf and triggers the reload path below.
+    $fingerprintParts[] = $db . ":" . (sha1_file($xml) ?: "unreadable");
 }
-$new = implode("\n", $lines) . "\n";
+$fingerprint = sha1(implode("\n", $fingerprintParts));
+$new = "# mapcache-xml-fingerprint: $fingerprint\n\n" . implode("\n", $aliasLines) . "\n";
 
 $current = is_file($confFile) ? (string)file_get_contents($confFile) : "";
 if ($new === $current) {
