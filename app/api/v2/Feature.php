@@ -14,8 +14,8 @@ use app\inc\Route;
 use app\inc\Response;
 use app\inc\Session;
 use app\inc\Util;
-use app\libs\GeometryFactory;
-use app\libs\gmlConverter;
+use app\inc\geometry\GeometryFactory;
+use app\inc\geometry\GmlConverter;
 use app\models\Database;
 use app\models\Layer;
 use Error;
@@ -29,8 +29,6 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use XML_Unserializer;
 
 include_once(__DIR__ . "../../../vendor/phayes/geophp/geoPHP.inc");
-include_once(__DIR__ . "../../../libs/phpgeometry_class.php");
-include_once(__DIR__ . "../../../libs/gmlparser.php");
 include_once(__DIR__ . "../../../libs/PEAR/XML/Unserializer.php");
 include_once(__DIR__ . "../../../libs/PEAR/XML/Serializer.php");
 
@@ -143,7 +141,7 @@ class Feature extends Controller
         }
 
         // Convert GML to WKT
-        $gmlConverter = new gmlConverter();
+        $gmlConverter = new GmlConverter();
         $wkt = $gmlConverter->gmlToWKT($xml)[0][0];
 
         // Convert WKT to GeoJSON
