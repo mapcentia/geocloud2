@@ -291,7 +291,8 @@ class Layer extends Table
                     }
                     if ($parse) {
                         if (
-                            ($key == "fieldconf" ||
+                            ($key == "elasticsearch" ||
+                                $key == "fieldconf" ||
                                 $key == "def" ||
                                 $key == "class" ||
                                 $key == "classwizard" ||

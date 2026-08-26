@@ -67,6 +67,7 @@ use Throwable;
                             type: 'object'
                         )
                     ),
+                    new OA\Property(property: 'elasticsearch', description: 'Per-column Elasticsearch/OpenSearch mapping config (elasticsearchtype/analyzer/search_analyzer per column). Consumed when the Search API (re)builds the index.', type: 'object'),
                 ],
                 type: 'object'
             ))
@@ -191,6 +192,7 @@ class Meta extends AbstractApi
             "_geom_type" => "type",
             "_srid" => "srid",
             "_authentication" => "authentication",
+            "elasticsearch" => "elasticsearch",
         ];
 
         foreach ($map as $outKey => $rowKey) {
@@ -225,6 +227,7 @@ class Meta extends AbstractApi
             "tags" => "tags",
             "meta" => "properties",
             "fieldconf" => "fields",
+            "elasticsearch" => "elasticsearch",
         ];
 
         foreach ($map as $rowKey => $inputKey) {
@@ -287,6 +290,7 @@ class Meta extends AbstractApi
                                 'sort_id' => new Assert\Optional(new Assert\Type('integer')),
                                 'tags' => new Assert\Optional(new Assert\Type('list', 'This value should be of type list.')),
                                 'properties' => new Assert\Optional(new Assert\Type('associative_array', 'This value should be of type object.')),
+                                'elasticsearch' => new Assert\Optional(new Assert\Type('associative_array', 'This value should be of type object.')),
                                 'fields' => new Assert\Optional([
                                     new Assert\Type('array'),
                                     new Assert\All([
