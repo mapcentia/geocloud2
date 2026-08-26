@@ -107,14 +107,79 @@ class Search extends AbstractApi
         return $this->getResponse($result);
     }
 
+    /**
+     * @throws GC2Exception
+     */
+    #[OA\Put(path: '/api/v4/schemas/{schema}/tables/{table}/search', operationId: 'buildSearchIndex', description: "(Re)build the OpenSearch index from the table/view. Owner/superuser only.", tags: ['Search'])]
+    #[OA\Response(response: 200, description: 'Index built')]
     public function put_index(): Response
     {
-        throw new GC2Exception("Not implemented", 405, null, "METHOD_NOT_ALLOWED");
+        $this->assertOwner();
+        $db = $this->route->jwt['data']['database'];
+        $index = $this->indexName();
+        $fullTable = "$this->schemaName.$this->tableName";
+
+        // Elasticsearch::createMapFromTable() and Sql_to_es both fall back to the process-global
+        // DB context (app\conf\Connection::$param['postgisdb']) instead of the request-scoped
+        // Connection AbstractApi threads everywhere else, because neither takes a Connection
+        // param. Point that global at the JWT database before using them — each request runs in
+        // its own php-fpm process here, so this doesn't leak across requests.
+        \app\models\Database::setDb($db);
+
+        // Compose settings (default + optional per-db analysis) and mapping from the table.
+        $analysis = (new \app\models\Setting($this->connection))->getSearchAnalysis();
+        $body = \app\opensearch\SettingsComposer::compose($analysis);
+        $body['mappings'] = (new \app\models\Elasticsearch())->createMapFromTable($fullTable);
+
+        $client = new Client();
+        try {
+            if ($client->indexExists($index)) {
+                $client->deleteIndex($index);
+            }
+            $client->createIndex($index, $body);
+        } catch (OpenSearchException $e) {
+            throw $this->mapOpenSearchException($e, "INDEX_BUILD_ERROR");
+        }
+
+        // Bulk index rows through the reused Sql_to_es indexer.
+        $priObj = $this->table[0]->getPrimeryKey($fullTable);
+        $priKey = $priObj['attname'] ?? null;
+        if (!$priKey) {
+            throw new GC2Exception("The relation has no primary key", 400, null, "INDEX_BUILD_ERROR");
+        }
+        $api = new \app\models\Sql_to_es("4326");
+        $api->execQuery("set client_encoding='UTF8'", "PDO");
+        $res = $api->runSql("SELECT * FROM \"$this->schemaName\".\"$this->tableName\"", $this->schemaName, $this->tableName, $priKey, $db);
+        if (empty($res['success'])) {
+            throw new GC2Exception($res['message'] ?? "Bulk indexing failed", 400, null, "INDEX_BUILD_ERROR");
+        }
+
+        // Make freshly indexed documents immediately searchable for callers that build then search.
+        $client->refresh($index);
+
+        return $this->getResponse([
+            'index' => $index,
+            'message' => $res['message'] ?? null,
+            'errors' => $res['errors'] ?? false,
+            'errors_in' => $res['errors_in'] ?? [],
+        ]);
     }
 
+    /**
+     * @throws GC2Exception
+     */
+    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/search', operationId: 'dropSearchIndex', description: "Drop the OpenSearch index. Owner/superuser only.", tags: ['Search'])]
+    #[OA\Response(response: 200, description: 'Index dropped')]
     public function delete_index(): Response
     {
-        throw new GC2Exception("Not implemented", 405, null, "METHOD_NOT_ALLOWED");
+        $this->assertOwner();
+        $client = new Client();
+        try {
+            $client->deleteIndex($this->indexName());
+        } catch (OpenSearchException $e) {
+            throw $this->mapOpenSearchException($e, "INDEX_BUILD_ERROR");
+        }
+        return $this->getResponse(['index' => $this->indexName(), 'dropped' => true]);
     }
 
     public function patch_index(): Response

@@ -16,6 +16,8 @@ class SearchV4ApiCest
     private $userId;
     private $token;
     private $schemaName;
+    private $subUserId;
+    private $subUserToken;
 
     public function __construct()
     {
@@ -59,6 +61,47 @@ class SearchV4ApiCest
             'constraint' => 'primary', 'columns' => ['gid'],
         ]));
         $I->seeResponseCodeIs(HttpCode::CREATED);
+
+        // A table in the 'public' schema (always readable/enterable per AbstractApi::initiate()'s
+        // schema gate, unlike the custom schema above, which only the owner may address) — used
+        // solely to get a sub-user request past that gate and into Search::assertOwner().
+        $I->sendPOST('/api/v4/schemas/public/tables', json_encode([
+            'name' => 'search_v4_sub_test',
+            'columns' => [
+                ['name' => 'gid', 'type' => 'serial'],
+                ['name' => 'name', 'type' => 'varchar'],
+            ],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+
+        // Sub user (created through the owner's session), used to assert 403 NOT_OWNER on build.
+        $ts = $this->date->getTimestamp();
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/session/start', json_encode([
+            'user' => $this->userId, 'password' => $this->password, 'schema' => 'public',
+        ]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $sessionCookie = $I->capturePHPSESSID();
+
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $sessionCookie);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/user', json_encode([
+            'name' => 'search v4 sub ' . $ts,
+            'email' => 'searchv4sub' . $ts . '@example.com',
+            'password' => $this->password,
+            'subuser' => true,
+        ]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $this->subUserId = json_decode($I->grabResponse())->data->screenname;
+        $I->deleteHeader('Cookie');
+
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v4/oauth', json_encode([
+            'grant_type' => 'password', 'username' => $this->subUserId, 'password' => $this->password,
+            'database' => $this->userId, 'client_id' => 'gc2-cli',
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $this->subUserToken = json_decode($I->grabResponse())->access_token;
     }
 
     public function shouldSetAndGetPerDbAnalysis(ApiTester $I)
@@ -84,5 +127,46 @@ class SearchV4ApiCest
         $I->sendGET('/api/v4/schemas/' . $this->schemaName . '/tables/poi/search?q=*');
         $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
         $I->seeResponseContainsJson(['errorCode' => 'INDEX_NOT_FOUND']);
+    }
+
+    public function shouldBuildSearchAndDropIndex(ApiTester $I)
+    {
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+
+        // Seed one row directly via SQL (not through the WFS-backed Feature API).
+        $I->sendPOST('/api/v4/sql', json_encode([
+            'q' => 'INSERT INTO "' . $this->schemaName . '"."poi" (name, the_geom) VALUES (\'Findme\', ST_SetSRID(ST_MakePoint(9.5, 55.7), 4326))',
+        ]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+
+        // Build
+        $I->sendPUT('/api/v4/schemas/' . $this->schemaName . '/tables/poi/search');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseContainsJson(['index' => $this->userId . '_' . $this->schemaName . '_poi']);
+
+        // OpenSearch is near-real-time; the build refreshes the index before returning, so this should be visible immediately.
+        $I->sendPOST('/api/v4/schemas/' . $this->schemaName . '/tables/poi/search',
+            json_encode(['query' => ['match' => ['properties.name' => 'Findme']]]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $data = json_decode($I->grabResponse(), true);
+        $I->assertGreaterThanOrEqual(1, $data['hits']['total']['value'] ?? 0);
+
+        // Drop
+        $I->sendDELETE('/api/v4/schemas/' . $this->schemaName . '/tables/poi/search');
+        $I->seeResponseCodeIs(HttpCode::OK);
+    }
+
+    public function shouldForbidSubUserBuild(ApiTester $I)
+    {
+        // Uses the 'public' schema (not $this->schemaName): a sub user is rejected before
+        // reaching Search::assertOwner() on a schema it doesn't own (AbstractApi::initiate()'s
+        // schema gate — 403 UNAUTHORIZED — see task-6-report.md for the full explanation).
+        // 'public' passes that gate for any authenticated user, so this exercises the
+        // owner-only check inside the controller itself.
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->subUserToken);
+        $I->sendPUT('/api/v4/schemas/public/tables/search_v4_sub_test/search');
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+        $I->seeResponseContainsJson(['errorCode' => 'NOT_OWNER']);
     }
 }

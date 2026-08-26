@@ -49,6 +49,19 @@ class Client
         }
     }
 
+    /**
+     * Forces a near-real-time refresh so documents just bulk-indexed are immediately
+     * searchable. Best-effort: errors are swallowed since this is only a convenience.
+     */
+    public function refresh(string $index): void
+    {
+        try {
+            $this->http->post("$this->host/$index/_refresh");
+        } catch (\Throwable) {
+            // Ignore — refresh is best-effort.
+        }
+    }
+
     public function search(string $index, string $query, bool $isBody): array
     {
         $url = "$this->host/$index/_search";
