@@ -117,18 +117,29 @@ class Feature extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/features/{feature}', operationId: 'getFeature', description: "Get a single feature as GeoJSON by its primary key. Read auth, geofence rules and versioning filters are applied by the WFS engine.", tags: ['Feature'])]
+    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/features/{feature}', operationId: 'getFeature', description: "Get one or more features as GeoJSON by primary key. Pass a single key or a comma-separated list (e.g. 1,2,3). Read auth, geofence rules and versioning filters are applied by the WFS engine.", tags: ['Feature'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
-    #[OA\Parameter(name: 'feature', description: 'Primary key value of the feature', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '1')]
+    #[OA\Parameter(name: 'feature', description: 'Primary key value, or a comma-separated list of values (e.g. 1,2,3)', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '1,2')]
     #[OA\Parameter(name: 'srs', description: 'Output EPSG code (SRID) of the GeoJSON geometry. Defaults to 4326.', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 4326), example: 25832)]
-    #[OA\Response(response: 200, description: 'GeoJSON FeatureCollection with the feature')]
-    #[OA\Response(response: 404, description: 'Feature not found')]
+    #[OA\Response(response: 200, description: 'GeoJSON FeatureCollection with the matched feature(s)')]
+    #[OA\Response(response: 404, description: 'No features found')]
     #[AcceptableAccepts(['application/json', 'application/geo+json', '*/*'])]
     public function get_index(): Response
     {
         $ctx = $this->buildContext();
         $this->authorizeLayer($ctx, false);
+
+        // The path key may be a single value or a comma-separated list, matching
+        // the other v4 collection GETs (e.g. .../features/1,2,3). Each value ends
+        // up in a WFS featureId filter (pkey='1' OR pkey='2' OR ...).
+        $keys = array_values(array_filter(
+            array_map('trim', explode(',', (string)$this->featureKey)),
+            static fn(string $k): bool => $k !== ''
+        ));
+        if (empty($keys)) {
+            throw new GC2Exception("A feature id is required in the path. Use the SQL or WFS API for reading collections.", 400, null, "FEATURE_ID_REQUIRED");
+        }
 
         $req = new WfsRequest(
             operation: 'GETFEATURE',
@@ -137,7 +148,7 @@ class Feature extends AbstractApi
             outputFormat: 'GML3',
             typeNames: [$this->featureTable],
             properties: null,
-            featureIds: ["$this->featureTable.$this->featureKey"],
+            featureIds: array_map(fn(string $k): string => "$this->featureTable.$k", $keys),
             bbox: null,
             resultType: null,
             srsName: null,
@@ -166,45 +177,63 @@ class Feature extends AbstractApi
         }
         $arr = $unserializer->getUnserializedData();
         $memberKey = "$this->featureSchema:$this->featureTable";
-        if (!is_array($arr["gml:featureMembers"] ?? null) || !isset($arr["gml:featureMembers"][$memberKey])) {
-            throw new GC2Exception("Feature not found", 404, null, "FEATURE_NOT_FOUND");
+        $members = $arr["gml:featureMembers"][$memberKey] ?? null;
+        if (empty($members)) {
+            throw new GC2Exception("No features found", 404, null, "FEATURE_NOT_FOUND");
         }
+        // The unserializer yields a single assoc array for one member and a numeric
+        // list for many. Normalize to a list of members, in document order.
+        $memberList = array_is_list($members) ? $members : [$members];
 
-        // Convert GML to WKT to GeoJSON geometry
-        $json = null;
-        $wkt = new GmlConverter()->gmlToWKT($xml)[0][0] ?? null;
-        // The engine emits GML in lat/lon axis order for 1.1.0 + EPSG:4326 (ST_AsGml
-        // flag 16 in the GetFeature handler) and gmlConverter does not flip it back.
-        // GeoJSON is lon/lat, so swap the coordinate pairs for that case.
-        if ($wkt && $this->srs === 4326) {
-            $wkt = preg_replace_callback(
-                '/(-?[0-9.eE+\-]+)\s+(-?[0-9.eE+\-]+)/',
-                static fn(array $m) => "$m[2] $m[1]",
-                $wkt
-            );
-        }
-        if ($wkt) {
-            try {
-                $json = geoPHP::load($wkt, 'wkt')->out('json');
-            } catch (Exception|Error $e) {
-                throw new GC2Exception($e->getMessage(), 500, null, "WFS_ERROR");
-            }
-        }
+        // One WKT per member, in the same document order. The GML is split on the
+        // feature element (the member is <schema:table> for 1.1.0, with no per-
+        // feature gml:featureMember wrapper), so each member gets its own slot;
+        // members without geometry produce an empty "()" placeholder at their index.
+        $wkts = new GmlConverter()->gmlToWKT($xml, [strtoupper($this->featureTable)])[0] ?? [];
 
-        $props = [];
-        foreach ($arr["gml:featureMembers"][$memberKey] as $key => $prop) {
-            if (!is_array($prop)) {
-                $props[explode(":", $key)[1] ?? $key] = $prop;
+        $features = [];
+        foreach ($memberList as $i => $member) {
+            $wkt = $wkts[$i] ?? null;
+            // A member without geometry renders as "()" (empty type) — treat as null.
+            if ($wkt !== null && str_starts_with($wkt, '(')) {
+                $wkt = null;
             }
+            // The engine emits GML in lat/lon axis order for 1.1.0 + EPSG:4326 (ST_AsGml
+            // flag 16 in the GetFeature handler) and gmlConverter does not flip it back.
+            // GeoJSON is lon/lat, so swap the coordinate pairs for that case.
+            if ($wkt && $this->srs === 4326) {
+                $wkt = preg_replace_callback(
+                    '/(-?[0-9.eE+\-]+)\s+(-?[0-9.eE+\-]+)/',
+                    static fn(array $m) => "$m[2] $m[1]",
+                    $wkt
+                );
+            }
+            $json = null;
+            if ($wkt) {
+                try {
+                    $json = geoPHP::load($wkt, 'wkt')->out('json');
+                } catch (Exception|Error $e) {
+                    throw new GC2Exception($e->getMessage(), 500, null, "WFS_ERROR");
+                }
+            }
+
+            $props = [];
+            foreach ($member as $key => $prop) {
+                if (!is_array($prop)) {
+                    $props[explode(":", $key)[1] ?? $key] = $prop;
+                }
+            }
+
+            $features[] = [
+                "type" => "Feature",
+                "properties" => $props,
+                "geometry" => $json !== null ? json_decode($json) : null,
+            ];
         }
 
         return $this->getResponse([
             "type" => "FeatureCollection",
-            "features" => [[
-                "type" => "Feature",
-                "properties" => $props,
-                "geometry" => $json !== null ? json_decode($json) : null,
-            ]],
+            "features" => $features,
         ]);
     }
 
