@@ -172,7 +172,7 @@ class Feature extends AbstractApi
 
         // Convert GML to WKT to GeoJSON geometry
         $json = null;
-        $wkt = (new GmlConverter())->gmlToWKT($xml)[0][0] ?? null;
+        $wkt = new GmlConverter()->gmlToWKT($xml)[0][0] ?? null;
         // The engine emits GML in lat/lon axis order for 1.1.0 + EPSG:4326 (ST_AsGml
         // flag 16 in the GetFeature handler) and gmlConverter does not flip it back.
         // GeoJSON is lon/lat, so swap the coordinate pairs for that case.
@@ -205,7 +205,7 @@ class Feature extends AbstractApi
                 "properties" => $props,
                 "geometry" => $json !== null ? json_decode($json) : null,
             ]],
-        ], single: false);
+        ]);
     }
 
     /**
@@ -425,8 +425,9 @@ class Feature extends AbstractApi
 
     /**
      * Dispatches a WFS request on the in-process server and returns the XML it
-     * would have streamed. The writer echoes (and ob_flush()es) per feature, so the
-     * output buffer callback swallows every chunk into $captured and forwards nothing.
+     * would have streamed. The writer is built with suppressFlush, so it only
+     * echoes (never physically flushes); the output buffer callback swallows every
+     * chunk into $captured and forwards nothing, and no HTTP headers are committed.
      *
      * @throws GC2Exception
      */
@@ -435,6 +436,11 @@ class Feature extends AbstractApi
         $writer = new GmlWriter(
             gmlNameSpace: $this->featureSchema,
             gmlNameSpaceUri: str_replace('https://', 'http://', Util::host() . "/$ctx->database/$this->featureSchema"),
+            // We capture the writer's output in an output buffer below and convert
+            // it to JSON. Suppress the writer's physical flush() so the streaming
+            // GetFeature path does not commit the HTTP headers (with the default
+            // text/html) before the response layer sets application/json.
+            suppressFlush: true,
         );
         $captured = '';
         ob_start(function (string $chunk) use (&$captured): string {

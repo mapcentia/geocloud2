@@ -9,6 +9,7 @@
  *   - buffered: write() accumulates in-memory until bufferFlush()
  * Transaction handler uses buffered; GetFeature uses streaming.
  */
+
 namespace app\wfs\output;
 
 final class GmlWriter
@@ -26,7 +27,18 @@ final class GmlWriter
         public readonly array   $gmlGeomFieldName = [],
         /** @var array<string, bool> $gmlUseAltFunctions */
         public readonly array   $gmlUseAltFunctions = [],
-    ) {}
+        /**
+         * When true, flush() is a no-op: the physical PHP flush()/ob_flush() are
+         * skipped. Callers that capture the writer's output in their own output
+         * buffer (e.g. the v4 Feature controller, which converts the GML to JSON)
+         * must set this — otherwise the per-feature flush() commits the HTTP
+         * headers early with the default text/html content type, before the
+         * response layer can set application/json.
+         */
+        public readonly bool    $suppressFlush = false,
+    )
+    {
+    }
 
     public function bufferStart(): void
     {
@@ -51,7 +63,7 @@ final class GmlWriter
 
     public function flush(): void
     {
-        if ($this->buffering) return;
+        if ($this->buffering || $this->suppressFlush) return;
         flush();
         if (ob_get_level() > 0) {
             ob_flush();
@@ -102,9 +114,9 @@ final class GmlWriter
 
     public function writeFeatureCollectionOpen(\app\wfs\Request $req, \app\wfs\Context $ctx, ?int $numberMatched = null): void
     {
-        $ns  = $this->gmlNameSpace;
+        $ns = $this->gmlNameSpace;
         $uri = $this->gmlNameSpaceUri;
-        $tn  = implode(',', $req->typeNames ?? []);
+        $tn = implode(',', $req->typeNames ?? []);
         $countAttr = $numberMatched !== null
             ? ' numberOfFeatures="' . $numberMatched . '" timeStamp="' . date('Y-m-d\TH:i:s.v\Z') . '"'
             : '';
@@ -145,7 +157,7 @@ final class GmlWriter
      */
     public function writeFeature(array $row, string $table, \app\models\Table $tableObj, \app\wfs\Request $req, \app\wfs\Context $ctx): void
     {
-        $ns          = $this->gmlNameSpace;
+        $ns = $this->gmlNameSpace;
         $featureName = $this->gmlFeature[$table] ?? $table;
 
         if ($req->version !== '1.1.0') {
@@ -153,7 +165,7 @@ final class GmlWriter
         }
         $idAttr = $req->version === '1.1.0'
             ? ['gml:id' => "{$table}.{$row['fid']}"]
-            : ['fid'    => "{$table}.{$row['fid']}"];
+            : ['fid' => "{$table}.{$row['fid']}"];
         $this->writeTag('open', $ns, $featureName, $idAttr);
 
         foreach ($row as $field => $value) {
@@ -170,10 +182,10 @@ final class GmlWriter
                 if ($value === null || $value === '') {
                     continue;
                 }
-                $geomNs       = $this->gmlNameSpaceGeom ?? $ns;
+                $geomNs = $this->gmlNameSpaceGeom ?? $ns;
                 $geomFieldName = $this->gmlGeomFieldName[$table] ?? $field;
                 $this->writeTag('open', $geomNs, $geomFieldName);
-                $this->write((string) $value);
+                $this->write((string)$value);
                 $this->writeTag('close', $geomNs, $geomFieldName);
                 continue;
             }
@@ -181,10 +193,10 @@ final class GmlWriter
                 continue;
             }
             if (in_array($info['type'] ?? '', ['string', 'text', 'json', 'jsonb'], true) && $value !== '') {
-                $value = '<![CDATA[' . str_replace('&', '&#38;', (string) $value) . ']]>';
+                $value = '<![CDATA[' . str_replace('&', '&#38;', (string)$value) . ']]>';
             }
             $this->writeTag('open', $ns, $field, null, false);
-            $this->write($value === false ? '0' : (string) $value);
+            $this->write($value === false ? '0' : (string)$value);
             $this->writeTag('close', $ns, $field);
         }
 
