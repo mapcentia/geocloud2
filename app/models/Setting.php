@@ -100,11 +100,12 @@ class Setting extends Model
         $arr->search->analysis = $analysis;
         if (App::$param["encryptSettings"]) {
             $pubKey = file_get_contents(App::$param["path"] . "app/conf/public.key");
-            $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('$pubKey'))";
+            $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt(:viewer, dearmor('$pubKey'))";
         } else {
-            $sql = "UPDATE settings.viewer SET viewer='" . json_encode($arr) . "'";
+            $sql = "UPDATE settings.viewer SET viewer=:viewer";
         }
-        $this->execQuery($sql, "PDO", "transaction");
+        $res = $this->prepare($sql);
+        $this->execute($res, [":viewer" => json_encode($arr)]);
         $this->clearCacheOnSchemaChanges();
     }
 

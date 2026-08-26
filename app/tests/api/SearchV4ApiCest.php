@@ -121,6 +121,23 @@ class SearchV4ApiCest
         $I->seeResponseContainsJson(['analysis' => ['analyzer' => ['t' => ['tokenizer' => 'standard']]]]);
     }
 
+    public function shouldRoundTripAnalysisContainingSingleQuote(ApiTester $I)
+    {
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+
+        $analysis = [
+            'analyzer' => ['q' => ['type' => 'custom', 'tokenizer' => 'standard', 'filter' => ['my_syn']]],
+            'filter' => ['my_syn' => ['type' => 'synonym', 'synonyms' => ["o'clock, oclock"]]],
+        ];
+        $I->sendPUT('/api/v4/search/settings', json_encode(['analysis' => $analysis]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+
+        $I->sendGET('/api/v4/search/settings');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseContainsJson(['analysis' => ['filter' => ['my_syn' => ['synonyms' => ["o'clock, oclock"]]]]]);
+    }
+
     public function shouldReturn404WhenNoIndex(ApiTester $I)
     {
         $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);

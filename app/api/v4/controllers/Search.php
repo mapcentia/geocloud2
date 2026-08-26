@@ -177,7 +177,7 @@ class Search extends AbstractApi
         try {
             $client->deleteIndex($this->indexName());
         } catch (OpenSearchException $e) {
-            throw $this->mapOpenSearchException($e, "INDEX_BUILD_ERROR");
+            throw $this->mapOpenSearchException($e, "INDEX_DROP_ERROR");
         }
         return $this->getResponse(['index' => $this->indexName(), 'dropped' => true]);
     }
