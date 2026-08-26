@@ -488,7 +488,7 @@ class Layer extends Table
      * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
      */
-    public function getElasticsearchMapping(string $_key_): array
+    public function getElasticsearchMapping(string $_key_, bool $modern = false): array
     {
         $elasticsearch = new Elasticsearch();
         $response['success'] = true;
@@ -499,7 +499,7 @@ class Layer extends Table
         $table = new Table($keySplit[0] . "." . $keySplit[1], false);
         $elasticsearchArr = (array)json_decode($this->getGeometryColumns($keySplit[0] . "." . $keySplit[1], "elasticsearch"));
         foreach ($table->metaData as $key => $value) {
-            $esType = $elasticsearch->mapPg2EsType($value['type'], !empty($value['geom_type']) && $value['geom_type'] == "POINT");
+            $esType = $elasticsearch->mapPg2EsType($value['type'], !empty($value['geom_type']) && $value['geom_type'] == "POINT", $modern);
             $arr = $this->array_push_assoc($arr, "id", $key);
             $arr = $this->array_push_assoc($arr, "column", $key);
             $arr = $this->array_push_assoc($arr, "elasticsearchtype", $elasticsearchArr[$key]->elasticsearchtype ?: $esType["type"]);
@@ -515,6 +515,14 @@ class Layer extends Table
                 $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']} ({$value['typeObj']['precision']} {$value['typeObj']['scale']})");
             } else {
                 $arr = $this->array_push_assoc($arr, "type", "{$value['typeObj']['type']}");
+            }
+            // Preserve additional per-column config keys (modern mapping params such
+            // as fields/normalizer/doc_values) so they survive to createMapFromTable.
+            // Additive: legacy configs have none of these, so their rows are unchanged.
+            foreach ((array)($elasticsearchArr[$key] ?? []) as $extraKey => $extraVal) {
+                if (!array_key_exists($extraKey, $arr)) {
+                    $arr = $this->array_push_assoc($arr, $extraKey, $extraVal);
+                }
             }
             $response['data'][] = $arr;
         }

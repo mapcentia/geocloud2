@@ -129,7 +129,7 @@ class Search extends AbstractApi
         // Compose settings (default + optional per-db analysis) and mapping from the table.
         $analysis = (new \app\models\Setting($this->connection))->getSearchAnalysis();
         $body = \app\opensearch\SettingsComposer::compose($analysis);
-        $body['mappings'] = (new \app\models\Elasticsearch())->createMapFromTable($fullTable);
+        $body['mappings'] = (new \app\models\Elasticsearch())->createMapFromTable($fullTable, modern: true);
 
         $client = new Client();
         try {

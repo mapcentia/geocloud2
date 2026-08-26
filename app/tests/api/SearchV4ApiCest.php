@@ -169,6 +169,14 @@ class SearchV4ApiCest
         $data = json_decode($I->grabResponse(), true);
         $I->assertGreaterThanOrEqual(1, $data['hits']['total']['value'] ?? 0);
 
+        // Modern mapping proof: a term query against the keyword multi-field only
+        // matches if createMapFromTable(modern:true) added properties.name.keyword.
+        $I->sendPOST('/api/v4/schemas/' . $this->schemaName . '/tables/poi/search',
+            json_encode(['query' => ['term' => ['properties.name.keyword' => 'Findme']]]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $data = json_decode($I->grabResponse(), true);
+        $I->assertGreaterThanOrEqual(1, $data['hits']['total']['value'] ?? 0);
+
         // Drop
         $I->sendDELETE('/api/v4/schemas/' . $this->schemaName . '/tables/poi/search');
         $I->seeResponseCodeIs(HttpCode::OK);

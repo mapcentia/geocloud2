@@ -112,7 +112,7 @@ class Elasticsearch extends Model
      * @param $table
      * @return array
      */
-    public function createMapFromTable($table)
+    public function createMapFromTable($table, bool $modern = false)
     {
         $split = explode(".", $table);
         $type = $split[1];
@@ -129,32 +129,39 @@ class Elasticsearch extends Model
 
         );
         $layer = new Layer();
-        $esTypes = $layer->getElasticsearchMapping($table);
+        $esTypes = $layer->getElasticsearchMapping($table, $modern);
         $arr = array();
-        foreach ($esTypes["data"] as $key => $value) {
-            $arr[$value["column"]] = array(
-                "elasticsearchtype" => $value["elasticsearchtype"],
-                "format" => $value["format"],
-                "index" => $value["index"],
-                "analyzer" => $value["analyzer"],
-                "search_analyzer" => $value["search_analyzer"],
-                "type" => $value["type"],
-                "boost" => $value["boost"],
-                "null_value" => $value["null_value"],
-                "fielddata" => $value["fielddata"],
-            );
+        foreach ($esTypes["data"] as $value) {
+            // Keep the whole per-column row so any modern mapping params (fields,
+            // normalizer, doc_values, ...) set through the Meta API pass through.
+            $arr[$value["column"]] = $value;
         }
+        // Keys that describe the column rather than the ES mapping — never emitted.
+        $control = array("id" => 1, "column" => 1, "elasticsearchtype" => 1, "type" => 1, "index_analyzer" => 1);
         foreach ($schema as $key => $value) {
             $pgType = $value["type"];
+            $conf = $arr[$key] ?? array();
             $mapArr = array();
-            $mapArr["type"] = $arr[$key]["elasticsearchtype"];
-            if (isset($arr[$key]["format"]) && ($arr[$key]["format"])) $mapArr["format"] = $arr[$key]["format"];
-            if (isset($arr[$key]["index"]) && ($arr[$key]["index"])) $mapArr["index"] = $arr[$key]["index"];
-            if (isset($arr[$key]["analyzer"]) && ($arr[$key]["analyzer"])) $mapArr["analyzer"] = $arr[$key]["analyzer"];
-            if (isset($arr[$key]["search_analyzer"]) && ($arr[$key]["search_analyzer"])) $mapArr["search_analyzer"] = $arr[$key]["search_analyzer"];
-            if (isset($arr[$key]["boost"]) && ($arr[$key]["boost"])) $mapArr["boost"] = $arr[$key]["boost"];
-            if (isset($arr[$key]["null_value"]) && ($arr[$key]["null_value"])) $mapArr["null_value"] = $arr[$key]["null_value"];
-            if (isset($arr[$key]["fielddata"]) && ($arr[$key]["fielddata"])) $mapArr["fielddata"] = $arr[$key]["fielddata"];
+            $mapArr["type"] = $conf["elasticsearchtype"] ?? null;
+            foreach ($conf as $confKey => $confVal) {
+                if (isset($control[$confKey])) continue;
+                // Strip index-time boost on the modern path (deprecated/removed in
+                // current OpenSearch/ES); legacy keeps emitting it exactly as before.
+                if ($modern && $confKey === "boost") continue;
+                // Legacy skipped every falsy value (byte-identical); the modern path
+                // keeps false/0 so settings like index:false can be expressed.
+                if ($modern) {
+                    if ($confVal === null || $confVal === "") continue;
+                } elseif (!$confVal) {
+                    continue;
+                }
+                $mapArr[$confKey] = $confVal;
+            }
+            // Modern default: give text fields a keyword multi-field for
+            // exact-match/aggregation/sorting, unless the config defines its own.
+            if ($modern && ($mapArr["type"] ?? null) === "text" && !isset($mapArr["fields"])) {
+                $mapArr["fields"] = array("keyword" => array("type" => "keyword", "ignore_above" => 256));
+            }
             if ($pgType == "geometry") {
                 if ($mapArr["type"] == "geo_point") {
                     $map["mappings"]["properties"]["geometry"]["properties"]["coordinates"] = $mapArr;
@@ -172,9 +179,12 @@ class Elasticsearch extends Model
     /**
      * @param $pgType
      * @param bool $point
+     * @param bool $modern When true, emit up-to-date OpenSearch/ES types (long,
+     *                     double, keyword, yyyy date format). Legacy (v1/v2)
+     *                     callers leave this false and get byte-identical output.
      * @return array
      */
-    public function mapPg2EsType($pgType, $point = false)
+    public function mapPg2EsType($pgType, $point = false, bool $modern = false)
     {
         if ($pgType == "geometry") {
             if ($point) {
@@ -227,6 +237,22 @@ class Elasticsearch extends Model
             $esType = array(
                 "type" => "text"
             );
+        }
+        if ($modern && $pgType != "geometry") {
+            // Modern (v4) type corrections. Note: GC2's getType() collapses
+            // bigint into "int" and inet into "string", so `long` is used for all
+            // integers (a safe superset that avoids overflow) and `ip` is out of
+            // reach here. string/text keep "text"; createMapFromTable adds the
+            // keyword multi-field for exact-match/aggregation.
+            if ($pgType == "int") {
+                $esType = array("type" => "long");
+            } elseif ($pgType == "number" || $pgType == "decimal" || $pgType == "double") {
+                $esType = array("type" => "double");
+            } elseif ($pgType == "uuid") {
+                $esType = array("type" => "keyword");
+            } elseif ($pgType == "timestamptz") {
+                $esType = array("type" => "date", "format" => "yyyy-MM-dd HH:mm:ss.SSSSSSZ");
+            }
         }
         return $esType;
     }
