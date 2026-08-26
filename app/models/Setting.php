@@ -76,6 +76,39 @@ class Setting extends Model
     }
 
     /**
+     * Per-database OpenSearch analysis block, stored under `search.analysis`
+     * in settings.viewer. Null when the database has no custom analysis.
+     */
+    public function getSearchAnalysis(): ?array
+    {
+        $arr = $this->getArray();
+        if (!isset($arr->search->analysis)) {
+            return null;
+        }
+        return json_decode(json_encode($arr->search->analysis), true);
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function updateSearchAnalysis(array $analysis): void
+    {
+        $arr = $this->getArray();
+        if (!isset($arr->search)) {
+            $arr->search = new stdClass();
+        }
+        $arr->search->analysis = $analysis;
+        if (App::$param["encryptSettings"]) {
+            $pubKey = file_get_contents(App::$param["path"] . "app/conf/public.key");
+            $sql = "UPDATE settings.viewer SET viewer=pgp_pub_encrypt('" . json_encode($arr) . "', dearmor('$pubKey'))";
+        } else {
+            $sql = "UPDATE settings.viewer SET viewer='" . json_encode($arr) . "'";
+        }
+        $this->execQuery($sql, "PDO", "transaction");
+        $this->clearCacheOnSchemaChanges();
+    }
+
+    /**
      * Updates the API key for a specified user and stores it in the database.
      * Differentiates between superuser and subuser to appropriately assign the API key.
      *

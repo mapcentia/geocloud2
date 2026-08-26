@@ -23,4 +23,19 @@ class SearchSettingsComposerTest extends \Codeception\Test\Unit
             'ngram range must not exceed index.max_ngram_diff'
         );
     }
+
+    public function testComposeUsesDefaultWhenNull(): void
+    {
+        $settings = \app\opensearch\SettingsComposer::compose(null);
+        $this->assertSame('edge_ngram', $settings['settings']['analysis']['filter']['substring']['type']);
+        $this->assertSame(5, $settings['settings']['number_of_shards']);
+    }
+
+    public function testComposeReplacesAnalysisWhenProvided(): void
+    {
+        $custom = ['analyzer' => ['x' => ['type' => 'custom', 'tokenizer' => 'standard']], 'filter' => []];
+        $settings = \app\opensearch\SettingsComposer::compose($custom);
+        $this->assertSame($custom, $settings['settings']['analysis'], 'per-db analysis replaces default');
+        $this->assertSame(5, $settings['settings']['number_of_shards'], 'other settings stay from default');
+    }
 }
