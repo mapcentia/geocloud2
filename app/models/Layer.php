@@ -499,7 +499,7 @@ class Layer extends Table
         $table = new Table($keySplit[0] . "." . $keySplit[1], false);
         $elasticsearchArr = (array)json_decode($this->getGeometryColumns($keySplit[0] . "." . $keySplit[1], "elasticsearch"));
         foreach ($table->metaData as $key => $value) {
-            $esType = $elasticsearch->mapPg2EsType($value['type'], !empty($value['geom_type']) && $value['geom_type'] == "POINT", $modern);
+            $esType = $elasticsearch->mapPg2EsType($value['type'], !empty($value['geom_type']) && $value['geom_type'] == "POINT", $modern, $value['full_type'] ?? null);
             $arr = $this->array_push_assoc($arr, "id", $key);
             $arr = $this->array_push_assoc($arr, "column", $key);
             $arr = $this->array_push_assoc($arr, "elasticsearchtype", $elasticsearchArr[$key]->elasticsearchtype ?: $esType["type"]);

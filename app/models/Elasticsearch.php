@@ -182,9 +182,13 @@ class Elasticsearch extends Model
      * @param bool $modern When true, emit up-to-date OpenSearch/ES types (long,
      *                     double, keyword, yyyy date format). Legacy (v1/v2)
      *                     callers leave this false and get byte-identical output.
+     * @param string|null $fullType The native PG type (format_type output, e.g.
+     *                     "bigint", "double precision", "inet"). On the modern
+     *                     path it refines the mapping beyond GC2's coarse bucket
+     *                     (precise int width, float vs double, inet -> ip).
      * @return array
      */
-    public function mapPg2EsType($pgType, $point = false, bool $modern = false)
+    public function mapPg2EsType(string $pgType, bool $point = false, bool $modern = false, ?string $fullType = null): array
     {
         if ($pgType == "geometry") {
             if ($point) {
@@ -239,12 +243,16 @@ class Elasticsearch extends Model
             );
         }
         if ($modern && $pgType != "geometry") {
-            // Modern (v4) type corrections. Note: GC2's getType() collapses
-            // bigint into "int" and inet into "string", so `long` is used for all
-            // integers (a safe superset that avoids overflow) and `ip` is out of
-            // reach here. string/text keep "text"; createMapFromTable adds the
-            // keyword multi-field for exact-match/aggregation.
-            if ($pgType == "int") {
+            // Modern (v4) type corrections. Prefer the fine native type
+            // (full_type) — it distinguishes what GC2's coarse getType() bucket
+            // cannot (bigint vs int, real vs double, inet). Fall back to the
+            // coarse bucket when full_type is absent or unrecognised: `long` for
+            // any integer (a safe superset), `double` for numeric. string/text
+            // keep "text"; createMapFromTable adds the keyword multi-field.
+            $fine = $this->modernTypeFromFullType($fullType);
+            if ($fine !== null) {
+                $esType = $fine;
+            } elseif ($pgType == "int") {
                 $esType = array("type" => "long");
             } elseif ($pgType == "number" || $pgType == "decimal" || $pgType == "double") {
                 $esType = array("type" => "double");
@@ -255,5 +263,58 @@ class Elasticsearch extends Model
             }
         }
         return $esType;
+    }
+
+    /**
+     * Maps a native PG type (format_type output) to a modern OpenSearch/ES type.
+     * Returns null for types better handled by the coarse fallback (varchar/text
+     * stay "text" so the keyword multi-field is added downstream).
+     *
+     * @param string|null $fullType e.g. "bigint", "double precision", "inet(255)"
+     * @return array<string,string>|null
+     */
+    private function modernTypeFromFullType(?string $fullType): ?array
+    {
+        if ($fullType === null || $fullType === "") {
+            return null;
+        }
+        $ft = strtolower($fullType);
+        // Order matters: bigint/smallint before the generic "int" match; double
+        // precision before real; "with time zone" before the generic timestamp.
+        if (str_contains($ft, "bigint") || str_contains($ft, "int8")) {
+            return array("type" => "long");
+        }
+        if (str_contains($ft, "smallint") || str_contains($ft, "int2")) {
+            return array("type" => "short");
+        }
+        if (str_contains($ft, "integer") || str_contains($ft, "int4")) {
+            return array("type" => "integer");
+        }
+        if (str_contains($ft, "double precision") || str_contains($ft, "float8")) {
+            return array("type" => "double");
+        }
+        if (str_contains($ft, "real") || str_contains($ft, "float4")) {
+            return array("type" => "float");
+        }
+        if (str_contains($ft, "numeric") || str_contains($ft, "decimal")) {
+            return array("type" => "double");
+        }
+        if (str_contains($ft, "inet") || str_contains($ft, "cidr")) {
+            return array("type" => "ip");
+        }
+        if (str_contains($ft, "uuid")) {
+            return array("type" => "keyword");
+        }
+        if (str_contains($ft, "timestamp with time zone") || str_contains($ft, "timestamptz")) {
+            return array("type" => "date", "format" => "yyyy-MM-dd HH:mm:ss.SSSSSSZ");
+        }
+        if (str_contains($ft, "timestamp")) {
+            return array("type" => "date", "format" => "yyyy-MM-dd HH:mm:ss.SSSSSS");
+        }
+        if (str_contains($ft, "date")) {
+            return array("type" => "date");
+        }
+        // varchar/text/char/json/bytea/boolean/etc.: let the coarse path decide.
+        return null;
     }
 }
