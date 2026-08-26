@@ -381,28 +381,41 @@ class Feature extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/features/{feature}', operationId: 'deleteFeature', description: "Delete a single feature by its primary key through a WFS-T transaction.", tags: ['Feature'])]
+    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/features/{feature}', operationId: 'deleteFeature', description: "Delete one or more features by primary key through a WFS-T transaction. Pass a single key or a comma-separated list (e.g. 1,2,3).", tags: ['Feature'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
-    #[OA\Parameter(name: 'feature', description: 'Primary key value of the feature', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '1')]
+    #[OA\Parameter(name: 'feature', description: 'Primary key value, or a comma-separated list of values (e.g. 1,2,3)', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '1,2')]
     #[OA\Response(response: 204, description: 'Deleted')]
-    #[OA\Response(response: 404, description: 'Feature not found')]
+    #[OA\Response(response: 404, description: 'No features found')]
     public function delete_index(): Response
     {
         $ctx = $this->buildContext();
         $this->authorizeLayer($ctx, true);
 
+        // The path key may be a single value or a comma-separated list (e.g. 1,2,3);
+        // each becomes an <ogc:FeatureId> in a single Delete filter, which the WFS
+        // engine OR-combines into one delete.
+        $keys = array_values(array_filter(
+            array_map('trim', explode(',', (string)$this->featureKey)),
+            static fn(string $k): bool => $k !== ''
+        ));
+        if (empty($keys)) {
+            throw new GC2Exception("A feature id is required in the path.", 400, null, "FEATURE_ID_REQUIRED");
+        }
+
         $xml = $this->transactionHeader();
         $xml .= "<wfs:Delete typeName=\"$this->featureSchema:$this->featureTable\" xmlns:$this->featureSchema=\"http://mapcentia.com/{$ctx->database}/$this->featureSchema\">";
         $xml .= "<ogc:Filter xmlns:ogc=\"http://www.opengis.net/ogc\">";
-        $xml .= "<ogc:FeatureId fid=\"$this->featureTable.$this->featureKey\"/>";
+        foreach ($keys as $key) {
+            $xml .= "<ogc:FeatureId fid=\"$this->featureTable.$key\"/>";
+        }
         $xml .= "</ogc:Filter>";
         $xml .= "</wfs:Delete>";
         $xml .= "</wfs:Transaction>\n";
 
         $result = $this->commit($ctx, $xml);
         if ($result['deleted'] === 0) {
-            throw new GC2Exception("Feature not found", 404, null, "FEATURE_NOT_FOUND");
+            throw new GC2Exception("No features found", 404, null, "FEATURE_NOT_FOUND");
         }
         return new NoContentResponse();
     }
