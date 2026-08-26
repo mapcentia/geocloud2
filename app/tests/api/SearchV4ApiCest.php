@@ -77,4 +77,12 @@ class SearchV4ApiCest
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseContainsJson(['analysis' => ['analyzer' => ['t' => ['tokenizer' => 'standard']]]]);
     }
+
+    public function shouldReturn404WhenNoIndex(ApiTester $I)
+    {
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
+        $I->sendGET('/api/v4/schemas/' . $this->schemaName . '/tables/poi/search?q=*');
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        $I->seeResponseContainsJson(['errorCode' => 'INDEX_NOT_FOUND']);
+    }
 }
