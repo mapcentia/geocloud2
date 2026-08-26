@@ -1,11 +1,15 @@
 <?php
-use PHPUnit\Framework\TestCase;
+/**
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2026 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ */
 
-class SearchSettingsComposerTest extends TestCase
+class SearchSettingsComposerTest extends \Codeception\Test\Unit
 {
     public function testDefaultSettingsJsonIsOpenSearchCompatible(): void
     {
-        $path = __DIR__ . '/../../conf/elasticsearch_settings.json';
+        $path = __DIR__ . '/../../conf/elasticsearch_settings.json.dist';
         $json = json_decode(file_get_contents($path), true);
         $this->assertIsArray($json, 'settings JSON must parse');
 
