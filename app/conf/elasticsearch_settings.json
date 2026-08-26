@@ -1,0 +1,28 @@
+{
+  "settings": {
+    "number_of_shards": 5,
+    "number_of_replicas": 0,
+    "max_ngram_diff": 19,
+    "analysis": {
+      "analyzer": {
+        "auto_complete_search_analyzer": {
+          "type": "custom",
+          "tokenizer": "whitespace",
+          "filter": ["lowercase", "asciifolding"]
+        },
+        "auto_complete_analyzer": {
+          "type": "custom",
+          "tokenizer": "whitespace",
+          "filter": ["lowercase", "asciifolding", "substring"]
+        }
+      },
+      "filter": {
+        "substring": {
+          "type": "edge_ngram",
+          "min_gram": 1,
+          "max_gram": 20
+        }
+      }
+    }
+  }
+}
