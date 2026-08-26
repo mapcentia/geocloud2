@@ -122,7 +122,7 @@ class Feature extends AbstractApi
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\Parameter(name: 'feature', description: 'Primary key value, or a comma-separated list of values (e.g. 1,2,3)', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '1,2')]
     #[OA\Parameter(name: 'srs', description: 'Output EPSG code (SRID) of the GeoJSON geometry. Defaults to 4326.', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 4326), example: 25832)]
-    #[OA\Response(response: 200, description: 'GeoJSON FeatureCollection with the matched feature(s)')]
+    #[OA\Response(response: 200, description: 'A GeoJSON Feature for a single match, or a FeatureCollection for several')]
     #[OA\Response(response: 404, description: 'No features found')]
     #[AcceptableAccepts(['application/json', 'application/geo+json', '*/*'])]
     public function get_index(): Response
@@ -231,6 +231,12 @@ class Feature extends AbstractApi
             ];
         }
 
+        // A single matched feature is returned as a bare GeoJSON Feature; several
+        // as a FeatureCollection (mirrors the single-vs-list shape of the other v4
+        // collection GETs).
+        if (count($features) === 1) {
+            return $this->getResponse($features[0]);
+        }
         return $this->getResponse([
             "type" => "FeatureCollection",
             "features" => $features,
