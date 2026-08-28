@@ -159,6 +159,8 @@ class User extends Model
         if (!empty($row['private_properties'])) {
             $row['private_properties'] = json_decode($row['private_properties']);
         }
+        // usergroup is JSONB; present it as a decoded list (or null), not a raw JSON string
+        $row['usergroup'] = self::toGroupArray($row['usergroup']);
         $response['success'] = true;
         $response['data'] = $row;
         return $response;
@@ -309,6 +311,7 @@ class User extends Model
             $client->sendEmailBatch($messages);
         }
         $row["properties"] = !empty($row["properties"]) ? json_decode($row["properties"]) : null;
+        $row['usergroup'] = self::toGroupArray($row['usergroup'] ?? null);
         $response['success'] = true;
         $response['message'] = 'User was created';
         $response['data'] = $row;
@@ -408,6 +411,7 @@ class User extends Model
         $this->execute($res);
         $row = $this->fetchRow($res);
         $row["properties"] = !empty($row["properties"]) ? json_decode($row["properties"]) : null;
+        $row['usergroup'] = self::toGroupArray($row['usergroup'] ?? null);
         $response['success'] = true;
         $response['message'] = "User was updated";
         $response['data'] = $row;
@@ -462,6 +466,11 @@ class User extends Model
         $res = $this->prepare($sQuery);
         $this->execute($res, [":sUserID" => $userId]);
         $subusers = $res->fetchAll(PDO::FETCH_ASSOC);
+        // usergroup is JSONB; present it as a decoded list (or null), not a raw JSON string
+        foreach ($subusers as &$subuser) {
+            $subuser['usergroup'] = self::toGroupArray($subuser['usergroup']);
+        }
+        unset($subuser);
         $response = [];
         $response['success'] = true;
         $response['data'] = $subusers;

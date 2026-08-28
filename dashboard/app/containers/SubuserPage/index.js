@@ -11,6 +11,9 @@ import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import Typography from '@material-ui/core/Typography';
 import MenuItem from '@material-ui/core/MenuItem';
+import Checkbox from '@material-ui/core/Checkbox';
+import ListItemText from '@material-ui/core/ListItemText';
+import Chip from '@material-ui/core/Chip';
 import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
@@ -44,7 +47,23 @@ const OverlayInner = styled.div`
     width: 100%;
 `;
 
-const NULL_VALUE = `null`;
+/**
+ * Normalizes a usergroup value to an array of group names. The API returns an
+ * array (multi-inheritance), but tolerate the legacy shapes as well: a JSON
+ * array string, a plain string (single group) or null.
+ */
+const normalizeUsergroup = (value) => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value.filter(item => typeof item === `string` && item !== ``);
+    if (typeof value === `string`) {
+        try {
+            const parsed = JSON.parse(value);
+            if (Array.isArray(parsed)) return parsed.filter(item => typeof item === `string` && item !== ``);
+        } catch (e) { /* not JSON — treat as a single group name */ }
+        return value === `null` ? [] : [value];
+    }
+    return [];
+};
 
 export class SubuserPage extends React.PureComponent {
     constructor(props) {
@@ -57,7 +76,7 @@ export class SubuserPage extends React.PureComponent {
             password1: ``,
             password2: ``,
             createSchema: false,
-            usergroup: NULL_VALUE
+            usergroup: []
         }
     }
 
@@ -86,7 +105,7 @@ export class SubuserPage extends React.PureComponent {
                             password1: ``,
                             password2: ``,
                             createSchema: false,
-                            usergroup: item.usergroup
+                            usergroup: normalizeUsergroup(item.usergroup)
                         });
                     }
                 });
@@ -100,10 +119,10 @@ export class SubuserPage extends React.PureComponent {
                 name: this.state.screenName,
                 email: this.state.email,
                 password: this.state.password1,
-                
+
             };
 
-            if (this.state.usergroup && this.state.usergroup !== NULL_VALUE) {
+            if (this.state.usergroup.length > 0) {
                 data.usergroup = this.state.usergroup;
             }
 
@@ -123,7 +142,10 @@ export class SubuserPage extends React.PureComponent {
         if (this.props.subusers) {
             this.props.subusers.map((item, index) => {
                 if (this.state.screenName !== item.screenName) {
-                    menuItems.push(<MenuItem key={`option_${index}`} value={item.screenName}>{item.screenName}</MenuItem>);
+                    menuItems.push(<MenuItem key={`option_${index}`} value={item.screenName}>
+                        <Checkbox color="primary" checked={this.state.usergroup.indexOf(item.screenName) > -1} />
+                        <ListItemText primary={item.screenName} />
+                    </MenuItem>);
                 }
             });
         };
@@ -156,7 +178,7 @@ export class SubuserPage extends React.PureComponent {
         } else if (this.props.updateError) {
             errorMessage = (<FormattedMessage id={`errors.${this.props.updateErrorCode}`} />)
         }
-        
+
         let overlay = false;
         if (overlayContent) {
             overlay = (<OverlayContainer>
@@ -203,7 +225,7 @@ export class SubuserPage extends React.PureComponent {
                         {this.state.addingSubuser ? (<FormattedMessage id="Create subuser" />) : (<FormattedMessage id="Change subuser settings" />)}
                     </Typography>
                     <Typography variant="body1" color="inherit" style={{paddingTop: `10px`}}>
-                    {this.state.addingSubuser ? (<FormattedMessage id="containers.SubuserPage.descriptionCreate"/>) : (<FormattedMessage id="containers.SubuserPage.descriptionEdit"/>)}
+                        {this.state.addingSubuser ? (<FormattedMessage id="containers.SubuserPage.descriptionCreate"/>) : (<FormattedMessage id="containers.SubuserPage.descriptionEdit"/>)}
                     </Typography>
                 </Grid>
             </Grid>
@@ -243,11 +265,17 @@ export class SubuserPage extends React.PureComponent {
             </Grid>
             <Grid container spacing={0}>
                 <Grid item md={12} style={{textAlign: `right`}}>
-                    <FormControl>
+                    <FormControl style={{minWidth: `250px`, textAlign: `left`}}>
                         <Select
+                            multiple
+                            displayEmpty
                             value={this.state.usergroup}
+                            renderValue={(selected) => (selected.length === 0
+                                ? this.props.intl.formatMessage({id: `Do not inherit`})
+                                : (<div style={{display: `flex`, flexWrap: `wrap`}}>
+                                    {selected.map(value => (<Chip key={value} label={value} style={{margin: `2px`}} />))}
+                                </div>))}
                             onChange={(event) => { this.setState({usergroup: event.target.value})}}>
-                            <MenuItem value={NULL_VALUE}>{this.props.intl.formatMessage({id: `Do not inherit`})}</MenuItem>
                             {menuItems}
                         </Select>
                     </FormControl>
@@ -266,11 +294,11 @@ export class SubuserPage extends React.PureComponent {
                     </Button>
 
                     {errorMessage ? (
-                    <div style={{width: `100%`}}>
-                        <Typography variant="body1" color="inherit" style={{color: `red`, padding: `10px`, textAlign: `center`}}>
-                            {errorMessage}
-                        </Typography>
-                    </div>) : false}
+                        <div style={{width: `100%`}}>
+                            <Typography variant="body1" color="inherit" style={{color: `red`, padding: `10px`, textAlign: `center`}}>
+                                {errorMessage}
+                            </Typography>
+                        </div>) : false}
                 </Grid>
             </Grid>
         </div>);
