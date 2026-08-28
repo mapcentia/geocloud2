@@ -32,7 +32,7 @@ const createUserCall = (action) => {
             name: Joi.string().required(),
             email: Joi.string().email().required(),
             password: Joi.string().min(3).required(),
-            usergroup: Joi.string().allow(``).optional()
+            usergroup: Joi.array().items(Joi.string()).optional()
         })
     });
 
@@ -57,7 +57,8 @@ const updateUserCall = (action) => {
         data.password = action.payload.data.newPassword;
     } else {
         if (action.payload.data.password) data.password = action.payload.data.password;
-        if (action.payload.data.usergroup) data.usergroup = (action.payload.data.usergroup === `null` ? `` : action.payload.data.usergroup);
+        // usergroup is an array of group names (multi-inheritance); an empty array clears the membership
+        if (action.payload.data.usergroup !== undefined) data.usergroup = action.payload.data.usergroup;
     }
 
     return axios.put(`${config.apiUrl}user/${action.payload.screenName}`, data, {
