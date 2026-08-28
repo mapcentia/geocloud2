@@ -17,6 +17,7 @@ class FeatureV4ApiCest
     private $token;
     private $schemaName;
     private $insertedKey;
+    private $insertedKey2;
 
     public function __construct()
     {
@@ -92,19 +93,42 @@ class FeatureV4ApiCest
         $I->assertNotEmpty($this->insertedKey);
     }
 
+    // A single matched key returns a bare GeoJSON Feature (not a FeatureCollection)
     public function shouldGetFeatureAsGeoJson(ApiTester $I)
     {
         $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
         $I->sendGET($this->endpoint() . '/' . $this->insertedKey);
         $I->seeResponseCodeIs(HttpCode::OK);
-        $body = json_decode($I->grabResponse(), true);
-        $I->assertSame('FeatureCollection', $body['type']);
-        $I->assertCount(1, $body['features']);
-        $feature = $body['features'][0];
+        $feature = json_decode($I->grabResponse(), true);
+        $I->assertSame('Feature', $feature['type']);
         $I->assertSame('alpha', $feature['properties']['name']);
         $I->assertSame('Point', $feature['geometry']['type']);
         $I->assertEqualsWithDelta(9.5, $feature['geometry']['coordinates'][0], 0.0001);
         $I->assertEqualsWithDelta(55.7, $feature['geometry']['coordinates'][1], 0.0001);
+    }
+
+    // A comma-separated key list returns a FeatureCollection with every match
+    public function shouldGetMultipleFeaturesAsFeatureCollection(ApiTester $I)
+    {
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST($this->endpoint(), $this->featureCollection('bravo', 10.1, 56.1));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $links = json_decode($I->grabResponse(), true);
+        $this->insertedKey2 = basename($links[0]['_links']['self']);
+
+        $I->sendGET($this->endpoint() . '/' . $this->insertedKey . ',' . $this->insertedKey2);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $body = json_decode($I->grabResponse(), true);
+        $I->assertSame('FeatureCollection', $body['type']);
+        $I->assertCount(2, $body['features']);
+        $names = array_map(static fn($f) => $f['properties']['name'], $body['features']);
+        $I->assertContains('alpha', $names);
+        $I->assertContains('bravo', $names);
+        foreach ($body['features'] as $feature) {
+            $I->assertSame('Feature', $feature['type']);
+            $I->assertSame('Point', $feature['geometry']['type']);
+        }
     }
 
     public function shouldReturnNotFoundForUnknownFeature(ApiTester $I)
@@ -123,11 +147,13 @@ class FeatureV4ApiCest
             'properties' => ['name' => 'beta'],
             'geometry' => ['type' => 'Point', 'coordinates' => [10.0, 56.0]],
         ]));
-        // 303 See Other is followed to the GET of the updated feature
+        // 303 See Other is followed to the GET of the updated feature,
+        // which returns a bare GeoJSON Feature for a single key
         $I->seeResponseCodeIs(HttpCode::OK);
-        $body = json_decode($I->grabResponse(), true);
-        $I->assertSame('beta', $body['features'][0]['properties']['name']);
-        $I->assertEqualsWithDelta(10.0, $body['features'][0]['geometry']['coordinates'][0], 0.0001);
+        $feature = json_decode($I->grabResponse(), true);
+        $I->assertSame('Feature', $feature['type']);
+        $I->assertSame('beta', $feature['properties']['name']);
+        $I->assertEqualsWithDelta(10.0, $feature['geometry']['coordinates'][0], 0.0001);
     }
 
     public function shouldRejectPatchWithoutPrimaryKey(ApiTester $I)
