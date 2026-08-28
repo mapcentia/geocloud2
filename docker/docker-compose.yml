@@ -14,7 +14,7 @@ services:
         - ECW_VERSION=3
         - PHP_VERSION=8.4
   gc2:
-    image: mapcentia/gc2:php8.4-1
+    image: mapcentia/gc2:php8.4-2
     privileged: true
     build:
       context: .
