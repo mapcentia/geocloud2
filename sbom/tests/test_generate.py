@@ -67,7 +67,8 @@ class GenerateTest(unittest.TestCase):
     def test_writes_full_file_set(self):
         out, code, _ = self._run()
         self.assertEqual(code, 0)
-        for f in ["gc2-source.cdx.json", "gc2-image.cdx.json", "gis-native.cdx.json",
+        for f in ["gc2-source.cdx.json", "gc2-source.syft.json",
+                  "gc2-image.cdx.json", "gc2-image.syft.json", "gis-native.cdx.json",
                   "release.json", "provenance.json", "coverage.json",
                   "validation.json", "components.csv", "sha256sums.txt"]:
             self.assertTrue((out / f).is_file(), f"missing {f}")

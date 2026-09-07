@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import tempfile
 from pathlib import Path
@@ -18,9 +19,13 @@ IMAGE_SYFT = "gc2-image.syft.json"
 GIS_CDX = "gis-native.cdx.json"
 
 
+def _syft_env():
+    return {k: v for k, v in os.environ.items() if not k.startswith("SYFT_")}
+
+
 def _syft_version(syft, capture) -> str:
     try:
-        out = capture([str(syft), "version", "-o", "json"], text=True)
+        out = capture([str(syft), "version", "-o", "json"], text=True, env=_syft_env())
         return json.loads(out).get("version", "unknown")
     except Exception:
         return "unknown"
@@ -29,7 +34,7 @@ def _syft_version(syft, capture) -> str:
 def resolve_image_digest(image, run, capture) -> str:
     run(["docker", "pull", image], check=True)
     out = capture(
-        ["docker", "inspect", "--format", "{{index .RepoDigests 0}}", image],
+        ["docker", "inspect", "--format", "{{if .RepoDigests}}{{index .RepoDigests 0}}{{end}}", image],
         text=True,
     ).strip()
     if "@sha256:" not in out:
@@ -42,7 +47,7 @@ def _scan_dir(syft, config, snapshot, name, version, out_cdx, out_syft, run):
         str(syft), "-c", str(config), "scan", f"dir:{snapshot}",
         "--source-name", name, "--source-version", version,
         "-o", f"cyclonedx-json@1.7={out_cdx}", "-o", f"syft-json={out_syft}",
-    ], check=True)
+    ], check=True, env=_syft_env())
 
 
 def _scan_image(syft, image_at_digest, name, version, out_cdx, out_syft, run):
@@ -50,20 +55,20 @@ def _scan_image(syft, image_at_digest, name, version, out_cdx, out_syft, run):
         str(syft), "scan", image_at_digest,
         "--source-name", name, "--source-version", version,
         "-o", f"cyclonedx-json@1.7={out_cdx}", "-o", f"syft-json={out_syft}",
-    ], check=True)
+    ], check=True, env=_syft_env())
 
 
-def _coverage(repo, source_cdx) -> dict:
+def _coverage(root, source_cdx) -> dict:
     present = sr.sbom_name_versions(source_cdx)
     entries = []
-    composer = repo / "app" / "composer.lock"
+    composer = root / "app" / "composer.lock"
     if composer.is_file():
         groups = sr.parse_composer_lock(composer)
         for group, locked in groups.items():
             entries.append(sr.compute_lockfile_coverage(
                 locked, present, path="app/composer.lock", group=group))
     for npm_path in ["package-lock.json", "dashboard/package-lock.json"]:
-        p = repo / npm_path
+        p = root / npm_path
         if p.is_file():
             entries.append(sr.compute_lockfile_coverage(
                 sr.parse_npm_lock(p), present, path=npm_path, group="npm"))
@@ -88,6 +93,7 @@ def generate(*, repo, tag, image, image_version, syft, output, config_dir,
         snapshot = sr.git_archive_snapshot(repo, tag, Path(tmp) / "src")
         _scan_dir(syft, config_dir / "syft-config.yaml", snapshot, "gc2", tag,
                   output / SOURCE_CDX, output / SOURCE_SYFT, run)
+        coverage_data = _coverage(snapshot, json.loads((output / SOURCE_CDX).read_text()))
 
     # 2) image SBOM by digest
     digest = resolve_image_digest(image, run, capture)
@@ -112,8 +118,7 @@ def generate(*, repo, tag, image, image_version, syft, output, config_dir,
     # 5) coverage + CSV
     source_cdx = json.loads((output / SOURCE_CDX).read_text())
     image_cdx = json.loads((output / IMAGE_CDX).read_text())
-    (output / "coverage.json").write_text(
-        json.dumps(_coverage(repo, source_cdx), indent=2) + "\n")
+    (output / "coverage.json").write_text(json.dumps(coverage_data, indent=2) + "\n")
     rows = (sr.cdx_component_rows(source_cdx, artifact="source")
             + sr.cdx_component_rows(image_cdx, artifact="image")
             + sr.cdx_component_rows(gis_bom, artifact="gis-native"))
@@ -123,6 +128,7 @@ def generate(*, repo, tag, image, image_version, syft, output, config_dir,
     syft_sha = sr.sha256_file(syft)
     config_sha = sr.sha256_file(config_dir / "syft-config.yaml")
     syft_ver = _syft_version(syft, capture)
+    dirty = bool(capture(["git", "-C", str(repo), "status", "--porcelain"], text=True).strip())
     artifacts = {
         name: {"sha256": sr.sha256_file(output / name), "format": "CycloneDX 1.7",
                "components": len(json.loads((output / name).read_text()).get("components", []))}
@@ -134,6 +140,7 @@ def generate(*, repo, tag, image, image_version, syft, output, config_dir,
         "config_sha256": config_sha,
         "commit": commit,
         "scope": "git-archive snapshot of tag + delivered image by digest + GIS-native supplement",
+        "working_tree_dirty": dirty,
     }, indent=2) + "\n")
     manifest = sr.build_release_manifest(
         tag=tag, commit=commit, image_ref=image, image_digest=digest,
