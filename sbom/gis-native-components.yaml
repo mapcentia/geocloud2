@@ -1,0 +1,29 @@
+# Fra-kilde-byggede GIS-libs i docker/Dockerfile som syft ikke fanger som pakker.
+# Pins SKAL holdes i sync med docker/Dockerfile ved hver image-version (php8.4-N).
+# Hvor 'purl' udelades, genereres pkg:generic/<name>@<version>.
+components:
+  - name: gdal
+    version: "3.9.2"
+    source: "http://download.osgeo.org/gdal/3.9.2/gdal392.zip"
+    notes: "Bygget med ECW 3.3 + LibKML (ECW_VERSION=3)"
+  - name: mapserver
+    version: "8.0-rsvg_fix"
+    purl: "pkg:github/mapcentia/mapserver@rsvg_fix"
+    notes: "Branch-klon; commit ikke pinnet i Dockerfile"
+  - name: mapcache
+    version: "branch-1-12"
+    purl: "pkg:github/mapserver/mapcache@branch-1-12"
+    notes: "Bygget med WITH_MEMCACHE=1"
+  - name: swig
+    version: "master"
+    purl: "pkg:github/swig/swig@master"
+    notes: "Kloned fra master; PHP8-support"
+  - name: ogr2postgis
+    version: "gui"
+    purl: "pkg:github/mapcentia/ogr2postgis@gui"
+  - name: libecwj2
+    version: "3.3"
+    notes: "ECW/JPEG2000 SDK; ECW_VERSION build-arg styrer 3.3 vs 5.3"
+  - name: qgis-server
+    version: "apt-ltr"
+    notes: "Fra qgis.org debian-ltr; faktisk version aflaeses i imaget"
