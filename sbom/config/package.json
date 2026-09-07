@@ -1,0 +1,10 @@
+{
+  "name": "gc2-sbom-validate",
+  "private": true,
+  "version": "1.0.0",
+  "description": "CycloneDX 1.7 validation for GC2 release SBOMs",
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
+  }
+}

@@ -14,6 +14,7 @@ app/tests/_output
 app/tests/_output/*
 app/composer.phar
 node_modules
+sbom/config/node_modules/
 public/backups
 public/logs
 public/scheduler/.sencha

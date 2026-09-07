@@ -1,0 +1,13 @@
+check-for-app-update: false
+select-catalogers:
+  - '+javascript-package-cataloger'
+javascript:
+  include-dev-dependencies: true
+  search-remote-licenses: false
+python:
+  search-remote-licenses: false
+  guess-unpinned-requirements: false
+license:
+  content: none
+cache:
+  dir: ''
