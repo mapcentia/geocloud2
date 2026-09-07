@@ -1,0 +1,21 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.7",
+  "metadata": {
+    "component": {
+      "type": "application",
+      "name": "fixture",
+      "version": "1.0.0",
+      "bom-ref": "fixture@1.0.0"
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "lib-a",
+      "version": "1.2.3",
+      "purl": "pkg:generic/lib-a@1.2.3",
+      "bom-ref": "pkg:generic/lib-a@1.2.3"
+    }
+  ]
+}

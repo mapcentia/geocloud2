@@ -1,0 +1,5 @@
+{
+  "bomFormat": "CycloneDX",
+  "metadata": { "component": { "type": "application", "name": "bad", "version": "1" } },
+  "components": []
+}
