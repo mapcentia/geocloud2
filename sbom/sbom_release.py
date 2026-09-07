@@ -71,6 +71,14 @@ def parse_composer_lock(lock_path) -> dict:
 
 
 def parse_npm_lock(lock_path) -> list:
+    """Parse npm lockfile (v1 or v2/v3) and return [(name, version), ...] tuples.
+
+    Handles both npm lockfile formats:
+    - v2/v3: packages map with entries like "node_modules/<name>": {version: "..."}
+    - v1: dependencies map with entries like "<name>": {version: "..."}
+
+    In v2/v3 format, skips root entry (empty string key).
+    """
     data = json.loads(Path(lock_path).read_text())
     pairs = []
     # Try v2/v3 format first (with "packages" map)

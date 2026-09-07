@@ -81,6 +81,36 @@ class CoverageTest(unittest.TestCase):
         ]}
         self.assertEqual(sr.sbom_name_versions(cdx), {("x", "1")})
 
+    def test_parse_npm_lock_v2v3_packages_map_skips_root_extracts_node_modules_names(self):
+        """Test v2/v3 packages-map path: root entry ("") skipped, node_modules/ names extracted."""
+        import tempfile
+        import json
+        # Synthetic v2/v3 lockfile with packages map
+        v2v3_lock = {
+            "lockfileVersion": 3,
+            "packages": {
+                "": {"name": "root", "version": "1.0.0"},  # root entry, should be skipped
+                "node_modules/left-pad": {"version": "1.3.0"},
+                "node_modules/@scope/pkg": {"version": "2.0.0"},
+            }
+        }
+        p = pathlib.Path(tempfile.mkstemp(suffix=".json")[1])
+        p.write_text(json.dumps(v2v3_lock))
+        try:
+            pairs = sr.parse_npm_lock(p)
+            # Convert to set for order-independent comparison
+            pairs_set = set(pairs)
+            # Verify root entry is skipped (should not have ("root", ...))
+            root_entries = [nv for nv in pairs_set if nv[0] == "root"]
+            self.assertEqual(len(root_entries), 0, "root entry should be skipped")
+            # Verify expected packages are present
+            self.assertIn(("left-pad", "1.3.0"), pairs_set)
+            self.assertIn(("@scope/pkg", "2.0.0"), pairs_set)
+            # Verify only expected entries (no extra entries from root)
+            self.assertEqual(len(pairs_set), 2)
+        finally:
+            p.unlink()
+
 
 if __name__ == "__main__":
     unittest.main()
