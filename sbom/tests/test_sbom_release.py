@@ -50,5 +50,37 @@ class GisComponentsTest(unittest.TestCase):
         self.assertEqual(len(refs), len(set(refs)))
 
 
+class CoverageTest(unittest.TestCase):
+    def test_parse_composer_lock_groups(self):
+        groups = sr.parse_composer_lock(REPO / "app" / "composer.lock")
+        self.assertEqual(len(groups["packages"]), 99)
+        self.assertEqual(len(groups["packages-dev"]), 60)
+        self.assertIn(("amphp/amp", "v3.1.0"), groups["packages"])
+
+    def test_parse_npm_lock_pairs(self):
+        pairs = sr.parse_npm_lock(REPO / "package-lock.json")
+        self.assertTrue(pairs)
+        for name, version in pairs[:5]:
+            self.assertTrue(name)
+            self.assertTrue(version)
+
+    def test_coverage_reports_missing(self):
+        locked = [("a", "1"), ("b", "2"), ("a", "1")]
+        present = {("a", "1")}
+        cov = sr.compute_lockfile_coverage(
+            locked, present, path="x.lock", group="packages"
+        )
+        self.assertEqual(cov["lockedEntries"], 3)
+        self.assertEqual(cov["uniqueNameVersions"], 2)
+        self.assertEqual(cov["missingNameVersions"], [["b", "2"]])
+
+    def test_sbom_name_versions_ignores_incomplete(self):
+        cdx = {"components": [
+            {"name": "x", "version": "1"},
+            {"name": "y"},
+        ]}
+        self.assertEqual(sr.sbom_name_versions(cdx), {("x", "1")})
+
+
 if __name__ == "__main__":
     unittest.main()
