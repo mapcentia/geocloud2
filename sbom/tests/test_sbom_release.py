@@ -1,6 +1,7 @@
 import json
 import pathlib
 import sys
+import tempfile
 import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
@@ -110,6 +111,42 @@ class CoverageTest(unittest.TestCase):
             self.assertEqual(len(pairs_set), 2)
         finally:
             p.unlink()
+
+
+class ManifestCsvTest(unittest.TestCase):
+    def test_cdx_rows(self):
+        cdx = {"components": [
+            {"type": "library", "name": "x", "version": "1", "purl": "pkg:generic/x@1"},
+        ]}
+        rows = sr.cdx_component_rows(cdx, artifact="source")
+        self.assertEqual(rows, [{
+            "artifact": "source", "type": "library",
+            "name": "x", "version": "1", "purl": "pkg:generic/x@1",
+        }])
+
+    def test_write_csv_has_header(self):
+        p = pathlib.Path(tempfile.mkstemp(suffix=".csv")[1])
+        sr.write_csv([{"artifact": "a", "type": "library",
+                       "name": "n", "version": "v", "purl": "p"}], p)
+        text = p.read_text()
+        self.assertTrue(text.startswith("artifact,type,name,version,purl"))
+        self.assertIn("a,library,n,v,p", text)
+
+    def test_release_manifest_shape(self):
+        m = sr.build_release_manifest(
+            tag="2026.6.7", commit="abc", image_ref="mapcentia/gc2:php8.4-2",
+            image_digest="sha256:dead", image_version="php8.4-2",
+            generated_at="2026-09-07T12:00:00Z", syft_version="1.51.1",
+            syft_sha256="ff", config_sha256="cc",
+            artifacts={"gc2-source.cdx.json": {"sha256": "11", "components": 2385}},
+            validation_passed=True,
+        )
+        self.assertEqual(m["product"], "gc2")
+        self.assertEqual(m["git_tag"], "2026.6.7")
+        self.assertEqual(m["image"]["digest"], "sha256:dead")
+        self.assertEqual(m["image"]["image_version"], "php8.4-2")
+        self.assertTrue(m["validation"]["all_passed"])
+        self.assertEqual(m["scope"]["vulnerability_scan"], "not performed in this step")
 
 
 if __name__ == "__main__":

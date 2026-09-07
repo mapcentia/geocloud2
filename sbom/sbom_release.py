@@ -118,3 +118,51 @@ def compute_lockfile_coverage(locked, present, *, path, group) -> dict:
         "uniqueNameVersions": len(unique),
         "missingNameVersions": missing,
     }
+
+
+def cdx_component_rows(cdx: dict, *, artifact: str) -> list:
+    rows = []
+    for c in cdx.get("components", []) or []:
+        rows.append({
+            "artifact": artifact,
+            "type": c.get("type", ""),
+            "name": c.get("name", ""),
+            "version": c.get("version", ""),
+            "purl": c.get("purl", ""),
+        })
+    return rows
+
+
+def write_csv(rows: list, out_path) -> None:
+    fields = ["artifact", "type", "name", "version", "purl"]
+    with open(out_path, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def build_release_manifest(*, tag, commit, image_ref, image_digest, image_version,
+                           generated_at, syft_version, syft_sha256, config_sha256,
+                           artifacts, validation_passed) -> dict:
+    return {
+        "product": "gc2",
+        "git_tag": tag,
+        "git_commit": commit,
+        "image": {
+            "ref": image_ref,
+            "digest": image_digest,
+            "platform": "linux/amd64",
+            "image_version": image_version,
+        },
+        "generated_at": generated_at,
+        "tool": {"name": "syft", "version": syft_version, "sha256": syft_sha256},
+        "config_sha256": config_sha256,
+        "artifacts": artifacts,
+        "validation": {"all_passed": validation_passed},
+        "scope": {
+            "source": "tracked git-archive of tag",
+            "image": "scanned by digest",
+            "gis_native": "hand-maintained supplement from Dockerfile pins",
+            "vulnerability_scan": "not performed in this step",
+        },
+    }
