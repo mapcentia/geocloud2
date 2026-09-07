@@ -9,6 +9,35 @@ from pathlib import Path
 
 import yaml
 
+import tarfile
+import tempfile as _tempfile
+
+
+def resolve_commit(repo, tag: str) -> str:
+    out = subprocess.check_output(
+        ["git", "-C", str(repo), "rev-list", "-n", "1", tag],
+        text=True, stderr=subprocess.DEVNULL,
+    )
+    return out.strip()
+
+
+def git_archive_snapshot(repo, tag: str, dest) -> Path:
+    dest = Path(dest)
+    dest.mkdir(parents=True, exist_ok=True)
+    with _tempfile.NamedTemporaryFile(suffix=".tar", delete=False) as tmp:
+        archive = Path(tmp.name)
+    try:
+        subprocess.run(
+            ["git", "-C", str(repo), "archive", "--format=tar",
+             f"--output={archive}", tag],
+            check=True,
+        )
+        with tarfile.open(archive) as tar:
+            tar.extractall(dest, filter="data")
+    finally:
+        archive.unlink(missing_ok=True)
+    return dest
+
 
 def sha256_file(path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()

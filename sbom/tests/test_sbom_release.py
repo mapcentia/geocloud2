@@ -149,5 +149,22 @@ class ManifestCsvTest(unittest.TestCase):
         self.assertEqual(m["scope"]["vulnerability_scan"], "not performed in this step")
 
 
+class GitHelpersTest(unittest.TestCase):
+    def test_resolve_commit_known_tag(self):
+        sha = sr.resolve_commit(REPO, "2026.6.6")
+        self.assertTrue(sha.startswith("7c3e2384f3f7"))
+        self.assertEqual(len(sha), 40)
+
+    def test_resolve_commit_unknown_tag_raises(self):
+        import subprocess as sp
+        with self.assertRaises(sp.CalledProcessError):
+            sr.resolve_commit(REPO, "no-such-tag-xyz")
+
+    def test_git_archive_snapshot_extracts_files(self):
+        dest = pathlib.Path(tempfile.mkdtemp())
+        sr.git_archive_snapshot(REPO, "2026.6.6", dest)
+        self.assertTrue((dest / "app" / "composer.json").is_file())
+
+
 if __name__ == "__main__":
     unittest.main()
