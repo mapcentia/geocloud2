@@ -14,6 +14,7 @@ use app\api\v4\Responses\StreamedResponse;
 use app\api\v4\Scope;
 use app\conf\App;
 use app\exceptions\GC2Exception;
+use app\exceptions\ServiceException;
 use app\inc\BasicAuth;
 use app\inc\Cache;
 use app\inc\Connection;
@@ -61,10 +62,25 @@ final class Mapcache extends AbstractApi
         return $this->stream();
     }
 
-    public function post_index(): StreamedResponse   { return $this->stream(); }
-    public function put_index(): StreamedResponse     { return $this->stream(); }
-    public function patch_index(): StreamedResponse   { return $this->stream(); }
-    public function delete_index(): StreamedResponse  { return $this->stream(); }
+    public function post_index(): StreamedResponse
+    {
+        return $this->stream();
+    }
+
+    public function put_index(): StreamedResponse
+    {
+        return $this->stream();
+    }
+
+    public function patch_index(): StreamedResponse
+    {
+        return $this->stream();
+    }
+
+    public function delete_index(): StreamedResponse
+    {
+        return $this->stream();
+    }
 
     public function validate(): void
     {
@@ -116,7 +132,7 @@ final class Mapcache extends AbstractApi
                     if (!headers_sent()) {
                         header('HTTP/1.1 500 ' . Util::httpCodeText(500), true, 500);
                         header('Content-Type: text/plain; charset=UTF-8');
-                        echo 'Internal error';
+                        echo $e->getMessage();
                     }
                 }
             },
