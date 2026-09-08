@@ -20,11 +20,19 @@ MIN_CDX = {
                     "bom-ref": "pkg:composer/amphp/amp@v3.1.0"}],
 }
 
+# What grype would emit for `-o cyclonedx-json` (CycloneDX with a vulnerabilities array).
+VULNS_CDX = {
+    "bomFormat": "CycloneDX", "specVersion": "1.7",
+    "vulnerabilities": [{"id": "CVE-2020-0001", "affects": [{"ref": "pkg:composer/amphp/amp@v3.1.0"}]}],
+}
+
 
 class FakeTools:
-    """Simulerer syft (skriver cdx/syft-filer), docker (digest) og node (validation.json)."""
-    def __init__(self, out):
+    """Simulerer syft (skriver cdx/syft-filer), docker (digest), node (validation.json)
+    og valgfrit grype (version, db status og scan-output)."""
+    def __init__(self, out, grype=None):
         self.out = pathlib.Path(out)
+        self.grype = grype
         self.calls = []
 
     def run(self, cmd, **kw):
@@ -45,6 +53,14 @@ class FakeTools:
         prog = pathlib.Path(cmd[0]).name
         if prog == "docker" and "inspect" in cmd:
             return "mapcentia/gc2@sha256:deadbeef\n"
+        if self.grype and str(cmd[0]) == str(self.grype):
+            if "db" in cmd:
+                return json.dumps({"schemaVersion": "5", "built": "2026-09-08T00:00:00Z",
+                                   "checksum": "sha256:dbdb"})
+            if "version" in cmd:
+                return json.dumps({"version": "0.80.0"})
+        if any(isinstance(a, str) and a.startswith("sbom:") for a in cmd):
+            return json.dumps(VULNS_CDX)  # grype scan output on stdout
         return ""
 
 
@@ -91,6 +107,52 @@ class GenerateTest(unittest.TestCase):
                 config_dir=CONFIG, gis_yaml=GIS_YAML,
                 generated_at="t", run=fake.run, capture=fake.capture,
             )
+
+
+class GenerateWithGrypeTest(unittest.TestCase):
+    def _run(self):
+        out = pathlib.Path(tempfile.mkdtemp()) / "2026.6.6"
+        syft = pathlib.Path(tempfile.mkstemp()[1])
+        syft.write_text("syft-stub")
+        grype = pathlib.Path(tempfile.mkstemp()[1])
+        grype.write_text("grype-stub")
+        fake = FakeTools(out, grype=grype)
+        code = gen.generate(
+            repo=REPO, tag="2026.6.6", image="mapcentia/gc2:php8.4-2",
+            image_version="php8.4-2", syft=syft, output=out,
+            config_dir=CONFIG, gis_yaml=GIS_YAML, grype=grype,
+            generated_at="2026-09-07T12:00:00Z",
+            run=fake.run, capture=fake.capture,
+        )
+        return out, code, fake
+
+    def test_writes_vulns_and_records_scan(self):
+        out, code, _ = self._run()
+        self.assertEqual(code, 0)
+        self.assertTrue((out / "vulns.cdx.json").is_file())
+        json.loads((out / "vulns.cdx.json").read_text())  # valid JSON
+        rel = json.loads((out / "release.json").read_text())
+        self.assertEqual(rel["vulnerability_scan"]["tool"]["name"], "grype")
+        self.assertEqual(rel["vulnerability_scan"]["tool"]["version"], "0.80.0")
+        self.assertEqual(rel["vulnerability_scan"]["output"], "vulns.cdx.json")
+        self.assertEqual(rel["vulnerability_scan"]["db"]["built"], "2026-09-08T00:00:00Z")
+        self.assertIn("grype", rel["scope"]["vulnerability_scan"])
+
+    def test_no_grype_skips_scan(self):
+        out = pathlib.Path(tempfile.mkdtemp()) / "2026.6.6"
+        syft = pathlib.Path(tempfile.mkstemp()[1])
+        syft.write_text("s")
+        fake = FakeTools(out)
+        gen.generate(
+            repo=REPO, tag="2026.6.6", image="mapcentia/gc2:php8.4-2",
+            image_version="php8.4-2", syft=syft, output=out,
+            config_dir=CONFIG, gis_yaml=GIS_YAML,
+            generated_at="t", run=fake.run, capture=fake.capture,
+        )
+        self.assertFalse((out / "vulns.cdx.json").exists())
+        rel = json.loads((out / "release.json").read_text())
+        self.assertNotIn("vulnerability_scan", rel)
+        self.assertEqual(rel["scope"]["vulnerability_scan"], "not performed in this step")
 
 
 if __name__ == "__main__":
