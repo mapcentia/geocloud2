@@ -184,6 +184,11 @@ FROM gdal${ECW_VERSION} AS mapserver
 ARG PHP_VERSION
 ENV PHP_VERSION=${PHP_VERSION}
 
+# Git ref (tag, branch or commit) of geocloud2 to build into the image.
+# Default 'master' preserves the old behaviour; pass --build-arg GC2_REF=<tag>
+# at release time to pin the image to a released tag (reproducible image<->tag).
+ARG GC2_REF=master
+
 # Set php session + upload sizes
 RUN sed -i "s/session.gc_maxlifetime = 1440/session.gc_maxlifetime = 86400/g" /etc/php/${PHP_VERSION}/fpm/php.ini \
     && sed -i "s/upload_max_filesize = 2M/upload_max_filesize = 1000M/g" /etc/php/${PHP_VERSION}/fpm/php.ini \
@@ -292,7 +297,9 @@ HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=3 \
 # Clone GC2 from GitHub
 RUN mkdir -p /var/www \
     && cd /var/www \
-    && git clone https://github.com/mapcentia/geocloud2.git --branch master
+    && git clone https://github.com/mapcentia/geocloud2.git \
+    && cd geocloud2 \
+    && git checkout ${GC2_REF}
 
 # Set workdir
 WORKDIR /var/www/geocloud2
@@ -351,9 +358,11 @@ FROM cron AS dev
 
 ARG PHP_VERSION
 ENV PHP_VERSION=${PHP_VERSION}
+ARG GC2_REF=master
 
-# Get latest source
-RUN git pull
+# Get latest source, but only when GC2_REF is a branch. A pinned tag/commit
+# leaves HEAD detached, where 'git pull' has no upstream and would fail.
+RUN git symbolic-ref -q HEAD >/dev/null && git pull || echo "GC2_REF=${GC2_REF} is detached; skipping pull"
 
 # Build with Node + Grunt
 RUN npm install \

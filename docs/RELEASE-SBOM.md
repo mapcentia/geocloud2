@@ -13,8 +13,16 @@ Hver udgivelse (= ét git-tag) skal have en committet, valideret SBOM under
 
 ## Ved hver udgivelse
 
-1. Byg og push runtime-imaget: `mapcentia/gc2:php8.4-N` (eksisterende flow).
-2. Opret git-tagget: `git tag YYYY.MINOR.PATCH && git push --tags`.
+1. Opret git-tagget: `git tag YYYY.MINOR.PATCH && git push --tags`.
+2. Byg og push runtime-imaget `mapcentia/gc2:php8.4-N` pinnet til tagget:
+
+       docker build -f docker/Dockerfile --target cron \
+         --build-arg GC2_REF=YYYY.MINOR.PATCH \
+         -t mapcentia/gc2:php8.4-N docker/
+
+   `GC2_REF` binder imagets GC2-kildekode til tagget (default er `master`),
+   så `release.json`'s image↔tag-kobling bliver reproducerbart *bevist* og
+   ikke kun registreret via digest.
 3. Opdatér `sbom/gis-native-components.yaml`, hvis Dockerfilens GIS-pins er
    ændret siden sidst.
 4. Generér SBOM'en:
