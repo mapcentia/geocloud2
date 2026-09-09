@@ -1,0 +1,16 @@
+# Dependencies
+node_modules
+
+# Build output
+build
+stats.json
+
+# Test coverage
+coverage
+
+# Logs
+npm-debug.log*
+yarn-error.log*
+
+# Editor/OS
+.DS_Store
