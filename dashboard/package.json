@@ -4,7 +4,7 @@
     "description": "Progressive web-application for Geocloud 2 REST API",
     "engines": {
         "npm": ">=5",
-        "node": ">=8.10.0"
+        "node": ">=24"
     },
     "author": "Max Stoiber",
     "contributors": [
@@ -18,12 +18,12 @@
         "npmcheckversion": "node ./internals/scripts/npmcheckversion.js",
         "preinstall": "npm run npmcheckversion",
         "prebuild": "npm run build:clean",
-        "build": "cross-env NODE_ENV=production webpack --config internals/webpack/webpack.prod.babel.js --color -p --progress --hide-modules --display-optimization-bailout && mkdir build/assets && mkdir build/assets/img && cp app/assets/img/MapCentia_500.png build/assets/img/MapCentia_500.png",
+        "build": "cross-env NODE_ENV=production NODE_OPTIONS=--openssl-legacy-provider webpack --config internals/webpack/webpack.prod.babel.js --color -p --progress --hide-modules --display-optimization-bailout && mkdir build/assets && mkdir build/assets/img && cp app/assets/img/MapCentia_500.png build/assets/img/MapCentia_500.png",
         "build:clean": "rimraf ./build",
-        "start": "cross-env NODE_ENV=development node server",
-        "start:tunnel": "cross-env NODE_ENV=development ENABLE_TUNNEL=true node server",
+        "start": "cross-env NODE_ENV=development NODE_OPTIONS=--openssl-legacy-provider node server",
+        "start:tunnel": "cross-env NODE_ENV=development ENABLE_TUNNEL=true NODE_OPTIONS=--openssl-legacy-provider node server",
         "start:production": "npm run build && npm run start:prod",
-        "start:prod": "cross-env NODE_ENV=production node server",
+        "start:prod": "cross-env NODE_ENV=production NODE_OPTIONS=--openssl-legacy-provider node server",
         "presetup": "npm i chalk shelljs",
         "setup": "node ./internals/scripts/setup.js",
         "clean": "shjs ./internals/scripts/clean.js",
@@ -43,6 +43,9 @@
     },
     "resolutions": {
         "babel-core": "7.0.0-bridge.0"
+    },
+    "overrides": {
+        "cheerio": "1.0.0-rc.10"
     },
     "dependencies": {
         "@babel/polyfill": "^7.6.0",
