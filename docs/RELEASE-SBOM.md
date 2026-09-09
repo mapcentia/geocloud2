@@ -42,7 +42,12 @@ Hver udgivelse (= ét git-tag) skal have en committet, valideret SBOM under
    `coverage.json` for nye huller (fx branch-pinnede GIS-libs, composer
    packages-dev). Scriptet returnerer non-zero, hvis valideringen fejler.
 6. **Triagér sårbarhedsfund** (hvis du kørte `--grype`): gennemgå
-   `vulns.cdx.json`. Et fund er en kandidat, ikke en dom — vurdér relevans og
+   `vulns.cdx.json`. Få en prioriteret oversigt (severity, CISA KEV,
+   EPSS-shortlist med fix-status) med:
+
+       python3 sbom/triage.py sbom/<tag>/vulns.cdx.json
+
+   Et fund er en kandidat, ikke en dom — vurdér relevans og
    udnyttelighed pr. fund og registrér beslutning (rettelse, eller begrundet
    undtagelse med ejer/udløb) jf. `[[vulnerability-management]]`. Et automatisk
    severity-tal afgør ikke alene udnyttelighed. GIS-libs i `gis-native.cdx.json`
