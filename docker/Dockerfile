@@ -136,6 +136,21 @@ RUN wget https://s3-eu-west-1.amazonaws.com/mapcentia-tmp/ERDAS-ECW_JPEG_2000_SD
 FROM ecw3 AS gdal3
 
 ENV GDAL_VERSION=3.9.2
+# Apache Arrow/Parquet libs for the GDAL (Geo)Parquet driver. Pinned to the
+# Arrow release contemporary with GDAL 3.9.2; newer Arrow majors may break the
+# GDAL 3.9 build. Bump both together.
+ENV ARROW_VERSION=17.0.0-1
+
+RUN wget -q https://packages.apache.org/artifactory/arrow/debian/apache-arrow-apt-source-latest-bookworm.deb \
+    && apt-get install -y ./apache-arrow-apt-source-latest-bookworm.deb \
+    && rm apache-arrow-apt-source-latest-bookworm.deb \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libarrow-dev=${ARROW_VERSION} \
+        libarrow-acero-dev=${ARROW_VERSION} \
+        libarrow-dataset-dev=${ARROW_VERSION} \
+        libparquet-dev=${ARROW_VERSION} \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN wget -q "http://download.osgeo.org/gdal/$GDAL_VERSION/gdal392.zip" -O gdal.zip \
     && unzip gdal.zip \
@@ -143,9 +158,12 @@ RUN wget -q "http://download.osgeo.org/gdal/$GDAL_VERSION/gdal392.zip" -O gdal.z
 
 WORKDIR /gdal-$GDAL_VERSION/build
 
-# Build GDAL with ECW and LibKML
+# Build GDAL with ECW, LibKML and Arrow/Parquet (GeoParquet). The GDAL_USE_*
+# flags make the build fail loudly instead of silently dropping the drivers.
 ENV GDAL_PYTHON_BINDINGS_WITHOUT_NUMPY=YES
-RUN cmake -DBUILD_PYTHON_BINDINGS=OFF -DWITH_LIBKML=YES -DWITH_ECW=/usr/local/ -DCMAKE_BUILD_TYPE=Release .. \
+RUN cmake -DBUILD_PYTHON_BINDINGS=OFF -DWITH_LIBKML=YES -DWITH_ECW=/usr/local/ \
+    -DGDAL_USE_ARROW=ON -DGDAL_USE_PARQUET=ON -DGDAL_USE_ARROWDATASET=ON \
+    -DCMAKE_BUILD_TYPE=Release .. \
     && cmake --build . -j"$(nproc)" \
     && cmake --build . --target install \
     && ln -s /usr/local/bin/ogr2ogr /usr/bin/ogr2ogr

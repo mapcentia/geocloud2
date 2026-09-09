@@ -5,7 +5,7 @@ components:
   - name: gdal
     version: "3.9.2"
     source: "http://download.osgeo.org/gdal/3.9.2/gdal392.zip"
-    notes: "Bygget med ECW 3.3 + LibKML (ECW_VERSION=3)"
+    notes: "Bygget med ECW 3.3 + LibKML + Arrow/Parquet 17.0.0 (GeoParquet) (ECW_VERSION=3)"
   - name: mapserver
     version: "8.0-rsvg_fix"
     purl: "pkg:github/mapcentia/mapserver@rsvg_fix"
