@@ -337,7 +337,7 @@ GET /api/v4/ogc/database/db/collections/s.t/items?bbox=…&limit=50&offset=100&c
 
 ## 7. Ydelse
 
-- COUNT for `numberMatched` koster en ekstra forespørgsel pr. items-kald. Den er cappet af `FEATURE_LIMIT` (1 000 000) som i WFS. Måles med `EXPLAIN` på `mydb` før/efter jf. projektets "measure first"-princip; hvis COUNT er dominerende på store tabeller, tilføjes en `?skipCount` senere (ikke i v1).
+- COUNT for `numberMatched` koster en ekstra forespørgsel pr. items-kald. Den regel-omskrevne indre forespørgsel wrappes i `SELECT COUNT(*) FROM (... LIMIT 1 000 000)`, så `numberMatched` mætter ved 1 000 000 og regler stadig gælder for tællingen. Måles med `EXPLAIN` på `mydb` før/efter jf. projektets "measure first"-princip; hvis COUNT er dominerende på store tabeller, tilføjes en `?skipCount` senere (ikke i v1).
 - Extent-cache som beskrevet i 5.2. `/collections` på databaser med mange hundrede lag måles.
 - `OFFSET` på dybe sider er O(n); accepteres i v1 (samme som pygeoapi/ldproxy default). Keyset-paging kan tilføjes senere.
 
