@@ -17,7 +17,7 @@ use app\models\Rule;
 use app\models\Table as TableModel;
 use app\wfs\Context;
 use app\wfs\Request;
-use app\wfs\output\GmlWriter;
+use app\wfs\output\FeatureWriterInterface;
 use PDOException;
 use sad_spirit\pg_builder\StatementFactory;
 
@@ -29,9 +29,40 @@ final class GetFeature implements HandlerInterface
     public function __construct(private readonly Context $ctx) {}
 
     /**
+     * SELECT expression for a geometry column: GML for the WFS formats (the legacy ST_AsGml
+     * options), GeoJSON for outputFormat GEOJSON (OGC API Features). GeoJSON is always x/y; the
+     * EPSG:4326 CRS URI is lat/lon by definition (Features Part 2), so its axes are flipped.
+     */
+    public static function geometrySql(string $column, ?string $geomType, int $srs, Request $req): string
+    {
+        $col = "\"$column\"";
+        if ($req->outputFormat === 'GEOJSON') {
+            $geom = "ST_Transform($col,$srs)";
+            if ($req->srsName === Request::LATLON_4326_URI) {
+                $geom = "ST_FlipCoordinates($geom)";
+            }
+            return "ST_AsGeoJSON($geom,9) as $col";
+        }
+        $gmlVersion = $req->outputFormat === 'GML3' ? '3' : '2';
+        $longCrs    = $req->version === '1.1.0' ? 1 : 0;
+        $flipAxis   = ($req->version === '1.1.0' && $srs == 4326) ? 16 : 0;
+        $options    = (string) ($longCrs + $flipAxis + 4);
+        $type = match (true) {
+            str_contains((string) $geomType, 'POINT')   => 1,
+            str_contains((string) $geomType, 'LINE')    => 2,
+            str_contains((string) $geomType, 'POLYGON') => 3,
+            default                                     => -999,
+        };
+        if ($type === -999) {
+            return "ST_AsGml($gmlVersion,ST_Transform($col,$srs),5,$options) as $col";
+        }
+        return "ST_AsGml($gmlVersion,ST_Transform(ST_CollectionExtract($col,$type),$srs),7,$options) as $col";
+    }
+
+    /**
      * @throws OwsException
      */
-    public function handle(Request $req, GmlWriter $writer): void
+    public function handle(Request $req, FeatureWriterInterface $writer): void
     {
         $srs = $this->ctx->srs ?? $req->srs;
         if (!$srs) {
@@ -65,8 +96,10 @@ final class GetFeature implements HandlerInterface
             return;
         }
 
-        // Bounding box (use first table that has a geometry)
-        $this->writeBoundedBy($writer, $req, $perTable, $srs);
+        // Bounding box (use first table that has a geometry); GeoJSON has no envelope element
+        if ($writer->wantsBoundedBy()) {
+            $this->writeBoundedBy($writer, $req, $perTable, $srs);
+        }
 
         // Feature members
         $writer->writeFeatureMembersOpen($req->version);
@@ -154,34 +187,7 @@ final class GetFeature implements HandlerInterface
         // Geometry and bytea rewrites
         foreach ($tableObj->metaData as $key => $colInfo) {
             if ($colInfo['type'] === 'geometry') {
-                $gmlVersion = $req->outputFormat === 'GML3' ? '3' : '2';
-                $longCrs    = $req->version === '1.1.0' ? 1 : 0;
-                $flipAxis   = ($req->version === '1.1.0' && $srs == 4326) ? 16 : 0;
-                $options    = (string) ($longCrs + $flipAxis + 4);
-
-                if (str_contains((string) $geomType, 'POINT')) {
-                    $type = 1;
-                } elseif (str_contains((string) $geomType, 'LINE')) {
-                    $type = 2;
-                } elseif (str_contains((string) $geomType, 'POLYGON')) {
-                    $type = 3;
-                } else {
-                    $type = -999;
-                }
-
-                if ($type === -999) {
-                    $sql = str_replace(
-                        "\"{$key}\"",
-                        "ST_AsGml({$gmlVersion},ST_Transform(\"{$key}\",{$srs}),5,{$options}) as \"{$key}\"",
-                        $sql
-                    );
-                } else {
-                    $sql = str_replace(
-                        "\"{$key}\"",
-                        "ST_AsGml({$gmlVersion},ST_Transform(ST_CollectionExtract(\"{$key}\",{$type}),{$srs}),7,{$options}) as \"{$key}\"",
-                        $sql
-                    );
-                }
+                $sql = str_replace("\"{$key}\"", self::geometrySql($key, $geomType, $srs, $req), $sql);
 
                 $sql2 = "SELECT ST_Xmin(ST_Extent(ST_Transform(\"{$key}\",{$srs}))) AS TXMin,"
                     . "ST_Xmax(ST_Extent(ST_Transform(\"{$key}\",{$srs}))) AS TXMax,"
@@ -345,7 +351,7 @@ final class GetFeature implements HandlerInterface
      */
     private function countFeatures(Request $req, array $perTable, int $srs): int
     {
-        if ($req->maxFeatures !== null) {
+        if ($req->maxFeatures !== null && $req->outputFormat !== 'GEOJSON') {
             return $req->maxFeatures;
         }
 
@@ -384,7 +390,7 @@ final class GetFeature implements HandlerInterface
      * @param array<string, array{sql: string, from: string, sql2: string|null, tableObj: TableModel}> $perTable
      * @throws OwsException
      */
-    private function writeBoundedBy(GmlWriter $writer, Request $req, array $perTable, int $srs): void
+    private function writeBoundedBy(FeatureWriterInterface $writer, Request $req, array $perTable, int $srs): void
     {
         $postgisObject = $this->ctx->model();
 
@@ -435,14 +441,15 @@ final class GetFeature implements HandlerInterface
      * @param array{sql: string, from: string, sql2: string|null, tableObj: TableModel} $state
      * @throws OwsException
      */
-    private function streamFeatures(GmlWriter $writer, Request $req, string $table, array $state, int $srs): void
+    private function streamFeatures(FeatureWriterInterface $writer, Request $req, string $table, array $state, int $srs): void
     {
         $factory       = new StatementFactory(PDOCompatible: true);
         $rule          = new Rule($this->ctx->connection);
         $walkerRule    = new TableWalkerRule($this->ctx->user, 'wfst', 'select', '');
         $postgisObject = $this->ctx->model();
 
-        $fullSql = $state['sql'] . $state['from'] . ' LIMIT ' . ($req->maxFeatures ?? self::FEATURE_LIMIT);
+        $fullSql = $state['sql'] . $state['from'] . ' LIMIT ' . ($req->maxFeatures ?? self::FEATURE_LIMIT)
+            . ($req->startIndex !== null && $req->startIndex > 0 ? ' OFFSET ' . (int) $req->startIndex : '');
         $select  = $factory->createFromString($fullSql);
         $rules   = $rule->get();
         $walkerRule->setRules($rules);
