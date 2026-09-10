@@ -623,6 +623,7 @@ SYMBOLS;
 
         // Output formats
         $s .= "OUTPUTFORMAT\nNAME \"png\"\nDRIVER AGG/PNG\nMIMETYPE \"image/png\"\nIMAGEMODE RGBA\nEXTENSION \"png\"\nTRANSPARENT ON\nFORMATOPTION \"GAMMA=0.75\"\nEND\n\n";
+        $s .= "OUTPUTFORMAT\nNAME \"jpeg\"\nDRIVER AGG/JPEG\nMIMETYPE \"image/jpeg\"\nIMAGEMODE RGB\nEXTENSION \"jpg\"\nFORMATOPTION \"QUALITY=85\"\nEND\n\n";
         $s .= "OUTPUTFORMAT\nNAME \"utfgrid\"\nDRIVER UTFGRID\nMIMETYPE \"application/json\"\nEXTENSION \"json\"\nFORMATOPTION \"UTFRESOLUTION=4\"\nFORMATOPTION \"DUPLICATES=false\"\nEND\n\n";
 
         $s .= "#CONFIG \"MS_ERRORFILE\" \"/var/www/geocloud2/app/wms/mapfiles/ms_error.txt\"\n";

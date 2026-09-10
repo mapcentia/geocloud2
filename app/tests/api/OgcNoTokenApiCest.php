@@ -479,4 +479,107 @@ class OgcNoTokenApiCest
         $I->seeHttpHeader('WWW-Authenticate');
         $I->deleteHeader('Authorization');
     }
+
+    private function assertPng(ApiTester $I, int $width, int $height): void
+    {
+        $ct = strtolower($I->grabHttpHeader('Content-Type'));
+        $I->assertStringContainsString('image/png', $ct);
+        $body = $I->grabResponse();
+        $I->assertSame("\x89PNG", substr($body, 0, 4));
+        // IHDR: width and height are big-endian at bytes 16..23
+        $I->assertSame([$width, $height], array_values(unpack('Nw/Nh', substr($body, 16, 8))));
+    }
+
+    public function shouldRenderCollectionMap(ApiTester $I)
+    {
+        $I->sendGET($this->collection('poi') . '/map?bbox=9,55,13,57&width=128&height=64');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $this->assertPng($I, 128, 64);
+    }
+
+    public function shouldDeriveHeightFromAspectRatio(ApiTester $I)
+    {
+        $I->sendGET($this->collection('poi') . '/map?bbox=9,55,13,57&width=200');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $this->assertPng($I, 200, 100);
+    }
+
+    public function shouldRenderMapWithDefaultBboxAndOtherCrs(ApiTester $I)
+    {
+        $I->sendGET($this->collection('poi') . '/map?width=32&height=32');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $this->assertPng($I, 32, 32);
+        $I->sendGET($this->collection('poi') . '/map?bbox=9,55,13,57&width=32&height=32&crs=' . urlencode('http://www.opengis.net/def/crs/EPSG/0/25832'));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $this->assertPng($I, 32, 32);
+        $I->sendGET($this->collection('poi') . '/map?bbox=55,9,57,13&bbox-crs=' . urlencode('http://www.opengis.net/def/crs/EPSG/0/4326') . '&width=32&height=32');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $this->assertPng($I, 32, 32);
+    }
+
+    public function shouldRenderJpeg(ApiTester $I)
+    {
+        $I->sendGET($this->collection('poi') . '/map?bbox=9,55,13,57&width=32&height=32&f=jpeg');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertStringContainsString('image/jpeg', strtolower($I->grabHttpHeader('Content-Type')));
+        $I->assertSame("\xFF\xD8", substr($I->grabResponse(), 0, 2));
+    }
+
+    public function shouldRejectBadMapParameters(ApiTester $I)
+    {
+        $I->sendGET($this->collection('poi') . '/map?width=99999');
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->sendGET($this->collection('poi') . '/map?f=gif');
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->sendGET($this->collection('poi') . '/map?foo=1');
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->sendGET($this->collection('secret') . '/map');
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+    }
+
+    public function shouldRenderDatasetMapWithSeveralCollections(ApiTester $I)
+    {
+        $I->sendGET($this->base() . '/map?collections=' . $this->schemaName . '.poi,' . $this->schemaName . '.poi_v&bbox=9,55,13,57&width=64&height=32');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $this->assertPng($I, 64, 32);
+        $I->sendGET($this->base() . '/map?bbox=9,55,13,57');
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);   // collections is required
+        $I->sendGET($this->base() . '/map?collections=' . $this->schemaName . '.nope');
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+    }
+
+    public function shouldApplyRulesAndDatetimeToMaps(ApiTester $I)
+    {
+        // limit rule → mapfile is patched (image still renders)
+        $id = $this->createRule($I, [
+            'username' => '*', 'service' => 'ows', 'request' => 'select', 'access' => 'limit',
+            'schema' => $this->schemaName, 'table' => 'poi', 'filter' => "name = 'bravo'",
+        ]);
+        $I->sendGET($this->collection('poi') . '/map?bbox=9,55,13,57&width=16&height=16');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $this->assertPng($I, 16, 16);
+        $this->deleteRule($I, $id);
+
+        // deny rule → 403 before any byte is streamed
+        $id = $this->createRule($I, ['username' => '*', 'service' => 'ows', 'request' => 'select', 'access' => 'deny']);
+        $I->sendGET($this->collection('poi') . '/map?bbox=9,55,13,57&width=16&height=16');
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+        $this->deleteRule($I, $id);
+
+        // versioned layer with a time slice → filter patched, image renders
+        $I->sendGET($this->collection('poi_v') . '/map?bbox=8,55,10,57&width=16&height=16&datetime=2024-01-01T00:00:00Z');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $this->assertPng($I, 16, 16);
+        $I->sendGET($this->collection('poi_v') . '/map?datetime=2024-01-01/2024-02-01');
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+    }
+
+    public function shouldServeReadWriteMapWithBasicAuthOnly(ApiTester $I)
+    {
+        $I->amHttpAuthenticated($this->userId, $this->password);
+        $I->sendGET($this->collection('secret') . '/map?bbox=8,55,10,57&width=16&height=16');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $this->assertPng($I, 16, 16);
+        $I->deleteHeader('Authorization');
+    }
 }

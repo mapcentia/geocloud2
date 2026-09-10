@@ -447,12 +447,15 @@ $handler = static function () use ($routes) {
             // V4 with OAuth and Route2
             //==========================
             $Route2 = new Route2();
-            // Rate limit per JWT token for all API v4 routes. OWS (tile/GetMap)
-            // traffic gets a higher, separately configurable limit, and its own
-            // counter bucket so heavy tile traffic can't 429 ordinary v4 calls.
+            // Rate limit per JWT token for all API v4 routes. OWS (tile/GetMap) traffic — the
+            // v4 OWS endpoint and the OGC API map endpoints — gets a higher, separately
+            // configurable limit and its own counter bucket, so heavy image traffic can't 429
+            // ordinary v4 calls.
+            $requestPathForLimit = strtok($_SERVER['REQUEST_URI'] ?? '', '?');
             $isOws = Input::getPath()->part(1) === 'api'
                 && Input::getPath()->part(2) === 'v4'
-                && Input::getPath()->part(3) === 'ows';
+                && (Input::getPath()->part(3) === 'ows'
+                    || (Input::getPath()->part(3) === 'ogc' && str_ends_with(rtrim((string)$requestPathForLimit, '/'), '/map')));
             RateLimiter::consumeForJwt(
                 Input::getJwtToken(),
                 $isOws
