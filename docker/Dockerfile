@@ -4,11 +4,13 @@ ARG PHP_VERSION=8.4
 ###############################################################################
 # Base image
 ###############################################################################
-FROM debian:bookworm-slim AS base
+FROM debian:trixie-slim AS base
 LABEL maintainer="Martin Høgh <mh@mapcentia.com>"
 
 # Non-interactive mode for apt
 ENV DEBIAN_FRONTEND=noninteractive
+# Debian release codename; used for the Sury PHP, Apache Arrow and QGIS apt suites.
+ENV DEBIAN_CODENAME=trixie
 ARG PHP_VERSION
 ENV PHP_VERSION=${PHP_VERSION}
 
@@ -19,7 +21,7 @@ RUN apt-get -y  update && apt-get -y install wget gnupg2 && rm -rf /var/lib/apt/
 RUN set -eux; \
     apt-get install -y --no-install-recommends wget gnupg; \
     wget -qO /usr/share/keyrings/sury-php.gpg https://packages.sury.org/php/apt.gpg; \
-    echo "deb [signed-by=/usr/share/keyrings/sury-php.gpg] https://packages.sury.org/php/ bookworm main" > /etc/apt/sources.list.d/sury-php.list; \
+    echo "deb [signed-by=/usr/share/keyrings/sury-php.gpg] https://packages.sury.org/php/ ${DEBIAN_CODENAME} main" > /etc/apt/sources.list.d/sury-php.list; \
     apt-get update && \
     apt-get install -y \
     cron vim g++ build-essential git unzip rng-tools \
@@ -31,8 +33,8 @@ RUN set -eux; \
     cmake librsvg2-dev libpng++-dev libjpeg-dev libfreetype6-dev \
     libproj-dev libfribidi-dev libharfbuzz-dev libcairo2-dev libgeos++-dev \
     curl libapache2-mod-fcgid libfcgi-dev xvfb osm2pgsql postgis sudo \
-    apt-transport-https ca-certificates software-properties-common \
-    libprotobuf-c-dev libprotobuf-dev libprotobuf-c1 libprotobuf32 \
+    apt-transport-https ca-certificates \
+    libprotobuf-c-dev libprotobuf-dev libprotobuf-c1 libprotobuf32t64 \
     protobuf-compiler protobuf-c-compiler libtool python3-dev bison \
     python3-setuptools jq libwxgtk3.2-dev libuv1-dev libpq-dev libxml2-dev libgif-dev libxerces-c-dev\
     && rm -rf /var/lib/apt/lists/*
@@ -74,15 +76,20 @@ RUN sed -i '/ServerTokens OS/c\ServerTokens Prod' /etc/apache2/conf-enabled/secu
 ###############################################################################
 # We’ll still rely on nvm, but watch out for environment issues in multi-stage
 # Docker builds. We’ll “export” environment variables inline as needed.
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.7/install.sh | bash
 
 SHELL ["/bin/bash", "-l", "-c"]
-ENV NVM_DIR="~/.nvm"
+# Docker does not expand ~ in ENV values, so use an absolute path.
+ENV NVM_DIR="/root/.nvm"
 RUN source $NVM_DIR/nvm.sh \
-    && nvm install 14 \
-    && nvm use 14 \
-    && ln -s /root/.nvm/versions/node/v14.21.3/bin/node /usr/bin/node \
-    && ln -s /root/.nvm/versions/node/v14.21.3/bin/npm /usr/bin/npm \
+    && nvm install 24 \
+    && nvm alias default 24 \
+    # nvm only puts node/npm on PATH in login/interactive shells. Symlink them
+    # into /usr/local/bin so any shell (incl. non-login build steps) gets Node 24
+    # and its bundled npm, instead of falling back to a stale system npm.
+    && ln -sf "$(nvm which 24)" /usr/local/bin/node \
+    && ln -sf "$(dirname "$(nvm which 24)")/npm" /usr/local/bin/npm \
+    && ln -sf "$(dirname "$(nvm which 24)")/npx" /usr/local/bin/npx \
     && npm install -g grunt-cli
 
 ###############################################################################
@@ -135,15 +142,18 @@ RUN wget https://s3-eu-west-1.amazonaws.com/mapcentia-tmp/ERDAS-ECW_JPEG_2000_SD
 ###############################################################################
 FROM ecw3 AS gdal3
 
-ENV GDAL_VERSION=3.9.2
-# Apache Arrow/Parquet libs for the GDAL (Geo)Parquet driver. Pinned to the
-# Arrow release contemporary with GDAL 3.9.2; newer Arrow majors may break the
-# GDAL 3.9 build. Bump both together.
-ENV ARROW_VERSION=17.0.0-1
+# GDAL 3.12.x is the newest line that still ships the MIN/MAX/ABS macros and char** metadata API the
+# MapServer rsvg_fix branch (2024-09 main) relies on. Moving to GDAL >= 3.13 needs that fork rebased on
+# upstream MapServer >= 8.4 first.
+ENV GDAL_VERSION=3.12.4
+# Apache Arrow/Parquet libs for the GDAL (Geo)Parquet driver. Pinned to a release
+# verified to build with the GDAL version above; a newer Arrow major may break the
+# GDAL build, so bump the two together and rebuild the gdal3 stage.
+ENV ARROW_VERSION=25.0.1-1
 
-RUN wget -q https://packages.apache.org/artifactory/arrow/debian/apache-arrow-apt-source-latest-bookworm.deb \
-    && apt-get install -y ./apache-arrow-apt-source-latest-bookworm.deb \
-    && rm apache-arrow-apt-source-latest-bookworm.deb \
+RUN wget -q https://packages.apache.org/artifactory/arrow/debian/apache-arrow-apt-source-latest-${DEBIAN_CODENAME}.deb \
+    && apt-get install -y ./apache-arrow-apt-source-latest-${DEBIAN_CODENAME}.deb \
+    && rm apache-arrow-apt-source-latest-${DEBIAN_CODENAME}.deb \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         libarrow-dev=${ARROW_VERSION} \
@@ -152,7 +162,7 @@ RUN wget -q https://packages.apache.org/artifactory/arrow/debian/apache-arrow-ap
         libparquet-dev=${ARROW_VERSION} \
     && rm -rf /var/lib/apt/lists/*
 
-RUN wget -q "http://download.osgeo.org/gdal/$GDAL_VERSION/gdal392.zip" -O gdal.zip \
+RUN wget -q "https://download.osgeo.org/gdal/${GDAL_VERSION}/gdal$(echo ${GDAL_VERSION} | tr -d .).zip" -O gdal.zip \
     && unzip gdal.zip \
     && rm gdal.zip
 
@@ -240,7 +250,8 @@ RUN git clone --branch rsvg_fix https://github.com/mapcentia/mapserver.git \
 RUN echo "extension=php_mapscriptng.so" >> /etc/php/${PHP_VERSION}/fpm/php.ini
 
 # Build MapCache from source
-RUN apt-get update && apt-get install -y --no-install-recommends libapr-memcache-dev \
+# MapCache >= 1.10 uses apr-util's built-in apr_memcache (WITH_MEMCACHE); libapr-memcache-dev is gone in trixie.
+RUN apt-get update && apt-get install -y --no-install-recommends libaprutil1-dev \
     && rm -rf /var/lib/apt/lists/*
 RUN git clone --branch branch-1-12 http://github.com/mapserver/mapcache.git \
     && cd mapcache \
@@ -255,7 +266,7 @@ RUN git clone --branch branch-1-12 http://github.com/mapserver/mapcache.git \
 RUN wget -qO - https://qgis.org/downloads/qgis-2022.gpg.key \
     | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import \
     && chmod a+r /etc/apt/trusted.gpg.d/qgis-archive.gpg \
-    && add-apt-repository "deb https://qgis.org/debian-ltr $(lsb_release -c -s) main" \
+    && echo "deb https://qgis.org/debian-ltr ${DEBIAN_CODENAME} main" > /etc/apt/sources.list.d/qgis.list \
     && apt-get update && apt-get install -y --no-install-recommends qgis-server \
     && rm -rf /var/lib/apt/lists/*
 
@@ -376,24 +387,24 @@ FROM cron AS dev
 
 ARG PHP_VERSION
 ENV PHP_VERSION=${PHP_VERSION}
-ARG GC2_REF=master
+ARG GC2_REF=chore/dashboard-node-24-upgrade
 
 # Get latest source, but only when GC2_REF is a branch. A pinned tag/commit
 # leaves HEAD detached, where 'git pull' has no upstream and would fail.
 RUN git symbolic-ref -q HEAD >/dev/null && git pull || echo "GC2_REF=${GC2_REF} is detached; skipping pull"
 
 # Build with Node + Grunt
-RUN npm install \
-    && grunt production
+#RUN npm install \
+#    && grunt production
 
 # Copy in GC2 custom config
 COPY conf/gc2/App.php /var/www/geocloud2/app/conf/
 COPY conf/gc2/Connection.php /var/www/geocloud2/app/conf/
 
 # Build dashboard
-RUN cd dashboard \
-    && npm install \
-    && npm run build
+#RUN cd dashboard \
+#    && npm install \
+#    && npm run build
 
 # VOLUME for geocloud2 if you want persistence
 VOLUME /var/www/geocloud2
