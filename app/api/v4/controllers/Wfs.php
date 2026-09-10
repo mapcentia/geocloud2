@@ -11,15 +11,14 @@ use app\api\v4\AcceptableMethods;
 use app\api\v4\Controller;
 use app\api\v4\Responses\StreamedResponse;
 use app\api\v4\Scope;
-use app\conf\App;
+use app\exceptions\GC2Exception;
 use app\exceptions\OwsException;
-use app\inc\BasicAuth;
 use app\inc\Connection;
-use app\inc\Input;
-use app\inc\Jwt;
+use app\inc\PublicIdentity;
 use app\inc\Route2;
 use app\inc\Util;
-use app\models\Authorization;
+use app\ows\LayerGate;
+use app\ows\RuleFilters;
 use app\wfs\Context;
 use app\wfs\Request as WfsRequest;
 use app\wfs\Server;
@@ -40,8 +39,7 @@ use Throwable;
 #[Controller(route: 'api/v4/wfs/schema/{schema}/database/{database}/srs/[srs]/ts/[timeSlice]', scope: Scope::PUBLIC)]
 final class Wfs extends AbstractApi
 {
-    /** Bearer token presented on the request, captured by buildContext(). */
-    private ?string $bearer = null;
+    private PublicIdentity $identity;
 
     public function __construct(public Route2 $route, Connection $connection)
     {
@@ -132,112 +130,33 @@ final class Wfs extends AbstractApi
     }
 
     /**
-     * @throws OwsException
+     * @throws GC2Exception on an invalid token or a token for another database
      */
     private function buildContext(): Context
     {
-        $database = $this->route->getParam('database');
-        $schema = $this->route->getParam('schema');
+        $database = (string)$this->route->getParam('database');
+        $schema = (string)$this->route->getParam('schema');
         // The route is PUBLIC, so the dispatcher has not enforced the token — a presented Bearer
         // token is validated here (and must match the database in the path), like the OWS endpoint.
-        $this->bearer = Input::getJwtToken() ?: null;
-
-        $trusted = false;
-        foreach ((App::$param['trustedAddresses'] ?? []) as $address) {
-            if (Util::ipInRange(Util::clientIp(), $address) && getenv('MODE_ENV') !== 'test') {
-                $trusted = true;
-                break;
-            }
-        }
-
-        if ($this->bearer) {
-            $jwt = Jwt::validate($this->bearer)['data'];
-            if (($jwt['database'] ?? null) !== $database) {
-                throw new OwsException(
-                    'Token is not valid for this database',
-                    attributes: ['exceptionCode' => 'NoApplicableCode']
-                );
-            }
-            $user = $jwt['uid'];
-            $userGroup = $jwt['userGroup'] ?? null;
-            $connection = new Connection(user: $user, database: $database, schema: $schema);
-        } else {
-            // For anonymous-readable layers, use the database name as the implicit user.
-            $user = Input::getAuthUser() ?: $database;
-            $userGroup = null;
-            $connection = new Connection(user: $user, database: $database, schema: $schema);
-            // A Basic-auth header sets the request identity ($user, parentUser) above,
-            // but per-layer auth only runs for requests that carry a typeName. Verify
-            // the credentials here so a fabricated header can't be trusted as identity
-            // on layer-less requests (GetCapabilities/DescribeFeatureType).
-            if (!$trusted) {
-                new BasicAuth(connection: $connection)->verifyCredentials();
-            }
-        }
-
+        $id = PublicIdentity::resolve($database, $schema);
         $srsParam = $this->route->getParam('srs');
         $srs = $srsParam !== null && $srsParam !== '' ? (int) $srsParam : null;
-
-        return new Context(
-            connection: $connection,
-            database: $database,
-            schema: $schema,
-            user: $user,
-            userGroup: $userGroup,
-            parentUser: $user === $database,
-            trusted: $trusted,
-            host: Util::host(),
-            thePath: Util::thePath(),
-            startTime: microtime(true),
-            srs: $srs,
-            tokenAuth: $this->bearer !== null,
-        );
+        $this->identity = $id;
+        return $id->wfsContext($schema, $srs);
     }
 
     /**
-     * Per-typeName authorization for the current identity — Bearer token (Authorization::check
-     * with the JWT identity), HTTP Basic (BasicAuth::authenticate, which challenges with 401), or
-     * anonymous (allowed for layers below the protected levels). Skipped when trusted. A WFS-T
-     * transaction raises the bar: 'Write' layers, readable anonymously, require credentials to
-     * transact.
+     * Per-typeName authorization for the current identity. WFS never caches allow decisions
+     * (GetFeature/Transaction are not tile-rate traffic), so LayerGate runs with cacheAllows off.
      */
     private function authorizeLayers(Context $ctx, WfsRequest $req): void
     {
-        if ($ctx->trusted || empty($req->typeNames)) {
+        if (empty($req->typeNames)) {
             return;
         }
-        $authUser = Input::getAuthUser();
-        $model = $ctx->model();
-        $isTransaction = $req->operation === 'TRANSACTION';
-        foreach ($req->typeNames as $tn) {
-            // The route pins the schema; normalize the (possibly unqualified or
-            // differently-qualified) request typeName to "schema.table" so the auth
-            // check runs against the relation actually served. Passing a raw
-            // unqualified name to BasicAuth would silently skip the subuser
-            // privilege check (its split on '.' yields an empty table name).
-            $rel = "$ctx->schema." . $this->tableOf($tn);
-            $auth = $model->getGeometryColumns($rel, 'authentication');
-            $needsAuth = $auth === 'Read/write'
-                || ($isTransaction && $auth === 'Write')
-                || !empty($authUser);
-            if (!$needsAuth) {
-                continue;
-            }
-            if ($this->bearer) {
-                new Authorization(connection: $ctx->connection)->check(
-                    relName: $rel, transaction: $isTransaction, isAuth: true,
-                    subUser: $ctx->parentUser ? null : $ctx->user, userGroup: $ctx->userGroup, rels: []
-                );
-            } else {
-                // Verifies credentials (challenges 401 when missing/wrong) and checks per-layer privilege.
-                new BasicAuth(connection: $ctx->connection)->authenticate($rel, $isTransaction);
-            }
-        }
-    }
-
-    private function tableOf(string $layer): string
-    {
-        $bits = explode('.', $layer);
-        return $bits[1] ?? $bits[0];
+        // The route pins the schema; normalize the (possibly unqualified or differently-qualified)
+        // request typeName to "schema.table" so the auth check runs against the relation served.
+        $rels = array_map(fn(string $tn) => "$ctx->schema." . RuleFilters::tableOf($tn), $req->typeNames);
+        new LayerGate($this->identity, cacheAllows: false)->authorize($rels, $req->operation === 'TRANSACTION');
     }
 }
