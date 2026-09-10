@@ -384,4 +384,99 @@ class OgcNoTokenApiCest
         $I->sendGET($this->collection('secret') . '/items');
         $I->seeResponseCodeIs(HttpCode::NOT_FOUND);    // hidden anonymously
     }
+
+    public function shouldDenyItemsByWildcardWfstRule(ApiTester $I)
+    {
+        $id = $this->createRule($I, ['username' => '*', 'service' => 'wfst', 'request' => 'select', 'access' => 'deny']);
+        $I->sendGET($this->collection('poi') . '/items');
+        // The deny fires in the count query inside the stream callback, before any byte is sent
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+        $I->assertSame('FORBIDDEN', json_decode($I->grabResponse(), true)['errorCode']);
+        $I->sendGET($this->collection('poi') . '/items/' . $this->poiKey1);
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+        $this->deleteRule($I, $id);
+    }
+
+    public function shouldNotApplyParentUserRuleToAnonymousItems(ApiTester $I)
+    {
+        $id = $this->createRule($I, ['username' => $this->userId, 'service' => 'wfst', 'request' => 'select', 'access' => 'deny']);
+        $I->sendGET($this->collection('poi') . '/items');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $this->deleteRule($I, $id);
+    }
+
+    public function shouldLimitItemsByRuleFilter(ApiTester $I)
+    {
+        $id = $this->createRule($I, [
+            'username' => '*', 'service' => 'wfst', 'request' => 'select', 'access' => 'limit',
+            'schema' => $this->schemaName, 'table' => 'poi', 'filter' => "name = 'bravo'",
+        ]);
+        $I->sendGET($this->collection('poi') . '/items');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $doc = json_decode($I->grabResponse(), true);
+        $I->assertSame(1, $doc['numberMatched']);
+        $I->assertSame('bravo', $doc['features'][0]['properties']['name']);
+        $I->sendGET($this->collection('poi') . '/items/' . $this->poiKey1);   // alpha is filtered out
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        $this->deleteRule($I, $id);
+    }
+
+    public function shouldServeCurrentVersionAndTimeSlice(ApiTester $I)
+    {
+        $I->sendGET($this->collection('poi_v') . '/items');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $doc = json_decode($I->grabResponse(), true);
+        $I->assertSame(1, $doc['numberMatched']);
+        $I->assertSame('v1', $doc['features'][0]['properties']['name']);
+        $before = gmdate('Y-m-d\TH:i:s\Z');
+        sleep(1);
+
+        // Update through the v4 Feature API: the WFS-T engine closes the old version and inserts a new one
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPATCH('/api/v4/schemas/' . $this->schemaName . '/tables/poi_v/features/' . $this->versionedKey, json_encode([
+            'type' => 'Feature', 'properties' => ['name' => 'v2'],
+            'geometry' => ['type' => 'Point', 'coordinates' => [9.0, 56.0]],
+        ]));
+        $I->deleteHeader('Authorization');
+
+        $I->sendGET($this->collection('poi_v') . '/items');
+        $doc = json_decode($I->grabResponse(), true);
+        $I->assertSame(1, $doc['numberMatched'], 'only the current version is visible');
+        $I->assertSame('v2', $doc['features'][0]['properties']['name']);
+
+        $I->sendGET($this->collection('poi_v') . '/items?datetime=' . urlencode($before));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $doc = json_decode($I->grabResponse(), true);
+        $I->assertSame(1, $doc['numberMatched'], 'the time slice shows the version valid then');
+        $I->assertSame('v1', $doc['features'][0]['properties']['name']);
+    }
+
+    public function shouldIgnoreDatetimeOnUnversionedCollection(ApiTester $I)
+    {
+        $I->sendGET($this->collection('poi') . '/items?datetime=2000-01-01T00:00:00Z');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertSame(3, json_decode($I->grabResponse(), true)['numberMatched']);
+    }
+
+    public function shouldServeReadWriteCollectionWithBasicAuth(ApiTester $I)
+    {
+        $I->amHttpAuthenticated($this->userId, $this->password);
+        $I->sendGET($this->base() . '/collections');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertContains($this->schemaName . '.secret', array_column(json_decode($I->grabResponse(), true)['collections'], 'id'));
+        $I->sendGET($this->collection('secret') . '/items');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertSame('hidden', json_decode($I->grabResponse(), true)['features'][0]['properties']['name']);
+        $I->deleteHeader('Authorization');
+    }
+
+    public function shouldChallengeWrongBasicCredentials(ApiTester $I)
+    {
+        $I->amHttpAuthenticated($this->userId, 'WrongPassword1');
+        $I->sendGET($this->base() . '/collections');
+        $I->seeResponseCodeIs(HttpCode::UNAUTHORIZED);
+        $I->seeHttpHeader('WWW-Authenticate');
+        $I->deleteHeader('Authorization');
+    }
 }
