@@ -12,22 +12,15 @@ use app\api\v4\AcceptableMethods;
 use app\api\v4\Controller;
 use app\api\v4\Responses\StreamedResponse;
 use app\api\v4\Scope;
-use app\conf\App;
 use app\exceptions\ServiceException;
-use app\inc\BasicAuth;
-use app\inc\Cache;
 use app\inc\Connection;
-use app\inc\Input;
-use app\inc\Jwt;
+use app\inc\PublicIdentity;
 use app\inc\Route2;
-use app\inc\UserFilter;
 use app\inc\Util;
-use app\models\Authorization;
-use app\models\Geofence;
-use app\models\Rule;
-use app\ows\Context;
+use app\ows\LayerGate;
 use app\ows\Proxy;
 use app\ows\Request as OwsRequest;
+use app\ows\RuleFilters;
 use OpenApi\Attributes as OA;
 use Throwable;
 
@@ -43,12 +36,6 @@ use Throwable;
 #[Controller(route: 'api/v4/ows/schema/{schema}/database/{database}', scope: Scope::PUBLIC)]
 final class Ows extends AbstractApi
 {
-    /** Seconds to cache a per-layer allow decision (OWS/WMS tiles are hit many times per second). */
-    private const int AUTH_CACHE_TTL = 60;
-
-    /** Bearer token presented on the request, captured by buildContext(). */
-    private ?string $bearer = null;
-
     public function __construct(public readonly Route2 $route, Connection $connection)
     {
         parent::__construct($connection);
@@ -93,10 +80,18 @@ final class Ows extends AbstractApi
                 Util::disableOb();
                 $tmp = null;
                 try {
-                    $ctx = $this->buildContext();
+                    $database = (string)$this->route->getParam('database');
+                    $schema = (string)$this->route->getParam('schema');
+                    // The route is PUBLIC, so the dispatcher has not enforced the token — a presented
+                    // Bearer token is validated here (and must match the database in the path).
+                    $id = PublicIdentity::resolve($database, $schema);
+                    $ctx = $id->owsContext($schema);
                     $req = OwsRequest::fromHttp();
-                    $this->authorizeLayers($ctx, $req);
-                    $filters = $this->applyRules($ctx, $req);
+                    // The route pins the schema; normalize the (possibly unqualified) request layer
+                    // to "schema.table" so auth runs against the relation MapServer will serve.
+                    $rels = array_map(fn(string $l) => "$schema." . RuleFilters::tableOf($l), $req->layers);
+                    new LayerGate($id)->authorizeRead($rels);
+                    $filters = new RuleFilters($id)->forLayers($req->layers, $schema, $req->filters);
                     $proxy = new Proxy($ctx);
                     [$url, $tmp] = $proxy->resolve($req, $filters);
                     $proxy->run($url, $req);
@@ -116,156 +111,5 @@ final class Ows extends AbstractApi
                 }
             },
         );
-    }
-
-    private function buildContext(): Context
-    {
-        $database = $this->route->getParam('database');
-        $schema = $this->route->getParam('schema');
-        // The route is PUBLIC, so the dispatcher has not enforced the token — a presented Bearer
-        // token is validated here (and must match the database in the path), like the MapCache proxy.
-        $this->bearer = Input::getJwtToken() ?: null;
-
-        $trusted = false;
-        foreach ((App::$param['trustedAddresses'] ?? []) as $address) {
-            if (Util::ipInRange(Util::clientIp(), $address) && getenv('MODE_ENV') !== 'test') {
-                $trusted = true;
-                break;
-            }
-        }
-
-        if ($this->bearer) {
-            $jwt = Jwt::validate($this->bearer)['data'];
-            if (($jwt['database'] ?? null) !== $database) {
-                throw new ServiceException('Token is not valid for this database');
-            }
-            $user = $jwt['uid'];
-            $userGroup = $jwt['userGroup'] ?? null;
-            $connection = new Connection(user: $user, database: $database, schema: $schema);
-        } else {
-            // For anonymous-readable layers, use the database name as the implicit user.
-            $user = Input::getAuthUser() ?: $database;
-            $userGroup = null;
-            $connection = new Connection(user: $user, database: $database, schema: $schema);
-            // A Basic-auth header sets the request identity ($user, parentUser) above,
-            // but per-layer auth only runs for requests that carry a layer. Verify the
-            // credentials here so a fabricated header can't be trusted as identity on
-            // layer-less requests (GetCapabilities).
-            if (!$trusted) {
-                new BasicAuth(connection: $connection)->verifyCredentials();
-            }
-        }
-
-        return new Context(
-            connection: $connection,
-            database: $database,
-            schema: $schema,
-            user: $user,
-            userGroup: $userGroup,
-            parentUser: $user === $database,
-            trusted: $trusted,
-            host: Util::host(),
-        );
-    }
-
-    /**
-     * Per-layer authorization for the current identity — Bearer token (Authorization::check with
-     * the JWT identity), HTTP Basic (BasicAuth::authenticate, which challenges with 401), or
-     * anonymous (allowed for layers below 'Read/write'). Skipped when trusted.
-     *
-     * The allow decision is cached per (identity, layer) for AUTH_CACHE_TTL, mirroring the MapCache
-     * proxy: a cache hit skips both the authentication lookup and the per-layer check. The identity
-     * is the bearer token or the Basic credentials, so a revoked/rotated token or a changed password
-     * stops being trusted within the TTL. A wrong Basic password is never cached as an allow —
-     * BasicAuth::authenticate() challenges before we reach the cache. ANONYMOUS requests are
-     * deliberately NOT cached: an allow cached for "*" would keep serving a layer that has just been
-     * switched to Read/write until the TTL expired, so anonymous access is re-evaluated every time.
-     */
-    private function authorizeLayers(Context $ctx, OwsRequest $req): void
-    {
-        if ($ctx->trusted || empty($req->layers)) {
-            return;
-        }
-        $authUser = Input::getAuthUser();
-        $identity = $this->bearer
-            ? 'j:' . hash('sha256', $this->bearer)
-            : ($authUser ? 'b:' . hash('sha256', $authUser . ':' . (Input::getAuthPw() ?? '')) : null);
-        $model = $ctx->model();
-        foreach ($req->layers as $layer) {
-            // The route pins the schema; normalize the (possibly unqualified or
-            // differently-qualified) request layer to "schema.table" so the auth
-            // check runs against the relation MapServer will actually serve.
-            // Passing a raw unqualified name to BasicAuth would silently skip the
-            // subuser privilege check (its split on '.' yields an empty table name).
-            $rel = "$ctx->schema." . $this->tableOf($layer);
-            $item = $identity !== null
-                ? Cache::getItem($ctx->database . '_owsauth_' . hash('sha256', $identity . '|' . $rel))
-                : null;
-            if ($item !== null && $item->isHit() && $item->get() === true) {
-                continue; // allow decision cached
-            }
-            $auth = $model->getGeometryColumns($rel, 'authentication');
-            if ($auth === 'Read/write' || !empty($authUser)) {
-                if ($this->bearer) {
-                    new Authorization(connection: $ctx->connection)->check(
-                        relName: $rel, transaction: false, isAuth: true,
-                        subUser: $ctx->parentUser ? null : $ctx->user, userGroup: $ctx->userGroup, rels: []
-                    );
-                } else {
-                    // Verifies credentials (challenges 401 when missing/wrong) and checks per-layer privilege.
-                    new BasicAuth(connection: $ctx->connection)->authenticate($rel, false);
-                }
-            }
-            if ($item !== null) {
-                $item->set(true)->expiresAfter(self::AUTH_CACHE_TTL);
-                Cache::save($item);
-            }
-        }
-    }
-
-    /**
-     * Geofence rules + versioning filter, merged with client filters. Mirrors
-     * Wms::setFilterFromRules but keyed by the request's layer names.
-     *
-     * @return array<string,array<string>> filters keyed by "schema.table"
-     */
-    private function applyRules(Context $ctx, OwsRequest $req): array
-    {
-        $filters = $req->filters;
-        $rule = new Rule(connection: $ctx->connection);
-        $rules = $rule->get();
-        $model = $ctx->model();
-        // Geofence identity: a token or Basic-auth user is themselves, an anonymous
-        // request is "*". Mirrors legacy Wms::setFilterFromRules. Note $ctx->user
-        // falls back to the database name for anonymous requests (used as the
-        // connection identity), which must NOT reach the geofence or a parent-user
-        // rule would match unauthenticated traffic. This public route never starts
-        // a session, so the token or Basic auth are the only signals.
-        $geofenceUser = $this->bearer || !empty(Input::getAuthUser()) ? $ctx->user : '*';
-        foreach ($req->layers as $layer) {
-            $table = $this->tableOf($layer);
-            $userFilter = new UserFilter($geofenceUser, 'ows', 'select', '*', $ctx->schema, $table);
-            $geofence = new Geofence($userFilter);
-            $auth = $geofence->authorize($rules);
-            if (isset($auth['access'])) {
-                if ($auth['access'] === 'deny') {
-                    throw new ServiceException('DENY');
-                }
-                if ($auth['access'] === 'limit' && !empty($auth['filters']['filter'])) {
-                    $filters[$layer][] = "({$auth['filters']['filter']})";
-                }
-            }
-            $versioning = $model->doesColumnExist("$ctx->schema.$table", 'gc2_version_gid');
-            if (!empty($versioning['exists'])) {
-                $filters[$layer][] = 'gc2_version_end_date IS NULL';
-            }
-        }
-        return $filters;
-    }
-
-    private function tableOf(string $layer): string
-    {
-        $bits = explode('.', $layer);
-        return $bits[1] ?? $bits[0];
     }
 }
