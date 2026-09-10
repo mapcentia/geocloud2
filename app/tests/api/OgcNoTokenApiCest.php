@@ -263,4 +263,125 @@ class OgcNoTokenApiCest
         $I->sendGET($this->base() . '/nope');
         $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
     }
+
+    public function shouldStreamItemsAsGeoJson(ApiTester $I)
+    {
+        $I->sendGET($this->collection('poi') . '/items');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeHttpHeader('Content-Type', 'application/geo+json');
+        $I->seeHttpHeader('Content-Crs', '<http://www.opengis.net/def/crs/OGC/1.3/CRS84>');
+        $doc = json_decode($I->grabResponse(), true);
+        $I->assertNotNull($doc, 'valid JSON expected: ' . $I->grabResponse());
+        $I->assertSame('FeatureCollection', $doc['type']);
+        $I->assertSame(3, $doc['numberMatched']);
+        $I->assertSame(3, $doc['numberReturned']);
+        $I->assertCount(3, $doc['features']);
+        $f = $doc['features'][0];
+        $I->assertSame('Feature', $f['type']);
+        $I->assertIsInt($f['id']);
+        $I->assertSame('Point', $f['geometry']['type']);
+        $I->assertArrayHasKey('name', $f['properties']);
+        $I->assertArrayNotHasKey('the_geom', $f['properties']);
+        $rels = array_column($doc['links'], 'href', 'rel');
+        $I->assertArrayHasKey('self', $rels);
+        $I->assertArrayHasKey('collection', $rels);
+        $I->assertArrayNotHasKey('next', $rels);
+    }
+
+    public function shouldPaginateItems(ApiTester $I)
+    {
+        $I->sendGET($this->collection('poi') . '/items?limit=2');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $doc = json_decode($I->grabResponse(), true);
+        $I->assertSame(3, $doc['numberMatched']);
+        $I->assertSame(2, $doc['numberReturned']);
+        $rels = array_column($doc['links'], 'href', 'rel');
+        $I->assertStringContainsString('limit=2', $rels['next']);
+        $I->assertStringContainsString('offset=2', $rels['next']);
+        $I->assertArrayNotHasKey('prev', $rels);
+
+        $I->sendGET($this->collection('poi') . '/items?limit=2&offset=2');
+        $doc = json_decode($I->grabResponse(), true);
+        $I->assertSame(1, $doc['numberReturned']);
+        $rels = array_column($doc['links'], 'href', 'rel');
+        $I->assertArrayNotHasKey('next', $rels);
+        $I->assertStringContainsString('offset=0', $rels['prev']);
+    }
+
+    public function shouldFilterItemsByBbox(ApiTester $I)
+    {
+        // Only alpha (9.5,55.7) lies in lon 9..10 / lat 55.5..56
+        $I->sendGET($this->collection('poi') . '/items?bbox=9,55.5,10,56');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $doc = json_decode($I->grabResponse(), true);
+        $I->assertSame(1, $doc['numberMatched']);
+        $I->assertSame('alpha', $doc['features'][0]['properties']['name']);
+
+        // Same box expressed lat/lon through the EPSG:4326 URI
+        $I->sendGET($this->collection('poi') . '/items?bbox=55.5,9,56,10&bbox-crs=' . urlencode('http://www.opengis.net/def/crs/EPSG/0/4326'));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertSame(1, json_decode($I->grabResponse(), true)['numberMatched']);
+
+        // Empty box → empty, valid collection
+        $I->sendGET($this->collection('poi') . '/items?bbox=0,0,1,1');
+        $doc = json_decode($I->grabResponse(), true);
+        $I->assertSame(0, $doc['numberMatched']);
+        $I->assertSame([], $doc['features']);
+    }
+
+    public function shouldReprojectItemsWithCrs(ApiTester $I)
+    {
+        $I->sendGET($this->collection('poi') . '/items?bbox=9,55.5,10,56&crs=' . urlencode('http://www.opengis.net/def/crs/EPSG/0/25832'));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeHttpHeader('Content-Crs', '<http://www.opengis.net/def/crs/EPSG/0/25832>');
+        $c = json_decode($I->grabResponse(), true)['features'][0]['geometry']['coordinates'];
+        // 9.5E 55.7N ≈ 531 400 E, 6 172 000 N in UTM 32N
+        $I->assertEqualsWithDelta(531400, $c[0], 5000);
+        $I->assertEqualsWithDelta(6173000, $c[1], 5000);
+
+        // EPSG:4326 URI: lat/lon axis order
+        $I->sendGET($this->collection('poi') . '/items?bbox=9,55.5,10,56&crs=' . urlencode('http://www.opengis.net/def/crs/EPSG/0/4326'));
+        $c = json_decode($I->grabResponse(), true)['features'][0]['geometry']['coordinates'];
+        $I->assertEqualsWithDelta(55.7, $c[0], 0.0001);
+        $I->assertEqualsWithDelta(9.5, $c[1], 0.0001);
+    }
+
+    public function shouldRejectBadItemsParameters(ApiTester $I)
+    {
+        $I->sendGET($this->collection('poi') . '/items?foo=bar');
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->sendGET($this->collection('poi') . '/items?crs=' . urlencode('http://www.opengis.net/def/crs/EPSG/0/2000'));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->assertSame('INVALID_CRS', json_decode($I->grabResponse(), true)['errorCode']);
+        $I->sendGET($this->collection('poi') . '/items?limit=0');
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->sendGET($this->collection('poi') . '/items?datetime=2024-01-01/2024-02-01');
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+    }
+
+    public function shouldGetSingleItem(ApiTester $I)
+    {
+        $I->sendGET($this->collection('poi') . '/items/' . $this->poiKey1);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeHttpHeader('Content-Type', 'application/geo+json');
+        $f = json_decode($I->grabResponse(), true);
+        $I->assertSame('Feature', $f['type']);
+        $I->assertSame((int)$this->poiKey1, $f['id']);
+        $I->assertSame('alpha', $f['properties']['name']);
+        $rels = array_column($f['links'], 'href', 'rel');
+        $I->assertStringEndsWith('/items/' . $this->poiKey1, $rels['self']);
+        $I->assertStringEndsWith($this->collection('poi'), $rels['collection']);
+    }
+
+    public function shouldReturnNotFoundForUnknownItem(ApiTester $I)
+    {
+        $I->sendGET($this->collection('poi') . '/items/999999');
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        $I->sendGET($this->collection('poi') . "/items/1'");
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->sendGET($this->collection('poi') . '/items/' . $this->poiKey1 . '?limit=1');
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);   // limit is not a single-item parameter
+        $I->sendGET($this->collection('secret') . '/items');
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);    // hidden anonymously
+    }
 }
