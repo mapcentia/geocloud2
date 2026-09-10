@@ -8,7 +8,6 @@
 namespace app\ogc;
 
 use app\api\v4\Responses\StreamedResponse;
-use app\exceptions\ServiceException;
 use app\inc\Model;
 use app\inc\PublicIdentity;
 use app\inc\Util;
@@ -37,10 +36,10 @@ final class MapRenderer
     public function render(string $schema, array $tables, MapParams $p, array $defaultBbox4326): StreamedResponse
     {
         $layers = array_map(fn(string $t) => "$schema.$t", $tables);
-        new LayerGate($this->id)->authorizeRead($layers);
         try {
+            new LayerGate($this->id)->authorizeRead($layers);
             $filters = new RuleFilters($this->id)->forLayers($layers, $schema, [], $p->datetime);
-        } catch (ServiceException $e) {
+        } catch (Throwable $e) {
             throw Problem::toGc2($e);
         }
         $target = Crs::epsg($p->crs);

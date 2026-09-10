@@ -9,6 +9,8 @@ namespace app\inc;
 
 use app\conf\App;
 use app\exceptions\GC2Exception;
+use app\models\Setting;
+use app\models\User;
 
 /**
  * The request identity on a PUBLIC (token-less) v4 route: a validated Bearer token, verified
@@ -73,12 +75,20 @@ final readonly class PublicIdentity
         if (!$trusted) {
             new BasicAuth(connection: $connection)->verifyCredentials();
         }
+        $userGroup = null;
+        if ($authUser && $authUser !== $database) {
+            $settings = new Setting(connection: $connection)->get();
+            $userGroup = !empty($settings["data"]->userGroups->{$authUser})
+                ? json_decode($settings["data"]->userGroups->{$authUser})
+                : [];
+            $userGroup = new User()->getFullInheritance($userGroup, $database);
+        }
         return new self(
             connection: $connection,
             database: $database,
             schema: $schema,
             user: $user,
-            userGroup: null,
+            userGroup: $userGroup,
             parentUser: $user === $database,
             trusted: $trusted,
             bearer: null,

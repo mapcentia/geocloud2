@@ -176,7 +176,7 @@ final class OgcFeatures extends AbstractApi
         }, 0);
         try {
             new GetFeature($ctx)->handle($req, $writer);
-        } catch (OwsException $e) {
+        } catch (Throwable $e) {
             throw Problem::toGc2($e);
         } finally {
             ob_end_flush();

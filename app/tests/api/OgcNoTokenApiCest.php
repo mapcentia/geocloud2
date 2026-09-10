@@ -582,4 +582,38 @@ class OgcNoTokenApiCest
         $this->assertPng($I, 16, 16);
         $I->deleteHeader('Authorization');
     }
+
+    /**
+     * F1: A Basic-auth sub-user with a direct 'read' privilege on a Read/write layer must see it
+     * through Collections::visible() (Authorization::check with the Basic identity's userGroup),
+     * the same as it already does for LayerGate/BasicAuth::authenticate() on /items. The sub-user's
+     * Basic password is its login password — BasicAuth::verifyPassword checks the users table first.
+     */
+    public function shouldServeReadWriteCollectionForBasicAuthSubUserWithDirectPrivilege(ApiTester $I)
+    {
+        $subName = 'ogcbasicsub' . $this->date->getTimestamp();
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v4/users', json_encode([
+            'name' => $subName, 'email' => $subName . '@example.com', 'password' => $this->password,
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+
+        $I->stopFollowingRedirects();
+        $I->sendPATCH('/api/v4/schemas/' . $this->schemaName . '/tables/secret/privileges', json_encode([
+            'subuser' => $subName, 'privilege' => 'read',
+        ]));
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $I->startFollowingRedirects();
+        $I->deleteHeader('Authorization');
+
+        $I->amHttpAuthenticated($subName, $this->password);
+        $I->sendGET($this->base() . '/collections');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertContains($this->schemaName . '.secret', array_column(json_decode($I->grabResponse(), true)['collections'], 'id'));
+        $I->sendGET($this->collection('secret') . '/items');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertSame('hidden', json_decode($I->grabResponse(), true)['features'][0]['properties']['name']);
+        $I->deleteHeader('Authorization');
+    }
 }

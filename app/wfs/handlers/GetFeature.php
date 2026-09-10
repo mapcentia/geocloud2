@@ -362,8 +362,10 @@ final class GetFeature implements HandlerInterface
         $postgisObject = $this->ctx->model();
 
         foreach ($perTable as $table => $state) {
-            $countSql = 'SELECT COUNT(*) ' . $state['from'] . ' LIMIT ' . self::FEATURE_LIMIT;
-            $select   = $factory->createFromString($countSql);
+            // LIMIT here caps the inner select (which the rewritten rules/DENY still apply to),
+            // not the count itself — the outer COUNT(*) wraps that capped, rule-rewritten result.
+            $innerSql = 'SELECT 1 ' . $state['from'] . ' LIMIT ' . self::FEATURE_LIMIT;
+            $select   = $factory->createFromString($innerSql);
             $rules    = $rule->get();
             $walkerRule->setRules($rules);
             try {
@@ -371,9 +373,10 @@ final class GetFeature implements HandlerInterface
             } catch (\Exception $e) {
                 throw new OwsException($e->getMessage());
             }
-            $rewrittenCount = $factory->createFromAST($select, true)->getSql();
+            $rewrittenInner = $factory->createFromAST($select, true)->getSql();
+            $countSql = 'SELECT COUNT(*) AS count FROM (' . $rewrittenInner . ') AS c';
             try {
-                $res   = $postgisObject->prepare($rewrittenCount);
+                $res   = $postgisObject->prepare($countSql);
                 $res->execute();
                 $row   = $postgisObject->fetchRow($res);
                 $total += (int) ($row['count'] ?? 0);

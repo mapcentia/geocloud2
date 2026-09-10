@@ -12,7 +12,6 @@ use app\api\v4\Controller;
 use app\api\v4\Responses\StreamedResponse;
 use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
-use app\exceptions\OwsException;
 use app\inc\Connection;
 use app\inc\PublicIdentity;
 use app\inc\Route2;
