@@ -309,11 +309,7 @@ Flow: `Collections::find` for hver → 404; `LayerGate::authorizeRead`; `RuleFil
 
 ### 5.9 Fejlformat
 
-JSON med `Content-Type: application/problem+json`:
-
-```json
-{"code": "COLLECTION_NOT_FOUND", "description": "Collection geodanmark.veje not found"}
-```
+JSON i v4's eksisterende fejlformat (`{"success":false,"message":…,"code":…,"errorCode":…}`, `Content-Type: application/json`), så OGC-endpoints deler fejlhåndtering med resten af v4. Fejl før stream kastes som `GC2Exception`; fejl inde i stream-callback'et skrives af `app\ogc\Problem::render()`.
 
 Status: 400 (parameterfejl, ukendt parameter, ugyldig crs), 401 (Basic-challenge med `WWW-Authenticate: Basic`, ugyldig token), 403 (geofence deny, manglende privilegium), 404 (collection/feature), 406 (ikke-understøttet `Accept`), 500 (uventet; intern besked logges, generisk tekst returneres). Efter første streamede byte kan status ikke ændres; fejl logges.
 
