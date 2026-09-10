@@ -41,7 +41,7 @@ final class Server
     {
         $this->validateProtocol($req);
         if ($req->operation !== 'GETCAPABILITIES') {
-            $this->checkLayerEnabled($req);
+            self::assertLayersEnabled($this->ctx, $req);
         }
 
         $class = self::HANDLERS[$req->operation]
@@ -76,14 +76,17 @@ final class Server
     }
 
     /**
+     * Every requested typeName must be an OWS-enabled layer. Public so the OGC API Features
+     * controller, which drives the GetFeature handler directly, applies the same gate.
+     *
      * @throws OwsException
      */
-    private function checkLayerEnabled(Request $req): void
+    public static function assertLayersEnabled(Context $ctx, Request $req): void
     {
         if (empty($req->typeNames)) return;
-        $model = $this->ctx->model();
+        $model = $ctx->model();
         foreach ($req->typeNames as $tn) {
-            $row = $model->getGeometryColumns("{$this->ctx->schema}.$tn", '*');
+            $row = $model->getGeometryColumns("{$ctx->schema}.$tn", '*');
             if (empty($row['enableows'])) {
                 throw new OwsException(
                     'Layer is not enabled',

@@ -66,4 +66,11 @@ class GmlWriterTest extends Unit
         $w->bufferFlush();
         $this->assertSame('</wfs:FeatureCollection>', ob_get_clean());
     }
+
+    public function testImplementsFeatureWriterInterfaceAndWantsBoundedBy(): void
+    {
+        $w = $this->newWriter();
+        $this->assertInstanceOf(\app\wfs\output\FeatureWriterInterface::class, $w);
+        $this->assertTrue($w->wantsBoundedBy());
+    }
 }

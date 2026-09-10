@@ -12,7 +12,7 @@
 
 namespace app\wfs\output;
 
-final class GmlWriter
+final class GmlWriter implements FeatureWriterInterface
 {
     private bool $buffering = false;
     private string $buffer = '';
@@ -59,6 +59,11 @@ final class GmlWriter
     {
         $this->buffer = '';
         $this->buffering = false;
+    }
+
+    public function wantsBoundedBy(): bool
+    {
+        return true;
     }
 
     public function flush(): void

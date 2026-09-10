@@ -179,6 +179,35 @@ XML;
         $this->assertSame(['mytable', 'other'], $req->typeNames);
     }
 
+    public function testStartIndexDefaultsToNullAndIsAssignable(): void
+    {
+        $req = new Request(
+            operation: 'GETFEATURE', version: '1.1.0', service: 'WFS', outputFormat: 'GEOJSON',
+            typeNames: ['t'], properties: null, featureIds: null, bbox: null, resultType: null,
+            srsName: Request::LATLON_4326_URI, srs: 4326, maxFeatures: 10, timeSlice: null,
+            filter: null, transactionBody: null, rawPostBody: null,
+        );
+        $this->assertNull($req->startIndex);
+        $this->assertSame('http://www.opengis.net/def/crs/EPSG/0/4326', $req->srsName);
+
+        $paged = new Request(
+            operation: 'GETFEATURE', version: '1.1.0', service: 'WFS', outputFormat: 'GEOJSON',
+            typeNames: ['t'], properties: null, featureIds: null, bbox: null, resultType: null,
+            srsName: null, srs: 4326, maxFeatures: 10, timeSlice: null,
+            filter: null, transactionBody: null, rawPostBody: null, startIndex: 20,
+        );
+        $this->assertSame(20, $paged->startIndex);
+    }
+
+    public function testFromHttpGetKeepsGeoJsonOutputFormat(): void
+    {
+        $_GET = ['SERVICE' => 'WFS', 'VERSION' => '1.1.0', 'REQUEST' => 'GetFeature', 'TYPENAME' => 't', 'OUTPUTFORMAT' => 'geojson'];
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $req = Request::fromHttp($this->makeContext(), rawBody: '');
+        $this->assertSame('GEOJSON', $req->outputFormat);
+        $this->assertNull($req->startIndex);
+    }
+
     private function makeContext(): \app\wfs\Context
     {
         return new \app\wfs\Context(

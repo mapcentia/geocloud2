@@ -8,6 +8,9 @@ namespace app\wfs;
 
 final readonly class Request
 {
+    /** OGC API Features Part 2 CRS URI whose axis order is latitude/longitude. */
+    public const string LATLON_4326_URI = 'http://www.opengis.net/def/crs/EPSG/0/4326';
+
     public function __construct(
         public string  $operation,
         public string  $version,
@@ -25,6 +28,8 @@ final readonly class Request
         public ?array  $filter,
         public ?array  $transactionBody,
         public ?string $rawPostBody,
+        /** OGC API `offset`: rows to skip before the first returned feature (null = no OFFSET). */
+        public ?int    $startIndex = null,
     ) {}
 
     public static function fromHttp(\app\wfs\Context $ctx, ?string $rawBody = null): self
@@ -86,6 +91,7 @@ final readonly class Request
         if (strcasecmp($fmt, 'XMLSCHEMA') !== 0
             && strcasecmp($fmt, 'GML2') !== 0
             && strcasecmp($fmt, 'GML3') !== 0
+            && strcasecmp($fmt, 'GEOJSON') !== 0
         ) {
             $fmt = 'GML2';
         }
