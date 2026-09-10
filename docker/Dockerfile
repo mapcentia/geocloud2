@@ -385,7 +385,7 @@ FROM cron AS dev
 
 ARG PHP_VERSION
 ENV PHP_VERSION=${PHP_VERSION}
-ARG GC2_REF=chore/dashboard-node-24-upgrade
+ARG GC2_REF=master
 
 # Get latest source, but only when GC2_REF is a branch. A pinned tag/commit
 # leaves HEAD detached, where 'git pull' has no upstream and would fail.
