@@ -86,6 +86,7 @@ class GeoJsonWriterTest extends Unit
         $f = $doc['features'][0];
         $this->assertSame(1, $f['id']);                       // int pkey → int id
         $this->assertSame('Point', $f['geometry']['type']);
+        $this->assertSame(1, $f['properties']['gid']);        // pkey present and int-converted
         $this->assertSame('alpha', $f['properties']['name']);
         $this->assertSame(1.5, $f['properties']['height']);
         $this->assertTrue($f['properties']['active']);
@@ -151,7 +152,7 @@ class GeoJsonWriterTest extends Unit
             $w->writeFeatureCollectionClose();
         });
         $this->assertStringContainsString('"geometry":null', $out);
-        $this->assertStringContainsString('"properties":{}', $out);
+        $this->assertStringContainsString('"properties":{"id":null}', $out);
         $this->assertSame('abc', json_decode($out, true)['features'][0]['id']);   // text pkey → string id
     }
 

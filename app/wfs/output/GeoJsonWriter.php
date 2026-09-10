@@ -92,12 +92,8 @@ final class GeoJsonWriter implements FeatureWriterInterface
     {
         $geometry = 'null';
         $props = [];
-        $pkey = $tableObj->primaryKey['attname'] ?? null;
         foreach ($row as $field => $value) {
             if ($field === 'fid' || $field === 'FID' || $field === 'oid') {
-                continue;
-            }
-            if ($field === $pkey) {
                 continue;
             }
             $info = $tableObj->metaData[$field] ?? null;
@@ -116,6 +112,7 @@ final class GeoJsonWriter implements FeatureWriterInterface
             }
             $props[$field] = self::convert($value, $type);
         }
+        $pkey = $tableObj->primaryKey['attname'] ?? null;
         $id = $row['fid'] ?? null;
         if ($id !== null && $pkey !== null && in_array($tableObj->metaData[$pkey]['type'] ?? '', self::INT_TYPES, true)) {
             $id = (int)$id;
