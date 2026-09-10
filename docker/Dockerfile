@@ -72,7 +72,7 @@ RUN sed -i '/ServerTokens OS/c\ServerTokens Prod' /etc/apache2/conf-enabled/secu
     && sed -i '/ServerSignature On/c\ServerSignature Off' /etc/apache2/conf-enabled/security.conf
 
 ###############################################################################
-# Node.js + Grunt
+# Node.js
 ###############################################################################
 # We’ll still rely on nvm, but watch out for environment issues in multi-stage
 # Docker builds. We’ll “export” environment variables inline as needed.
@@ -89,8 +89,7 @@ RUN source $NVM_DIR/nvm.sh \
     # and its bundled npm, instead of falling back to a stale system npm.
     && ln -sf "$(nvm which 24)" /usr/local/bin/node \
     && ln -sf "$(dirname "$(nvm which 24)")/npm" /usr/local/bin/npm \
-    && ln -sf "$(dirname "$(nvm which 24)")/npx" /usr/local/bin/npx \
-    && npm install -g grunt-cli
+    && ln -sf "$(dirname "$(nvm which 24)")/npx" /usr/local/bin/npx
 
 ###############################################################################
 # Enable Apache modules
@@ -391,9 +390,10 @@ ARG GC2_REF=master
 # leaves HEAD detached, where 'git pull' has no upstream and would fail.
 RUN git symbolic-ref -q HEAD >/dev/null && git pull || echo "GC2_REF=${GC2_REF} is detached; skipping pull"
 
-# Build with Node + Grunt
+# Build front-end assets with Node (replaces the old Grunt build)
 RUN npm install \
-    && grunt production
+    && node build.mjs production \
+    && node hacks.mjs
 
 # Copy in GC2 custom config
 COPY conf/gc2/App.php /var/www/geocloud2/app/conf/
