@@ -313,9 +313,7 @@ RUN git clone --branch gui https://github.com/mapcentia/ogr2postgis.git \
     && rm -rf ogr2postgis
 
 # gc2-cli
-RUN wget https://gc2-cli.s3.eu-west-1.amazonaws.com/versions/2025.4.0/d3a2e2c/apt/gc2_2025.4.0.d3a2e2c-1_amd64.deb -O gc2.deb \
-    && dpkg -i gc2.deb \
-    && rm gc2.deb
+RUN npm install @mapcentia/gc2-cli -g
 
 EXPOSE 80 443
 
@@ -394,17 +392,17 @@ ARG GC2_REF=chore/dashboard-node-24-upgrade
 RUN git symbolic-ref -q HEAD >/dev/null && git pull || echo "GC2_REF=${GC2_REF} is detached; skipping pull"
 
 # Build with Node + Grunt
-#RUN npm install \
-#    && grunt production
+RUN npm install \
+    && grunt production
 
 # Copy in GC2 custom config
 COPY conf/gc2/App.php /var/www/geocloud2/app/conf/
 COPY conf/gc2/Connection.php /var/www/geocloud2/app/conf/
 
 # Build dashboard
-#RUN cd dashboard \
-#    && npm install \
-#    && npm run build
+RUN cd dashboard \
+    && npm install \
+    && npm run build
 
 # VOLUME for geocloud2 if you want persistence
 VOLUME /var/www/geocloud2

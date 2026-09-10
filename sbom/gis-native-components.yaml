@@ -3,9 +3,9 @@
 # Hvor 'purl' udelades, genereres pkg:generic/<name>@<version>.
 components:
   - name: gdal
-    version: "3.9.2"
-    source: "http://download.osgeo.org/gdal/3.9.2/gdal392.zip"
-    notes: "Bygget med ECW 3.3 + LibKML + Arrow/Parquet 17.0.0 (GeoParquet) (ECW_VERSION=3)"
+    version: "3.12.4"
+    source: "https://download.osgeo.org/gdal/3.12.4/gdal3124.zip"
+    notes: "Bygget med ECW 3.3 + LibKML + Arrow/Parquet 25.0.1 (GeoParquet) (ECW_VERSION=3)"
   - name: mapserver
     version: "8.0-rsvg_fix"
     purl: "pkg:github/mapcentia/mapserver@rsvg_fix"
