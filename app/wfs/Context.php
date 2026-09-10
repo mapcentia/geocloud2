@@ -26,6 +26,9 @@ final class Context
         /** True when the request identity is a validated Bearer token — per-layer auth then ran
          *  via Authorization::check in the controller, so handlers must not challenge Basic. */
         public readonly bool   $tokenAuth = false,
+        /** Geofence identity: the user for token/Basic requests, "*" for anonymous ones; null
+         *  falls back to $user (legacy callers). */
+        public readonly ?string $geofenceUser = null,
     ) {}
 
     public function model(): Model

@@ -147,7 +147,7 @@ final class Transaction implements HandlerInterface
                     $newId = $row[$primary['attname']] ?? $row['gid'] ?? null;
 
                     // Geofence post-check (savepoint-safe inside outer transaction)
-                    $userFilter = new UserFilter($user, 'wfs', 'insert', '*', $this->ctx->schema, $typeName);
+                    $userFilter = new UserFilter($this->ctx->geofenceUser ?? $this->ctx->user, 'wfs', 'insert', '*', $this->ctx->schema, $typeName);
                     $geofence = new Geofence($userFilter, $this->ctx->connection);
                     $authResult = $geofence->authorize($rules);
                     if (($authResult['access'] ?? '') === Geofence::LIMIT_ACCESS) {
@@ -367,7 +367,7 @@ final class Transaction implements HandlerInterface
             }
 
             // Geofence sandbox via savepoint (worker-safe, savepoint nests inside outer tx)
-            $userFilter = new UserFilter($user, 'wfs', 'update', '*', $this->ctx->schema, $typeName);
+            $userFilter = new UserFilter($this->ctx->geofenceUser ?? $this->ctx->user, 'wfs', 'update', '*', $this->ctx->schema, $typeName);
             $geofence = new Geofence($userFilter, $this->ctx->connection);
             $authResult = $geofence->authorize($rules);
             if (($authResult['access'] ?? '') === Geofence::LIMIT_ACCESS) {
@@ -380,7 +380,7 @@ final class Transaction implements HandlerInterface
             }
 
             // Rules-rewrite (DENY etc.)
-            $walkerRule = new TableWalkerRule($user, 'wfst', 'update', '');
+            $walkerRule = new TableWalkerRule($this->ctx->geofenceUser ?? $this->ctx->user, 'wfst', 'update', '');
             $walkerRule->setRules($rules);
             $ast = $factory->createFromString($sql);
             try {
@@ -515,7 +515,7 @@ final class Transaction implements HandlerInterface
             }
 
             // Geofence sandbox via savepoint
-            $userFilter = new UserFilter($user, 'wfs', 'delete', '*', $this->ctx->schema, $typeName);
+            $userFilter = new UserFilter($this->ctx->geofenceUser ?? $this->ctx->user, 'wfs', 'delete', '*', $this->ctx->schema, $typeName);
             $geofence = new Geofence($userFilter, $this->ctx->connection);
             $authResult = $geofence->authorize($rules);
             if (($authResult['access'] ?? '') === Geofence::LIMIT_ACCESS) {
@@ -528,7 +528,7 @@ final class Transaction implements HandlerInterface
             }
 
             // Rules-rewrite
-            $walkerRule = new TableWalkerRule($user, 'wfst', 'delete', '');
+            $walkerRule = new TableWalkerRule($this->ctx->geofenceUser ?? $this->ctx->user, 'wfst', 'delete', '');
             $walkerRule->setRules($rules);
             $ast = $factory->createFromString($sql);
             try {

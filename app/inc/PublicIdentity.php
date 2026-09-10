@@ -107,6 +107,7 @@ final readonly class PublicIdentity
             startTime: microtime(true),
             srs: $srs,
             tokenAuth: $this->bearer !== null,
+            geofenceUser: $this->geofenceUser(),
         );
     }
 

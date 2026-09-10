@@ -39,6 +39,12 @@ class PublicIdentityTest extends Unit
         $this->assertSame(25832, $ctx->srs);
         $this->assertFalse($ctx->parentUser);
         $this->assertFalse($ctx->tokenAuth);
+        $this->assertSame('alice', $ctx->geofenceUser);
+    }
+
+    public function testWfsContextOfAnonymousIdentityUsesWildcardGeofenceUser(): void
+    {
+        $this->assertSame('*', $this->identity(true, 'mydb')->wfsContext('roads')->geofenceUser);
     }
 
     public function testOwsContextCarriesIdentity(): void

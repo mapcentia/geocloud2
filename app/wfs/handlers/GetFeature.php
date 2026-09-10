@@ -357,7 +357,7 @@ final class GetFeature implements HandlerInterface
 
         $factory     = new StatementFactory(PDOCompatible: true);
         $rule        = new Rule($this->ctx->connection);
-        $walkerRule  = new TableWalkerRule($this->ctx->user, 'wfst', 'select', '');
+        $walkerRule  = new TableWalkerRule($this->ctx->geofenceUser ?? $this->ctx->user, 'wfst', 'select', '');
         $total       = 0;
         $postgisObject = $this->ctx->model();
 
@@ -445,7 +445,7 @@ final class GetFeature implements HandlerInterface
     {
         $factory       = new StatementFactory(PDOCompatible: true);
         $rule          = new Rule($this->ctx->connection);
-        $walkerRule    = new TableWalkerRule($this->ctx->user, 'wfst', 'select', '');
+        $walkerRule    = new TableWalkerRule($this->ctx->geofenceUser ?? $this->ctx->user, 'wfst', 'select', '');
         $postgisObject = $this->ctx->model();
 
         $fullSql = $state['sql'] . $state['from'] . ' LIMIT ' . ($req->maxFeatures ?? self::FEATURE_LIMIT)
