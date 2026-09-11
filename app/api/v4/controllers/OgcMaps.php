@@ -64,8 +64,7 @@ final class OgcMaps extends AbstractApi
         $collectionId = (string)$this->route->getParam('collection');
         $id = PublicIdentity::resolve($database);
         $collections = new Collections($id, Links::base($database));
-        $row = $collections->find($collectionId)
-            ?? throw new GC2Exception("Collection $collectionId not found", 404, null, 'COLLECTION_NOT_FOUND');
+        $row = $collections->get($collectionId);
         $p = MapParams::fromQuery($_GET, Collections::crsList(isset($row['srid']) ? (int)$row['srid'] : null), false);
         return new MapRenderer($id)->render($row['f_table_schema'], [$row['f_table_name']], $p, $collections->extentBbox($row));
     }

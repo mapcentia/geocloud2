@@ -84,8 +84,7 @@ final class OgcFeatures extends AbstractApi
         $id = PublicIdentity::resolve($database);
         $base = Links::base($database);
         $collections = new Collections($id, $base);
-        $row = $collections->find($collectionId)
-            ?? throw new GC2Exception("Collection $collectionId not found", 404, null, 'COLLECTION_NOT_FOUND');
+        $row = $collections->get($collectionId);
         if (($row['type'] ?? null) === 'RASTER') {
             throw new GC2Exception("Collection $collectionId has no items", 400, null, 'NO_ITEMS');
         }

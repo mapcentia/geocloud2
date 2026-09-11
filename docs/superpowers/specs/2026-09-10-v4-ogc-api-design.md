@@ -158,7 +158,7 @@ http://www.opengis.net/spec/ogcapi-maps-1/1.0/conf/collections-selection
 - Rasterlag (`type = RASTER`): `itemType` udelades, intet `items`-link, kun `map`-link, `extent` fra `settings.viewer` extents eller verden.
 - Versionerede lag får `extent.temporal.interval = [[min(gc2_version_start_date), null]]` (cachet).
 - Extent: `Layer::getEstExtent(_key_, 4326)`; ved `NULL` (ingen statistik, view, tom tabel) én `ST_Extent` med `statement_timeout` 5 s og fallback til verden. Cachet pr. lag under `<db>_<schema>.<table>_ogcExtent` med tag `<db>_geometryColumns`, TTL 24 timer.
-- Ukendt eller usynlig collection → 404 (aldrig 403, så eksistens ikke lækkes til anonyme).
+- Ukendt collection → 404. En collection, der findes, men som kalderen ikke må læse: 401 med `WWW-Authenticate: Basic` for anonyme (ingen credentials), 403 `INSUFFICIENT_PRIVILEGES` for Bearer/Basic-identiteter uden privilegium. Listen `/collections` udelader fortsat skjulte lag. (Besluttet 2026-09-11: eksistensen af `Read/write`-lag må gerne være synlig i statuskoden.)
 
 ### 5.3 Identitet: `app\inc\PublicIdentity`
 
@@ -265,7 +265,7 @@ Metoderne `GetFeature` bruger: `writeXmlProlog()`, `writeFeatureCollectionOpen(R
 
 Flow for `GET /collections/{id}/items`:
 
-1. `PublicIdentity::resolve($database, $schema)`; `Collections::find($id)` → 404 hvis usynlig; 400 hvis raster (`itemType` mangler).
+1. `PublicIdentity::resolve($database, $schema)`; `Collections::get($id)` → 404 hvis ukendt, 401/403 hvis kendt men ikke tilladt; 400 hvis raster (`itemType` mangler).
 2. Parametervalidering:
    - `limit` int 1..10000, default 10.
    - `offset` int ≥ 0, default 0.
@@ -303,7 +303,7 @@ Parametre og oversættelse til WMS 1.3.0 GetMap:
 
 `STYLES=` sendes tomt (`wms_allow_getmap_without_styles`). `LAYERS` = `schema.table`-navne som i dag.
 
-Flow: `Collections::find` for hver → 404; `LayerGate::authorizeRead`; `RuleFilters::forLayers($layers, [], $datetime)`; `OwsRequest::parse('GET', $wmsQuery, http_build_query($wmsQuery), null)`; `Proxy::resolve` + `Proxy::run` inde i `StreamedResponse` med `Util::disableOb()`. Fejl før stream → JSON-fejl (ikke OGC ServiceException-XML). Tmp-mapfile slettes i `finally` som i `Ows::stream`.
+Flow: `Collections::get` for hver → 404/401/403; `LayerGate::authorizeRead`; `RuleFilters::forLayers($layers, [], $datetime)`; `OwsRequest::parse('GET', $wmsQuery, http_build_query($wmsQuery), null)`; `Proxy::resolve` + `Proxy::run` inde i `StreamedResponse` med `Util::disableOb()`. Fejl før stream → JSON-fejl (ikke OGC ServiceException-XML). Tmp-mapfile slettes i `finally` som i `Ows::stream`.
 
 `public/index.php`: rate-limit-bucket `ows` udvides til `Input::getPath()->part(3) === 'ogc'` når stien ender på `map`, så map-trafik ikke spiser den ordinære v4-kvote.
 

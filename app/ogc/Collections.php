@@ -45,27 +45,45 @@ final class Collections
         ];
     }
 
-    /** The raw layer row for a visible collection, or null (unknown and hidden look the same). */
-    public function find(string $collectionId): ?array
+    /**
+     * The raw layer row for a collection the caller may read.
+     *
+     * @throws GC2Exception 404 when no such OWS-enabled layer exists; 401 (with a Basic challenge)
+     *                      when it exists but the anonymous caller needs credentials; 403 when the
+     *                      identified caller lacks the privilege
+     */
+    public function get(string $collectionId): array
     {
         $bits = explode('.', $collectionId, 2);
         if (count($bits) !== 2 || $bits[0] === '' || $bits[1] === '' || preg_match('/[\'\\\\]/', $collectionId)) {
-            return null;
+            throw new GC2Exception("Collection $collectionId not found", 404, null, 'COLLECTION_NOT_FOUND');
         }
-        foreach ($this->rows($bits[0], $bits[1]) as $row) {
-            if ($this->visible($row)) {
-                return $row;
-            }
+        $rows = $this->rows($bits[0], $bits[1], visibleOnly: false);
+        if ($rows === []) {
+            throw new GC2Exception("Collection $collectionId not found", 404, null, 'COLLECTION_NOT_FOUND');
         }
-        return null;
+        $row = $rows[0];
+        if ($this->visible($row)) {
+            return $row;
+        }
+        if ($this->id->anonymous) {
+            header('WWW-Authenticate: Basic realm="' . $this->id->database . '"');
+            throw new GC2Exception("Authentication required for collection $collectionId", 401, null, 'UNAUTHORIZED');
+        }
+        throw new GC2Exception("Insufficient privileges for collection $collectionId", 403, null, 'INSUFFICIENT_PRIVILEGES');
     }
 
-    /** @return list<array<string,mixed>> */
-    private function rows(?string $schema = null, ?string $table = null): array
+    /**
+     * @param bool $visibleOnly narrow the SQL to anonymously readable layers for anonymous callers
+     *                          (listing); false returns every OWS-enabled row so get() can tell
+     *                          "unknown" from "needs credentials"
+     * @return list<array<string,mixed>>
+     */
+    private function rows(?string $schema = null, ?string $table = null, bool $visibleOnly = true): array
     {
         $model = new Model(connection: $this->id->connection);
         // settings.getColumns() inlines its arguments into SQL, hence the doubled quotes.
-        $auth = $this->id->anonymous ? " AND (authentication=''Write'' OR authentication=''None'')" : '';
+        $auth = $visibleOnly && $this->id->anonymous ? " AND (authentication=''Write'' OR authentication=''None'')" : '';
         $vector = 'enableows=true' . $auth;
         $raster = 'enableows=true' . $auth;
         if ($schema !== null && $table !== null) {
@@ -87,13 +105,21 @@ final class Collections
         return $rows;
     }
 
-    /** Sub-users only see 'Read/write' layers they hold a privilege on (Authorization::check). */
+    /**
+     * Anonymous callers may read layers below 'Read/write'; the parent user and trusted
+     * addresses read everything; sub-users read 'Read/write' layers they hold a privilege on.
+     */
     private function visible(array $row): bool
     {
-        if ($this->id->anonymous || $this->id->parentUser || $this->id->trusted) {
+        if (($row['authentication'] ?? null) !== 'Read/write') {
             return true;
         }
-        if (($row['authentication'] ?? null) !== 'Read/write') {
+        // Anonymous first: the connection identity of an anonymous request is the database
+        // owner, so parentUser is true for it as well.
+        if ($this->id->anonymous) {
+            return false;
+        }
+        if ($this->id->parentUser || $this->id->trusted) {
             return true;
         }
         try {

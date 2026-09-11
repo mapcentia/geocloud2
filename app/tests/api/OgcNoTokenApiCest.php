@@ -254,12 +254,15 @@ class OgcNoTokenApiCest
         $I->assertNull($c['extent']['temporal']['interval'][0][1]);
     }
 
-    public function shouldReturnNotFoundForUnknownOrHiddenCollection(ApiTester $I)
+    public function shouldReturnNotFoundForUnknownCollectionAndChallengeHiddenOne(ApiTester $I)
     {
         $I->sendGET($this->collection('nope'));
         $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
-        $I->sendGET($this->collection('secret'));   // exists, but not visible anonymously → 404, not 403
-        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        // Exists, but a Read/write layer needs credentials: anonymous callers are challenged
+        $I->sendGET($this->collection('secret'));
+        $I->seeResponseCodeIs(HttpCode::UNAUTHORIZED);
+        $I->seeHttpHeader('WWW-Authenticate');
+        $I->assertSame('UNAUTHORIZED', json_decode($I->grabResponse(), true)['errorCode']);
         $I->sendGET($this->base() . '/nope');
         $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
     }
@@ -382,7 +385,8 @@ class OgcNoTokenApiCest
         $I->sendGET($this->collection('poi') . '/items/' . $this->poiKey1 . '?limit=1');
         $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);   // limit is not a single-item parameter
         $I->sendGET($this->collection('secret') . '/items');
-        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);    // hidden anonymously
+        $I->seeResponseCodeIs(HttpCode::UNAUTHORIZED);  // Read/write layer, no credentials
+        $I->seeHttpHeader('WWW-Authenticate');
     }
 
     public function shouldDenyItemsByWildcardWfstRule(ApiTester $I)
@@ -534,7 +538,8 @@ class OgcNoTokenApiCest
         $I->sendGET($this->collection('poi') . '/map?foo=1');
         $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
         $I->sendGET($this->collection('secret') . '/map');
-        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        $I->seeResponseCodeIs(HttpCode::UNAUTHORIZED);
+        $I->seeHttpHeader('WWW-Authenticate');
     }
 
     public function shouldRenderDatasetMapWithSeveralCollections(ApiTester $I)

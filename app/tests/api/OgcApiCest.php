@@ -4,7 +4,7 @@ use Codeception\Util\HttpCode;
 
 /**
  * Token flows of the OGC API: the parent user sees everything, a sub-user without privileges
- * does not see 'Read/write' layers (404 on their items), a sub-user with 'read' does; a token for
+ * does not see 'Read/write' layers in the list (403 when addressing them), a sub-user with 'read' does; a token for
  * another database is rejected; workflow hides unpublished features from a sub-user without a role.
  */
 class OgcApiCest
@@ -153,8 +153,14 @@ class OgcApiCest
         $I->sendGET($this->base() . '/collections');
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->assertNotContains($this->schemaName . '.secret', array_column(json_decode($I->grabResponse(), true)['collections'], 'id'));
+        // The list hides it, but addressing it directly with an identity that lacks privileges is 403
+        $I->sendGET($this->collection('secret'));
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+        $I->assertSame('INSUFFICIENT_PRIVILEGES', json_decode($I->grabResponse(), true)['errorCode']);
         $I->sendGET($this->collection('secret') . '/items');
-        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+        $I->sendGET($this->collection('secret') . '/map?width=8&height=8');
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
         $I->deleteHeader('Authorization');
     }
 

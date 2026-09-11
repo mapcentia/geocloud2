@@ -147,8 +147,7 @@ final class Ogc extends AbstractApi
         Params::assertKnown($_GET, ['f']);
         Params::assertJson($_GET);
         $collections = new Collections($id, $base);
-        $row = $collections->find($collectionId)
-            ?? throw new GC2Exception("Collection $collectionId not found", 404, null, 'COLLECTION_NOT_FOUND');
+        $row = $collections->get($collectionId);
         return new GetResponse(data: $collections->toCollection($row));
     }
 
@@ -164,7 +163,7 @@ final class Ogc extends AbstractApi
         $rows = [];
         $first = null;
         foreach ($ids as $cid) {
-            $row = $collections->find($cid) ?? throw new GC2Exception("Collection $cid not found", 404, null, 'COLLECTION_NOT_FOUND');
+            $row = $collections->get($cid);
             $first ??= $row;
             if ($row['f_table_schema'] !== $first['f_table_schema']) {
                 throw new GC2Exception('All collections of one map must belong to the same schema', 400, null, 'INVALID_PARAMETER');
