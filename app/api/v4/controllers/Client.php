@@ -314,30 +314,22 @@ class Client extends AbstractApi
         $collection = new Assert\Collection([]);
 
         if (Input::getMethod() == 'post') {
-            $collection->fields['id'] = new Assert\Optional(
-                new Assert\Length(min: 3)
-            );
             $collection->fields['name'] = new Assert\Required(
                 new Assert\Length(min: 3)
             );
-            $collection->fields['redirect_uri'] = new Assert\Required([
-                new Assert\Type('array'),
-                new Assert\Count(min: 1),
-                new Assert\NotBlank(),
-            ]);
         } else {
-            $collection->fields['id'] = new Assert\Optional(
-                new Assert\Length(min: 3)
-            );
             $collection->fields['name'] = new Assert\Optional(
                 new Assert\Length(min: 3)
             );
-            $collection->fields['redirect_uri'] = new Assert\Optional([
-                new Assert\Type('array'),
-                new Assert\Count(min: 1),
-                new Assert\NotBlank(),
-            ]);
+
         }
+        $collection->fields['id'] = new Assert\Optional(
+            new Assert\Length(min: 3)
+        );
+        $collection->fields['redirect_uri'] = new Assert\Optional([
+            new Assert\Type('array'),
+            new Assert\Count(min: 0),
+        ]);
         $collection->fields['homepage'] = new Assert\Optional(
             new Assert\Url(requireTld: true),
         );

@@ -129,6 +129,9 @@ class Client extends Model
             $sets[] = "social_signup=:social_signup";
             $values['social_signup'] = $socialSignup ? 't' : 'f';
         }
+        if (empty($sets)) {
+            return $values['id'];
+        }
         $setStr = implode(', ', $sets);
         $sql = "UPDATE settings.clients set $setStr  WHERE id = :id RETURNING id";
         $res = $this->prepare($sql);
