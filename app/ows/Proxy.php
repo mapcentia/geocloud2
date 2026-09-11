@@ -124,19 +124,39 @@ final class Proxy
              . '?' . http_build_query($merged);
     }
 
+    /** Longest backend error message forwarded to clients. */
+    private const int ERROR_MESSAGE_MAX = 500;
+
     /**
      * Streams the backend response to php://output. Forwards headers with legacy
      * filtering; never buffers the whole body.
+     *
+     * With $expectedContentType (a prefix such as "image/"), a backend response of another
+     * type — MapServer's HTML error page, an OGC ServiceException — is not streamed through
+     * as a 200. Its body is collected instead and answered as a v4 JSON error with 502, so
+     * clients of the OGC API Maps endpoint never mistake an error page for an image. The
+     * OWS endpoint passes null and keeps the legacy pass-through (OGC clients expect the
+     * ServiceException XML).
      */
-    public function run(string $url, Request $req): void
+    public function run(string $url, Request $req, ?string $expectedContentType = null): void
     {
         header('X-Powered-By: GC2 WMS');
         header('Cache-Control: no-store');
+        $unexpected = false;
+        $collected = '';
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $line) {
+        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $line) use (&$unexpected, $expectedContentType) {
             $bits = explode(':', $line);
+            if ($unexpected) {
+                return strlen($line); // headers of an error page are not forwarded
+            }
+            if (count($bits) > 1 && $bits[0] === 'Content-Type'
+                && !self::isExpectedContentType(trim(substr($line, strlen($bits[0]) + 1)), $expectedContentType)) {
+                $unexpected = true;
+                return strlen($line);
+            }
             if (count($bits) > 1 && $bits[0] === 'Content-Type'
                 && (trim($bits[1]) === 'application/vnd.ogc.se_xml' || trim($bits[1]) === 'text/xml; charset=UTF-8')) {
                 header('Content-Type: text/xml');
@@ -145,7 +165,13 @@ final class Proxy
             }
             return strlen($line);
         });
-        curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($curl, $data) {
+        curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($curl, $data) use (&$unexpected, &$collected) {
+            if ($unexpected) {
+                if (strlen($collected) < 65536) {
+                    $collected .= $data;
+                }
+                return strlen($data);
+            }
             echo $data;
             flush();
             if (ob_get_level() > 0) {
@@ -167,5 +193,47 @@ final class Proxy
             error_log('OWS proxy curl error: ' . curl_error($ch));
         }
         curl_close($ch);
+        if ($unexpected) {
+            $this->emitBackendError($collected);
+        }
+    }
+
+    /** True when $contentType starts with $expectedPrefix (case-insensitive); always true without a prefix. */
+    public static function isExpectedContentType(string $contentType, ?string $expectedPrefix): bool
+    {
+        if ($expectedPrefix === null) {
+            return true;
+        }
+        return str_starts_with(strtolower(trim($contentType)), strtolower($expectedPrefix));
+    }
+
+    /**
+     * The human-readable text of a backend error body: tags (MapServer's HTML page, a
+     * ServiceException report) are stripped, whitespace collapsed, length capped.
+     */
+    public static function backendErrorMessage(string $body): string
+    {
+        $text = trim(preg_replace('/\s+/', ' ', html_entity_decode(strip_tags($body), ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?? '');
+        if ($text === '') {
+            return 'Map backend returned no body';
+        }
+        return mb_strlen($text) > self::ERROR_MESSAGE_MAX ? mb_substr($text, 0, self::ERROR_MESSAGE_MAX) : $text;
+    }
+
+    /** Answers a non-image backend response as a v4 JSON error (502) — nothing has been streamed yet. */
+    private function emitBackendError(string $body): void
+    {
+        $message = self::backendErrorMessage($body);
+        error_log('OWS proxy: map backend returned a non-image response: ' . $message);
+        if (!headers_sent()) {
+            header('HTTP/1.1 502 Bad Gateway', true, 502);
+            header('Content-Type: application/json; charset=utf-8');
+        }
+        echo json_encode([
+            'success' => false,
+            'message' => $message,
+            'code' => 502,
+            'errorCode' => 'MAP_BACKEND_ERROR',
+        ], JSON_UNESCAPED_UNICODE);
     }
 }

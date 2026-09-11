@@ -579,6 +579,42 @@ class OgcNoTokenApiCest
         $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
     }
 
+    /**
+     * A MapServer failure (here: the schema's mapfile is missing) must not leak through the proxy
+     * as an HTTP 200 HTML page: the OGC API contract is an image or a JSON error with a 5xx.
+     * The Cest runs inside the container next to the web server, so it can remove the mapfile
+     * and let POST /api/v4/layers regenerate it afterwards.
+     */
+    public function shouldTranslateMapBackendErrorToJson(ApiTester $I)
+    {
+        $mapfile = '/var/www/geocloud2/app/wms/mapfiles/' . $this->userId . '_' . $this->schemaName . '_wms.map';
+        $I->assertFileExists($mapfile);
+        unlink($mapfile);
+        try {
+            $I->sendGET($this->collection('poi') . '/map?bbox=9,55,13,57&width=16&height=16');
+            $I->seeResponseCodeIs(HttpCode::BAD_GATEWAY);
+            $I->seeHttpHeader('Content-Type', 'application/json; charset=utf-8');
+            $body = json_decode($I->grabResponse(), true);
+            $I->assertSame(false, $body['success']);
+            $I->assertSame('MAP_BACKEND_ERROR', $body['errorCode']);
+            $I->assertStringContainsString('msLoadMap', $body['message']);
+            $I->assertStringNotContainsString('<', $body['message']);
+        } finally {
+            // Regenerate the mapfile by saving the layer again
+            $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
+            $I->haveHttpHeader('Content-Type', 'application/json');
+            $I->sendPOST('/api/v4/layers', json_encode([
+                'name' => $this->schemaName . '.poi.the_geom',
+                'classes' => [['name' => 'All', 'sortid' => 10, 'styles' => [['color' => '#008000', 'size' => '6']]]],
+            ]));
+            $I->deleteHeader('Authorization');
+        }
+        $I->assertFileExists($mapfile);
+        $I->sendGET($this->collection('poi') . '/map?bbox=9,55,13,57&width=16&height=16');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $this->assertPng($I, 16, 16);
+    }
+
     public function shouldServeReadWriteMapWithBasicAuthOnly(ApiTester $I)
     {
         $I->amHttpAuthenticated($this->userId, $this->password);

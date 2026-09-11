@@ -80,7 +80,8 @@ final class MapRenderer
                 try {
                     $proxy = new Proxy($ctx);
                     [$url, $tmp] = $proxy->resolve($req, $filters);
-                    $proxy->run($url, $req);
+                    // Anything but an image (MapServer error page, ServiceException) becomes a 502 JSON error.
+                    $proxy->run($url, $req, 'image/');
                 } catch (Throwable $e) {
                     Problem::render($e);
                 } finally {
