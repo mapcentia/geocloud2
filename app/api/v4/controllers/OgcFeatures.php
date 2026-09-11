@@ -54,28 +54,38 @@ final class OgcFeatures extends AbstractApi
         // Identity, collection lookup and parameter checks happen in get_index().
     }
 
-    #[OA\Get(path: '/api/v4/ogc/database/{database}/collections/{collectionId}/items', operationId: 'getOgcItems', description: 'Features of a collection as a GeoJSON FeatureCollection. Geofence rules, versioning and workflow are applied by the WFS engine.', tags: ['Ogc'])]
-    #[OA\Parameter(name: 'database', description: 'Database name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_database')]
-    #[OA\Parameter(name: 'collectionId', description: 'Collection id (schema.table)', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema.my_table')]
-    #[OA\Parameter(name: 'limit', description: 'Page size (default 10, max 10000)', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 10))]
-    #[OA\Parameter(name: 'offset', description: 'Features to skip', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 0))]
-    #[OA\Parameter(name: 'bbox', description: 'minx,miny,maxx,maxy in bbox-crs', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: '9,55,10,56')]
-    #[OA\Parameter(name: 'bbox-crs', description: 'CRS URI of bbox (default CRS84)', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'crs', description: 'Output CRS URI from the collection crs list (default CRS84)', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'datetime', description: 'ISO 8601 instant: the version valid at that time (versioned layers only)', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Response(response: 200, description: 'GeoJSON FeatureCollection (application/geo+json) with Content-Crs header')]
-    #[OA\Response(response: 400, description: 'Invalid or unknown parameter')]
-    #[OA\Response(response: 401, description: 'Credentials required for a Read/write layer')]
-    #[OA\Response(response: 403, description: 'Denied by a geofence rule')]
-    #[OA\Response(response: 404, description: 'Unknown or not visible collection')]
-    #[OA\Get(path: '/api/v4/ogc/database/{database}/collections/{collectionId}/items/{featureId}', operationId: 'getOgcItem', description: 'One feature by primary key as a GeoJSON Feature.', tags: ['Ogc'])]
-    #[OA\Parameter(name: 'database', description: 'Database name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_database')]
-    #[OA\Parameter(name: 'collectionId', description: 'Collection id (schema.table)', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema.my_table')]
-    #[OA\Parameter(name: 'featureId', description: 'Primary key value', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '1')]
-    #[OA\Parameter(name: 'crs', description: 'Output CRS URI (default CRS84)', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'datetime', description: 'ISO 8601 instant (versioned layers only)', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Response(response: 200, description: 'GeoJSON Feature (application/geo+json)')]
-    #[OA\Response(response: 404, description: 'Unknown feature or collection')]
+    #[OA\Get(path: '/api/v4/ogc/database/{database}/collections/{collectionId}/items', operationId: 'getOgcItems', description: 'Features of a collection as a GeoJSON FeatureCollection. Geofence rules, versioning and workflow are applied by the WFS engine.', tags: ['Ogc'],
+        parameters: [
+            new OA\Parameter(name: 'database', description: 'Database name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_database'),
+            new OA\Parameter(name: 'collectionId', description: 'Collection id (schema.table)', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema.my_table'),
+            new OA\Parameter(name: 'limit', description: 'Page size (default 10, max 10000)', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 10)),
+            new OA\Parameter(name: 'offset', description: 'Features to skip', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 0)),
+            new OA\Parameter(name: 'bbox', description: 'minx,miny,maxx,maxy in bbox-crs', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: '9,55,10,56'),
+            new OA\Parameter(name: 'bbox-crs', description: 'CRS URI of bbox (default CRS84)', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'crs', description: 'Output CRS URI from the collection crs list (default CRS84)', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'datetime', description: 'ISO 8601 instant: the version valid at that time (versioned layers only)', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'GeoJSON FeatureCollection (application/geo+json) with Content-Crs header'),
+            new OA\Response(response: 400, description: 'Invalid or unknown parameter'),
+            new OA\Response(response: 401, description: 'Credentials required for a Read/write layer'),
+            new OA\Response(response: 403, description: 'Insufficient privileges, or denied by a geofence rule'),
+            new OA\Response(response: 404, description: 'Unknown collection'),
+        ],
+    )]
+    #[OA\Get(path: '/api/v4/ogc/database/{database}/collections/{collectionId}/items/{featureId}', operationId: 'getOgcItem', description: 'One feature by primary key as a GeoJSON Feature.', tags: ['Ogc'],
+        parameters: [
+            new OA\Parameter(name: 'database', description: 'Database name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_database'),
+            new OA\Parameter(name: 'collectionId', description: 'Collection id (schema.table)', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema.my_table'),
+            new OA\Parameter(name: 'featureId', description: 'Primary key value', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '1'),
+            new OA\Parameter(name: 'crs', description: 'Output CRS URI (default CRS84)', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'datetime', description: 'ISO 8601 instant (versioned layers only)', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'GeoJSON Feature (application/geo+json)'),
+            new OA\Response(response: 404, description: 'Unknown feature or collection'),
+        ],
+    )]
     public function get_index(): Response
     {
         $database = (string)$this->route->getParam('database');

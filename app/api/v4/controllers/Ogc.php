@@ -47,35 +47,62 @@ final class Ogc extends AbstractApi
         // Identity and parameter checks happen per sub-resource in get_index().
     }
 
-    #[OA\Get(path: '/api/v4/ogc/database/{database}', operationId: 'getOgcLandingPage', description: 'OGC API landing page for a database (Bearer, HTTP Basic or anonymous).', tags: ['Ogc'])]
-    #[OA\Parameter(name: 'database', description: 'Database name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_database')]
-    #[OA\Response(response: 200, description: 'Landing page with links to conformance, collections and the OpenAPI document')]
-    #[OA\Get(path: '/api/v4/ogc/database/{database}/conformance', operationId: 'getOgcConformance', description: 'Conformance classes implemented by this OGC API.', tags: ['Ogc'])]
-    #[OA\Parameter(name: 'database', description: 'Database name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_database')]
-    #[OA\Response(response: 200, description: 'conformsTo list')]
-    #[OA\Get(path: '/api/v4/ogc/database/{database}/collections', operationId: 'getOgcCollections', description: 'OWS-enabled layers as OGC API collections (id = schema.table), filtered by the caller\'s access.', tags: ['Ogc'])]
-    #[OA\Parameter(name: 'database', description: 'Database name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_database')]
-    #[OA\Parameter(name: 'limit', description: 'Page size (default 100, max 1000)', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 100))]
-    #[OA\Parameter(name: 'offset', description: 'Collections to skip', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 0))]
-    #[OA\Response(response: 200, description: 'Collections with extent, crs list and links')]
-    #[OA\Get(path: '/api/v4/ogc/database/{database}/collections/{collectionId}', operationId: 'getOgcCollection', description: 'One collection.', tags: ['Ogc'])]
-    #[OA\Parameter(name: 'database', description: 'Database name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_database')]
-    #[OA\Parameter(name: 'collectionId', description: 'Collection id (schema.table)', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema.my_table')]
-    #[OA\Response(response: 200, description: 'Collection')]
-    #[OA\Response(response: 404, description: 'Unknown or not visible')]
-    #[OA\Get(path: '/api/v4/ogc/database/{database}/map', operationId: 'getOgcDatasetMap', description: 'Map of several collections (same schema) rendered through the WMS backend with geofence rules and versioning applied.', tags: ['Ogc'])]
-    #[OA\Parameter(name: 'database', description: 'Database name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_database')]
-    #[OA\Parameter(name: 'collections', description: 'Comma-separated collection ids', in: 'query', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema.roads,my_schema.buildings')]
-    #[OA\Parameter(name: 'bbox', description: 'minx,miny,maxx,maxy in bbox-crs', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'bbox-crs', description: 'CRS URI of bbox (default CRS84)', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'crs', description: 'Output CRS URI (default CRS84)', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'width', description: 'Image width in pixels (max 16384)', in: 'query', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'height', description: 'Image height in pixels (max 16384)', in: 'query', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'f', description: 'png (default) or jpeg', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['png', 'jpeg']))]
-    #[OA\Parameter(name: 'transparent', description: 'Transparent background (default true for png)', in: 'query', required: false, schema: new OA\Schema(type: 'boolean'))]
-    #[OA\Parameter(name: 'bgcolor', description: 'Background colour 0xRRGGBB', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'datetime', description: 'ISO 8601 instant: render the version valid at that time (versioned layers)', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Response(response: 200, description: 'image/png or image/jpeg')]
+    #[OA\Get(path: '/api/v4/ogc/database/{database}', operationId: 'getOgcLandingPage', description: 'OGC API landing page for a database (Bearer, HTTP Basic or anonymous).', tags: ['Ogc'],
+        parameters: [
+            new OA\Parameter(name: 'database', description: 'Database name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_database'),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Landing page with links to conformance, collections and the OpenAPI document'),
+        ],
+    )]
+    #[OA\Get(path: '/api/v4/ogc/database/{database}/conformance', operationId: 'getOgcConformance', description: 'Conformance classes implemented by this OGC API.', tags: ['Ogc'],
+        parameters: [
+            new OA\Parameter(name: 'database', description: 'Database name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_database'),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'conformsTo list'),
+        ],
+    )]
+    #[OA\Get(path: '/api/v4/ogc/database/{database}/collections', operationId: 'getOgcCollections', description: 'OWS-enabled layers as OGC API collections (id = schema.table), filtered by the caller\'s access.', tags: ['Ogc'],
+        parameters: [
+            new OA\Parameter(name: 'database', description: 'Database name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_database'),
+            new OA\Parameter(name: 'limit', description: 'Page size (default 100, max 1000)', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 100)),
+            new OA\Parameter(name: 'offset', description: 'Collections to skip', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 0)),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Collections with extent, crs list and links'),
+        ],
+    )]
+    #[OA\Get(path: '/api/v4/ogc/database/{database}/collections/{collectionId}', operationId: 'getOgcCollection', description: 'One collection.', tags: ['Ogc'],
+        parameters: [
+            new OA\Parameter(name: 'database', description: 'Database name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_database'),
+            new OA\Parameter(name: 'collectionId', description: 'Collection id (schema.table)', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema.my_table'),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Collection'),
+            new OA\Response(response: 401, description: 'Read/write collection: credentials required'),
+            new OA\Response(response: 403, description: 'Read/write collection: insufficient privileges'),
+            new OA\Response(response: 404, description: 'Unknown collection'),
+        ],
+    )]
+    #[OA\Get(path: '/api/v4/ogc/database/{database}/map', operationId: 'getOgcDatasetMap', description: 'Map of several collections (same schema) rendered through the WMS backend with geofence rules and versioning applied.', tags: ['Ogc'],
+        parameters: [
+            new OA\Parameter(name: 'database', description: 'Database name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_database'),
+            new OA\Parameter(name: 'collections', description: 'Comma-separated collection ids', in: 'query', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema.roads,my_schema.buildings'),
+            new OA\Parameter(name: 'bbox', description: 'minx,miny,maxx,maxy in bbox-crs', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'bbox-crs', description: 'CRS URI of bbox (default CRS84)', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'crs', description: 'Output CRS URI (default CRS84)', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'width', description: 'Image width in pixels (max 16384)', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'height', description: 'Image height in pixels (max 16384)', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'f', description: 'png (default) or jpeg', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['png', 'jpeg'])),
+            new OA\Parameter(name: 'transparent', description: 'Transparent background (default true for png)', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'bgcolor', description: 'Background colour 0xRRGGBB', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'datetime', description: 'ISO 8601 instant: render the version valid at that time (versioned layers)', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'image/png or image/jpeg'),
+        ],
+    )]
     public function get_index(): Response
     {
         $database = (string)$this->route->getParam('database');
