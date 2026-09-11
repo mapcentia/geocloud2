@@ -211,6 +211,35 @@ use Symfony\Component\Validator\Constraints as Assert;
     ],
     type: "object"
 )]
+#[OA\Schema(
+    schema: "OAuthGuest",
+    description: "Guest token request payload.",
+    required: ["client_id", "database"],
+    properties: [
+        new OA\Property(
+            property: "database",
+            title: "Database",
+            description: "Database name the guest token will be created for.",
+            type: "string",
+            example: "my_database",
+        ),
+        new OA\Property(
+            property: "client_id",
+            title: "Client id",
+            description: "OAuth client id.",
+            type: "string",
+            example: "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+        ),
+        new OA\Property(
+            property: "client_secret",
+            title: "Client secret",
+            description: "OAuth client secret.",
+            type: "string",
+            example: "xxx"
+        )
+    ],
+    type: "object"
+)]
 #[AcceptableMethods(['POST', 'HEAD', 'OPTIONS'])]
 #[Controller(route: 'api/v4/oauth/(action)', scope: Scope::PUBLIC)]
 class Oauth extends AbstractApi
@@ -387,6 +416,48 @@ class Oauth extends AbstractApi
         return new PostResponse($data);
     }
 
+    /**
+     * @throws GC2Exception
+     * @throws \Throwable
+     */
+    #[OA\Post(path: '/api/v4/oauth/guest', operationId: 'postGuest', description: 'Get a guest token.', tags: ['OAuth'])]
+    #[OA\RequestBody(description: 'Get a guest token. A default user must be present.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/OAuthGuest"))]
+    #[OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(ref: "#/components/schemas/OAuthResponse"))]
+    #[OA\Response(response: 400, description: 'Bad request')]
+    public function post_guest(): Response
+    {
+        $data = json_decode(Input::getBody(), true) ?: [];
+        $db = $data['database'];
+        $clientId = $data['client_id'];
+        $superUserApiKey = new Setting(connection: new Connection(database: $db))->getApiKeyForSuperUser();
+        $defaultUser = new \app\models\User(parentDb: $db)->getDefaultUser();
+        $accessToken = Jwt::createJWT($superUserApiKey, $db, $defaultUser['screenname'], false, null);
+        $refreshToken = Jwt::createJWT($superUserApiKey, $db, $defaultUser['screenname'], false, null, false);
+
+        try {
+            $client = new \app\models\Client(connection: new Connection(database: $db));
+            $clientData = $client->get($clientId);
+        } catch (GC2Exception) {
+            return self::error("invalid_grant", "Client with identifier '$clientId' was not found in the directory", 401);
+        }
+        if (!$clientData[0]['public']) {
+            try {
+                $client->verifySecret($clientId, $data['client_secret']);
+            } catch (GC2Exception) {
+                return self::error("invalid_client", "Client secret is wrong", 401);
+            }
+        }
+
+        $data = [
+            "access_token" => $accessToken['token'],
+            "refresh_token" => $refreshToken['token'],
+            "token_type" => "bearer",
+            "expires_in" => Jwt::ACCESS_TOKEN_TTL,
+            "scope" => "",
+        ];
+        return new PostResponse($data);
+    }
+
     private static function error(string $err, string $message, int $code): ErrorResponse
     {
         $res = [
@@ -444,6 +515,9 @@ class Oauth extends AbstractApi
             new Assert\NotBlank()
         ]);
         $collection->fields['client_secret'] = new Assert\Optional([
+            new Assert\NotBlank()
+        ]);
+        $collection->fields['database'] = new Assert\Optional([
             new Assert\NotBlank()
         ]);
         if ($type == 'password') {
