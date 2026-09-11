@@ -74,22 +74,9 @@ RUN sed -i '/ServerTokens OS/c\ServerTokens Prod' /etc/apache2/conf-enabled/secu
 ###############################################################################
 # Node.js
 ###############################################################################
-# We’ll still rely on nvm, but watch out for environment issues in multi-stage
-# Docker builds. We’ll “export” environment variables inline as needed.
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.7/install.sh | bash
-
-SHELL ["/bin/bash", "-l", "-c"]
-# Docker does not expand ~ in ENV values, so use an absolute path.
-ENV NVM_DIR="/root/.nvm"
-RUN source $NVM_DIR/nvm.sh \
-    && nvm install 24 \
-    && nvm alias default 24 \
-    # nvm only puts node/npm on PATH in login/interactive shells. Symlink them
-    # into /usr/local/bin so any shell (incl. non-login build steps) gets Node 24
-    # and its bundled npm, instead of falling back to a stale system npm.
-    && ln -sf "$(nvm which 24)" /usr/local/bin/node \
-    && ln -sf "$(dirname "$(nvm which 24)")/npm" /usr/local/bin/npm \
-    && ln -sf "$(dirname "$(nvm which 24)")/npx" /usr/local/bin/npx
+RUN curl -sL https://deb.nodesource.com/setup_24.x -o nodesource_setup.sh &&\
+    bash nodesource_setup.sh &&\
+    apt-get install -y nodejs
 
 ###############################################################################
 # Enable Apache modules
