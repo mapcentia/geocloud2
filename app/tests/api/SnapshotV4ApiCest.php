@@ -172,6 +172,9 @@ class SnapshotV4ApiCest
 
         $I->sendPOST('/api/v4/snapshots', json_encode(['schema' => $this->schema, 'relation' => 'po"i']));
         $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+
+        $I->sendPOST('/api/v4/snapshots', json_encode([['schema' => $this->schema, 'relation' => 'poi']]));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
     }
 
     public function shouldReturn404ForUnknownSnapshotId(ApiTester $I)

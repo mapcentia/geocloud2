@@ -109,12 +109,26 @@ class Snapshot extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/snapshots/{id}', operationId: 'getSnapshot', description: "Get a snapshot job, or list the newest jobs.", tags: ['Snapshots'])]
-    #[OA\Parameter(name: 'id', description: 'Snapshot id', in: 'path', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'schema', description: 'List filter: schema', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'relation', description: 'List filter: relation', in: 'query', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Snapshot"))]
-    #[OA\Response(response: 404, description: 'Not found')]
+    #[OA\Get(path: '/api/v4/snapshots/{id}', operationId: 'getSnapshot', description: "Get a snapshot job.", tags: ['Snapshots'],
+        parameters: [
+            new OA\Parameter(name: 'id', description: 'Snapshot id', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Snapshot")),
+            new OA\Response(response: 403, description: 'Super-user only'),
+            new OA\Response(response: 404, description: 'Not found'),
+        ],
+    )]
+    #[OA\Get(path: '/api/v4/snapshots', operationId: 'getSnapshots', description: "List the newest snapshot jobs.", tags: ['Snapshots'],
+        parameters: [
+            new OA\Parameter(name: 'schema', description: 'List filter: schema', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relation', description: 'List filter: relation', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: "#/components/schemas/Snapshot"))),
+            new OA\Response(response: 403, description: 'Super-user only'),
+        ],
+    )]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
     public function get_index(): Response
@@ -137,7 +151,9 @@ class Snapshot extends AbstractApi
     #[OA\RequestBody(description: 'Relation to snapshot.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/SnapshotRequest"))]
     #[OA\Response(response: 202, description: 'Accepted; poll _links.self for status')]
     #[OA\Response(response: 400, description: 'Bad request')]
+    #[OA\Response(response: 403, description: 'Super-user only')]
     #[OA\Response(response: 404, description: 'Relation not found')]
+    #[OA\Response(response: 406, description: 'POST with a resource id is not allowed')]
     #[OA\Response(response: 409, description: 'A snapshot of this relation is already pending or running')]
     #[OA\Response(response: 501, description: 'Snapshot storage is not configured')]
     #[AcceptableContentTypes(['application/json'])]
@@ -194,6 +210,10 @@ class Snapshot extends AbstractApi
         if ($method === 'post') {
             if (!empty($id)) {
                 $this->postWithResource();
+            }
+            $decoded = json_decode(Input::getBody(), true);
+            if (is_array($decoded) && array_is_list($decoded)) {
+                throw new GC2Exception("A single snapshot request object is required", 400, null, "INVALID_REQUEST");
             }
             $this->validateRequest(self::getAssert(), Input::getBody(), $method);
         }
