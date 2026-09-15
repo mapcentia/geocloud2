@@ -80,6 +80,8 @@ class SnapshotWorker
                 throw new RuntimeException("Relation $schema.$relation does not exist");
             }
             $crs = $srs ?? $this->nativeSrid($schema, $relation);
+            // A change fingerprint, not a security hash: it only needs to
+            // differ when the column shape changes between snapshots.
             $schemaVersion = md5(json_encode($this->columns($schema, $relation)));
 
             if (!is_dir($this->tmpDir) && !mkdir($this->tmpDir, 0775, true) && !is_dir($this->tmpDir)) {
@@ -181,14 +183,21 @@ class SnapshotWorker
 
     /**
      * Column names and types in ordinal order, the input to schema_version.
+     * Reads pg_attribute directly (rather than information_schema.columns)
+     * so this also picks up materialized views, which information_schema
+     * does not describe.
      *
-     * @return array<int, array{column_name:string, udt_name:string}>
+     * @return array<int, array{column_name:string, data_type:string}> Covers
+     *     tables, views, materialized views and foreign tables.
      */
     private function columns(string $schema, string $relation): array
     {
-        $sql = "SELECT column_name, udt_name FROM information_schema.columns
-                WHERE table_schema = :schema AND table_name = :relation
-                ORDER BY ordinal_position";
+        $sql = "SELECT a.attname AS column_name, format_type(a.atttypid, a.atttypmod) AS data_type
+                FROM pg_attribute a
+                JOIN pg_class c ON c.oid = a.attrelid
+                JOIN pg_namespace n ON n.oid = c.relnamespace
+                WHERE n.nspname = :schema AND c.relname = :relation AND a.attnum > 0 AND NOT a.attisdropped
+                ORDER BY a.attnum";
         $res = $this->model->prepare($sql);
         $this->model->execute($res, ['schema' => $schema, 'relation' => $relation]);
         return $this->model->fetchAll($res, 'assoc');
