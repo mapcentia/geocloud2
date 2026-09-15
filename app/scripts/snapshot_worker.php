@@ -19,6 +19,7 @@ include_once(__DIR__ . "/../vendor/autoload.php");
 use app\conf\App;
 use app\inc\Cache;
 use app\inc\Connection;
+use app\inc\Model;
 use app\inc\SnapshotWorker;
 use app\models\Database;
 use Aws\S3\S3Client;
@@ -70,9 +71,10 @@ foreach ($dbs as $db) {
     if (in_array($db, $skip, true)) {
         continue;
     }
+    $connection = new Connection(database: $db);
     try {
         $tmpDir = App::$param['path'] . "app/tmp/$db/__snapshots";
-        $summary = new SnapshotWorker(new Connection(database: $db), $filesystem, $bucket, $prefix, $tmpDir)
+        $summary = new SnapshotWorker($connection, $filesystem, $bucket, $prefix, $tmpDir)
             ->processPending($batchPerDb);
         if ($summary['processed'] > 0) {
             echo "$db: processed={$summary['processed']} ok={$summary['succeeded']} failed={$summary['failed']}\n";
@@ -83,6 +85,9 @@ foreach ($dbs as $db) {
     } catch (Throwable $e) {
         // Databases without settings.snapshots (or transient errors) are
         // skipped silently; this worker is best-effort per run.
+    } finally {
+        // Release this database's PDO connection; the cache is per process.
+        Model::disconnect($connection);
     }
 }
 

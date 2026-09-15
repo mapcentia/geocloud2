@@ -34,7 +34,9 @@ foreach ($arr['data'] as $db) {
                 }
             }
             echo " {$db}\n";
-            $conn->PgConnection = NULL;
+            // Release this database's PDO connection; the cache is per process
+            // and this loop visits every database.
+            \app\inc\Model::disconnect($conn->connection);
             $conn = NULL;
         }
     }

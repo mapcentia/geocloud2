@@ -18,6 +18,7 @@ use app\conf\App;
 use app\inc\Cache;
 use app\inc\Connection;
 use app\inc\FunctionEventDispatcher;
+use app\inc\Model;
 use app\models\Database;
 
 new App();
@@ -36,14 +37,18 @@ foreach ($dbs as $db) {
     if (in_array($db, $skip, true)) {
         continue;
     }
+    $connection = new Connection(database: $db);
     try {
-        $enqueued = new FunctionEventDispatcher(new Connection(database: $db))->dispatch();
+        $enqueued = new FunctionEventDispatcher($connection)->dispatch();
         if ($enqueued > 0) {
             echo "$db: enqueued=$enqueued\n";
             $total += $enqueued;
         }
     } catch (Throwable $e) {
         // Databases without the function tables (or transient errors) are skipped.
+    } finally {
+        // Release this database's PDO connection; the cache is per process.
+        Model::disconnect($connection);
     }
 }
 

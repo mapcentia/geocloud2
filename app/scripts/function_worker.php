@@ -18,6 +18,7 @@ use app\conf\App;
 use app\inc\Cache;
 use app\inc\Connection;
 use app\inc\FunctionWorker;
+use app\inc\Model;
 use app\models\Database;
 
 new App();
@@ -41,8 +42,9 @@ foreach ($dbs as $db) {
     if (in_array($db, $skip, true)) {
         continue;
     }
+    $connection = new Connection(database: $db);
     try {
-        $summary = new FunctionWorker(new Connection(database: $db))->processPending($batchPerDb);
+        $summary = new FunctionWorker($connection)->processPending($batchPerDb);
         if ($summary['processed'] > 0) {
             echo "$db: processed={$summary['processed']} ok={$summary['succeeded']} failed={$summary['failed']}\n";
             foreach ($totals as $k => $v) {
@@ -52,6 +54,9 @@ foreach ($dbs as $db) {
     } catch (Throwable $e) {
         // Databases without settings.function_invocations (or transient errors)
         // are skipped silently; this worker is best-effort per run.
+    } finally {
+        // Release this database's PDO connection; the cache is per process.
+        Model::disconnect($connection);
     }
 }
 

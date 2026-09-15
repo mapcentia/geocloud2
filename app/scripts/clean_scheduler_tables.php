@@ -45,5 +45,7 @@ foreach ($arr['data'] as $db) {
             $res = $model->prepare($sql);
             $res->execute();
         }
+        // Release this database's PDO connection; the cache is per process.
+        Model::disconnect($model->connection);
     }
 }

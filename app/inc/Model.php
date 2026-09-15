@@ -732,12 +732,33 @@ class Model
      */
     public function connectString(): string
     {
-        $connectString = "host=" . $this->connection->host;
-        $connectString .= " port=" . $this->connection->port;
-        $connectString .= " user=" . $this->connection->user;
-        $connectString .= " password=" . $this->connection->password;
-        $connectString .= " dbname=" . $this->connection->database;
+        return self::connectStringFor($this->connection);
+    }
+
+    /**
+     * The libpq connection string for a Connection. Also the key under which
+     * the shared PDO instance for that database is cached.
+     */
+    public static function connectStringFor(Connection $connection): string
+    {
+        $connectString = "host=" . $connection->host;
+        $connectString .= " port=" . $connection->port;
+        $connectString .= " user=" . $connection->user;
+        $connectString .= " password=" . $connection->password;
+        $connectString .= " dbname=" . $connection->database;
         return $connectString;
+    }
+
+    /**
+     * Drops the cached PDO connection for a Connection so the socket is
+     * released. The PDO cache is static and keyed per database, so a CLI
+     * script that loops over every database would otherwise keep one open
+     * connection per database for the lifetime of the process. The next
+     * Model that needs the database reconnects transparently.
+     */
+    public static function disconnect(Connection $connection): void
+    {
+        unset(self::$PdoConnections[self::connectStringFor($connection)]);
     }
 
     /**
@@ -758,7 +779,6 @@ class Model
                 break;
             case "PDO" :
                 if (empty($this->getPdoConnection()) || !$this->isPdoConnected()) {
-                    error_log("Connecting to " . $this->connection->database . " on " . $this->connection->host . " as " . $this->connection->user);
                     // client_encoding is passed as a libpq connection parameter rather than a
                     // loose "SET client_encoding" after connect. A post-connect SET runs as its
                     // own autocommit statement and, under PgBouncer transaction pooling, is not
