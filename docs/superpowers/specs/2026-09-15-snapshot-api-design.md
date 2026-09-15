@@ -109,10 +109,16 @@ Model `app\models\Snapshot` (extends `Model`, takes a `Connection`):
 
 - `create(string $schema, string $relation, ?int $srs, string $username): string`
   inserts a pending row and returns the uuid.
-- `hasActive(string $schema, string $relation): bool` true if a pending or running
-  row exists for the relation.
-- `claimPending(int $limit): array` flips up to `$limit` pending rows to `running`
-  with `started = now()`, using `FOR UPDATE SKIP LOCKED`, and returns them.
+- `hasActive(string $schema, string $relation): bool` true if a pending row exists
+  for the relation, or a running one whose `started` is within
+  `STALE_RUNNING_INTERVAL` (2 hours). A `running` row older than that is presumed
+  to belong to a dead worker and no longer counts as active.
+- `claimPending(int $limit): array` flips up to `$limit` eligible rows to `running`
+  with a fresh `started = now()`, using `FOR UPDATE SKIP LOCKED`, and returns them.
+  Eligible rows are `pending` ones and `running` ones whose `started` is older than
+  `STALE_RUNNING_INTERVAL` (`Snapshot::STALE_RUNNING_INTERVAL`, 2 hours) — a worker
+  that died mid-run leaves its row stuck in `running`, and after 2 hours it is
+  reclaimed by the next worker run.
 - `finish(string $uuid, string $status, ?string $s3Path, ?int $rowCount, ?string $error): void`
   sets the final status and `finished = now()`.
 - `get(string $uuid): array` throws `GC2Exception` 404 `NO_SNAPSHOT_ERROR` when missing.
@@ -234,6 +240,7 @@ hard-coded schema/relation, and the now-unused imports. `ogr/Parquet` stays in
 | Relation dropped before run | worker | row `failed`, error text |
 | ogr2ogr error | worker | row `failed`, ogr2ogr output as error |
 | S3 write failure | worker | row `failed`, exception message |
+| Worker died mid-run (row stuck in running) | model | after 2 h the row counts as inactive: POST is allowed again and the worker reclaims it |
 
 ## Testing
 

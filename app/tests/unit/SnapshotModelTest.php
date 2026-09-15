@@ -141,6 +141,40 @@ class SnapshotModelTest extends Unit
         $this->assertNull($row['s3_path']);
     }
 
+    public function testStaleRunningRowIsReclaimedButFreshRunningRowIsNot(): void
+    {
+        $m = $this->model();
+        // Drain anything left by other tests so claimPending(100) below is exact.
+        $m->claimPending(1000);
+
+        $stale = $m->create('public', 'stale_rel', null, self::$database);
+        $fresh = $m->create('public', 'fresh_rel', null, self::$database);
+
+        $claimed = $m->claimPending(100);
+        $staleRow = $claimed[array_search($stale, array_column($claimed, 'uuid'), true)];
+        $freshRow = $claimed[array_search($fresh, array_column($claimed, 'uuid'), true)];
+        $this->assertSame('running', $staleRow['status']);
+        $this->assertSame('running', $freshRow['status']);
+        $backdatedStarted = $staleRow['started'];
+
+        // Backdate the stale row's started past STALE_RUNNING_INTERVAL, as if
+        // its worker had died mid-run.
+        $res = $m->prepare("UPDATE settings.snapshots SET started = now() - interval '3 hours' WHERE uuid = :uuid");
+        $m->execute($res, ['uuid' => $stale]);
+
+        $this->assertFalse($m->hasActive('public', 'stale_rel'), 'a running row stuck past the stale interval is no longer active');
+        $this->assertTrue($m->hasActive('public', 'fresh_rel'), 'a recently claimed running row is still active');
+
+        $reclaimed = $m->claimPending(100);
+        $reclaimedUuids = array_column($reclaimed, 'uuid');
+        $this->assertContains($stale, $reclaimedUuids, 'the stale running row is reclaimed');
+        $this->assertNotContains($fresh, $reclaimedUuids, 'the fresh running row is not re-claimed');
+
+        $reclaimedRow = $reclaimed[array_search($stale, $reclaimedUuids, true)];
+        $this->assertSame('running', $reclaimedRow['status']);
+        $this->assertGreaterThan($backdatedStarted, $reclaimedRow['started'], 'reclaiming gives the row a fresh started');
+    }
+
     public function testListIsNewestFirstAndFilters(): void
     {
         $m = $this->model();

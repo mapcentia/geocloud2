@@ -20,6 +20,15 @@ use PDO;
 class Snapshot extends Model
 {
     /**
+     * A `running` row whose `started` is older than this is considered dead
+     * (the worker process that owned it crashed or was killed) and becomes
+     * reclaimable: it no longer counts as active, and claimPending() will
+     * pick it up again with a fresh `started`. Interpolated into SQL below;
+     * it is a fixed string, not user input.
+     */
+    public const string STALE_RUNNING_INTERVAL = '2 hours';
+
+    /**
      * Inserts a pending snapshot request and returns its uuid.
      */
     public function create(string $schema, string $relation, ?int $srs, string $username): string
@@ -37,14 +46,20 @@ class Snapshot extends Model
     }
 
     /**
-     * True when a pending or running snapshot exists for the relation.
+     * True when a pending snapshot exists for the relation, or a running one
+     * that is still within STALE_RUNNING_INTERVAL of its start. A running row
+     * older than that is presumed to have died with its worker and no longer
+     * counts as active.
      */
     public function hasActive(string $schema, string $relation): bool
     {
         $sql = "SELECT EXISTS (
                     SELECT 1 FROM settings.snapshots
                     WHERE schema_name = :schema AND relation_name = :relation
-                      AND status IN ('pending', 'running')
+                      AND (
+                          status = 'pending'
+                          OR (status = 'running' AND started > now() - interval '" . self::STALE_RUNNING_INTERVAL . "')
+                      )
                 ) AS active";
         $res = $this->prepare($sql);
         $this->execute($res, ['schema' => $schema, 'relation' => $relation]);
@@ -52,9 +67,12 @@ class Snapshot extends Model
     }
 
     /**
-     * Atomically claims up to $limit pending rows (oldest first), flipping them
-     * to 'running' with started = now(). SKIP LOCKED keeps concurrent workers
-     * from claiming the same row.
+     * Atomically claims up to $limit rows (oldest first), flipping them to
+     * 'running' with a fresh started = now(). Eligible rows are 'pending'
+     * ones and 'running' ones whose started is older than
+     * STALE_RUNNING_INTERVAL (a worker died mid-run and left the row stuck);
+     * reclaiming resets started so the new attempt gets its own stale window.
+     * SKIP LOCKED keeps concurrent workers from claiming the same row.
      *
      * @return array<int, array<string, mixed>> The claimed rows.
      */
@@ -65,6 +83,7 @@ class Snapshot extends Model
                 FROM (
                     SELECT uuid FROM settings.snapshots
                     WHERE status = 'pending'
+                       OR (status = 'running' AND started < now() - interval '" . self::STALE_RUNNING_INTERVAL . "')
                     ORDER BY created
                     LIMIT :limit
                     FOR UPDATE SKIP LOCKED
