@@ -17,7 +17,6 @@ use app\inc\Model;
 use app\inc\TableWalkerRelation;
 use DateInterval;
 use DateTimeImmutable;
-use Error;
 use PDO;
 use PDOException;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
@@ -30,7 +29,6 @@ use sad_spirit\pg_wrapper\Connection as WrapperConnection;
 use ZipArchive;
 use sad_spirit\pg_builder\StatementFactory;
 use sad_spirit\pg_wrapper\converters\DefaultTypeConverterFactory;
-
 
 
 /**
@@ -51,6 +49,8 @@ class Sql extends Model
     private const string DEFAULT_TIME_FORMAT = 'H:i:s';
     private const string DEFAULT_TIMETZ_FORMAT = 'H:i:s P';
     private const string DEFAULT_DATE_FORMAT = 'Y-m-d';
+
+    private const array NO_ZIP_FORMATS = ['ogr/GPX', 'ogr/Parquet'];
     private WrapperConnection|null $wrapperConnection = null;
 
     private DefaultTypeConverterFactory $defaultTypeConverterFactory;
@@ -100,18 +100,18 @@ class Sql extends Model
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
     public function sql(
-        string $q,
+        string  $q,
         ?string $clientEncoding = null,
         ?string $format = "geojson",
         ?string $geoformat = "wkt",
-        bool $csvAllToStr = false,
+        bool    $csvAllToStr = false,
         ?string $aliasesFrom = null,
         ?string $nlt = null,
         ?string $nln = null,
-        bool $convertTypes = false,
-        ?array $parameters = null,
-        ?array $typeHints = null,
-        ?array $typeFormats = null
+        bool    $convertTypes = false,
+        ?array  $parameters = null,
+        ?array  $typeHints = null,
+        ?array  $typeFormats = null
     ): array
     {
         // Check params
@@ -158,8 +158,9 @@ class Sql extends Model
                     }
                 }
             }
-            if ($format == "ogr/GPX") {
-                header("Content-type: application/gpx, application/octet-stream");
+            if (in_array($format, self::NO_ZIP_FORMATS)) {
+                $contentType = $format == "ogr/GPX" ? "application/gpx, application/octet-stream" : "application/octet-stream";
+                header("Content-type: $contentType");
                 header("Content-Disposition: attachment; filename=\"$fileOrFolder\"");
                 readfile($path);
             } else {
