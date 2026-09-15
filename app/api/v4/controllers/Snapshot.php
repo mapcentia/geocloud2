@@ -59,7 +59,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(property: "relation", type: "string", example: "bygning"),
         new OA\Property(property: "srs", type: "integer", example: 25832, nullable: true),
         new OA\Property(property: "status", type: "string", enum: ["pending", "running", "succeeded", "failed"]),
-        new OA\Property(property: "s3_path", type: "string", example: "s3://gc2-parquet/prod/mydb/schema=geodanmark/relation=bygning/harvest_date=2026-09-15/", nullable: true),
+        new OA\Property(property: "s3_path", type: "string", example: "s3://gc2-parquet/prod/mydb/schema=geodanmark/relation=bygning/_gc2_snapshot_date=2026-09-15/", nullable: true),
         new OA\Property(property: "row_count", type: "integer", example: 123456, nullable: true),
         new OA\Property(property: "error", type: "string", nullable: true),
         new OA\Property(property: "username", type: "string"),

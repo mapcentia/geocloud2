@@ -85,16 +85,16 @@ class SnapshotWorkerTest extends Unit
     public function testPartitionKeyLayout(): void
     {
         $this->assertSame(
-            'prod/mydb/schema=geodanmark/relation=bygning/harvest_date=2026-09-15/',
+            'prod/mydb/schema=geodanmark/relation=bygning/_gc2_snapshot_date=2026-09-15/',
             SnapshotWorker::partitionKey('prod', 'mydb', 'geodanmark', 'bygning', '2026-09-15')
         );
         $this->assertSame(
-            'mydb/schema=s/relation=r/harvest_date=2026-09-15/',
+            'mydb/schema=s/relation=r/_gc2_snapshot_date=2026-09-15/',
             SnapshotWorker::partitionKey('', 'mydb', 's', 'r', '2026-09-15'),
             'empty prefix is omitted'
         );
         $this->assertSame(
-            'p/mydb/schema=s/relation=r/harvest_date=2026-09-15/',
+            'p/mydb/schema=s/relation=r/_gc2_snapshot_date=2026-09-15/',
             SnapshotWorker::partitionKey('/p/', 'mydb', 's', 'r', '2026-09-15'),
             'prefix slashes are normalised'
         );
@@ -109,7 +109,7 @@ class SnapshotWorkerTest extends Unit
         $this->assertSame(1, $summary['processed']);
         $this->assertSame(1, $summary['succeeded'], 'error: ' . ($this->snapshot()->get($uuid)['data']['error'] ?? ''));
 
-        $partition = 'unit/' . self::$database . '/schema=snap/relation=points/harvest_date=' . $day . '/';
+        $partition = 'unit/' . self::$database . '/schema=snap/relation=points/_gc2_snapshot_date=' . $day . '/';
         $this->assertFileExists($this->storeDir . '/' . $partition . 'data.parquet');
         $this->assertGreaterThan(0, filesize($this->storeDir . '/' . $partition . 'data.parquet'));
         $this->assertFileExists($this->storeDir . '/' . $partition . 'metadata.json');
@@ -139,7 +139,7 @@ class SnapshotWorkerTest extends Unit
         $summary = $this->worker()->processPending(5);
         $this->assertSame(1, $summary['succeeded'], 'error: ' . ($this->snapshot()->get($uuid)['data']['error'] ?? ''));
 
-        $partition = 'unit/' . self::$database . '/schema=snap/relation=points_view/harvest_date=' . $day . '/';
+        $partition = 'unit/' . self::$database . '/schema=snap/relation=points_view/_gc2_snapshot_date=' . $day . '/';
         $meta = json_decode(file_get_contents($this->storeDir . '/' . $partition . 'metadata.json'), true);
         $this->assertSame(2, $meta['row_count']);
         $this->assertSame('EPSG:4326', $meta['crs']);
@@ -153,14 +153,14 @@ class SnapshotWorkerTest extends Unit
         $summary = $this->worker()->processPending(5);
         $this->assertSame(2, $summary['succeeded']);
 
-        $mvPartition = 'unit/' . self::$database . '/schema=snap/relation=points_mv/harvest_date=' . $day . '/';
+        $mvPartition = 'unit/' . self::$database . '/schema=snap/relation=points_mv/_gc2_snapshot_date=' . $day . '/';
         $mvMeta = json_decode(file_get_contents($this->storeDir . '/' . $mvPartition . 'metadata.json'), true);
         $this->assertSame($mvUuid, $mvMeta['snapshot_id']);
         $this->assertSame(3, $mvMeta['row_count']);
         $this->assertSame('EPSG:25832', $mvMeta['crs']);
         $this->assertNotSame(md5('[]'), $mvMeta['schema_version'], 'a materialized view must yield real column metadata, not an empty set');
 
-        $tablePartition = 'unit/' . self::$database . '/schema=snap/relation=points/harvest_date=' . $day . '/';
+        $tablePartition = 'unit/' . self::$database . '/schema=snap/relation=points/_gc2_snapshot_date=' . $day . '/';
         $tableMeta = json_decode(file_get_contents($this->storeDir . '/' . $tablePartition . 'metadata.json'), true);
         $this->assertSame($tableUuid, $tableMeta['snapshot_id']);
         $this->assertSame($tableMeta['schema_version'], $mvMeta['schema_version'], 'same columns as the underlying table give the same schema_version');
@@ -173,7 +173,7 @@ class SnapshotWorkerTest extends Unit
         $summary = $this->worker()->processPending(5);
         $this->assertSame(1, $summary['succeeded'], 'error: ' . ($this->snapshot()->get($uuid)['data']['error'] ?? ''));
 
-        $partition = 'unit/' . self::$database . '/schema=snap/relation=plain/harvest_date=' . $day . '/';
+        $partition = 'unit/' . self::$database . '/schema=snap/relation=plain/_gc2_snapshot_date=' . $day . '/';
         $meta = json_decode(file_get_contents($this->storeDir . '/' . $partition . 'metadata.json'), true);
         $this->assertSame(2, $meta['row_count']);
         $this->assertNull($meta['crs']);

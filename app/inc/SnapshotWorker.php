@@ -58,11 +58,11 @@ class SnapshotWorker
     /**
      * S3 key prefix for one snapshot partition (always ends with '/').
      */
-    public static function partitionKey(string $prefix, string $database, string $schema, string $relation, string $harvestDate): string
+    public static function partitionKey(string $prefix, string $database, string $schema, string $relation, string $date): string
     {
         $prefix = trim($prefix, '/');
         return ($prefix !== '' ? $prefix . '/' : '')
-            . "$database/schema=$schema/relation=$relation/harvest_date=$harvestDate/";
+            . "$database/schema=$schema/relation=$relation/_gc2_snapshot_date=$date/";
     }
 
     /**

@@ -61,7 +61,7 @@ Returns the snapshot row. 404 `NO_SNAPSHOT_ERROR` when the uuid is unknown.
   "relation": "bygning",
   "srs": 25832,
   "status": "succeeded",
-  "s3_path": "s3://gc2-parquet/prod/mydb/schema=geodanmark/relation=bygning/harvest_date=2026-09-15/",
+  "s3_path": "s3://gc2-parquet/prod/mydb/schema=geodanmark/relation=bygning/_gc2_snapshot_date=2026-09-15/",
   "row_count": 123456,
   "error": null,
   "username": "mydb",
@@ -159,7 +159,7 @@ Per claimed row, `runOne`:
    as the error.
 4. Count rows with `Model::countRows`.
 5. Build the partition key
-   `<prefix>/<database>/schema=<schema>/relation=<relation>/harvest_date=<YYYY-MM-DD>/`
+   `<prefix>/<database>/schema=<schema>/relation=<relation>/_gc2_snapshot_date=<YYYY-MM-DD>/`
    (prefix omitted when empty) and write `data.parquet` from the tmp file and
    `metadata.json`:
 
