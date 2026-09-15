@@ -398,6 +398,27 @@ END;
 $$ LANGUAGE plpgsql;
 SQL;
 
+        // Snapshots: async export of a relation to Parquet on S3 (see
+        // app/inc/SnapshotWorker.php). The table is the queue.
+        $sqls[] = "CREATE TABLE settings.snapshots
+                    (
+                      uuid          UUID                      NOT NULL  DEFAULT uuid_generate_v4()  PRIMARY KEY,
+                      schema_name   TEXT                      NOT NULL,
+                      relation_name TEXT                      NOT NULL,
+                      srs           INTEGER,
+                      status        CHARACTER VARYING(32)     NOT NULL  DEFAULT 'pending',
+                      s3_path       TEXT,
+                      row_count     BIGINT,
+                      error         TEXT,
+                      username      CHARACTER VARYING(255),
+                      created       TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT now(),
+                      started       TIMESTAMP WITH TIME ZONE,
+                      finished      TIMESTAMP WITH TIME ZONE,
+                      CHECK (status IN ('pending', 'running', 'succeeded', 'failed'))
+                    )";
+        $sqls[] = "CREATE INDEX snapshots_pending_idx ON settings.snapshots (created) WHERE status = 'pending'";
+        $sqls[] = "CREATE INDEX snapshots_relation_idx ON settings.snapshots (schema_name, relation_name)";
+
         include 'Views1.php';
         return $sqls;
     }
