@@ -198,8 +198,10 @@ class SnapshotV4ApiCest
         $I->haveHttpHeader('Accept', 'application/json');
         $I->haveHttpHeader('Authorization', 'Bearer ' . $this->subToken);
         $I->sendPOST('/api/v4/snapshots', json_encode(['schema' => $this->schema, 'relation' => 'poi']));
-        $I->seeResponseCodeIsClientError();
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+        $I->seeResponseContainsJson(['errorCode' => 'SUPER_USER_ONLY']);
         $I->sendGET('/api/v4/snapshots');
-        $I->seeResponseCodeIsClientError();
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+        $I->seeResponseContainsJson(['errorCode' => 'SUPER_USER_ONLY']);
     }
 }
