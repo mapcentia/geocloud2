@@ -63,6 +63,8 @@ Returns the snapshot row. 404 `NO_SNAPSHOT_ERROR` when the uuid is unknown.
   "status": "succeeded",
   "s3_path": "s3://gc2-parquet/prod/mydb/schema=geodanmark/relation=bygning/_gc2_snapshot_date=2026-09-15/",
   "row_count": 123456,
+  "schema_version": "9e107d9d372bb6826bd81d3542a419d6",
+  "relation_schema": [{"column_name": "gid", "data_type": "integer"}, {"column_name": "the_geom", "data_type": "geometry(Point,25832)"}],
   "error": null,
   "username": "mydb",
   "created": "2026-09-15T10:00:00+00:00",
@@ -72,7 +74,8 @@ Returns the snapshot row. 404 `NO_SNAPSHOT_ERROR` when the uuid is unknown.
 ```
 
 `status` is one of `pending`, `running`, `succeeded`, `failed`. `s3_path`,
-`row_count`, `started`, `finished` are null until set. `error` is set only on
+`row_count`, `schema_version`, `relation_schema`, `started`, `finished` are
+null until set. `error` is set only on
 `failed`.
 
 ### GET /api/v4/snapshots
@@ -94,6 +97,8 @@ CREATE TABLE settings.snapshots
   status        CHARACTER VARYING(32)    NOT NULL DEFAULT 'pending',
   s3_path       TEXT,
   row_count     BIGINT,
+  schema_version  TEXT,   -- md5 of relation_schema
+  relation_schema JSONB,  -- [{column_name, data_type}, ...] at snapshot time
   error         TEXT,
   username      CHARACTER VARYING(255),
   created       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
@@ -119,8 +124,9 @@ Model `app\models\Snapshot` (extends `Model`, takes a `Connection`):
   `STALE_RUNNING_INTERVAL` (`Snapshot::STALE_RUNNING_INTERVAL`, 2 hours) — a worker
   that died mid-run leaves its row stuck in `running`, and after 2 hours it is
   reclaimed by the next worker run.
-- `finish(string $uuid, string $status, ?string $s3Path, ?int $rowCount, ?string $error): void`
-  sets the final status and `finished = now()`.
+- `finish(string $uuid, string $status, ?string $s3Path, ?int $rowCount, ?string $error, ?string $schemaVersion = null, ?array $relationSchema = null): void`
+  sets the final status and `finished = now()`; on success also the column
+  fingerprint and the column list.
 - `get(string $uuid): array` throws `GC2Exception` 404 `NO_SNAPSHOT_ERROR` when missing.
 - `list(?string $schema, ?string $relation, int $limit = 50): array` newest first.
 
@@ -170,7 +176,8 @@ Per claimed row, `runOne`:
      "database": "mydb",
      "source": "geodanmark.bygning",
      "row_count": 123456,
-     "schema_version": "<md5 of serialised column metadata>",
+     "schema_version": "<md5 of canonical 'column_name data_type' lines, one per column>",
+     "schema": [{"column_name": "gid", "data_type": "integer"}, {"column_name": "the_geom", "data_type": "geometry(Point,25832)"}],
      "crs": "EPSG:25832"
    }
    ```

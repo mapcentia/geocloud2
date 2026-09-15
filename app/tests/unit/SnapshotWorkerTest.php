@@ -121,12 +121,25 @@ class SnapshotWorkerTest extends Unit
         $this->assertSame(3, $meta['row_count']);
         $this->assertSame('EPSG:25832', $meta['crs'], 'native SRID used when no srs is requested');
         $this->assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $meta['schema_version']);
-        $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $meta['harvested_at']);
+        $this->assertSame(
+            [
+                ['column_name' => 'gid', 'data_type' => 'integer'],
+                ['column_name' => 'name', 'data_type' => 'text'],
+                ['column_name' => 'the_geom', 'data_type' => 'geometry(Point,25832)'],
+            ],
+            $meta['schema'],
+            'metadata carries the column list in ordinal order'
+        );
+        $this->assertSame(SnapshotWorker::schemaVersion($meta['schema']), $meta['schema_version'], 'fingerprint is recomputable from the schema array');
+        $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $meta['created_at']);
 
         $row = $this->snapshot()->get($uuid)['data'];
         $this->assertSame('succeeded', $row['status']);
         $this->assertSame('s3://test-bucket/' . $partition, $row['s3_path']);
         $this->assertSame(3, (int)$row['row_count']);
+        $this->assertSame($meta['schema_version'], $row['schema_version'], 'row carries the same fingerprint as metadata.json');
+        // assertEquals: jsonb reorders object keys, the content must match.
+        $this->assertEquals($meta['schema'], json_decode($row['relation_schema'], true), 'row carries the same column list as metadata.json');
         $this->assertNotNull($row['finished']);
 
         $this->assertFileDoesNotExist($this->tmpDir . '/' . $uuid . '.parquet', 'tmp file is removed');
@@ -158,7 +171,7 @@ class SnapshotWorkerTest extends Unit
         $this->assertSame($mvUuid, $mvMeta['snapshot_id']);
         $this->assertSame(3, $mvMeta['row_count']);
         $this->assertSame('EPSG:25832', $mvMeta['crs']);
-        $this->assertNotSame(md5('[]'), $mvMeta['schema_version'], 'a materialized view must yield real column metadata, not an empty set');
+        $this->assertNotSame(SnapshotWorker::schemaVersion([]), $mvMeta['schema_version'], 'a materialized view must yield real column metadata, not an empty set');
 
         $tablePartition = 'unit/' . self::$database . '/schema=snap/relation=points/_gc2_snapshot_date=' . $day . '/';
         $tableMeta = json_decode(file_get_contents($this->storeDir . '/' . $tablePartition . 'metadata.json'), true);

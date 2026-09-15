@@ -125,12 +125,16 @@ class SnapshotModelTest extends Unit
     {
         $m = $this->model();
         $ok = $m->create('public', 'finish_ok', null, self::$database);
-        $m->finish($ok, 'succeeded', 's3://bucket/x/', 42, null);
+        $columns = [['column_name' => 'gid', 'data_type' => 'integer'], ['column_name' => 'geom', 'data_type' => 'geometry(Point,25832)']];
+        $m->finish($ok, 'succeeded', 's3://bucket/x/', 42, null, 'abc123', $columns);
         $row = $m->get($ok)['data'];
         $this->assertSame('succeeded', $row['status']);
         $this->assertSame('s3://bucket/x/', $row['s3_path']);
         $this->assertSame(42, (int)$row['row_count']);
         $this->assertNull($row['error']);
+        $this->assertSame('abc123', $row['schema_version']);
+        // assertEquals: jsonb reorders object keys, the content must match.
+        $this->assertEquals($columns, json_decode($row['relation_schema'], true), 'relation_schema round-trips through jsonb');
         $this->assertNotNull($row['finished']);
 
         $bad = $m->create('public', 'finish_bad', null, self::$database);
@@ -139,6 +143,8 @@ class SnapshotModelTest extends Unit
         $this->assertSame('failed', $row['status']);
         $this->assertSame('ogr2ogr exploded', $row['error']);
         $this->assertNull($row['s3_path']);
+        $this->assertNull($row['schema_version']);
+        $this->assertNull($row['relation_schema']);
     }
 
     public function testStaleRunningRowIsReclaimedButFreshRunningRowIsNot(): void

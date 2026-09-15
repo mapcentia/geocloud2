@@ -418,6 +418,10 @@ SQL;
                     )";
         $sqls[] = "CREATE INDEX snapshots_pending_idx ON settings.snapshots (created) WHERE status = 'pending'";
         $sqls[] = "CREATE INDEX snapshots_relation_idx ON settings.snapshots (schema_name, relation_name)";
+        // Column shape of the relation at snapshot time: a fingerprint and the
+        // column list itself (name + type), mirrored in metadata.json on S3.
+        $sqls[] = "ALTER TABLE settings.snapshots ADD COLUMN schema_version TEXT";
+        $sqls[] = "ALTER TABLE settings.snapshots ADD COLUMN relation_schema JSONB";
 
         include 'Views1.php';
         return $sqls;

@@ -116,6 +116,8 @@ class SnapshotV4ApiCest
         $I->assertContains($body->status, ['pending', 'running', 'succeeded', 'failed']);
         $I->assertTrue(property_exists($body, 's3_path'));
         $I->assertTrue(property_exists($body, 'row_count'));
+        $I->assertTrue(property_exists($body, 'schema_version'));
+        $I->assertTrue(property_exists($body, 'relation_schema'));
         $I->assertTrue(property_exists($body, 'error'));
         $I->assertTrue(property_exists($body, 'created'));
         $I->assertTrue(property_exists($body, 'started'));

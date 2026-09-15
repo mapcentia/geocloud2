@@ -56,6 +56,19 @@ class SnapshotWorker
     }
 
     /**
+     * Change fingerprint of a column list, not a security hash: it only needs
+     * to differ when the column shape changes between snapshots. Computed from
+     * canonical "name type" lines so it can be recomputed from the schema
+     * array regardless of how a JSON store (e.g. jsonb) orders object keys.
+     *
+     * @param array<int, array{column_name:string, data_type:string}> $columns
+     */
+    public static function schemaVersion(array $columns): string
+    {
+        return md5(implode("\n", array_map(fn($c) => $c['column_name'] . ' ' . $c['data_type'], $columns)));
+    }
+
+    /**
      * S3 key prefix for one snapshot partition (always ends with '/').
      */
     public static function partitionKey(string $prefix, string $database, string $schema, string $relation, string $date): string
@@ -80,9 +93,8 @@ class SnapshotWorker
                 throw new RuntimeException("Relation $schema.$relation does not exist");
             }
             $crs = $srs ?? $this->nativeSrid($schema, $relation);
-            // A change fingerprint, not a security hash: it only needs to
-            // differ when the column shape changes between snapshots.
-            $schemaVersion = md5(json_encode($this->columns($schema, $relation)));
+            $columns = $this->columns($schema, $relation);
+            $schemaVersion = self::schemaVersion($columns);
 
             if (!is_dir($this->tmpDir) && !mkdir($this->tmpDir, 0775, true) && !is_dir($this->tmpDir)) {
                 throw new RuntimeException("Could not create tmp dir {$this->tmpDir}");
@@ -106,15 +118,16 @@ class SnapshotWorker
             }
             $this->filesystem->write($partition . 'metadata.json', json_encode([
                 'snapshot_id' => $uuid,
-                'harvested_at' => gmdate('Y-m-d\TH:i:s\Z'),
+                'created_at' => gmdate('Y-m-d\TH:i:s\Z'),
                 'database' => $this->connection->database,
                 'source' => "$schema.$relation",
                 'row_count' => $rowCount,
                 'schema_version' => $schemaVersion,
+                'schema' => $columns,
                 'crs' => $crs !== null ? "EPSG:$crs" : null,
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
-            $this->snapshot->finish($uuid, 'succeeded', "s3://{$this->bucket}/$partition", $rowCount, null);
+            $this->snapshot->finish($uuid, 'succeeded', "s3://{$this->bucket}/$partition", $rowCount, null, $schemaVersion, $columns);
             return 'succeeded';
         } catch (Throwable $e) {
             // Bounded and redacted: the PG connection string (with password)

@@ -97,12 +97,22 @@ class Snapshot extends Model
     }
 
     /**
-     * Finalises a row with its outcome.
+     * Finalises a row with its outcome. $relationSchema is the column list
+     * (name + type) captured at snapshot time; $schemaVersion is its md5.
      */
-    public function finish(string $uuid, string $status, ?string $s3Path, ?int $rowCount, ?string $error): void
+    public function finish(
+        string  $uuid,
+        string  $status,
+        ?string $s3Path,
+        ?int    $rowCount,
+        ?string $error,
+        ?string $schemaVersion = null,
+        ?array  $relationSchema = null,
+    ): void
     {
         $sql = "UPDATE settings.snapshots
-                SET status = :status, s3_path = :s3_path, row_count = :row_count, error = :error, finished = now()
+                SET status = :status, s3_path = :s3_path, row_count = :row_count, error = :error,
+                    schema_version = :schema_version, relation_schema = :relation_schema, finished = now()
                 WHERE uuid = :uuid";
         $res = $this->prepare($sql);
         $res->bindValue(':uuid', $uuid);
@@ -110,6 +120,8 @@ class Snapshot extends Model
         $res->bindValue(':s3_path', $s3Path, $s3Path === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $res->bindValue(':row_count', $rowCount, $rowCount === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
         $res->bindValue(':error', $error, $error === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+        $res->bindValue(':schema_version', $schemaVersion, $schemaVersion === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+        $res->bindValue(':relation_schema', $relationSchema === null ? null : json_encode($relationSchema), $relationSchema === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
         $this->execute($res);
     }
 
