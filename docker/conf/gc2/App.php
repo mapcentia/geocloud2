@@ -41,6 +41,8 @@ class App
 
         // AWS credentials used by the snapshot worker (and other S3 features).
         "s3" => [
+            // S3 endpoint host used by MapCache S3 caches; not needed for snapshots.
+            "host" => "",
             "id" => "",
             "secret" => "",
             "region" => "eu-west-1",
