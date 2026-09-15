@@ -87,7 +87,7 @@ class SnapshotWorker
             }
             $this->export($schema, $relation, $srs, $tmpFile);
 
-            $rowCount = (int)$this->model->countRows($schema, $relation)['data'];
+            $rowCount = $this->rowCount($schema, $relation);
             $partition = self::partitionKey($this->prefix, $this->connection->database, $schema, $relation, gmdate('Y-m-d'));
 
             $stream = fopen($tmpFile, 'rb');
@@ -146,6 +146,23 @@ class SnapshotWorker
         if (!file_exists($tmpFile)) {
             throw new RuntimeException("ogr2ogr produced no output file");
         }
+    }
+
+    /**
+     * Row count of the relation. Unlike Model::countRows(), a query failure
+     * throws instead of being swallowed into a ['success' => false] array,
+     * so the caller can't mistake a failed count for zero rows.
+     */
+    private function rowCount(string $schema, string $relation): int
+    {
+        $sql = "SELECT count(*) AS count FROM " . $this->model->doubleQuoteQualifiedName("$schema.$relation");
+        $res = $this->model->prepare($sql);
+        $this->model->execute($res);
+        $row = $this->model->fetchRow($res);
+        if ($row === null) {
+            throw new RuntimeException("Could not count rows in $schema.$relation");
+        }
+        return (int)$row['count'];
     }
 
     /**
