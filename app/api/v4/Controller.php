@@ -46,6 +46,6 @@ readonly class Controller
         } elseif ($this->scope === Scope::PUBLIC) {
             return;
         }
-        throw new GC2Exception(Response::SUPER_USER_ONLY['message']);
+        throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 403, null, 'SUPER_USER_ONLY');
     }
 }
