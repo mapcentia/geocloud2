@@ -36,18 +36,30 @@ if ($bucket === '') {
 $prefix = App::$param['snapshot']['prefix'] ?? '';
 $region = App::$param['snapshot']['region'] ?? 'eu-west-1';
 
+$s3Id = App::$param['s3']['id'] ?? '';
+$s3Secret = App::$param['s3']['secret'] ?? '';
+if ($s3Id === '' || $s3Secret === '') {
+    echo "SNAPSHOT WORKER: s3.id/s3.secret are not configured, nothing to do\n";
+    exit(0);
+}
+
 $batchPerDb = (int)(getenv('GC2_SNAPSHOT_BATCH') ?: 2);
 $skip = ['rdsadmin', 'template1', 'template0', 'postgres', 'postgis_template', 'template_geocloud', 'mapcentia', 'gc2scheduler'];
 $only = $argv[1] ?? null;
 
-$filesystem = new Filesystem(new AwsS3V3Adapter(new S3Client([
-    'credentials' => [
-        'key' => App::$param['s3']['id'],
-        'secret' => App::$param['s3']['secret'],
-    ],
-    'region' => $region,
-    'version' => 'latest',
-]), $bucket));
+try {
+    $filesystem = new Filesystem(new AwsS3V3Adapter(new S3Client([
+        'credentials' => [
+            'key' => $s3Id,
+            'secret' => $s3Secret,
+        ],
+        'region' => $region,
+        'version' => 'latest',
+    ]), $bucket));
+} catch (Throwable $e) {
+    echo "SNAPSHOT WORKER: could not initialise S3 storage: {$e->getMessage()}\n";
+    exit(1);
+}
 
 $dbs = $only ? [$only] : new Database()->listAllDbs()['data'];
 $totals = ['processed' => 0, 'succeeded' => 0, 'failed' => 0];

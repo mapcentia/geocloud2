@@ -39,6 +39,13 @@ class App
             "db" => 0,
         ],
 
+        // AWS credentials used by the snapshot worker (and other S3 features).
+        "s3" => [
+            "id" => "",
+            "secret" => "",
+            "region" => "eu-west-1",
+        ],
+
         // Parquet snapshots to S3 (POST /api/v4/snapshots). Credentials are read
         // from the "s3" block (id/secret). Leave "bucket" empty to disable.
         "snapshot" => [
