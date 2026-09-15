@@ -52,6 +52,8 @@ class SnapshotWorkerTest extends Unit
                 ('c', ST_SetSRID(ST_MakePoint(500200, 6200200), 25832))", "PDO", "transaction");
             $m->execQuery("CREATE VIEW snap.points_view AS SELECT * FROM snap.points WHERE name <> 'c'", "PDO", "transaction");
             $m->execQuery("CREATE MATERIALIZED VIEW snap.points_mv AS SELECT * FROM snap.points", "PDO", "transaction");
+            $m->execQuery("CREATE TABLE snap.plain (id serial PRIMARY KEY, label text)", "PDO", "transaction");
+            $m->execQuery("INSERT INTO snap.plain (label) VALUES ('a'), ('b')", "PDO", "transaction");
         }
         $base = sys_get_temp_dir() . '/snapshot_worker_test_' . bin2hex(random_bytes(4));
         $this->storeDir = $base . '/store';
@@ -101,12 +103,13 @@ class SnapshotWorkerTest extends Unit
     public function testTableSnapshotSucceedsAndWritesParquetAndMetadata(): void
     {
         $uuid = $this->snapshot()->create('snap', 'points', null, self::$database);
+        $day = gmdate('Y-m-d'); // captured before the run so a midnight UTC rollover can't flake this
         $summary = $this->worker()->processPending(5);
 
         $this->assertSame(1, $summary['processed']);
         $this->assertSame(1, $summary['succeeded'], 'error: ' . ($this->snapshot()->get($uuid)['data']['error'] ?? ''));
 
-        $partition = 'unit/' . self::$database . '/schema=snap/relation=points/harvest_date=' . gmdate('Y-m-d') . '/';
+        $partition = 'unit/' . self::$database . '/schema=snap/relation=points/harvest_date=' . $day . '/';
         $this->assertFileExists($this->storeDir . '/' . $partition . 'data.parquet');
         $this->assertGreaterThan(0, filesize($this->storeDir . '/' . $partition . 'data.parquet'));
         $this->assertFileExists($this->storeDir . '/' . $partition . 'metadata.json');
@@ -132,10 +135,11 @@ class SnapshotWorkerTest extends Unit
     public function testViewSnapshotWithRequestedSrsReportsThatCrs(): void
     {
         $uuid = $this->snapshot()->create('snap', 'points_view', 4326, self::$database);
+        $day = gmdate('Y-m-d'); // captured before the run so a midnight UTC rollover can't flake this
         $summary = $this->worker()->processPending(5);
         $this->assertSame(1, $summary['succeeded'], 'error: ' . ($this->snapshot()->get($uuid)['data']['error'] ?? ''));
 
-        $partition = 'unit/' . self::$database . '/schema=snap/relation=points_view/harvest_date=' . gmdate('Y-m-d') . '/';
+        $partition = 'unit/' . self::$database . '/schema=snap/relation=points_view/harvest_date=' . $day . '/';
         $meta = json_decode(file_get_contents($this->storeDir . '/' . $partition . 'metadata.json'), true);
         $this->assertSame(2, $meta['row_count']);
         $this->assertSame('EPSG:4326', $meta['crs']);
@@ -145,20 +149,34 @@ class SnapshotWorkerTest extends Unit
     {
         $mvUuid = $this->snapshot()->create('snap', 'points_mv', null, self::$database);
         $tableUuid = $this->snapshot()->create('snap', 'points', null, self::$database);
+        $day = gmdate('Y-m-d'); // captured before the run so a midnight UTC rollover can't flake this
         $summary = $this->worker()->processPending(5);
         $this->assertSame(2, $summary['succeeded']);
 
-        $mvPartition = 'unit/' . self::$database . '/schema=snap/relation=points_mv/harvest_date=' . gmdate('Y-m-d') . '/';
+        $mvPartition = 'unit/' . self::$database . '/schema=snap/relation=points_mv/harvest_date=' . $day . '/';
         $mvMeta = json_decode(file_get_contents($this->storeDir . '/' . $mvPartition . 'metadata.json'), true);
         $this->assertSame($mvUuid, $mvMeta['snapshot_id']);
         $this->assertSame(3, $mvMeta['row_count']);
         $this->assertSame('EPSG:25832', $mvMeta['crs']);
         $this->assertNotSame(md5('[]'), $mvMeta['schema_version'], 'a materialized view must yield real column metadata, not an empty set');
 
-        $tablePartition = 'unit/' . self::$database . '/schema=snap/relation=points/harvest_date=' . gmdate('Y-m-d') . '/';
+        $tablePartition = 'unit/' . self::$database . '/schema=snap/relation=points/harvest_date=' . $day . '/';
         $tableMeta = json_decode(file_get_contents($this->storeDir . '/' . $tablePartition . 'metadata.json'), true);
         $this->assertSame($tableUuid, $tableMeta['snapshot_id']);
         $this->assertSame($tableMeta['schema_version'], $mvMeta['schema_version'], 'same columns as the underlying table give the same schema_version');
+    }
+
+    public function testRelationWithoutGeometryHasNullCrs(): void
+    {
+        $uuid = $this->snapshot()->create('snap', 'plain', null, self::$database);
+        $day = gmdate('Y-m-d'); // captured before the run so a midnight UTC rollover can't flake this
+        $summary = $this->worker()->processPending(5);
+        $this->assertSame(1, $summary['succeeded'], 'error: ' . ($this->snapshot()->get($uuid)['data']['error'] ?? ''));
+
+        $partition = 'unit/' . self::$database . '/schema=snap/relation=plain/harvest_date=' . $day . '/';
+        $meta = json_decode(file_get_contents($this->storeDir . '/' . $partition . 'metadata.json'), true);
+        $this->assertSame(2, $meta['row_count']);
+        $this->assertNull($meta['crs']);
     }
 
     public function testMissingRelationFailsRowWithError(): void

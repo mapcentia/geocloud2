@@ -82,8 +82,7 @@ foreach ($dbs as $db) {
         }
     } catch (Throwable $e) {
         // Databases without settings.snapshots (or transient errors) are
-        // skipped; this worker is best-effort per run.
-        echo "$db: skipped ({$e->getMessage()})\n";
+        // skipped silently; this worker is best-effort per run.
     }
 }
 

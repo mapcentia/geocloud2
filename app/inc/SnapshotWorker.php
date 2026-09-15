@@ -89,6 +89,7 @@ class SnapshotWorker
             }
             $this->export($schema, $relation, $srs, $tmpFile);
 
+            // Counted after the export on a separate connection, so on a live table this is approximate.
             $rowCount = $this->rowCount($schema, $relation);
             $partition = self::partitionKey($this->prefix, $this->connection->database, $schema, $relation, gmdate('Y-m-d'));
 
@@ -116,7 +117,14 @@ class SnapshotWorker
             $this->snapshot->finish($uuid, 'succeeded', "s3://{$this->bucket}/$partition", $rowCount, null);
             return 'succeeded';
         } catch (Throwable $e) {
-            $this->snapshot->finish($uuid, 'failed', null, null, $e->getMessage());
+            // Bounded and redacted: the PG connection string (with password)
+            // can end up in an ogr2ogr/PDO error, and the message can be
+            // arbitrarily long (e.g. the full ogr2ogr output).
+            $msg = preg_replace('/password=\S+/', 'password=***', $e->getMessage());
+            if (strlen($msg) > 2000) {
+                $msg = substr($msg, -2000);
+            }
+            $this->snapshot->finish($uuid, 'failed', null, null, $msg);
             return 'failed';
         } finally {
             if (file_exists($tmpFile)) {
@@ -133,11 +141,12 @@ class SnapshotWorker
     {
         $c = $this->connection;
         $pg = "PG:host={$c->host} port={$c->port} user={$c->user} password={$c->password} dbname={$c->database}";
+        $q = fn(string $s) => '"' . str_replace('"', '""', $s) . '"';
         $cmd = 'ogr2ogr -mapFieldType Time=String,Binary=String -f Parquet ' . escapeshellarg($tmpFile)
             . ($srs !== null ? ' -t_srs ' . escapeshellarg("EPSG:$srs") : '')
             . ' -preserve_fid '
             . escapeshellarg($pg)
-            . ' -sql ' . escapeshellarg("SELECT * FROM \"$schema\".\"$relation\"")
+            . ' -sql ' . escapeshellarg("SELECT * FROM {$q($schema)}.{$q($relation)}")
             . ' 2>&1';
         $out = [];
         $code = 0;
