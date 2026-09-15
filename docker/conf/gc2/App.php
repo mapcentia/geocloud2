@@ -39,6 +39,14 @@ class App
             "db" => 0,
         ],
 
+        // Parquet snapshots to S3 (POST /api/v4/snapshots). Credentials are read
+        // from the "s3" block (id/secret). Leave "bucket" empty to disable.
+        "snapshot" => [
+            "bucket" => "",
+            "prefix" => "",
+            "region" => "eu-west-1",
+        ],
+
         // MapCache config
         // In Docker use the names of the containers
         "mapCache" => [

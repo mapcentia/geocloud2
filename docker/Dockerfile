@@ -360,6 +360,8 @@ RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data php -f /var
 RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data php -f /var/www/geocloud2/app/scripts/function_scheduler.php > /proc/1/fd/1 2>&1"; } | crontab
 RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data php -f /var/www/geocloud2/app/scripts/function_event_dispatcher.php > /proc/1/fd/1 2>&1"; } | crontab
 RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data php -f /var/www/geocloud2/app/scripts/function_worker.php > /proc/1/fd/1 2>&1"; } | crontab
+# Parquet snapshots: export queued relations to S3 (see app/scripts/snapshot_worker.php).
+RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data php -f /var/www/geocloud2/app/scripts/snapshot_worker.php > /proc/1/fd/1 2>&1"; } | crontab
 
 # (Optional) finalize crontab
 RUN crontab -l 2>/dev/null | { cat; echo ""; } | crontab
