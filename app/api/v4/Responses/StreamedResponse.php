@@ -10,10 +10,14 @@ use Closure;
 
 final class StreamedResponse extends Response
 {
+    /**
+     * @param array<string,string> $headers extra response headers (name => value), emitted before the callback runs
+     */
     public function __construct(
-        public readonly string $contentType,
+        public readonly string  $contentType,
         public readonly Closure $callback,
-        int $status = 200,
+        int                     $status = 200,
+        public readonly array   $headers = [],
     ) {
         parent::__construct(status: $status, data: null);
     }

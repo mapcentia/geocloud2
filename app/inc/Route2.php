@@ -84,7 +84,7 @@ class Route2
                     if (!in_array($method, $allowedMethods)) {
                         $listener->throwException();
                     }
-                    if ($method == "options" || $method == "head") {
+                    if ($method == "options" || ($method == "head" && !self::declaresHead($controller, $action))) {
                         if ($method == "options") {
                             $m = Input::getAccessControlRequestMethod();
                             $m = $m ? strtolower($m) : null;
@@ -146,6 +146,9 @@ class Route2
             if ($response instanceof StreamedResponse) {
                 header('HTTP/1.0 ' . $response->getStatus() . ' ' . Util::httpCodeText($response->getStatus()));
                 header('Content-Type: ' . $response->contentType);
+                foreach ($response->headers as $name => $value) {
+                    header("$name: $value");
+                }
                 ($response->callback)();
                 return;
             }
@@ -173,6 +176,20 @@ class Route2
                 echo json_encode($data, JSON_UNESCAPED_UNICODE);
             }
         }
+    }
+
+    /**
+     * True when the controller class itself (not AbstractApi) declares the
+     * given head_<action> method. Such controllers answer HEAD with real
+     * headers (e.g. Content-Length for range-capable downloads); every other
+     * controller keeps the generic short-circuit.
+     */
+    private static function declaresHead(ApiInterface $controller, string $headAction): bool
+    {
+        if (!method_exists($controller, $headAction)) {
+            return false;
+        }
+        return (new ReflectionMethod($controller, $headAction))->getDeclaringClass()->getName() === $controller::class;
     }
 
     /**

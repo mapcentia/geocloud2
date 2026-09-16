@@ -26,4 +26,21 @@ class StreamedResponseTest extends Unit
         $this->assertSame($cb, $r->callback);
         $this->assertSame(201, $r->getStatus());
     }
+
+    public function testHeadersDefaultToEmptyArray(): void
+    {
+        $r = new StreamedResponse('text/xml', fn() => null);
+        $this->assertSame([], $r->headers);
+    }
+
+    public function testHeadersAreCarried(): void
+    {
+        $r = new StreamedResponse('application/vnd.apache.parquet', fn() => null, 206, [
+            'Content-Range' => 'bytes 0-3/100',
+            'Accept-Ranges' => 'bytes',
+        ]);
+        $this->assertSame(206, $r->getStatus());
+        $this->assertSame('bytes 0-3/100', $r->headers['Content-Range']);
+        $this->assertSame('bytes', $r->headers['Accept-Ranges']);
+    }
 }
