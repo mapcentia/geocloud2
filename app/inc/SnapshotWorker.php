@@ -8,19 +8,21 @@
 
 namespace app\inc;
 
+use app\inc\snapshot\SnapshotRef;
+use app\inc\snapshot\SnapshotStorage;
 use app\models\Snapshot as SnapshotModel;
-use League\Flysystem\Filesystem;
 use RuntimeException;
 use Throwable;
 
 /**
  * Runs queued snapshots for one database: claims pending rows in
- * settings.snapshots, exports each relation to Parquet with ogr2ogr, uploads
- * data.parquet + metadata.json through Flysystem, and finalises the row.
+ * settings.snapshots, exports each relation to Parquet with ogr2ogr, writes
+ * data-<id>.parquet + metadata-<id>.json through SnapshotStorage, and
+ * publishes the row (superseding an earlier snapshot of the same date).
  *
- * The Filesystem is injected so production can use S3 and tests a local
- * directory. Relation lookups use uncached catalog queries so a relation
- * created moments ago is seen.
+ * Files are named by snapshot id, so a rerun never overwrites a file a
+ * reader may be streaming; readers only reach files via the catalog, so a
+ * run that fails before publish leaves nothing visible.
  */
 class SnapshotWorker
 {
@@ -28,11 +30,9 @@ class SnapshotWorker
     private Model $model;
 
     public function __construct(
-        private readonly Connection $connection,
-        private readonly Filesystem $filesystem,
-        private readonly string     $bucket,
-        private readonly string     $prefix,
-        private readonly string     $tmpDir,
+        private readonly Connection      $connection,
+        private readonly SnapshotStorage $storage,
+        private readonly string          $tmpDir,
     )
     {
         $this->snapshot = new SnapshotModel($connection);
@@ -69,16 +69,6 @@ class SnapshotWorker
     }
 
     /**
-     * S3 key prefix for one snapshot partition (always ends with '/').
-     */
-    public static function partitionKey(string $prefix, string $database, string $schema, string $relation, string $date): string
-    {
-        $prefix = trim($prefix, '/');
-        return ($prefix !== '' ? $prefix . '/' : '')
-            . "$database/schema=$schema/relation=$relation/_gc2_snapshot_date=$date/";
-    }
-
-    /**
      * @return string 'succeeded' | 'failed'
      */
     private function runOne(array $row): string
@@ -88,6 +78,8 @@ class SnapshotWorker
         $relation = $row['relation_name'];
         $srs = $row['srs'] !== null ? (int)$row['srs'] : null;
         $tmpFile = rtrim($this->tmpDir, '/') . "/$uuid.parquet";
+        $ref = new SnapshotRef($this->connection->database, $schema, $relation, gmdate('Y-m-d'), $uuid);
+        $written = [];
         try {
             if (!$this->model->doesRelationExists("$schema.$relation")) {
                 throw new RuntimeException("Relation $schema.$relation does not exist");
@@ -103,21 +95,23 @@ class SnapshotWorker
 
             // Counted after the export on a separate connection, so on a live table this is approximate.
             $rowCount = $this->rowCount($schema, $relation);
-            $partition = self::partitionKey($this->prefix, $this->connection->database, $schema, $relation, gmdate('Y-m-d'));
+            $files = [['name' => $ref->dataFile(), 'size_bytes' => (int)filesize($tmpFile)]];
 
             $stream = fopen($tmpFile, 'rb');
             if ($stream === false) {
                 throw new RuntimeException("Could not open $tmpFile");
             }
             try {
-                $this->filesystem->writeStream($partition . 'data.parquet', $stream);
+                $this->storage->writeStream($ref, $ref->dataFile(), $stream);
+                $written[] = $ref->dataFile();
             } finally {
                 if (is_resource($stream)) {
                     fclose($stream);
                 }
             }
-            $this->filesystem->write($partition . 'metadata.json', json_encode([
+            $this->storage->write($ref, $ref->metadataFile(), json_encode([
                 'snapshot_id' => $uuid,
+                'snapshot_date' => $ref->snapshotDate,
                 'created_at' => gmdate('Y-m-d\TH:i:s\Z'),
                 'database' => $this->connection->database,
                 'source' => "$schema.$relation",
@@ -125,9 +119,14 @@ class SnapshotWorker
                 'schema_version' => $schemaVersion,
                 'schema' => $columns,
                 'crs' => $crs !== null ? "EPSG:$crs" : null,
+                'files' => $files,
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            $written[] = $ref->metadataFile();
 
-            $this->snapshot->finish($uuid, 'succeeded', "s3://{$this->bucket}/$partition", $rowCount, null, $schemaVersion, $columns);
+            $superseded = $this->snapshot->publish($uuid, $ref->snapshotDate, $this->storage->locationOf($ref), $rowCount, $schemaVersion, $columns, $files);
+            if ($superseded !== null) {
+                $this->deleteFilesOf($superseded, $ref);
+            }
             return 'succeeded';
         } catch (Throwable $e) {
             // Bounded and redacted: the PG connection string (with password)
@@ -138,11 +137,38 @@ class SnapshotWorker
                 $msg = substr($msg, -2000);
             }
             $this->snapshot->finish($uuid, 'failed', null, null, $msg);
+            foreach ($written as $file) {
+                try {
+                    $this->storage->delete($ref, $file);
+                } catch (Throwable) {
+                    // best effort; orphans without a catalog row are invisible
+                }
+            }
             return 'failed';
         } finally {
             if (file_exists($tmpFile)) {
                 @unlink($tmpFile);
             }
+        }
+    }
+
+    /**
+     * Removes the files of a superseded row (same relation and date, so the
+     * same directory as $current). Best effort: the catalog is already
+     * consistent, an orphaned object only costs storage.
+     */
+    private function deleteFilesOf(string $supersededUuid, SnapshotRef $current): void
+    {
+        try {
+            $old = $this->snapshot->get($supersededUuid)['data'];
+            $files = is_string($old['files'] ?? null) ? (json_decode($old['files'], true) ?: []) : [];
+            $oldRef = new SnapshotRef($current->database, $current->schema, $current->relation, $current->snapshotDate, $supersededUuid);
+            foreach ($files as $f) {
+                $this->storage->delete($oldRef, $f['name']);
+            }
+            $this->storage->delete($oldRef, $oldRef->metadataFile());
+        } catch (Throwable $e) {
+            error_log("snapshot: could not delete files of superseded $supersededUuid: " . $e->getMessage());
         }
     }
 

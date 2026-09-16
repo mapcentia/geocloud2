@@ -48,12 +48,18 @@ class App
             "region" => "eu-west-1",
         ],
 
-        // Parquet snapshots to S3 (POST /api/v4/snapshots). Credentials are read
-        // from the "s3" block (id/secret). Leave "bucket" empty to disable.
+        // Parquet snapshots (POST /api/v4/snapshots, GET .../relations/{relation}/snapshots).
+        // storage: "s3" (credentials from the "s3" block) or "local" (localPath).
+        // download: "proxy" streams through GC2; "redirect" answers with a short-lived
+        // presigned URL (s3 only). Leave bucket/localPath empty to disable.
         "snapshot" => [
+            "storage" => "s3",
             "bucket" => "",
             "prefix" => "",
             "region" => "eu-west-1",
+            "localPath" => "",
+            "download" => "proxy",
+            "urlTtl" => 300,
         ],
 
         // MapCache config

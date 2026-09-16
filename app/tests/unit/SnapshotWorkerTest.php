@@ -7,11 +7,11 @@
 
 use app\inc\Connection;
 use app\inc\Model;
+use app\inc\snapshot\LocalSnapshotStorage;
+use app\inc\snapshot\SnapshotRef;
 use app\inc\SnapshotWorker;
 use app\models\Snapshot;
 use Codeception\Test\Unit;
-use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /**
  * Runs the snapshot worker end to end against a provisioned database with a
@@ -70,9 +70,7 @@ class SnapshotWorkerTest extends Unit
     {
         return new SnapshotWorker(
             new Connection(database: self::$database),
-            new Filesystem(new LocalFilesystemAdapter($this->storeDir)),
-            'test-bucket',
-            $prefix,
+            new LocalSnapshotStorage($this->storeDir, $prefix),
             $this->tmpDir,
         );
     }
@@ -80,24 +78,6 @@ class SnapshotWorkerTest extends Unit
     private function snapshot(): Snapshot
     {
         return new Snapshot(new Connection(database: self::$database));
-    }
-
-    public function testPartitionKeyLayout(): void
-    {
-        $this->assertSame(
-            'prod/mydb/schema=geodanmark/relation=bygning/_gc2_snapshot_date=2026-09-15/',
-            SnapshotWorker::partitionKey('prod', 'mydb', 'geodanmark', 'bygning', '2026-09-15')
-        );
-        $this->assertSame(
-            'mydb/schema=s/relation=r/_gc2_snapshot_date=2026-09-15/',
-            SnapshotWorker::partitionKey('', 'mydb', 's', 'r', '2026-09-15'),
-            'empty prefix is omitted'
-        );
-        $this->assertSame(
-            'p/mydb/schema=s/relation=r/_gc2_snapshot_date=2026-09-15/',
-            SnapshotWorker::partitionKey('/p/', 'mydb', 's', 'r', '2026-09-15'),
-            'prefix slashes are normalised'
-        );
     }
 
     public function testTableSnapshotSucceedsAndWritesParquetAndMetadata(): void
@@ -110,11 +90,11 @@ class SnapshotWorkerTest extends Unit
         $this->assertSame(1, $summary['succeeded'], 'error: ' . ($this->snapshot()->get($uuid)['data']['error'] ?? ''));
 
         $partition = 'unit/' . self::$database . '/schema=snap/relation=points/_gc2_snapshot_date=' . $day . '/';
-        $this->assertFileExists($this->storeDir . '/' . $partition . 'data.parquet');
-        $this->assertGreaterThan(0, filesize($this->storeDir . '/' . $partition . 'data.parquet'));
-        $this->assertFileExists($this->storeDir . '/' . $partition . 'metadata.json');
+        $this->assertFileExists($this->storeDir . '/' . $partition . 'data-' . $uuid . '.parquet');
+        $this->assertGreaterThan(0, filesize($this->storeDir . '/' . $partition . 'data-' . $uuid . '.parquet'));
+        $this->assertFileExists($this->storeDir . '/' . $partition . 'metadata-' . $uuid . '.json');
 
-        $meta = json_decode(file_get_contents($this->storeDir . '/' . $partition . 'metadata.json'), true);
+        $meta = json_decode(file_get_contents($this->storeDir . '/' . $partition . 'metadata-' . $uuid . '.json'), true);
         $this->assertSame($uuid, $meta['snapshot_id']);
         $this->assertSame(self::$database, $meta['database']);
         $this->assertSame('snap.points', $meta['source']);
@@ -135,12 +115,19 @@ class SnapshotWorkerTest extends Unit
 
         $row = $this->snapshot()->get($uuid)['data'];
         $this->assertSame('succeeded', $row['status']);
-        $this->assertSame('s3://test-bucket/' . $partition, $row['s3_path']);
         $this->assertSame(3, (int)$row['row_count']);
         $this->assertSame($meta['schema_version'], $row['schema_version'], 'row carries the same fingerprint as metadata.json');
         // assertEquals: jsonb reorders object keys, the content must match.
         $this->assertEquals($meta['schema'], json_decode($row['relation_schema'], true), 'row carries the same column list as metadata.json');
         $this->assertNotNull($row['finished']);
+
+        $this->assertSame($day, $meta['snapshot_date']);
+        $this->assertEquals([['name' => 'data-' . $uuid . '.parquet', 'size_bytes' => filesize($this->storeDir . '/' . $partition . 'data-' . $uuid . '.parquet')]], $meta['files']);
+        $this->assertSame($day, $row['snapshot_date']);
+        $this->assertNotNull($row['published']);
+        $this->assertEquals($meta['files'], json_decode($row['files'], true));
+        $this->assertSame((int)$meta['files'][0]['size_bytes'], (int)$row['size_bytes']);
+        $this->assertSame('file://' . $this->storeDir . '/' . $partition, $row['s3_path']);
 
         $this->assertFileDoesNotExist($this->tmpDir . '/' . $uuid . '.parquet', 'tmp file is removed');
     }
@@ -153,7 +140,7 @@ class SnapshotWorkerTest extends Unit
         $this->assertSame(1, $summary['succeeded'], 'error: ' . ($this->snapshot()->get($uuid)['data']['error'] ?? ''));
 
         $partition = 'unit/' . self::$database . '/schema=snap/relation=points_view/_gc2_snapshot_date=' . $day . '/';
-        $meta = json_decode(file_get_contents($this->storeDir . '/' . $partition . 'metadata.json'), true);
+        $meta = json_decode(file_get_contents($this->storeDir . '/' . $partition . 'metadata-' . $uuid . '.json'), true);
         $this->assertSame(2, $meta['row_count']);
         $this->assertSame('EPSG:4326', $meta['crs']);
     }
@@ -167,14 +154,14 @@ class SnapshotWorkerTest extends Unit
         $this->assertSame(2, $summary['succeeded']);
 
         $mvPartition = 'unit/' . self::$database . '/schema=snap/relation=points_mv/_gc2_snapshot_date=' . $day . '/';
-        $mvMeta = json_decode(file_get_contents($this->storeDir . '/' . $mvPartition . 'metadata.json'), true);
+        $mvMeta = json_decode(file_get_contents($this->storeDir . '/' . $mvPartition . 'metadata-' . $mvUuid . '.json'), true);
         $this->assertSame($mvUuid, $mvMeta['snapshot_id']);
         $this->assertSame(3, $mvMeta['row_count']);
         $this->assertSame('EPSG:25832', $mvMeta['crs']);
         $this->assertNotSame(SnapshotWorker::schemaVersion([]), $mvMeta['schema_version'], 'a materialized view must yield real column metadata, not an empty set');
 
         $tablePartition = 'unit/' . self::$database . '/schema=snap/relation=points/_gc2_snapshot_date=' . $day . '/';
-        $tableMeta = json_decode(file_get_contents($this->storeDir . '/' . $tablePartition . 'metadata.json'), true);
+        $tableMeta = json_decode(file_get_contents($this->storeDir . '/' . $tablePartition . 'metadata-' . $tableUuid . '.json'), true);
         $this->assertSame($tableUuid, $tableMeta['snapshot_id']);
         $this->assertSame($tableMeta['schema_version'], $mvMeta['schema_version'], 'same columns as the underlying table give the same schema_version');
     }
@@ -187,7 +174,7 @@ class SnapshotWorkerTest extends Unit
         $this->assertSame(1, $summary['succeeded'], 'error: ' . ($this->snapshot()->get($uuid)['data']['error'] ?? ''));
 
         $partition = 'unit/' . self::$database . '/schema=snap/relation=plain/_gc2_snapshot_date=' . $day . '/';
-        $meta = json_decode(file_get_contents($this->storeDir . '/' . $partition . 'metadata.json'), true);
+        $meta = json_decode(file_get_contents($this->storeDir . '/' . $partition . 'metadata-' . $uuid . '.json'), true);
         $this->assertSame(2, $meta['row_count']);
         $this->assertNull($meta['crs']);
     }
@@ -210,6 +197,35 @@ class SnapshotWorkerTest extends Unit
     {
         $this->worker()->processPending(5); // drain
         $this->assertSame(['processed' => 0, 'succeeded' => 0, 'failed' => 0], $this->worker()->processPending(5));
+    }
+
+    public function testRerunSameDaySupersedesAndDeletesOldFile(): void
+    {
+        $first = $this->snapshot()->create('snap', 'points', null, self::$database);
+        $this->worker()->processPending(5);
+        $day = gmdate('Y-m-d');
+        $partition = 'unit/' . self::$database . '/schema=snap/relation=points/_gc2_snapshot_date=' . $day . '/';
+        $this->assertFileExists($this->storeDir . '/' . $partition . 'data-' . $first . '.parquet');
+
+        $second = $this->snapshot()->create('snap', 'points', null, self::$database);
+        $summary = $this->worker()->processPending(5);
+        $this->assertSame(1, $summary['succeeded']);
+
+        $this->assertSame('superseded', $this->snapshot()->get($first)['data']['status']);
+        $this->assertSame($second, $this->snapshot()->getPublished('snap', 'points', $day)['data']['uuid']);
+        $this->assertFileDoesNotExist($this->storeDir . '/' . $partition . 'data-' . $first . '.parquet', 'superseded files are removed');
+        $this->assertFileDoesNotExist($this->storeDir . '/' . $partition . 'metadata-' . $first . '.json');
+        $this->assertFileExists($this->storeDir . '/' . $partition . 'data-' . $second . '.parquet');
+    }
+
+    public function testFailedRunIsNotPublishedAndLeavesNoFiles(): void
+    {
+        $uuid = $this->snapshot()->create('snap', 'does_not_exist', null, self::$database);
+        $this->worker()->processPending(5);
+        $row = $this->snapshot()->get($uuid)['data'];
+        $this->assertSame('failed', $row['status']);
+        $this->assertNull($row['published']);
+        $this->assertSame([], $this->snapshot()->listPublished('snap', 'does_not_exist'));
     }
 
     private function rmrf(string $dir): void

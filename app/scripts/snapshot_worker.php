@@ -17,50 +17,30 @@ include_once(__DIR__ . "/../conf/App.php");
 include_once(__DIR__ . "/../vendor/autoload.php");
 
 use app\conf\App;
+use app\exceptions\GC2Exception;
 use app\inc\Cache;
 use app\inc\Connection;
 use app\inc\Model;
 use app\inc\SnapshotWorker;
+use app\inc\snapshot\SnapshotStorageFactory;
 use app\models\Database;
-use Aws\S3\S3Client;
-use League\Flysystem\AwsS3V3\AwsS3V3Adapter;
-use League\Flysystem\Filesystem;
 
 new App();
 Cache::setInstance();
 
-$bucket = App::$param['snapshot']['bucket'] ?? '';
-if ($bucket === '') {
-    echo "SNAPSHOT WORKER: snapshot.bucket is not configured, nothing to do\n";
+try {
+    $storage = SnapshotStorageFactory::fromApp();
+} catch (GC2Exception $e) {
+    echo "SNAPSHOT WORKER: {$e->getMessage()}, nothing to do\n";
     exit(0);
-}
-$prefix = App::$param['snapshot']['prefix'] ?? '';
-$region = App::$param['snapshot']['region'] ?? 'eu-west-1';
-
-$s3Id = App::$param['s3']['id'] ?? '';
-$s3Secret = App::$param['s3']['secret'] ?? '';
-if ($s3Id === '' || $s3Secret === '') {
-    echo "SNAPSHOT WORKER: s3.id/s3.secret are not configured, nothing to do\n";
-    exit(0);
+} catch (Throwable $e) {
+    echo "SNAPSHOT WORKER: could not initialise snapshot storage: {$e->getMessage()}\n";
+    exit(1);
 }
 
 $batchPerDb = (int)(getenv('GC2_SNAPSHOT_BATCH') ?: 2);
 $skip = ['rdsadmin', 'template1', 'template0', 'postgres', 'postgis_template', 'template_geocloud', 'mapcentia', 'gc2scheduler'];
 $only = $argv[1] ?? null;
-
-try {
-    $filesystem = new Filesystem(new AwsS3V3Adapter(new S3Client([
-        'credentials' => [
-            'key' => $s3Id,
-            'secret' => $s3Secret,
-        ],
-        'region' => $region,
-        'version' => 'latest',
-    ]), $bucket));
-} catch (Throwable $e) {
-    echo "SNAPSHOT WORKER: could not initialise S3 storage: {$e->getMessage()}\n";
-    exit(1);
-}
 
 $dbs = $only ? [$only] : new Database()->listAllDbs()['data'];
 $totals = ['processed' => 0, 'succeeded' => 0, 'failed' => 0];
@@ -74,7 +54,7 @@ foreach ($dbs as $db) {
     $connection = new Connection(database: $db);
     try {
         $tmpDir = App::$param['path'] . "app/tmp/$db/__snapshots";
-        $summary = new SnapshotWorker($connection, $filesystem, $bucket, $prefix, $tmpDir)
+        $summary = new SnapshotWorker($connection, $storage, $tmpDir)
             ->processPending($batchPerDb);
         if ($summary['processed'] > 0) {
             echo "$db: processed={$summary['processed']} ok={$summary['succeeded']} failed={$summary['failed']}\n";
