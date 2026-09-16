@@ -16,12 +16,12 @@ use app\api\v4\Controller;
 use app\api\v4\Responses\AcceptedResponse;
 use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
-use app\conf\App;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Model;
 use app\inc\Route2;
+use app\inc\snapshot\SnapshotStorageFactory;
 use app\models\Snapshot as SnapshotModel;
 use OpenApi\Annotations\OpenApi;
 use OpenApi\Attributes as OA;
@@ -170,9 +170,9 @@ class Snapshot extends AbstractApi
     #[Override]
     public function post_index(): Response
     {
-        if (empty(App::$param['snapshot']['bucket'])) {
-            throw new GC2Exception("Snapshot storage is not configured on this server", 501, null, "SNAPSHOT_NOT_CONFIGURED");
-        }
+        // Same check the worker and the read API make: s3 needs bucket +
+        // credentials, local needs localPath. Throws 501 SNAPSHOT_NOT_CONFIGURED.
+        SnapshotStorageFactory::fromApp();
         $body = json_decode(Input::getBody(), true);
         $schema = (string)$body['schema'];
         $relation = (string)$body['relation'];
