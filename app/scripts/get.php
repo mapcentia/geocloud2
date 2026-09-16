@@ -17,6 +17,7 @@ use app\conf\Connection;
 use app\controllers\Tilecache;
 use app\inc\Cache;
 use app\inc\Util;
+use app\inc\WfsPaging;
 use app\models\Database;
 use app\models\Layer;
 use app\models\Table;
@@ -122,18 +123,28 @@ if (sizeof(explode("|http", $url)) > 1) {
         $url = substr($url, 5); // Strip json:
     }
     $grid = null;
-    // Check if Content type is zip
-    $headers = get_headers($url);
-    print "\n\nheaders\n";
-    foreach ($headers as $header) {
-        if ($header == "Content-Type: application/zip") {
-            $getFunction = "getCmdZip";
+    // A plain WFS 2.0.0 GetFeature URL is paged with startIndex/count (and
+    // sortBy when it can be determined). Grid ("|") jobs and WFS 1.x keep
+    // their existing paths; an explicit startIndex means the caller pages.
+    $wfsPaging = null;
+    if (!$getFunction && ($wfsPaging = WfsPaging::detect($url)) !== null) {
+        print "\nInfo: WFS 2.0.0 GetFeature detected. Using startIndex/count paging (count={$wfsPaging->pageSize}).";
+        $getFunction = "getCmdWfsPaging";
+    }
+    if ($getFunction !== "getCmdWfsPaging") {
+        // Check if Content type is zip
+        $headers = get_headers($url);
+        print "\n\nheaders\n";
+        foreach ($headers as $header) {
+            if ($header == "Content-Type: application/zip") {
+                $getFunction = "getCmdZip";
+            }
+            if (str_contains($header, "text/csv")) {
+                $contentIsCsv = true;
+                $getFunction = "getCmd";
+            }
+            print " $header\n";
         }
-        if (str_contains($header, "text/csv")) {
-            $contentIsCsv = true;
-            $getFunction = "getCmd";
-        }
-        print " $header\n";
     }
     // Check file extension if getFunction still not is set
     if (!$getFunction) {
@@ -351,7 +362,7 @@ function getCmd(): void
  */
 function getCmdPaging(): void
 {
-    global $randTableName, $type, $db, $workingSchema, $url, $grid, $id, $encoding, $downloadSchema, $table, $pass, $cellTemps, $report, $numberOfFeatures;
+    global $randTableName, $type, $db, $workingSchema, $url, $grid, $id, $encoding, $downloadSchema, $table, $pass, $cellTemps, $report, $numberOfFeatures, $srid;
 
     $downloadSchema ? $report[DOWNLOADTYPE] = GMLAS : $report[DOWNLOADTYPE] = GML;
 
@@ -362,156 +373,6 @@ function getCmdPaging(): void
     $res = $table->execQuery($sql);
     $cellTemps = [];
 
-    function fetch($row, $url, $randTableName, $encoding, $downloadSchema, $workingSchema, $type, $db, $id): void
-    {
-        global $pass, $count, $cellNumber, $table, $cellTemps, $id, $numberOfFeatures, $srid, $out, $err, $tmpDir;
-        $out = [];
-        $bbox = "{$row["st_xmin"]},{$row["st_ymin"]},{$row["st_xmax"]},{$row["st_ymax"]},EPSG:{$srid}";
-        $wfsUrl = $url . "&BBOX=";
-        $gmlName = $randTableName . "-" . $row["gid"] . ".gml";
-
-        $cellTemp = "_" . time() . "_cell_" . md5(microtime() . rand());
-
-        if (!file_put_contents($tmpDir . $gmlName, Util::wget($wfsUrl . $bbox))) {
-            print "\nError: could not get GML for cell #{$row["gid"]}";
-            $pass = false;
-        }
-
-        $gmlPath = $tmpDir . $gmlName;
-
-        // SRS normalizer
-        $logNormalizeCount = true;
-
-        $perlExpr = $logNormalizeCount ? <<<'PERL'
-            BEGIN { $c = 0; }
-            $c += s{
-              (srsName=")
-              (?:
-                https?://www\.opengis\.net/gml/srs/epsg\.xml\#(\d+)
-              | https?://www\.opengis\.net/def/crs/EPSG/0/(\d+)/?
-              | urn:ogc:def:crs:EPSG::(\d+)
-              )
-              (")
-            }{
-              $1 . "EPSG:" . ($2 // $3 // $4) . $5
-            }gex;
-            END { print STDERR "SRS normalized: $c\n"; }
-            PERL
-            : <<<'PERL'
-            $c += s{
-              (srsName=")
-              (?:
-                https?://www\.opengis\.net/gml/srs/epsg\.xml\#(\d+)
-              | https?://www\.opengis\.net/def/crs/EPSG/0/(\d+)/?
-              | urn:ogc:def:crs:EPSG::(\d+)
-              )
-              (")
-            }{
-              $1 . "EPSG:" . ($2 // $3 // $4) . $5
-            }gex;
-            PERL;
-
-        // Normalize SRS in-place
-        $normalizeCmd = "perl -i -0777 -pe " . escapeshellarg($perlExpr) . " " . escapeshellarg($gmlPath);
-        exec($normalizeCmd . ' 2>&1');
-
-        // Build final cmd
-        if ($downloadSchema) {
-            $extraArgs = [
-                "-oo " . escapeshellarg("CONFIG_FILE=/var/www/geocloud2/app/scripts/gmlasconf.xml"),
-            ];
-            $cmd = buildOgr2ogrCmd(
-                encoding: $encoding,
-                srid: $srid,
-                db: $db,
-                workingSchema: $workingSchema,
-                randTableName: $cellTemp,
-                inputPath: "GMLAS:" . escapeshellarg($gmlPath),
-                type: $type,
-                preserveFid: true,
-                extraArgs: $extraArgs,
-            );
-        } else {
-            $cmd = buildOgr2ogrCmd(
-                encoding: $encoding,
-                srid: $srid,
-                db: $db,
-                workingSchema: $workingSchema,
-                randTableName: $cellTemp,
-                inputPath: escapeshellarg($gmlPath),
-                type: $type,
-                preserveFid: true,
-            );
-        }
-
-        exec($cmd . ' 2>&1', $out, $err);
-        if ($err) {
-            $pass = false;
-        }
-
-        // The GMLAS driver sometimes throws a 404 error, so we can't stop on this kind of error
-        foreach ($out as $line) {
-            if (str_contains($line, "FAILURE") || (str_contains($line, "ERROR") && $line != "ERROR 1: HTTP error code : 404")) {
-                $pass = false;
-                break;
-            }
-        }
-
-        if (!$pass) {
-            if ($count > 30) {
-                print "\nError: Too many recursive tries to fetch cell #{$cellNumber}";
-                cleanUp();
-                exit(1);
-            }
-            $count++;
-            sleep(5 * $count); // We increase the wait for each try
-            fetch($row, $url, $randTableName, $encoding, $downloadSchema, $workingSchema, $type, $db, $id);
-            foreach ($out as $line) {
-                print "\n" . $line;
-            }
-            print "\nRequest: " . $wfsUrl . $bbox;
-            print "\nInfo: Outputting the first few lines of the file:";
-            $handle = @fopen($tmpDir . $gmlName, "r");
-            if ($handle) {
-                for ($i = 0; $i < 40; $i++) {
-                    $buffer = fgets($handle, 4096);
-                    print $buffer;
-                }
-                if (!feof($handle)) {
-                    print "\nError: unexpected fgets() fail.";
-                }
-                fclose($handle);
-            }
-            @unlink($tmpDir . $gmlName);
-            cleanUp();
-            exit(1);
-        }
-
-        @unlink($tmpDir . $gmlName);
-
-        $checkSql = "SELECT EXISTS (
-           SELECT FROM pg_catalog.pg_class c
-           JOIN   pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-           WHERE  n.nspname = '{$workingSchema}'
-           AND    c.relname = '{$cellTemp}'
-           AND    c.relkind = 'r'    -- only tables
-           ) AS exists";
-        $checkRes = $table->execQuery($checkSql);
-        if ($table->fetchRow($checkRes)["exists"]) {
-            $sql = "SELECT count(*) AS number FROM {$workingSchema}.{$cellTemp}";
-            try {
-                $res = $table->prepare($sql);
-                $res->execute();
-                $numberOfFeatures[] = $table->fetchRow($res)["number"];
-                $cellTemps[] = $cellTemp;
-            } catch (PDOException $e) {
-                $numberOfFeatures[] = 0;
-            }
-        } else {
-            $numberOfFeatures[] = 0;
-        }
-    }
-
     print "\n";
     $cellNumber = 1;
     print "\nProcessing cell ";
@@ -520,9 +381,179 @@ function getCmdPaging(): void
         $count = 1;
         print $cellNumber . ' ';
         $cellNumber++;
-        fetch($row, $url, $randTableName, $encoding, $downloadSchema, $workingSchema, $type, $db, $id);
+        $bbox = "{$row["st_xmin"]},{$row["st_ymin"]},{$row["st_xmax"]},{$row["st_ymax"]},EPSG:{$srid}";
+        fetchPart("cell-" . $row["gid"], $url . "&BBOX=" . $bbox);
     }
     print "\n";
+
+    finalizePagedTables();
+}
+
+function fetchPart(string $label, string $requestUrl): array
+{
+    global $pass, $count, $cellNumber, $table, $cellTemps, $id, $numberOfFeatures, $out, $err, $tmpDir,
+           $randTableName, $encoding, $downloadSchema, $workingSchema, $type, $db, $srid;
+    $out = [];
+    $pass = true; // each attempt starts clean so a successful retry counts
+    $counts = ['matched' => null, 'returned' => null];
+    $gmlName = $randTableName . "-" . $label . ".gml";
+
+    $cellTemp = "_" . time() . "_cell_" . md5(microtime() . rand());
+
+    if (!file_put_contents($tmpDir . $gmlName, Util::wget($requestUrl))) {
+        print "\nError: could not get GML for {$label}";
+        $pass = false;
+    } else {
+        // numberMatched/numberReturned sit on the FeatureCollection root; WFS paging needs them
+        $counts = WfsPaging::parseCounts((string)file_get_contents($tmpDir . $gmlName, false, null, 0, 8192));
+    }
+
+    $gmlPath = $tmpDir . $gmlName;
+
+    // SRS normalizer
+    $logNormalizeCount = true;
+
+    $perlExpr = $logNormalizeCount ? <<<'PERL'
+        BEGIN { $c = 0; }
+        $c += s{
+          (srsName=")
+          (?:
+            https?://www\.opengis\.net/gml/srs/epsg\.xml\#(\d+)
+          | https?://www\.opengis\.net/def/crs/EPSG/0/(\d+)/?
+          | urn:ogc:def:crs:EPSG::(\d+)
+          )
+          (")
+        }{
+          $1 . "EPSG:" . ($2 // $3 // $4) . $5
+        }gex;
+        END { print STDERR "SRS normalized: $c\n"; }
+        PERL
+        : <<<'PERL'
+        $c += s{
+          (srsName=")
+          (?:
+            https?://www\.opengis\.net/gml/srs/epsg\.xml\#(\d+)
+          | https?://www\.opengis\.net/def/crs/EPSG/0/(\d+)/?
+          | urn:ogc:def:crs:EPSG::(\d+)
+          )
+          (")
+        }{
+          $1 . "EPSG:" . ($2 // $3 // $4) . $5
+        }gex;
+        PERL;
+
+    // Normalize SRS in-place
+    $normalizeCmd = "perl -i -0777 -pe " . escapeshellarg($perlExpr) . " " . escapeshellarg($gmlPath);
+    exec($normalizeCmd . ' 2>&1');
+
+    // Build final cmd
+    if ($downloadSchema) {
+        $extraArgs = [
+            "-oo " . escapeshellarg("CONFIG_FILE=/var/www/geocloud2/app/scripts/gmlasconf.xml"),
+        ];
+        $cmd = buildOgr2ogrCmd(
+            encoding: $encoding,
+            srid: $srid,
+            db: $db,
+            workingSchema: $workingSchema,
+            randTableName: $cellTemp,
+            inputPath: "GMLAS:" . escapeshellarg($gmlPath),
+            type: $type,
+            preserveFid: true,
+            extraArgs: $extraArgs,
+        );
+    } else {
+        $cmd = buildOgr2ogrCmd(
+            encoding: $encoding,
+            srid: $srid,
+            db: $db,
+            workingSchema: $workingSchema,
+            randTableName: $cellTemp,
+            inputPath: escapeshellarg($gmlPath),
+            type: $type,
+            preserveFid: true,
+        );
+    }
+
+    exec($cmd . ' 2>&1', $out, $err);
+    if ($err) {
+        $pass = false;
+    }
+
+    // The GMLAS driver sometimes throws a 404 error, so we can't stop on this kind of error
+    foreach ($out as $line) {
+        if (str_contains($line, "FAILURE") || (str_contains($line, "ERROR") && $line != "ERROR 1: HTTP error code : 404")) {
+            $pass = false;
+            break;
+        }
+    }
+
+    if (!$pass) {
+        if ($count > 30) {
+            print "\nError: Too many recursive tries to fetch {$label}";
+            cleanUp();
+            exit(1);
+        }
+        $count++;
+        sleep(5 * $count); // We increase the wait for each try
+        $retried = fetchPart($label, $requestUrl);
+        if ($pass) {
+            return $retried; // the retry succeeded
+        }
+        foreach ($out as $line) {
+            print "\n" . $line;
+        }
+        print "\nRequest: " . $requestUrl;
+        print "\nInfo: Outputting the first few lines of the file:";
+        $handle = @fopen($tmpDir . $gmlName, "r");
+        if ($handle) {
+            for ($i = 0; $i < 40; $i++) {
+                $buffer = fgets($handle, 4096);
+                print $buffer;
+            }
+            if (!feof($handle)) {
+                print "\nError: unexpected fgets() fail.";
+            }
+            fclose($handle);
+        }
+        @unlink($tmpDir . $gmlName);
+        cleanUp();
+        exit(1);
+    }
+
+    @unlink($tmpDir . $gmlName);
+
+    $checkSql = "SELECT EXISTS (
+       SELECT FROM pg_catalog.pg_class c
+       JOIN   pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+       WHERE  n.nspname = '{$workingSchema}'
+       AND    c.relname = '{$cellTemp}'
+       AND    c.relkind = 'r'    -- only tables
+       ) AS exists";
+    $checkRes = $table->execQuery($checkSql);
+    if ($table->fetchRow($checkRes)["exists"]) {
+        $sql = "SELECT count(*) AS number FROM {$workingSchema}.{$cellTemp}";
+        try {
+            $res = $table->prepare($sql);
+            $res->execute();
+            $numberOfFeatures[] = $table->fetchRow($res)["number"];
+            $cellTemps[] = $cellTemp;
+        } catch (PDOException $e) {
+            $numberOfFeatures[] = 0;
+        }
+    } else {
+        $numberOfFeatures[] = 0;
+    }
+    return $counts;
+}
+/**
+ * Unions the per-cell/per-page temp tables into the job table, resolves the
+ * identifier, removes duplicates and re-sequences gid. Shared by the grid
+ * (bbox) paging and the WFS startIndex/count paging.
+ */
+function finalizePagedTables(): void
+{
+    global $table, $workingSchema, $randTableName, $cellTemps, $report, $id, $numberOfFeatures;
 
     $selects = [];
     $drops = [];
@@ -788,6 +819,62 @@ function getCmdPaging(): void
     arsort($numberOfFeatures);
     print "\nInfo: Highest number of features in cell: " . array_values($numberOfFeatures)[0] . (" (#" . ((int)array_keys($numberOfFeatures)[0] + 1)) . ")";
     $report[MAXCELLCOUNT] = array_values($numberOfFeatures)[0];
+}
+
+/**
+ * WFS 2.0.0 paging: fetches the job URL page by page with startIndex/count
+ * (and sortBy when the DescribeFeatureType response has an id-like
+ * property), loads each page like a grid cell, then unions the pages.
+ */
+function getCmdWfsPaging(): void
+{
+    global $wfsPaging, $report, $downloadSchema, $pass, $cellTemps, $numberOfFeatures, $count, $cellNumber;
+
+    $downloadSchema ? $report[DOWNLOADTYPE] = GMLAS : $report[DOWNLOADTYPE] = GML;
+
+    print "\nInfo: Start WFS paged download (count={$wfsPaging->pageSize})...";
+
+    if ($wfsPaging->sortBy !== null) {
+        print "\nInfo: sortBy from URL: {$wfsPaging->sortBy}";
+    } else {
+        $property = null;
+        try {
+            $xsd = Util::wget($wfsPaging->describeFeatureTypeUrl(), 10, 120);
+            $property = is_string($xsd) ? WfsPaging::pickSortProperty($xsd) : null;
+        } catch (Throwable $e) {
+            print "\nWarning: DescribeFeatureType failed: " . $e->getMessage();
+        }
+        if ($property !== null) {
+            $wfsPaging = $wfsPaging->withSortBy($property);
+            print "\nInfo: sortBy set to {$property} (from DescribeFeatureType)";
+        } else {
+            print "\nWarning: Could not determine a sortBy property. Paging without sortBy; the server must page in a stable order.";
+        }
+    }
+
+    $pass = true;
+    $cellTemps = [];
+    $numberOfFeatures = [];
+    $startIndex = 0;
+    $page = 1;
+    print "\nProcessing page ";
+    while (true) {
+        $count = 1;
+        $cellNumber = $page;
+        print $page . ' ';
+        $counts = fetchPart("page-" . $page, $wfsPaging->pageUrl($startIndex));
+        if ($counts['returned'] === null) {
+            print "\nWarning: numberReturned missing on page {$page}; assuming it was the last page.";
+        }
+        if (WfsPaging::isLastPage($startIndex, $counts['returned'], $counts['matched'], $wfsPaging->pageSize)) {
+            break;
+        }
+        $startIndex += $counts['returned'];
+        $page++;
+    }
+    print "\nInfo: Fetched {$page} page(s)" . ($counts['matched'] !== null ? " of {$counts['matched']} matched features" : "") . ".";
+
+    finalizePagedTables();
 }
 
 function getCmdFile(): void
