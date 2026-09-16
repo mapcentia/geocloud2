@@ -901,6 +901,9 @@ class Model
             if ($field == 'authentication') {
                 $response = $row['authentication'];
             }
+            if ($field == 'privileges') {
+                $response = $row['privileges'];
+            }
             if ($field == 'fieldconf') {
                 $response = $row['fieldconf'];
             }
