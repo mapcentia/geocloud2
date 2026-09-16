@@ -81,7 +81,7 @@ $extra = $options["extra"] == "null" ? null : base64_decode($options["extra"]);
 $preSql = $options["preSql"] == "null" ? null : base64_decode($options["preSql"]);
 $postSql = $options["postSql"] == "null" ? null : base64_decode($options["postSql"]);
 $downloadSchema = $options["downloadSchema"];
-$snapshotAfterImport = $options["snapshot"];
+$snapshotAfterImport = $options["snapshot"] ?? null;
 
 $workingSchema = "_gc2scheduler";
 
