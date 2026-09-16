@@ -14,7 +14,6 @@ use app\exceptions\GC2Exception;
 use app\inc\Model;
 use app\inc\SchedulerLock;
 use Cron\CronExpression;
-use Exception;
 use InvalidArgumentException;
 
 
@@ -145,22 +144,45 @@ class Job extends Model
                 // get.php registers itself in started_jobs (see SchedulerLock); wait until that run is over.
                 $lock = new SchedulerLock();
                 $host = gethostname() ?: 'unknown';
-                $waited = 0;
-                do {
-                    sleep(1);
-                    $waited++;
-                    $run = $lock->latestRunForPid($this->childPidOf($pid) ?? $pid, $host);
-                    if ($run !== null && $run['status'] !== 'running') {
-                        break;
-                    }
-                    if ($run === null && $waited > 30 && !$this->isAlive($pid)) {
-                        break; // died before registering
-                    }
-                } while (true);
+                // Capture the child (php) pid promptly: a fast run (skipped path,
+                // or a tiny import) can finish and take its `timeout` wrapper with
+                // it within well under a second, so this must not wait a whole
+                // second before the first pgrep -P attempt.
+                $childPid = $this->childPidOf($pid);
+                $start = microtime(true);
+                while ($childPid === null && $this->isAlive($pid) && (microtime(true) - $start) < 2.0) {
+                    usleep(100000);
+                    $childPid = $this->childPidOf($pid);
+                }
+                $this->waitForRun($pid, $childPid, $host, $lock);
                 $lock->release();
             }
         }
         return true;
+    }
+
+    /**
+     * Waits until the run registered under $childPid (or, if it never
+     * registered, $wrapperPid) leaves 'running'. Liveness of the wrapper
+     * process is the stop condition: once it's gone, the child is gone too,
+     * so one last lookup catches the final registry UPDATE.
+     */
+    public function waitForRun(int $wrapperPid, ?int $childPid, string $host, SchedulerLock $lock): ?array
+    {
+        $lookupPid = $childPid ?? $wrapperPid;
+        while (true) {
+            $run = $lock->latestRunForPid($lookupPid, $host);
+            if ($run !== null && $run['status'] !== 'running') {
+                break;
+            }
+            if (!$this->isAlive($wrapperPid)) {
+                // wrapper gone: the child is gone too; one last lookup catches the final UPDATE
+                $run = $lock->latestRunForPid($lookupPid, $host);
+                break;
+            }
+            sleep(1);
+        }
+        return $run;
     }
 
     /** The pid of the php process under a `timeout` wrapper pid, or null. */
