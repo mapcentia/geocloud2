@@ -208,9 +208,15 @@ Controller `RelationSnapshot`, route
 | GET/HEAD | `.../snapshots/{date}/data` | `get_data` / `head_data` | the single data file; 409 `MULTI_FILE_SNAPSHOT` (with the file list) when the snapshot has several |
 | GET/HEAD | `.../snapshots/{date}/files/{file}` | `get_files` / `head_files` | that file |
 
-`date` is validated as `YYYY-MM-DD`; `file` must be one of the names in the
-catalog row (never a free path). Errors: 404 `NO_SNAPSHOT_ERROR` (unknown date
-or file), 403 `INSUFFICIENT_PRIVILEGES`, 416 (see below).
+`schema` and `relation` names must match `^[A-Za-z0-9_-]+$` (validated again
+here, independently of the job API, since this controller is reached without
+`doesSchemaExist()` and both are interpolated into `settings.getColumns()`'s
+literal-quoted SQL by `SnapshotAuthorizer`/`Model::getGeometryColumns()`).
+`date` is validated as `YYYY-MM-DD` (and a real calendar date via `checkdate`);
+`file` must be one of the names in the catalog row (never a free path).
+Errors: 400 `INVALID_REQUEST` (bad schema/relation/date/file), 404
+`NO_SNAPSHOT_ERROR` (unknown date or file), 403 `INSUFFICIENT_PRIVILEGES`,
+416 (see below).
 
 File responses:
 
@@ -220,7 +226,7 @@ File responses:
 - Proxy mode streams `readRange`/`readStream` in 1 MiB chunks with `flush()` after each; output buffering is closed (`while (ob_get_level()) ob_end_clean()`), and `apache_setenv('no-gzip', '1')` when available so `Content-Length` stays truthful.
 - Redirect mode (`download = redirect` and `downloadUrl()` not null): after authorization, 302 `Location: <presigned>` with `Cache-Control: no-store`. HEAD in redirect mode also 302s. Range headers are not forwarded; the client repeats them against S3.
 
-Apache deployment note: mod_proxy_fcgi (httpd 2.4.6x+) discards the backend's `Content-Length` unless the environment variable `ap_trust_cgilike_cl` is set; the vhost sets `SetEnv ap_trust_cgilike_cl 1`. Without it HEAD has no length and GET is chunked, which breaks Parquet readers.
+Apache deployment note: mod_proxy_fcgi (httpd 2.4.6x+) discards the backend's `Content-Length` unless the environment variable `ap_trust_cgilike_cl` is set; the vhost sets `SetEnv ap_trust_cgilike_cl 1`. Without it HEAD has no length and GET is chunked, which breaks Parquet readers. Scoping this to just the snapshot routes (via `LocationMatch` or a `mod_rewrite` `[E=...]` flag) was attempted and did not work — the variable was confirmed present in the request's environment either way, but mod_proxy_fcgi's Content-Length trust check did not honor it from either scoped form, only from an unscoped, top-level `SetEnv` — so it is currently vhost-wide.
 
 ### Route2 and StreamedResponse changes
 

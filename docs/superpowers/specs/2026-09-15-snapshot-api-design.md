@@ -36,6 +36,11 @@ Body:
 Validation (Symfony Assert collection, as other v4 controllers):
 
 - 400 `INVALID_REQUEST` on missing or non-string schema/relation, non-integer srs.
+- `schema` and `relation` names must match `^[A-Za-z0-9_-]+$` (a positive
+  character class, not a blocklist): they are interpolated into the S3 key,
+  the quoted SQL identifier, and — via the read API's authorization check —
+  into `settings.getColumns()`'s literal-quoted SQL, so anything outside
+  this class (including `'`) is rejected as 400 `INVALID_REQUEST`.
 - 404 `RELATION_NOT_FOUND` if `schema.relation` is not a table or view.
 - 409 `SNAPSHOT_IN_PROGRESS` if a row for the same schema/relation is `pending`
   or `running`.

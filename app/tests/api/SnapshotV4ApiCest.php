@@ -175,6 +175,12 @@ class SnapshotV4ApiCest
         $I->sendPOST('/api/v4/snapshots', json_encode(['schema' => $this->schema, 'relation' => 'po"i']));
         $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
 
+        // Positive-class regex (CRITICAL fix): a single quote must be rejected too,
+        // since schema/relation are interpolated into settings.getColumns()'s
+        // literal-quoted SQL by the read API's authorizer.
+        $I->sendPOST('/api/v4/snapshots', json_encode(['schema' => $this->schema, 'relation' => "po'i"]));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+
         $I->sendPOST('/api/v4/snapshots', json_encode([['schema' => $this->schema, 'relation' => 'poi']]));
         $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
     }

@@ -128,6 +128,20 @@ class RelationSnapshotV4ApiCest
         $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
     }
 
+    public function shouldRejectUnsafeNames(ApiTester $I)
+    {
+        $this->asSuper($I);
+        // CRITICAL: schema/relation are interpolated into settings.getColumns()'s
+        // literal-quoted SQL by SnapshotAuthorizer -> Model::getGeometryColumns().
+        // A positive-class regex must reject a quote in either segment.
+        $I->sendGET("/api/v4/schemas/x'--/relations/poi/snapshots");
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->seeResponseContainsJson(['errorCode' => 'INVALID_REQUEST']);
+
+        $I->sendGET('/api/v4/schemas/' . $this->schema . "/relations/p%27q/snapshots");
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+    }
+
     public function shouldAnswerHeadWithLengthAndAcceptRanges(ApiTester $I)
     {
         $this->asSuper($I);
@@ -194,11 +208,18 @@ class RelationSnapshotV4ApiCest
 
     public function shouldEnforcePrivilegesForSubUser(ApiTester $I)
     {
+        $this->asSuper($I);
+        $I->sendGET($this->base() . '/' . $this->date);
+        $meta = json_decode($I->grabResponse());
+        $metaFile = 'metadata-' . $meta->snapshot_id . '.json';
+
         $this->asSub($I);
         $I->sendGET($this->base());
         $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
         $I->seeResponseContainsJson(['errorCode' => 'INSUFFICIENT_PRIVILEGES']);
         $I->sendGET($this->base() . '/' . $this->date . '/data');
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+        $I->sendGET($this->base() . '/' . $this->date . '/files/' . $metaFile);
         $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
 
         $this->asSuper($I);
@@ -210,5 +231,8 @@ class RelationSnapshotV4ApiCest
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->sendHEAD($this->base() . '/' . $this->date . '/data');
         $I->seeResponseCodeIs(HttpCode::OK);
+        $I->sendHEAD($this->base() . '/' . $this->date . '/files/' . $metaFile);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeHttpHeader('Content-Type', 'application/json');
     }
 }

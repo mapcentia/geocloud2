@@ -133,12 +133,21 @@ class RelationSnapshot extends AbstractApi
             return "EPSG:" . (int)$row['srs'];
         }
         // Native SRID is only in metadata-<id>.json; read it once (small file).
+        // Only treat "the file/backend isn't there" as missing metadata (null);
+        // a misconfigured storage backend (GC2Exception, e.g. 501) is a real
+        // error and must propagate, not be silently swallowed as "no CRS".
+        $stream = null;
         try {
             $ref = $this->refOf($row);
-            $meta = json_decode(stream_get_contents($this->storage()->readStream($ref, $ref->metadataFile())), true);
+            $stream = $this->storage()->readStream($ref, $ref->metadataFile());
+            $meta = json_decode(stream_get_contents($stream), true);
             return $meta['crs'] ?? null;
-        } catch (\Throwable) {
+        } catch (\League\Flysystem\FilesystemException | \RuntimeException) {
             return null;
+        } finally {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
         }
     }
 
@@ -237,7 +246,10 @@ class RelationSnapshot extends AbstractApi
     {
         $row = $this->authorizedRow();
         $data = array_values(array_filter($this->filesOf($row), fn($f) => str_ends_with($f['name'], '.parquet')));
-        if (count($data) !== 1) {
+        if (count($data) === 0) {
+            throw new GC2Exception("Snapshot has no data file", 404, null, "NO_SNAPSHOT_ERROR");
+        }
+        if (count($data) > 1) {
             throw new GC2Exception("Snapshot has " . count($data) . " data files; fetch them via /files/{file}", 409, null, "MULTI_FILE_SNAPSHOT");
         }
         return ['row' => $row, 'file' => $data[0]];
@@ -304,17 +316,24 @@ class RelationSnapshot extends AbstractApi
             return new StreamedResponse($contentType, fn() => null, 416, $common + ['Content-Range' => "bytes */{$e->size}", 'Content-Length' => '0']);
         }
 
+        // Open the stream (or not, for HEAD) before returning the response so a
+        // storage-layer failure (S3 error, missing object) throws here and is
+        // handled as a normal GC2/500 error response, rather than surfacing
+        // inside the StreamedResponse callback after status/headers were
+        // already emitted, which would append error JSON to a binary body.
         if ($range === null) {
             $headers = $common + ['Content-Length' => (string)$size];
-            $callback = $headOnly ? fn() => null : function () use ($storage, $ref, $name, $size) {
-                $this->pump($storage->readStream($ref, $name), $size);
+            $stream = $headOnly ? null : $storage->readStream($ref, $name);
+            $callback = $headOnly ? fn() => null : function () use ($stream, $size) {
+                $this->pump($stream, $size);
             };
             return new StreamedResponse($contentType, $callback, 200, $headers);
         }
 
         $headers = $common + ['Content-Range' => $range->contentRange($size), 'Content-Length' => (string)$range->length()];
-        $callback = $headOnly ? fn() => null : function () use ($storage, $ref, $name, $range) {
-            $this->pump($storage->readRange($ref, $name, $range->start, $range->length()), $range->length());
+        $stream = $headOnly ? null : $storage->readRange($ref, $name, $range->start, $range->length());
+        $callback = $headOnly ? fn() => null : function () use ($stream, $range) {
+            $this->pump($stream, $range->length());
         };
         return new StreamedResponse($contentType, $callback, 206, $headers);
     }
@@ -329,7 +348,9 @@ class RelationSnapshot extends AbstractApi
     private function pump($stream, int $length): void
     {
         while (ob_get_level() > 0) {
-            ob_end_clean();
+            if (!@ob_end_clean()) {
+                break;
+            }
         }
         if (function_exists('apache_setenv')) {
             @apache_setenv('no-gzip', '1');
@@ -346,6 +367,11 @@ class RelationSnapshot extends AbstractApi
                 flush();
                 $left -= strlen($chunk);
             }
+        } catch (\Throwable $e) {
+            // Status and headers are already on the wire at this point; a
+            // mid-stream failure (e.g. the S3 connection drops) can only end
+            // the body short, not turn into a clean error response.
+            error_log('snapshot stream aborted: ' . $e->getMessage());
         } finally {
             if (is_resource($stream)) {
                 fclose($stream);
@@ -357,11 +383,14 @@ class RelationSnapshot extends AbstractApi
     public function validate(): void
     {
         $this->initParams();
-        // Load-bearing guard: schema/relation come from the route and are used
-        // to build storage paths on backends with no ".." defence of their own.
-        // The job API validated them on creation with this same regex; validate
-        // again here since this controller is reached independently.
-        $name = '/^[^"\/\\\\\s]+$/';
+        // Load-bearing guard: schema/relation come from the route and are
+        // interpolated into SQL by Model::getColumns() (via getGeometryColumns()
+        // in SnapshotAuthorizer) and into storage paths on backends with no ".."
+        // defence of their own. A positive character class is required — the
+        // previous negated-class regex allowed "'", which is a SQL injection
+        // vector into settings.getColumns('f_table_schema = ''$schema'' ...').
+        // The job API's Assert\Regex uses the same pattern so both controllers agree.
+        $name = '/^[A-Za-z0-9_\-]+$/';
         if (!preg_match($name, $this->schemaName) || !preg_match($name, $this->relationName)) {
             throw new GC2Exception("Invalid schema or relation name", 400, null, "INVALID_REQUEST");
         }
@@ -371,8 +400,13 @@ class RelationSnapshot extends AbstractApi
         if (!in_array($method, ['get', 'head'], true)) {
             return;
         }
-        if (!empty($date) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$date)) {
-            throw new GC2Exception("Snapshot date must be YYYY-MM-DD", 400, null, "INVALID_REQUEST");
+        if (!empty($date)) {
+            if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', (string)$date, $m)) {
+                throw new GC2Exception("Snapshot date must be YYYY-MM-DD", 400, null, "INVALID_REQUEST");
+            }
+            if (!checkdate((int)$m[2], (int)$m[3], (int)$m[1])) {
+                throw new GC2Exception("Snapshot date must be YYYY-MM-DD", 400, null, "INVALID_REQUEST");
+            }
         }
         if ($action === 'index' && !empty($this->route->getParam('file'))) {
             throw new GC2Exception("Unknown resource", 404, null, "NO_SNAPSHOT_ERROR");

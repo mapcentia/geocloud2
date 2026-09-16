@@ -224,12 +224,15 @@ class Snapshot extends AbstractApi
     }
 
     /**
-     * Names must be safe for the S3 key and the quoted SQL identifier: no
-     * quotes, slashes or whitespace.
+     * Names must be safe for the S3 key and the quoted SQL identifier, and
+     * for interpolation into settings.getColumns()'s literal-quoted SQL
+     * (Model::getGeometryColumns() -> getColumns()): a positive class,
+     * not a negated one, so a quote or other SQL metacharacter can never
+     * slip through.
      */
     static public function getAssert(): Assert\Collection
     {
-        $name = [new Assert\Type('string'), new Assert\NotBlank(), new Assert\Regex('/^[^"\/\\\\\s]+$/')];
+        $name = [new Assert\Type('string'), new Assert\NotBlank(), new Assert\Regex('/^[A-Za-z0-9_\-]+$/')];
         return new Assert\Collection([
             'schema' => new Assert\Required($name),
             'relation' => new Assert\Required($name),
