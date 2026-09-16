@@ -49,6 +49,19 @@ class Job extends Model
     }
 
     /**
+     * The four BOOL columns (delete_append, download_schema, active, snapshot)
+     * are bound as 0/1 through FILTER_VALIDATE_BOOLEAN, never as the raw value:
+     *
+     * - PDOStatement::execute(array) binds everything as PARAM_STR, so a PHP
+     *   `false` reaches Postgres as '' and a BOOL column rejects it with 22P02.
+     * - The ExtJS scheduler submits unchecked checkboxes as the *string*
+     *   "false" (uncheckedValue in public/scheduler/app/view/MyWindow.js) and
+     *   app/controllers/Job.php passes the body through unchanged, so a plain
+     *   truthiness test would store an unchecked box as true.
+     *
+     * FILTER_VALIDATE_BOOLEAN accepts JSON true/false, 1/0, "true"/"false",
+     * "on"/"off" and "yes"/"no"; anything else (and an absent property) is false.
+     *
      * @param object $data
      * @param string $db
      * @return array<bool|string|int>
@@ -59,13 +72,15 @@ class Job extends Model
         $this->validateCronExpression($data);
         $sql = "INSERT INTO jobs (db, name, schema, url, cron, epsg, type, min, hour, dayofmonth, month, dayofweek, encoding, extra, delete_append, download_schema, presql, postsql, active, snapshot) VALUES(:db, :name, :schema, :url, :cron, :epsg, :type, :min, :hour, :dayofmonth, :month, :dayofweek, :encoding, :extra, :delete_append, :download_schema, :presql, :postsql, :active, :snapshot)";
         $res = $this->prepare($sql);
-        $res->execute(array(":db" => $db, ":name" => Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":extra" => $data->extra, ":delete_append" => !empty($data->delete_append) ? 1 : 0, ":download_schema" => !empty($data->download_schema) ? 1 : 0, ":presql" => $data->presql, ":postsql" => $data->postsql, ":active" => !empty($data->active) ? 1 : 0, ":snapshot" => !empty($data->snapshot) ? 1 : 0));
+        $res->execute(array(":db" => $db, ":name" => Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":extra" => $data->extra, ":delete_append" => filter_var($data->delete_append ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0, ":download_schema" => filter_var($data->download_schema ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0, ":presql" => $data->presql, ":postsql" => $data->postsql, ":active" => filter_var($data->active ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0, ":snapshot" => filter_var($data->snapshot ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0));
         $response['success'] = true;
         $response['message'] = "Jobs created";
         return $response;
     }
 
     /**
+     * Booleans are bound the same way as in newJob(); see the note there.
+     *
      * @param object $data
      * @return array<bool|string|int>
      * @throws GC2Exception
@@ -75,7 +90,7 @@ class Job extends Model
         $this->validateCronExpression($data);
         $sql = "UPDATE jobs SET name=:name, schema=:schema, url=:url, cron=:cron, epsg=:epsg, type=:type, min=:min, hour=:hour, dayofmonth=:dayofmonth, month=:month, dayofweek=:dayofweek, encoding=:encoding, extra=:extra, delete_append=:delete_append, download_schema=:download_schema, presql=:presql, postsql=:postsql, active=:active, snapshot=:snapshot WHERE id=:id";
         $res = $this->prepare($sql);
-        $res->execute(array(":name" => Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":id" => $data->id, ":extra" => $data->extra, "delete_append" => !empty($data->delete_append) ? 1 : 0, "download_schema" => !empty($data->download_schema) ? 1 : 0, "presql" => $data->presql, "postsql" => $data->postsql, "active" => !empty($data->active) ? 1 : 0, "snapshot" => !empty($data->snapshot) ? 1 : 0));
+        $res->execute(array(":name" => Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":id" => $data->id, ":extra" => $data->extra, "delete_append" => filter_var($data->delete_append ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0, "download_schema" => filter_var($data->download_schema ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0, "presql" => $data->presql, "postsql" => $data->postsql, "active" => filter_var($data->active ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0, "snapshot" => filter_var($data->snapshot ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0));
         $response['success'] = true;
         $response['message'] = "Jobs updated";
         return $response;
