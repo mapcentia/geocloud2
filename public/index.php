@@ -122,7 +122,11 @@ function setHeaders(): void
     } elseif (isset(App::$param["AccessControlAllowOrigin"]) && App::$param["AccessControlAllowOrigin"][0] == "*") {
         header("Access-Control-Allow-Origin: *");
     }
-    header("Access-Control-Allow-Headers: Origin, Content-Type, Authorization, X-Requested-With, Accept, Session, Cache-Control");
+    // Range/If-Range let browser clients (and DuckDB-wasm) fetch byte ranges of
+    // snapshot Parquet files; the exposed headers let scripts read the sizes,
+    // ranges and ETags those responses carry.
+    header("Access-Control-Allow-Headers: Origin, Content-Type, Authorization, X-Requested-With, Accept, Session, Cache-Control, Range, If-Range");
+    header("Access-Control-Expose-Headers: Content-Length, Content-Range, Accept-Ranges, ETag, Last-Modified, Location");
     header("Access-Control-Allow-Credentials: true");
     header("Access-Control-Allow-Methods: GET, PUT, POST, DELETE, HEAD, OPTIONS");
 }

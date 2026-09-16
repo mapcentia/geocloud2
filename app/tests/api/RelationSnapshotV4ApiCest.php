@@ -195,6 +195,23 @@ class RelationSnapshotV4ApiCest
         $I->deleteHeader('Range');
     }
 
+    public function shouldAnswerCorsPreflightOnFileRoutes(ApiTester $I)
+    {
+        // A browser sends OPTIONS before a GET with Authorization/Range headers.
+        foreach (['', '/' . $this->date, '/' . $this->date . '/data', '/' . $this->date . '/files/anything'] as $suffix) {
+            $I->haveHttpHeader('Origin', 'http://localhost:4001');
+            $I->haveHttpHeader('Access-Control-Request-Method', 'GET');
+            $I->haveHttpHeader('Access-Control-Request-Headers', 'authorization,range');
+            $I->sendOPTIONS($this->base() . $suffix);
+            $I->seeResponseCodeIs(HttpCode::NO_CONTENT);
+            $I->assertStringContainsStringIgnoringCase('range', $I->grabHttpHeader('Access-Control-Allow-Headers'), 'browsers must be allowed to send Range');
+            $I->assertStringContainsStringIgnoringCase('content-range', $I->grabHttpHeader('Access-Control-Expose-Headers'), 'scripts must be able to read Content-Range');
+        }
+        $I->deleteHeader('Origin');
+        $I->deleteHeader('Access-Control-Request-Method');
+        $I->deleteHeader('Access-Control-Request-Headers');
+    }
+
     public function shouldServeMetadataFileByName(ApiTester $I)
     {
         $this->asSuper($I);

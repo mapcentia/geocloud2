@@ -293,6 +293,20 @@ class RelationSnapshot extends AbstractApi
         return $this->serve($this->namedFile(), true);
     }
 
+    /**
+     * CORS preflight for the file routes. Route2 only lets AcceptableMethods
+     * answer OPTIONS (204 + CORS headers) when the controller declares
+     * options_<action>; without these stubs a preflight on /data or /files
+     * is a 404 and browsers never send the real GET.
+     */
+    public function options_data(): void
+    {
+    }
+
+    public function options_files(): void
+    {
+    }
+
     /** @return array{row:array, file:array{name:string,size_bytes:int}} */
     private function dataFile(): array
     {
