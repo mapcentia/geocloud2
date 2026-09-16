@@ -129,6 +129,19 @@ class SchedulerLockTest extends Unit
         $this->assertNotNull($finished['finished_at']);
     }
 
+    public function testHeartbeatAfterReleaseDoesNotThrow(): void
+    {
+        $s = $this->session();
+        $this->assertTrue($s->tryJobLock($this->jobId));
+        $uuid = $s->startRun($this->jobId, 'schedlocktest', 'lock test', 4244, 1, 'unit-host');
+
+        $s->release();
+        array_shift($this->sessions); // already released; drop it from _after()'s cleanup
+
+        $s->heartbeat($uuid); // session is gone: must return quietly, not throw
+        $this->assertTrue(true);
+    }
+
     public function testSkippedRowIsRecordedAndNotRunning(): void
     {
         $s = $this->session();

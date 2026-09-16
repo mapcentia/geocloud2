@@ -635,6 +635,7 @@ function finalizePagedTables(): void
         print "\nNotice: No data for the area.";
         $report[FEATURECOUNT] = 0;
         cleanUp(1);
+        exit(0);
     }
 
     $sql = "CREATE TABLE $workingSchema.$randTableName AS " . implode("\nUNION ALL\n", $selects);
@@ -1165,13 +1166,10 @@ try {
     exit(1);
 }
 
-// Begin transaction
-// =================
-$table->begin();
-$table->execQuery("SET LOCAL statement_timeout = '24h'");
-
 // Wait for a run slot, register the run, then download
 // ======================================================
+// Done before the transaction begins, so the customer database never sits
+// idle-in-transaction for however long the wait takes (up to hours).
 $maxJobs = (int)(App::$param['gc2scheduler']['maxJobs'] ?? SchedulerLock::DEFAULT_MAX_JOBS);
 $slot = $schedulerLock->acquireSlot($maxJobs, function (int $max, int $sleep) use (&$report) {
     print "\nInfo: All {$max} run slots are busy. Waiting {$sleep} seconds...";
@@ -1179,6 +1177,12 @@ $slot = $schedulerLock->acquireSlot($maxJobs, function (int $max, int $sleep) us
 });
 $runUuid = $schedulerLock->startRun((int)$jobId, $db, $safeName, $runPid, $slot, $runHost);
 print "\nInfo: Run {$runUuid} registered on slot {$slot}";
+
+// Begin transaction
+// =================
+$table->begin();
+$table->execQuery("SET LOCAL statement_timeout = '24h'");
+
 $getFunction();
 
 // Check output
@@ -1253,6 +1257,7 @@ try {
     $report[FEATURECOUNT] = 0;
     $table->rollback();
     cleanUp(1);
+    exit(0);
 }
 
 // Pre run SQL

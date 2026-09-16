@@ -126,10 +126,19 @@ final class SchedulerLock
         $st->execute(['status' => $status, 'reason' => $reason, 'uuid' => $uuid]);
     }
 
+    /**
+     * Best effort: the advisory lock, not the heartbeat, is the liveness
+     * truth, so a transient failure here (e.g. the session is gone) must
+     * never interrupt the import it is reporting on.
+     */
     public function heartbeat(string $uuid): void
     {
-        $st = $this->pdo->prepare("UPDATE started_jobs SET heartbeat = now() WHERE uuid = :uuid AND status = 'running'");
-        $st->execute(['uuid' => $uuid]);
+        try {
+            $st = $this->pdo->prepare("UPDATE started_jobs SET heartbeat = now() WHERE uuid = :uuid AND status = 'running'");
+            $st->execute(['uuid' => $uuid]);
+        } catch (\Throwable $e) {
+            error_log("scheduler heartbeat failed: " . $e->getMessage());
+        }
     }
 
     public function runningRun(int $jobId): ?array
