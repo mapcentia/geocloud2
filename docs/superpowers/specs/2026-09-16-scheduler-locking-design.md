@@ -231,3 +231,66 @@ yields one `running` and one `skipped` row.
 
 Manual: `kill -9` a running get.php and confirm the job can be started again
 within seconds and the old row reads `lost`.
+
+## v4 scheduler API
+
+The v2 job controller (session-authenticated, `app/controllers/Job.php`) and
+the v3 run listing stay for the existing UI. A v4 API exposes the same
+capabilities under JWT with the usual v4 conventions (super-user only,
+`Scope::SUPER_USER_ONLY`; job ownership is the JWT's `database`).
+
+### Jobs: `api/v4/scheduler/jobs/[id]` (controller `SchedulerJob`)
+
+Resource (what GET returns):
+
+```json
+{
+  "id": 42, "name": "bygninger", "schema": "geodanmark", "url": "https://…/wfs?…",
+  "schedule": "0 3 * * *",            // "min hour dayofmonth month dayofweek", the five jobs columns joined
+  "epsg": 25832, "type": "AUTO", "encoding": "UTF8", "extra": null,
+  "delete_append": false, "download_schema": true, "presql": null, "postsql": null,
+  "active": true, "snapshot": false,
+  "lastcheck": true, "lasttimestamp": "2026-09-16T03:00:12+00:00", "lastrun": null, "report": {…}
+}
+```
+
+| Method | Path | Behaviour |
+|---|---|---|
+| GET | `/jobs` | all jobs of the caller's database, ordered by id |
+| GET | `/jobs/{id}` | one job; 404 `JOB_NOT_FOUND` when the id is not in the caller's database |
+| POST | `/jobs` | create; required `name, schema, url, schedule`; defaults `epsg 4326`, `type "AUTO"`, `encoding "UTF8"`, `delete_append false`, `download_schema true`, `active true`, `snapshot false`; 201 + `Location` |
+| PATCH | `/jobs/{id}` | partial update of any writable field; 303 + `Location` |
+| DELETE | `/jobs/{id}` | 204; 409 `JOB_RUNNING` while a run of the job is `running` |
+
+Validation: `schedule` must be a valid five-field cron expression
+(`Cron\CronExpression`, the library `Job::validateCronExpression` already
+uses); `name` is normalised with `Model::toAscii(…, '_')` like v2; `epsg`
+positive int; booleans typed; `url` non-empty string. Errors 400
+`INVALID_REQUEST`. The `cron` column is written with the same string as
+`schedule` for the legacy readers.
+
+### Runs: `api/v4/scheduler/runs/[uuid]` (controller `SchedulerRun`)
+
+Run resource = one `started_jobs` row:
+
+```json
+{ "uuid": "…", "job": 42, "name": "Started by Scheduler", "pid": 12345, "host": "gc2core-1", "slot": 3,
+  "status": "running", "stale": false, "started_at": "…", "heartbeat": "…", "finished_at": null, "exit_reason": null }
+```
+
+| Method | Path | Behaviour |
+|---|---|---|
+| GET | `/runs` | running runs first, then the newest 50 finished, for the caller's database; filters `?job={id}`, `?status={running\|succeeded\|failed\|skipped\|lost}` |
+| GET | `/runs/{uuid}` | one run; 404 `RUN_NOT_FOUND` |
+| POST | `/runs` | body `{"job": 42, "force": false}`; starts the job asynchronously (the run row is created by get.php itself moments later); 202 `{"job": 42, "status": "starting", "_links": {"runs": "/api/v4/scheduler/runs?job=42"}}`; 404 `JOB_NOT_FOUND`; 409 `JOB_RUNNING` when a run is already `running` (checked before spawning, so a double click does not even spawn a process) |
+| DELETE | `/runs/{uuid}` | stop: SIGINT, then SIGKILL after 30 s; 200 `{"uuid", "signal"}`; 404 `RUN_NOT_FOUND`; 409 `RUN_ON_OTHER_HOST` |
+
+`stale` is `status = running AND heartbeat older than 5 minutes`. The reaper
+runs before every listing, as in v3.
+
+### Model changes for v4
+
+`app\models\Job` gains db-scoped, id-based methods next to the v2 ones:
+`getById(int $id, string $db): ?array`, `createJob(array $fields, string $db): int`,
+`patchJob(int $id, string $db, array $fields): void`, `deleteJobById(int $id, string $db): void`.
+`getAll`/`newJob`/`updateJob`/`deleteJob` stay for v2.

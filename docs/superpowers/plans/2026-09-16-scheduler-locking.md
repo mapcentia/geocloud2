@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the scheduler's file-based locks with Postgres advisory locks on the `gc2scheduler` database and turn `started_jobs` into a truthful run registry.
+**Goal:** Replace the scheduler's file-based locks with Postgres advisory locks on the `gc2scheduler` database, turn `started_jobs` into a truthful run registry, and expose job management and runs through a v4 API.
 
 **Architecture:** A new `app\inc\SchedulerLock` owns one dedicated PDO session to `gc2scheduler` (not the `Model` connection cache, so the session is never shared with the job's data work) and exposes the job lock, the run slots, the reaper and the registry bookkeeping. `get.php` uses it instead of lock files, records every run in `started_jobs`, and finalises the row from `cleanUp()`, a shutdown function and a SIGINT handler. `Job::runJob` and the v3 scheduler API read the registry instead of `pgrep`. `purge_locks.php` goes away.
 
@@ -37,6 +37,8 @@
 | `app/scripts/scheduler.php` | run the reaper each tick |
 | `app/scripts/purge_locks.php`, `docker/Dockerfile` | delete script and cron line |
 | `docker/conf/gc2/App.php` | `gc2scheduler.maxJobs` |
+| `app/api/v4/controllers/SchedulerJob.php` (new), `app/tests/api/SchedulerJobV4ApiCest.php` (new) | v4 job CRUD |
+| `app/api/v4/controllers/SchedulerRun.php` (new), `app/tests/api/SchedulerRunV4ApiCest.php` (new) | v4 runs: start/list/inspect/stop |
 
 ---
 
@@ -898,9 +900,745 @@ git commit -m "chore(scheduler): reap lost runs each tick, drop purge_locks, add
 
 ---
 
-### Task 5: Verification
+### Task 5: v4 job management API (`SchedulerJob`)
 
-- [ ] **Step 1:** unit `SchedulerLockTest.php`, `JobSnapshotFlagTest.php`, `WfsPagingTest.php`; api `SchedulerApiCest.php`, `FunctionManagementCest.php` — all green, each its own command.
+**Files:**
+- Modify: `app/models/Job.php` (add `getById`, `createJob`, `patchJob`, `deleteJobById`)
+- Create: `app/api/v4/controllers/SchedulerJob.php`
+- Test: `app/tests/api/SchedulerJobV4ApiCest.php`
+
+**Interfaces:**
+- Consumes: `SchedulerLock::runningRun(int)` (Task 1) for the 409 on delete; `Cron\CronExpression` (installed, used by `Job::validateCronExpression`).
+- Produces (used by Task 6):
+
+```php
+public function getById(int $id, string $db): ?array;                 // row or null
+public function createJob(array $fields, string $db): int;            // new id; $fields = resource keys (schedule split into the five columns)
+public function patchJob(int $id, string $db, array $fields): void;   // only the given keys; throws 404 GC2Exception when not owned
+public function deleteJobById(int $id, string $db): void;             // throws 404 when not owned
+```
+
+- [ ] **Step 1: Write the failing Cest**
+
+```php
+<?php
+
+use Codeception\Util\HttpCode;
+
+/**
+ * v4 scheduler job CRUD (app/api/v4/controllers/SchedulerJob.php). Super-user
+ * only; jobs are scoped to the JWT's database. Ordered/stateful.
+ */
+class SchedulerJobV4ApiCest
+{
+    private $password = 'A1abcabcabc';
+    private $userId;
+    private $token;
+    private $otherToken;
+    private $jobId;
+
+    private function asSuper(ApiTester $I): void
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Accept', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
+    }
+
+    public function shouldPrepareUsers(ApiTester $I)
+    {
+        $ts = time();
+        foreach (['a', 'b'] as $k) {
+            $I->haveHttpHeader('Content-Type', 'application/json');
+            $I->sendPOST('/api/v2/user', json_encode(['name' => "schedjob $k $ts", 'email' => "schedjob$k$ts@example.com", 'password' => $this->password]));
+            $I->seeResponseCodeIs(HttpCode::OK);
+            $uid = json_decode($I->grabResponse())->data->screenname;
+            $I->sendPOST('/api/v4/oauth', json_encode(['grant_type' => 'password', 'username' => $uid, 'password' => $this->password, 'database' => $uid, 'client_id' => 'gc2-cli']));
+            $I->seeResponseCodeIs(HttpCode::CREATED);
+            $tok = json_decode($I->grabResponse())->access_token;
+            if ($k === 'a') { $this->userId = $uid; $this->token = $tok; } else { $this->otherToken = $tok; }
+        }
+    }
+
+    public function shouldCreateJob(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendPOST('/api/v4/scheduler/jobs', json_encode([
+            'name' => 'My Job', 'schema' => 'public', 'url' => 'https://example.com/data.zip', 'schedule' => '15 3 * * 1-5',
+            'epsg' => 25832, 'snapshot' => true,
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $loc = $I->grabHttpHeader('Location');
+        $I->assertMatchesRegularExpression('#/api/v4/scheduler/jobs/\d+$#', $loc);
+        $this->jobId = (int)basename($loc);
+
+        $I->sendGET('/api/v4/scheduler/jobs/' . $this->jobId);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseContainsJson([
+            'id' => $this->jobId, 'name' => 'my_job', 'schema' => 'public', 'schedule' => '15 3 * * 1-5',
+            'epsg' => 25832, 'type' => 'AUTO', 'encoding' => 'UTF8', 'delete_append' => false, 'download_schema' => true,
+            'active' => true, 'snapshot' => true,
+        ]);
+    }
+
+    public function shouldValidateOnCreate(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendPOST('/api/v4/scheduler/jobs', json_encode(['name' => 'x', 'schema' => 'public', 'url' => 'https://e.com/a', 'schedule' => 'every day']));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->sendPOST('/api/v4/scheduler/jobs', json_encode(['name' => 'x', 'schema' => 'public', 'schedule' => '* * * * *']));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->sendPOST('/api/v4/scheduler/jobs', json_encode(['name' => 'x', 'schema' => 'public', 'url' => 'https://e.com/a', 'schedule' => '* * * * *', 'epsg' => 'abc']));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+    }
+
+    public function shouldListAndPatch(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendGET('/api/v4/scheduler/jobs');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseContainsJson([['id' => $this->jobId]]);
+
+        $I->sendPATCH('/api/v4/scheduler/jobs/' . $this->jobId, json_encode(['active' => false, 'schedule' => '0 4 * * *', 'presql' => 'SELECT 1']));
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $I->sendGET('/api/v4/scheduler/jobs/' . $this->jobId);
+        $I->seeResponseContainsJson(['active' => false, 'schedule' => '0 4 * * *', 'presql' => 'SELECT 1', 'snapshot' => true]);
+
+        $I->sendPATCH('/api/v4/scheduler/jobs/' . $this->jobId, json_encode(['schedule' => 'nope']));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+    }
+
+    public function shouldScopeJobsToTheCallersDatabase(ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Accept', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->otherToken);
+        $I->sendGET('/api/v4/scheduler/jobs/' . $this->jobId);
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        $I->seeResponseContainsJson(['errorCode' => 'JOB_NOT_FOUND']);
+        $I->sendDELETE('/api/v4/scheduler/jobs/' . $this->jobId);
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        $I->sendGET('/api/v4/scheduler/jobs');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertEquals([], json_decode($I->grabResponse()));
+    }
+
+    public function shouldDeleteJob(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendDELETE('/api/v4/scheduler/jobs/' . $this->jobId);
+        $I->seeResponseCodeIs(HttpCode::NO_CONTENT);
+        $I->sendGET('/api/v4/scheduler/jobs/' . $this->jobId);
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+    }
+}
+```
+
+- [ ] **Step 2: Run to verify failure** — expected 404 on POST (no route).
+
+- [ ] **Step 3: Model methods (append to `app\models\Job`)**
+
+```php
+    private const array WRITABLE = ['name', 'schema', 'url', 'schedule', 'epsg', 'type', 'encoding', 'extra',
+        'delete_append', 'download_schema', 'presql', 'postsql', 'active', 'snapshot'];
+    private const array BOOLS = ['delete_append', 'download_schema', 'active', 'snapshot'];
+
+    public function getById(int $id, string $db): ?array
+    {
+        $res = $this->prepare("SELECT * FROM jobs WHERE id = :id AND db = :db");
+        $this->execute($res, ['id' => $id, 'db' => $db]);
+        $row = $this->fetchRow($res);
+        return $row ?: null;
+    }
+
+    /**
+     * @param array<string,mixed> $fields resource keys (see SchedulerJob); schedule is "min hour dom mon dow"
+     * @throws GC2Exception 400 on an invalid schedule
+     */
+    public function createJob(array $fields, string $db): int
+    {
+        $cols = $this->toColumns($fields + ['epsg' => 4326, 'type' => 'AUTO', 'encoding' => 'UTF8', 'delete_append' => false, 'download_schema' => true, 'active' => true, 'snapshot' => false]);
+        $cols['db'] = $db;
+        $names = array_keys($cols);
+        $sql = "INSERT INTO jobs (" . implode(', ', $names) . ") VALUES (:" . implode(', :', $names) . ") RETURNING id";
+        $res = $this->prepare($sql);
+        $this->execute($res, $cols);
+        return (int)$res->fetchColumn();
+    }
+
+    /** @throws GC2Exception 404 when the job is not in $db, 400 on an invalid schedule */
+    public function patchJob(int $id, string $db, array $fields): void
+    {
+        if ($this->getById($id, $db) === null) {
+            throw new GC2Exception("Job $id not found", 404, null, "JOB_NOT_FOUND");
+        }
+        $cols = $this->toColumns($fields);
+        if ($cols === []) {
+            return;
+        }
+        $sets = implode(', ', array_map(fn($c) => "$c = :$c", array_keys($cols)));
+        $res = $this->prepare("UPDATE jobs SET $sets WHERE id = :id AND db = :db");
+        $this->execute($res, $cols + ['id' => $id, 'db' => $db]);
+    }
+
+    /** @throws GC2Exception 404 when the job is not in $db */
+    public function deleteJobById(int $id, string $db): void
+    {
+        $res = $this->prepare("DELETE FROM jobs WHERE id = :id AND db = :db");
+        $this->execute($res, ['id' => $id, 'db' => $db]);
+        if ($res->rowCount() === 0) {
+            throw new GC2Exception("Job $id not found", 404, null, "JOB_NOT_FOUND");
+        }
+    }
+
+    /**
+     * Resource keys -> jobs columns. Splits schedule into the five cron columns
+     * (and mirrors it into the legacy cron column), normalises the name like
+     * v2, and binds booleans as 0/1.
+     */
+    private function toColumns(array $fields): array
+    {
+        $cols = [];
+        foreach ($fields as $k => $v) {
+            if (!in_array($k, self::WRITABLE, true)) {
+                continue;
+            }
+            if ($k === 'schedule') {
+                $parts = preg_split('/\s+/', trim((string)$v));
+                if (count($parts) !== 5) {
+                    throw new GC2Exception("schedule must have five cron fields", 400, null, "INVALID_CRON_FIELD");
+                }
+                try {
+                    new CronExpression(implode(' ', $parts));
+                } catch (InvalidArgumentException $e) {
+                    throw new GC2Exception($e->getMessage(), 400, null, "INVALID_CRON_FIELD");
+                }
+                [$cols['min'], $cols['hour'], $cols['dayofmonth'], $cols['month'], $cols['dayofweek']] = $parts;
+                $cols['cron'] = implode(' ', $parts);
+            } elseif ($k === 'name') {
+                $cols['name'] = Model::toAscii((string)$v, null, "_");
+            } elseif (in_array($k, self::BOOLS, true)) {
+                $cols[$k] = filter_var($v, FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
+            } elseif ($k === 'epsg') {
+                $cols['epsg'] = (string)(int)$v;
+            } else {
+                $cols[$k] = $v;
+            }
+        }
+        return $cols;
+    }
+```
+
+(`Model::toAscii` is what `newJob` already uses; `CronExpression`/`InvalidArgumentException` are already imported in Job.php.)
+
+- [ ] **Step 4: Controller**
+
+`app/api/v4/controllers/SchedulerJob.php`, modelled on `Keyvalue.php`/`Snapshot.php`:
+
+```php
+<?php
+/**
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2026 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ *
+ */
+
+namespace app\api\v4\controllers;
+
+use app\api\v4\AbstractApi;
+use app\api\v4\AcceptableAccepts;
+use app\api\v4\AcceptableContentTypes;
+use app\api\v4\AcceptableMethods;
+use app\api\v4\Controller;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
+use app\exceptions\GC2Exception;
+use app\inc\Connection;
+use app\inc\Input;
+use app\inc\Route2;
+use app\inc\SchedulerLock;
+use app\models\Job;
+use OpenApi\Annotations\OpenApi;
+use OpenApi\Attributes as OA;
+use Override;
+use Symfony\Component\Validator\Constraints as Assert;
+
+/**
+ * v4 scheduler jobs: the import jobs of the caller's database (super-user only).
+ * A job's five cron columns are exposed as one "schedule" string.
+ */
+#[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
+#[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
+#[OA\Schema(schema: "SchedulerJob", description: "An import job of the scheduler.", required: ["name", "schema", "url", "schedule"], properties: [
+    new OA\Property(property: "name", type: "string", example: "bygninger"),
+    new OA\Property(property: "schema", type: "string", example: "geodanmark"),
+    new OA\Property(property: "url", type: "string", example: "https://example.com/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=bygning"),
+    new OA\Property(property: "schedule", description: "Five-field cron expression: min hour dayofmonth month dayofweek", type: "string", example: "0 3 * * *"),
+    new OA\Property(property: "epsg", type: "integer", example: 25832),
+    new OA\Property(property: "type", description: "ogr2ogr -nlt or AUTO", type: "string", example: "AUTO"),
+    new OA\Property(property: "encoding", type: "string", example: "UTF8"),
+    new OA\Property(property: "extra", type: "string", nullable: true),
+    new OA\Property(property: "delete_append", type: "boolean", example: false),
+    new OA\Property(property: "download_schema", type: "boolean", example: true),
+    new OA\Property(property: "presql", type: "string", nullable: true),
+    new OA\Property(property: "postsql", type: "string", nullable: true),
+    new OA\Property(property: "active", type: "boolean", example: true),
+    new OA\Property(property: "snapshot", description: "Queue a Parquet snapshot after each successful import", type: "boolean", example: false),
+], type: "object")]
+#[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
+#[Controller(route: 'api/v4/scheduler/jobs/[id]', scope: Scope::SUPER_USER_ONLY)]
+class SchedulerJob extends AbstractApi
+{
+    private Job $job;
+    private string $db;
+
+    public function __construct(public readonly Route2 $route, Connection $connection)
+    {
+        parent::__construct($connection);
+        $this->job = new Job(new Connection(database: 'gc2scheduler'));
+        $this->db = (string)$this->route->jwt['data']['database'];
+        $this->resource = 'scheduler-job';
+    }
+
+    private function present(array $r): array
+    {
+        return [
+            'id' => (int)$r['id'], 'name' => $r['name'], 'schema' => $r['schema'], 'url' => $r['url'],
+            'schedule' => trim("{$r['min']} {$r['hour']} {$r['dayofmonth']} {$r['month']} {$r['dayofweek']}"),
+            'epsg' => $r['epsg'] !== null ? (int)$r['epsg'] : null, 'type' => $r['type'], 'encoding' => $r['encoding'], 'extra' => $r['extra'],
+            'delete_append' => (bool)$r['delete_append'], 'download_schema' => (bool)$r['download_schema'],
+            'presql' => $r['presql'], 'postsql' => $r['postsql'], 'active' => (bool)$r['active'], 'snapshot' => (bool)$r['snapshot'],
+            'lastcheck' => $r['lastcheck'] !== null ? (bool)$r['lastcheck'] : null, 'lasttimestamp' => $r['lasttimestamp'], 'lastrun' => $r['lastrun'],
+            'report' => is_string($r['report'] ?? null) ? json_decode($r['report'], true) : null,
+        ];
+    }
+
+    private function idParam(): int
+    {
+        return (int)$this->route->getParam('id');
+    }
+
+    #[OA\Get(path: '/api/v4/scheduler/jobs/{id}', operationId: 'getSchedulerJob', description: "Get a job, or list all jobs of the database.", tags: ['Scheduler'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [new OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/SchedulerJob")), new OA\Response(response: 404, description: 'Not found')])]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    #[Override]
+    public function get_index(): Response
+    {
+        $id = $this->route->getParam('id');
+        if (!empty($id)) {
+            $row = $this->job->getById($this->idParam(), $this->db);
+            if ($row === null) {
+                throw new GC2Exception("Job $id not found", 404, null, "JOB_NOT_FOUND");
+            }
+            return $this->getResponse([$this->present($row)], single: true);
+        }
+        $rows = $this->job->getAll($this->db)['data'] ?? [];
+        return $this->getResponse(array_map(fn($r) => $this->present($r), $rows));
+    }
+
+    #[OA\Post(path: '/api/v4/scheduler/jobs', operationId: 'postSchedulerJob', description: "Create a job.", tags: ['Scheduler'],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: "#/components/schemas/SchedulerJob")),
+        responses: [new OA\Response(response: 201, description: 'Created'), new OA\Response(response: 400, description: 'Bad request')])]
+    #[AcceptableContentTypes(['application/json'])]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    #[Override]
+    public function post_index(): Response
+    {
+        $body = json_decode(Input::getBody(), true);
+        $id = $this->job->createJob($body, $this->db);
+        return $this->postResponse("/api/v4/scheduler/jobs/", [$id]);
+    }
+
+    #[OA\Patch(path: '/api/v4/scheduler/jobs/{id}', operationId: 'patchSchedulerJob', description: "Update fields of a job.", tags: ['Scheduler'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: "#/components/schemas/SchedulerJob")),
+        responses: [new OA\Response(response: 303, description: 'Updated'), new OA\Response(response: 400, description: 'Bad request'), new OA\Response(response: 404, description: 'Not found')])]
+    #[AcceptableContentTypes(['application/json'])]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    #[Override]
+    public function patch_index(): Response
+    {
+        $body = json_decode(Input::getBody(), true);
+        $this->job->patchJob($this->idParam(), $this->db, $body);
+        return $this->patchResponse("/api/v4/scheduler/jobs/", [$this->idParam()]);
+    }
+
+    #[OA\Delete(path: '/api/v4/scheduler/jobs/{id}', operationId: 'deleteSchedulerJob', description: "Delete a job. Refused while a run of it is running.", tags: ['Scheduler'],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [new OA\Response(response: 204, description: 'Deleted'), new OA\Response(response: 404, description: 'Not found'), new OA\Response(response: 409, description: 'A run is in progress')])]
+    #[Override]
+    public function delete_index(): Response
+    {
+        $id = $this->idParam();
+        $lock = new SchedulerLock();
+        $lock->reap();
+        $running = $lock->runningRun($id);
+        $lock->release();
+        if ($running !== null && $this->job->getById($id, $this->db) !== null) {
+            throw new GC2Exception("Job $id has a running run ({$running['uuid']})", 409, null, "JOB_RUNNING");
+        }
+        $this->job->deleteJobById($id, $this->db);
+        return $this->deleteResponse();
+    }
+
+    public function put_index(): Response
+    {
+        throw new GC2Exception("Method not allowed", 405, null, "METHOD_NOT_ALLOWED");
+    }
+
+    #[Override]
+    public function validate(): void
+    {
+        $id = $this->route->getParam('id');
+        $method = Input::getMethod();
+        if (!empty($id) && !ctype_digit((string)$id)) {
+            throw new GC2Exception("Job id must be an integer", 400, null, "INVALID_REQUEST");
+        }
+        if ($method === 'post' && !empty($id)) {
+            $this->postWithResource();
+        }
+        if (in_array($method, ['patch', 'delete'], true) && empty($id)) {
+            throw new GC2Exception("A job id is required", 400, null, "INVALID_REQUEST");
+        }
+        if (in_array($method, ['post', 'patch'], true)) {
+            $this->validateRequest(self::getAssert($method), Input::getBody(), $method);
+        }
+    }
+
+    public static function getAssert(string $method = 'post'): Assert\Collection
+    {
+        $required = fn(array $c) => $method === 'post' ? new Assert\Required($c) : new Assert\Optional($c);
+        $str = [new Assert\Type('string'), new Assert\NotBlank()];
+        return new Assert\Collection([
+            'name' => $required($str), 'schema' => $required($str), 'url' => $required($str), 'schedule' => $required($str),
+            'epsg' => new Assert\Optional([new Assert\Type('integer'), new Assert\Positive()]),
+            'type' => new Assert\Optional(new Assert\Type('string')), 'encoding' => new Assert\Optional(new Assert\Type('string')),
+            'extra' => new Assert\Optional(), 'presql' => new Assert\Optional(), 'postsql' => new Assert\Optional(),
+            'delete_append' => new Assert\Optional(new Assert\Type('bool')), 'download_schema' => new Assert\Optional(new Assert\Type('bool')),
+            'active' => new Assert\Optional(new Assert\Type('bool')), 'snapshot' => new Assert\Optional(new Assert\Type('bool')),
+        ]);
+    }
+}
+```
+
+Note: `Job` is constructed on a `gc2scheduler` connection explicitly, because Route2 hands v4 controllers a connection to the caller's database. Check how `Job::getAll` reads (`SELECT * FROM jobs WHERE db=:db`) — it must run against gc2scheduler; the explicit connection guarantees that. `validateRequest` is expected to reject `epsg: "abc"` (string vs integer) — the existing helper JSON-decodes the body.
+
+- [ ] **Step 5: Run the Cest until green** — `OK (6 tests, ...)`. Also re-run `JobSnapshotFlagTest.php` (Job.php changed).
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add app/models/Job.php app/api/v4/controllers/SchedulerJob.php app/tests/api/SchedulerJobV4ApiCest.php
+git commit -m "feat(api): v4 scheduler job management (GET/POST/PATCH/DELETE /api/v4/scheduler/jobs)"
+```
+
+---
+
+### Task 6: v4 run API (`SchedulerRun`)
+
+**Files:**
+- Create: `app/api/v4/controllers/SchedulerRun.php`
+- Test: `app/tests/api/SchedulerRunV4ApiCest.php`
+
+**Interfaces:**
+- Consumes: `SchedulerLock` (Task 1), `Job::runJob` / `Job::kill` / `getById` (Tasks 3, 5).
+
+- [ ] **Step 1: Write the failing Cest**
+
+```php
+<?php
+
+use Codeception\Util\HttpCode;
+
+/**
+ * v4 scheduler runs (app/api/v4/controllers/SchedulerRun.php): start a job,
+ * list/inspect runs, stop a run. Uses a tiny GeoJSON served by the container
+ * as the job source. Ordered/stateful.
+ */
+class SchedulerRunV4ApiCest
+{
+    private $password = 'A1abcabcabc';
+    private $userId;
+    private $token;
+    private $jobId;
+    private $runUuid;
+
+    private function asSuper(ApiTester $I): void
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Accept', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
+    }
+
+    public function shouldPrepareUserSourceAndJob(ApiTester $I)
+    {
+        $ts = time();
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/user', json_encode(['name' => "schedrun $ts", 'email' => "schedrun$ts@example.com", 'password' => $this->password]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $this->userId = json_decode($I->grabResponse())->data->screenname;
+        $I->sendPOST('/api/v4/oauth', json_encode(['grant_type' => 'password', 'username' => $this->userId, 'password' => $this->password, 'database' => $this->userId, 'client_id' => 'gc2-cli']));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $this->token = json_decode($I->grabResponse())->access_token;
+        file_put_contents('/var/www/geocloud2/public/schedrun.geojson', '{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"id":1},"geometry":{"type":"Point","coordinates":[10,56]}}]}');
+
+        $this->asSuper($I);
+        $I->sendPOST('/api/v4/scheduler/jobs', json_encode(['name' => 'run test', 'schema' => 'public', 'url' => 'http://localhost/schedrun.geojson', 'schedule' => '0 0 1 1 *', 'active' => false]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $this->jobId = (int)basename($I->grabHttpHeader('Location'));
+    }
+
+    public function shouldStartAJobAndListItsRun(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendPOST('/api/v4/scheduler/runs', json_encode(['job' => $this->jobId]));
+        $I->seeResponseCodeIs(HttpCode::ACCEPTED);
+        $I->seeResponseContainsJson(['job' => $this->jobId, 'status' => 'starting']);
+        sleep(15);
+
+        $I->sendGET('/api/v4/scheduler/runs?job=' . $this->jobId);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $runs = json_decode($I->grabResponse());
+        $I->assertGreaterThanOrEqual(1, count($runs));
+        $run = $runs[0];
+        $I->assertEquals($this->jobId, $run->job);
+        $I->assertContains($run->status, ['succeeded', 'failed', 'running'], 'run status: ' . json_encode($run));
+        $I->assertTrue(property_exists($run, 'host') && property_exists($run, 'stale') && property_exists($run, 'exit_reason'));
+        $this->runUuid = $run->uuid;
+
+        $I->sendGET('/api/v4/scheduler/runs/' . $this->runUuid);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseContainsJson(['uuid' => $this->runUuid, 'job' => $this->jobId]);
+    }
+
+    public function shouldReject404AndUnknownJob(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendGET('/api/v4/scheduler/runs/00000000-0000-0000-0000-000000000000');
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        $I->seeResponseContainsJson(['errorCode' => 'RUN_NOT_FOUND']);
+        $I->sendPOST('/api/v4/scheduler/runs', json_encode(['job' => 987654321]));
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        $I->seeResponseContainsJson(['errorCode' => 'JOB_NOT_FOUND']);
+        $I->sendDELETE('/api/v4/scheduler/runs/' . $this->runUuid);
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND); // finished runs cannot be stopped
+    }
+
+    public function shouldCleanUp(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendDELETE('/api/v4/scheduler/jobs/' . $this->jobId);
+        $I->seeResponseCodeIsSuccessful();
+        @unlink('/var/www/geocloud2/public/schedrun.geojson');
+    }
+}
+```
+
+(Stopping a running run is verified manually in Task 7; a job fast enough for a Cest is finished before DELETE can hit it.)
+
+- [ ] **Step 2: Run to verify failure** — 404 on POST /runs.
+
+- [ ] **Step 3: Controller**
+
+```php
+<?php
+/**
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2026 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ *
+ */
+
+namespace app\api\v4\controllers;
+
+use app\api\v4\AbstractApi;
+use app\api\v4\AcceptableAccepts;
+use app\api\v4\AcceptableContentTypes;
+use app\api\v4\AcceptableMethods;
+use app\api\v4\Controller;
+use app\api\v4\Responses\AcceptedResponse;
+use app\api\v4\Responses\GetResponse;
+use app\api\v4\Responses\Response;
+use app\api\v4\Scope;
+use app\exceptions\GC2Exception;
+use app\inc\Connection;
+use app\inc\Input;
+use app\inc\Route2;
+use app\inc\SchedulerLock;
+use app\models\Job;
+use OpenApi\Annotations\OpenApi;
+use OpenApi\Attributes as OA;
+use Override;
+use Symfony\Component\Validator\Constraints as Assert;
+
+/**
+ * v4 scheduler runs: start a job now, list and inspect runs (the
+ * started_jobs registry kept by get.php), stop a running run.
+ */
+#[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
+#[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
+#[OA\Schema(schema: "SchedulerRun", description: "One run of a scheduler job.", properties: [
+    new OA\Property(property: "uuid", type: "string"), new OA\Property(property: "job", type: "integer"), new OA\Property(property: "name", type: "string", nullable: true),
+    new OA\Property(property: "pid", type: "integer"), new OA\Property(property: "host", type: "string", nullable: true), new OA\Property(property: "slot", type: "integer", nullable: true),
+    new OA\Property(property: "status", type: "string", enum: ["running", "succeeded", "failed", "skipped", "lost"]), new OA\Property(property: "stale", type: "boolean"),
+    new OA\Property(property: "started_at", type: "string", format: "date-time"), new OA\Property(property: "heartbeat", type: "string", format: "date-time", nullable: true),
+    new OA\Property(property: "finished_at", type: "string", format: "date-time", nullable: true), new OA\Property(property: "exit_reason", type: "string", nullable: true),
+], type: "object")]
+#[AcceptableMethods(['GET', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
+#[Controller(route: 'api/v4/scheduler/runs/[uuid]', scope: Scope::SUPER_USER_ONLY)]
+class SchedulerRun extends AbstractApi
+{
+    private const array STATUSES = ['running', 'succeeded', 'failed', 'skipped', 'lost'];
+    private Job $job;
+    private string $db;
+
+    public function __construct(public readonly Route2 $route, Connection $connection)
+    {
+        parent::__construct($connection);
+        $this->job = new Job(new Connection(database: 'gc2scheduler'));
+        $this->db = (string)$this->route->jwt['data']['database'];
+        $this->resource = 'scheduler-run';
+    }
+
+    private function present(array $r): array
+    {
+        return [
+            'uuid' => $r['uuid'], 'job' => (int)$r['id'], 'name' => $r['name'], 'pid' => (int)$r['pid'], 'host' => $r['host'],
+            'slot' => $r['slot'] !== null ? (int)$r['slot'] : null, 'status' => $r['status'],
+            'stale' => $r['status'] === 'running' && $r['heartbeat'] !== null && (time() - strtotime($r['heartbeat'])) > 300,
+            'started_at' => $r['started_at'], 'heartbeat' => $r['heartbeat'], 'finished_at' => $r['finished_at'], 'exit_reason' => $r['exit_reason'],
+        ];
+    }
+
+    /** @return array<int, array<string,mixed>> runs of the caller's database after reaping */
+    private function runs(): array
+    {
+        $lock = new SchedulerLock();
+        $lock->reap();
+        $rows = $lock->runsFor($this->db);
+        $lock->release();
+        return $rows;
+    }
+
+    #[OA\Get(path: '/api/v4/scheduler/runs/{uuid}', operationId: 'getSchedulerRun', description: "Get one run, or list runs (running first, then the newest finished). Filters: ?job=, ?status=.", tags: ['Scheduler'],
+        parameters: [new OA\Parameter(name: 'uuid', in: 'path', required: true, schema: new OA\Schema(type: 'string')), new OA\Parameter(name: 'job', in: 'query', required: false, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string'))],
+        responses: [new OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/SchedulerRun")), new OA\Response(response: 404, description: 'Not found')])]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    #[Override]
+    public function get_index(): Response
+    {
+        $uuid = $this->route->getParam('uuid');
+        $rows = $this->runs();
+        if (!empty($uuid)) {
+            foreach ($rows as $r) {
+                if ($r['uuid'] === $uuid) {
+                    return $this->getResponse([$this->present($r)], single: true);
+                }
+            }
+            throw new GC2Exception("Run $uuid not found", 404, null, "RUN_NOT_FOUND");
+        }
+        $job = isset($_GET['job']) && ctype_digit((string)$_GET['job']) ? (int)$_GET['job'] : null;
+        $status = isset($_GET['status']) && in_array($_GET['status'], self::STATUSES, true) ? $_GET['status'] : null;
+        $rows = array_values(array_filter($rows, fn($r) => ($job === null || (int)$r['id'] === $job) && ($status === null || $r['status'] === $status)));
+        return $this->getResponse(array_map(fn($r) => $this->present($r), $rows));
+    }
+
+    #[OA\Post(path: '/api/v4/scheduler/runs', operationId: 'postSchedulerRun', description: "Start a job now. Asynchronous: poll the runs list for the new run.", tags: ['Scheduler'],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(properties: [new OA\Property(property: "job", type: "integer"), new OA\Property(property: "force", description: "Ignore delete_append and overwrite", type: "boolean")], type: "object")),
+        responses: [new OA\Response(response: 202, description: 'Starting'), new OA\Response(response: 404, description: 'Job not found'), new OA\Response(response: 409, description: 'A run of the job is already running')])]
+    #[AcceptableContentTypes(['application/json'])]
+    #[AcceptableAccepts(['application/json', '*/*'])]
+    #[Override]
+    public function post_index(): Response
+    {
+        $body = json_decode(Input::getBody(), true);
+        $jobId = (int)$body['job'];
+        if ($this->job->getById($jobId, $this->db) === null) {
+            throw new GC2Exception("Job $jobId not found", 404, null, "JOB_NOT_FOUND");
+        }
+        $lock = new SchedulerLock();
+        $lock->reap();
+        $running = $lock->runningRun($jobId);
+        $lock->release();
+        if ($running !== null) {
+            throw new GC2Exception("Job $jobId is already running (run {$running['uuid']})", 409, null, "JOB_RUNNING");
+        }
+        $this->job->runJob($jobId, $this->db, 'Started via API v4 by ' . $this->route->jwt['data']['uid'], !empty($body['force']), null, true);
+        return new AcceptedResponse(['job' => $jobId, 'status' => 'starting', '_links' => ['runs' => "/api/v4/scheduler/runs?job=$jobId"]]);
+    }
+
+    #[OA\Delete(path: '/api/v4/scheduler/runs/{uuid}', operationId: 'deleteSchedulerRun', description: "Stop a running run: SIGINT, then SIGKILL after 30 s.", tags: ['Scheduler'],
+        parameters: [new OA\Parameter(name: 'uuid', in: 'path', required: true, schema: new OA\Schema(type: 'string'))],
+        responses: [new OA\Response(response: 200, description: 'Signal sent'), new OA\Response(response: 404, description: 'No running run with that uuid'), new OA\Response(response: 409, description: 'The run is on another host')])]
+    #[Override]
+    public function delete_index(): Response
+    {
+        $uuid = (string)$this->route->getParam('uuid');
+        $run = null;
+        foreach ($this->runs() as $r) {
+            if ($r['uuid'] === $uuid && $r['status'] === 'running') {
+                $run = $r;
+            }
+        }
+        if ($run === null) {
+            throw new GC2Exception("No running run with uuid $uuid", 404, null, "RUN_NOT_FOUND");
+        }
+        $host = gethostname() ?: 'unknown';
+        if ($run['host'] !== $host) {
+            throw new GC2Exception("Run $uuid is on host {$run['host']}, not $host", 409, null, "RUN_ON_OTHER_HOST");
+        }
+        $this->job->kill((int)$run['pid']);
+        return new GetResponse(data: ['uuid' => $uuid, 'signal' => 'SIGINT']);
+    }
+
+    public function put_index(): Response
+    {
+        throw new GC2Exception("Method not allowed", 405, null, "METHOD_NOT_ALLOWED");
+    }
+
+    public function patch_index(): Response
+    {
+        throw new GC2Exception("Method not allowed", 405, null, "METHOD_NOT_ALLOWED");
+    }
+
+    #[Override]
+    public function validate(): void
+    {
+        $uuid = $this->route->getParam('uuid');
+        $method = Input::getMethod();
+        if ($method === 'post') {
+            if (!empty($uuid)) {
+                $this->postWithResource();
+            }
+            $this->validateRequest(new Assert\Collection([
+                'job' => new Assert\Required([new Assert\Type('integer'), new Assert\Positive()]),
+                'force' => new Assert\Optional(new Assert\Type('bool')),
+            ]), Input::getBody(), $method);
+        }
+        if ($method === 'delete' && empty($uuid)) {
+            throw new GC2Exception("A run uuid is required", 400, null, "INVALID_REQUEST");
+        }
+    }
+}
+```
+
+`Job::kill` must be public (Task 3 made it so). Note `runJob(..., $async = true)` returns immediately; the 202 says `starting` because the run row is written by get.php.
+
+- [ ] **Step 4: Run the Cest until green** — `OK (4 tests, ...)`; re-run `SchedulerJobV4ApiCest.php`.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add app/api/v4/controllers/SchedulerRun.php app/tests/api/SchedulerRunV4ApiCest.php
+git commit -m "feat(api): v4 scheduler runs (start, list, inspect, stop) on the run registry"
+```
+
+---
+
+### Task 7: Verification
+
+- [ ] **Step 1:** unit `SchedulerLockTest.php`, `JobSnapshotFlagTest.php`, `WfsPagingTest.php`; api `SchedulerApiCest.php`, `SchedulerJobV4ApiCest.php`, `SchedulerRunV4ApiCest.php`, `FunctionManagementCest.php` — all green, each its own command.
 - [ ] **Step 2:** repeat Task 2 Step 6's double-start and kill -9 checks on the final code; record output.
-- [ ] **Step 3:** `DELETE /api/v3/scheduler/{uuid}` by hand on a running job (start a job against a slow source, e.g. the WFS stub from the previous feature with a `sleep` added, or simply a job whose ogr2ogr step is long); expect `{"success":true,...}`, the run row `failed` with `exit_reason = timeout` or `terminated`, and the slot free (`SELECT count(*) FROM pg_locks WHERE classid = 42002`).
+- [ ] **Step 3:** `DELETE /api/v4/scheduler/runs/{uuid}` (and the v3 twin) by hand on a running job (start a job against a slow source, e.g. the WFS stub from the previous feature with a `sleep` added, or simply a job whose ogr2ogr step is long); expect `{"success":true,...}`, the run row `failed` with `exit_reason = timeout` or `terminated`, and the slot free (`SELECT count(*) FROM pg_locks WHERE classid = 42002`).
 - [ ] **Step 4:** `grep -rn "scheduler_locks\|purge_locks\|pgrep timeout" app public docker --exclude-dir=vendor` → only historical docs.
