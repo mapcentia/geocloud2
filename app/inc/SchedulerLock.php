@@ -59,16 +59,23 @@ final class SchedulerLock
 
     /**
      * Takes the first free run slot, waiting while all are busy. $onWait is
-     * called before every sleep (for logging/reporting).
+     * called before every sleep (for logging/reporting). When $maxWaitSeconds
+     * is not null and the total time spent waiting reaches it, throws
+     * RuntimeException instead of waiting further; null (the default) waits
+     * forever, which is what get.php wants.
      */
-    public function acquireSlot(int $maxJobs, ?callable $onWait = null, int $sleepSeconds = 10): int
+    public function acquireSlot(int $maxJobs, ?callable $onWait = null, int $sleepSeconds = 10, ?int $maxWaitSeconds = null): int
     {
         $maxJobs = max(1, $maxJobs);
+        $start = microtime(true);
         while (true) {
             for ($slot = 1; $slot <= $maxJobs; $slot++) {
                 if ($this->trySlot($slot)) {
                     return $slot;
                 }
+            }
+            if ($maxWaitSeconds !== null && (microtime(true) - $start) >= $maxWaitSeconds) {
+                throw new RuntimeException("No free run slot after {$maxWaitSeconds}s");
             }
             if ($onWait !== null) {
                 $onWait($maxJobs, $sleepSeconds);
@@ -161,6 +168,9 @@ final class SchedulerLock
     /** Ends the session, which releases every lock it holds. */
     public function release(): void
     {
+        if (!isset($this->pdo)) {
+            return;
+        }
         unset($this->pdo);
     }
 

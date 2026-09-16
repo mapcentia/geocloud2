@@ -67,20 +67,38 @@ class SchedulerLockTest extends Unit
         $a = $this->session();
         $b = $this->session();
         $c = $this->session();
-        $this->assertSame(1, $a->acquireSlot(2));
-        $this->assertSame(2, $b->acquireSlot(2));
-        $this->assertFalse($c->trySlot(1));
-        $this->assertFalse($c->trySlot(2));
+        $big = 1000; // far above any real maxJobs, so A and B always get a slot
+        $s1 = $a->acquireSlot($big, null, 1, 5);
+        $s2 = $b->acquireSlot($big, null, 1, 5);
+        $this->assertNotSame($s1, $s2);
+        $this->assertFalse($c->trySlot($s1));
+        $this->assertFalse($c->trySlot($s2));
 
+        // Every slot up to max(s1, s2) is held (by A, B or unrelated runs), so C must wait;
+        // releasing A from the wait callback lets C take exactly A's slot.
+        $limit = max($s1, $s2);
         $waits = 0;
-        // With no free slot acquireSlot waits; release A from the wait callback so the loop ends.
-        $slot = $c->acquireSlot(2, function () use (&$waits, $a) {
+        $slot = $c->acquireSlot($limit, function () use (&$waits, $a) {
             $waits++;
             $a->release();
-        }, 1);
-        array_shift($this->sessions);
-        $this->assertSame(1, $slot);
+        }, 1, 30);
+        array_shift($this->sessions); // A is released; drop it from _after()'s cleanup
+        $this->assertSame($s1, $slot);
         $this->assertGreaterThanOrEqual(1, $waits);
+    }
+
+    public function testAcquireSlotTimesOut(): void
+    {
+        $a = $this->session();
+        $b = $this->session();
+        $s = $a->acquireSlot(1000, null, 1, 5);
+        // Hold every slot up to $s so B has nothing to find, even if unrelated
+        // runs release a lower slot mid-test.
+        for ($i = 1; $i <= $s; $i++) {
+            $a->trySlot($i);
+        }
+        $this->expectException(RuntimeException::class);
+        $b->acquireSlot($s, null, 1, 2);
     }
 
     public function testRegistryLifecycle(): void
