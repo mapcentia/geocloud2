@@ -180,16 +180,24 @@ class Route2
 
     /**
      * True when the controller class itself (not AbstractApi) declares the
-     * given head_<action> method. Such controllers answer HEAD with real
+     * given head_<action> method AND that method promises a Response (i.e.
+     * its return type is not void). Such controllers answer HEAD with real
      * headers (e.g. Content-Length for range-capable downloads); every other
-     * controller keeps the generic short-circuit.
+     * controller keeps the generic short-circuit. Legacy no-op
+     * `head_<action>(): void` stubs (e.g. Func::head_invocations) keep the
+     * short-circuit.
      */
     private static function declaresHead(ApiInterface $controller, string $headAction): bool
     {
         if (!method_exists($controller, $headAction)) {
             return false;
         }
-        return (new ReflectionMethod($controller, $headAction))->getDeclaringClass()->getName() === $controller::class;
+        $m = new ReflectionMethod($controller, $headAction);
+        if ($m->getDeclaringClass()->getName() !== $controller::class) {
+            return false;
+        }
+        $type = $m->getReturnType();
+        return $type !== null && !($type instanceof \ReflectionNamedType && $type->getName() === 'void');
     }
 
     /**

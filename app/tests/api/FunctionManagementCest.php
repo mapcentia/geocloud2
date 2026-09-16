@@ -81,6 +81,21 @@ class FunctionManagementCest
         $I->assertStringContainsString('/api/v4/functions/' . $this->functionName, $location);
     }
 
+    /**
+     * Func declares a legacy no-op `head_invocations(): void` stub (it exists
+     * only to be recognized by AcceptableMethods, not to answer the request
+     * itself). Route2::declaresHead() must treat a void return type as "does
+     * not declare HEAD", so this keeps getting the generic AcceptableMethods
+     * short-circuit (204) instead of falling through to `$response->getData()`
+     * on a null $response.
+     */
+    public function shouldShortCircuitHeadOnInvocations(ApiTester $I)
+    {
+        $this->auth($I);
+        $I->sendHEAD('/api/v4/functions/' . $this->functionName . '/invocations');
+        $I->seeResponseCodeIs(HttpCode::NO_CONTENT);
+    }
+
     public function shouldListFunctions(ApiTester $I)
     {
         $this->auth($I);
