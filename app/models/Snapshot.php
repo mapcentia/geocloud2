@@ -16,6 +16,8 @@ use PDO;
  * Queue and status records for asynchronous Parquet snapshots in
  * settings.snapshots. The table is the queue: POST inserts a 'pending' row,
  * the worker claims rows (FOR UPDATE SKIP LOCKED) and finalises them.
+ * `superseded`: replaced by a newer run for the same date; `published`
+ * marks visibility.
  */
 class Snapshot extends Model
 {
@@ -174,5 +176,84 @@ class Snapshot extends Model
         $res->bindValue(':limit', max(1, $limit), PDO::PARAM_INT);
         $this->execute($res);
         return $this->fetchAll($res, 'assoc');
+    }
+
+    /**
+     * Marks a claimed run succeeded and visible, in one transaction: any
+     * earlier succeeded row for the same relation and date is flipped to
+     * 'superseded' first (the partial unique index forbids two succeeded rows
+     * per date), then this row gets its catalog data and published = now().
+     *
+     * @param array<int, array{column_name:string, data_type:string}> $relationSchema
+     * @param array<int, array{name:string, size_bytes:int}> $files
+     * @return string|null uuid of the superseded row, so the caller can delete its files
+     */
+    public function publish(string $uuid, string $snapshotDate, string $location, int $rowCount, string $schemaVersion, array $relationSchema, array $files): ?string
+    {
+        return $this->withTransaction(function () use ($uuid, $snapshotDate, $location, $rowCount, $schemaVersion, $relationSchema, $files) {
+            $res = $this->prepare("UPDATE settings.snapshots SET status = 'superseded'
+                                   WHERE uuid <> :uuid AND status = 'succeeded' AND snapshot_date = :date
+                                     AND (schema_name, relation_name) = (SELECT schema_name, relation_name FROM settings.snapshots WHERE uuid = :uuid)
+                                   RETURNING uuid");
+            $this->execute($res, ['uuid' => $uuid, 'date' => $snapshotDate]);
+            $superseded = $res->fetchColumn();
+
+            $sizeBytes = array_sum(array_map(fn($f) => (int)$f['size_bytes'], $files));
+            $res = $this->prepare("UPDATE settings.snapshots
+                                   SET status = 'succeeded', snapshot_date = :date, s3_path = :location, row_count = :row_count,
+                                       schema_version = :schema_version, relation_schema = :relation_schema,
+                                       files = :files, size_bytes = :size_bytes, error = NULL,
+                                       published = now(), finished = now()
+                                   WHERE uuid = :uuid");
+            $res->bindValue(':uuid', $uuid);
+            $res->bindValue(':date', $snapshotDate);
+            $res->bindValue(':location', $location);
+            $res->bindValue(':row_count', $rowCount, PDO::PARAM_INT);
+            $res->bindValue(':schema_version', $schemaVersion);
+            $res->bindValue(':relation_schema', json_encode($relationSchema));
+            $res->bindValue(':files', json_encode($files));
+            $res->bindValue(':size_bytes', $sizeBytes, PDO::PARAM_INT);
+            $this->execute($res);
+            return $superseded === false || $superseded === null ? null : (string)$superseded;
+        });
+    }
+
+    /**
+     * Visible snapshots of a relation (succeeded and published), newest date first.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function listPublished(string $schema, string $relation, int $limit = 100): array
+    {
+        $sql = "SELECT * FROM settings.snapshots
+                WHERE schema_name = :schema AND relation_name = :relation
+                  AND status = 'succeeded' AND published IS NOT NULL
+                ORDER BY snapshot_date DESC, published DESC
+                LIMIT :limit";
+        $res = $this->prepare($sql);
+        $res->bindValue(':schema', $schema);
+        $res->bindValue(':relation', $relation);
+        $res->bindValue(':limit', max(1, $limit), PDO::PARAM_INT);
+        $this->execute($res);
+        return $this->fetchAll($res, 'assoc');
+    }
+
+    /**
+     * One visible snapshot by relation and date.
+     *
+     * @throws GC2Exception 404 NO_SNAPSHOT_ERROR
+     */
+    public function getPublished(string $schema, string $relation, string $snapshotDate): array
+    {
+        $sql = "SELECT * FROM settings.snapshots
+                WHERE schema_name = :schema AND relation_name = :relation AND snapshot_date = :date
+                  AND status = 'succeeded' AND published IS NOT NULL";
+        $res = $this->prepare($sql);
+        $this->execute($res, ['schema' => $schema, 'relation' => $relation, 'date' => $snapshotDate]);
+        $row = $this->fetchRow($res);
+        if (!$row) {
+            throw new GC2Exception("No snapshot of $schema.$relation for $snapshotDate", 404, null, "NO_SNAPSHOT_ERROR");
+        }
+        return ['success' => true, 'message' => "Snapshot fetched", 'data' => $row];
     }
 }

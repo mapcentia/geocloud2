@@ -422,6 +422,15 @@ SQL;
         // column list itself (name + type), mirrored in metadata.json on S3.
         $sqls[] = "ALTER TABLE settings.snapshots ADD COLUMN schema_version TEXT";
         $sqls[] = "ALTER TABLE settings.snapshots ADD COLUMN relation_schema JSONB";
+        // Read side of snapshots: the catalog identifies a snapshot by relation +
+        // date, remembers its files, and only shows published rows.
+        $sqls[] = "ALTER TABLE settings.snapshots ADD COLUMN snapshot_date DATE";
+        $sqls[] = "ALTER TABLE settings.snapshots ADD COLUMN files JSONB";
+        $sqls[] = "ALTER TABLE settings.snapshots ADD COLUMN size_bytes BIGINT";
+        $sqls[] = "ALTER TABLE settings.snapshots ADD COLUMN published TIMESTAMP WITH TIME ZONE";
+        $sqls[] = "ALTER TABLE settings.snapshots DROP CONSTRAINT snapshots_status_check";
+        $sqls[] = "ALTER TABLE settings.snapshots ADD CONSTRAINT snapshots_status_check CHECK (status IN ('pending', 'running', 'succeeded', 'failed', 'superseded'))";
+        $sqls[] = "CREATE UNIQUE INDEX snapshots_published_unique_idx ON settings.snapshots (schema_name, relation_name, snapshot_date) WHERE status = 'succeeded'";
 
         include 'Views1.php';
         return $sqls;

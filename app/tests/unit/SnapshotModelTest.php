@@ -200,6 +200,63 @@ class SnapshotModelTest extends Unit
         $this->assertCount(1, $m->list(null, null, 1));
     }
 
+    public function testPublishMakesRowVisibleAndSupersedesSameDate(): void
+    {
+        $m = $this->model();
+        $files = [['name' => 'data-a.parquet', 'size_bytes' => 10]];
+        $cols = [['column_name' => 'gid', 'data_type' => 'integer']];
+
+        $first = $m->create('pub', 'rel', null, self::$database);
+        $m->claimPending(100);
+        $this->assertNull($m->publish($first, '2026-09-16', 's3://b/x/', 5, 'v1', $cols, $files));
+
+        $row = $m->getPublished('pub', 'rel', '2026-09-16')['data'];
+        $this->assertSame($first, $row['uuid']);
+        $this->assertSame('succeeded', $row['status']);
+        $this->assertSame('2026-09-16', $row['snapshot_date']);
+        $this->assertSame(10, (int)$row['size_bytes']);
+        $this->assertEquals($files, json_decode($row['files'], true));
+        $this->assertNotNull($row['published']);
+        $this->assertNotNull($row['finished']);
+
+        $second = $m->create('pub', 'rel', null, self::$database);
+        $m->claimPending(100);
+        $this->assertSame($first, $m->publish($second, '2026-09-16', 's3://b/y/', 6, 'v1', $cols, [['name' => 'data-b.parquet', 'size_bytes' => 12]]));
+
+        $this->assertSame('superseded', $m->get($first)['data']['status']);
+        $this->assertSame($second, $m->getPublished('pub', 'rel', '2026-09-16')['data']['uuid']);
+        $this->assertCount(1, $m->listPublished('pub', 'rel'));
+    }
+
+    public function testListPublishedIsNewestDateFirstAndHidesOtherStates(): void
+    {
+        $m = $this->model();
+        $cols = [['column_name' => 'gid', 'data_type' => 'integer']];
+        $f = [['name' => 'data-x.parquet', 'size_bytes' => 1]];
+
+        $old = $m->create('lp', 'rel', null, self::$database);
+        $new = $m->create('lp', 'rel', null, self::$database);
+        $failed = $m->create('lp', 'rel', null, self::$database);
+        $pending = $m->create('lp', 'rel', null, self::$database);
+        $m->claimPending(3); // claims old, new, failed (oldest first); pending stays pending
+        $m->publish($old, '2026-09-14', 's3://b/1/', 1, 'v', $cols, $f);
+        $m->publish($new, '2026-09-15', 's3://b/2/', 1, 'v', $cols, $f);
+        $m->finish($failed, 'failed', null, null, 'boom');
+
+        $list = $m->listPublished('lp', 'rel');
+        $this->assertSame(['2026-09-15', '2026-09-14'], array_column($list, 'snapshot_date'));
+        $this->assertNotContains($failed, array_column($list, 'uuid'));
+        $this->assertNotContains($pending, array_column($list, 'uuid'));
+        $this->assertSame([], $m->listPublished('lp', 'other'));
+    }
+
+    public function testGetPublishedUnknownDateThrows404(): void
+    {
+        $this->expectException(GC2Exception::class);
+        $this->expectExceptionCode(404);
+        $this->model()->getPublished('lp', 'rel', '1999-01-01');
+    }
+
     private function post(string $path, array $body): ?array
     {
         $ctx = stream_context_create([
