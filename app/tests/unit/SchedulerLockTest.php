@@ -1,0 +1,142 @@
+<?php
+/**
+ * @author     Martin Høgh <mh@mapcentia.com>
+ * @copyright  2013-2026 MapCentia ApS
+ * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
+ */
+
+use app\inc\Connection;
+use app\inc\SchedulerLock;
+use Codeception\Test\Unit;
+
+/**
+ * Advisory-lock based scheduler locking against the real gc2scheduler
+ * database. Every SchedulerLock instance is its own Postgres session, so two
+ * instances behave like two get.php processes.
+ */
+class SchedulerLockTest extends Unit
+{
+    protected UnitTester $tester;
+
+    /** @var SchedulerLock[] */
+    private array $sessions = [];
+    private int $jobId;
+
+    protected function _before(): void
+    {
+        // A job id nobody else uses: negative ids never occur in the jobs table.
+        $this->jobId = -random_int(1000, 999999);
+    }
+
+    protected function _after(): void
+    {
+        foreach ($this->sessions as $s) {
+            $s->release();
+        }
+        $this->sessions = [];
+        $pdo = new PDO("pgsql:dbname=gc2scheduler;host=" . getenv('POSTGRES_HOST') . ";port=" . (getenv('POSTGRES_PORT') ?: 5432), getenv('POSTGRES_USER'), getenv('POSTGRES_PASSWORD'));
+        $pdo->exec("DELETE FROM started_jobs WHERE id < 0 OR db = 'schedlocktest'");
+    }
+
+    private function session(): SchedulerLock
+    {
+        try {
+            $s = new SchedulerLock(new Connection(database: 'gc2scheduler'));
+        } catch (Throwable $e) {
+            $this->markTestSkipped('gc2scheduler not reachable: ' . $e->getMessage());
+        }
+        $this->sessions[] = $s;
+        return $s;
+    }
+
+    public function testJobLockIsExclusivePerJobAndReleasedWithTheSession(): void
+    {
+        $a = $this->session();
+        $b = $this->session();
+        $this->assertTrue($a->tryJobLock($this->jobId));
+        $this->assertFalse($b->tryJobLock($this->jobId), 'second session must not get the same job lock');
+        $this->assertTrue($b->tryJobLock($this->jobId - 1), 'a different job is independent');
+
+        $a->release();
+        array_shift($this->sessions);
+        $this->assertTrue($b->tryJobLock($this->jobId), 'closing the holder releases the lock');
+    }
+
+    public function testSlotsAreLimitedAndReusable(): void
+    {
+        $a = $this->session();
+        $b = $this->session();
+        $c = $this->session();
+        $this->assertSame(1, $a->acquireSlot(2));
+        $this->assertSame(2, $b->acquireSlot(2));
+        $this->assertFalse($c->trySlot(1));
+        $this->assertFalse($c->trySlot(2));
+
+        $waits = 0;
+        // With no free slot acquireSlot waits; release A from the wait callback so the loop ends.
+        $slot = $c->acquireSlot(2, function () use (&$waits, $a) {
+            $waits++;
+            $a->release();
+        }, 1);
+        array_shift($this->sessions);
+        $this->assertSame(1, $slot);
+        $this->assertGreaterThanOrEqual(1, $waits);
+    }
+
+    public function testRegistryLifecycle(): void
+    {
+        $s = $this->session();
+        $this->assertTrue($s->tryJobLock($this->jobId));
+        $uuid = $s->startRun($this->jobId, 'schedlocktest', 'lock test', 4242, 1, 'unit-host');
+        $this->assertMatchesRegularExpression('/^[0-9a-f-]{36}$/', $uuid);
+
+        $run = $s->runningRun($this->jobId);
+        $this->assertSame($uuid, $run['uuid']);
+        $this->assertSame('running', $run['status']);
+        $this->assertSame('unit-host', $run['host']);
+        $this->assertSame(1, (int)$run['slot']);
+        $this->assertNull($run['heartbeat']);
+
+        $s->heartbeat($uuid);
+        $this->assertNotNull($s->runningRun($this->jobId)['heartbeat']);
+
+        $this->assertContains($uuid, array_column($s->runsFor('schedlocktest'), 'uuid'), 'runsFor lists the running row');
+        $this->assertSame($uuid, $s->latestRunForPid(4242, 'unit-host')['uuid']);
+
+        $s->finishRun($uuid, 'failed', 'boom');
+        $this->assertNull($s->runningRun($this->jobId));
+        $finished = array_values(array_filter($s->runsFor('schedlocktest'), fn($r) => $r['uuid'] === $uuid))[0];
+        $this->assertSame('failed', $finished['status']);
+        $this->assertSame('boom', $finished['exit_reason']);
+        $this->assertNotNull($finished['finished_at']);
+    }
+
+    public function testSkippedRowIsRecordedAndNotRunning(): void
+    {
+        $s = $this->session();
+        $uuid = $s->recordSkipped($this->jobId, 'schedlocktest', 'lock test', 4243, 'unit-host', 'already running');
+        $this->assertNull($s->runningRun($this->jobId));
+        $row = array_values(array_filter($s->runsFor('schedlocktest'), fn($r) => $r['uuid'] === $uuid))[0];
+        $this->assertSame('skipped', $row['status']);
+        $this->assertNotNull($row['finished_at']);
+    }
+
+    public function testReaperMarksUnlockedRunningRowsLostAndLeavesLockedOnes(): void
+    {
+        $holder = $this->session();
+        $this->assertTrue($holder->tryJobLock($this->jobId));
+        $live = $holder->startRun($this->jobId, 'schedlocktest', 'live', 1, 1, 'unit-host');
+
+        $deadJob = $this->jobId - 7;
+        $dead = $holder->startRun($deadJob, 'schedlocktest', 'dead', 2, 2, 'unit-host'); // no lock for this id
+
+        $other = $this->session();
+        $lost = $other->reap();
+        $this->assertGreaterThanOrEqual(1, $lost);
+        $this->assertSame('running', $holder->runningRun($this->jobId)['status'], 'a row whose lock is held stays running');
+        $this->assertNull($holder->runningRun($deadJob), 'a row without a lock is lost');
+        $deadRow = array_values(array_filter($holder->runsFor('schedlocktest'), fn($r) => $r['uuid'] === $dead))[0];
+        $this->assertSame('lost', $deadRow['status']);
+        $this->assertSame($live, $holder->runningRun($this->jobId)['uuid']);
+    }
+}

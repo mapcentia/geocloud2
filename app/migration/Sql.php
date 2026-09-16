@@ -498,6 +498,17 @@ SQL;
                         name    varchar(255)
                     );
                   ";
+        // Scheduler run registry: started_jobs gains lifecycle columns; locks
+        // themselves are Postgres advisory locks (see app/inc/SchedulerLock.php).
+        $sqls[] = "ALTER TABLE started_jobs ADD COLUMN started_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()";
+        $sqls[] = "ALTER TABLE started_jobs ADD COLUMN heartbeat TIMESTAMP WITH TIME ZONE";
+        $sqls[] = "ALTER TABLE started_jobs ADD COLUMN finished_at TIMESTAMP WITH TIME ZONE";
+        $sqls[] = "ALTER TABLE started_jobs ADD COLUMN status VARCHAR(16) NOT NULL DEFAULT 'running'";
+        $sqls[] = "ALTER TABLE started_jobs ADD COLUMN host VARCHAR(255)";
+        $sqls[] = "ALTER TABLE started_jobs ADD COLUMN slot INTEGER";
+        $sqls[] = "ALTER TABLE started_jobs ADD COLUMN exit_reason TEXT";
+        $sqls[] = "ALTER TABLE started_jobs ADD CONSTRAINT started_jobs_status_check CHECK (status IN ('running', 'succeeded', 'failed', 'skipped', 'lost'))";
+        $sqls[] = "CREATE INDEX started_jobs_running_idx ON started_jobs (id) WHERE status = 'running'";
         return $sqls;
     }
 }
