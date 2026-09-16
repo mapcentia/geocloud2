@@ -257,6 +257,23 @@ class SnapshotModelTest extends Unit
         $this->model()->getPublished('lp', 'rel', '1999-01-01');
     }
 
+    public function testPublishUnknownUuidThrows404(): void
+    {
+        $this->expectException(GC2Exception::class);
+        $this->expectExceptionCode(404);
+        $this->model()->publish('00000000-0000-0000-0000-000000000000', '2026-09-16', 's3://b/x/', 1, 'v1', [], []);
+    }
+
+    public function testPublishRequiresRunningRow(): void
+    {
+        $m = $this->model();
+        $uuid = $m->create('pub_unclaimed', 'rel', null, self::$database);
+        // Not claimed: row is still 'pending', not 'running'.
+        $this->expectException(GC2Exception::class);
+        $this->expectExceptionCode(404);
+        $m->publish($uuid, '2026-09-16', 's3://b/x/', 1, 'v1', [], []);
+    }
+
     private function post(string $path, array $body): ?array
     {
         $ctx = stream_context_create([

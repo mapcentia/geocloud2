@@ -187,6 +187,7 @@ class Snapshot extends Model
      * @param array<int, array{column_name:string, data_type:string}> $relationSchema
      * @param array<int, array{name:string, size_bytes:int}> $files
      * @return string|null uuid of the superseded row, so the caller can delete its files
+     * @throws GC2Exception 404 NO_SNAPSHOT_ERROR when $uuid is unknown or not currently 'running'
      */
     public function publish(string $uuid, string $snapshotDate, string $location, int $rowCount, string $schemaVersion, array $relationSchema, array $files): ?string
     {
@@ -204,7 +205,7 @@ class Snapshot extends Model
                                        schema_version = :schema_version, relation_schema = :relation_schema,
                                        files = :files, size_bytes = :size_bytes, error = NULL,
                                        published = now(), finished = now()
-                                   WHERE uuid = :uuid");
+                                   WHERE uuid = :uuid AND status = 'running'");
             $res->bindValue(':uuid', $uuid);
             $res->bindValue(':date', $snapshotDate);
             $res->bindValue(':location', $location);
@@ -214,6 +215,9 @@ class Snapshot extends Model
             $res->bindValue(':files', json_encode($files));
             $res->bindValue(':size_bytes', $sizeBytes, PDO::PARAM_INT);
             $this->execute($res);
+            if ($res->rowCount() === 0) {
+                throw new GC2Exception("No snapshot with that id", 404, null, "NO_SNAPSHOT_ERROR");
+            }
             return $superseded === false || $superseded === null ? null : (string)$superseded;
         });
     }
