@@ -29,6 +29,10 @@ use app\inc\snapshot\SnapshotRef;
 use app\inc\snapshot\SnapshotStorage;
 use app\inc\snapshot\SnapshotStorageFactory;
 use app\models\Snapshot as SnapshotModel;
+use Aws\Exception\AwsException;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\UnableToReadFile;
+use RuntimeException;
 use OpenApi\Annotations\OpenApi;
 use OpenApi\Attributes as OA;
 use Override;
@@ -39,7 +43,9 @@ use Override;
  * (DuckDB read_parquet) can fetch footers and row groups selectively.
  *
  * Authorization runs before any catalog file name or storage call: super
- * users always, sub-users by schema ownership or layer read privilege.
+ * users always, sub-users by schema ownership or layer read privilege, and
+ * never a sub-user the geofence filters (a whole-table file cannot honour a
+ * row filter). Storage failures answer 502 without naming bucket or key.
  */
 #[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
@@ -133,17 +139,26 @@ class RelationSnapshot extends AbstractApi
             return "EPSG:" . (int)$row['srs'];
         }
         // Native SRID is only in metadata-<id>.json; read it once (small file).
-        // Only treat "the file/backend isn't there" as missing metadata (null);
-        // a misconfigured storage backend (GC2Exception, e.g. 501) is a real
-        // error and must propagate, not be silently swallowed as "no CRS".
+        // Only a *missing metadata file* means "no CRS" (null); a misconfigured
+        // backend (GC2Exception 501) and a broken one (502, via withStorage)
+        // are real errors and must propagate, not be swallowed as "no CRS".
         $stream = null;
         try {
             $ref = $this->refOf($row);
-            $stream = $this->storage()->readStream($ref, $ref->metadataFile());
+            $stream = $this->withStorage(function () use ($ref) {
+                try {
+                    return $this->storage()->readStream($ref, $ref->metadataFile());
+                } catch (UnableToReadFile) {
+                    // The metadata file is simply not there (an older snapshot,
+                    // or it was pruned): no CRS to report, not an outage.
+                    return null;
+                }
+            });
+            if ($stream === null) {
+                return null;
+            }
             $meta = json_decode(stream_get_contents($stream), true);
             return $meta['crs'] ?? null;
-        } catch (\League\Flysystem\FilesystemException | \RuntimeException) {
-            return null;
         } finally {
             if (is_resource($stream)) {
                 fclose($stream);
@@ -161,6 +176,31 @@ class RelationSnapshot extends AbstractApi
     private function storage(): SnapshotStorage
     {
         return $this->storageInstance ??= SnapshotStorageFactory::fromApp();
+    }
+
+    /**
+     * Runs one storage operation and turns a backend failure into a flat 502.
+     *
+     * Flysystem and the AWS SDK put the bucket, the full object key or the
+     * local root into their messages, and GC2's error handler renders the
+     * message to the client: a storage outage must not become a map of where
+     * the snapshots live. The detail goes to the error log instead.
+     * GC2Exception (e.g. 501 SNAPSHOT_NOT_CONFIGURED from the factory) is
+     * deliberately not caught and keeps its own status.
+     *
+     * @template T
+     * @param callable(): T $op
+     * @return T
+     * @throws GC2Exception 502 SNAPSHOT_STORAGE_ERROR
+     */
+    private function withStorage(callable $op): mixed
+    {
+        try {
+            return $op();
+        } catch (FilesystemException | AwsException | RuntimeException $e) {
+            error_log('snapshot storage error: ' . $e->getMessage());
+            throw new GC2Exception("Snapshot storage unavailable", 502, null, "SNAPSHOT_STORAGE_ERROR");
+        }
     }
 
     #[OA\Get(path: '/api/v4/schemas/{schema}/relations/{relation}/snapshots/{date}', operationId: 'getRelationSnapshot', description: "Get one published snapshot (metadata), or list them when {date} is omitted.", tags: ['Snapshots'],
@@ -204,6 +244,7 @@ class RelationSnapshot extends AbstractApi
             new OA\Response(response: 404, description: 'No published snapshot for that date'),
             new OA\Response(response: 409, description: 'Snapshot has several files; use /files/{file}'),
             new OA\Response(response: 416, description: 'Range not satisfiable'),
+            new OA\Response(response: 502, description: 'Snapshot storage unavailable'),
         ]
     )]
     public function get_data(): Response
@@ -229,6 +270,7 @@ class RelationSnapshot extends AbstractApi
             new OA\Response(response: 403, description: 'Insufficient privileges'),
             new OA\Response(response: 404, description: 'Unknown snapshot or file'),
             new OA\Response(response: 416, description: 'Range not satisfiable'),
+            new OA\Response(response: 502, description: 'Snapshot storage unavailable'),
         ]
     )]
     public function get_files(): Response
@@ -250,7 +292,9 @@ class RelationSnapshot extends AbstractApi
             throw new GC2Exception("Snapshot has no data file", 404, null, "NO_SNAPSHOT_ERROR");
         }
         if (count($data) > 1) {
-            throw new GC2Exception("Snapshot has " . count($data) . " data files; fetch them via /files/{file}", 409, null, "MULTI_FILE_SNAPSHOT");
+            // GC2Exception carries no data payload, so the names go in the
+            // message: a client that gets 409 must know what to fetch instead.
+            throw new GC2Exception("Snapshot has " . count($data) . " data files; fetch them via /files/{file}: " . implode(', ', array_column($data, 'name')), 409, null, "MULTI_FILE_SNAPSHOT");
         }
         return ['row' => $row, 'file' => $data[0]];
     }
@@ -262,12 +306,14 @@ class RelationSnapshot extends AbstractApi
         $name = (string)$this->route->getParam('file');
         $ref = $this->refOf($row);
         $candidates = $this->filesOf($row);
-        // metadata-<id>.json is not in the files list (it is not data) but is addressable.
-        $candidates[] = ['name' => $ref->metadataFile(), 'size_bytes' => 0];
+        // metadata-<id>.json is not in the files list (it is not data) but is
+        // addressable; null marks "size unknown, ask storage" — 0 would be a
+        // legitimate (if odd) catalog size and would trigger a pointless call.
+        $candidates[] = ['name' => $ref->metadataFile(), 'size_bytes' => null];
         foreach ($candidates as $f) {
             if ($f['name'] === $name) {
-                if ($f['size_bytes'] === 0) {
-                    $f['size_bytes'] = $this->storage()->size($ref, $name);
+                if ($f['size_bytes'] === null) {
+                    $f['size_bytes'] = $this->withStorage(fn() => $this->storage()->size($ref, $name));
                 }
                 return ['row' => $row, 'file' => $f];
             }
@@ -297,7 +343,7 @@ class RelationSnapshot extends AbstractApi
         $contentType = str_ends_with($name, '.json') ? 'application/json' : self::PARQUET;
 
         if ((App::$param['snapshot']['download'] ?? 'proxy') === 'redirect') {
-            $url = $storage->downloadUrl($ref, $name, (int)(App::$param['snapshot']['urlTtl'] ?? 300));
+            $url = $this->withStorage(fn() => $storage->downloadUrl($ref, $name, (int)(App::$param['snapshot']['urlTtl'] ?? 300)));
             if ($url !== null) {
                 header('Cache-Control: no-store');
                 return new RedirectResponse(location: $url);
@@ -318,12 +364,12 @@ class RelationSnapshot extends AbstractApi
 
         // Open the stream (or not, for HEAD) before returning the response so a
         // storage-layer failure (S3 error, missing object) throws here and is
-        // handled as a normal GC2/500 error response, rather than surfacing
-        // inside the StreamedResponse callback after status/headers were
-        // already emitted, which would append error JSON to a binary body.
+        // handled as a normal GC2 error response (502 via withStorage), rather
+        // than surfacing inside the StreamedResponse callback after status and
+        // headers were emitted, which would append error JSON to a binary body.
         if ($range === null) {
             $headers = $common + ['Content-Length' => (string)$size];
-            $stream = $headOnly ? null : $storage->readStream($ref, $name);
+            $stream = $headOnly ? null : $this->withStorage(fn() => $storage->readStream($ref, $name));
             $callback = $headOnly ? fn() => null : function () use ($stream, $size) {
                 $this->pump($stream, $size);
             };
@@ -331,7 +377,7 @@ class RelationSnapshot extends AbstractApi
         }
 
         $headers = $common + ['Content-Range' => $range->contentRange($size), 'Content-Length' => (string)$range->length()];
-        $stream = $headOnly ? null : $storage->readRange($ref, $name, $range->start, $range->length());
+        $stream = $headOnly ? null : $this->withStorage(fn() => $storage->readRange($ref, $name, $range->start, $range->length()));
         $callback = $headOnly ? fn() => null : function () use ($stream, $range) {
             $this->pump($stream, $range->length());
         };
@@ -422,20 +468,24 @@ class RelationSnapshot extends AbstractApi
         }
     }
 
+    /** Not supported here: snapshots are queued via POST /api/v4/snapshots. */
     public function post_index(): Response
     {
-        // Not supported: snapshots are queued via POST /api/v4/snapshots.
+        throw new GC2Exception("Method not allowed", 405, null, "METHOD_NOT_ALLOWED");
     }
 
     public function put_index(): Response
     {
+        throw new GC2Exception("Method not allowed", 405, null, "METHOD_NOT_ALLOWED");
     }
 
     public function patch_index(): Response
     {
+        throw new GC2Exception("Method not allowed", 405, null, "METHOD_NOT_ALLOWED");
     }
 
     public function delete_index(): Response
     {
+        throw new GC2Exception("Method not allowed", 405, null, "METHOD_NOT_ALLOWED");
     }
 }

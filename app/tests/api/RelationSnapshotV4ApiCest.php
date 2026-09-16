@@ -88,7 +88,11 @@ class RelationSnapshotV4ApiCest
         $I->sendGET('/api/v4/snapshots/' . $id);
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseContainsJson(['status' => 'succeeded']);
-        $this->date = gmdate('Y-m-d');
+        // Take the date from the job API rather than gmdate() after the run:
+        // a midnight-UTC rollover between the worker's gmdate() and ours would
+        // otherwise point every later request at a date with no snapshot.
+        $this->date = json_decode($I->grabResponse())->snapshot_date;
+        $I->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', (string)$this->date);
     }
 
     public function shouldListSnapshotsOfRelation(ApiTester $I)
@@ -234,5 +238,43 @@ class RelationSnapshotV4ApiCest
         $I->sendHEAD($this->base() . '/' . $this->date . '/files/' . $metaFile);
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeHttpHeader('Content-Type', 'application/json');
+    }
+
+    // A snapshot is the whole table in one Parquet file and cannot carry a row
+    // filter, so a sub-user whose SQL/OWS access is narrowed by a geofence rule
+    // must not be able to download it — even with the read privilege that the
+    // previous test granted.
+    public function shouldDenySnapshotsToGeofencedSubUser(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendPOST('/api/v4/rules', json_encode([
+            'username' => $this->subUserId, 'service' => 'sql', 'request' => 'select', 'access' => 'limit',
+            'schema' => $this->schema, 'table' => 'poi', 'filter' => "name = 'p1'",
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $ruleId = basename($I->grabHttpHeader('Location'));
+
+        $this->asSub($I);
+        $I->sendGET($this->base());
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+        $I->seeResponseContainsJson(['errorCode' => 'GEOFENCE_RULES_APPLY']);
+        $I->sendGET($this->base() . '/' . $this->date);
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+        $I->sendGET($this->base() . '/' . $this->date . '/data');
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+
+        // The super-user owns the schema and is never geofenced.
+        $this->asSuper($I);
+        $I->sendGET($this->base());
+        $I->seeResponseCodeIs(HttpCode::OK);
+
+        $I->sendDELETE('/api/v4/rules/' . $ruleId);
+        $I->seeResponseCodeIsSuccessful();
+
+        $this->asSub($I);
+        $I->sendGET($this->base());
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->sendHEAD($this->base() . '/' . $this->date . '/data');
+        $I->seeResponseCodeIs(HttpCode::OK);
     }
 }

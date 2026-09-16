@@ -58,7 +58,8 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(property: "schema", type: "string", example: "geodanmark"),
         new OA\Property(property: "relation", type: "string", example: "bygning"),
         new OA\Property(property: "srs", type: "integer", example: 25832, nullable: true),
-        new OA\Property(property: "status", type: "string", enum: ["pending", "running", "succeeded", "failed"]),
+        new OA\Property(property: "status", type: "string", enum: ["pending", "running", "succeeded", "failed", "superseded"]),
+        new OA\Property(property: "snapshot_date", description: "UTC date the export ran; the {date} segment of the relation snapshot read API.", type: "string", format: "date", example: "2026-09-16", nullable: true),
         new OA\Property(property: "s3_path", type: "string", example: "s3://gc2-parquet/prod/mydb/schema=geodanmark/relation=bygning/_gc2_snapshot_date=2026-09-15/", nullable: true),
         new OA\Property(property: "row_count", type: "integer", example: 123456, nullable: true),
         new OA\Property(property: "schema_version", description: "md5 fingerprint of relation_schema, for drift detection.", type: "string", example: "9e107d9d372bb6826bd81d3542a419d6", nullable: true),
@@ -98,6 +99,10 @@ class Snapshot extends AbstractApi
             'relation' => $row['relation_name'],
             'srs' => $row['srs'] !== null ? (int)$row['srs'] : null,
             'status' => $row['status'],
+            // Exposed so a client that queued a snapshot can address it in the
+            // read API (/schemas/{s}/relations/{r}/snapshots/{snapshot_date})
+            // without guessing the worker's UTC date.
+            'snapshot_date' => $row['snapshot_date'],
             's3_path' => $row['s3_path'],
             'row_count' => $row['row_count'] !== null ? (int)$row['row_count'] : null,
             'schema_version' => $row['schema_version'],
