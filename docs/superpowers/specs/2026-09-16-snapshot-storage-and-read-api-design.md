@@ -96,6 +96,15 @@ Rules:
   one transaction: `UPDATE old SET status='superseded'; UPDATE new SET status='succeeded', published=now(), ...`.
 - Failed and superseded rows stay for the job API; the read API never shows them.
 
+Rows published by the 2026-09-15 branch — before `published` and
+`snapshot_date` existed, with the data file simply named `data.parquet` — are
+invisible to the read API (`published IS NULL`, `snapshot_date IS NULL`) and
+are **not** backfilled: their files do not carry a snapshot id, so two runs of
+the same relation share a name and nothing in the catalog says which row a
+given `data.parquet` belongs to. They stay readable through the job API's
+`s3_path` and age out with normal retention; re-run the relation to get a
+snapshot the read API can serve.
+
 Model additions (`app\models\Snapshot`):
 
 ```php
@@ -321,6 +330,21 @@ but it is a real widening of who can call it, so it is covered by a test
 repoints any connection it is given at the central user database, so the
 privileges lookup ran against `mapcentia` and answered 500 instead of 403/200.
 `User` now gets its own `Connection`.
+
+## Deployment
+
+- **Image rebuild required.** The Apache vhost gains `SetEnv
+  ap_trust_cgilike_cl 1` (see the deployment note under "Read API"); it lives
+  in the image's vhost config, so an existing container keeps chunking HEAD/GET
+  responses until the image is rebuilt and redeployed.
+- **New config keys are optional.** `snapshot.storage` defaults to `s3` when a
+  bucket is configured (and the factory answers 501 `SNAPSHOT_NOT_CONFIGURED`
+  when nothing is), `snapshot.download` defaults to `proxy`, and
+  `snapshot.urlTtl` to 300 seconds. An existing `App.php` with only
+  `snapshot.bucket`/`prefix`/`region` keeps working unchanged.
+- **The scheduler `snapshot` flag is API-only.** `jobs.snapshot` is settable
+  through `POST`/`PUT` on the job API; the ExtJS scheduler UI has no field for
+  it yet, so a job created in the admin never queues a snapshot.
 
 ## Tests
 

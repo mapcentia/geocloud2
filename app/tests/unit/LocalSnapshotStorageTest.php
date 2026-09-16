@@ -75,6 +75,35 @@ class LocalSnapshotStorageTest extends Unit
         $this->assertSame('89', stream_get_contents($this->storage->readRange($this->ref, 'r.bin', 8, 100)));
     }
 
+    /**
+     * key() interpolates every segment straight into the path, so a separator
+     * or a ".." in any of them would escape the snapshot directory. The
+     * controller's regex already rules this out; the backend refuses anyway.
+     */
+    public function testKeyRejectsPathSeparatorsAndDotDot(): void
+    {
+        $bad = [
+            'relation with slash' => new SnapshotRef('mydb', 'geo', 'roads/../..', '2026-09-16', 'id'),
+            'schema with dotdot' => new SnapshotRef('mydb', '..', 'roads', '2026-09-16', 'id'),
+            'database with backslash' => new SnapshotRef('my\\db', 'geo', 'roads', '2026-09-16', 'id'),
+            'date with slash' => new SnapshotRef('mydb', 'geo', 'roads', '2026/09/16', 'id'),
+        ];
+        foreach ($bad as $why => $ref) {
+            try {
+                $this->storage->key($ref, 'x.parquet');
+                $this->fail("expected InvalidArgumentException for $why");
+            } catch (InvalidArgumentException) {
+                $this->addToAssertionCount(1);
+            }
+        }
+        try {
+            $this->storage->key($this->ref, '../../etc/passwd');
+            $this->fail('expected InvalidArgumentException for a traversing file name');
+        } catch (InvalidArgumentException) {
+            $this->addToAssertionCount(1);
+        }
+    }
+
     public function testNoDownloadUrlForLocalStorage(): void
     {
         $this->storage->write($this->ref, 'x.bin', 'x');

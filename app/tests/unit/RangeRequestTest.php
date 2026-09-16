@@ -25,6 +25,8 @@ class RangeRequestTest extends Unit
             'suffix larger than file' => ['bytes=-500', 100, [0, 99]],
             'end clamped' => ['bytes=95-200', 100, [95, 99]],
             'single last byte' => ['bytes=99-99', 100, [99, 99]],
+            'uppercase unit' => ['BYTES=0-3', 100, [0, 3]],
+            'mixed case unit' => ['Bytes=90-', 100, [90, 99]],
             'multiple ranges ignored' => ['bytes=0-1,5-6', 100, null],
             'other unit ignored' => ['items=0-1', 100, null],
             'garbage ignored' => ['bytes=abc', 100, null],

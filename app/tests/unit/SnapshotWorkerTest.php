@@ -203,7 +203,10 @@ class SnapshotWorkerTest extends Unit
     {
         $first = $this->snapshot()->create('snap', 'points', null, self::$database);
         $this->worker()->processPending(5);
-        $day = gmdate('Y-m-d');
+        // The worker's own snapshot_date, not gmdate() after the fact: the two
+        // differ if the run straddles midnight UTC and the paths below would
+        // then point at a directory that was never written.
+        $day = $this->snapshot()->get($first)['data']['snapshot_date'];
         $partition = 'unit/' . self::$database . '/schema=snap/relation=points/_gc2_snapshot_date=' . $day . '/';
         $this->assertFileExists($this->storeDir . '/' . $partition . 'data-' . $first . '.parquet');
 

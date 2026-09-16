@@ -9,6 +9,7 @@ namespace app\inc\snapshot;
 
 use League\Flysystem\Filesystem;
 use League\Flysystem\StorageAttributes;
+use InvalidArgumentException;
 use League\Flysystem\UnableToDeleteFile;
 
 /**
@@ -31,6 +32,16 @@ abstract class FlysystemSnapshotStorage implements SnapshotStorage
      */
     public function key(SnapshotRef $ref, string $file = ''): string
     {
+        // Defence in depth: every segment is interpolated straight into the
+        // object key / local path, so a '/', '\\' or '..' in any of them would
+        // escape the snapshot's directory (locally, into the filesystem). The
+        // controller's regex and the catalog already rule this out; a backend
+        // must not depend on a caller upstream getting it right.
+        foreach (['database' => $ref->database, 'schema' => $ref->schema, 'relation' => $ref->relation, 'snapshotDate' => $ref->snapshotDate, 'file' => $file] as $name => $segment) {
+            if (str_contains($segment, '/') || str_contains($segment, '\\') || str_contains($segment, '..')) {
+                throw new InvalidArgumentException("Snapshot key segment '$name' must not contain '/', '\\' or '..'");
+            }
+        }
         $prefix = trim($this->prefix, '/');
         return ($prefix !== '' ? $prefix . '/' : '')
             . "{$ref->database}/schema={$ref->schema}/relation={$ref->relation}/_gc2_snapshot_date={$ref->snapshotDate}/$file";

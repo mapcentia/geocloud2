@@ -6,7 +6,8 @@
  *
  * Background worker for Parquet snapshots. Drains pending rows in
  * settings.snapshots across all databases, exporting each relation with
- * ogr2ogr and uploading to S3.
+ * ogr2ogr and writing them to the configured snapshot storage (S3 or local
+ * disk).
  *
  *   * * * * * php -f /var/www/geocloud2/app/scripts/snapshot_worker.php
  *

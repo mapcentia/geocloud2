@@ -24,10 +24,14 @@ final readonly class RangeRequest
      * than one range, or is malformed: the server may then ignore Range and
      * answer 200 with the whole file. Throws RangeNotSatisfiable (416) for a
      * well-formed single range no byte of the file can satisfy.
+     *
+     * The unit is matched case-insensitively: RFC 9110 range units are
+     * case-insensitive tokens, and a client sending "BYTES=0-3" must get the
+     * range, not the whole file.
      */
     public static function parse(?string $header, int $size): ?self
     {
-        if ($header === null || !preg_match('/^\s*bytes\s*=\s*(\d*)\s*-\s*(\d*)\s*$/', $header, $m)) {
+        if ($header === null || !preg_match('/^\s*bytes\s*=\s*(\d*)\s*-\s*(\d*)\s*$/i', $header, $m)) {
             return null;
         }
         [, $a, $b] = $m;
