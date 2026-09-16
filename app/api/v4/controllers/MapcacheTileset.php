@@ -305,7 +305,12 @@ final class MapcacheTileset extends AbstractApi
             }
             $connection = new Connection(user: $jwt['uid'], database: $database, schema: $schema);
             $auth = new Authorization(connection: $connection);
-            $chain = new User(connection: $connection)->getFullInheritance($jwt['userGroup'] ?? [], $database);
+            // User lives in the central user database and repoints whatever
+            // Connection it is handed ($connection->database = mapcentia), so
+            // it gets its own: $connection must still address $database for the
+            // privileges lookup below, which reads settings.getColumns() there.
+            $chain = new User(connection: new Connection(user: $jwt['uid'], database: $database, schema: $schema))
+                ->getFullInheritance($jwt['userGroup'] ?? [], $database);
             if ($auth->isOwner($jwt['uid'], $chain, $schema)) {
                 return;
             }

@@ -133,6 +133,71 @@ class MapcacheWipeApiCest
         $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
     }
 
+    /**
+     * requireWrite() grants the tile-cache delete to a sub-user whose layer
+     * privilege is `read/write`. That branch was unreachable until
+     * Model::getGeometryColumns($layer, 'privileges') started returning the
+     * privileges JSON (added for the snapshot read API): it returned null for
+     * every field it did not know, so the privileges array was always empty
+     * and every sub-user got 403 regardless of their grant. Pin both sides of
+     * the now-live branch.
+     */
+    public function subUserNeedsWritePrivilegeToWipeTileset(ApiTester $I)
+    {
+        $ts = $this->date->getTimestamp();
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->deleteHeader('Authorization');
+        $I->sendPOST('/api/v2/session/start', json_encode(['user' => $this->userId, 'password' => $this->password, 'schema' => 'public']));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $I->capturePHPSESSID());
+        $I->sendPOST('/api/v2/user', json_encode([
+            'name' => 'mcw_sub_' . $ts, 'email' => 'mcwsub' . $ts . '@example.com',
+            'password' => $this->password, 'subuser' => true,
+        ]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $subUserId = json_decode($I->grabResponse())->data->screenname;
+        $I->deleteHeader('Cookie');
+        $I->sendPOST('/api/v4/oauth', json_encode([
+            'grant_type' => 'password', 'username' => $subUserId, 'password' => $this->password,
+            'database' => $this->userId, 'client_id' => 'gc2-cli',
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $subToken = json_decode($I->grabResponse())->access_token;
+
+        // sqlite with no cache file yet: the wipe is a no-op 200, so the only
+        // thing under test is the authorization gate.
+        $this->setCache($I, 'sqlite');
+        @unlink($this->mapcacheDir() . 'sqlite/' . $this->userId . '/' . $this->tileset . '.sqlite3');
+
+        // Granted through the legacy layer controller, which is the path that
+        // stores the "read/write" vocabulary requireWrite() matches (the v4
+        // privileges API's Choice list is none/read/write).
+        $grant = function (string $privilege) use ($I, $subUserId) {
+            $I->deleteHeader('Authorization');
+            $I->haveHttpHeader('Content-Type', 'application/json');
+            $I->sendPOST('/api/v2/session/start', json_encode(['user' => $this->userId, 'password' => $this->password, 'schema' => 's1']));
+            $I->seeResponseCodeIs(HttpCode::OK);
+            $I->sendPUT('/controllers/layer/privileges', json_encode([
+                'data' => ['subuser' => $subUserId, 'privileges' => $privilege, '_key_' => $this->layer],
+            ]));
+            $I->seeResponseCodeIs(HttpCode::OK);
+        };
+
+        $grant('read');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $subToken);
+        $I->sendDELETE('/api/v4/mapcache/database/' . $this->userId . '/tileset/' . $this->tileset);
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+        $I->seeResponseContainsJson(['errorCode' => 'INSUFFICIENT_PRIVILEGES']);
+
+        $grant('read/write');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $subToken);
+        $I->sendDELETE('/api/v4/mapcache/database/' . $this->userId . '/tileset/' . $this->tileset);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $data = json_decode($I->grabResponse(), true);
+        $I->assertSame('sqlite', $data['backend']);
+        $I->assertSame('wipe', $data['mode']);
+    }
+
     public function shouldCleanup(ApiTester $I)
     {
         @unlink($this->mapcacheDir() . $this->userId . '.xml');

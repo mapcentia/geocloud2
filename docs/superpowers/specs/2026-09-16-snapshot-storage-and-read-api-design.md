@@ -303,6 +303,25 @@ the end of a successful `get.php` run (in `cleanUp(1)`), when the job has
 `snapshot = true`, insert a pending row via `Snapshot::create($schema, $safeName, null, $db)`
 unless `hasActive()`; the cron worker does the rest. No other coupling.
 
+## Side effects on existing endpoints
+
+`Model::getGeometryColumns($table, 'privileges')` was added for
+`SnapshotAuthorizer`; before that the method simply had no `privileges`
+branch and returned null for it. `MapcacheTileset::requireWrite()` already
+read that field to let a sub-user with `read/write` on the layer delete its
+tile cache (`DELETE /api/v4/mapcache/database/{db}/tileset/{tileset}`), so
+until now the privileges array was always empty and *every* sub-user was
+refused with 403 regardless of their grant. With the field populated that
+branch goes live: a sub-user holding `read/write` on the layer can now wipe
+or scope-delete the tileset. That is the documented intent of the endpoint,
+but it is a real widening of who can call it, so it is covered by a test
+(`MapcacheWipeApiCest::subUserNeedsWritePrivilegeToWipeTileset`: `read` →
+403, `read/write` → 200). Enabling the branch also exposed a bug in
+`requireWrite()`: it handed its `Connection` to `app\models\User`, which
+repoints any connection it is given at the central user database, so the
+privileges lookup ran against `mapcentia` and answered 500 instead of 403/200.
+`User` now gets its own `Connection`.
+
 ## Tests
 
 Unit (`app/tests/unit/`):
