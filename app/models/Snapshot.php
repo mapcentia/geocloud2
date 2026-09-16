@@ -99,8 +99,13 @@ class Snapshot extends Model
     }
 
     /**
-     * Finalises a row with its outcome. $relationSchema is the column list
-     * (name + type) captured at snapshot time; $schemaVersion is its md5.
+     * Finalises a claimed row with its outcome. $relationSchema is the column
+     * list (name + type) captured at snapshot time; $schemaVersion is its md5.
+     *
+     * Only a row that is still 'running' is touched: a worker whose row was
+     * reclaimed after the stale window (and possibly already published by the
+     * winner) must not overwrite the new outcome with its own. A no-op is not
+     * an error here; the caller has already logged the failure.
      */
     public function finish(
         string  $uuid,
@@ -115,7 +120,7 @@ class Snapshot extends Model
         $sql = "UPDATE settings.snapshots
                 SET status = :status, s3_path = :s3_path, row_count = :row_count, error = :error,
                     schema_version = :schema_version, relation_schema = :relation_schema, finished = now()
-                WHERE uuid = :uuid";
+                WHERE uuid = :uuid AND status = 'running'";
         $res = $this->prepare($sql);
         $res->bindValue(':uuid', $uuid);
         $res->bindValue(':status', $status);

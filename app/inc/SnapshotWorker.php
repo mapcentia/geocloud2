@@ -8,6 +8,7 @@
 
 namespace app\inc;
 
+use app\exceptions\GC2Exception;
 use app\inc\snapshot\SnapshotRef;
 use app\inc\snapshot\SnapshotStorage;
 use app\models\Snapshot as SnapshotModel;
@@ -23,6 +24,13 @@ use Throwable;
  * Files are named by snapshot id, so a rerun never overwrites a file a
  * reader may be streaming; readers only reach files via the catalog, so a
  * run that fails before publish leaves nothing visible.
+ *
+ * The id-named-file invariant does not cover a *stale reclaim of the same
+ * uuid*: after STALE_RUNNING_INTERVAL another worker may claim the row this
+ * one is still working on, and both write the same file names. The winner is
+ * whoever publishes first; the loser's publish is refused with
+ * NO_SNAPSHOT_ERROR, and it then leaves both the row and its files alone
+ * (they are the winner's files now) instead of finalising or deleting them.
  */
 class SnapshotWorker
 {
@@ -135,6 +143,15 @@ class SnapshotWorker
             $msg = preg_replace('/password=\S+/', 'password=***', $e->getMessage());
             if (strlen($msg) > 2000) {
                 $msg = substr($msg, -2000);
+            }
+            // publish() refuses when the row is no longer 'running': another
+            // worker reclaimed it past the stale window and owns it (and the
+            // files, which carry the same uuid) now. Touch nothing — marking
+            // it failed or deleting the files would destroy the snapshot the
+            // winner just published.
+            if ($e instanceof GC2Exception && $e->getErrorCode() === 'NO_SNAPSHOT_ERROR') {
+                error_log("snapshot $uuid: publish refused, row no longer ours: $msg");
+                return 'failed';
             }
             $this->snapshot->finish($uuid, 'failed', null, null, $msg);
             foreach ($written as $file) {

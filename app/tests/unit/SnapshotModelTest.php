@@ -126,6 +126,8 @@ class SnapshotModelTest extends Unit
         $m = $this->model();
         $ok = $m->create('public', 'finish_ok', null, self::$database);
         $columns = [['column_name' => 'gid', 'data_type' => 'integer'], ['column_name' => 'geom', 'data_type' => 'geometry(Point,25832)']];
+        // finish() only finalises a claimed ('running') row, so claim first.
+        $m->claimPending(1000);
         $m->finish($ok, 'succeeded', 's3://bucket/x/', 42, null, 'abc123', $columns);
         $row = $m->get($ok)['data'];
         $this->assertSame('succeeded', $row['status']);
@@ -138,6 +140,7 @@ class SnapshotModelTest extends Unit
         $this->assertNotNull($row['finished']);
 
         $bad = $m->create('public', 'finish_bad', null, self::$database);
+        $m->claimPending(1000);
         $m->finish($bad, 'failed', null, null, 'ogr2ogr exploded');
         $row = $m->get($bad)['data'];
         $this->assertSame('failed', $row['status']);
@@ -145,6 +148,24 @@ class SnapshotModelTest extends Unit
         $this->assertNull($row['s3_path']);
         $this->assertNull($row['schema_version']);
         $this->assertNull($row['relation_schema']);
+    }
+
+    /**
+     * A worker whose row was reclaimed past the stale window (and re-published
+     * by the winner) must not be able to flip it back to 'failed'. finish()
+     * therefore only touches rows that are still 'running'.
+     */
+    public function testFinishIgnoresRowsNotRunning(): void
+    {
+        $m = $this->model();
+        $uuid = $m->create('finish_guard', 'rel', null, self::$database);
+        // Not claimed: the row is 'pending', so no worker owns it.
+        $m->finish($uuid, 'failed', null, null, 'not mine to fail');
+
+        $row = $m->get($uuid)['data'];
+        $this->assertSame('pending', $row['status'], 'an unclaimed row is left alone');
+        $this->assertNull($row['error']);
+        $this->assertNull($row['finished']);
     }
 
     public function testStaleRunningRowIsReclaimedButFreshRunningRowIsNot(): void
