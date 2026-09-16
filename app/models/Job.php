@@ -12,6 +12,7 @@ ini_set('max_execution_time', "0");
 
 use app\exceptions\GC2Exception;
 use app\inc\Model;
+use app\inc\SchedulerLock;
 use Cron\CronExpression;
 use Exception;
 use InvalidArgumentException;
@@ -134,65 +135,75 @@ class Job extends Model
                 if ($force) {
                     $job["delete_append"] = '0';
                 }
-                $cmd = "/usr/bin/nohup /usr/bin/timeout -s SIGINT 20h php " . __DIR__ . "/../scripts/get.php --db {$job["db"]} --schema {$job["schema"]} --safeName {$job["name"]} --url \"{$job["url"]}\" --srid {$job["epsg"]} --type {$job["type"]} --encoding {$job["encoding"]} --jobId {$job["id"]} --deleteAppend {$job["delete_append"]} --extra " . (!empty($job["extra"]) ? base64_encode($job["extra"]) : "null") . " --preSql " . (!empty($job["presql"]) ? base64_encode($job["presql"]) : "null") . " --postSql " . (!empty($job["postsql"]) ? base64_encode($job["postsql"]) : "null") . " --downloadSchema {$job["download_schema"]} --snapshot {$job["snapshot"]}";
+                $cmd = "/usr/bin/nohup /usr/bin/timeout -s SIGINT -k 60 20h php " . __DIR__ . "/../scripts/get.php --db {$job["db"]} --schema {$job["schema"]} --safeName {$job["name"]} --url \"{$job["url"]}\" --srid {$job["epsg"]} --type {$job["type"]} --encoding {$job["encoding"]} --jobId {$job["id"]} --deleteAppend {$job["delete_append"]} --extra " . (!empty($job["extra"]) ? base64_encode($job["extra"]) : "null") . " --preSql " . (!empty($job["presql"]) ? base64_encode($job["presql"]) : "null") . " --postSql " . (!empty($job["postsql"]) ? base64_encode($job["postsql"]) : "null") . " --downloadSchema {$job["download_schema"]} --snapshot {$job["snapshot"]}";
                 break;
             }
         }
         if ($cmd) {
             $pid = (int)exec($cmd . " > " . __DIR__ . "/../../public/logs/{$job["id"]}_scheduler.log  </dev/null & echo $!");
-            try {
-                $this->insert($job['id'], $pid, $job['db'], $name);
-            } catch (Exception) {
-                $this->kill($pid); // If we can't insert the pid we kill the process if its running
-            }
             if (!$async) {
+                // get.php registers itself in started_jobs (see SchedulerLock); wait until that run is over.
+                $lock = new SchedulerLock();
+                $host = gethostname() ?: 'unknown';
+                $waited = 0;
                 do {
-                    $out = [];
                     sleep(1);
-                    $cmd = "pgrep timeout";
-                    exec($cmd, $out);
-                } while (in_array($pid, $out));
+                    $waited++;
+                    $run = $lock->latestRunForPid($this->childPidOf($pid) ?? $pid, $host);
+                    if ($run !== null && $run['status'] !== 'running') {
+                        break;
+                    }
+                    if ($run === null && $waited > 30 && !$this->isAlive($pid)) {
+                        break; // died before registering
+                    }
+                } while (true);
+                $lock->release();
             }
         }
         return true;
     }
 
-    /**
-     * @param int $id
-     * @param int $pid
-     * @param string $db
-     * @param string|null $name
-     * @return void
-     */
-    public function insert(int $id, int $pid, string $db, ?string $name): void
+    /** The pid of the php process under a `timeout` wrapper pid, or null. */
+    private function childPidOf(int $wrapperPid): ?int
     {
-        $sql = "INSERT INTO started_jobs (id, pid, db, name) VALUES (:id, :pid, :db, :name) RETURNING *";
-        $res = $this->prepare($sql);
-        $arr = ['id' => $id, 'pid' => $pid, 'db' => $db, 'name' => $name];
-        $res->execute($arr);
+        $out = [];
+        exec("pgrep -P " . (int)$wrapperPid, $out);
+        return isset($out[0]) && ctype_digit($out[0]) ? (int)$out[0] : null;
+    }
+
+    private function isAlive(int $pid): bool
+    {
+        return function_exists('posix_kill') ? posix_kill($pid, 0) : file_exists("/proc/$pid");
     }
 
     /**
-     * Kills the process with the given ID.
+     * Kills the process with the given ID: SIGINT first (so get.php records
+     * "terminated"), SIGKILL after 30 s.
      *
      * @param int $pid The process ID to kill.
      * @return void
      */
-    private function kill(int $pid): void
+    public function kill(int $pid): void
     {
-        exec("/bin/kill -9 $pid");
+        exec("/bin/kill -INT $pid");
+        for ($i = 0; $i < 30 && $this->isAlive($pid); $i++) {
+            sleep(1);
+        }
+        if ($this->isAlive($pid)) {
+            exec("/bin/kill -9 $pid");
+        }
     }
 
     /**
-     * @param string $db
-     * @return array
+     * Runs of this database: running first, then the newest finished ones.
      */
     public function getAllStartedJobs(string $db): array
     {
-        $sql = "SELECT * FROM started_jobs where db=:db";
-        $res = $this->prepare($sql);
-        $res->execute(['db' => $db]);
-        return $this->fetchAll($res, 'assoc');
+        $lock = new SchedulerLock();
+        $lock->reap();
+        $rows = $lock->runsFor($db);
+        $lock->release();
+        return $rows;
     }
 
     /**

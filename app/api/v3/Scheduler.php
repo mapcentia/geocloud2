@@ -71,22 +71,64 @@ class Scheduler extends Controller
     #[OA\Get(path: '/api/v3/scheduler', operationId: 'getRunningSchedulerJobs', tags: ['Scheduler'])]
     #[OA\Response(response: 200, description: 'OK',
         content: new OA\JsonContent(properties: [
-            new OA\Property(property: 'uuid', description: 'Job uuid', type: 'string', example: 'my_index'),
-            new OA\Property(property: 'id', description: 'Job id', type: 'string', example: 'my_index'),
-            new OA\Property(property: 'pid', description: 'Job pid', type: 'string', example: 'my_index'),
+            new OA\Property(property: 'jobs', type: 'array', items: new OA\Items(properties: [
+                new OA\Property(property: 'uuid', description: 'Run uuid', type: 'string'),
+                new OA\Property(property: 'id', description: 'Job id', type: 'integer'),
+                new OA\Property(property: 'name', description: 'Job name', type: 'string', nullable: true),
+                new OA\Property(property: 'pid', description: 'Process id', type: 'integer'),
+                new OA\Property(property: 'host', description: 'Host the run happened/happens on', type: 'string'),
+                new OA\Property(property: 'slot', description: 'Run slot', type: 'integer', nullable: true),
+                new OA\Property(property: 'status', description: 'running|succeeded|failed|lost|skipped', type: 'string'),
+                new OA\Property(property: 'started_at', description: 'Start timestamp', type: 'string'),
+                new OA\Property(property: 'heartbeat', description: 'Last heartbeat timestamp', type: 'string', nullable: true),
+                new OA\Property(property: 'finished_at', description: 'Finish timestamp', type: 'string', nullable: true),
+                new OA\Property(property: 'exit_reason', description: 'Reason for a non-running status', type: 'string', nullable: true),
+                new OA\Property(property: 'stale', description: 'Running but no heartbeat for over 5 minutes', type: 'boolean'),
+            ], type: 'object')),
         ], type: 'object'))]
     public function get_index(): array
     {
-        $fromDb = $this->job->getAllStartedJobs($this->db);
-        $cmd = "pgrep timeout";
-        exec($cmd, $out);
         $res = [];
-        // Find active pids
-        foreach ($fromDb as $value) {
-            if (in_array($value["pid"], $out)) {
-                $res[] = ["uuid" => $value["uuid"], "pid" => $value["pid"], "id" => $value["id"], "name" => $value["name"]];
-            }
+        foreach ($this->job->getAllStartedJobs($this->db) as $r) {
+            $stale = $r['status'] === 'running'
+                && $r['heartbeat'] !== null
+                && (time() - strtotime($r['heartbeat'])) > 300;
+            $res[] = [
+                "uuid" => $r["uuid"], "id" => (int)$r["id"], "name" => $r["name"], "pid" => (int)$r["pid"],
+                "host" => $r["host"], "slot" => $r["slot"] !== null ? (int)$r["slot"] : null,
+                "status" => $r["status"], "started_at" => $r["started_at"], "heartbeat" => $r["heartbeat"],
+                "finished_at" => $r["finished_at"], "exit_reason" => $r["exit_reason"], "stale" => $stale,
+            ];
         }
         return ["jobs" => $res];
+    }
+
+    /**
+     * Stops a running run on this host: SIGINT first (so get.php records
+     * "terminated"), SIGKILL after 30 s.
+     */
+    #[OA\Delete(path: '/api/v3/scheduler/{uuid}', operationId: 'stopSchedulerRun', tags: ['Scheduler'])]
+    #[OA\Parameter(name: 'uuid', description: 'Run uuid from GET /api/v3/scheduler', in: 'path', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Response(response: 200, description: 'Signal sent')]
+    #[OA\Response(response: 404, description: 'No running run with that uuid')]
+    #[OA\Response(response: 409, description: 'The run is on another host')]
+    public function delete_index(): array
+    {
+        $uuid = Route::getParam("uuid");
+        $run = null;
+        foreach ($this->job->getAllStartedJobs($this->db) as $r) {
+            if ($r['uuid'] === $uuid && $r['status'] === 'running') {
+                $run = $r;
+            }
+        }
+        if ($run === null) {
+            throw new GC2Exception("No running run with uuid $uuid", 404, null, "NO_RUN");
+        }
+        $host = gethostname() ?: 'unknown';
+        if ($run['host'] !== $host) {
+            throw new GC2Exception("Run $uuid is on host {$run['host']}, not $host", 409, null, "RUN_ON_OTHER_HOST");
+        }
+        $this->job->kill((int)$run['pid']);
+        return ["success" => true, "uuid" => $uuid, "signal" => "SIGINT"];
     }
 }

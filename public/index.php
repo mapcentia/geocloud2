@@ -379,6 +379,17 @@ $handler = static function () use ($routes) {
                     echo Response::toJson($jwt);
                 }
             });
+            Route::add("api/v3/scheduler/{uuid}", function () {
+                $jwt = Jwt::validate();
+                if ($jwt["success"]) {
+                    if (!$jwt["data"]["superUser"]) {
+                        throw new GC2Exception(Response::SUPER_USER_ONLY['message'], 400);
+                    }
+                    Database::setDb("gc2scheduler");
+                } else {
+                    echo Response::toJson($jwt);
+                }
+            });
             Route::add("api/v3/scheduler", function () {
                 $jwt = Jwt::validate();
                 if ($jwt["success"]) {
