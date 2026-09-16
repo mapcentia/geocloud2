@@ -248,4 +248,93 @@ class Job extends Model
             throw new GC2Exception($e->getMessage(), 400, null, 'INVALID_CRON_FIELD');
         }
     }
+
+    private const array WRITABLE = ['name', 'schema', 'url', 'schedule', 'epsg', 'type', 'encoding', 'extra',
+        'delete_append', 'download_schema', 'presql', 'postsql', 'active', 'snapshot'];
+    private const array BOOLS = ['delete_append', 'download_schema', 'active', 'snapshot'];
+
+    public function getById(int $id, string $db): ?array
+    {
+        $res = $this->prepare("SELECT * FROM jobs WHERE id = :id AND db = :db");
+        $this->execute($res, ['id' => $id, 'db' => $db]);
+        $row = $this->fetchRow($res);
+        return $row ?: null;
+    }
+
+    /**
+     * @param array<string,mixed> $fields resource keys (see SchedulerJob); schedule is "min hour dom mon dow"
+     * @throws GC2Exception 400 on an invalid schedule
+     */
+    public function createJob(array $fields, string $db): int
+    {
+        $cols = $this->toColumns($fields + ['epsg' => 4326, 'type' => 'AUTO', 'encoding' => 'UTF8', 'delete_append' => false, 'download_schema' => true, 'active' => true, 'snapshot' => false]);
+        $cols['db'] = $db;
+        $names = array_keys($cols);
+        $sql = "INSERT INTO jobs (" . implode(', ', $names) . ") VALUES (:" . implode(', :', $names) . ") RETURNING id";
+        $res = $this->prepare($sql);
+        $this->execute($res, $cols);
+        return (int)$res->fetchColumn();
+    }
+
+    /** @throws GC2Exception 404 when the job is not in $db, 400 on an invalid schedule */
+    public function patchJob(int $id, string $db, array $fields): void
+    {
+        if ($this->getById($id, $db) === null) {
+            throw new GC2Exception("Job $id not found", 404, null, "JOB_NOT_FOUND");
+        }
+        $cols = $this->toColumns($fields);
+        if ($cols === []) {
+            return;
+        }
+        $sets = implode(', ', array_map(fn($c) => "$c = :$c", array_keys($cols)));
+        $res = $this->prepare("UPDATE jobs SET $sets WHERE id = :id AND db = :db");
+        $this->execute($res, $cols + ['id' => $id, 'db' => $db]);
+    }
+
+    /** @throws GC2Exception 404 when the job is not in $db */
+    public function deleteJobById(int $id, string $db): void
+    {
+        $res = $this->prepare("DELETE FROM jobs WHERE id = :id AND db = :db");
+        $this->execute($res, ['id' => $id, 'db' => $db]);
+        if ($res->rowCount() === 0) {
+            throw new GC2Exception("Job $id not found", 404, null, "JOB_NOT_FOUND");
+        }
+    }
+
+    /**
+     * Resource keys -> jobs columns. Splits schedule into the five cron columns
+     * (and mirrors it into the legacy cron column), normalises the name like
+     * v2, and binds booleans as 0/1.
+     */
+    private function toColumns(array $fields): array
+    {
+        $cols = [];
+        foreach ($fields as $k => $v) {
+            if (!in_array($k, self::WRITABLE, true)) {
+                continue;
+            }
+            if ($k === 'schedule') {
+                $parts = preg_split('/\s+/', trim((string)$v));
+                if (count($parts) !== 5) {
+                    throw new GC2Exception("schedule must have five cron fields", 400, null, "INVALID_CRON_FIELD");
+                }
+                try {
+                    new CronExpression(implode(' ', $parts));
+                } catch (InvalidArgumentException $e) {
+                    throw new GC2Exception($e->getMessage(), 400, null, "INVALID_CRON_FIELD");
+                }
+                [$cols['min'], $cols['hour'], $cols['dayofmonth'], $cols['month'], $cols['dayofweek']] = $parts;
+                $cols['cron'] = implode(' ', $parts);
+            } elseif ($k === 'name') {
+                $cols['name'] = Model::toAscii((string)$v, null, "_");
+            } elseif (in_array($k, self::BOOLS, true)) {
+                $cols[$k] = filter_var($v, FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
+            } elseif ($k === 'epsg') {
+                $cols['epsg'] = (string)(int)$v;
+            } else {
+                $cols[$k] = $v;
+            }
+        }
+        return $cols;
+    }
 }
