@@ -57,9 +57,9 @@ class Job extends Model
     public function newJob(object $data, string $db): array
     {
         $this->validateCronExpression($data);
-        $sql = "INSERT INTO jobs (db, name, schema, url, cron, epsg, type, min, hour, dayofmonth, month, dayofweek, encoding, extra, delete_append, download_schema, presql, postsql, active) VALUES(:db, :name, :schema, :url, :cron, :epsg, :type, :min, :hour, :dayofmonth, :month, :dayofweek, :encoding, :extra, :delete_append, :download_schema, :presql, :postsql, :active)";
+        $sql = "INSERT INTO jobs (db, name, schema, url, cron, epsg, type, min, hour, dayofmonth, month, dayofweek, encoding, extra, delete_append, download_schema, presql, postsql, active, snapshot) VALUES(:db, :name, :schema, :url, :cron, :epsg, :type, :min, :hour, :dayofmonth, :month, :dayofweek, :encoding, :extra, :delete_append, :download_schema, :presql, :postsql, :active, :snapshot)";
         $res = $this->prepare($sql);
-        $res->execute(array(":db" => $db, ":name" => Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":extra" => $data->extra, ":delete_append" => $data->delete_append, ":download_schema" => $data->download_schema, ":presql" => $data->presql, ":postsql" => $data->postsql, ":active" => $data->active));
+        $res->execute(array(":db" => $db, ":name" => Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":extra" => $data->extra, ":delete_append" => $data->delete_append, ":download_schema" => $data->download_schema, ":presql" => $data->presql, ":postsql" => $data->postsql, ":active" => $data->active, ":snapshot" => $data->snapshot ?? false));
         $response['success'] = true;
         $response['message'] = "Jobs created";
         return $response;
@@ -73,9 +73,9 @@ class Job extends Model
     public function updateJob(object $data): array
     {
         $this->validateCronExpression($data);
-        $sql = "UPDATE jobs SET name=:name, schema=:schema, url=:url, cron=:cron, epsg=:epsg, type=:type, min=:min, hour=:hour, dayofmonth=:dayofmonth, month=:month, dayofweek=:dayofweek, encoding=:encoding, extra=:extra, delete_append=:delete_append, download_schema=:download_schema, presql=:presql, postsql=:postsql, active=:active WHERE id=:id";
+        $sql = "UPDATE jobs SET name=:name, schema=:schema, url=:url, cron=:cron, epsg=:epsg, type=:type, min=:min, hour=:hour, dayofmonth=:dayofmonth, month=:month, dayofweek=:dayofweek, encoding=:encoding, extra=:extra, delete_append=:delete_append, download_schema=:download_schema, presql=:presql, postsql=:postsql, active=:active, snapshot=:snapshot WHERE id=:id";
         $res = $this->prepare($sql);
-        $res->execute(array(":name" => Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":id" => $data->id, ":extra" => $data->extra, "delete_append" => $data->delete_append, "download_schema" => $data->download_schema, "presql" => $data->presql, "postsql" => $data->postsql, "active" => $data->active));
+        $res->execute(array(":name" => Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":id" => $data->id, ":extra" => $data->extra, "delete_append" => $data->delete_append, "download_schema" => $data->download_schema, "presql" => $data->presql, "postsql" => $data->postsql, "active" => $data->active, "snapshot" => $data->snapshot ?? false));
         $response['success'] = true;
         $response['message'] = "Jobs updated";
         return $response;
@@ -115,10 +115,11 @@ class Job extends Model
                 }
                 if (!$job["delete_append"]) $job["delete_append"] = "0";
                 if (!$job["download_schema"]) $job["download_schema"] = "0";
+                if (!$job["snapshot"]) $job["snapshot"] = "0";
                 if ($force) {
                     $job["delete_append"] = '0';
                 }
-                $cmd = "/usr/bin/nohup /usr/bin/timeout -s SIGINT 20h php " . __DIR__ . "/../scripts/get.php --db {$job["db"]} --schema {$job["schema"]} --safeName {$job["name"]} --url \"{$job["url"]}\" --srid {$job["epsg"]} --type {$job["type"]} --encoding {$job["encoding"]} --jobId {$job["id"]} --deleteAppend {$job["delete_append"]} --extra " . (!empty($job["extra"]) ? base64_encode($job["extra"]) : "null") . " --preSql " . (!empty($job["presql"]) ? base64_encode($job["presql"]) : "null") . " --postSql " . (!empty($job["postsql"]) ? base64_encode($job["postsql"]) : "null") . " --downloadSchema {$job["download_schema"]}";
+                $cmd = "/usr/bin/nohup /usr/bin/timeout -s SIGINT 20h php " . __DIR__ . "/../scripts/get.php --db {$job["db"]} --schema {$job["schema"]} --safeName {$job["name"]} --url \"{$job["url"]}\" --srid {$job["epsg"]} --type {$job["type"]} --encoding {$job["encoding"]} --jobId {$job["id"]} --deleteAppend {$job["delete_append"]} --extra " . (!empty($job["extra"]) ? base64_encode($job["extra"]) : "null") . " --preSql " . (!empty($job["presql"]) ? base64_encode($job["presql"]) : "null") . " --postSql " . (!empty($job["postsql"]) ? base64_encode($job["postsql"]) : "null") . " --downloadSchema {$job["download_schema"]} --snapshot {$job["snapshot"]}";
                 break;
             }
         }

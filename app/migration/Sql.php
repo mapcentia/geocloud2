@@ -486,6 +486,7 @@ SQL;
         $sqls[] = "ALTER TABLE jobs ADD COLUMN download_schema BOOL DEFAULT TRUE";
         $sqls[] = "ALTER TABLE jobs ADD COLUMN report jsonb";
         $sqls[] = "ALTER TABLE jobs ADD COLUMN active BOOL DEFAULT TRUE";
+        $sqls[] = "ALTER TABLE jobs ADD COLUMN snapshot BOOL DEFAULT FALSE";
         $sqls[] = "CREATE EXTENSION \"uuid-ossp\"";
         $sqls[] = "create table public.started_jobs
                     (

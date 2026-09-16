@@ -64,6 +64,7 @@ $longopts = array(
     "preSql:",
     "postSql:",
     "downloadSchema:",
+    "snapshot:",
 );
 $options = getopt("", $longopts);
 
@@ -80,6 +81,7 @@ $extra = $options["extra"] == "null" ? null : base64_decode($options["extra"]);
 $preSql = $options["preSql"] == "null" ? null : base64_decode($options["preSql"]);
 $postSql = $options["postSql"] == "null" ? null : base64_decode($options["postSql"]);
 $downloadSchema = $options["downloadSchema"];
+$snapshotAfterImport = $options["snapshot"];
 
 $workingSchema = "_gc2scheduler";
 
@@ -1312,7 +1314,7 @@ print "\nInfo: " . Tilecache::bust($schema . "." . $safeName)["message"];
 // ========
 function cleanUp(int $success = 0): void
 {
-    global $schema, $workingSchema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db, $report, $lockFile;
+    global $schema, $workingSchema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db, $report, $lockFile, $snapshotAfterImport;
 
     // Unlink lock file
     unlink($lockFile);
@@ -1396,6 +1398,18 @@ function cleanUp(int $success = 0): void
         $layer = new Layer();
         $layer->updateLastmodified(schema: $schema, table: $safeName);
         print "\nInfo: Last modified value updated";
+
+        if (!empty($snapshotAfterImport)) {
+            try {
+                $snap = new \app\models\Snapshot(new \app\inc\Connection(database: $db));
+                if (!$snap->hasActive($schema, $safeName)) {
+                    $snap->create($schema, $safeName, null, $db);
+                    print "\nInfo: Snapshot queued for $schema.$safeName";
+                }
+            } catch (\Throwable $e) {
+                print "\nWarning: could not queue snapshot: " . $e->getMessage();
+            }
+        }
     }
 }
 
