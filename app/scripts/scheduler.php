@@ -17,6 +17,18 @@ use Cron\CronExpression;
 
 new App();
 Database::setDb("gc2scheduler");
+
+// Mark runs whose process died without bookkeeping as lost (their advisory
+// lock is gone), so the API and the UI never show phantom running jobs.
+try {
+    $lost = (new \app\inc\SchedulerLock())->reap();
+    if ($lost > 0) {
+        echo "Marked $lost lost run(s)\n";
+    }
+} catch (Throwable $e) {
+    error_log("scheduler: reaper failed: " . $e->getMessage());
+}
+
 $scheduler = new Scheduler([
     'tempDir' => '/var/www/geocloud2/app/tmp'
 ]);

@@ -129,6 +129,8 @@ class App
         // Enable gc2scheduler
         "gc2scheduler" => array(
             "test" => true,
+            // Maximum number of scheduler jobs importing at the same time (advisory-lock run slots).
+            "maxJobs" => 20,
         ),
 
         // Allowed origins for CORS
