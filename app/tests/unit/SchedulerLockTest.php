@@ -59,7 +59,14 @@ class SchedulerLockTest extends Unit
 
         $a->release();
         array_shift($this->sessions);
-        $this->assertTrue($b->tryJobLock($this->jobId), 'closing the holder releases the lock');
+        $acquired = false;
+        for ($i = 0; $i < 40 && !$acquired; $i++) { // the backend releases session locks asynchronously; allow up to ~2 s
+            $acquired = $b->tryJobLock($this->jobId);
+            if (!$acquired) {
+                usleep(50000);
+            }
+        }
+        $this->assertTrue($acquired, 'closing the holder releases the lock (within 2 s)');
     }
 
     public function testSlotsAreLimitedAndReusable(): void
