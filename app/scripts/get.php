@@ -998,11 +998,10 @@ function getCmdZip(): void
 Database::setDb($db);
 $table = new Table($schema . "." . $safeName);
 
-// Begin transaction
-// =================
-$table->begin();
-$table->execQuery("SET LOCAL statement_timeout = '24h'");
-
+// The working schema must be committed before the job's transaction starts:
+// ogr2ogr loads into it over its own connection and cannot see an
+// uncommitted CREATE SCHEMA (a database that never ran a job would fail
+// every import, and the paged downloads would retry for ~40 minutes first).
 $sql = "CREATE SCHEMA IF NOT EXISTS {$workingSchema}";
 $res = $table->prepare($sql);
 try {
@@ -1013,6 +1012,11 @@ try {
     cleanUp();
     exit(1);
 }
+
+// Begin transaction
+// =================
+$table->begin();
+$table->execQuery("SET LOCAL statement_timeout = '24h'");
 
 // We poll for running jobs
 // ========================
