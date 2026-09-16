@@ -203,7 +203,17 @@ class RelationSnapshot extends AbstractApi
         }
     }
 
-    #[OA\Get(path: '/api/v4/schemas/{schema}/relations/{relation}/snapshots/{date}', operationId: 'getRelationSnapshot', description: "Get one published snapshot (metadata), or list them when {date} is omitted.", tags: ['Snapshots'],
+    #[OA\Get(path: '/api/v4/schemas/{schema}/relations/{relation}/snapshots', operationId: 'getRelationSnapshots', description: "List the published snapshots of a relation, newest first. Returns a bare array like every other v4 collection.", tags: ['Snapshots'],
+        parameters: [
+            new OA\Parameter(name: 'schema', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relation', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: "#/components/schemas/RelationSnapshot"))),
+            new OA\Response(response: 403, description: 'Insufficient privileges'),
+        ]
+    )]
+    #[OA\Get(path: '/api/v4/schemas/{schema}/relations/{relation}/snapshots/{date}', operationId: 'getRelationSnapshot', description: "Get one published snapshot (metadata).", tags: ['Snapshots'],
         parameters: [
             new OA\Parameter(name: 'schema', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'relation', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
@@ -226,7 +236,7 @@ class RelationSnapshot extends AbstractApi
             return new GetResponse(data: $this->present($row, true));
         }
         $rows = $this->snapshot->listPublished($this->schemaName, $this->relationName);
-        return new GetResponse(data: ['snapshots' => array_map(fn($r) => $this->present($r, false), $rows)]);
+        return new GetResponse(data: array_map(fn($r) => $this->present($r, false), $rows));
     }
 
     #[OA\Get(path: '/api/v4/schemas/{schema}/relations/{relation}/snapshots/{date}/data', operationId: 'getRelationSnapshotData', description: "The snapshot's Parquet file. Supports HEAD and single byte ranges (206/416). In redirect mode answers 302 to a short-lived storage URL.", tags: ['Snapshots'],

@@ -212,7 +212,7 @@ Controller `RelationSnapshot`, route
 
 | Method | Path | Handler | Response |
 |---|---|---|---|
-| GET | `.../snapshots` | `get_index` | `{"snapshots":[{snapshot_date, snapshot_id, row_count, size_bytes, schema_version, files:[{name,size_bytes,href}], published}]}` newest first |
+| GET | `.../snapshots` | `get_index` | bare array, like every other v4 collection: `[{snapshot_date, snapshot_id, row_count, size_bytes, schema_version, files:[{name,size_bytes,href}], published}]` newest first |
 | GET | `.../snapshots/{date}` | `get_index` | one entry as above plus `relation_schema`, `crs`, `srs`, `_links: {data, files}` |
 | GET/HEAD | `.../snapshots/{date}/data` | `get_data` / `head_data` | the single data file; 409 `MULTI_FILE_SNAPSHOT` (with the file list) when the snapshot has several |
 | GET/HEAD | `.../snapshots/{date}/files/{file}` | `get_files` / `head_files` | that file |

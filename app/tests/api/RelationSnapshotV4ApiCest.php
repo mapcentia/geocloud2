@@ -101,8 +101,8 @@ class RelationSnapshotV4ApiCest
         $I->sendGET($this->base());
         $I->seeResponseCodeIs(HttpCode::OK);
         $body = json_decode($I->grabResponse());
-        $I->assertCount(1, $body->snapshots);
-        $s = $body->snapshots[0];
+        $I->assertCount(1, $body);
+        $s = $body[0];
         $I->assertEquals($this->date, $s->snapshot_date);
         $I->assertEquals(50, $s->row_count);
         $I->assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $s->schema_version);
