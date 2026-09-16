@@ -16,6 +16,7 @@ use app\conf\App;
 use app\conf\Connection;
 use app\controllers\Tilecache;
 use app\inc\Cache;
+use app\inc\SchedulerLock;
 use app\inc\Util;
 use app\inc\WfsPaging;
 use app\models\Database;
@@ -28,12 +29,7 @@ Cache::setInstance();
 
 
 $report = [];
-
-$lockDir = App::$param['path'] . "/app/tmp/scheduler_locks";
-
-if (!file_exists($lockDir)) {
-    @mkdir($lockDir);
-}
+$lastError = null;
 
 const DOWNLOADTYPE = "downloadType";
 const FEATURECOUNT = "featureCount";
@@ -45,6 +41,7 @@ const GMLAS = "Grid/GMLAS";
 const FILE = "File";
 const ZIP = "Zip";
 const SLEEP = "sleep";
+$report[SLEEP] = 0;
 
 print "Info: Started at " . date(DATE_RFC822);
 
@@ -86,18 +83,57 @@ $snapshotAfterImport = $options["snapshot"] ?? null;
 
 $workingSchema = "_gc2scheduler";
 
-// Create lock file
-$lockDir = App::$param['path'] . "/app/tmp/scheduler_locks";
-$lockFile = $lockDir . "/" . $jobId . ".lock";
-
 $tmpDir = "/var/www/geocloud2/app/tmp/";
 
-if (!file_exists($lockDir)) {
-    @mkdir($lockDir);
+// Locking and run registry live in gc2scheduler (Postgres advisory locks),
+// on a dedicated session that lasts for the whole run. See app/inc/SchedulerLock.php.
+$runHost = gethostname() ?: 'unknown';
+$runPid = getmypid();
+$schedulerLock = new SchedulerLock();
+$schedulerLock->reap();
+if (!$schedulerLock->tryJobLock((int)$jobId)) {
+    $running = $schedulerLock->runningRun((int)$jobId);
+    $reason = "already running" . ($running ? " (run {$running['uuid']}, started {$running['started_at']}, host {$running['host']})" : "");
+    $schedulerLock->recordSkipped((int)$jobId, $db, $safeName, $runPid, $runHost, $reason);
+    print "\nInfo: Job {$jobId} is {$reason}. Exiting.";
+    exit(0);
 }
+$runUuid = null; // set once a slot is held and the run is registered
 
-if (!file_exists($lockFile)) {
-    @touch($lockFile);
+// Bookkeeping when the process dies without reaching cleanUp(): the locks
+// are released by Postgres regardless; this only keeps the registry honest.
+register_shutdown_function(function () use (&$schedulerLock, &$runUuid) {
+    if ($runUuid === null) {
+        return;
+    }
+    $err = error_get_last();
+    $reason = $err !== null ? "terminated: " . $err['message'] : "terminated";
+    try {
+        $schedulerLock->finishRun($runUuid, 'failed', $reason); // no-op if cleanUp() already finalised
+    } catch (Throwable) {
+    }
+});
+if (function_exists('pcntl_async_signals')) {
+    pcntl_async_signals(true);
+    pcntl_signal(SIGINT, function () use (&$schedulerLock, &$runUuid) {
+        print "\nError: Terminated by SIGINT (timeout).";
+        if ($runUuid !== null) {
+            try {
+                $schedulerLock->finishRun($runUuid, 'failed', 'timeout');
+            } catch (Throwable) {
+            }
+        }
+        exit(130);
+    });
+    pcntl_signal(SIGTERM, function () use (&$schedulerLock, &$runUuid) {
+        if ($runUuid !== null) {
+            try {
+                $schedulerLock->finishRun($runUuid, 'failed', 'terminated');
+            } catch (Throwable) {
+            }
+        }
+        exit(143);
+    });
 }
 
 $getFunction = null;
@@ -298,6 +334,10 @@ function buildOgr2ogrCmd(
 function getCmd(): void
 {
     global $encoding, $srid, $dir, $tempFile, $type, $db, $workingSchema, $randTableName, $downloadSchema, $url, $report, $out, $err, $contentIsCsv, $contentIsJson;
+    global $schedulerLock, $runUuid;
+    if ($runUuid !== null) {
+        $schedulerLock->heartbeat($runUuid);
+    }
 
     $report[DOWNLOADTYPE] = URL;
     $tmpFilePath = $dir . "/" . $tempFile;
@@ -394,6 +434,10 @@ function fetchPart(string $label, string $requestUrl): array
     global $pass, $count, $cellNumber, $table, $cellTemps, $id, $numberOfFeatures, $out, $err, $tmpDir,
            $randTableName, $encoding, $downloadSchema, $workingSchema, $type, $db, $srid;
     $out = [];
+    global $schedulerLock, $runUuid;
+    if ($runUuid !== null) {
+        $schedulerLock->heartbeat($runUuid);
+    }
     $pass = true; // each attempt starts clean so a successful retry counts
     $counts = ['matched' => null, 'returned' => null];
     $gmlName = $randTableName . "-" . $label . ".gml";
@@ -553,7 +597,7 @@ function fetchPart(string $label, string $requestUrl): array
  */
 function finalizePagedTables(): void
 {
-    global $table, $workingSchema, $randTableName, $cellTemps, $report, $id, $numberOfFeatures;
+    global $table, $workingSchema, $randTableName, $cellTemps, $report, $id, $numberOfFeatures, $lastError;
 
     $selects = [];
     $drops = [];
@@ -600,6 +644,7 @@ function finalizePagedTables(): void
     } catch (PDOException $e) {
         print "Error: ";
         print_r($e->getMessage());
+        $lastError = $e->getMessage();
         cleanUp();
         exit(1);
     } finally {
@@ -626,6 +671,7 @@ function finalizePagedTables(): void
         } catch (PDOException $e) {
             print "Error: ";
             print_r($e->getMessage());
+            $lastError = $e->getMessage();
             cleanUp();
             exit(1);
         }
@@ -640,6 +686,7 @@ function finalizePagedTables(): void
         } catch (PDOException $e) {
             print "Error: ";
             print_r($e->getMessage());
+            $lastError = $e->getMessage();
             cleanUp();
             exit(1);
         }
@@ -679,6 +726,7 @@ function finalizePagedTables(): void
                         } catch (PDOException $e) {
                             print "Error: ";
                             print_r($e->getMessage());
+                            $lastError = $e->getMessage();
                             cleanUp();
                             exit(1);
                         }
@@ -686,6 +734,7 @@ function finalizePagedTables(): void
                 } catch (PDOException $e) {
                     print "Error: ";
                     print_r($e->getMessage());
+                    $lastError = $e->getMessage();
                     cleanUp();
                     exit(1);
                 }
@@ -693,6 +742,7 @@ function finalizePagedTables(): void
         } catch (PDOException $e) {
             print "Error: ";
             print_r($e->getMessage());
+            $lastError = $e->getMessage();
             cleanUp();
             exit(1);
         }
@@ -721,6 +771,7 @@ function finalizePagedTables(): void
     } catch (PDOException $e) {
         print "Error: ";
         print_r($e->getMessage());
+        $lastError = $e->getMessage();
         $table->rollback();
         cleanUp();
         exit(1);
@@ -740,6 +791,7 @@ function finalizePagedTables(): void
     } catch (PDOException $e) {
         print "Error: ";
         print_r($e->getMessage());
+        $lastError = $e->getMessage();
         $table->rollback();
         cleanUp();
         exit(1);
@@ -776,6 +828,7 @@ function finalizePagedTables(): void
     } catch (PDOException $e) {
         print "Error: ";
         print_r($e->getMessage());
+        $lastError = $e->getMessage();
         $table->rollback();
         cleanUp();
         exit(1);
@@ -787,6 +840,7 @@ function finalizePagedTables(): void
     } catch (PDOException $e) {
         print "Error: ";
         print_r($e->getMessage());
+        $lastError = $e->getMessage();
         $table->rollback();
         cleanUp();
         exit(1);
@@ -798,6 +852,7 @@ function finalizePagedTables(): void
     } catch (PDOException $e) {
         print "Error: ";
         print_r($e->getMessage());
+        $lastError = $e->getMessage();
         $table->rollback();
         cleanUp();
         exit(1);
@@ -811,6 +866,7 @@ function finalizePagedTables(): void
     } catch (PDOException $e) {
         print "Error: ";
         print_r($e->getMessage());
+        $lastError = $e->getMessage();
         $table->rollback();
         cleanUp();
         exit(1);
@@ -880,6 +936,10 @@ function getCmdWfsPaging(): void
 function getCmdFile(): void
 {
     global $randTableName, $type, $db, $workingSchema, $url, $encoding, $srid, $report, $out, $err, $dir;
+    global $schedulerLock, $runUuid;
+    if ($runUuid !== null) {
+        $schedulerLock->heartbeat($runUuid);
+    }
 
     $report[DOWNLOADTYPE] = FILE;
 
@@ -981,6 +1041,10 @@ function getCmdFile(): void
 function getCmdZip(): void
 {
     global $extCheck2, $dir, $url, $tempFile, $encoding, $srid, $type, $db, $workingSchema, $randTableName, $downloadSchema, $outFileName, $report, $out, $err;
+    global $schedulerLock, $runUuid;
+    if ($runUuid !== null) {
+        $schedulerLock->heartbeat($runUuid);
+    }
 
     $report[DOWNLOADTYPE] = ZIP;
 
@@ -1096,6 +1160,7 @@ try {
 } catch (PDOException $e) {
     print "Error: ";
     print_r($e->getMessage());
+    $lastError = $e->getMessage();
     cleanUp();
     exit(1);
 }
@@ -1105,31 +1170,23 @@ try {
 $table->begin();
 $table->execQuery("SET LOCAL statement_timeout = '24h'");
 
-// We poll for running jobs
-// ========================
-function poll(): void
-{
-    global $getFunction, $lockDir, $report;
-    $sleep = 10;
-    $maxJobs = 20;
-    $fi = new FilesystemIterator($lockDir, FilesystemIterator::SKIP_DOTS);
-    if (iterator_count($fi) > $maxJobs) {
-        print "\nInfo: There are " . iterator_count($fi) . " jobs running right now. Waiting {$sleep} seconds...";
-        $report[SLEEP] += $sleep;
-        sleep($sleep);
-        poll();
-    } else {
-        $getFunction();
-    }
-}
-
-poll();
+// Wait for a run slot, register the run, then download
+// ======================================================
+$maxJobs = (int)(App::$param['gc2scheduler']['maxJobs'] ?? SchedulerLock::DEFAULT_MAX_JOBS);
+$slot = $schedulerLock->acquireSlot($maxJobs, function (int $max, int $sleep) use (&$report) {
+    print "\nInfo: All {$max} run slots are busy. Waiting {$sleep} seconds...";
+    $report[SLEEP] += $sleep;
+});
+$runUuid = $schedulerLock->startRun((int)$jobId, $db, $safeName, $runPid, $slot, $runHost);
+print "\nInfo: Run {$runUuid} registered on slot {$slot}";
+$getFunction();
 
 // Check output
 // ============
 if ($err) {
     print "\nError " . $err;
     print_r($out);
+    $lastError = "ogr2ogr failed (exit {$err}): " . implode(" | ", $out);
     // Output the first few lines of file
     if ($grid == null) {
         print "\nInfo: Outputting the first few lines of the file:";
@@ -1152,6 +1209,7 @@ if ($err) {
     foreach ($out as $line) {
         if (strpos($line, "FAILURE") !== false || (strpos($line, "ERROR") !== false && $line != "ERROR 1: HTTP error code : 404")) {
             print_r($out);
+            $lastError = "ogr2ogr reported an error: " . implode(" | ", $out);
             cleanUp();
             exit(1);
         }
@@ -1208,6 +1266,7 @@ if ($preSql) {
         } catch (PDOException $e) {
             print "\nError: ";
             print_r($e->getMessage());
+            $lastError = $e->getMessage();
             $table->rollback();
             cleanUp();
             exit(1);
@@ -1248,6 +1307,7 @@ if ($o != "-overwrite") {
     } catch (PDOException $e) {
         print "\nError: ";
         print_r($e->getMessage());
+        $lastError = $e->getMessage();
         $table->rollback();
         cleanUp();
         exit(1);
@@ -1266,6 +1326,7 @@ if ($o != "-overwrite") {
     } catch (PDOException $e) {
         print "\nError: ";
         print_r($e->getMessage());
+        $lastError = $e->getMessage();
         $table->rollback();
         cleanUp();
         exit(1);
@@ -1285,6 +1346,7 @@ if ($o != "-overwrite") {
     } catch (PDOException $e) {
         print "\nError: ";
         print_r($e->getMessage());
+        $lastError = $e->getMessage();
         cleanUp();
         exit(1);
     }
@@ -1298,6 +1360,7 @@ try {
 } catch (PDOException $e) {
     print "\nError: ";
     print_r($e->getMessage());
+    $lastError = $e->getMessage();
     $table->rollback();
     cleanUp();
     exit(1);
@@ -1351,6 +1414,7 @@ if ($extra) {
                 } catch (PDOException $e) {
                     print "\nError: ";
                     print_r($e->getMessage());
+                    $lastError = $e->getMessage();
                     $table->rollback();
                     cleanUp();
                     exit(1);
@@ -1366,6 +1430,7 @@ if ($extra) {
             } catch (PDOException $e) {
                 print "\nError: ";
                 print_r($e->getMessage());
+                $lastError = $e->getMessage();
                 $table->rollback();
                 cleanUp();
                 exit(1);
@@ -1387,6 +1452,7 @@ if ($postSql) {
         } catch (PDOException $e) {
             print "\nError: ";
             print_r($e->getMessage());
+            $lastError = $e->getMessage();
             $table->rollback();
             cleanUp();
             exit(1);
@@ -1405,10 +1471,7 @@ print "\nInfo: " . Tilecache::bust($schema . "." . $safeName)["message"];
 // ========
 function cleanUp(int $success = 0): void
 {
-    global $schema, $workingSchema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db, $report, $lockFile, $snapshotAfterImport;
-
-    // Unlink lock file
-    unlink($lockFile);
+    global $schema, $workingSchema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db, $report, $snapshotAfterImport, $schedulerLock, $runUuid, $lastError;
 
     // Unlink temp file
     // ================
@@ -1502,9 +1565,14 @@ function cleanUp(int $success = 0): void
             }
         }
     }
+
+    if ($runUuid !== null) {
+        $schedulerLock->finishRun($runUuid, $success ? 'succeeded' : 'failed', $success ? null : ($lastError ?? 'see job log'));
+    }
 }
 
 cleanUp(1);
+$schedulerLock->release();
 exit(0);
 
 
