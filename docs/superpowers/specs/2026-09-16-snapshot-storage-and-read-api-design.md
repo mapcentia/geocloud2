@@ -225,8 +225,8 @@ literal-quoted SQL by `SnapshotAuthorizer`/`Model::getGeometryColumns()`).
 `file` must be one of the names in the catalog row (never a free path).
 Errors: 400 `INVALID_REQUEST` (bad schema/relation/date/file), 404
 `NO_SNAPSHOT_ERROR` (unknown date or file), 403 `INSUFFICIENT_PRIVILEGES`,
-403 `GEOFENCE_RULES_APPLY` (a geofence rule applies to this sub-user and
-relation), 409 `MULTI_FILE_SNAPSHOT` (several data files; the message names
+403 `GEOFENCE_RULES_APPLY` (a `deny`/`limit` geofence rule applies to this
+sub-user and relation), 409 `MULTI_FILE_SNAPSHOT` (several data files; the message names
 them), 416 (see below), 501 `SNAPSHOT_NOT_CONFIGURED` (no storage configured),
 502 `SNAPSHOT_STORAGE_ERROR` (the storage backend failed). The 502 message is
 deliberately flat — Flysystem and the AWS SDK name the bucket, the full object
@@ -256,18 +256,22 @@ Apache deployment note: mod_proxy_fcgi (httpd 2.4.6x+) discards the backend's `C
 1. `superUser` → allowed.
 2. Sub-user: `Authorization::isOwner($uid, $userGroup, $schema)` → allowed.
 3. Sub-user: privileges JSON from `Model::getGeometryColumns("$schema.$relation", 'privileges')`; `extractHighestPrivilege` in `read`/`read/write` → allowed; `none` → 403 `INSUFFICIENT_PRIVILEGES`. Non-spatial tables, views and materialized views are registered too (`settings.geometry_columns_view` unions `non_postgis_tables`/`views`/`matviews` with `geometry_columns`), so the same privilege row exists for every relation GC2 knows.
-4. Sub-user: if **any** rule in `settings.geofence` matches the caller (or one
-   of their groups) on this schema and relation → 403 `GEOFENCE_RULES_APPLY`.
-   A snapshot is the whole relation in one Parquet file and cannot carry a row
-   filter, so serving it to a user whose SQL/OWS reads are narrowed by a
-   `limit` rule (or forbidden by a `deny` rule) would hand them exactly the
-   rows the geofence exists to withhold — the snapshot route would become a
-   way around the rules. Matching is not re-implemented: each rule is passed
-   to `Geofence::authorize()` on its own with a `UserFilter` carrying that
-   rule's own `service`/`request`, so the identity, schema, layer and IP-range
-   matching (including the `fnmatch` wildcards) is byte for byte the one SQL
-   and OWS use. Super-users (step 1) and schema owners (step 2) are never
-   affected.
+4. Sub-user: if any rule in `settings.geofence` matches the caller (or one of
+   their groups) on this schema and relation **and its `access` is `deny` or
+   `limit`** → 403 `GEOFENCE_RULES_APPLY`. A snapshot is the whole relation in
+   one Parquet file and cannot carry a row filter, so serving it to a user
+   whose SQL/OWS reads are forbidden by a `deny` rule or narrowed by a `limit`
+   rule would hand them exactly the rows the geofence exists to withhold — the
+   snapshot route would become a way around the rules. A matching `allow` rule
+   grants the unfiltered relation, which is precisely what the snapshot is, so
+   it does not block the read. Matching is not re-implemented: each rule is
+   passed to `Geofence::authorize()` on its own with a `UserFilter` carrying
+   that rule's own `service`/`request`, so the identity, schema, layer and
+   IP-range matching (including the `fnmatch` wildcards) is byte for byte the
+   one SQL and OWS use; every rule is evaluated rather than only the
+   highest-priority match for one service, because a snapshot is not bound to
+   a service or request. Super-users (step 1) and schema owners (step 2) are
+   never affected.
 5. The check runs on the catalog row's schema/relation, so a dropped relation
    whose snapshots still exist has no privilege row any more: only super-users
    and schema owners can read its history.

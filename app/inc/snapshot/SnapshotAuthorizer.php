@@ -22,10 +22,11 @@ use app\models\Rule;
  * views and matviews with geometry_columns); a dropped relation has none,
  * so only super-users and schema owners can still read its history.
  *
- * On top of that, a sub-user any geofence rule applies to is refused: a
- * snapshot is a whole-table Parquet file and cannot carry a row filter, so
- * serving it would hand a geofenced user the rows their SQL/OWS access is
- * filtered away from.
+ * On top of that, a sub-user whose matching geofence rule denies or filters
+ * the relation is refused: a snapshot is a whole-table Parquet file and
+ * cannot carry a row filter, so serving it would hand that user the rows
+ * their SQL/OWS access is filtered away from. A matching `allow` rule changes
+ * nothing about what the user may read and is not a reason to refuse.
  */
 final class SnapshotAuthorizer
 {
@@ -63,18 +64,24 @@ final class SnapshotAuthorizer
     }
 
     /**
-     * True when any rule in settings.geofence matches this sub-user (or one of
-     * their groups) on this schema and relation.
+     * True when a rule in settings.geofence matches this sub-user (or one of
+     * their groups) on this schema and relation *and* denies or filters it.
+     *
+     * Only `deny` and `limit` count. A `deny` rule forbids the relation
+     * outright and a `limit` rule narrows it to the rows its filter selects;
+     * neither can be honoured by a single whole-table Parquet file, so the
+     * snapshot is refused. An `allow` rule grants the unfiltered relation —
+     * exactly what a snapshot is — so it is not a reason to refuse.
      *
      * Matching is not re-implemented here: each rule is handed to
      * Geofence::authorize() on its own, with a UserFilter carrying the rule's
      * own service and request, so the only axes that can decide the match are
      * the ones that matter for a snapshot — the identity (fnmatch on
      * username), the schema and the layer (both fnmatch), and the client IP
-     * range, exactly as they are matched for SQL and OWS. A rule of any
-     * access level counts: `deny` and `limit` obviously, and `allow` because
-     * a rule set that mentions this user and relation at all is a filtered
-     * relationship a whole-table file cannot express.
+     * range, exactly as they are matched for SQL and OWS. Evaluating every
+     * rule (rather than only the highest-priority match for one service) is
+     * deliberate: a snapshot is not bound to a service or request, so a rule
+     * that filters the relation for *any* of them blocks it.
      *
      * @param list<string>|null $groups
      */
@@ -95,7 +102,8 @@ final class SnapshotAuthorizer
                     $schema,
                     $relation,
                 );
-                if (!empty(new Geofence($userFilter, $this->connection)->authorize([$rule])['access'])) {
+                $access = new Geofence($userFilter, $this->connection)->authorize([$rule])['access'] ?? null;
+                if ($access === Geofence::DENY_ACCESS || $access === Geofence::LIMIT_ACCESS) {
                     return true;
                 }
             }

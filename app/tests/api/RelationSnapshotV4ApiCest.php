@@ -277,4 +277,28 @@ class RelationSnapshotV4ApiCest
         $I->sendHEAD($this->base() . '/' . $this->date . '/data');
         $I->seeResponseCodeIs(HttpCode::OK);
     }
+
+    // An `allow` rule grants the relation unfiltered — which is exactly what a
+    // snapshot is — so it must not be mistaken for "this user is geofenced".
+    // Only deny/limit, which a whole-table file cannot honour, block the read.
+    public function shouldNotBlockSubUserOnAllowRule(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendPOST('/api/v4/rules', json_encode([
+            'username' => $this->subUserId, 'service' => 'sql', 'request' => 'select', 'access' => 'allow',
+            'schema' => $this->schema, 'table' => 'poi',
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $ruleId = basename($I->grabHttpHeader('Location'));
+
+        $this->asSub($I);
+        $I->sendGET($this->base());
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->sendHEAD($this->base() . '/' . $this->date . '/data');
+        $I->seeResponseCodeIs(HttpCode::OK);
+
+        $this->asSuper($I);
+        $I->sendDELETE('/api/v4/rules/' . $ruleId);
+        $I->seeResponseCodeIsSuccessful();
+    }
 }
