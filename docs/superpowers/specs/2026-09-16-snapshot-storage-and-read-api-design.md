@@ -220,6 +220,8 @@ File responses:
 - Proxy mode streams `readRange`/`readStream` in 1 MiB chunks with `flush()` after each; output buffering is closed (`while (ob_get_level()) ob_end_clean()`), and `apache_setenv('no-gzip', '1')` when available so `Content-Length` stays truthful.
 - Redirect mode (`download = redirect` and `downloadUrl()` not null): after authorization, 302 `Location: <presigned>` with `Cache-Control: no-store`. HEAD in redirect mode also 302s. Range headers are not forwarded; the client repeats them against S3.
 
+Apache deployment note: mod_proxy_fcgi (httpd 2.4.6x+) discards the backend's `Content-Length` unless the environment variable `ap_trust_cgilike_cl` is set; the vhost sets `SetEnv ap_trust_cgilike_cl 1`. Without it HEAD has no length and GET is chunked, which breaks Parquet readers.
+
 ### Route2 and StreamedResponse changes
 
 - `StreamedResponse` gets `public readonly array $headers = []` (name → value) emitted by Route2 before the callback, and the status is emitted as given (206 works today; nothing maps it).
