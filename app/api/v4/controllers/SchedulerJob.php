@@ -34,7 +34,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(schema: "SchedulerJobInput", description: "A job to create: name, schema, url and schedule are required.", required: ["name", "schema", "url", "schedule"], allOf: [new OA\Schema(ref: "#/components/schemas/SchedulerJob")])]
 #[OA\Schema(schema: "SchedulerJob", description: "An import job of the scheduler. On PATCH every field is optional.", properties: [
-    new OA\Property(property: "name", type: "string", example: "bygninger"),
+    new OA\Property(property: "name", description: "Job name; the imported table is named after it, so it is normalised on write: transliterated to ASCII, lower-cased, characters other than letters, digits, / _ | + space and - removed, and every run of / _ | + space - replaced by a single underscore (\"Bygninger 2026-09\" becomes \"bygninger_2026_09\"). Read the job back to see the stored name.", type: "string", example: "bygninger"),
     new OA\Property(property: "schema", type: "string", example: "geodanmark"),
     new OA\Property(property: "url", type: "string", example: "https://example.com/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=bygning"),
     new OA\Property(property: "schedule", description: "Five-field cron expression: min hour dayofmonth month dayofweek", type: "string", example: "0 3 * * *"),
