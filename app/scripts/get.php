@@ -1602,7 +1602,7 @@ function cleanUp(int $success = 0): void
         $layer = new Layer();
         $layer->updateLastmodified(schema: $schema, table: $safeName);
         print "\nInfo: Last modified value updated";
-
+        $layer->insertDefaultMeta();
         if (!empty($snapshotAfterImport)) {
             try {
                 $snap = new \app\models\Snapshot(new \app\inc\Connection(database: $db));
