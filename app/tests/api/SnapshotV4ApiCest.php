@@ -181,8 +181,53 @@ class SnapshotV4ApiCest
         $I->sendPOST('/api/v4/snapshots', json_encode(['schema' => $this->schema, 'relation' => "po'i"]));
         $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
 
-        $I->sendPOST('/api/v4/snapshots', json_encode([['schema' => $this->schema, 'relation' => 'poi']]));
+        $I->sendPOST('/api/v4/snapshots', json_encode([]));
         $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+    }
+
+    public function shouldQueueSeveralSnapshotsFromAnArrayAllOrNothing(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendPOST('/api/v4/schemas/' . $this->schema . '/tables', json_encode([
+            'name' => 'poi2',
+            'columns' => [['name' => 'gid', 'type' => 'serial'], ['name' => 'the_geom', 'type' => 'geometry(Point,4326)']],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+
+        // poi is still pending from the earlier test: the whole list is refused and poi2 is not queued
+        $I->sendPOST('/api/v4/snapshots', json_encode([
+            ['schema' => $this->schema, 'relation' => 'poi2'],
+            ['schema' => $this->schema, 'relation' => 'poi'],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CONFLICT);
+        $I->seeResponseContainsJson(['errorCode' => 'SNAPSHOT_IN_PROGRESS']);
+        $I->sendGET('/api/v4/snapshots?schema=' . $this->schema . '&relation=poi2');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertCount(0, json_decode($I->grabResponse()));
+
+        // a relation listed twice is refused up front
+        $I->sendPOST('/api/v4/snapshots', json_encode([
+            ['schema' => $this->schema, 'relation' => 'poi2'],
+            ['schema' => $this->schema, 'relation' => 'poi2'],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+
+        $I->sendPOST('/api/v4/snapshots', json_encode([['schema' => $this->schema, 'relation' => 'poi2', 'srs' => 4326]]));
+        $I->seeResponseCodeIs(HttpCode::ACCEPTED);
+        $accepted = json_decode($I->grabResponse());
+        $I->assertIsArray($accepted, 'an array request answers with an array');
+        $I->assertCount(1, $accepted);
+        $I->assertEquals('pending', $accepted[0]->status);
+
+        $I->sendGET('/api/v4/snapshots/' . $this->snapshotId . ',' . $accepted[0]->id);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $both = json_decode($I->grabResponse());
+        $I->assertIsArray($both);
+        $I->assertEquals([$this->snapshotId, $accepted[0]->id], array_map(fn($s) => $s->id, $both));
+        $I->assertEquals(['poi', 'poi2'], array_map(fn($s) => $s->relation, $both));
+
+        $I->sendGET('/api/v4/snapshots/' . $this->snapshotId . ',00000000-0000-0000-0000-000000000000');
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
     }
 
     public function shouldReturn404ForUnknownSnapshotId(ApiTester $I)

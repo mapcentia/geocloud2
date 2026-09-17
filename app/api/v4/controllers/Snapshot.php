@@ -40,6 +40,16 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
+    schema: "SnapshotAccepted",
+    description: "A queued snapshot job.",
+    properties: [
+        new OA\Property(property: "id", type: "string", example: "0b8c2f2e-2f5a-4d9c-9d3a-1b2c3d4e5f60"),
+        new OA\Property(property: "status", type: "string", example: "pending"),
+        new OA\Property(property: "_links", type: "object", properties: [new OA\Property(property: "self", type: "string", example: "/api/v4/snapshots/0b8c2f2e-2f5a-4d9c-9d3a-1b2c3d4e5f60")]),
+    ],
+    type: "object"
+)]
+#[OA\Schema(
     schema: "SnapshotRequest",
     description: "A request to snapshot a table or view to Parquet on S3.",
     required: ["schema", "relation"],
@@ -118,12 +128,13 @@ class Snapshot extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/snapshots/{id}', operationId: 'getSnapshot', description: "Get a snapshot job.", tags: ['Snapshots'],
+    #[OA\Get(path: '/api/v4/snapshots/{id}', operationId: 'getSnapshot', description: "Get one snapshot job (object), or several by comma separated ids (array).", tags: ['Snapshots'],
         parameters: [
-            new OA\Parameter(name: 'id', description: 'Snapshot id', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', description: 'Snapshot id, or comma separated ids', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Snapshot")),
+            new OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/Snapshot"),
+                new OA\Schema(type: 'array', items: new OA\Items(ref: "#/components/schemas/Snapshot"))])),
             new OA\Response(response: 403, description: 'Super-user only'),
             new OA\Response(response: 404, description: 'Not found'),
         ],
@@ -144,8 +155,11 @@ class Snapshot extends AbstractApi
     {
         $id = $this->route->getParam('id');
         if (!empty($id)) {
-            $row = $this->snapshot->get($id)['data'];
-            return $this->getResponse([$this->present($row)], single: true);
+            $list = [];
+            foreach (explode(',', (string)$id) as $one) {
+                $list[] = $this->present($this->snapshot->get(trim($one))['data']);
+            }
+            return $this->getResponse($list, single: count($list) === 1);
         }
         $schema = isset($_GET['schema']) && $_GET['schema'] !== '' ? (string)$_GET['schema'] : null;
         $relation = isset($_GET['relation']) && $_GET['relation'] !== '' ? (string)$_GET['relation'] : null;
@@ -156,9 +170,12 @@ class Snapshot extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Post(path: '/api/v4/snapshots', operationId: 'postSnapshot', description: "Queue a Parquet snapshot of a table or view to S3. Returns 202; poll the returned link for status.", tags: ['Snapshots'])]
-    #[OA\RequestBody(description: 'Relation to snapshot.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/SnapshotRequest"))]
-    #[OA\Response(response: 202, description: 'Accepted; poll _links.self for status')]
+    #[OA\Post(path: '/api/v4/snapshots', operationId: 'postSnapshot', description: "Queue a Parquet snapshot of one relation (object) or several (array of objects). Returns 202; poll the returned link(s) for status. With an array, every relation is checked before anything is queued.", tags: ['Snapshots'])]
+    #[OA\RequestBody(description: 'Relation(s) to snapshot.', required: true, content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/SnapshotRequest"),
+        new OA\Schema(type: 'array', items: new OA\Items(ref: "#/components/schemas/SnapshotRequest"))]))]
+    #[OA\Response(response: 202, description: 'Accepted; poll _links.self for status. An object for a single request, an array for an array request.',
+        content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/SnapshotAccepted"),
+            new OA\Schema(type: 'array', items: new OA\Items(ref: "#/components/schemas/SnapshotAccepted"))]))]
     #[OA\Response(response: 400, description: 'Bad request')]
     #[OA\Response(response: 403, description: 'Super-user only')]
     #[OA\Response(response: 404, description: 'Relation not found')]
@@ -174,23 +191,34 @@ class Snapshot extends AbstractApi
         // credentials, local needs localPath. Throws 501 SNAPSHOT_NOT_CONFIGURED.
         SnapshotStorageFactory::fromApp();
         $body = json_decode(Input::getBody(), true);
-        $schema = (string)$body['schema'];
-        $relation = (string)$body['relation'];
-        $srs = isset($body['srs']) ? (int)$body['srs'] : null;
+        $isList = array_is_list($body);
+        $requests = $isList ? $body : [$body];
         $uid = $this->route->jwt["data"]["uid"];
+        $model = new Model($this->connection);
 
-        if (!new Model($this->connection)->doesRelationExists("$schema.$relation")) {
-            throw new GC2Exception("Relation $schema.$relation does not exist", 404, null, "RELATION_NOT_FOUND");
+        // Check every request before queueing any, so a bad list queues nothing.
+        $seen = [];
+        foreach ($requests as $r) {
+            $schema = (string)$r['schema'];
+            $relation = (string)$r['relation'];
+            if (isset($seen["$schema.$relation"])) {
+                throw new GC2Exception("Relation $schema.$relation is listed more than once", 400, null, "INVALID_REQUEST");
+            }
+            $seen["$schema.$relation"] = true;
+            if (!$model->doesRelationExists("$schema.$relation")) {
+                throw new GC2Exception("Relation $schema.$relation does not exist", 404, null, "RELATION_NOT_FOUND");
+            }
+            if ($this->snapshot->hasActive($schema, $relation)) {
+                throw new GC2Exception("A snapshot of $schema.$relation is already pending or running", 409, null, "SNAPSHOT_IN_PROGRESS");
+            }
         }
-        if ($this->snapshot->hasActive($schema, $relation)) {
-            throw new GC2Exception("A snapshot of $schema.$relation is already pending or running", 409, null, "SNAPSHOT_IN_PROGRESS");
+        $accepted = [];
+        foreach ($requests as $r) {
+            $srs = isset($r['srs']) ? (int)$r['srs'] : null;
+            $id = $this->snapshot->create((string)$r['schema'], (string)$r['relation'], $srs, $uid);
+            $accepted[] = ['id' => $id, 'status' => 'pending', '_links' => ['self' => "/api/v4/snapshots/$id"]];
         }
-        $id = $this->snapshot->create($schema, $relation, $srs, $uid);
-        return new AcceptedResponse([
-            'id' => $id,
-            'status' => 'pending',
-            '_links' => ['self' => "/api/v4/snapshots/$id"],
-        ]);
+        return new AcceptedResponse($isList ? $accepted : $accepted[0]);
     }
 
     public function put_index(): Response
@@ -221,8 +249,8 @@ class Snapshot extends AbstractApi
                 $this->postWithResource();
             }
             $decoded = json_decode(Input::getBody(), true);
-            if (is_array($decoded) && array_is_list($decoded)) {
-                throw new GC2Exception("A single snapshot request object is required", 400, null, "INVALID_REQUEST");
+            if (is_array($decoded) && array_is_list($decoded) && $decoded === []) {
+                throw new GC2Exception("An empty list of snapshot requests is not allowed", 400, null, "INVALID_REQUEST");
             }
             $this->validateRequest(self::getAssert(), Input::getBody(), $method);
         }

@@ -23,6 +23,12 @@ Controller: `app/api/v4/controllers/Snapshot.php`, route `api/v4/snapshots/[id]`
 
 ### POST /api/v4/snapshots
 
+The body is one request object or an array of them ("one of" design, as the
+other v4 controllers). With an array every relation is checked (existence,
+duplicates in the list, active snapshot) before anything is queued, so a bad
+list queues nothing; the 202 body is then an array of the objects below, in
+request order. An empty array is 400 `INVALID_REQUEST`.
+
 Body:
 
 ```json
@@ -56,6 +62,9 @@ Response 202:
 ```
 
 ### GET /api/v4/snapshots/{id}
+
+`{id}` may be a comma separated list of ids: one id answers with an object,
+several with an array (404 if any id is unknown).
 
 Returns the snapshot row. 404 `NO_SNAPSHOT_ERROR` when the uuid is unknown.
 
