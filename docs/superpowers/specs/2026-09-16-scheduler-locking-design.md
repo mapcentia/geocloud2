@@ -294,3 +294,26 @@ runs before every listing, as in v3.
 `getById(int $id, string $db): ?array`, `createJob(array $fields, string $db): int`,
 `patchJob(int $id, string $db, array $fields): void`, `deleteJobById(int $id, string $db): void`.
 `getAll`/`newJob`/`updateJob`/`deleteJob` stay for v2.
+
+## Cooldown between runs
+
+Users forget the cron fields and end up with a job that runs every minute.
+A global minimum interval guards against that:
+
+```php
+"gc2scheduler" => [
+    "*" => true,
+    "maxJobs" => 20,
+    "minInterval" => 3600,   // NEW: seconds that must pass since the last run of a job; 0 = off
+],
+```
+
+get.php, right after the job lock and before a slot is taken: look up the
+job's latest run (`SchedulerLock::latestRun($jobId)`: newest `started_at`
+among `running`, `succeeded`, `failed`, `lost` — `skipped` rows do not
+count). If `now - started_at < minInterval`, record a `skipped` row with
+`exit_reason = "cooldown: last run started <ts>, <n> s ago, minimum <m> s"`,
+print `Info: Job <id> skipped: cooldown …`, and exit 0. Manual starts (API
+"run now") are subject to the same rule; the `skipped` row tells the caller
+why. The check happens after the lock so two overlapping starts cannot both
+pass it.

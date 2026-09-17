@@ -1636,6 +1636,72 @@ git commit -m "feat(api): v4 scheduler runs (start, list, inspect, stop) on the 
 
 ---
 
+### Task 8: Cooldown between runs
+
+**Files:**
+- Modify: `app/inc/SchedulerLock.php` (+ `latestRun`), `app/scripts/get.php`, `docker/conf/gc2/App.php`
+- Test: `app/tests/unit/SchedulerLockTest.php` (+ `testLatestRunIgnoresSkippedRows`), manual check
+
+**Interfaces:**
+- Produces: `SchedulerLock::latestRun(int $jobId): ?array` — newest row by `started_at` with status in (`running`, `succeeded`, `failed`, `lost`), or null.
+
+- [ ] **Step 1: Failing unit test** (append to `SchedulerLockTest`)
+
+```php
+    public function testLatestRunIgnoresSkippedRows(): void
+    {
+        $s = $this->session();
+        $this->assertNull($s->latestRun($this->jobId));
+        $first = $s->startRun($this->jobId, 'schedlocktest', 'a', 1, 1, 'unit-host');
+        $s->finishRun($first, 'succeeded');
+        $s->recordSkipped($this->jobId, 'schedlocktest', 'a', 2, 'unit-host', 'cooldown');
+        $latest = $s->latestRun($this->jobId);
+        $this->assertSame($first, $latest['uuid'], 'skipped rows never count as a run');
+        $this->assertSame('succeeded', $latest['status']);
+    }
+```
+
+- [ ] **Step 2: Implement `latestRun`**
+
+```php
+    /** The job's newest real run (skipped rows excluded), or null. */
+    public function latestRun(int $jobId): ?array
+    {
+        $st = $this->pdo->prepare("SELECT * FROM started_jobs WHERE id = :id AND status IN ('running', 'succeeded', 'failed', 'lost') ORDER BY started_at DESC LIMIT 1");
+        $st->execute(['id' => $jobId]);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        return $row === false ? null : $row;
+    }
+```
+
+- [ ] **Step 3: get.php** — directly after the job lock is taken (before `register_shutdown_function` and before the slot block):
+
+```php
+// Cooldown: a job that ran less than gc2scheduler.minInterval seconds ago is
+// skipped (users forget the cron fields and get a job every minute).
+$minInterval = (int)(App::$param['gc2scheduler']['minInterval'] ?? 0);
+if ($minInterval > 0) {
+    $last = $schedulerLock->latestRun((int)$jobId);
+    if ($last !== null) {
+        $ago = time() - strtotime($last['started_at']);
+        if ($ago < $minInterval) {
+            $reason = "cooldown: last run started {$last['started_at']}, {$ago} s ago, minimum {$minInterval} s";
+            $schedulerLock->recordSkipped((int)$jobId, $db, $safeName, $runPid, $runHost, $reason);
+            print "\nInfo: Job {$jobId} skipped: {$reason}. Exiting.";
+            exit(0);
+        }
+    }
+}
+```
+
+- [ ] **Step 4: Config template** — add `"minInterval" => 0,` with the comment `// Minimum seconds between two runs of the same job (0 = off); a run inside the window is recorded as skipped.` next to `maxJobs` in `docker/conf/gc2/App.php`; set it to `0` in the local `app/conf/App.php` too (not committed).
+
+- [ ] **Step 5: Verify** — `SchedulerLockTest.php` green (8 tests); manual: temporarily set `minInterval` to 600 in the local App.php, run a fake job twice in a row (`--jobId 999995`, tiny GeoJSON as in Task 2), show one `succeeded` and one `skipped` row whose `exit_reason` starts with `cooldown:`; set it back to 0.
+
+- [ ] **Step 6: Commit** — `feat(scheduler): minimum interval between runs of a job (gc2scheduler.minInterval)`.
+
+---
+
 ### Task 7: Verification
 
 - [ ] **Step 1:** unit `SchedulerLockTest.php`, `JobSnapshotFlagTest.php`, `WfsPagingTest.php`; api `SchedulerApiCest.php`, `SchedulerJobV4ApiCest.php`, `SchedulerRunV4ApiCest.php`, `FunctionManagementCest.php` — all green, each its own command.
