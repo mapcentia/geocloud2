@@ -1516,7 +1516,7 @@ if ($postSql) {
 $table->commit();
 
 print "\nInfo: Data imported into " . $schema . "." . $safeName;
-print "\nInfo: " . Tilecache::bust($schema . "." . $safeName)["message"];
+//print "\nInfo: " . Tilecache::bust($schema . "." . $safeName)["message"];
 
 // Clean up
 // ========
@@ -1598,7 +1598,7 @@ function cleanUp(int $success = 0): void
     print "\nInfo: Temp table dropped.";
 
     if ($success) {
-        $layer = new Layer(connection: new $conn);
+        $layer = new Layer(connection: $conn);
         $layer->updateLastmodified(schema: $schema, table: $safeName);
         print "\nInfo: Last modified value updated";
         $layer->insertDefaultMeta();
