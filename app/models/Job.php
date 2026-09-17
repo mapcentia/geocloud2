@@ -123,7 +123,7 @@ class Job extends Model
         $cmd = null;
         $job = null;
         $jobs = $this->getAll($db);
-        foreach ($jobs["data"] as $job) {
+        foreach (($jobs["data"] ?? []) as $job) {
             if ($id == $job["id"]) {
                 if ($include && !in_array($job['name'], $include)) {
                     continue;
@@ -134,7 +134,7 @@ class Job extends Model
                 if ($force) {
                     $job["delete_append"] = '0';
                 }
-                $cmd = "/usr/bin/nohup /usr/bin/timeout -s SIGINT -k 60 20h php " . __DIR__ . "/../scripts/get.php --db {$job["db"]} --schema {$job["schema"]} --safeName {$job["name"]} --url \"{$job["url"]}\" --srid {$job["epsg"]} --type {$job["type"]} --encoding {$job["encoding"]} --jobId {$job["id"]} --deleteAppend {$job["delete_append"]} --extra " . (!empty($job["extra"]) ? base64_encode($job["extra"]) : "null") . " --preSql " . (!empty($job["presql"]) ? base64_encode($job["presql"]) : "null") . " --postSql " . (!empty($job["postsql"]) ? base64_encode($job["postsql"]) : "null") . " --downloadSchema {$job["download_schema"]} --snapshot {$job["snapshot"]}" . " --manual " . ($manual ? 1 : 0) . " --name " . base64_encode((string)$name);
+                $cmd = self::buildGetCmd($job, $name, $manual);
                 break;
             }
         }
@@ -159,6 +159,41 @@ class Job extends Model
             }
         }
         return true;
+    }
+
+    /**
+     * The get.php command line for one jobs row.
+     *
+     * Every interpolated value is shell-escaped: the v4 write API lets a
+     * bearer token set db/schema/url/type/encoding, and POST /runs executes
+     * the result as the web-server user, so an unescaped `;` or `$(…)` here
+     * would be remote code execution. `extra`/`presql`/`postsql`/`name` are
+     * base64 and therefore already safe.
+     *
+     * @param array<string, mixed> $job a jobs row
+     */
+    public static function buildGetCmd(array $job, ?string $name = null, bool $manual = false): string
+    {
+        $cmd = "/usr/bin/nohup /usr/bin/timeout -s SIGINT -k 60 20h php " . __DIR__ . "/../scripts/get.php"
+            . " --db " . escapeshellarg((string)$job["db"])
+            . " --schema " . escapeshellarg((string)$job["schema"])
+            . " --safeName " . escapeshellarg((string)$job["name"])
+            . " --url " . escapeshellarg((string)$job["url"])
+            . " --srid " . (int)$job["epsg"]
+            . " --type " . escapeshellarg((string)$job["type"])
+            . " --encoding " . escapeshellarg((string)$job["encoding"])
+            . " --jobId " . (int)$job["id"]
+            . " --deleteAppend {$job["delete_append"]}"
+            . " --extra " . (!empty($job["extra"]) ? base64_encode($job["extra"]) : "null")
+            . " --preSql " . (!empty($job["presql"]) ? base64_encode($job["presql"]) : "null")
+            . " --postSql " . (!empty($job["postsql"]) ? base64_encode($job["postsql"]) : "null")
+            . " --downloadSchema {$job["download_schema"]}"
+            . " --snapshot {$job["snapshot"]}"
+            . " --manual " . ($manual ? 1 : 0);
+        if ($name !== null && $name !== '') {
+            $cmd .= " --name " . base64_encode($name);
+        }
+        return $cmd;
     }
 
     /**
