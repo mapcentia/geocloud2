@@ -342,12 +342,12 @@ CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 FROM mapserver AS cron
 
 # Clean up job for app/tmp
-RUN crontab -l 2>/dev/null | { cat; echo "0 0 * * * php -f /var/www/geocloud2/app/scripts/clean_tmp_dir.php 1 > /proc/1/fd/1 2>&1"; } | crontab
+RUN crontab -l 2>/dev/null | { cat; echo "0 0 * * * php -f /var/www/geocloud2/app/scripts/clean_tmp_dir.php > /proc/1/fd/1 2>&1"; } | crontab
 # Clean up job for tmp tables
-RUN crontab -l 2>/dev/null | { cat; echo "0 0 * * * php -f /var/www/geocloud2/app/scripts/clean_scheduler_tables.php 1 > /proc/1/fd/1 2>&1"; } | crontab
+RUN crontab -l 2>/dev/null | { cat; echo "0 0 * * * php -f /var/www/geocloud2/app/scripts/clean_scheduler_tables.php > /proc/1/fd/1 2>&1"; } | crontab
 # Keep app/wms/mapcache/mapcache.conf in sync with the per-database MapCache xml files (replaces the
 # watch_mapcache_changes.sh + reload.js watcher). Runs as root: it validates and gracefully reloads Apache.
-RUN crontab -l 2>/dev/null | { cat; echo "* * * * * php -f /var/www/geocloud2/app/scripts/mapcache_conf.php  > /proc/1/fd/1 2>&1"; } | crontab
+RUN crontab -l 2>/dev/null | { cat; echo "* * * * * php -f /var/www/geocloud2/app/scripts/mapcache_conf.php > /proc/1/fd/1 2>&1"; } | crontab
 # Create scheduler report once a day
 RUN crontab -l 2>/dev/null | { cat; echo "0 6 * * * php -f /var/www/geocloud2/app/scripts/job_report.php > /proc/1/fd/1 2>&1"; } | crontab
 # Run scheduler
