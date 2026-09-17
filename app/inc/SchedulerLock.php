@@ -241,7 +241,7 @@ final class SchedulerLock
     /** One run by uuid, scoped to one database, or null. */
     public function run(string $uuid, string $db): ?array
     {
-        $st = $this->pdo()->prepare("SELECT * FROM started_jobs WHERE uuid = :uuid AND db = :db");
+        $st = $this->pdo()->prepare("SELECT * FROM started_jobs WHERE uuid::text = :uuid AND db = :db");
         $st->execute(['uuid' => $uuid, 'db' => $db]);
         $row = $st->fetch(PDO::FETCH_ASSOC);
         return $row === false ? null : $row;

@@ -369,7 +369,7 @@ function buildOgr2ogrCmd(
 function getCmd(): void
 {
     global $encoding, $srid, $dir, $tempFile, $type, $db, $workingSchema, $randTableName, $downloadSchema, $url, $report, $out, $err, $contentIsCsv, $contentIsJson;
-    global $schedulerLock, $runUuid;
+    global $schedulerLock, $runUuid, $lastError;
     if ($runUuid !== null) {
         $schedulerLock->heartbeat($runUuid);
     }
@@ -1079,7 +1079,7 @@ function getCmdFile(): void
 function getCmdZip(): void
 {
     global $extCheck2, $dir, $url, $tempFile, $encoding, $srid, $type, $db, $workingSchema, $randTableName, $downloadSchema, $outFileName, $report, $out, $err;
-    global $schedulerLock, $runUuid;
+    global $schedulerLock, $runUuid, $lastError;
     if ($runUuid !== null) {
         $schedulerLock->heartbeat($runUuid);
     }

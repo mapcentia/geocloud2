@@ -344,6 +344,15 @@ class Job extends Model
      * (and mirrors it into the legacy cron column), normalises the name like
      * v2, and binds booleans as 0/1.
      */
+    /**
+     * Throws the same 400 toColumns() would (e.g. INVALID_CRON_FIELD) without writing anything.
+     * @throws GC2Exception
+     */
+    public function validateFields(array $fields): void
+    {
+        $this->toColumns($fields);
+    }
+
     private function toColumns(array $fields): array
     {
         $cols = [];

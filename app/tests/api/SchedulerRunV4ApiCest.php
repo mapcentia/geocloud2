@@ -68,6 +68,9 @@ class SchedulerRunV4ApiCest
         $this->asSuper($I);
         $I->sendGET('/api/v4/scheduler/runs/00000000-0000-0000-0000-000000000000');
         $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        $I->sendGET('/api/v4/scheduler/runs/not-a-uuid');
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        $I->seeResponseContainsJson(['errorCode' => 'RUN_NOT_FOUND']);
         $I->seeResponseContainsJson(['errorCode' => 'RUN_NOT_FOUND']);
         $I->sendPOST('/api/v4/scheduler/runs', json_encode(['job' => 987654321]));
         $I->seeResponseCodeIs(HttpCode::NOT_FOUND);

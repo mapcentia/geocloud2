@@ -88,7 +88,7 @@ class SchedulerJob extends AbstractApi
     }
 
     #[OA\Get(path: '/api/v4/scheduler/jobs/{id}', operationId: 'getSchedulerJob', description: "Get one or more jobs (comma separated ids), or list all jobs of the database.", tags: ['Scheduler'],
-        parameters: [new OA\Parameter(name: 'id', description: 'Job id, or comma separated ids', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: '5497,5498')],
+        parameters: [new OA\Parameter(name: 'id', description: 'Job id, or comma separated ids', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '5497,5498')],
         responses: [new OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/SchedulerJob"),
             new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/SchedulerJob"))])), new OA\Response(response: 404, description: 'Not found')])]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -121,6 +121,10 @@ class SchedulerJob extends AbstractApi
     {
         $body = json_decode(Input::getBody(), true);
         $jobs = array_is_list($body) ? $body : [$body];
+        // Check every element (incl. the cron fields) before creating any, so a bad list creates nothing.
+        foreach ($jobs as $job) {
+            $this->job->validateFields($job);
+        }
         $ids = [];
         foreach ($jobs as $job) {
             $ids[] = $this->job->createJob($job, $this->db);

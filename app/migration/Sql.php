@@ -510,7 +510,7 @@ SQL;
         // The ADD COLUMN above defaults every pre-existing row's started_at to
         // the moment the migration ran; `created` holds the real value.
         // Idempotent: on a second run no row matches.
-        $sqls[] = "UPDATE started_jobs SET started_at = created WHERE created IS NOT NULL AND created < started_at";
+        $sqls[] = "UPDATE started_jobs SET started_at = created WHERE created IS NOT NULL AND created < started_at - interval '1 minute'";
         // Rows that predate the registry can never be reaped honestly (no
         // heartbeat, no lock); retire them instead of leaving them 'running'.
         $sqls[] = "UPDATE started_jobs SET status = 'lost', finished_at = created, exit_reason = 'row predates the run registry' WHERE status = 'running' AND heartbeat IS NULL AND created IS NOT NULL AND created < now() - interval '1 day'";

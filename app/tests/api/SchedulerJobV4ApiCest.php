@@ -60,6 +60,16 @@ class SchedulerJobV4ApiCest
     public function shouldValidateOnCreate(ApiTester $I)
     {
         $this->asSuper($I);
+        // a bad cron field in the second element creates nothing
+        $I->sendGET('/api/v4/scheduler/jobs');
+        $before = count(json_decode($I->grabResponse()));
+        $I->sendPOST('/api/v4/scheduler/jobs', json_encode([
+            ['name' => 'ok', 'schema' => 'public', 'url' => 'https://e.com/a', 'schedule' => '0 1 * * *'],
+            ['name' => 'bad', 'schema' => 'public', 'url' => 'https://e.com/b', 'schedule' => 'nonsense fields here now'],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->sendGET('/api/v4/scheduler/jobs');
+        $I->assertCount($before, json_decode($I->grabResponse()), 'all-or-nothing');
         $I->sendPOST('/api/v4/scheduler/jobs', json_encode(['name' => 'x', 'schema' => 'public', 'url' => 'https://e.com/a', 'schedule' => 'every day']));
         $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
         $I->sendPOST('/api/v4/scheduler/jobs', json_encode(['name' => 'x', 'schema' => 'public', 'schedule' => '* * * * *']));
