@@ -32,7 +32,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 #[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
-#[OA\Schema(schema: "SchedulerJob", description: "An import job of the scheduler.", required: ["name", "schema", "url", "schedule"], properties: [
+#[OA\Schema(schema: "SchedulerJobInput", description: "A job to create: name, schema, url and schedule are required.", required: ["name", "schema", "url", "schedule"], allOf: [new OA\Schema(ref: "#/components/schemas/SchedulerJob")])]
+#[OA\Schema(schema: "SchedulerJob", description: "An import job of the scheduler. On PATCH every field is optional.", properties: [
     new OA\Property(property: "name", type: "string", example: "bygninger"),
     new OA\Property(property: "schema", type: "string", example: "geodanmark"),
     new OA\Property(property: "url", type: "string", example: "https://example.com/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=bygning"),
@@ -88,7 +89,7 @@ class SchedulerJob extends AbstractApi
     }
 
     #[OA\Get(path: '/api/v4/scheduler/jobs/{id}', operationId: 'getSchedulerJob', description: "Get one or more jobs (comma separated ids), or list all jobs of the database.", tags: ['Scheduler'],
-        parameters: [new OA\Parameter(name: 'id', description: 'Job id, or comma separated ids', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '5497,5498')],
+        parameters: [new OA\Parameter(name: 'id', description: 'Job id, or comma separated ids. Omit to list all jobs of the database.', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: '5497,5498')],
         responses: [new OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/SchedulerJob"),
             new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/SchedulerJob"))])), new OA\Response(response: 404, description: 'Not found')])]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -111,8 +112,8 @@ class SchedulerJob extends AbstractApi
     }
 
     #[OA\Post(path: '/api/v4/scheduler/jobs', operationId: 'postSchedulerJob', description: "Create one or more jobs.", tags: ['Scheduler'],
-        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/SchedulerJob"),
-            new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/SchedulerJob"))])),
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/SchedulerJobInput"),
+            new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/SchedulerJobInput"))])),
         responses: [new OA\Response(response: 201, description: 'Created'), new OA\Response(response: 400, description: 'Bad request')])]
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]

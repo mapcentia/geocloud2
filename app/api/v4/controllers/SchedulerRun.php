@@ -80,7 +80,7 @@ class SchedulerRun extends AbstractApi
     }
 
     #[OA\Get(path: '/api/v4/scheduler/runs/{uuid}', operationId: 'getSchedulerRun', description: "Get one run, or list runs (running first, then the newest finished). Filters: ?job=, ?status=.", tags: ['Scheduler'],
-        parameters: [new OA\Parameter(name: 'uuid', in: 'path', required: true, schema: new OA\Schema(type: 'string')), new OA\Parameter(name: 'job', in: 'query', required: false, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string'))],
+        parameters: [new OA\Parameter(name: 'uuid', description: 'Run uuid. Omit to list runs (running plus the newest finished ones).', in: 'path', required: false, schema: new OA\Schema(type: 'string')), new OA\Parameter(name: 'job', in: 'query', required: false, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string'))],
         responses: [new OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/SchedulerRun")), new OA\Response(response: 404, description: 'Not found')])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
@@ -107,7 +107,7 @@ class SchedulerRun extends AbstractApi
     }
 
     #[OA\Post(path: '/api/v4/scheduler/runs', operationId: 'postSchedulerRun', description: "Start a job now. Asynchronous: poll the runs list for the new run.", tags: ['Scheduler'],
-        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(properties: [new OA\Property(property: "job", type: "integer"), new OA\Property(property: "force", description: "Ignore delete_append and overwrite", type: "boolean")], type: "object")),
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ["job"], properties: [new OA\Property(property: "job", type: "integer"), new OA\Property(property: "force", description: "Ignore delete_append and overwrite", type: "boolean")], type: "object")),
         responses: [new OA\Response(response: 202, description: 'Starting'), new OA\Response(response: 404, description: 'Job not found'), new OA\Response(response: 409, description: 'A run of the job is already running')])]
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
