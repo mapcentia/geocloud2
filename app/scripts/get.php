@@ -87,7 +87,7 @@ $runName = !empty($options["name"]) ? (base64_decode($options["name"]) ?: null) 
 
 $workingSchema = "_gc2scheduler";
 
-$tmpDir = "/var/www/geocloud2/app/tmp/";
+$tmpDir = App::$param['path'] . "app/tmp/";
 
 // Locking and run registry live in gc2scheduler (Postgres advisory locks),
 // on a dedicated session that lasts for the whole run. See app/inc/SchedulerLock.php.
@@ -531,7 +531,7 @@ function fetchPart(string $label, string $requestUrl): array
     // Build final cmd
     if ($downloadSchema) {
         $extraArgs = [
-            "-oo " . escapeshellarg("CONFIG_FILE=/var/www/geocloud2/app/scripts/gmlasconf.xml"),
+            "-oo " . escapeshellarg("CONFIG_FILE=" . App::$param['path'] . "app/scripts/gmlasconf.xml"),
         ];
         $cmd = buildOgr2ogrCmd(
             encoding: $encoding,
