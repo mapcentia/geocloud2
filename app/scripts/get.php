@@ -89,6 +89,8 @@ $workingSchema = "_gc2scheduler";
 
 $tmpDir = App::$param['path'] . "app/tmp/";
 
+$conn = new \app\inc\Connection(user: (!empty(App::$param['setUser']) ? $db : Connection::$param["postgisuser"]), database: $db);
+
 // Locking and run registry live in gc2scheduler (Postgres advisory locks),
 // on a dedicated session that lasts for the whole run. See app/inc/SchedulerLock.php.
 $runHost = gethostname() ?: 'unknown';
@@ -1189,8 +1191,7 @@ function getCmdZip(): void
     exec($cmd . ' 2>&1', $out, $err);
 }
 
-Database::setDb($db);
-$table = new Table($schema . "." . $safeName);
+$table = new Table(table: $schema . "." . $safeName, connection: $conn);
 
 // The working schema must be committed before the job's transaction starts:
 // ogr2ogr loads into it over its own connection and cannot see an
@@ -1521,7 +1522,7 @@ print "\nInfo: " . Tilecache::bust($schema . "." . $safeName)["message"];
 // ========
 function cleanUp(int $success = 0): void
 {
-    global $schema, $workingSchema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db, $report, $snapshotAfterImport, $schedulerLock, $runUuid, $lastError;
+    global $schema, $workingSchema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db, $report, $snapshotAfterImport, $schedulerLock, $runUuid, $lastError, $conn;
 
     // Unlink temp file
     // ================
@@ -1543,8 +1544,7 @@ function cleanUp(int $success = 0): void
 
     // Update jobs table
     // =================
-    Database::setDb("gc2scheduler");
-    $job = new \app\inc\Model();
+    $job = new \app\inc\Model(connection: new \app\inc\Connection(database: 'gc2scheduler'));
 
     // lastcheck
     // =========
@@ -1598,8 +1598,7 @@ function cleanUp(int $success = 0): void
     print "\nInfo: Temp table dropped.";
 
     if ($success) {
-        Database::setDb($db);
-        $layer = new Layer();
+        $layer = new Layer(connection: new $conn);
         $layer->updateLastmodified(schema: $schema, table: $safeName);
         print "\nInfo: Last modified value updated";
         $layer->insertDefaultMeta();
