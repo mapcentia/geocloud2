@@ -65,7 +65,7 @@ while ($row = $model->fetchRow($res)) {
         try {
             $scheduler->php(
                 $cmd,
-                "/usr/bin/php",
+                PHP_BINARY,
                 $args,
                 $row["id"] . "_" . $row["name"]
             )->at($expression)->output([

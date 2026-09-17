@@ -175,9 +175,28 @@ class Job extends Model
      *
      * @param array<string, mixed> $job a jobs row
      */
+    /**
+     * The php CLI to spawn get.php with. Not a bare "php": cron's PATH usually
+     * lacks /usr/local/bin, so the spawn silently fails there. PHP_BINARY is the
+     * CLI itself when we run under the CLI (cron), but under FPM/Apache it is
+     * the php-fpm binary, so the web path takes the "php" next to it instead.
+     */
+    public static function phpCli(): string
+    {
+        if (PHP_SAPI === 'cli' && PHP_BINARY !== '') {
+            return PHP_BINARY;
+        }
+        foreach ([PHP_BINDIR . '/php', '/usr/local/bin/php', '/usr/bin/php'] as $candidate) {
+            if (is_executable($candidate)) {
+                return $candidate;
+            }
+        }
+        return 'php';
+    }
+
     public static function buildGetCmd(array $job, ?string $name = null, bool $manual = false): string
     {
-        $cmd = "/usr/bin/nohup /usr/bin/timeout -s SIGINT -k 60 20h php " . __DIR__ . "/../scripts/get.php"
+        $cmd = "/usr/bin/nohup /usr/bin/timeout -s SIGINT -k 60 20h " . escapeshellarg(self::phpCli()) . " " . __DIR__ . "/../scripts/get.php"
             . " --db " . escapeshellarg((string)$job["db"])
             . " --schema " . escapeshellarg((string)$job["schema"])
             . " --safeName " . escapeshellarg((string)$job["name"])

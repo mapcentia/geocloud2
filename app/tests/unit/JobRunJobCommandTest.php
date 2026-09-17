@@ -86,4 +86,14 @@ class JobRunJobCommandTest extends Unit
         $this->assertStringContainsString('--manual 1', $cmd);
         $this->assertStringContainsString('--manual 0', Job::buildGetCmd($this->row()));
     }
+    public function testSpawnsWithTheRunningPhpBinaryNotABarePhp(): void
+    {
+        $cmd = Job::buildGetCmd(['id' => 1, 'db' => 'd', 'schema' => 's', 'name' => 'n', 'url' => 'https://e.com/a', 'epsg' => 4326,
+            'type' => 'AUTO', 'encoding' => 'UTF8', 'extra' => null, 'presql' => null, 'postsql' => null,
+            'delete_append' => '0', 'download_schema' => '1', 'snapshot' => '0']);
+        $this->assertStringContainsString('20h ' . escapeshellarg(Job::phpCli()) . ' ', $cmd);
+        $this->assertSame(PHP_BINARY, Job::phpCli(), 'under the CLI the running interpreter is used');
+        $this->assertStringNotContainsString('20h php ', $cmd);
+    }
+
 }
