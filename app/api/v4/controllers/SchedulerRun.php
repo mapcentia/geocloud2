@@ -37,7 +37,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Schema(schema: "SchedulerRun", description: "One run of a scheduler job.", properties: [
     new OA\Property(property: "uuid", type: "string"), new OA\Property(property: "job", type: "integer"), new OA\Property(property: "name", type: "string", nullable: true),
     new OA\Property(property: "pid", type: "integer"), new OA\Property(property: "host", type: "string", nullable: true), new OA\Property(property: "slot", type: "integer", nullable: true),
-    new OA\Property(property: "status", type: "string", enum: ["running", "succeeded", "failed", "skipped", "lost"]), new OA\Property(property: "stale", type: "boolean"),
+    new OA\Property(property: "status", type: "string", enum: ["running", "succeeded", "failed", "skipped", "lost"]), new OA\Property(property: "stale", description: "No progress signal (heartbeat or start) for 5 minutes", type: "boolean"),
     new OA\Property(property: "started_at", type: "string", format: "date-time"), new OA\Property(property: "heartbeat", type: "string", format: "date-time", nullable: true),
     new OA\Property(property: "finished_at", type: "string", format: "date-time", nullable: true), new OA\Property(property: "exit_reason", type: "string", nullable: true),
 ], type: "object")]
@@ -62,7 +62,9 @@ class SchedulerRun extends AbstractApi
         return [
             'uuid' => $r['uuid'], 'job' => (int)$r['id'], 'name' => $r['name'], 'pid' => (int)$r['pid'], 'host' => $r['host'],
             'slot' => $r['slot'] !== null ? (int)$r['slot'] : null, 'status' => $r['status'],
-            'stale' => $r['status'] === 'running' && $r['heartbeat'] !== null && (time() - strtotime($r['heartbeat'])) > 300,
+            // No progress signal for 5 minutes. A run that died before its
+            // first heartbeat has none, so fall back to started_at.
+            'stale' => $r['status'] === 'running' && (time() - strtotime($r['heartbeat'] ?? $r['started_at'])) > 300,
             'started_at' => $r['started_at'], 'heartbeat' => $r['heartbeat'], 'finished_at' => $r['finished_at'], 'exit_reason' => $r['exit_reason'],
         ];
     }
@@ -85,15 +87,19 @@ class SchedulerRun extends AbstractApi
     public function get_index(): Response
     {
         $uuid = $this->route->getParam('uuid');
-        $rows = $this->runs();
         if (!empty($uuid)) {
-            foreach ($rows as $r) {
-                if ($r['uuid'] === $uuid) {
-                    return $this->getResponse([$this->present($r)], single: true);
-                }
+            // Direct lookup, not a scan of runsFor(): a real but older run
+            // falls outside the newest-50 listing.
+            $lock = new SchedulerLock();
+            $lock->reap();
+            $run = $lock->run((string)$uuid, $this->db);
+            $lock->release();
+            if ($run === null) {
+                throw new GC2Exception("Run $uuid not found", 404, null, "RUN_NOT_FOUND");
             }
-            throw new GC2Exception("Run $uuid not found", 404, null, "RUN_NOT_FOUND");
+            return $this->getResponse([$this->present($run)], single: true);
         }
+        $rows = $this->runs();
         $job = isset($_GET['job']) && ctype_digit((string)$_GET['job']) ? (int)$_GET['job'] : null;
         $status = isset($_GET['status']) && in_array($_GET['status'], self::STATUSES, true) ? $_GET['status'] : null;
         $rows = array_values(array_filter($rows, fn($r) => ($job === null || (int)$r['id'] === $job) && ($status === null || $r['status'] === $status)));

@@ -149,14 +149,18 @@ class SchedulerJob extends AbstractApi
     public function delete_index(): Response
     {
         $ids = $this->idList();
+        // Ownership first: a 409 must never quote another database's run uuid
+        // for an id the caller does not own.
+        foreach ($ids as $id) {
+            if ($this->job->getById($id, $this->db) === null) {
+                throw new GC2Exception("Job $id not found", 404, null, "JOB_NOT_FOUND");
+            }
+        }
         $lock = new SchedulerLock();
         $lock->reap();
         try {
             // Check every id before deleting any, so a bad list deletes nothing.
             foreach ($ids as $id) {
-                if ($this->job->getById($id, $this->db) === null) {
-                    throw new GC2Exception("Job $id not found", 404, null, "JOB_NOT_FOUND");
-                }
                 $running = $lock->runningRun($id);
                 if ($running !== null) {
                     throw new GC2Exception("Job $id has a running run ({$running['uuid']})", 409, null, "JOB_RUNNING");

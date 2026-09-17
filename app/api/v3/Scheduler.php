@@ -83,16 +83,17 @@ class Scheduler extends Controller
                 new OA\Property(property: 'heartbeat', description: 'Last heartbeat timestamp', type: 'string', nullable: true),
                 new OA\Property(property: 'finished_at', description: 'Finish timestamp', type: 'string', nullable: true),
                 new OA\Property(property: 'exit_reason', description: 'Reason for a non-running status', type: 'string', nullable: true),
-                new OA\Property(property: 'stale', description: 'Running but no heartbeat for over 5 minutes', type: 'boolean'),
+                new OA\Property(property: 'stale', description: 'No progress signal (heartbeat or start) for 5 minutes', type: 'boolean'),
             ], type: 'object')),
         ], type: 'object'))]
     public function get_index(): array
     {
         $res = [];
         foreach ($this->job->getAllStartedJobs($this->db) as $r) {
+            // No progress signal for 5 minutes. A run that died before its
+            // first heartbeat has none, so fall back to started_at.
             $stale = $r['status'] === 'running'
-                && $r['heartbeat'] !== null
-                && (time() - strtotime($r['heartbeat'])) > 300;
+                && (time() - strtotime($r['heartbeat'] ?? $r['started_at'])) > 300;
             $res[] = [
                 "uuid" => $r["uuid"], "id" => (int)$r["id"], "name" => $r["name"], "pid" => (int)$r["pid"],
                 "host" => $r["host"], "slot" => $r["slot"] !== null ? (int)$r["slot"] : null,
