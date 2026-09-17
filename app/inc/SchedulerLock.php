@@ -32,7 +32,7 @@ final class SchedulerLock
     public const int SLOT_LOCK_CLASS = 42002;
     public const int DEFAULT_MAX_JOBS = 20;
 
-    private PDO $pdo;
+    private ?PDO $pdo;
 
     public function __construct(?Connection $connection = null)
     {
@@ -45,6 +45,36 @@ final class SchedulerLock
         // The session may live for hours while the job imports; nothing here runs in a transaction.
         $this->pdo->exec("SET statement_timeout = 0");
         $this->pdo->exec("SET idle_in_transaction_session_timeout = 0");
+        $this->assertSessionSticky();
+    }
+
+    /**
+     * The whole mechanism assumes this connection is one Postgres session:
+     * behind a transaction-pooled PgBouncer every advisory lock would be
+     * dropped at the end of its own statement, every lock would appear free
+     * and the reaper would mark every live run lost — silently. Prove it
+     * instead of trusting the `pgbouncer: false` flag (which selects no other
+     * host today): take a throwaway lock and re-read it in a *separate*
+     * statement.
+     */
+    private function assertSessionSticky(): void
+    {
+        $this->pdo->exec("SELECT pg_advisory_lock(" . self::JOB_LOCK_CLASS . ", 0)");
+        $ok = $this->pdo->query("SELECT count(*) FROM pg_locks WHERE locktype = 'advisory'
+            AND pid = pg_backend_pid() AND classid = " . self::JOB_LOCK_CLASS . " AND objid = 0::oid AND objsubid = 2")->fetchColumn();
+        $this->pdo->exec("SELECT pg_advisory_unlock(" . self::JOB_LOCK_CLASS . ", 0)");
+        if (!$ok) {
+            throw new RuntimeException("gc2scheduler connection is not session-sticky (transaction-pooled PgBouncer?); scheduler locking cannot work");
+        }
+    }
+
+    /** @throws RuntimeException when the session has been released */
+    private function pdo(): PDO
+    {
+        if ($this->pdo === null) {
+            throw new RuntimeException("lock session released");
+        }
+        return $this->pdo;
     }
 
     public function tryJobLock(int $jobId): bool
@@ -97,22 +127,35 @@ final class SchedulerLock
                   AND NOT EXISTS (
                       SELECT 1 FROM pg_locks l
                       WHERE l.locktype = 'advisory' AND l.classid = :class AND l.objid = s.id::oid AND l.objsubid = 2 AND l.granted
+                        AND l.database = (SELECT oid FROM pg_database WHERE datname = current_database())
                   )";
-        $st = $this->pdo->prepare($sql);
+        $st = $this->pdo()->prepare($sql);
         $st->execute(['class' => self::JOB_LOCK_CLASS]);
         return $st->rowCount();
     }
 
-    public function startRun(int $jobId, string $db, ?string $name, int $pid, int $slot, string $host): string
+    /**
+     * Registers the run. $slot may be null: get.php inserts the row right
+     * after the job lock, before it waits for a slot, so a lock-holding run
+     * is never invisible to the API; assignSlot() fills the slot in later.
+     */
+    public function startRun(int $jobId, string $db, ?string $name, int $pid, ?int $slot, string $host): string
     {
-        $st = $this->pdo->prepare("INSERT INTO started_jobs (id, db, name, pid, slot, host, status) VALUES (:id, :db, :name, :pid, :slot, :host, 'running') RETURNING uuid");
+        $st = $this->pdo()->prepare("INSERT INTO started_jobs (id, db, name, pid, slot, host, status) VALUES (:id, :db, :name, :pid, :slot, :host, 'running') RETURNING uuid");
         $st->execute(['id' => $jobId, 'db' => $db, 'name' => $name, 'pid' => $pid, 'slot' => $slot, 'host' => $host]);
         return $st->fetchColumn();
     }
 
+    /** Fills in the run slot once acquireSlot() has handed one out. */
+    public function assignSlot(string $uuid, int $slot): void
+    {
+        $st = $this->pdo()->prepare("UPDATE started_jobs SET slot = :slot WHERE uuid = :uuid");
+        $st->execute(['slot' => $slot, 'uuid' => $uuid]);
+    }
+
     public function recordSkipped(int $jobId, string $db, ?string $name, int $pid, string $host, string $reason): string
     {
-        $st = $this->pdo->prepare("INSERT INTO started_jobs (id, db, name, pid, host, status, finished_at, exit_reason) VALUES (:id, :db, :name, :pid, :host, 'skipped', now(), :reason) RETURNING uuid");
+        $st = $this->pdo()->prepare("INSERT INTO started_jobs (id, db, name, pid, host, status, finished_at, exit_reason) VALUES (:id, :db, :name, :pid, :host, 'skipped', now(), :reason) RETURNING uuid");
         $st->execute(['id' => $jobId, 'db' => $db, 'name' => $name, 'pid' => $pid, 'host' => $host, 'reason' => $reason]);
         return $st->fetchColumn();
     }
@@ -122,7 +165,7 @@ final class SchedulerLock
         if (!in_array($status, ['succeeded', 'failed', 'lost'], true)) {
             throw new RuntimeException("Not a final status: $status");
         }
-        $st = $this->pdo->prepare("UPDATE started_jobs SET status = :status, finished_at = now(), exit_reason = :reason WHERE uuid = :uuid AND status = 'running'");
+        $st = $this->pdo()->prepare("UPDATE started_jobs SET status = :status, finished_at = now(), exit_reason = :reason WHERE uuid = :uuid AND status = 'running'");
         $st->execute(['status' => $status, 'reason' => $reason, 'uuid' => $uuid]);
     }
 
@@ -134,7 +177,7 @@ final class SchedulerLock
     public function heartbeat(string $uuid): void
     {
         try {
-            $st = $this->pdo->prepare("UPDATE started_jobs SET heartbeat = now() WHERE uuid = :uuid AND status = 'running'");
+            $st = $this->pdo()->prepare("UPDATE started_jobs SET heartbeat = now() WHERE uuid = :uuid AND status = 'running'");
             $st->execute(['uuid' => $uuid]);
         } catch (\Throwable $e) {
             error_log("scheduler heartbeat failed: " . $e->getMessage());
@@ -143,7 +186,7 @@ final class SchedulerLock
 
     public function runningRun(int $jobId): ?array
     {
-        $st = $this->pdo->prepare("SELECT * FROM started_jobs WHERE id = :id AND status = 'running' ORDER BY started_at DESC LIMIT 1");
+        $st = $this->pdo()->prepare("SELECT * FROM started_jobs WHERE id = :id AND status = 'running' ORDER BY started_at DESC LIMIT 1");
         $st->execute(['id' => $jobId]);
         $row = $st->fetch(PDO::FETCH_ASSOC);
         return $row === false ? null : $row;
@@ -156,7 +199,7 @@ final class SchedulerLock
      */
     public function runsFor(string $db, int $finishedLimit = 50): array
     {
-        $st = $this->pdo->prepare("(SELECT * FROM started_jobs WHERE db = :db AND status = 'running' ORDER BY started_at DESC)
+        $st = $this->pdo()->prepare("(SELECT * FROM started_jobs WHERE db = :db AND status = 'running' ORDER BY started_at DESC)
                                    UNION ALL
                                    (SELECT * FROM started_jobs WHERE db = :db2 AND status <> 'running' ORDER BY started_at DESC LIMIT :lim)");
         $st->bindValue('db', $db);
@@ -169,16 +212,37 @@ final class SchedulerLock
     /** The job's newest real run (skipped rows excluded), or null. */
     public function latestRun(int $jobId): ?array
     {
-        $st = $this->pdo->prepare("SELECT * FROM started_jobs WHERE id = :id AND status IN ('running', 'succeeded', 'failed', 'lost') ORDER BY started_at DESC LIMIT 1");
+        $st = $this->pdo()->prepare("SELECT * FROM started_jobs WHERE id = :id AND status IN ('running', 'succeeded', 'failed', 'lost') ORDER BY started_at DESC LIMIT 1");
         $st->execute(['id' => $jobId]);
         $row = $st->fetch(PDO::FETCH_ASSOC);
         return $row === false ? null : $row;
     }
 
-    public function latestRunForPid(int $pid, string $host): ?array
+    /**
+     * $since (anything strtotime/Postgres understands, e.g. date('c')) bounds
+     * the lookup below: pids are reused, so without it a caller waiting on a
+     * freshly spawned run can match an old finished row on the same pid and
+     * return before the new run has even registered.
+     */
+    public function latestRunForPid(int $pid, string $host, ?string $since = null): ?array
     {
-        $st = $this->pdo->prepare("SELECT * FROM started_jobs WHERE pid = :pid AND host = :host ORDER BY started_at DESC LIMIT 1");
-        $st->execute(['pid' => $pid, 'host' => $host]);
+        $sql = "SELECT * FROM started_jobs WHERE pid = :pid AND host = :host";
+        $params = ['pid' => $pid, 'host' => $host];
+        if ($since !== null) {
+            $sql .= " AND started_at >= :since";
+            $params['since'] = $since;
+        }
+        $st = $this->pdo()->prepare($sql . " ORDER BY started_at DESC LIMIT 1");
+        $st->execute($params);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        return $row === false ? null : $row;
+    }
+
+    /** One run by uuid, scoped to one database, or null. */
+    public function run(string $uuid, string $db): ?array
+    {
+        $st = $this->pdo()->prepare("SELECT * FROM started_jobs WHERE uuid = :uuid AND db = :db");
+        $st->execute(['uuid' => $uuid, 'db' => $db]);
         $row = $st->fetch(PDO::FETCH_ASSOC);
         return $row === false ? null : $row;
     }
@@ -186,16 +250,13 @@ final class SchedulerLock
     /** Ends the session, which releases every lock it holds. */
     public function release(): void
     {
-        if (!isset($this->pdo)) {
-            return;
-        }
-        unset($this->pdo);
+        $this->pdo = null;
     }
 
     private function tryLock(int $class, int $key): bool
     {
         try {
-            $st = $this->pdo->prepare("SELECT pg_try_advisory_lock(:class, :key)");
+            $st = $this->pdo()->prepare("SELECT pg_try_advisory_lock(:class, :key)");
             $st->bindValue('class', $class, PDO::PARAM_INT);
             $st->bindValue('key', $key, PDO::PARAM_INT);
             $st->execute();

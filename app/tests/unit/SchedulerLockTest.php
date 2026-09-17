@@ -146,7 +146,49 @@ class SchedulerLockTest extends Unit
         array_shift($this->sessions); // already released; drop it from _after()'s cleanup
 
         $s->heartbeat($uuid); // session is gone: must return quietly, not throw
-        $this->assertTrue(true);
+
+        // and it wrote nothing: the row is exactly as startRun() left it.
+        $check = $this->session();
+        $row = $check->runningRun($this->jobId);
+        $this->assertSame($uuid, $row['uuid']);
+        $this->assertSame('running', $row['status']);
+        $this->assertNull($row['heartbeat'], 'a released session must not have written a heartbeat');
+    }
+
+    /**
+     * get.php registers the run right after the job lock, long before it knows
+     * which slot it will get (the slot wait is unbounded), so the row must be
+     * insertable with slot null and updatable once a slot is held.
+     */
+    public function testRunIsRegisteredWithoutASlotAndTheSlotIsAssignedLater(): void
+    {
+        $s = $this->session();
+        $this->assertTrue($s->tryJobLock($this->jobId));
+        $uuid = $s->startRun($this->jobId, 'schedlocktest', 'no slot yet', 4245, null, 'unit-host');
+
+        $run = $s->runningRun($this->jobId);
+        $this->assertSame($uuid, $run['uuid']);
+        $this->assertNull($run['slot'], 'a run waiting for a slot is registered with slot null');
+        $this->assertSame($uuid, $s->run($uuid, 'schedlocktest')['uuid'], 'run() finds it by uuid');
+        $this->assertNull($s->run($uuid, 'someotherdb'), 'run() is scoped to one database');
+
+        $s->assignSlot($uuid, 7);
+        $this->assertSame(7, (int)$s->runningRun($this->jobId)['slot']);
+
+        $s->finishRun($uuid, 'succeeded');
+        $this->assertSame(7, (int)$s->run($uuid, 'schedlocktest')['slot'], 'the slot survives the finish');
+    }
+
+    /** Pids are reused; a $since bound keeps an old row from ending a new wait. */
+    public function testLatestRunForPidRespectsTheSinceBound(): void
+    {
+        $s = $this->session();
+        $uuid = $s->startRun($this->jobId, 'schedlocktest', 'old', 4246, 1, 'unit-host');
+        $s->finishRun($uuid, 'succeeded');
+
+        $this->assertSame($uuid, $s->latestRunForPid(4246, 'unit-host')['uuid'], 'unbounded lookup finds it');
+        $this->assertSame($uuid, $s->latestRunForPid(4246, 'unit-host', date('c', time() - 60))['uuid']);
+        $this->assertNull($s->latestRunForPid(4246, 'unit-host', date('c', time() + 60)), 'a row from before $since must not match');
     }
 
     public function testSkippedRowIsRecordedAndNotRunning(): void

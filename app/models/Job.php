@@ -139,6 +139,9 @@ class Job extends Model
             }
         }
         if ($cmd) {
+            // Lower bound for the registry lookup below: pid numbers are reused,
+            // so a run of this pid from before the spawn must never match.
+            $since = date('c');
             $pid = (int)exec($cmd . " > " . __DIR__ . "/../../public/logs/{$job["id"]}_scheduler.log  </dev/null & echo $!");
             if (!$async) {
                 // get.php registers itself in started_jobs (see SchedulerLock); wait until that run is over.
@@ -154,7 +157,7 @@ class Job extends Model
                     usleep(100000);
                     $childPid = $this->childPidOf($pid);
                 }
-                $this->waitForRun($pid, $childPid, $host, $lock);
+                $this->waitForRun($pid, $childPid, $host, $lock, $since);
                 $lock->release();
             }
         }
@@ -202,17 +205,17 @@ class Job extends Model
      * process is the stop condition: once it's gone, the child is gone too,
      * so one last lookup catches the final registry UPDATE.
      */
-    public function waitForRun(int $wrapperPid, ?int $childPid, string $host, SchedulerLock $lock): ?array
+    public function waitForRun(int $wrapperPid, ?int $childPid, string $host, SchedulerLock $lock, ?string $since = null): ?array
     {
         $lookupPid = $childPid ?? $wrapperPid;
         while (true) {
-            $run = $lock->latestRunForPid($lookupPid, $host);
+            $run = $lock->latestRunForPid($lookupPid, $host, $since);
             if ($run !== null && $run['status'] !== 'running') {
                 break;
             }
             if (!$this->isAlive($wrapperPid)) {
                 // wrapper gone: the child is gone too; one last lookup catches the final UPDATE
-                $run = $lock->latestRunForPid($lookupPid, $host);
+                $run = $lock->latestRunForPid($lookupPid, $host, $since);
                 break;
             }
             sleep(1);
