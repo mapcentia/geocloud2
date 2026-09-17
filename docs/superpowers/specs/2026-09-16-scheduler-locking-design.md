@@ -313,7 +313,13 @@ job's latest run (`SchedulerLock::latestRun($jobId)`: newest `started_at`
 among `running`, `succeeded`, `failed`, `lost` — `skipped` rows do not
 count). If `now - started_at < minInterval`, record a `skipped` row with
 `exit_reason = "cooldown: last run started <ts>, <n> s ago, minimum <m> s"`,
-print `Info: Job <id> skipped: cooldown …`, and exit 0. Manual starts (API
-"run now") are subject to the same rule; the `skipped` row tells the caller
-why. The check happens after the lock so two overlapping starts cannot both
-pass it.
+print `Info: Job <id> skipped: cooldown …`, and exit 0. The check happens
+after the lock so two overlapping starts cannot both pass it.
+
+Manual starts bypass the cooldown: "run now" from the v2 UI
+(`app/controllers/Job.php::get_run`), `POST /api/v3/scheduler` and
+`POST /api/v4/scheduler/runs` call `Job::runJob(..., manual: true)`, which
+appends `--manual 1` to the get.php command line; `scheduler_run_job.php`
+(cron) does not. get.php reads `--manual` (default 0) and skips the cooldown
+check when it is set; the run row's `name` keeps the trigger label the caller
+passes (`Started by Scheduler`, `Started from web-ui`, `Started via API v4 by …`).

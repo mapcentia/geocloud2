@@ -1639,7 +1639,7 @@ git commit -m "feat(api): v4 scheduler runs (start, list, inspect, stop) on the 
 ### Task 8: Cooldown between runs
 
 **Files:**
-- Modify: `app/inc/SchedulerLock.php` (+ `latestRun`), `app/scripts/get.php`, `docker/conf/gc2/App.php`
+- Modify: `app/inc/SchedulerLock.php` (+ `latestRun`), `app/scripts/get.php`, `app/models/Job.php`, `app/controllers/Job.php`, `app/api/v3/Scheduler.php`, `app/api/v4/controllers/SchedulerRun.php`, `docker/conf/gc2/App.php`
 - Test: `app/tests/unit/SchedulerLockTest.php` (+ `testLatestRunIgnoresSkippedRows`), manual check
 
 **Interfaces:**
@@ -1693,6 +1693,13 @@ if ($minInterval > 0) {
     }
 }
 ```
+
+- [ ] **Step 3b: Manual starts bypass the cooldown**
+   - `app/scripts/get.php`: add `"manual:"` to `$longopts`, read `$manualStart = !empty($options["manual"]);`, and wrap the cooldown block in `if ($minInterval > 0 && !$manualStart)`; when a manual start would otherwise have been inside the window, print `Info: Cooldown bypassed (manual start).`
+   - `app/models/Job.php::runJob(int $id, string $db, ?string $name = null, bool $force = false, ?array $include = null, bool $async = false, bool $manual = false)`: append `" --manual " . ($manual ? 1 : 0)` to the get.php command line.
+   - Callers: `app/controllers/Job.php::get_run` (v2 UI), `app/api/v3/Scheduler.php::post_index` and `app/api/v4/controllers/SchedulerRun.php::post_index` pass `manual: true`; `app/scripts/scheduler_run_job.php` is unchanged (cron, not manual).
+   - `startRun()` in get.php: pass the trigger label instead of `$safeName` as `name` when available: add `"name:"` to `$longopts`; `runJob` appends `--name` base64-encoded like `--extra` (`base64_encode($name ?? '')`); get.php decodes it (`$runName = base64_decode($options["name"] ?? '') ?: null`) and uses `$runName ?? $safeName`.
+   - Manual check: with `minInterval` 600, run the fake job twice via the CLI with `--manual 1` on the second run → two `succeeded` rows; then once more without → `skipped` with `cooldown:`.
 
 - [ ] **Step 4: Config template** — add `"minInterval" => 0,` with the comment `// Minimum seconds between two runs of the same job (0 = off); a run inside the window is recorded as skipped.` next to `maxJobs` in `docker/conf/gc2/App.php`; set it to `0` in the local `app/conf/App.php` too (not committed).
 
