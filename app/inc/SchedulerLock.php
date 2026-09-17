@@ -166,6 +166,15 @@ final class SchedulerLock
         return $st->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /** The job's newest real run (skipped rows excluded), or null. */
+    public function latestRun(int $jobId): ?array
+    {
+        $st = $this->pdo->prepare("SELECT * FROM started_jobs WHERE id = :id AND status IN ('running', 'succeeded', 'failed', 'lost') ORDER BY started_at DESC LIMIT 1");
+        $st->execute(['id' => $jobId]);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        return $row === false ? null : $row;
+    }
+
     public function latestRunForPid(int $pid, string $host): ?array
     {
         $st = $this->pdo->prepare("SELECT * FROM started_jobs WHERE pid = :pid AND host = :host ORDER BY started_at DESC LIMIT 1");

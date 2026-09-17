@@ -118,7 +118,7 @@ class Job extends Model
      * @param array|null $include
      * @return true
      */
-    public function runJob(int $id, string $db, ?string $name = null, bool $force = false, ?array $include = null, bool $async = false): true
+    public function runJob(int $id, string $db, ?string $name = null, bool $force = false, ?array $include = null, bool $async = false, bool $manual = false): true
     {
         $cmd = null;
         $job = null;
@@ -134,7 +134,7 @@ class Job extends Model
                 if ($force) {
                     $job["delete_append"] = '0';
                 }
-                $cmd = "/usr/bin/nohup /usr/bin/timeout -s SIGINT -k 60 20h php " . __DIR__ . "/../scripts/get.php --db {$job["db"]} --schema {$job["schema"]} --safeName {$job["name"]} --url \"{$job["url"]}\" --srid {$job["epsg"]} --type {$job["type"]} --encoding {$job["encoding"]} --jobId {$job["id"]} --deleteAppend {$job["delete_append"]} --extra " . (!empty($job["extra"]) ? base64_encode($job["extra"]) : "null") . " --preSql " . (!empty($job["presql"]) ? base64_encode($job["presql"]) : "null") . " --postSql " . (!empty($job["postsql"]) ? base64_encode($job["postsql"]) : "null") . " --downloadSchema {$job["download_schema"]} --snapshot {$job["snapshot"]}";
+                $cmd = "/usr/bin/nohup /usr/bin/timeout -s SIGINT -k 60 20h php " . __DIR__ . "/../scripts/get.php --db {$job["db"]} --schema {$job["schema"]} --safeName {$job["name"]} --url \"{$job["url"]}\" --srid {$job["epsg"]} --type {$job["type"]} --encoding {$job["encoding"]} --jobId {$job["id"]} --deleteAppend {$job["delete_append"]} --extra " . (!empty($job["extra"]) ? base64_encode($job["extra"]) : "null") . " --preSql " . (!empty($job["presql"]) ? base64_encode($job["presql"]) : "null") . " --postSql " . (!empty($job["postsql"]) ? base64_encode($job["postsql"]) : "null") . " --downloadSchema {$job["download_schema"]} --snapshot {$job["snapshot"]}" . " --manual " . ($manual ? 1 : 0) . " --name " . base64_encode((string)$name);
                 break;
             }
         }

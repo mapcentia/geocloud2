@@ -91,7 +91,7 @@ class Job extends Controller
                 "message" => "Id missing",
             ];
         }
-        $this->job->runJob($id, $_SESSION['screen_name'], 'Started from web-ui', false, null, true);
+        $this->job->runJob($id, $_SESSION['screen_name'], 'Started from web-ui', false, null, true, true);
         return ["success" => true ];
     }
 }

@@ -177,4 +177,16 @@ class SchedulerLockTest extends Unit
         $this->assertSame('lost', $deadRow['status']);
         $this->assertSame($live, $holder->runningRun($this->jobId)['uuid']);
     }
+
+    public function testLatestRunIgnoresSkippedRows(): void
+    {
+        $s = $this->session();
+        $this->assertNull($s->latestRun($this->jobId));
+        $first = $s->startRun($this->jobId, 'schedlocktest', 'a', 1, 1, 'unit-host');
+        $s->finishRun($first, 'succeeded');
+        $s->recordSkipped($this->jobId, 'schedlocktest', 'a', 2, 'unit-host', 'cooldown');
+        $latest = $s->latestRun($this->jobId);
+        $this->assertSame($first, $latest['uuid'], 'skipped rows never count as a run');
+        $this->assertSame('succeeded', $latest['status']);
+    }
 }

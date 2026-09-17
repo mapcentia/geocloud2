@@ -63,6 +63,8 @@ $longopts = array(
     "postSql:",
     "downloadSchema:",
     "snapshot:",
+    "manual:",
+    "name:",
 );
 $options = getopt("", $longopts);
 
@@ -80,6 +82,8 @@ $preSql = $options["preSql"] == "null" ? null : base64_decode($options["preSql"]
 $postSql = $options["postSql"] == "null" ? null : base64_decode($options["postSql"]);
 $downloadSchema = $options["downloadSchema"];
 $snapshotAfterImport = $options["snapshot"] ?? null;
+$manualStart = !empty($options["manual"]);
+$runName = !empty($options["name"]) ? (base64_decode($options["name"]) ?: null) : null;
 
 $workingSchema = "_gc2scheduler";
 
@@ -94,11 +98,32 @@ $schedulerLock->reap();
 if (!$schedulerLock->tryJobLock((int)$jobId)) {
     $running = $schedulerLock->runningRun((int)$jobId);
     $reason = "already running" . ($running ? " (run {$running['uuid']}, started {$running['started_at']}, host {$running['host']})" : "");
-    $schedulerLock->recordSkipped((int)$jobId, $db, $safeName, $runPid, $runHost, $reason);
+    $schedulerLock->recordSkipped((int)$jobId, $db, $runName ?? $safeName, $runPid, $runHost, $reason);
     print "\nInfo: Job {$jobId} is {$reason}. Exiting.";
     exit(0);
 }
 $runUuid = null; // set once a slot is held and the run is registered
+
+// Cooldown: a job that ran less than gc2scheduler.minInterval seconds ago is
+// skipped (users forget the cron fields and get a job every minute). Manual
+// starts (UI "run now", API) bypass it; the caller asked for this run.
+$minInterval = (int)(App::$param['gc2scheduler']['minInterval'] ?? 0);
+if ($minInterval > 0) {
+    $last = $schedulerLock->latestRun((int)$jobId);
+    if ($last !== null) {
+        $ago = time() - strtotime($last['started_at']);
+        if ($ago < $minInterval) {
+            if ($manualStart) {
+                print "\nInfo: Cooldown bypassed (manual start).";
+            } else {
+                $reason = "cooldown: last run started {$last['started_at']}, {$ago} s ago, minimum {$minInterval} s";
+                $schedulerLock->recordSkipped((int)$jobId, $db, $runName ?? $safeName, $runPid, $runHost, $reason);
+                print "\nInfo: Job {$jobId} skipped: {$reason}. Exiting.";
+                exit(0);
+            }
+        }
+    }
+}
 
 // Bookkeeping when the process dies without reaching cleanUp(): the locks
 // are released by Postgres regardless; this only keeps the registry honest.
@@ -1175,7 +1200,7 @@ $slot = $schedulerLock->acquireSlot($maxJobs, function (int $max, int $sleep) us
     print "\nInfo: All {$max} run slots are busy. Waiting {$sleep} seconds...";
     $report[SLEEP] += $sleep;
 });
-$runUuid = $schedulerLock->startRun((int)$jobId, $db, $safeName, $runPid, $slot, $runHost);
+$runUuid = $schedulerLock->startRun((int)$jobId, $db, $runName ?? $safeName, $runPid, $slot, $runHost);
 print "\nInfo: Run {$runUuid} registered on slot {$slot}";
 
 // Begin transaction

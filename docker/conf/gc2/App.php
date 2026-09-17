@@ -131,6 +131,8 @@ class App
             "test" => true,
             // Maximum number of scheduler jobs importing at the same time (advisory-lock run slots).
             "maxJobs" => 20,
+            // Minimum seconds between two runs of the same job (0 = off); a run inside the window is recorded as skipped.
+            "minInterval" => 0,
         ),
 
         // Allowed origins for CORS

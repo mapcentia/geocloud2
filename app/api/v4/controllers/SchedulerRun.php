@@ -120,7 +120,7 @@ class SchedulerRun extends AbstractApi
         if ($running !== null) {
             throw new GC2Exception("Job $jobId is already running (run {$running['uuid']})", 409, null, "JOB_RUNNING");
         }
-        $this->job->runJob($jobId, $this->db, 'Started via API v4 by ' . $this->route->jwt['data']['uid'], !empty($body['force']), null, true);
+        $this->job->runJob($jobId, $this->db, 'Started via API v4 by ' . $this->route->jwt['data']['uid'], !empty($body['force']), null, true, true);
         return new AcceptedResponse(['job' => $jobId, 'status' => 'starting', '_links' => ['runs' => "/api/v4/scheduler/runs?job=$jobId"]]);
     }
 
