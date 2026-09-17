@@ -328,7 +328,7 @@ function buildOgr2ogrCmd(
 {
     $pgConn = "host=" . Connection::$param["postgishost"]
         . " port=" . Connection::$param["postgisport"]
-        . " user=" . Connection::$param["postgisuser"]
+        . " user=" . (!empty(App::$param['setUser']) ? $db : Connection::$param["postgisuser"])
         . " password=" . Connection::$param["postgispw"]
         . " dbname=" . $db;
 
@@ -481,6 +481,7 @@ function fetchPart(string $label, string $requestUrl): array
 
     $cellTemp = "_" . time() . "_cell_" . md5(microtime() . rand());
 
+    print ("\n$requestUrl\n");
     if (!file_put_contents($tmpDir . $gmlName, Util::wget($requestUrl))) {
         print "\nError: could not get GML for {$label}";
         $pass = false;
@@ -556,6 +557,7 @@ function fetchPart(string $label, string $requestUrl): array
         );
     }
 
+    print ("\n$cmd\n");
     exec($cmd . ' 2>&1', $out, $err);
     if ($err) {
         $pass = false;
@@ -570,7 +572,7 @@ function fetchPart(string $label, string $requestUrl): array
     }
 
     if (!$pass) {
-        if ($count > 30) {
+        if ($count > 2) {
             print "\nError: Too many recursive tries to fetch {$label}";
             cleanUp();
             exit(1);
@@ -933,6 +935,7 @@ function getCmdWfsPaging(): void
     } else {
         $property = null;
         try {
+            print "\n{$wfsPaging->describeFeatureTypeUrl()}\n";
             $xsd = Util::wget($wfsPaging->describeFeatureTypeUrl(), 10, 120);
             $property = is_string($xsd) ? WfsPaging::pickSortProperty($xsd) : null;
         } catch (Throwable $e) {
