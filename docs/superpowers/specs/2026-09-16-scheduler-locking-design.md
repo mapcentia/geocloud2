@@ -257,10 +257,10 @@ Resource (what GET returns):
 | Method | Path | Behaviour |
 |---|---|---|
 | GET | `/jobs` | all jobs of the caller's database, ordered by id |
-| GET | `/jobs/{id}` | one job; 404 `JOB_NOT_FOUND` when the id is not in the caller's database |
-| POST | `/jobs` | create; required `name, schema, url, schedule`; defaults `epsg 4326`, `type "AUTO"`, `encoding "UTF8"`, `delete_append false`, `download_schema true`, `active true`, `snapshot false`; 201 + `Location` |
-| PATCH | `/jobs/{id}` | partial update of any writable field; 303 + `Location` |
-| DELETE | `/jobs/{id}` | 204; 409 `JOB_RUNNING` while a run of the job is `running` |
+| GET | `/jobs/{id}` | one job (object), or several with comma separated ids `/jobs/5497,5498` (array); 404 `JOB_NOT_FOUND` when any id is not in the caller's database |
+| POST | `/jobs` | create one job (object) or several (array of objects); required `name, schema, url, schedule`; defaults `epsg 4326`, `type "AUTO"`, `encoding "UTF8"`, `delete_append false`, `download_schema true`, `active true`, `snapshot false`; 201 + `Location` |
+| PATCH | `/jobs/{id}` | single id only; partial update of any writable field; 303 + `Location` |
+| DELETE | `/jobs/{id}` | one id or comma separated ids; all ids are checked before anything is deleted; 204; 404 `JOB_NOT_FOUND`; 409 `JOB_RUNNING` while a run of any listed job is `running` |
 
 Validation: `schedule` must be a valid five-field cron expression
 (`Cron\CronExpression`, the library `Job::validateCronExpression` already

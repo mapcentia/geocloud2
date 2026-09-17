@@ -111,4 +111,39 @@ class SchedulerJobV4ApiCest
         $I->sendGET('/api/v4/scheduler/jobs/' . $this->jobId);
         $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
     }
+    public function shouldCreateGetAndDeleteMultipleJobs(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendPOST('/api/v4/scheduler/jobs', json_encode([
+            ['name' => 'multi a', 'schema' => 'public', 'url' => 'https://e.com/a', 'schedule' => '0 1 * * *', 'active' => false],
+            ['name' => 'multi b', 'schema' => 'public', 'url' => 'https://e.com/b', 'schedule' => '0 2 * * *', 'active' => false],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $location = $I->grabHttpHeader('Location');
+        $ids = explode(',', basename($location));
+        $I->assertCount(2, $ids, "Location: $location");
+
+        $I->sendGET('/api/v4/scheduler/jobs/' . implode(',', $ids));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $jobs = json_decode($I->grabResponse());
+        $I->assertIsArray($jobs);
+        $I->assertEquals(['multi_a', 'multi_b'], array_map(fn($j) => $j->name, $jobs));
+
+        $I->sendGET('/api/v4/scheduler/jobs/' . $ids[0]);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertIsObject(json_decode($I->grabResponse()), 'a single id returns an object');
+
+        $I->sendGET('/api/v4/scheduler/jobs/' . $ids[0] . ',abc');
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->sendDELETE('/api/v4/scheduler/jobs/' . $ids[0] . ',987654321');
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        $I->sendGET('/api/v4/scheduler/jobs/' . $ids[0]);
+        $I->seeResponseCodeIs(HttpCode::OK); // nothing was deleted by the failed list
+
+        $I->sendDELETE('/api/v4/scheduler/jobs/' . implode(',', $ids));
+        $I->seeResponseCodeIs(HttpCode::NO_CONTENT);
+        $I->sendGET('/api/v4/scheduler/jobs/' . implode(',', $ids));
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+    }
+
 }

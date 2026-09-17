@@ -81,27 +81,38 @@ class SchedulerJob extends AbstractApi
         return (int)$this->route->getParam('id');
     }
 
-    #[OA\Get(path: '/api/v4/scheduler/jobs/{id}', operationId: 'getSchedulerJob', description: "Get a job, or list all jobs of the database.", tags: ['Scheduler'],
-        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
-        responses: [new OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/SchedulerJob")), new OA\Response(response: 404, description: 'Not found')])]
+    /** The {id} path segment as a list of ints: "5497" or "5497,5498". */
+    private function idList(): array
+    {
+        return array_map('intval', explode(',', (string)$this->route->getParam('id')));
+    }
+
+    #[OA\Get(path: '/api/v4/scheduler/jobs/{id}', operationId: 'getSchedulerJob', description: "Get one or more jobs (comma separated ids), or list all jobs of the database.", tags: ['Scheduler'],
+        parameters: [new OA\Parameter(name: 'id', description: 'Job id, or comma separated ids', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: '5497,5498')],
+        responses: [new OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/SchedulerJob"),
+            new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/SchedulerJob"))])), new OA\Response(response: 404, description: 'Not found')])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
     public function get_index(): Response
     {
-        $id = $this->route->getParam('id');
-        if (!empty($id)) {
-            $row = $this->job->getById($this->idParam(), $this->db);
-            if ($row === null) {
-                throw new GC2Exception("Job $id not found", 404, null, "JOB_NOT_FOUND");
+        if (!empty($this->route->getParam('id'))) {
+            $list = [];
+            foreach ($this->idList() as $id) {
+                $row = $this->job->getById($id, $this->db);
+                if ($row === null) {
+                    throw new GC2Exception("Job $id not found", 404, null, "JOB_NOT_FOUND");
+                }
+                $list[] = $this->present($row);
             }
-            return $this->getResponse([$this->present($row)], single: true);
+            return $this->getResponse($list, single: count($list) === 1);
         }
         $rows = $this->job->getAll($this->db)['data'] ?? [];
         return $this->getResponse(array_map(fn($r) => $this->present($r), $rows));
     }
 
-    #[OA\Post(path: '/api/v4/scheduler/jobs', operationId: 'postSchedulerJob', description: "Create a job.", tags: ['Scheduler'],
-        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: "#/components/schemas/SchedulerJob")),
+    #[OA\Post(path: '/api/v4/scheduler/jobs', operationId: 'postSchedulerJob', description: "Create one or more jobs.", tags: ['Scheduler'],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/SchedulerJob"),
+            new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/SchedulerJob"))])),
         responses: [new OA\Response(response: 201, description: 'Created'), new OA\Response(response: 400, description: 'Bad request')])]
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -109,8 +120,12 @@ class SchedulerJob extends AbstractApi
     public function post_index(): Response
     {
         $body = json_decode(Input::getBody(), true);
-        $id = $this->job->createJob($body, $this->db);
-        return $this->postResponse("/api/v4/scheduler/jobs/", [$id]);
+        $jobs = array_is_list($body) ? $body : [$body];
+        $ids = [];
+        foreach ($jobs as $job) {
+            $ids[] = $this->job->createJob($job, $this->db);
+        }
+        return $this->postResponse("/api/v4/scheduler/jobs/", $ids);
     }
 
     #[OA\Patch(path: '/api/v4/scheduler/jobs/{id}', operationId: 'patchSchedulerJob', description: "Update fields of a job.", tags: ['Scheduler'],
@@ -127,21 +142,32 @@ class SchedulerJob extends AbstractApi
         return $this->patchResponse("/api/v4/scheduler/jobs/", [$this->idParam()]);
     }
 
-    #[OA\Delete(path: '/api/v4/scheduler/jobs/{id}', operationId: 'deleteSchedulerJob', description: "Delete a job. Refused while a run of it is running.", tags: ['Scheduler'],
-        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+    #[OA\Delete(path: '/api/v4/scheduler/jobs/{id}', operationId: 'deleteSchedulerJob', description: "Delete one or more jobs (comma separated ids). Refused while a run of any of them is running.", tags: ['Scheduler'],
+        parameters: [new OA\Parameter(name: 'id', description: 'Job id, or comma separated ids', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '5497,5498')],
         responses: [new OA\Response(response: 204, description: 'Deleted'), new OA\Response(response: 404, description: 'Not found'), new OA\Response(response: 409, description: 'A run is in progress')])]
     #[Override]
     public function delete_index(): Response
     {
-        $id = $this->idParam();
+        $ids = $this->idList();
         $lock = new SchedulerLock();
         $lock->reap();
-        $running = $lock->runningRun($id);
-        $lock->release();
-        if ($running !== null && $this->job->getById($id, $this->db) !== null) {
-            throw new GC2Exception("Job $id has a running run ({$running['uuid']})", 409, null, "JOB_RUNNING");
+        try {
+            // Check every id before deleting any, so a bad list deletes nothing.
+            foreach ($ids as $id) {
+                if ($this->job->getById($id, $this->db) === null) {
+                    throw new GC2Exception("Job $id not found", 404, null, "JOB_NOT_FOUND");
+                }
+                $running = $lock->runningRun($id);
+                if ($running !== null) {
+                    throw new GC2Exception("Job $id has a running run ({$running['uuid']})", 409, null, "JOB_RUNNING");
+                }
+            }
+        } finally {
+            $lock->release();
         }
-        $this->job->deleteJobById($id, $this->db);
+        foreach ($ids as $id) {
+            $this->job->deleteJobById($id, $this->db);
+        }
         return $this->deleteResponse();
     }
 
@@ -155,8 +181,11 @@ class SchedulerJob extends AbstractApi
     {
         $id = $this->route->getParam('id');
         $method = Input::getMethod();
-        if (!empty($id) && !ctype_digit((string)$id)) {
-            throw new GC2Exception("Job id must be an integer", 400, null, "INVALID_REQUEST");
+        if (!empty($id) && !preg_match('/^\d+(,\d+)*$/', (string)$id)) {
+            throw new GC2Exception("Job id must be an integer or a comma separated list of integers", 400, null, "INVALID_REQUEST");
+        }
+        if ($method === 'patch' && str_contains((string)$id, ',')) {
+            throw new GC2Exception("PATCH takes a single job id", 400, null, "INVALID_REQUEST");
         }
         if ($method === 'post' && !empty($id)) {
             $this->postWithResource();
