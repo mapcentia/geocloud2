@@ -507,8 +507,18 @@ SQL;
         $sqls[] = "ALTER TABLE started_jobs ADD COLUMN host VARCHAR(255)";
         $sqls[] = "ALTER TABLE started_jobs ADD COLUMN slot INTEGER";
         $sqls[] = "ALTER TABLE started_jobs ADD COLUMN exit_reason TEXT";
+        // The ADD COLUMN above defaults every pre-existing row's started_at to
+        // the moment the migration ran; `created` holds the real value.
+        // Idempotent: on a second run no row matches.
+        $sqls[] = "UPDATE started_jobs SET started_at = created WHERE created IS NOT NULL AND created < started_at";
+        // Rows that predate the registry can never be reaped honestly (no
+        // heartbeat, no lock); retire them instead of leaving them 'running'.
+        $sqls[] = "UPDATE started_jobs SET status = 'lost', finished_at = created, exit_reason = 'row predates the run registry' WHERE status = 'running' AND heartbeat IS NULL AND created IS NOT NULL AND created < now() - interval '1 day'";
         $sqls[] = "ALTER TABLE started_jobs ADD CONSTRAINT started_jobs_status_check CHECK (status IN ('running', 'succeeded', 'failed', 'skipped', 'lost'))";
         $sqls[] = "CREATE INDEX started_jobs_running_idx ON started_jobs (id) WHERE status = 'running'";
+        // The listing branch of runsFor() and the retention delete both order
+        // by started_at within one database.
+        $sqls[] = "CREATE INDEX IF NOT EXISTS started_jobs_db_started_idx ON started_jobs (db, started_at DESC)";
         return $sqls;
     }
 }
