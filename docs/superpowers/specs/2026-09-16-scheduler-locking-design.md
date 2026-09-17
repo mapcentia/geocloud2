@@ -93,7 +93,8 @@ Lifecycle of a row:
 
 | Event | Who | Change |
 |---|---|---|
-| get.php acquired job lock + slot | get.php | INSERT row: id, db, name, pid, host (`gethostname()`), slot, status `running` (replaces the INSERT `Job::runJob` does today) |
+| get.php acquired job lock | get.php | INSERT row: id, db, name, pid, host (`gethostname()`), status `running`, `slot` null (replaces the INSERT `Job::runJob` does today). Inserted right after the lock — before the cooldown-free path takes a slot — so a lock-holding run is never invisible to the API |
+| get.php acquired a run slot | get.php | UPDATE row: `slot` (`SchedulerLock::assignSlot`) |
 | job lock busy | get.php | INSERT row with status `skipped`, `exit_reason = 'already running (run <uuid>)'`, `finished_at = now()`, then exit 0 |
 | `cleanUp(1)` / `cleanUp(0)` | get.php | UPDATE status `succeeded` / `failed`, `finished_at = now()`, `exit_reason` (the last error line when failed) |
 | shutdown without cleanUp (fatal, SIGINT) | get.php `register_shutdown_function` | UPDATE status `failed`, `exit_reason = 'terminated: ' . error_get_last()['message'] ?? 'signal'` — best effort, the lock is released by Postgres regardless |
@@ -130,13 +131,21 @@ without a cron), and (b) in `scheduler.php` each minute before dispatching.
    `skipped` row, print `Info: Job <id> is already running (run <uuid>, started <ts>, host <h>). Exiting.`, exit 0.
    (Exit 0 on purpose: an overlapping cron tick is not an error, and the
    scheduler log must not turn red.)
-3. `acquireSlot()`: loop `for ($slot = 1; $slot <= $max; $slot++)`
+3. INSERT the `running` row with `slot` null (moved here from `Job::runJob`,
+   which no longer writes `started_jobs`; it keeps spawning and, when `$async`
+   is false, waiting). This happens immediately after the job lock and the
+   cooldown check — before `get_headers`, `CREATE SCHEMA` and the (unbounded)
+   slot wait — so no run ever holds the job lock without a registry row: the
+   API can list it, `POST /runs` 409s on it, and `DELETE /runs/{uuid}` can stop
+   it. A cooldown or lock skip still writes only its `skipped` row and exits 0.
+   `register_shutdown_function`/`pcntl_signal` are installed right after the
+   INSERT, so the early window is covered too.
+4. `acquireSlot()`: loop `for ($slot = 1; $slot <= $max; $slot++)`
    `SELECT pg_try_advisory_lock(42002, :slot)`; first `true` wins. None →
    print the waiting line (as `poll()` does today), `$report[SLEEP] += 10`,
-   `sleep(10)`, repeat. A plain `while` loop replaces the recursive `poll()`.
-4. INSERT the `running` row (moved here from `Job::runJob`, which no longer
-   writes `started_jobs`; it keeps spawning and, when `$async` is false,
-   waiting).
+   heartbeat the (already registered) run, `sleep(10)`, repeat. A plain `while`
+   loop replaces the recursive `poll()`. Once a slot is held,
+   `SchedulerLock::assignSlot($runUuid, $slot)` fills it into the row.
 5. Remove: `$lockDir`/`$lockFile`, `touch`, the `unlink($lockFile)` in
    `cleanUp()`, `FilesystemIterator` counting.
 6. `cleanUp($success)` updates the row's status; `register_shutdown_function`

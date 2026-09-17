@@ -102,7 +102,7 @@ if (!$schedulerLock->tryJobLock((int)$jobId)) {
     print "\nInfo: Job {$jobId} is {$reason}. Exiting.";
     exit(0);
 }
-$runUuid = null; // set once a slot is held and the run is registered
+$runUuid = null; // set right after the job lock, below
 
 // Cooldown: a job that ran less than gc2scheduler.minInterval seconds ago is
 // skipped (users forget the cron fields and get a job every minute). Manual
@@ -124,6 +124,12 @@ if ($minInterval > 0) {
         }
     }
 }
+
+// The run is registered as soon as the job lock is held, before the (possibly
+// hour-long) wait for a run slot: a lock-holding run must never be invisible
+// to the API. The slot is filled in by assignSlot() once one is acquired.
+$runUuid = $schedulerLock->startRun((int)$jobId, $db, $runName ?? $safeName, $runPid, null, $runHost);
+print "\nInfo: Run {$runUuid} registered";
 
 // Bookkeeping when the process dies without reaching cleanUp(): the locks
 // are released by Postgres regardless; this only keeps the registry honest.
@@ -194,7 +200,11 @@ if (sizeof(explode("|http", $url)) > 1) {
     }
     if ($getFunction !== "getCmdWfsPaging") {
         // Check if Content type is zip
-        $headers = get_headers($url);
+        // An explicit timeout: without one this blocks on the default
+        // default_socket_timeout while holding the job lock. false (failed
+        // HEAD/GET) is not fatal -- the extension check below still decides.
+        $ctx = stream_context_create(['http' => ['timeout' => 30]]);
+        $headers = get_headers($url, false, $ctx) ?: [];
         print "\n\nheaders\n";
         foreach ($headers as $header) {
             if ($header == "Content-Type: application/zip") {
@@ -382,7 +392,9 @@ function getCmd(): void
     fclose($fp);
     if (isset($error_msg)) {
         print "\n" . $error_msg;
+        $lastError = $error_msg;
         cleanUp();
+        exit(1);
     }
 
     if ($contentIsJson) {
@@ -1089,7 +1101,9 @@ function getCmdZip(): void
     fclose($fp);
     if (isset($error_msg)) {
         print "\n" . $error_msg;
+        $lastError = $error_msg;
         cleanUp();
+        exit(1);
     }
     $ext = array("shp", "tab", "geojson", "gml", "kml", "mif", "gdb", "csv", "json", "gpkg");
 
@@ -1196,11 +1210,14 @@ try {
 // Done before the transaction begins, so the customer database never sits
 // idle-in-transaction for however long the wait takes (up to hours).
 $maxJobs = (int)(App::$param['gc2scheduler']['maxJobs'] ?? SchedulerLock::DEFAULT_MAX_JOBS);
-$slot = $schedulerLock->acquireSlot($maxJobs, function (int $max, int $sleep) use (&$report) {
+$slot = $schedulerLock->acquireSlot($maxJobs, function (int $max, int $sleep) use (&$report, $schedulerLock, &$runUuid) {
     print "\nInfo: All {$max} run slots are busy. Waiting {$sleep} seconds...";
     $report[SLEEP] += $sleep;
+    // The run is already registered (right after the job lock), so keep it
+    // from looking stale while it queues.
+    $schedulerLock->heartbeat($runUuid);
 });
-$runUuid = $schedulerLock->startRun((int)$jobId, $db, $runName ?? $safeName, $runPid, $slot, $runHost);
+$schedulerLock->assignSlot($runUuid, $slot);
 print "\nInfo: Run {$runUuid} registered on slot {$slot}";
 
 // Begin transaction
