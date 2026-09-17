@@ -17,6 +17,7 @@ use app\inc\Cache;
 use app\inc\Connection;
 use app\inc\Jwt;
 use app\inc\Route2;
+use app\inc\Session;
 use app\models\Client;
 use app\models\Database;
 use app\models\Session as SessionModel;
@@ -153,7 +154,8 @@ class Signup extends AbstractApi
                 }
                 // Delete the two-factor key
                 Cache::deleteItem($key);
-                (new SessionModel())->start($res['data']['screenname'], $_POST['password'], "public", $res['data']['parentdb']);
+                Session::start();
+                new SessionModel()->start($res['data']['screenname'], $_POST['password'], "public", $res['data']['parentdb']);
                 // Redirect
                 $header = "HX-Redirect: " . urldecode($_POST['redirect_uri']);
                 header($header);
