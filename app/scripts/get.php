@@ -631,6 +631,7 @@ function fetchPart(string $label, string $requestUrl): array
     }
     return $counts;
 }
+
 /**
  * Unions the per-cell/per-page temp tables into the job table, resolves the
  * identifier, removes duplicates and re-sequences gid. Shared by the grid
@@ -704,7 +705,7 @@ function finalizePagedTables(): void
 
     // If source has an "id" fields and identifier is gml:id, it will be mapped to id2 by GMLAS driver
     // We try to rename id2 to id and drop id1
-    $tmpTableName = $workingSchema . ".". $randTableName;
+    $tmpTableName = $workingSchema . "." . $randTableName;
     if ($table->doesColumnExist($tmpTableName, 'id2')['exists']) {
         $sql = "ALTER TABLE $tmpTableName RENAME id2 TO id";
         $res = $table->prepare($sql);
@@ -1602,6 +1603,16 @@ function cleanUp(int $success = 0): void
         $layer->updateLastmodified(schema: $schema, table: $safeName);
         print "\nInfo: Last modified value updated";
         $layer->insertDefaultMeta();
+
+        print "\nInfo: Clear cache for layer $schema.$safeName";
+        $relName = $schema . '.' . $safeName;
+        $patterns = [
+            $db . '_' . md5($relName) . '*',
+            $db . '*_meta_*',
+            $db . '*_legend_*',
+            $db . '*_geometryColumns',
+        ];
+        Cache::deleteByPatterns($patterns);
         if (!empty($snapshotAfterImport)) {
             try {
                 $snap = new \app\models\Snapshot(new \app\inc\Connection(database: $db));
