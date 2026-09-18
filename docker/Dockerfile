@@ -95,6 +95,13 @@ RUN service php${PHP_VERSION}-fpm start || true
 ###############################################################################
 FROM base AS ecw3
 
+# ECW JPEG 2000 SDK 3.3 is third-party software distributed and used
+# under the ECW JPEG 2000 SDK Public Use License Agreement.
+#
+# The original, unmodified SDK distribution is redistributed separately
+# from GC2 and retains its original copyright notices, license terms
+# and disclaimers.
+
 RUN wget https://s3-eu-west-1.amazonaws.com/mapcentia-www/software/libecwj2-3.3-2006-09-06.zip \
     && unzip libecwj2-3.3-2006-09-06.zip \
     && wget https://s3-eu-west-1.amazonaws.com/mapcentia-www/software/libecwj2-3.3-msvc90-fixes.patch \
@@ -115,10 +122,28 @@ RUN wget https://s3-eu-west-1.amazonaws.com/mapcentia-www/software/libecwj2-3.3-
 ###############################################################################
 FROM base AS ecw5
 
-RUN wget https://s3-eu-west-1.amazonaws.com/mapcentia-tmp/ERDAS-ECW_JPEG_2000_SDK-5.3.0.zip &&\
-    unzip ERDAS-ECW_JPEG_2000_SDK-5.3.0.zip &&\
+# ERDAS ECW/JP2 SDK 5.x is proprietary software and is NOT distributed with GC2.
+#
+# To build this stage, obtain the SDK directly from Hexagon and place:
+#
+#   ERDAS-ECW_JPEG_2000_SDK-5.3.0.zip
+#
+# in the vendor/ directory.
+#
+# GC2 is server software. You are responsible for obtaining an appropriate
+# Hexagon license for your intended use. The free Desktop Read-Only license
+# may not permit use of the SDK in a server application.
+#
+# See Hexagon's ECW/JP2 SDK license terms for details.
+
+ARG ECW_SDK_VARIANT
+RUN test -n "$ECW_SDK_VARIANT" || \
+      (echo "ECW_SDK_VARIANT must be specified according to your Hexagon license" && exit 1)
+
+COPY vendor/ERDAS-ECW_JPEG_2000_SDK-5.3.0.zip ERDAS-ECW_JPEG_2000_SDK-5.3.0.zip
+RUN unzip ERDAS-ECW_JPEG_2000_SDK-5.3.0.zip &&\
     mkdir /usr/local/hexagon &&\
-    cp -r ERDAS-ECW_JPEG_2000_SDK-5.3.0/Desktop_Read-Only/* /usr/local/hexagon &&\
+    cp -r ERDAS-ECW_JPEG_2000_SDK-5.3.0/${ECW_SDK_VARIANT}/* /usr/local/hexagon &&\
     ln -s /usr/local/hexagon/lib/x64/release/libNCSEcw.so /usr/local/lib/libNCSEcw.so &&\
     ln -s /usr/local/hexagon/lib/x64/release/libNCSEcw.so.5.3.0 /usr/local/lib/libNCSEcw.so.5.3.0 &&\
     ldconfig
@@ -171,6 +196,13 @@ RUN rm -rf /gdal-$GDAL_VERSION
 # gdal Stage (ecw 5.3)
 ###############################################################################
 FROM ecw5 AS gdal5
+
+# Building this target requires the ERDAS ECW/JP2 SDK 5.3, which is
+# proprietary software and is not distributed with GC2.
+#
+# GC2 is server software. Users are responsible for obtaining the SDK
+# directly from Hexagon and ensuring that their license permits the
+# intended server use.
 
 ENV GDAL_VERSION=3.5.3
 

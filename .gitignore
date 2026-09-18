@@ -85,3 +85,5 @@ public/js/admin/build/
 # Python bytecode
 __pycache__/
 *.pyc
+
+vendor/ERDAS-ECW_JPEG_2000_SDK-*
