@@ -11,6 +11,7 @@ namespace app\inc;
 use app\exceptions\GC2Exception;
 use app\inc\snapshot\SnapshotRef;
 use app\inc\snapshot\SnapshotStorage;
+use app\inc\snapshot\StacCatalogWriter;
 use app\models\Snapshot as SnapshotModel;
 use RuntimeException;
 use Throwable;
@@ -93,6 +94,7 @@ class SnapshotWorker
                 throw new RuntimeException("Relation $schema.$relation does not exist");
             }
             $crs = $srs ?? $this->nativeSrid($schema, $relation);
+            $bbox = $this->bbox($schema, $relation);
             $columns = $this->columns($schema, $relation);
             $schemaVersion = self::schemaVersion($columns);
 
@@ -127,13 +129,23 @@ class SnapshotWorker
                 'schema_version' => $schemaVersion,
                 'schema' => $columns,
                 'crs' => $crs !== null ? "EPSG:$crs" : null,
+                'bbox' => $bbox,
                 'files' => $files,
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
             $written[] = $ref->metadataFile();
 
-            $superseded = $this->snapshot->publish($uuid, $ref->snapshotDate, $this->storage->locationOf($ref), $rowCount, $schemaVersion, $columns, $files);
+            $superseded = $this->snapshot->publish($uuid, $ref->snapshotDate, $this->storage->locationOf($ref), $rowCount, $schemaVersion, $columns, $files, $bbox);
             if ($superseded !== null) {
                 $this->deleteFilesOf($superseded, $ref);
+            }
+            // The catalog describes what is published, so it is rebuilt after
+            // the publish (and after the supersede cleanup) — and best effort:
+            // a snapshot that is in the database and on disk has succeeded even
+            // if its STAC documents could not be written.
+            try {
+                $this->rebuildCatalog();
+            } catch (Throwable $e) {
+                error_log("snapshot $uuid: catalog rebuild failed: " . $e->getMessage());
             }
             return 'succeeded';
         } catch (Throwable $e) {
@@ -167,6 +179,78 @@ class SnapshotWorker
                 @unlink($tmpFile);
             }
         }
+    }
+
+    /**
+     * Rewrites the whole static STAC catalog of this database from
+     * settings.snapshots: one catalog.json at the database root, one
+     * collection.json per relation and one item.json per snapshot, next to the
+     * Parquet files they describe.
+     *
+     * Rebuilt in full rather than patched, so a publish, a supersede and a
+     * catalog written by an older version of this code all converge on the
+     * same documents.
+     */
+    private function rebuildCatalog(): void
+    {
+        $rows = $this->snapshot->listAllPublished();
+        $relations = [];
+        foreach ($rows as $row) {
+            $relations[$row['schema_name'] . '.' . $row['relation_name']] = true;
+        }
+        $documents = (new StacCatalogWriter($this->connection->database))
+            ->build($rows, $this->snapshot->relationMeta(array_keys($relations)));
+        foreach ($documents as $path => $document) {
+            $this->storage->writeAt($this->connection->database, $path, StacCatalogWriter::encode($document));
+        }
+    }
+
+    /**
+     * WGS84 bounding box of the relation's first geometry column
+     * ([minx, miny, maxx, maxy]), or null when it has no geometry column, no
+     * rows, or the extent cannot be computed (an unknown SRID, say). Best
+     * effort: a missing footprint only costs the STAC Item its geometry.
+     */
+    private function bbox(string $schema, string $relation): ?array
+    {
+        $column = $this->geometryColumn($schema, $relation);
+        if ($column === null) {
+            return null;
+        }
+        try {
+            // Quoted here rather than through doubleQuoteQualifiedName(), which
+            // would read a '.' in a column name as a schema separator.
+            $quoted = '"' . str_replace('"', '""', $column) . '"';
+            $sql = "SELECT ST_XMin(e) AS minx, ST_YMin(e) AS miny, ST_XMax(e) AS maxx, ST_YMax(e) AS maxy
+                    FROM (SELECT ST_Extent(ST_Transform($quoted, 4326)) e
+                          FROM " . $this->model->doubleQuoteQualifiedName("$schema.$relation") . ") s";
+            $res = $this->model->prepare($sql);
+            $this->model->execute($res);
+            $row = $this->model->fetchRow($res);
+        } catch (Throwable $e) {
+            error_log("snapshot: could not compute bbox of $schema.$relation: " . $e->getMessage());
+            return null;
+        }
+        if ($row === null || $row['minx'] === null) {
+            return null; // empty relation: no extent
+        }
+        return [(float)$row['minx'], (float)$row['miny'], (float)$row['maxx'], (float)$row['maxy']];
+    }
+
+    /**
+     * Name of the relation's first geometry column, or null when it has none.
+     * Same lookup as nativeSrid(): geometry_columns covers tables, views and
+     * materialized views alike.
+     */
+    private function geometryColumn(string $schema, string $relation): ?string
+    {
+        $sql = "SELECT f_geometry_column FROM geometry_columns
+                WHERE f_table_schema = :schema AND f_table_name = :relation
+                ORDER BY f_geometry_column LIMIT 1";
+        $res = $this->model->prepare($sql);
+        $this->model->execute($res, ['schema' => $schema, 'relation' => $relation]);
+        $column = $res->fetchColumn();
+        return $column === false || $column === null ? null : (string)$column;
     }
 
     /**

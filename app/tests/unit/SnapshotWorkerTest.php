@@ -130,6 +130,14 @@ class SnapshotWorkerTest extends Unit
         $this->assertSame('file://' . $this->storeDir . '/' . $partition, $row['s3_path']);
 
         $this->assertFileDoesNotExist($this->tmpDir . '/' . $uuid . '.parquet', 'tmp file is removed');
+
+        // WGS84 footprint of the three points around 500000 6200000 in EPSG:25832.
+        $this->assertCount(4, $meta['bbox']);
+        $this->assertGreaterThan(8.0, $meta['bbox'][0]);
+        $this->assertLessThan(10.0, $meta['bbox'][2]);
+        $this->assertGreaterThan(55.0, $meta['bbox'][1]);
+        $this->assertLessThan(57.0, $meta['bbox'][3]);
+        $this->assertEquals($meta['bbox'], json_decode($row['bbox'], true), 'the row carries the same footprint as metadata.json');
     }
 
     public function testViewSnapshotWithRequestedSrsReportsThatCrs(): void
@@ -177,6 +185,7 @@ class SnapshotWorkerTest extends Unit
         $meta = json_decode(file_get_contents($this->storeDir . '/' . $partition . 'metadata-' . $uuid . '.json'), true);
         $this->assertSame(2, $meta['row_count']);
         $this->assertNull($meta['crs']);
+        $this->assertNull($meta['bbox'], 'a relation without a geometry column has no footprint');
     }
 
     public function testMissingRelationFailsRowWithError(): void
@@ -219,6 +228,80 @@ class SnapshotWorkerTest extends Unit
         $this->assertFileDoesNotExist($this->storeDir . '/' . $partition . 'data-' . $first . '.parquet', 'superseded files are removed');
         $this->assertFileDoesNotExist($this->storeDir . '/' . $partition . 'metadata-' . $first . '.json');
         $this->assertFileExists($this->storeDir . '/' . $partition . 'data-' . $second . '.parquet');
+
+        $collection = $this->json($this->catalogDir() . 'schema=snap/relation=points/collection.json');
+        $items = array_values(array_filter($collection['links'], fn($l) => $l['rel'] === 'item'));
+        $this->assertCount(1, $items, 'a superseded snapshot leaves the catalog');
+        $this->assertSame("./_gc2_snapshot_date=$day/item.json", $items[0]['href']);
+        $item = $this->json($this->catalogDir() . "schema=snap/relation=points/_gc2_snapshot_date=$day/item.json");
+        $this->assertSame("./data-$second.parquet", $item['assets']['data']['href'], 'the item points at the surviving file');
+    }
+
+    public function testCatalogIsWrittenAfterASuccessfulSnapshot(): void
+    {
+        $uuid = $this->snapshot()->create('snap', 'points', null, self::$database);
+        $summary = $this->worker()->processPending(5);
+        $this->assertSame(1, $summary['succeeded'], 'error: ' . ($this->snapshot()->get($uuid)['data']['error'] ?? ''));
+        $day = $this->snapshot()->get($uuid)['data']['snapshot_date'];
+
+        $catalog = $this->json($this->catalogDir() . 'catalog.json');
+        $this->assertSame('Catalog', $catalog['type']);
+        $this->assertSame(self::$database, $catalog['id']);
+        $this->assertContains(
+            './schema=snap/relation=points/collection.json',
+            array_column($catalog['links'], 'href'),
+            'the catalog links the relation relatively'
+        );
+
+        $collection = $this->json($this->catalogDir() . 'schema=snap/relation=points/collection.json');
+        $this->assertSame('Collection', $collection['type']);
+        $this->assertSame('snap.points', $collection['id']);
+        $this->assertSame([[$day . 'T00:00:00Z', $day . 'T00:00:00Z']], $collection['extent']['temporal']['interval']);
+
+        $item = $this->json($this->catalogDir() . "schema=snap/relation=points/_gc2_snapshot_date=$day/item.json");
+        $this->assertSame('Feature', $item['type']);
+        $this->assertSame("snap.points/$day", $item['id']);
+        $this->assertSame($uuid, $item['properties']['gc2:snapshot_id']);
+        $this->assertSame("./data-$uuid.parquet", $item['assets']['data']['href']);
+        $this->assertFileExists(dirname($this->catalogDir() . "schema=snap/relation=points/_gc2_snapshot_date=$day/item.json") . '/data-' . $uuid . '.parquet', 'the asset href resolves next to the item');
+        $this->assertSame('GeoParquet', $item['assets']['data']['title']);
+        $this->assertCount(4, $item['bbox']);
+        $this->assertSame($item['bbox'], $collection['extent']['spatial']['bbox'][0]);
+        $this->assertSame('Polygon', $item['geometry']['type']);
+    }
+
+    public function testCatalogItemOfARelationWithoutGeometryHasNoFootprint(): void
+    {
+        $uuid = $this->snapshot()->create('snap', 'plain', null, self::$database);
+        $this->assertSame(1, $this->worker()->processPending(5)['succeeded']);
+        $day = $this->snapshot()->get($uuid)['data']['snapshot_date'];
+
+        $item = $this->json($this->catalogDir() . "schema=snap/relation=plain/_gc2_snapshot_date=$day/item.json");
+        $this->assertNull($item['geometry']);
+        $this->assertArrayNotHasKey('bbox', $item);
+        $this->assertSame('Parquet', $item['assets']['data']['title']);
+
+        $collection = $this->json($this->catalogDir() . 'schema=snap/relation=plain/collection.json');
+        $this->assertSame([[-180, -90, 180, 90]], $collection['extent']['spatial']['bbox']);
+        $this->assertSame('snap.plain', $collection['title'], 'a relation without layer metadata is titled by its name');
+    }
+
+    public function testFailedRunWritesNoCatalog(): void
+    {
+        $this->snapshot()->create('snap', 'does_not_exist', null, self::$database);
+        $this->assertSame(1, $this->worker()->processPending(5)['failed']);
+        $this->assertFileDoesNotExist($this->catalogDir() . 'catalog.json', 'the catalog is only rebuilt after a publish');
+    }
+
+    private function catalogDir(): string
+    {
+        return $this->storeDir . '/unit/' . self::$database . '/';
+    }
+
+    private function json(string $path): array
+    {
+        $this->assertFileExists($path);
+        return json_decode(file_get_contents($path), true);
     }
 
     public function testFailedRunIsNotPublishedAndLeavesNoFiles(): void
