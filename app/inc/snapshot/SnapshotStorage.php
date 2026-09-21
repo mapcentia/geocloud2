@@ -35,6 +35,14 @@ interface SnapshotStorage
 
     public function write(SnapshotRef $ref, string $file, string $contents): void;
 
+    /**
+     * Writes a file that belongs to the database rather than to one snapshot —
+     * the STAC catalog documents. $relativePath is relative to the database
+     * root (e.g. "catalog.json", "schema=X/relation=Y/collection.json"); the
+     * storage still owns the prefix and the database layout.
+     */
+    public function writeAt(string $database, string $relativePath, string $contents): void;
+
     /** Deletes one file; a missing file is not an error. */
     public function delete(SnapshotRef $ref, string $file): void;
 

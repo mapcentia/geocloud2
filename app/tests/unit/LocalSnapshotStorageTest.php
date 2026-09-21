@@ -104,6 +104,42 @@ class LocalSnapshotStorageTest extends Unit
         }
     }
 
+    public function testWriteAtAddressesThePrefixedDatabaseRootNotASnapshotDirectory(): void
+    {
+        $this->storage->writeAt('mydb', 'catalog.json', '{"type":"Catalog"}');
+        $this->storage->writeAt('mydb', 'schema=geo/relation=roads/collection.json', '{"type":"Collection"}');
+
+        $this->assertStringEqualsFile($this->root . '/unit/mydb/catalog.json', '{"type":"Catalog"}');
+        $this->assertStringEqualsFile($this->root . '/unit/mydb/schema=geo/relation=roads/collection.json', '{"type":"Collection"}');
+
+        (new LocalSnapshotStorage($this->root, ''))->writeAt('mydb', 'catalog.json', 'no prefix');
+        $this->assertStringEqualsFile($this->root . '/mydb/catalog.json', 'no prefix');
+    }
+
+    /**
+     * writeAt takes a whole relative path, so the traversal guard has to allow
+     * '/' in it while still refusing to leave the database root.
+     */
+    public function testWriteAtRejectsTraversingDatabaseOrPath(): void
+    {
+        foreach (['..', 'my/db', 'my\\db'] as $database) {
+            try {
+                $this->storage->writeAt($database, 'catalog.json', 'x');
+                $this->fail("expected InvalidArgumentException for database '$database'");
+            } catch (InvalidArgumentException) {
+                $this->addToAssertionCount(1);
+            }
+        }
+        foreach (['../other/catalog.json', '/etc/passwd', 'schema=geo\\x.json', ''] as $path) {
+            try {
+                $this->storage->writeAt('mydb', $path, 'x');
+                $this->fail("expected InvalidArgumentException for path '$path'");
+            } catch (InvalidArgumentException) {
+                $this->addToAssertionCount(1);
+            }
+        }
+    }
+
     public function testNoDownloadUrlForLocalStorage(): void
     {
         $this->storage->write($this->ref, 'x.bin', 'x');

@@ -59,6 +59,16 @@ class S3SnapshotStorageTest extends Unit
         $this->assertSame('bytes=100-102', $this->mock->getLastCommand()['Range']);
     }
 
+    public function testWriteAtPutsTheObjectAtThePrefixedDatabaseRoot(): void
+    {
+        $this->mock->append(new Result([]));
+        $this->storage->writeAt('mydb', 'schema=geo/relation=roads/collection.json', '{"type":"Collection"}');
+
+        $cmd = $this->mock->getLastCommand();
+        $this->assertSame('gc2-parquet', $cmd['Bucket']);
+        $this->assertSame('prod/mydb/schema=geo/relation=roads/collection.json', $cmd['Key']);
+    }
+
     public function testDownloadUrlIsPresignedForBucketAndKey(): void
     {
         $url = $this->storage->downloadUrl($this->ref, 'data-abc-123.parquet', 300);

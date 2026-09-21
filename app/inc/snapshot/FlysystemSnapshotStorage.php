@@ -38,13 +38,45 @@ abstract class FlysystemSnapshotStorage implements SnapshotStorage
         // controller's regex and the catalog already rule this out; a backend
         // must not depend on a caller upstream getting it right.
         foreach (['database' => $ref->database, 'schema' => $ref->schema, 'relation' => $ref->relation, 'snapshotDate' => $ref->snapshotDate, 'file' => $file] as $name => $segment) {
-            if (str_contains($segment, '/') || str_contains($segment, '\\') || str_contains($segment, '..')) {
-                throw new InvalidArgumentException("Snapshot key segment '$name' must not contain '/', '\\' or '..'");
-            }
+            $this->assertSafeSegment($name, $segment);
         }
+        return $this->databaseRoot($ref->database)
+            . "schema={$ref->schema}/relation={$ref->relation}/_gc2_snapshot_date={$ref->snapshotDate}/$file";
+    }
+
+    /**
+     * "{prefix}/{database}/{relativePath}": the key of a file that belongs to
+     * the database as a whole rather than to one snapshot — the STAC catalog
+     * documents, which sit next to (and above) the snapshot directories.
+     * Unlike key(), $relativePath may contain '/' (it spans directories), but
+     * it must stay inside the database root.
+     */
+    public function keyAt(string $database, string $relativePath): string
+    {
+        $this->assertSafeSegment('database', $database);
+        if ($relativePath === '' || str_contains($relativePath, '\\') || str_contains($relativePath, '..') || str_starts_with($relativePath, '/')) {
+            throw new InvalidArgumentException("Snapshot path '$relativePath' must be relative and must not contain '\\' or '..'");
+        }
+        return $this->databaseRoot($database) . $relativePath;
+    }
+
+    public function writeAt(string $database, string $relativePath, string $contents): void
+    {
+        $this->filesystem->write($this->keyAt($database, $relativePath), $contents);
+    }
+
+    /** "{prefix}/{database}/", prefix omitted when empty. */
+    private function databaseRoot(string $database): string
+    {
         $prefix = trim($this->prefix, '/');
-        return ($prefix !== '' ? $prefix . '/' : '')
-            . "{$ref->database}/schema={$ref->schema}/relation={$ref->relation}/_gc2_snapshot_date={$ref->snapshotDate}/$file";
+        return ($prefix !== '' ? $prefix . '/' : '') . "$database/";
+    }
+
+    private function assertSafeSegment(string $name, string $segment): void
+    {
+        if (str_contains($segment, '/') || str_contains($segment, '\\') || str_contains($segment, '..')) {
+            throw new InvalidArgumentException("Snapshot key segment '$name' must not contain '/', '\\' or '..'");
+        }
     }
 
     public function exists(SnapshotRef $ref, string $file): bool
