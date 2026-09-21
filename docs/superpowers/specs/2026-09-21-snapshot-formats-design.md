@@ -106,7 +106,10 @@ if no result has status produced: throw RuntimeException("no requested format co
 
 `export(string $schema, string $relation, ?int $srs, SnapshotFormat $format, string $tmpFile)`
 builds the ogr2ogr line from the registry (`-f {driver}`, `ogrArgs`,
-`-t_srs` when `srs` set, `-preserve_fid`, the `-sql SELECT * FROM …`). An
+`-t_srs` when `srs` set, `-preserve_fid`, the `-sql SELECT * FROM …`).
+`-nln {relation}` names the layer inside the file after the relation for every
+format: with a `-sql` source GDAL would otherwise call it `sql_statement`,
+which a FlatGeobuf reader shows to the user (Parquet has no layer name). An
 ogr2ogr failure for one format fails the snapshot (it is an error, not a
 "cannot be produced" case). Temp files of every format are removed in the
 `finally`.
@@ -192,6 +195,30 @@ API:
   Parquet, `/data/flatgeobuf` answers with `application/flatgeobuf`, HEAD +
   Range work on it, `/data/geojson` → 400, metadata `formats` carries both
   hrefs.
+
+## 8a. Deviations recorded during implementation (Tasks 1-3)
+
+- `ogrArgs` is a list of already split arguments
+  (`['-mapFieldType', 'Time=String,Binary=String']`) rather than one string, so
+  the worker escapes each element instead of interpolating a pre-joined blob
+  into the shell. Same resulting command line.
+- `SnapshotFormat::defaults()` treats a configured empty list as "nothing
+  configured" and returns `["parquet"]`; a request-level `formats: []` is still
+  a 400 (§2).
+- `Snapshot::publish()` derives the per-format results from its `$files` list
+  when a caller passes none, so a published row never renders its *requested*
+  list as if it were the outcome. Only the legacy single-format callers hit it.
+- `Snapshot::presentFormats()` normalises key order and casts `size_bytes`,
+  because jsonb does not preserve the key order the worker wrote.
+- The worker treats a spatial column in `geography_columns` as geometry for the
+  skip rule (ogr2ogr exports geography fine); the footprint query casts such a
+  column to geometry. `metadata.json`'s `crs` still comes from
+  `geometry_columns` only, so a geography relation reports `crs: null` while
+  carrying a bbox — as before this change.
+- A row whose stored `formats` names only ids the registry does not know fails
+  with "no known output format requested: …" instead of falling back to the
+  server default. The fallback applies only to a row with no list at all (one
+  queued before the column existed).
 
 ## 9. Follow-ups (not in scope)
 

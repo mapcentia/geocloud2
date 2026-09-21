@@ -54,6 +54,10 @@ class SnapshotWorkerTest extends Unit
             $m->execQuery("CREATE MATERIALIZED VIEW snap.points_mv AS SELECT * FROM snap.points", "PDO", "transaction");
             $m->execQuery("CREATE TABLE snap.plain (id serial PRIMARY KEY, label text)", "PDO", "transaction");
             $m->execQuery("INSERT INTO snap.plain (label) VALUES ('a'), ('b')", "PDO", "transaction");
+            $m->execQuery("CREATE TABLE snap.geog (id serial PRIMARY KEY, label text, the_geog geography(Point, 4326))", "PDO", "transaction");
+            $m->execQuery("INSERT INTO snap.geog (label, the_geog) VALUES
+                ('a', ST_SetSRID(ST_MakePoint(9.0, 55.5), 4326)::geography),
+                ('b', ST_SetSRID(ST_MakePoint(9.5, 56.0), 4326)::geography)", "PDO", "transaction");
         }
         $base = sys_get_temp_dir() . '/snapshot_worker_test_' . bin2hex(random_bytes(4));
         $this->storeDir = $base . '/store';
@@ -426,7 +430,7 @@ class SnapshotWorkerTest extends Unit
         exec('ogrinfo -so ' . escapeshellarg($fgb) . ' 2>&1', $out, $code);
         $this->assertSame(0, $code, 'ogrinfo reads the FlatGeobuf file: ' . implode("\n", $out));
         $this->assertNotEmpty(preg_grep('/using driver `FlatGeobuf\x27 successful/', $out), 'GDAL recognises the file as FlatGeobuf: ' . implode("\n", $out));
-        $this->assertNotEmpty(preg_grep('/^1: /', $out), 'ogrinfo reports a layer: ' . implode("\n", $out));
+        $this->assertNotEmpty(preg_grep('/^1: points\b/', $out), 'the layer is named after the relation, not after the -sql statement: ' . implode("\n", $out));
 
         $this->assertSame([], glob($this->tmpDir . '/' . $uuid . '.*'), 'no temp file of any format is left behind');
     }
@@ -470,8 +474,50 @@ class SnapshotWorkerTest extends Unit
         $this->assertStringContainsString('relation has no geometry column', $row['error'], 'the error says why each format was skipped');
         $this->assertNull($row['published']);
         $this->assertNull($row['s3_path']);
-        $this->assertSame([], $this->snapshot()->listPublished('snap', 'plain_flatgeobuf_only'));
+        $this->assertNotContains($uuid, array_column($this->snapshot()->listPublished('snap', 'plain'), 'uuid'), 'a failed run is not visible');
         $this->assertSame([], glob($this->tmpDir . '/' . $uuid . '.*'));
+    }
+
+    /**
+     * A geography column is a geometry column as far as an export is concerned:
+     * ogr2ogr writes it, so a format that requires geometry must not be skipped
+     * for it (geography_columns, not geometry_columns, is where it is listed).
+     */
+    public function testGeographyRelationCountsAsSpatial(): void
+    {
+        $uuid = $this->snapshot()->create('snap', 'geog', null, self::$database, ['flatgeobuf']);
+        $day = gmdate('Y-m-d'); // captured before the run so a midnight UTC rollover can't flake this
+        $summary = $this->worker()->processPending(5);
+        $this->assertSame(1, $summary['succeeded'], 'error: ' . ($this->snapshot()->get($uuid)['data']['error'] ?? ''));
+
+        $dir = $this->storeDir . '/unit/' . self::$database . '/schema=snap/relation=geog/_gc2_snapshot_date=' . $day . '/';
+        $fgb = $dir . 'data-' . $uuid . '.fgb';
+        $this->assertFileExists($fgb);
+        $row = $this->snapshot()->get($uuid)['data'];
+        $this->assertSame(
+            [['format' => 'flatgeobuf', 'status' => 'produced', 'file' => 'data-' . $uuid . '.fgb', 'size_bytes' => filesize($fgb), 'media_type' => 'application/flatgeobuf']],
+            Snapshot::presentFormats($row)
+        );
+
+        $meta = json_decode(file_get_contents($dir . 'metadata-' . $uuid . '.json'), true);
+        $this->assertCount(4, $meta['bbox'], 'a geography column still yields a footprint');
+        $this->assertGreaterThan(8.0, $meta['bbox'][0]);
+        $this->assertLessThan(10.0, $meta['bbox'][2]);
+    }
+
+    /**
+     * A row asking only for formats this GC2 does not know is a mistake, not an
+     * invitation to produce the server default instead.
+     */
+    public function testRowRequestingOnlyUnknownFormatsFails(): void
+    {
+        $uuid = $this->snapshot()->create('snap', 'points', null, self::$database, ['geopackage']);
+        $this->assertSame(1, $this->worker()->processPending(5)['failed']);
+
+        $row = $this->snapshot()->get($uuid)['data'];
+        $this->assertSame('failed', $row['status']);
+        $this->assertStringContainsString('no known output format requested: geopackage', $row['error']);
+        $this->assertNull($row['published']);
     }
 
     private function catalogDir(): string

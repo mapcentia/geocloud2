@@ -109,11 +109,11 @@ class SnapshotWorker
             }
             // Everything that describes the relation rather than one output
             // file is read once, before the first export.
-            $geometryColumn = $this->geometryColumn($schema, $relation);
+            $spatialColumn = $this->spatialColumn($schema, $relation);
             $crs = $srs ?? $this->nativeSrid($schema, $relation);
             // Measured before the export and on a separate connection, so on a
             // live table it is approximate — the same caveat as $rowCount below.
-            $bbox = $this->bbox($schema, $relation, $geometryColumn);
+            $bbox = $this->bbox($schema, $relation, $spatialColumn);
             $columns = $this->columns($schema, $relation);
             $schemaVersion = self::schemaVersion($columns);
 
@@ -124,7 +124,7 @@ class SnapshotWorker
             $files = [];
             $results = [];
             foreach ($this->requestedFormats($row) as $format) {
-                if ($format->requiresGeometry && $geometryColumn === null) {
+                if ($format->requiresGeometry && $spatialColumn === null) {
                     $results[] = ['format' => $format->id, 'status' => 'skipped', 'reason' => self::NO_GEOMETRY_REASON];
                     continue;
                 }
@@ -225,11 +225,12 @@ class SnapshotWorker
     }
 
     /**
-     * The formats this row asks for, in request order. A row without a usable
-     * list — one written before the formats column existed — falls back to the
-     * server default, so an old queued row still produces something. An id the
-     * registry no longer knows is dropped with a log line rather than failing
-     * the run over a format nobody can produce any more.
+     * The formats this row asks for, in request order. A row with no list at
+     * all — one written before the formats column existed — falls back to the
+     * server default, so an old queued row still produces something. A row
+     * that does name formats is answered with those: an id the registry no
+     * longer knows is dropped with a log line, but if that leaves nothing the
+     * run fails, rather than quietly producing a format nobody asked for.
      *
      * @param array<string, mixed> $row
      * @return array<int, SnapshotFormat>
@@ -238,8 +239,10 @@ class SnapshotWorker
     {
         $stored = $row['formats'] ?? null;
         $stored = is_string($stored) ? json_decode($stored, true) : $stored;
+        $stored = is_array($stored) ? $stored : [];
         $ids = [];
-        foreach (is_array($stored) ? $stored : [] as $entry) {
+        $unknown = [];
+        foreach ($stored as $entry) {
             // Strings while the row waits; objects if it is being re-run after
             // a publish (a stale reclaim), in which case the format is named
             // the same way.
@@ -249,9 +252,14 @@ class SnapshotWorker
             }
             if (!SnapshotFormat::has($id)) {
                 error_log("snapshot {$row['uuid']}: unknown format '$id' ignored");
+                $unknown[] = $id;
                 continue;
             }
             $ids[] = $id;
+        }
+        if ($ids === [] && $stored !== []) {
+            throw new RuntimeException("no known output format requested: " . implode(', ', $unknown)
+                . "; known formats are " . implode(', ', SnapshotFormat::ids()));
         }
         if ($ids === []) {
             $ids = SnapshotFormat::defaults();
@@ -306,11 +314,13 @@ class SnapshotWorker
      * rows, or the extent cannot be computed (an unknown SRID, say). Best
      * effort: a missing footprint only costs the STAC Item its geometry.
      *
-     * $column is the relation's geometry column as geometryColumn() found it,
+     * $column is the relation's spatial column as spatialColumn() found it,
      * passed in because the caller has to know about it anyway (a format that
      * requires geometry is skipped without one).
+     *
+     * @param array{column:string, geography:bool}|null $column
      */
-    private function bbox(string $schema, string $relation, ?string $column): ?array
+    private function bbox(string $schema, string $relation, ?array $column): ?array
     {
         if ($column === null) {
             return null;
@@ -318,9 +328,12 @@ class SnapshotWorker
         try {
             // Quoted here rather than through doubleQuoteQualifiedName(), which
             // would read a '.' in a column name as a schema separator.
-            $quoted = '"' . str_replace('"', '""', $column) . '"';
+            $quoted = '"' . str_replace('"', '""', $column['column']) . '"';
+            // ST_Transform() takes geometry, so a geography column is cast; it
+            // is always lon/lat, so the transform is then a no-op.
+            $expression = $column['geography'] ? "($quoted)::geometry" : $quoted;
             $sql = "SELECT ST_XMin(e) AS minx, ST_YMin(e) AS miny, ST_XMax(e) AS maxx, ST_YMax(e) AS maxy
-                    FROM (SELECT ST_Extent(ST_Transform($quoted, 4326)) e
+                    FROM (SELECT ST_Extent(ST_Transform($expression, 4326)) e
                           FROM " . $this->model->doubleQuoteQualifiedName("$schema.$relation") . ") s";
             $res = $this->model->prepare($sql);
             $this->model->execute($res);
@@ -336,19 +349,34 @@ class SnapshotWorker
     }
 
     /**
-     * Name of the relation's first geometry column, or null when it has none.
-     * Same lookup as nativeSrid(): geometry_columns covers tables, views and
-     * materialized views alike.
+     * The relation's first spatial column — geometry or geography — or null
+     * when it has neither. Both views cover tables, views and materialized
+     * views alike, and geometry columns are preferred over geography ones so
+     * the footprint below is measured on the same column as before geography
+     * was considered at all.
+     *
+     * A geography relation counts as spatial: ogr2ogr exports it happily, so a
+     * format that requires geometry must not be skipped for it.
+     *
+     * @return array{column:string, geography:bool}|null
      */
-    private function geometryColumn(string $schema, string $relation): ?string
+    private function spatialColumn(string $schema, string $relation): ?array
     {
-        $sql = "SELECT f_geometry_column FROM geometry_columns
-                WHERE f_table_schema = :schema AND f_table_name = :relation
-                ORDER BY f_geometry_column LIMIT 1";
+        $sql = "SELECT column_name, geography FROM (
+                    SELECT f_geometry_column AS column_name, false AS geography FROM geometry_columns
+                    WHERE f_table_schema = :schema AND f_table_name = :relation
+                    UNION ALL
+                    SELECT f_geography_column, true FROM geography_columns
+                    WHERE f_table_schema = :schema AND f_table_name = :relation
+                ) c
+                ORDER BY geography, column_name LIMIT 1";
         $res = $this->model->prepare($sql);
         $this->model->execute($res, ['schema' => $schema, 'relation' => $relation]);
-        $column = $res->fetchColumn();
-        return $column === false || $column === null ? null : (string)$column;
+        $row = $this->model->fetchRow($res);
+        if ($row === null || ($row['column_name'] ?? null) === null) {
+            return null;
+        }
+        return ['column' => (string)$row['column_name'], 'geography' => filter_var($row['geography'], FILTER_VALIDATE_BOOLEAN)];
     }
 
     /**
@@ -374,7 +402,8 @@ class SnapshotWorker
     /**
      * Exports the relation to $tmpFile in one format with ogr2ogr. The driver
      * and its arguments come from the format registry, so a new format needs
-     * nothing here. Reprojects only when $srs is given.
+     * nothing here. The layer inside the file is named after the relation;
+     * reprojects only when $srs is given.
      */
     private function export(string $schema, string $relation, ?int $srs, SnapshotFormat $format, string $tmpFile): void
     {
@@ -386,7 +415,10 @@ class SnapshotWorker
             . ' -f ' . escapeshellarg($format->driver) . ' ' . escapeshellarg($tmpFile)
             . ($srs !== null ? ' -t_srs ' . escapeshellarg("EPSG:$srs") : '')
             . ' -preserve_fid '
-            . escapeshellarg($pg)
+            // Without -nln the layer is named after the -sql statement
+            // ("sql_statement"), which a FlatGeobuf reader shows to the user.
+            . ' -nln ' . escapeshellarg($relation)
+            . ' ' . escapeshellarg($pg)
             . ' -sql ' . escapeshellarg("SELECT * FROM {$q($schema)}.{$q($relation)}")
             . ' 2>&1';
         $out = [];

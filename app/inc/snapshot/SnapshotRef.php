@@ -10,6 +10,9 @@ namespace app\inc\snapshot;
 /**
  * Logical identity of one snapshot. Only the storage layer turns this into a
  * physical key or path.
+ *
+ * The names of the data files are not here: they depend on the output format,
+ * and SnapshotFormat::fileName() is the only place that knows them.
  */
 final readonly class SnapshotRef
 {
@@ -20,11 +23,6 @@ final readonly class SnapshotRef
         public string $snapshotDate,
         public string $snapshotId,
     ) {
-    }
-
-    public function dataFile(): string
-    {
-        return "data-{$this->snapshotId}.parquet";
     }
 
     public function metadataFile(): string
