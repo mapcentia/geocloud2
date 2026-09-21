@@ -322,4 +322,17 @@ class StacCatalogWriterTest extends Unit
         $this->assertStringNotContainsString('\\/', $json);
         $this->assertSame(['href' => './a/b.json'], json_decode($json, true));
     }
+    public function testCrsFallbackPicksTheAlphabeticallyFirstGeometryColumnLikeTheWorker(): void
+    {
+        // Declared order has the 25832 column first; the worker's bbox/metadata use
+        // geometry_columns ORDER BY f_geometry_column, i.e. "a_geom" (4326) wins.
+        $row = $this->row(['srs' => null, 'relation_schema' => [
+            ['column_name' => 'z_geom', 'data_type' => 'geometry(Point,25832)'],
+            ['column_name' => 'a_geom', 'data_type' => 'geometry(Point,4326)'],
+        ]]);
+        $docs = (new StacCatalogWriter('db'))->build([$row], []);
+        $item = $docs[array_values(array_filter(array_keys($docs), fn($k) => str_ends_with($k, '/item.json')))[0]];
+        $this->assertSame('EPSG:4326', $item['properties']['proj:code']);
+    }
+
 }

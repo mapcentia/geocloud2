@@ -302,8 +302,13 @@ final class StacCatalogWriter
         if ($srs !== null) {
             return 'EPSG:' . (int)$srs;
         }
-        foreach ($this->decode($row['relation_schema'] ?? null) as $column) {
-            $type = is_array($column) ? strtolower(trim((string)($column['data_type'] ?? ''))) : '';
+        // Same column choice as SnapshotWorker::nativeSrid()/geometryColumn()
+        // (geometry_columns ORDER BY f_geometry_column): alphabetical by name,
+        // so the CRS stated here is the one the bbox and metadata.json used.
+        $columns = array_values(array_filter($this->decode($row['relation_schema'] ?? null), 'is_array'));
+        usort($columns, fn(array $a, array $b) => strcmp((string)($a['column_name'] ?? ''), (string)($b['column_name'] ?? '')));
+        foreach ($columns as $column) {
+            $type = strtolower(trim((string)($column['data_type'] ?? '')));
             if (!str_starts_with($type, 'geometry') && !str_starts_with($type, 'geography')) {
                 continue;
             }
