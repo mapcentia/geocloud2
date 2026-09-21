@@ -60,6 +60,9 @@ class App
             "localPath" => "",
             "download" => "proxy",
             "urlTtl" => 300,
+            // Output formats produced when a request does not name any: ids from
+            // SnapshotFormat (parquet, flatgeobuf).
+            "formats" => ["parquet"],
         ],
 
         // MapCache config
