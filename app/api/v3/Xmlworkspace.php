@@ -114,7 +114,7 @@ class Xmlworkspace extends Controller
                 echo "            <CodedValues xsi:type='esri:ArrayOfCodedValue'>";
                 foreach ($field["restriction"] as $r) {
                     echo "                <CodedValue xsi:type='esri:CodedValue'>";
-                    echo "                    <Name>{$r["alias"]}</Name>";
+                    echo "                    <Name>" . htmlspecialchars($r["alias"], ENT_XML1 | ENT_QUOTES, 'UTF-8') ."</Name>";
                     echo "                    <Code xsi:type='xs:int'>{$r["value"]}</Code>";
                     echo "                </CodedValue>";
                 }
@@ -233,7 +233,7 @@ class Xmlworkspace extends Controller
                 echo "            <CodedValues xsi:type='esri:ArrayOfCodedValue'>";
                 foreach ($field["restriction"] as $r) {
                     echo "                <CodedValue xsi:type='esri:CodedValue'>";
-                    echo "                    <Name>{$r["alias"]}</Name>";
+                    echo "                    <Name>" . htmlspecialchars($r["alias"], ENT_XML1 | ENT_QUOTES, 'UTF-8') ."</Name>";
                     echo "                    <Code xsi:type='xs:int'>{$r["value"]}</Code>";
                     echo "                </CodedValue>";
                 }
