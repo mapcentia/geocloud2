@@ -406,7 +406,10 @@ Written next to the data they describe, under the database root:
 Every `href` is **relative to the document that contains it** (`./catalog.json`,
 `../../catalog.json`, `./_gc2_snapshot_date=D/item.json`, `./data-<uuid>.parquet`),
 so the same bytes work on S3, on local disk and behind the read API without the
-writer knowing any base URL.
+writer knowing any base URL. For the same reason there are **no `self` links**:
+a document cannot state an absolute URL it does not know. Links are
+`root`/`child` (catalog), `root`/`parent`/`item` (collection) and
+`root`/`parent`/`collection` (item).
 
 - **Catalog**: one `child` link per relation with at least one visible snapshot,
   sorted by schema then relation, titled like the collection.
@@ -415,17 +418,38 @@ writer knowing any base URL.
   the only place `f_table_schema`/`f_table_name` exist) — `f_table_title`,
   `f_table_abstract`, `tags` — falling back to `X.Y` and
   `Snapshots of X.Y` when there is no row or the value is blank. A non-spatial
-  relation never has a row, so it always falls back. `license` is
-  `proprietary`. `extent.spatial` is the union of the items' bboxes, or the
+  relation never has a row, so it always falls back. `license` is `other`
+  (GC2 knows nothing about the licence of the data it snapshots).
+  `extent.spatial` is the union of the items' bboxes, or the
   whole world when no snapshot has one; `extent.temporal` runs oldest to newest
-  snapshot date. `summaries` carries `gc2:schema_version` and, when any
-  snapshot has an `srs`, `proj:epsg`. `item` links are newest first.
+  snapshot date. `summaries` carries `gc2:schema_version` and `proj:code`, but
+  only the keys that have at least one value, and the member is omitted
+  entirely when neither has. `keywords` keeps only string tags. `item` links are
+  newest first.
 - **Item**: `geometry` is the bbox as a closed WGS84 polygon (`null`, and no
   `bbox` member at all, when the relation has no footprint); `properties`
-  carries `datetime` (the snapshot date at midnight UTC), `gc2:row_count`,
-  `gc2:schema_version`, `gc2:snapshot_id` and `proj:epsg` when set. Assets:
+  carries `datetime` (the snapshot date at midnight UTC), `gc2:snapshot_id`,
+  `gc2:row_count` and `gc2:schema_version` when known (omitted rather than
+  null) and `proj:code` when a CRS is known. Assets:
   `data` (the `.parquet` entry of the row's `files`, `application/vnd.apache.parquet`,
   titled `GeoParquet` or `Parquet`) and `metadata` (`metadata-<uuid>.json`).
+
+### CRS
+
+The `srs` column is only the CRS the *request* asked to reproject to, so it is
+null for the common case; the CRS a reader needs is then the one the geometry
+column declares. The effective CRS is therefore `srs` when set, else the SRID
+parsed out of the first geometry (or geography) column's type in
+`relation_schema` (`geometry(Point,25832)` → 25832). A column typed without an
+SRID (a bare `geometry`) declares nothing and no CRS is reported rather than a
+guessed one.
+
+It is published as **`proj:code`** (`"EPSG:25832"`) — the spelling of the
+projection extension **v2**, not v1's `proj:epsg` — on items (in `properties`)
+and in the collection summaries, and
+`https://stac-extensions.github.io/projection/v2.0.0/schema.json` is declared in
+`stac_extensions` on exactly the documents that carry it. A document that
+carries no `proj:` field has no `stac_extensions` member at all.
 
 ### Bbox
 
@@ -460,6 +484,13 @@ pass — the **whole** catalog of that database is rebuilt from
 keeps ownership of the prefix and the database layout; the guard of `key()` is
 reused, so a path may span directories but cannot leave the database root).
 
+`catalog.json` is written **last** (`build()` returns it last), because it is
+the entry point: a reader following a child link must not arrive at a collection
+that has not been written yet. A document that cannot be written does not stop
+the others — a partial catalog beats a stale one — so each failure is logged
+(`snapshot catalog: could not write <path>: …`) and the round ends with a
+summary line naming how many of how many documents were written.
+
 Rebuilding in full rather than patching means a publish, a supersede and a
 catalog left by an older version of this code all converge on the same
 documents. The rebuild is **best effort**: a failure is logged as
@@ -476,7 +507,26 @@ succeeded, because its data is already published and visible through the API.
   newest date first, `files`/`bbox` decoded) and `Snapshot::relationMeta()`
   (title/abstract/tags per `X.Y`, one bound parameter per relation).
 - `StacCatalogWriterTest` covers the document shapes, the relative hrefs, the
-  title fallbacks, the extent union and the no-footprint case;
-  `SnapshotWorkerTest` asserts the documents land in the store and that a
-  supersede leaves exactly one item; `LocalSnapshotStorageTest` and
-  `S3SnapshotStorageTest` cover `writeAt` (including its traversal guard).
+  title fallbacks, the extent union, the no-footprint case, the CRS derivation
+  and extension declaration, the omitted summaries/properties and the
+  catalog-last build order; `SnapshotWorkerTest` asserts the documents land in
+  the store, that a supersede leaves exactly one item, and that a storage
+  refusing one document leaves the snapshot `succeeded` while the rest is still
+  written; `LocalSnapshotStorageTest` and `S3SnapshotStorageTest` cover
+  `writeAt` (including its traversal guard).
+
+### Follow-ups (deferred)
+
+- **The catalog is rebuilt in full on every publish.** With many relations and
+  dates this is one write per snapshot per publish, and two hosts publishing
+  concurrently are last-writer-wins on every document (they write the same
+  content unless one of them read an older database state, so the outcome is
+  benign but wasteful). Options if it ever hurts: diff against the previous
+  documents (the writer is pure, so this is cheap to add), write only the
+  touched relation plus the catalog, or move the rebuild behind a per-database
+  advisory lock.
+- **No rebuild for databases whose snapshots all predate this change**: they get
+  a catalog at their next publish. A one-off CLI script could rebuild them all.
+- **Nothing serves these documents through the authenticated read API**; on S3
+  they are exactly as reachable as the bucket policy makes them, and they name
+  every published relation and its row counts.

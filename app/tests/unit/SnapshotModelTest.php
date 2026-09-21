@@ -360,6 +360,29 @@ class SnapshotModelTest extends Unit
         $this->assertSame([], $m->relationMeta([]), 'no relations, no query');
     }
 
+    /**
+     * A blank title or abstract is no metadata: reported as null, so a
+     * relation with several geometry columns is described by whichever row
+     * actually says something.
+     */
+    public function testRelationMetaTreatsBlankTitleAndAbstractAsMissing(): void
+    {
+        $m = $this->model();
+        $res = $m->prepare("CREATE SCHEMA IF NOT EXISTS meta_blank");
+        $m->execute($res);
+        $res = $m->prepare("CREATE TABLE IF NOT EXISTS meta_blank.pts (gid serial PRIMARY KEY, the_geom geometry(Point, 4326))");
+        $m->execute($res);
+        $res = $m->prepare("INSERT INTO settings.geometry_columns_join (_key_, f_table_title, f_table_abstract)
+                            VALUES ('meta_blank.pts.the_geom', '   ', '')
+                            ON CONFLICT (_key_) DO UPDATE SET f_table_title = excluded.f_table_title, f_table_abstract = excluded.f_table_abstract");
+        $m->execute($res);
+
+        $meta = $m->relationMeta(['meta_blank.pts']);
+        $this->assertNull($meta['meta_blank.pts']['title']);
+        $this->assertNull($meta['meta_blank.pts']['description']);
+        $this->assertSame([], $meta['meta_blank.pts']['keywords']);
+    }
+
     private function post(string $path, array $body): ?array
     {
         $ctx = stream_context_create([

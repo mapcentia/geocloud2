@@ -94,6 +94,8 @@ class SnapshotWorker
                 throw new RuntimeException("Relation $schema.$relation does not exist");
             }
             $crs = $srs ?? $this->nativeSrid($schema, $relation);
+            // Measured before the export and on a separate connection, so on a
+            // live table it is approximate — the same caveat as $rowCount below.
             $bbox = $this->bbox($schema, $relation);
             $columns = $this->columns($schema, $relation);
             $schemaVersion = self::schemaVersion($columns);
@@ -190,6 +192,13 @@ class SnapshotWorker
      * Rebuilt in full rather than patched, so a publish, a supersede and a
      * catalog written by an older version of this code all converge on the
      * same documents.
+     *
+     * catalog.json is written last (build() orders it that way): it is the
+     * entry point, so a reader must not be able to follow a child link to a
+     * collection that has not been written yet. One document that cannot be
+     * written does not stop the others — a partial catalog is more useful than
+     * a stale one — so each failure is logged and the round ends with a
+     * summary.
      */
     private function rebuildCatalog(): void
     {
@@ -198,10 +207,20 @@ class SnapshotWorker
         foreach ($rows as $row) {
             $relations[$row['schema_name'] . '.' . $row['relation_name']] = true;
         }
-        $documents = (new StacCatalogWriter($this->connection->database))
+        $documents = new StacCatalogWriter($this->connection->database)
             ->build($rows, $this->snapshot->relationMeta(array_keys($relations)));
+
+        $failed = 0;
         foreach ($documents as $path => $document) {
-            $this->storage->writeAt($this->connection->database, $path, StacCatalogWriter::encode($document));
+            try {
+                $this->storage->writeAt($this->connection->database, $path, StacCatalogWriter::encode($document));
+            } catch (Throwable $e) {
+                $failed++;
+                error_log("snapshot catalog: could not write $path: " . $e->getMessage());
+            }
+        }
+        if ($failed > 0) {
+            error_log("snapshot catalog: " . (count($documents) - $failed) . " of " . count($documents) . " documents written for {$this->connection->database}, $failed failed");
         }
     }
 

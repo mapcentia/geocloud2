@@ -309,9 +309,14 @@ class Snapshot extends Model
         foreach ($this->fetchAll($res, 'assoc') as $row) {
             $key = $row['f_table_schema'] . '.' . $row['f_table_name'];
             $tags = is_string($row['tags'] ?? null) ? json_decode($row['tags'], true) : ($row['tags'] ?? null);
+            // A blank title or abstract is no metadata: reported as null, so a
+            // relation with several geometry columns ends up described by
+            // whichever of its rows actually says something.
+            $title = trim((string)($row['f_table_title'] ?? ''));
+            $abstract = trim((string)($row['f_table_abstract'] ?? ''));
             $entry = [
-                'title' => $row['f_table_title'] ?? null,
-                'description' => $row['f_table_abstract'] ?? null,
+                'title' => $title === '' ? null : $title,
+                'description' => $abstract === '' ? null : $abstract,
                 'keywords' => is_array($tags) ? array_values($tags) : [],
             ];
             $existing = $meta[$key] ?? null;

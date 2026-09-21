@@ -25,6 +25,13 @@ final class StacCatalogWriter
 {
     public const string STAC_VERSION = '1.1.0';
 
+    /**
+     * Projection extension v2, which spells the CRS `proj:code` ("EPSG:25832")
+     * rather than the v1 `proj:epsg`. Declared only on the documents that
+     * actually carry it.
+     */
+    public const string PROJECTION_EXTENSION = 'https://stac-extensions.github.io/projection/v2.0.0/schema.json';
+
     /** STAC's own default extent when nothing is known about a collection's footprint. */
     private const array WORLD_BBOX = [-180, -90, 180, 90];
 
@@ -45,7 +52,9 @@ final class StacCatalogWriter
      * @param array<string, array{title?:?string, description?:?string, keywords?:array}> $relationMeta
      *     Layer metadata keyed "schema.relation"; missing or blank entries fall back.
      * @return array<string, array<string, mixed>> Documents keyed by path
-     *     relative to the database root.
+     *     relative to the database root, `catalog.json` last: it is the entry
+     *     point, so whoever writes these documents writes it once everything
+     *     it links to is in place.
      */
     public function build(array $publishedRows, array $relationMeta): array
     {
@@ -86,7 +95,7 @@ final class StacCatalogWriter
             ];
         }
 
-        return ['catalog.json' => $this->catalog($children)] + $documents;
+        return $documents + ['catalog.json' => $this->catalog($children)];
     }
 
     /**
@@ -101,8 +110,9 @@ final class StacCatalogWriter
             'id' => $this->database,
             'title' => $this->database,
             'description' => "Parquet snapshots of database {$this->database} published by GC2",
+            // No self link: these documents are relative and do not know the
+            // URL they are served from.
             'links' => array_merge([
-                ['rel' => 'self', 'href' => './catalog.json', 'type' => 'application/json'],
                 ['rel' => 'root', 'href' => './catalog.json', 'type' => 'application/json'],
             ], $children),
         ];
@@ -118,24 +128,26 @@ final class StacCatalogWriter
     {
         $dates = array_map(fn($r) => (string)$r['snapshot_date'], $rows);
         $versions = [];
-        $epsgs = [];
+        $codes = [];
         foreach ($rows as $row) {
             $version = $row['schema_version'] ?? null;
-            if ($version !== null && !in_array($version, $versions, true)) {
+            if ($version !== null && !in_array((string)$version, $versions, true)) {
                 $versions[] = (string)$version;
             }
-            if ($row['srs'] !== null && !in_array((int)$row['srs'], $epsgs, true)) {
-                $epsgs[] = (int)$row['srs'];
+            $code = $this->projCode($row);
+            if ($code !== null && !in_array($code, $codes, true)) {
+                $codes[] = $code;
             }
         }
 
-        $summaries = ['gc2:schema_version' => $versions];
-        if ($epsgs !== []) {
-            $summaries['proj:epsg'] = $epsgs;
-        }
+        // Only summarise what there is something to say about; an empty
+        // summaries object says nothing and an empty list is invalid.
+        $summaries = array_filter([
+            'gc2:schema_version' => $versions,
+            'proj:code' => $codes,
+        ], fn(array $values) => $values !== []);
 
         $links = [
-            ['rel' => 'self', 'href' => './collection.json', 'type' => 'application/json'],
             ['rel' => 'root', 'href' => '../../catalog.json', 'type' => 'application/json'],
             ['rel' => 'parent', 'href' => '../../catalog.json', 'type' => 'application/json'],
         ];
@@ -143,21 +155,30 @@ final class StacCatalogWriter
             $links[] = ['rel' => 'item', 'href' => "./_gc2_snapshot_date=$date/item.json", 'type' => 'application/geo+json'];
         }
 
-        return [
+        $collection = [
             'type' => 'Collection',
             'stac_version' => self::STAC_VERSION,
+        ];
+        if ($codes !== []) {
+            $collection['stac_extensions'] = [self::PROJECTION_EXTENSION];
+        }
+        $collection += [
             'id' => $id,
             'title' => $title,
             'description' => $this->text($meta['description'] ?? null) ?? "Snapshots of $id",
-            'keywords' => array_values(array_filter($meta['keywords'] ?? [], 'is_scalar')),
-            'license' => 'proprietary',
+            'keywords' => array_values(array_filter($meta['keywords'] ?? [], 'is_string')),
+            // GC2 knows nothing about the licence of the data it snapshots.
+            'license' => 'other',
             'extent' => [
                 'spatial' => ['bbox' => [$this->union($items)]],
                 'temporal' => ['interval' => [[min($dates) . 'T00:00:00Z', max($dates) . 'T00:00:00Z']]],
             ],
-            'summaries' => $summaries,
-            'links' => $links,
         ];
+        if ($summaries !== []) {
+            $collection['summaries'] = $summaries;
+        }
+        $collection['links'] = $links;
+        return $collection;
     }
 
     /**
@@ -178,19 +199,27 @@ final class StacCatalogWriter
         }
         $dataFile ??= "data-$uuid.parquet";
 
-        $properties = [
-            'datetime' => $row['snapshot_date'] . 'T00:00:00Z',
-            'gc2:row_count' => $row['row_count'] !== null ? (int)$row['row_count'] : null,
-            'gc2:schema_version' => $row['schema_version'] !== null ? (string)$row['schema_version'] : null,
-            'gc2:snapshot_id' => $uuid,
-        ];
-        if ($row['srs'] !== null) {
-            $properties['proj:epsg'] = (int)$row['srs'];
+        $properties = ['datetime' => $row['snapshot_date'] . 'T00:00:00Z'];
+        if (($row['row_count'] ?? null) !== null) {
+            $properties['gc2:row_count'] = (int)$row['row_count'];
+        }
+        if (($row['schema_version'] ?? null) !== null) {
+            $properties['gc2:schema_version'] = (string)$row['schema_version'];
+        }
+        $properties['gc2:snapshot_id'] = $uuid;
+        $code = $this->projCode($row);
+        if ($code !== null) {
+            $properties['proj:code'] = $code;
         }
 
         $item = [
             'type' => 'Feature',
             'stac_version' => self::STAC_VERSION,
+        ];
+        if ($code !== null) {
+            $item['stac_extensions'] = [self::PROJECTION_EXTENSION];
+        }
+        $item += [
             'id' => $collectionId . '/' . $row['snapshot_date'],
             'collection' => $collectionId,
             'geometry' => $bbox === null ? null : [
@@ -210,7 +239,6 @@ final class StacCatalogWriter
         }
         $item['properties'] = $properties;
         $item['links'] = [
-            ['rel' => 'self', 'href' => './item.json', 'type' => 'application/geo+json'],
             ['rel' => 'root', 'href' => '../../../catalog.json', 'type' => 'application/json'],
             ['rel' => 'parent', 'href' => '../collection.json', 'type' => 'application/json'],
             ['rel' => 'collection', 'href' => '../collection.json', 'type' => 'application/json'],
@@ -254,6 +282,36 @@ final class StacCatalogWriter
             ];
         }
         return $union ?? self::WORLD_BBOX;
+    }
+
+    /**
+     * The CRS of the snapshot's data as "EPSG:<n>", or null when nothing
+     * declares one.
+     *
+     * The row's `srs` is only the *requested* reprojection and is null for the
+     * common case, so the fallback is the SRID the geometry (or geography)
+     * column itself declares — `geometry(Point,25832)` gives 25832. A column
+     * typed without an SRID (a bare `geometry`) declares nothing, and the item
+     * then carries no CRS rather than a guessed one.
+     *
+     * @param array<string, mixed> $row
+     */
+    private function projCode(array $row): ?string
+    {
+        $srs = $row['srs'] ?? null;
+        if ($srs !== null) {
+            return 'EPSG:' . (int)$srs;
+        }
+        foreach ($this->decode($row['relation_schema'] ?? null) as $column) {
+            $type = is_array($column) ? strtolower(trim((string)($column['data_type'] ?? ''))) : '';
+            if (!str_starts_with($type, 'geometry') && !str_starts_with($type, 'geography')) {
+                continue;
+            }
+            if (preg_match('/\((?:[^()]*,)?\s*(\d+)\s*\)$/', $type, $m)) {
+                return 'EPSG:' . (int)$m[1];
+            }
+        }
+        return null;
     }
 
     /**

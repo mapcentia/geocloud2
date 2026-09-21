@@ -293,15 +293,89 @@ class SnapshotWorkerTest extends Unit
         $this->assertFileDoesNotExist($this->catalogDir() . 'catalog.json', 'the catalog is only rebuilt after a publish');
     }
 
-    private function catalogDir(): string
-    {
-        return $this->storeDir . '/unit/' . self::$database . '/';
-    }
 
-    private function json(string $path): array
+    /**
+     * The catalog is a by-product: a storage that refuses one of its documents
+     * must not cost the snapshot its published state, and the remaining
+     * documents are still written.
+     */
+    public function testCatalogWriteFailureLeavesTheSnapshotSucceededAndWritesTheRest(): void
     {
-        $this->assertFileExists($path);
-        return json_decode(file_get_contents($path), true);
+        $uuid = $this->snapshot()->create('snap', 'points', null, self::$database);
+        $storage = new class(new LocalSnapshotStorage($this->storeDir, 'unit')) implements \app\inc\snapshot\SnapshotStorage {
+            public function __construct(private readonly LocalSnapshotStorage $inner)
+            {
+            }
+
+            public function writeAt(string $database, string $relativePath, string $contents): void
+            {
+                if (str_ends_with($relativePath, 'collection.json')) {
+                    throw new RuntimeException('no collections today');
+                }
+                $this->inner->writeAt($database, $relativePath, $contents);
+            }
+
+            public function exists(SnapshotRef $ref, string $file): bool
+            {
+                return $this->inner->exists($ref, $file);
+            }
+
+            public function size(SnapshotRef $ref, string $file): int
+            {
+                return $this->inner->size($ref, $file);
+            }
+
+            public function listFiles(SnapshotRef $ref): array
+            {
+                return $this->inner->listFiles($ref);
+            }
+
+            public function readStream(SnapshotRef $ref, string $file)
+            {
+                return $this->inner->readStream($ref, $file);
+            }
+
+            public function readRange(SnapshotRef $ref, string $file, int $start, int $length)
+            {
+                return $this->inner->readRange($ref, $file, $start, $length);
+            }
+
+            public function writeStream(SnapshotRef $ref, string $file, $stream): void
+            {
+                $this->inner->writeStream($ref, $file, $stream);
+            }
+
+            public function write(SnapshotRef $ref, string $file, string $contents): void
+            {
+                $this->inner->write($ref, $file, $contents);
+            }
+
+            public function delete(SnapshotRef $ref, string $file): void
+            {
+                $this->inner->delete($ref, $file);
+            }
+
+            public function downloadUrl(SnapshotRef $ref, string $file, int $ttlSeconds): ?string
+            {
+                return $this->inner->downloadUrl($ref, $file, $ttlSeconds);
+            }
+
+            public function locationOf(SnapshotRef $ref): string
+            {
+                return $this->inner->locationOf($ref);
+            }
+        };
+
+        $summary = new SnapshotWorker(new Connection(database: self::$database), $storage, $this->tmpDir)->processPending(5);
+        $this->assertSame(1, $summary['succeeded'], 'a catalog that cannot be written does not fail the snapshot');
+        $row = $this->snapshot()->get($uuid)['data'];
+        $this->assertSame('succeeded', $row['status']);
+        $this->assertNotNull($row['published']);
+
+        $day = $row['snapshot_date'];
+        $this->assertFileDoesNotExist($this->catalogDir() . 'schema=snap/relation=points/collection.json');
+        $this->assertFileExists($this->catalogDir() . "schema=snap/relation=points/_gc2_snapshot_date=$day/item.json", 'the rebuild carries on past a refused document');
+        $this->assertFileExists($this->catalogDir() . 'catalog.json');
     }
 
     public function testFailedRunIsNotPublishedAndLeavesNoFiles(): void
@@ -312,6 +386,17 @@ class SnapshotWorkerTest extends Unit
         $this->assertSame('failed', $row['status']);
         $this->assertNull($row['published']);
         $this->assertSame([], $this->snapshot()->listPublished('snap', 'does_not_exist'));
+    }
+
+    private function catalogDir(): string
+    {
+        return $this->storeDir . '/unit/' . self::$database . '/';
+    }
+
+    private function json(string $path): array
+    {
+        $this->assertFileExists($path);
+        return json_decode(file_get_contents($path), true);
     }
 
     private function rmrf(string $dir): void

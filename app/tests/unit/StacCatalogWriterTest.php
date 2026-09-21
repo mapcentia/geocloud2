@@ -58,22 +58,22 @@ class StacCatalogWriterTest extends Unit
         $this->assertSame('mydb', $catalog['title']);
         $this->assertSame('Parquet snapshots of database mydb published by GC2', $catalog['description']);
 
-        $this->assertSame(['self', 'root', 'child', 'child', 'child'], array_column($catalog['links'], 'rel'));
+        $this->assertSame(['root', 'child', 'child', 'child'], array_column($catalog['links'], 'rel'), 'no self link: the catalog does not know its own URL');
         $this->assertSame('./catalog.json', $catalog['links'][0]['href']);
-        $this->assertSame('./catalog.json', $catalog['links'][1]['href']);
         $this->assertSame(
             [
                 './schema=geo/relation=areas/collection.json',
                 './schema=geo/relation=roads/collection.json',
                 './schema=snap/relation=points/collection.json',
             ],
-            array_column(array_slice($catalog['links'], 2), 'href'),
+            array_column(array_slice($catalog['links'], 1), 'href'),
             'children are sorted by schema then relation and addressed relatively'
         );
-        $child = $catalog['links'][3];
+        $child = $catalog['links'][2];
         $this->assertSame('application/json', $child['type']);
         $this->assertSame('Roads', $child['title'], 'child link carries the collection title');
-        $this->assertSame('geo.areas', $catalog['links'][2]['title'], 'without metadata the qualified name is the title');
+        $this->assertSame('geo.areas', $catalog['links'][1]['title'], 'without metadata the qualified name is the title');
+        $this->assertArrayNotHasKey('stac_extensions', $catalog, 'the catalog carries no extension of its own');
     }
 
     public function testCollectionUsesMetadataTitleDescriptionAndKeywords(): void
@@ -89,7 +89,7 @@ class StacCatalogWriterTest extends Unit
         $this->assertSame('Nice points', $collection['title']);
         $this->assertSame('All the points', $collection['description']);
         $this->assertSame(['points', 'test'], $collection['keywords']);
-        $this->assertSame('proprietary', $collection['license']);
+        $this->assertSame('other', $collection['license']);
     }
 
     public function testCollectionFallsBackWhenMetadataIsMissingOrBlank(): void
@@ -116,20 +116,19 @@ class StacCatalogWriterTest extends Unit
         ], []);
         $collection = $docs['schema=snap/relation=points/collection.json'];
 
-        $this->assertSame(['self', 'root', 'parent', 'item', 'item', 'item'], array_column($collection['links'], 'rel'));
-        $this->assertSame('./collection.json', $collection['links'][0]['href']);
+        $this->assertSame(['root', 'parent', 'item', 'item', 'item'], array_column($collection['links'], 'rel'));
+        $this->assertSame('../../catalog.json', $collection['links'][0]['href']);
         $this->assertSame('../../catalog.json', $collection['links'][1]['href']);
-        $this->assertSame('../../catalog.json', $collection['links'][2]['href']);
         $this->assertSame(
             [
                 './_gc2_snapshot_date=2026-09-16/item.json',
                 './_gc2_snapshot_date=2026-09-15/item.json',
                 './_gc2_snapshot_date=2026-09-14/item.json',
             ],
-            array_column(array_slice($collection['links'], 3), 'href'),
+            array_column(array_slice($collection['links'], 2), 'href'),
             'items are linked newest first'
         );
-        $this->assertSame('application/geo+json', $collection['links'][3]['type']);
+        $this->assertSame('application/geo+json', $collection['links'][2]['type']);
         $this->assertCount(3, array_filter(array_keys($docs), fn($p) => str_ends_with($p, 'item.json')));
     }
 
@@ -148,14 +147,49 @@ class StacCatalogWriterTest extends Unit
             'interval runs oldest to newest'
         );
         $this->assertSame(['ver2', 'ver1'], $collection['summaries']['gc2:schema_version'], 'distinct schema versions');
-        $this->assertSame([25832], $collection['summaries']['proj:epsg'], 'distinct srs');
+        $this->assertSame(['EPSG:25832'], $collection['summaries']['proj:code'], 'distinct CRS codes');
+        $this->assertSame([StacCatalogWriter::PROJECTION_EXTENSION], $collection['stac_extensions']);
     }
 
-    public function testCollectionOmitsEpsgSummaryWhenNoSnapshotHasAnSrs(): void
+    /**
+     * The row's srs is only the *requested* reprojection, so it is usually
+     * null; the CRS a reader needs is then the one the geometry column itself
+     * declares.
+     */
+    public function testCrsFallsBackToTheSridOfTheGeometryColumn(): void
     {
-        $collection = $this->writer()->build([$this->row(['srs' => null])], [])['schema=snap/relation=points/collection.json'];
-        $this->assertArrayNotHasKey('proj:epsg', $collection['summaries']);
-        $this->assertSame(['ver1'], $collection['summaries']['gc2:schema_version']);
+        $docs = $this->writer()->build([$this->row(['srs' => null])], []);
+        $item = $docs['schema=snap/relation=points/_gc2_snapshot_date=2026-09-16/item.json'];
+        $this->assertSame('EPSG:25832', $item['properties']['proj:code'], 'read from geometry(Point,25832)');
+        $this->assertArrayNotHasKey('proj:epsg', $item['properties'], 'projection v2 spells it proj:code');
+        $this->assertSame([StacCatalogWriter::PROJECTION_EXTENSION], $item['stac_extensions']);
+
+        $requested = $this->writer()->build([$this->row(['srs' => 4326])], [])['schema=snap/relation=points/_gc2_snapshot_date=2026-09-16/item.json'];
+        $this->assertSame('EPSG:4326', $requested['properties']['proj:code'], 'a requested reprojection wins over the column');
+
+        $geography = $this->writer()->build([$this->row([
+            'srs' => null,
+            'relation_schema' => [['column_name' => 'geog', 'data_type' => 'geography(Point,4326)']],
+        ])], [])['schema=snap/relation=points/_gc2_snapshot_date=2026-09-16/item.json'];
+        $this->assertSame('EPSG:4326', $geography['properties']['proj:code']);
+
+        $typeless = $this->writer()->build([$this->row([
+            'srs' => null,
+            'relation_schema' => [['column_name' => 'gid', 'data_type' => 'integer'], ['column_name' => 'geom', 'data_type' => 'geometry']],
+        ])], [])['schema=snap/relation=points/_gc2_snapshot_date=2026-09-16/item.json'];
+        $this->assertArrayNotHasKey('proj:code', $typeless['properties'], 'an untyped geometry column declares no SRID');
+        $this->assertArrayNotHasKey('stac_extensions', $typeless, 'no projection extension when nothing uses it');
+    }
+
+    public function testCollectionOmitsSummariesItCannotFill(): void
+    {
+        $collection = $this->writer()->build([$this->row([
+            'srs' => null,
+            'schema_version' => null,
+            'relation_schema' => [['column_name' => 'id', 'data_type' => 'integer']],
+        ])], [])['schema=snap/relation=points/collection.json'];
+        $this->assertArrayNotHasKey('summaries', $collection, 'no summaries at all rather than empty lists');
+        $this->assertArrayNotHasKey('stac_extensions', $collection);
     }
 
     public function testItemCarriesBboxPolygonPropertiesAssetsAndRelativeLinks(): void
@@ -180,12 +214,12 @@ class StacCatalogWriterTest extends Unit
             'gc2:row_count' => 3,
             'gc2:schema_version' => 'ver1',
             'gc2:snapshot_id' => $uuid,
-            'proj:epsg' => 25832,
+            'proj:code' => 'EPSG:25832',
         ], $item['properties']);
 
-        $this->assertSame(['self', 'root', 'parent', 'collection'], array_column($item['links'], 'rel'));
+        $this->assertSame(['root', 'parent', 'collection'], array_column($item['links'], 'rel'));
         $this->assertSame(
-            ['./item.json', '../../../catalog.json', '../collection.json', '../collection.json'],
+            ['../../../catalog.json', '../collection.json', '../collection.json'],
             array_column($item['links'], 'href')
         );
 
@@ -215,7 +249,7 @@ class StacCatalogWriterTest extends Unit
         $item = $docs['schema=snap/relation=plain/_gc2_snapshot_date=2026-09-16/item.json'];
         $this->assertNull($item['geometry']);
         $this->assertArrayNotHasKey('bbox', $item, 'no bbox key at all when there is no extent');
-        $this->assertArrayNotHasKey('proj:epsg', $item['properties']);
+        $this->assertArrayNotHasKey('proj:code', $item['properties']);
         $this->assertSame('Parquet', $item['assets']['data']['title']);
 
         $collection = $docs['schema=snap/relation=plain/collection.json'];
@@ -250,7 +284,35 @@ class StacCatalogWriterTest extends Unit
     {
         $docs = $this->writer()->build([], []);
         $this->assertSame(['catalog.json'], array_keys($docs));
-        $this->assertSame(['self', 'root'], array_column($docs['catalog.json']['links'], 'rel'));
+        $this->assertSame(['root'], array_column($docs['catalog.json']['links'], 'rel'));
+    }
+
+    public function testItemOmitsPropertiesItHasNoValueFor(): void
+    {
+        $item = $this->writer()->build([$this->row(['row_count' => null, 'schema_version' => null])], [])
+        ['schema=snap/relation=points/_gc2_snapshot_date=2026-09-16/item.json'];
+        $this->assertArrayNotHasKey('gc2:row_count', $item['properties']);
+        $this->assertArrayNotHasKey('gc2:schema_version', $item['properties']);
+        $this->assertSame('2026-09-16T00:00:00Z', $item['properties']['datetime']);
+    }
+
+    public function testKeywordsKeepOnlyStrings(): void
+    {
+        $collection = $this->writer()->build([$this->row()], [
+            'snap.points' => ['title' => null, 'description' => null, 'keywords' => ['poi', 42, null, ['nested'], 'ok']],
+        ])['schema=snap/relation=points/collection.json'];
+        $this->assertSame(['poi', 'ok'], $collection['keywords']);
+    }
+
+    /**
+     * The catalog is the entry point, so it is written last: a reader that
+     * follows a child link must not reach a collection that is not there yet.
+     */
+    public function testCatalogIsTheLastDocumentInBuildOrder(): void
+    {
+        $paths = array_keys($this->writer()->build([$this->row(), $this->row(['relation_name' => 'other'])], []));
+        $this->assertSame('catalog.json', end($paths));
+        $this->assertCount(5, $paths, 'two collections, two items and the catalog');
     }
 
     public function testEncodeIsPrettyPrintedWithUnescapedSlashes(): void
