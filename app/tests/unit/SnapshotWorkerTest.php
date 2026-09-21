@@ -388,6 +388,92 @@ class SnapshotWorkerTest extends Unit
         $this->assertSame([], $this->snapshot()->listPublished('snap', 'does_not_exist'));
     }
 
+    public function testEveryRequestedFormatIsExportedUploadedAndRecorded(): void
+    {
+        $uuid = $this->snapshot()->create('snap', 'points', null, self::$database, ['parquet', 'flatgeobuf']);
+        $day = gmdate('Y-m-d'); // captured before the run so a midnight UTC rollover can't flake this
+        $summary = $this->worker()->processPending(5);
+        $this->assertSame(1, $summary['succeeded'], 'error: ' . ($this->snapshot()->get($uuid)['data']['error'] ?? ''));
+
+        $dir = $this->storeDir . '/unit/' . self::$database . '/schema=snap/relation=points/_gc2_snapshot_date=' . $day . '/';
+        $parquet = $dir . 'data-' . $uuid . '.parquet';
+        $fgb = $dir . 'data-' . $uuid . '.fgb';
+        $this->assertFileExists($parquet);
+        $this->assertFileExists($fgb);
+        $this->assertGreaterThan(0, filesize($fgb));
+
+        $expected = [
+            ['format' => 'parquet', 'status' => 'produced', 'file' => 'data-' . $uuid . '.parquet', 'size_bytes' => filesize($parquet), 'media_type' => 'application/vnd.apache.parquet'],
+            ['format' => 'flatgeobuf', 'status' => 'produced', 'file' => 'data-' . $uuid . '.fgb', 'size_bytes' => filesize($fgb), 'media_type' => 'application/flatgeobuf'],
+        ];
+        $row = $this->snapshot()->get($uuid)['data'];
+        $this->assertSame($expected, Snapshot::presentFormats($row), 'the row records both formats in request order');
+        $this->assertSame(filesize($parquet) + filesize($fgb), (int)$row['size_bytes'], 'size_bytes covers every data file');
+
+        $meta = json_decode(file_get_contents($dir . 'metadata-' . $uuid . '.json'), true);
+        $this->assertSame($expected, $meta['formats'], 'metadata.json carries the same formats as the row');
+        $this->assertSame(
+            [
+                ['name' => 'data-' . $uuid . '.parquet', 'size_bytes' => filesize($parquet)],
+                ['name' => 'data-' . $uuid . '.fgb', 'size_bytes' => filesize($fgb)],
+            ],
+            $meta['files']
+        );
+        $this->assertEquals($meta['files'], json_decode($row['files'], true));
+
+        $out = [];
+        $code = 0;
+        exec('ogrinfo -so ' . escapeshellarg($fgb) . ' 2>&1', $out, $code);
+        $this->assertSame(0, $code, 'ogrinfo reads the FlatGeobuf file: ' . implode("\n", $out));
+        $this->assertNotEmpty(preg_grep('/using driver `FlatGeobuf\x27 successful/', $out), 'GDAL recognises the file as FlatGeobuf: ' . implode("\n", $out));
+        $this->assertNotEmpty(preg_grep('/^1: /', $out), 'ogrinfo reports a layer: ' . implode("\n", $out));
+
+        $this->assertSame([], glob($this->tmpDir . '/' . $uuid . '.*'), 'no temp file of any format is left behind');
+    }
+
+    public function testFormatThatNeedsGeometryIsSkippedWithAReason(): void
+    {
+        $uuid = $this->snapshot()->create('snap', 'plain', null, self::$database, ['parquet', 'flatgeobuf']);
+        $day = gmdate('Y-m-d'); // captured before the run so a midnight UTC rollover can't flake this
+        $summary = $this->worker()->processPending(5);
+        $this->assertSame(1, $summary['succeeded'], 'a format that cannot be produced does not fail the snapshot');
+
+        $dir = $this->storeDir . '/unit/' . self::$database . '/schema=snap/relation=plain/_gc2_snapshot_date=' . $day . '/';
+        $parquet = $dir . 'data-' . $uuid . '.parquet';
+        $this->assertFileExists($parquet);
+        $this->assertFileDoesNotExist($dir . 'data-' . $uuid . '.fgb');
+
+        $expected = [
+            ['format' => 'parquet', 'status' => 'produced', 'file' => 'data-' . $uuid . '.parquet', 'size_bytes' => filesize($parquet), 'media_type' => 'application/vnd.apache.parquet'],
+            ['format' => 'flatgeobuf', 'status' => 'skipped', 'reason' => 'relation has no geometry column'],
+        ];
+        $row = $this->snapshot()->get($uuid)['data'];
+        $this->assertSame('succeeded', $row['status']);
+        $this->assertSame($expected, Snapshot::presentFormats($row));
+        $this->assertSame(filesize($parquet), (int)$row['size_bytes'], 'a skipped format contributes no bytes');
+
+        $meta = json_decode(file_get_contents($dir . 'metadata-' . $uuid . '.json'), true);
+        $this->assertSame($expected, $meta['formats']);
+        $this->assertSame([['name' => 'data-' . $uuid . '.parquet', 'size_bytes' => filesize($parquet)]], $meta['files'], 'a skipped format leaves no file');
+        $this->assertSame([], glob($this->tmpDir . '/' . $uuid . '.*'));
+    }
+
+    public function testSnapshotFailsWhenNoRequestedFormatCanBeProduced(): void
+    {
+        $uuid = $this->snapshot()->create('snap', 'plain', null, self::$database, ['flatgeobuf']);
+        $summary = $this->worker()->processPending(5);
+        $this->assertSame(1, $summary['failed']);
+
+        $row = $this->snapshot()->get($uuid)['data'];
+        $this->assertSame('failed', $row['status']);
+        $this->assertStringContainsString('no requested format could be produced', $row['error']);
+        $this->assertStringContainsString('relation has no geometry column', $row['error'], 'the error says why each format was skipped');
+        $this->assertNull($row['published']);
+        $this->assertNull($row['s3_path']);
+        $this->assertSame([], $this->snapshot()->listPublished('snap', 'plain_flatgeobuf_only'));
+        $this->assertSame([], glob($this->tmpDir . '/' . $uuid . '.*'));
+    }
+
     private function catalogDir(): string
     {
         return $this->storeDir . '/unit/' . self::$database . '/';

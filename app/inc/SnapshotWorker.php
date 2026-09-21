@@ -9,6 +9,7 @@
 namespace app\inc;
 
 use app\exceptions\GC2Exception;
+use app\inc\snapshot\SnapshotFormat;
 use app\inc\snapshot\SnapshotRef;
 use app\inc\snapshot\SnapshotStorage;
 use app\inc\snapshot\StacCatalogWriter;
@@ -18,9 +19,15 @@ use Throwable;
 
 /**
  * Runs queued snapshots for one database: claims pending rows in
- * settings.snapshots, exports each relation to Parquet with ogr2ogr, writes
- * data-<id>.parquet + metadata-<id>.json through SnapshotStorage, and
- * publishes the row (superseding an earlier snapshot of the same date).
+ * settings.snapshots, exports each relation with ogr2ogr in every format the
+ * row asks for, writes one data-<id>.<ext> per format plus
+ * metadata-<id>.json through SnapshotStorage, and publishes the row
+ * (superseding an earlier snapshot of the same date).
+ *
+ * A format that cannot describe the relation — FlatGeobuf needs a geometry
+ * column — is skipped with a recorded reason; the run only fails when no
+ * requested format could be produced at all. An ogr2ogr failure is an error,
+ * not a "cannot be produced" case, and fails the whole run.
  *
  * Files are named by snapshot id, so a rerun never overwrites a file a
  * reader may be streaming; readers only reach files via the catalog, so a
@@ -35,6 +42,13 @@ use Throwable;
  */
 class SnapshotWorker
 {
+    /**
+     * Why a format that needs geometry is skipped. Recorded on the row and
+     * shown by the API, so it is one fixed sentence rather than a message
+     * built per call.
+     */
+    public const string NO_GEOMETRY_REASON = 'relation has no geometry column';
+
     private SnapshotModel $snapshot;
     private Model $model;
 
@@ -86,41 +100,65 @@ class SnapshotWorker
         $schema = $row['schema_name'];
         $relation = $row['relation_name'];
         $srs = $row['srs'] !== null ? (int)$row['srs'] : null;
-        $tmpFile = rtrim($this->tmpDir, '/') . "/$uuid.parquet";
         $ref = new SnapshotRef($this->connection->database, $schema, $relation, gmdate('Y-m-d'), $uuid);
         $written = [];
+        $tmpFiles = [];
         try {
             if (!$this->model->doesRelationExists("$schema.$relation")) {
                 throw new RuntimeException("Relation $schema.$relation does not exist");
             }
+            // Everything that describes the relation rather than one output
+            // file is read once, before the first export.
+            $geometryColumn = $this->geometryColumn($schema, $relation);
             $crs = $srs ?? $this->nativeSrid($schema, $relation);
             // Measured before the export and on a separate connection, so on a
             // live table it is approximate — the same caveat as $rowCount below.
-            $bbox = $this->bbox($schema, $relation);
+            $bbox = $this->bbox($schema, $relation, $geometryColumn);
             $columns = $this->columns($schema, $relation);
             $schemaVersion = self::schemaVersion($columns);
 
             if (!is_dir($this->tmpDir) && !mkdir($this->tmpDir, 0775, true) && !is_dir($this->tmpDir)) {
                 throw new RuntimeException("Could not create tmp dir {$this->tmpDir}");
             }
-            $this->export($schema, $relation, $srs, $tmpFile);
+
+            $files = [];
+            $results = [];
+            foreach ($this->requestedFormats($row) as $format) {
+                if ($format->requiresGeometry && $geometryColumn === null) {
+                    $results[] = ['format' => $format->id, 'status' => 'skipped', 'reason' => self::NO_GEOMETRY_REASON];
+                    continue;
+                }
+                $tmpFile = rtrim($this->tmpDir, '/') . "/$uuid.$format->extension";
+                $tmpFiles[] = $tmpFile;
+                $this->export($schema, $relation, $srs, $format, $tmpFile);
+
+                $file = $format->fileName($uuid);
+                $size = (int)filesize($tmpFile);
+                $stream = fopen($tmpFile, 'rb');
+                if ($stream === false) {
+                    throw new RuntimeException("Could not open $tmpFile");
+                }
+                try {
+                    $this->storage->writeStream($ref, $file, $stream);
+                    $written[] = $file;
+                } finally {
+                    if (is_resource($stream)) {
+                        fclose($stream);
+                    }
+                }
+                $files[] = ['name' => $file, 'size_bytes' => $size];
+                $results[] = ['format' => $format->id, 'status' => 'produced', 'file' => $file, 'size_bytes' => $size, 'media_type' => $format->mediaType];
+            }
+            if (!array_filter($results, fn(array $r) => $r['status'] === 'produced')) {
+                throw new RuntimeException("no requested format could be produced: " . implode('; ', array_map(
+                        fn(array $r) => "{$r['format']}: " . ($r['reason'] ?? 'skipped'),
+                        $results
+                    )));
+            }
 
             // Counted after the export on a separate connection, so on a live table this is approximate.
             $rowCount = $this->rowCount($schema, $relation);
-            $files = [['name' => $ref->dataFile(), 'size_bytes' => (int)filesize($tmpFile)]];
 
-            $stream = fopen($tmpFile, 'rb');
-            if ($stream === false) {
-                throw new RuntimeException("Could not open $tmpFile");
-            }
-            try {
-                $this->storage->writeStream($ref, $ref->dataFile(), $stream);
-                $written[] = $ref->dataFile();
-            } finally {
-                if (is_resource($stream)) {
-                    fclose($stream);
-                }
-            }
             $this->storage->write($ref, $ref->metadataFile(), json_encode([
                 'snapshot_id' => $uuid,
                 'snapshot_date' => $ref->snapshotDate,
@@ -132,11 +170,12 @@ class SnapshotWorker
                 'schema' => $columns,
                 'crs' => $crs !== null ? "EPSG:$crs" : null,
                 'bbox' => $bbox,
+                'formats' => $results,
                 'files' => $files,
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
             $written[] = $ref->metadataFile();
 
-            $superseded = $this->snapshot->publish($uuid, $ref->snapshotDate, $this->storage->locationOf($ref), $rowCount, $schemaVersion, $columns, $files, $bbox);
+            $superseded = $this->snapshot->publish($uuid, $ref->snapshotDate, $this->storage->locationOf($ref), $rowCount, $schemaVersion, $columns, $files, $bbox, $results);
             if ($superseded !== null) {
                 $this->deleteFilesOf($superseded, $ref);
             }
@@ -177,10 +216,47 @@ class SnapshotWorker
             }
             return 'failed';
         } finally {
-            if (file_exists($tmpFile)) {
-                @unlink($tmpFile);
+            foreach ($tmpFiles as $tmpFile) {
+                if (file_exists($tmpFile)) {
+                    @unlink($tmpFile);
+                }
             }
         }
+    }
+
+    /**
+     * The formats this row asks for, in request order. A row without a usable
+     * list — one written before the formats column existed — falls back to the
+     * server default, so an old queued row still produces something. An id the
+     * registry no longer knows is dropped with a log line rather than failing
+     * the run over a format nobody can produce any more.
+     *
+     * @param array<string, mixed> $row
+     * @return array<int, SnapshotFormat>
+     */
+    private function requestedFormats(array $row): array
+    {
+        $stored = $row['formats'] ?? null;
+        $stored = is_string($stored) ? json_decode($stored, true) : $stored;
+        $ids = [];
+        foreach (is_array($stored) ? $stored : [] as $entry) {
+            // Strings while the row waits; objects if it is being re-run after
+            // a publish (a stale reclaim), in which case the format is named
+            // the same way.
+            $id = is_string($entry) ? $entry : (is_array($entry) ? ($entry['format'] ?? null) : null);
+            if (!is_string($id) || in_array($id, $ids, true)) {
+                continue;
+            }
+            if (!SnapshotFormat::has($id)) {
+                error_log("snapshot {$row['uuid']}: unknown format '$id' ignored");
+                continue;
+            }
+            $ids[] = $id;
+        }
+        if ($ids === []) {
+            $ids = SnapshotFormat::defaults();
+        }
+        return array_map(SnapshotFormat::get(...), $ids);
     }
 
     /**
@@ -229,10 +305,13 @@ class SnapshotWorker
      * ([minx, miny, maxx, maxy]), or null when it has no geometry column, no
      * rows, or the extent cannot be computed (an unknown SRID, say). Best
      * effort: a missing footprint only costs the STAC Item its geometry.
+     *
+     * $column is the relation's geometry column as geometryColumn() found it,
+     * passed in because the caller has to know about it anyway (a format that
+     * requires geometry is skipped without one).
      */
-    private function bbox(string $schema, string $relation): ?array
+    private function bbox(string $schema, string $relation, ?string $column): ?array
     {
-        $column = $this->geometryColumn($schema, $relation);
         if ($column === null) {
             return null;
         }
@@ -293,15 +372,18 @@ class SnapshotWorker
     }
 
     /**
-     * Exports the relation to a Parquet file with ogr2ogr. Reprojects only
-     * when $srs is given.
+     * Exports the relation to $tmpFile in one format with ogr2ogr. The driver
+     * and its arguments come from the format registry, so a new format needs
+     * nothing here. Reprojects only when $srs is given.
      */
-    private function export(string $schema, string $relation, ?int $srs, string $tmpFile): void
+    private function export(string $schema, string $relation, ?int $srs, SnapshotFormat $format, string $tmpFile): void
     {
         $c = $this->connection;
         $pg = "PG:host={$c->host} port={$c->port} user={$c->user} password={$c->password} dbname={$c->database}";
         $q = fn(string $s) => '"' . str_replace('"', '""', $s) . '"';
-        $cmd = 'ogr2ogr -mapFieldType Time=String,Binary=String -f Parquet ' . escapeshellarg($tmpFile)
+        $cmd = 'ogr2ogr '
+            . implode(' ', array_map('escapeshellarg', $format->ogrArgs))
+            . ' -f ' . escapeshellarg($format->driver) . ' ' . escapeshellarg($tmpFile)
             . ($srs !== null ? ' -t_srs ' . escapeshellarg("EPSG:$srs") : '')
             . ' -preserve_fid '
             . escapeshellarg($pg)
@@ -311,10 +393,10 @@ class SnapshotWorker
         $code = 0;
         exec($cmd, $out, $code);
         if ($code !== 0 || preg_grep('/ERROR/', $out)) {
-            throw new RuntimeException("ogr2ogr failed: " . implode("\n", $out));
+            throw new RuntimeException("ogr2ogr failed for format $format->id: " . implode("\n", $out));
         }
         if (!file_exists($tmpFile)) {
-            throw new RuntimeException("ogr2ogr produced no output file");
+            throw new RuntimeException("ogr2ogr produced no output file for format $format->id");
         }
     }
 
