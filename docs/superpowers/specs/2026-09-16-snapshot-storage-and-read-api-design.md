@@ -385,3 +385,98 @@ run inline (`snapshot_worker.php <db>`) after queuing:
 End-to-end (manual, recorded in the plan): DuckDB `read_parquet('http://localhost:8080/api/v4/schemas/…/snapshots/<date>/data')`
 with an `http` secret carrying the bearer token, in proxy mode; then the
 same in redirect mode against S3.
+
+## STAC catalog (addendum, 2026-09-21)
+
+The snapshot store also carries a **static STAC 1.1.0 catalog** of itself, so a
+bucket (or a local store behind any static file server) is browsable with STAC
+Browser, pystac and the QGIS STAC plugin without GC2 being involved. It is a
+by-product of publishing, not an API: nothing reads it from the database side.
+
+### Files
+
+Written next to the data they describe, under the database root:
+
+```
+{prefix}/{database}/catalog.json                                          Catalog, id = database
+{prefix}/{database}/schema=X/relation=Y/collection.json                   Collection, id = X.Y
+{prefix}/{database}/schema=X/relation=Y/_gc2_snapshot_date=D/item.json    Item, id = X.Y/D
+```
+
+Every `href` is **relative to the document that contains it** (`./catalog.json`,
+`../../catalog.json`, `./_gc2_snapshot_date=D/item.json`, `./data-<uuid>.parquet`),
+so the same bytes work on S3, on local disk and behind the read API without the
+writer knowing any base URL.
+
+- **Catalog**: one `child` link per relation with at least one visible snapshot,
+  sorted by schema then relation, titled like the collection.
+- **Collection**: `title`/`description`/`keywords` from
+  `settings.geometry_columns_join` (read through `settings.geometry_columns_view`,
+  the only place `f_table_schema`/`f_table_name` exist) — `f_table_title`,
+  `f_table_abstract`, `tags` — falling back to `X.Y` and
+  `Snapshots of X.Y` when there is no row or the value is blank. A non-spatial
+  relation never has a row, so it always falls back. `license` is
+  `proprietary`. `extent.spatial` is the union of the items' bboxes, or the
+  whole world when no snapshot has one; `extent.temporal` runs oldest to newest
+  snapshot date. `summaries` carries `gc2:schema_version` and, when any
+  snapshot has an `srs`, `proj:epsg`. `item` links are newest first.
+- **Item**: `geometry` is the bbox as a closed WGS84 polygon (`null`, and no
+  `bbox` member at all, when the relation has no footprint); `properties`
+  carries `datetime` (the snapshot date at midnight UTC), `gc2:row_count`,
+  `gc2:schema_version`, `gc2:snapshot_id` and `proj:epsg` when set. Assets:
+  `data` (the `.parquet` entry of the row's `files`, `application/vnd.apache.parquet`,
+  titled `GeoParquet` or `Parquet`) and `metadata` (`metadata-<uuid>.json`).
+
+### Bbox
+
+`SnapshotWorker` computes the relation's WGS84 footprint at export time from
+the first geometry column (the same lookup as `nativeSrid()`, so views and
+materialized views are covered):
+
+```sql
+SELECT ST_XMin(e), ST_YMin(e), ST_XMax(e), ST_YMax(e)
+FROM (SELECT ST_Extent(ST_Transform("<geom>", 4326)) e FROM "<schema>"."<relation>") s
+```
+
+It is `null` for a relation without a geometry column, for an empty relation
+and when the extent cannot be computed (logged, never fatal). It is stored in
+`metadata.json` as `bbox` and in a new nullable column:
+
+```sql
+ALTER TABLE settings.snapshots ADD COLUMN bbox JSONB;   -- [minx,miny,maxx,maxy] in EPSG:4326
+```
+
+`Snapshot::publish()` takes it as a trailing optional parameter, so rows
+published before this change simply have none and their items get
+`geometry: null`.
+
+### When it is written
+
+After every successful `publish()` in `SnapshotWorker::runOne()` — and after
+the supersede cleanup, so a superseded snapshot leaves the catalog in the same
+pass — the **whole** catalog of that database is rebuilt from
+`Snapshot::listAllPublished()` and written with
+`SnapshotStorage::writeAt($database, $relativePath, $contents)` (the storage
+keeps ownership of the prefix and the database layout; the guard of `key()` is
+reused, so a path may span directories but cannot leave the database root).
+
+Rebuilding in full rather than patching means a publish, a supersede and a
+catalog left by an older version of this code all converge on the same
+documents. The rebuild is **best effort**: a failure is logged as
+`snapshot <uuid>: catalog rebuild failed: …` and the snapshot still counts as
+succeeded, because its data is already published and visible through the API.
+
+### Code and tests
+
+- `app/inc/snapshot/StacCatalogWriter.php` — pure: `build($publishedRows, $relationMeta)`
+  returns the documents keyed by path relative to the database root;
+  `StacCatalogWriter::encode()` is the one JSON flavour
+  (`JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES`).
+- `Snapshot::listAllPublished()` (every visible row, grouped by relation,
+  newest date first, `files`/`bbox` decoded) and `Snapshot::relationMeta()`
+  (title/abstract/tags per `X.Y`, one bound parameter per relation).
+- `StacCatalogWriterTest` covers the document shapes, the relative hrefs, the
+  title fallbacks, the extent union and the no-footprint case;
+  `SnapshotWorkerTest` asserts the documents land in the store and that a
+  supersede leaves exactly one item; `LocalSnapshotStorageTest` and
+  `S3SnapshotStorageTest` cover `writeAt` (including its traversal guard).
