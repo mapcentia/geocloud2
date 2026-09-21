@@ -335,4 +335,102 @@ class StacCatalogWriterTest extends Unit
         $this->assertSame('EPSG:4326', $item['properties']['proj:code']);
     }
 
+
+    /**
+     * One asset per *produced* format, keyed by the registry's asset key, so a
+     * reader can pick the file it can open. The metadata asset stays last.
+     */
+    public function testItemHasOneAssetPerProducedFormat(): void
+    {
+        $uuid = '11111111-1111-1111-1111-111111111111';
+        $item = $this->writer()->build([$this->row([
+            'files' => [
+                ['name' => "data-$uuid.parquet", 'size_bytes' => 10],
+                ['name' => "data-$uuid.fgb", 'size_bytes' => 20],
+            ],
+            'formats' => [
+                ['format' => 'parquet', 'status' => 'produced', 'file' => "data-$uuid.parquet", 'size_bytes' => 10, 'media_type' => 'application/vnd.apache.parquet'],
+                ['format' => 'flatgeobuf', 'status' => 'produced', 'file' => "data-$uuid.fgb", 'size_bytes' => 20, 'media_type' => 'application/flatgeobuf'],
+            ],
+        ])], [])['schema=snap/relation=points/_gc2_snapshot_date=2026-09-16/item.json'];
+
+        $this->assertSame(['data', 'flatgeobuf', 'metadata'], array_keys($item['assets']));
+        $this->assertSame([
+            'href' => "./data-$uuid.parquet",
+            'type' => 'application/vnd.apache.parquet',
+            'roles' => ['data'],
+            'title' => 'GeoParquet',
+        ], $item['assets']['data']);
+        $this->assertSame([
+            'href' => "./data-$uuid.fgb",
+            'type' => 'application/flatgeobuf',
+            'roles' => ['data'],
+            'title' => 'FlatGeobuf',
+        ], $item['assets']['flatgeobuf']);
+    }
+
+    public function testASkippedFormatGetsNoAsset(): void
+    {
+        $item = $this->writer()->build([$this->row([
+            'relation_name' => 'plain',
+            'srs' => null,
+            'bbox' => null,
+            'uuid' => 'plain-1',
+            'relation_schema' => [['column_name' => 'id', 'data_type' => 'integer']],
+            'files' => [['name' => 'data-plain-1.parquet', 'size_bytes' => 4]],
+            'formats' => [
+                ['format' => 'parquet', 'status' => 'produced', 'file' => 'data-plain-1.parquet', 'size_bytes' => 4, 'media_type' => 'application/vnd.apache.parquet'],
+                ['format' => 'flatgeobuf', 'status' => 'skipped', 'reason' => 'relation has no geometry column'],
+            ],
+        ])], [])['schema=snap/relation=plain/_gc2_snapshot_date=2026-09-16/item.json'];
+
+        $this->assertSame(['data', 'metadata'], array_keys($item['assets']));
+        $this->assertSame('Parquet', $item['assets']['data']['title'], 'no geometry, so it is not GeoParquet');
+    }
+
+    /**
+     * A snapshot of only the geometry-only format has no `data` asset at all —
+     * the key belongs to Parquet — and is found under its own key.
+     */
+    public function testAParquetLessSnapshotIsKeyedByItsOwnFormat(): void
+    {
+        $item = $this->writer()->build([$this->row([
+            'files' => [['name' => 'data-fgb-1.fgb', 'size_bytes' => 20]],
+            'uuid' => 'fgb-1',
+            'formats' => [
+                ['format' => 'flatgeobuf', 'status' => 'produced', 'file' => 'data-fgb-1.fgb', 'size_bytes' => 20, 'media_type' => 'application/flatgeobuf'],
+            ],
+        ])], [])['schema=snap/relation=points/_gc2_snapshot_date=2026-09-16/item.json'];
+
+        $this->assertSame(['flatgeobuf', 'metadata'], array_keys($item['assets']));
+        $this->assertSame('./data-fgb-1.fgb', $item['assets']['flatgeobuf']['href']);
+    }
+
+    /**
+     * Rows published before the `formats` column: the files list is all there
+     * is, and the assets are what they have always been.
+     */
+    public function testARowWithoutFormatsStillGetsItsDataAssetFromTheFiles(): void
+    {
+        $item = $this->writer()->build([$this->row([
+            'files' => json_encode([['name' => 'data-legacy.parquet', 'size_bytes' => 1]]),
+            'formats' => null,
+        ])], [])['schema=snap/relation=points/_gc2_snapshot_date=2026-09-16/item.json'];
+
+        $this->assertSame(['data', 'metadata'], array_keys($item['assets']));
+        $this->assertSame('./data-legacy.parquet', $item['assets']['data']['href']);
+        $this->assertSame('GeoParquet', $item['assets']['data']['title']);
+    }
+
+    /** A stored list of *requested* ids describes nothing produced; the files do. */
+    public function testRequestedFormatIdsAreNotMistakenForProducedOnes(): void
+    {
+        $item = $this->writer()->build([$this->row([
+            'files' => [['name' => 'data-x.parquet', 'size_bytes' => 3]],
+            'formats' => ['parquet', 'flatgeobuf'],
+        ])], [])['schema=snap/relation=points/_gc2_snapshot_date=2026-09-16/item.json'];
+
+        $this->assertSame(['data', 'metadata'], array_keys($item['assets']));
+        $this->assertSame('./data-x.parquet', $item['assets']['data']['href']);
+    }
 }

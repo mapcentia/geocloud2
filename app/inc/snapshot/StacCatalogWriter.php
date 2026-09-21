@@ -8,9 +8,10 @@
 namespace app\inc\snapshot;
 
 /**
- * Builds the static STAC 1.1.0 catalog of a database's published Parquet
- * snapshots: one Catalog, one Collection per relation and one Item per
- * snapshot, laid out alongside the data files themselves
+ * Builds the static STAC 1.1.0 catalog of a database's published snapshots:
+ * one Catalog, one Collection per relation and one Item per snapshot — with
+ * one asset per produced output format — laid out alongside the data files
+ * themselves
  * ({database}/catalog.json, {database}/schema=X/relation=Y/collection.json,
  * .../_gc2_snapshot_date=D/item.json).
  *
@@ -188,16 +189,7 @@ final class StacCatalogWriter
     private function item(string $collectionId, array $row): array
     {
         $bbox = $this->bbox($row['bbox'] ?? null);
-        $files = $this->decode($row['files'] ?? null);
         $uuid = (string)$row['uuid'];
-        $dataFile = null;
-        foreach ($files as $file) {
-            if (is_array($file) && isset($file['name']) && str_ends_with((string)$file['name'], '.parquet')) {
-                $dataFile = (string)$file['name'];
-                break;
-            }
-        }
-        $dataFile ??= "data-$uuid.parquet";
 
         $properties = ['datetime' => $row['snapshot_date'] . 'T00:00:00Z'];
         if (($row['row_count'] ?? null) !== null) {
@@ -243,13 +235,7 @@ final class StacCatalogWriter
             ['rel' => 'parent', 'href' => '../collection.json', 'type' => 'application/json'],
             ['rel' => 'collection', 'href' => '../collection.json', 'type' => 'application/json'],
         ];
-        $item['assets'] = [
-            'data' => [
-                'href' => "./$dataFile",
-                'type' => 'application/vnd.apache.parquet',
-                'roles' => ['data'],
-                'title' => $this->isSpatial($row, $bbox) ? 'GeoParquet' : 'Parquet',
-            ],
+        $item['assets'] = $this->dataAssets($row, $this->isSpatial($row, $bbox)) + [
             'metadata' => [
                 'href' => "./metadata-$uuid.json",
                 'type' => 'application/json',
@@ -257,6 +243,75 @@ final class StacCatalogWriter
             ],
         ];
         return $item;
+    }
+
+    /**
+     * One asset per produced output format, keyed by the format's STAC asset
+     * key (`data` for Parquet, the format id for the rest) and in the order the
+     * formats were produced. A skipped format has no file and therefore no
+     * asset.
+     *
+     * @param array<string, mixed> $row
+     * @param bool $spatial Whether the snapshot has a geometry column, which is
+     *     what makes Parquet *Geo*Parquet.
+     * @return array<string, array<string, mixed>>
+     */
+    private function dataAssets(array $row, bool $spatial): array
+    {
+        $assets = [];
+        foreach ($this->producedFormats($row) as [$format, $file]) {
+            $assets[$format->stacAssetKey] = [
+                'href' => "./$file",
+                'type' => $format->mediaType,
+                'roles' => ['data'],
+                'title' => $format->stacTitle($spatial),
+            ];
+        }
+        return $assets;
+    }
+
+    /**
+     * The produced formats of a snapshot as [format, file name] pairs.
+     *
+     * Read from the row's `formats` results, which is what the worker writes on
+     * publish. A row published before that column existed — or one whose
+     * `formats` still holds the *requested* ids rather than results — is
+     * described by its files instead, every data file a produced format; and a
+     * row with neither falls back to the Parquet the file names always had, so
+     * an old item keeps exactly the asset it has always had.
+     *
+     * @param array<string, mixed> $row
+     * @return array<int, array{0:SnapshotFormat, 1:string}>
+     */
+    private function producedFormats(array $row): array
+    {
+        $produced = [];
+        foreach ($this->decode($row['formats'] ?? null) as $entry) {
+            if (!is_array($entry) || ($entry['status'] ?? 'produced') !== 'produced') {
+                continue;
+            }
+            $id = (string)($entry['format'] ?? '');
+            $file = (string)($entry['file'] ?? '');
+            if ($file === '' || !SnapshotFormat::has($id)) {
+                continue;
+            }
+            $produced[] = [SnapshotFormat::get($id), $file];
+        }
+        if ($produced !== []) {
+            return $produced;
+        }
+        foreach ($this->decode($row['files'] ?? null) as $file) {
+            $name = is_array($file) ? (string)($file['name'] ?? '') : '';
+            $format = $name === '' ? null : SnapshotFormat::fromExtension($name);
+            if ($format !== null) {
+                $produced[] = [$format, $name];
+            }
+        }
+        if ($produced !== []) {
+            return $produced;
+        }
+        $parquet = SnapshotFormat::get('parquet');
+        return [[$parquet, $parquet->fileName((string)$row['uuid'])]];
     }
 
     /**

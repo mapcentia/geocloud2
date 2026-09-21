@@ -430,9 +430,28 @@ a document cannot state an absolute URL it does not know. Links are
   `bbox` member at all, when the relation has no footprint); `properties`
   carries `datetime` (the snapshot date at midnight UTC), `gc2:snapshot_id`,
   `gc2:row_count` and `gc2:schema_version` when known (omitted rather than
-  null) and `proj:code` when a CRS is known. Assets:
-  `data` (the `.parquet` entry of the row's `files`, `application/vnd.apache.parquet`,
-  titled `GeoParquet` or `Parquet`) and `metadata` (`metadata-<uuid>.json`).
+  null) and `proj:code` when a CRS is known. Assets: **one per produced output
+  format** plus `metadata` (`metadata-<uuid>.json`), see below.
+
+### Assets per format (amended 2026-09-21, multi-format snapshots)
+
+A snapshot holds one data file per produced format, so an Item carries one
+asset per produced format, in the order they were produced, keyed by the
+format's `stacAssetKey` from `SnapshotFormat` — `data` for Parquet (unchanged,
+so an old item keeps the key readers already follow) and the format id for the
+rest (`flatgeobuf`). Each asset is `{href: ./<file>, type: <mediaType>, roles:
+["data"], title: <stacTitle(spatial)>}`: `GeoParquet`/`Parquet` depending on
+whether the relation has a geometry column, `FlatGeobuf` either way. A
+**skipped** format has no file and therefore no asset, and a snapshot of only a
+geometry-only format has no `data` asset at all — its file is under its own
+key. The `metadata` asset is unchanged and stays last.
+
+The assets are read from the row's `formats` results (what the worker writes on
+publish). A row published before that column existed — or one whose `formats`
+still holds the *requested* ids rather than results — is described by its
+`files` instead, every data file a produced format by extension
+(`SnapshotFormat::fromExtension`); a row with neither falls back to
+`data-<uuid>.parquet`, exactly the asset such an item has always had.
 
 ### CRS
 

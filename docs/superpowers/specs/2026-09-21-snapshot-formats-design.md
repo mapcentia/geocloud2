@@ -220,6 +220,52 @@ API:
   server default. The fallback applies only to a row with no list at all (one
   queued before the column existed).
 
+## 8b. Deviations recorded during implementation (Tasks 4-6)
+
+**Job API (§2)**
+
+- An unknown format id is rejected in `validate()` *before* the
+  `Assert\Collection` runs, so the answer is `400 INVALID_REQUEST` with the
+  message the spec asks for ("Unknown snapshot format 'x'; known formats are
+  …"). `Assert\Choice` stays in the collection as a second line of defence.
+  The other shape errors — an empty list, duplicates, a non-string element —
+  are Symfony violations and answer `400 INPUT_VALIDATION_ERROR`, which is how
+  every other v4 body error reads.
+- The non-spatial refusal names the relation:
+  `Relation <schema>.<relation> has no geometry column; formats [flatgeobuf]
+  cannot be produced`. Without the relation an array request would not say
+  which element was refused.
+- `SnapshotFormat::IDS` (a constant with the same ids as the registry) was added
+  because a PHP attribute argument must be a constant expression and cannot call
+  `ids()`; the OpenAPI enums read it and a unit test asserts
+  `ids() === IDS`.
+- `SnapshotWorker::spatialColumn()` moved to `Snapshot::spatialColumn()` (the
+  model), so the job API's refusal and the worker's skip answer from one query.
+
+**Read API (§4)**
+
+- A `[file]` segment on `/data` that is not shaped like a format id (uppercase,
+  a hyphen, …) answers `400 INVALID_REQUEST` rather than the previous
+  `404 NO_SNAPSHOT_ERROR`: a caller gets one answer for "that is not a format
+  id" whether it is misspelled or miscased.
+- The `409 MULTI_FILE_SNAPSHOT` message lists `/data/{format}` paths rather than
+  full hrefs (GC2Exception carries no data payload). It is unreachable with the
+  two formats that exist today — two produced files always include the Parquet —
+  and is therefore not covered by a test.
+- `formats` is rendered by the shared presenter, so it appears on the list
+  entries as well as on the single snapshot, `href` and all.
+- The FlatGeobuf signature is asserted as its first **seven** bytes
+  (`66 67 62 03 66 67 62`); the eighth is the format's minor version and is
+  `0x01` with the GDAL in the current image, not the `0x00` of the spec text.
+
+**STAC (§5)**
+
+- `StacCatalogWriter` decodes the row's `formats` itself instead of calling
+  `Snapshot::presentFormats()`, keeping the writer pure (rows in, documents out,
+  no model class) as it already was for `files`, `bbox` and `relation_schema`.
+- A row whose `formats` still holds the *requested* ids (strings, never written
+  by `publish()`) is described by its `files`, like a row from before the column.
+
 ## 9. Follow-ups (not in scope)
 
 - Per-job `snapshot_formats` on scheduler jobs.
