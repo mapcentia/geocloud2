@@ -5,9 +5,10 @@ use Codeception\Util\HttpCode;
 /**
  * HTTP contract of the relation snapshot read API
  * (app/api/v4/controllers/RelationSnapshot.php): listing, metadata, HEAD/GET
- * of the Parquet file with byte ranges, and the privilege check. Runs the
- * snapshot worker inline (same container) after queuing, against whatever
- * storage app/conf/App.php configures. Ordered/stateful.
+ * of the data files with byte ranges, one file per produced format, and the
+ * privilege check. Runs the snapshot worker inline (same container) after
+ * queuing, against whatever storage app/conf/App.php configures.
+ * Ordered/stateful.
  */
 class RelationSnapshotV4ApiCest
 {
@@ -19,6 +20,16 @@ class RelationSnapshotV4ApiCest
     private $schema;
     private $date;
     private $size;
+    private $fgbSize;
+    private $nogeomDate;
+    private $fgbOnlyDate;
+
+    /**
+     * FlatGeobuf's file signature: "fgb", the spec's major version byte, then
+     * "fgb" again. The eighth byte is the spec's *minor* version (0x01 with the
+     * GDAL in this image) and is deliberately not asserted.
+     */
+    private const FGB_MAGIC = "fgb\x03fgb";
 
     public function __construct()
     {
@@ -41,7 +52,12 @@ class RelationSnapshotV4ApiCest
 
     private function base(): string
     {
-        return '/api/v4/schemas/' . $this->schema . '/relations/poi/snapshots';
+        return $this->baseFor('poi');
+    }
+
+    private function baseFor(string $relation): string
+    {
+        return '/api/v4/schemas/' . $this->schema . '/relations/' . $relation . '/snapshots';
     }
 
     public function shouldPrepareUsersTableAndSnapshot(ApiTester $I)
@@ -77,22 +93,65 @@ class RelationSnapshotV4ApiCest
         $I->sendPOST('/api/v4/sql', json_encode(['q' => "INSERT INTO \"{$this->schema}\".poi(name, the_geom) SELECT 'p'||g, ST_SetSRID(ST_MakePoint(10+g*0.001, 56), 4326) FROM generate_series(1, 50) g"]));
         $I->seeResponseCodeIs(HttpCode::OK);
 
-        $I->sendPOST('/api/v4/snapshots', json_encode(['schema' => $this->schema, 'relation' => 'poi']));
-        $I->seeResponseCodeIs(HttpCode::ACCEPTED);
-        $id = json_decode($I->grabResponse())->id;
+        // A relation without a geometry column, so one requested format is
+        // skipped and /data/{format} has a 404 case to answer.
+        $I->sendPOST('/api/v4/schemas/' . $this->schema . '/tables', json_encode(['name' => 'nogeom', 'columns' => [
+            ['name' => 'gid', 'type' => 'serial'], ['name' => 'name', 'type' => 'varchar'],
+        ]]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $I->sendPOST('/api/v4/sql', json_encode(['q' => "INSERT INTO \"{$this->schema}\".nogeom(name) SELECT 'n'||g FROM generate_series(1, 5) g"]));
+        $I->seeResponseCodeIs(HttpCode::OK);
 
-        // Run the worker inline for this database (the container has no snapshot cron).
-        $out = shell_exec('php -f /var/www/geocloud2/app/scripts/snapshot_worker.php ' . escapeshellarg($this->userId) . ' 2>&1');
-        $I->assertStringContainsString('ok=1', (string)$out, "worker output: $out");
+        // A second spatial table, snapshotted as FlatGeobuf only, so one
+        // snapshot has no Parquet at all: /data must then serve the single
+        // file it does have.
+        $I->sendPOST('/api/v4/schemas/' . $this->schema . '/tables', json_encode(['name' => 'poi_fgb', 'columns' => [
+            ['name' => 'gid', 'type' => 'serial'], ['name' => 'name', 'type' => 'varchar'], ['name' => 'the_geom', 'type' => 'geometry(Point,4326)'],
+        ]]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $I->sendPOST('/api/v4/sql', json_encode(['q' => "INSERT INTO \"{$this->schema}\".poi_fgb(name, the_geom) SELECT 'q'||g, ST_SetSRID(ST_MakePoint(11+g*0.001, 57), 4326) FROM generate_series(1, 5) g"]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+
+        // Every relation in one array request, each with its own formats.
+        $I->sendPOST('/api/v4/snapshots', json_encode([
+            ['schema' => $this->schema, 'relation' => 'poi', 'formats' => ['parquet', 'flatgeobuf']],
+            ['schema' => $this->schema, 'relation' => 'nogeom', 'formats' => ['parquet', 'flatgeobuf']],
+            ['schema' => $this->schema, 'relation' => 'poi_fgb', 'formats' => ['flatgeobuf']],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::ACCEPTED);
+        $accepted = json_decode($I->grabResponse());
+        $I->assertCount(3, $accepted);
+        [$id, $nogeomId, $fgbOnlyId] = [$accepted[0]->id, $accepted[1]->id, $accepted[2]->id];
+
+        // Run the worker inline for this database (the container has no snapshot
+        // cron); the batch size is raised so one run drains all three rows.
+        $out = shell_exec('GC2_SNAPSHOT_BATCH=3 php -f /var/www/geocloud2/app/scripts/snapshot_worker.php ' . escapeshellarg($this->userId) . ' 2>&1');
+        $I->assertStringContainsString('ok=3', (string)$out, "worker output: $out");
 
         $I->sendGET('/api/v4/snapshots/' . $id);
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseContainsJson(['status' => 'succeeded']);
+        $body = json_decode($I->grabResponse(), true);
+        $I->assertSame(['produced', 'produced'], array_column($body['formats'], 'status'), 'the spatial relation gets both formats');
         // Take the date from the job API rather than gmdate() after the run:
         // a midnight-UTC rollover between the worker's gmdate() and ours would
         // otherwise point every later request at a date with no snapshot.
-        $this->date = json_decode($I->grabResponse())->snapshot_date;
+        $this->date = $body['snapshot_date'];
         $I->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', (string)$this->date);
+
+        $I->sendGET('/api/v4/snapshots/' . $nogeomId);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseContainsJson(['status' => 'succeeded']);
+        $nogeom = json_decode($I->grabResponse(), true);
+        $I->assertSame(['produced', 'skipped'], array_column($nogeom['formats'], 'status'), 'FlatGeobuf is skipped without a geometry column');
+        $this->nogeomDate = $nogeom['snapshot_date'];
+
+        $I->sendGET('/api/v4/snapshots/' . $fgbOnlyId);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseContainsJson(['status' => 'succeeded']);
+        $fgbOnly = json_decode($I->grabResponse(), true);
+        $I->assertSame([['format' => 'flatgeobuf', 'status' => 'produced']], array_map(fn($f) => ['format' => $f['format'], 'status' => $f['status']], $fgbOnly['formats']));
+        $this->fgbOnlyDate = $fgbOnly['snapshot_date'];
     }
 
     public function shouldListSnapshotsOfRelation(ApiTester $I)
@@ -106,11 +165,25 @@ class RelationSnapshotV4ApiCest
         $I->assertEquals($this->date, $s->snapshot_date);
         $I->assertEquals(50, $s->row_count);
         $I->assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $s->schema_version);
-        $I->assertCount(1, $s->files);
-        $I->assertStringEndsWith('.parquet', $s->files[0]->name);
-        $I->assertEquals($this->base() . '/' . $this->date . '/files/' . $s->files[0]->name, $s->files[0]->href);
-        $this->size = (int)$s->files[0]->size_bytes;
+        $I->assertCount(2, $s->files, 'one file per produced format');
+        $byExtension = [];
+        foreach ($s->files as $f) {
+            $byExtension[pathinfo($f->name, PATHINFO_EXTENSION)] = $f;
+            $I->assertEquals($this->base() . '/' . $this->date . '/files/' . $f->name, $f->href);
+        }
+        $I->assertSame(['parquet', 'fgb'], array_keys($byExtension));
+        $this->size = (int)$byExtension['parquet']->size_bytes;
+        $this->fgbSize = (int)$byExtension['fgb']->size_bytes;
         $I->assertGreaterThan(8, $this->size);
+        $I->assertGreaterThan(8, $this->fgbSize);
+
+        // Every produced format is addressable straight from the list.
+        $I->assertSame([
+            ['parquet', 'produced', $this->base() . '/' . $this->date . '/data/parquet'],
+            ['flatgeobuf', 'produced', $this->base() . '/' . $this->date . '/data/flatgeobuf'],
+        ], array_map(fn($f) => [$f->format, $f->status, $f->href], $s->formats));
+        $I->assertSame('application/vnd.apache.parquet', $s->formats[0]->media_type);
+        $I->assertSame('application/flatgeobuf', $s->formats[1]->media_type);
     }
 
     public function shouldReturnSnapshotMetadata(ApiTester $I)
@@ -122,7 +195,10 @@ class RelationSnapshotV4ApiCest
         $I->assertEquals($this->date, $body->snapshot_date);
         $I->assertEquals('EPSG:4326', $body->crs);
         $I->assertEquals('gid', $body->relation_schema[0]->column_name);
-        $I->assertEquals($this->base() . '/' . $this->date . '/data', $body->_links->data);
+        $I->assertEquals($this->base() . '/' . $this->date . '/data', $body->_links->data, '/data stays the Parquet');
+        $I->assertSame(['parquet', 'flatgeobuf'], array_map(fn($f) => $f->format, $body->formats));
+        $I->assertEquals($this->base() . '/' . $this->date . '/data/flatgeobuf', $body->formats[1]->href);
+        $I->assertSame($this->fgbSize, (int)$body->formats[1]->size_bytes);
 
         $I->sendGET($this->base() . '/1999-01-01');
         $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
@@ -317,5 +393,131 @@ class RelationSnapshotV4ApiCest
         $this->asSuper($I);
         $I->sendDELETE('/api/v4/rules/' . $ruleId);
         $I->seeResponseCodeIsSuccessful();
+    }
+
+    public function shouldServeAChosenFormat(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendGET($this->base() . '/' . $this->date . '/data/flatgeobuf');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeHttpHeader('Content-Type', 'application/flatgeobuf');
+        $I->seeHttpHeader('Accept-Ranges', 'bytes');
+        $body = $I->grabResponse();
+        $I->assertSame($this->fgbSize, strlen($body), 'the whole FlatGeobuf file');
+        $I->assertSame(self::FGB_MAGIC, substr($body, 0, 7), 'FlatGeobuf signature');
+        $this->seeContentLengthIfTrusted($I, $this->fgbSize);
+
+        $I->sendHEAD($this->base() . '/' . $this->date . '/data/flatgeobuf');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeHttpHeader('Content-Type', 'application/flatgeobuf');
+        $I->seeHttpHeader('Accept-Ranges', 'bytes');
+        $I->assertSame('', $I->grabResponse());
+        $this->seeContentLengthIfTrusted($I, $this->fgbSize);
+
+        // /data/parquet is the same file /data serves.
+        $I->sendGET($this->base() . '/' . $this->date . '/data/parquet');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeHttpHeader('Content-Type', 'application/vnd.apache.parquet');
+        $I->assertSame($this->size, strlen($I->grabResponse()));
+    }
+
+    public function shouldServeByteRangesOfAChosenFormat(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->haveHttpHeader('Range', 'bytes=0-7');
+        $I->sendGET($this->base() . '/' . $this->date . '/data/flatgeobuf');
+        $I->seeResponseCodeIs(HttpCode::PARTIAL_CONTENT);
+        $I->seeHttpHeader('Content-Range', 'bytes 0-7/' . $this->fgbSize);
+        $I->seeHttpHeader('Content-Type', 'application/flatgeobuf');
+        // Content-Length on a 206 needs the vhost's ap_trust_cgilike_cl.
+        $this->seeContentLengthIfTrusted($I, 8);
+        // The body itself arrives whole even where Content-Length does not.
+        $body = $I->grabResponse();
+        $I->assertSame(8, strlen($body));
+        $I->assertSame(self::FGB_MAGIC, substr($body, 0, 7), 'the file signature, from the first byte range');
+
+        $I->haveHttpHeader('Range', 'bytes=999999999-');
+        $I->sendGET($this->base() . '/' . $this->date . '/data/flatgeobuf');
+        $I->seeResponseCodeIs(416);
+        $I->seeHttpHeader('Content-Range', 'bytes */' . $this->fgbSize);
+        $I->deleteHeader('Range');
+    }
+
+    public function shouldRejectAnUnknownFormat(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendGET($this->base() . '/' . $this->date . '/data/geojson');
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->seeResponseContainsJson(['errorCode' => 'INVALID_REQUEST']);
+        $message = json_decode($I->grabResponse())->message;
+        $I->assertStringContainsString('geojson', $message);
+        $I->assertStringContainsString('flatgeobuf', $message);
+
+        // The segment is validated before anything looks it up.
+        $I->sendGET($this->base() . '/' . $this->date . '/data/FlatGeobuf');
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->seeResponseContainsJson(['errorCode' => 'INVALID_REQUEST']);
+        $I->sendGET($this->base() . '/' . $this->date . '/data/flat-geobuf');
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+    }
+
+    public function shouldReturn404ForAFormatThatWasNotProduced(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $base = $this->baseFor('nogeom');
+        $I->sendGET($base . '/' . $this->nogeomDate);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $body = json_decode($I->grabResponse());
+        $I->assertSame(['parquet', 'flatgeobuf'], array_map(fn($f) => $f->format, $body->formats));
+        $I->assertSame('skipped', $body->formats[1]->status);
+        $I->assertFalse(property_exists($body->formats[1], 'href'), 'a skipped format has nothing to download');
+        $I->assertStringContainsString('geometry', $body->formats[1]->reason);
+
+        $I->sendGET($base . '/' . $this->nogeomDate . '/data/flatgeobuf');
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        $I->seeResponseContainsJson(['errorCode' => 'NO_SNAPSHOT_ERROR']);
+
+        // The one format it does have is still served by bare /data.
+        $I->sendGET($base . '/' . $this->nogeomDate . '/data');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeHttpHeader('Content-Type', 'application/vnd.apache.parquet');
+        $I->assertSame('PAR1', substr($I->grabResponse(), 0, 4));
+    }
+
+
+    public function shouldServeTheOnlyFormatOfAParquetLessSnapshot(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $base = $this->baseFor('poi_fgb');
+        $I->sendGET($base . '/' . $this->fgbOnlyDate);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $body = json_decode($I->grabResponse());
+        $I->assertSame(['flatgeobuf'], array_map(fn($f) => $f->format, $body->formats));
+        $I->assertEquals($base . '/' . $this->fgbOnlyDate . '/data/flatgeobuf', $body->formats[0]->href);
+        $I->assertFalse(property_exists($body->_links, 'data'), 'no Parquet, so no _links.data');
+
+        // Bare /data has only one file to choose from and serves it.
+        $I->sendGET($base . '/' . $this->fgbOnlyDate . '/data');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeHttpHeader('Content-Type', 'application/flatgeobuf');
+        $I->assertSame(self::FGB_MAGIC, substr($I->grabResponse(), 0, 7));
+
+        $I->sendGET($base . '/' . $this->fgbOnlyDate . '/data/parquet');
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        $I->seeResponseContainsJson(['errorCode' => 'NO_SNAPSHOT_ERROR']);
+    }
+
+    /**
+     * Content-Length only survives HEAD and 206 when the vhost sets
+     * `SetEnv ap_trust_cgilike_cl 1` (AGENTS.md section 6); the running image
+     * may predate that, and rebuilding it is not this Cest's business. Where
+     * the header is there it must be right.
+     */
+    private function seeContentLengthIfTrusted(ApiTester $I, int $expected): void
+    {
+        $length = $I->grabHttpHeader('Content-Length');
+        if ($length !== null && $length !== '') {
+            $I->assertSame((string)$expected, (string)$length);
+        }
     }
 }

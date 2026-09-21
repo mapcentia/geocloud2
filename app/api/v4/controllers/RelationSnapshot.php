@@ -25,6 +25,7 @@ use app\inc\Route2;
 use app\inc\snapshot\RangeNotSatisfiable;
 use app\inc\snapshot\RangeRequest;
 use app\inc\snapshot\SnapshotAuthorizer;
+use app\inc\snapshot\SnapshotFormat;
 use app\inc\snapshot\SnapshotRef;
 use app\inc\snapshot\SnapshotStorage;
 use app\inc\snapshot\SnapshotStorageFactory;
@@ -38,9 +39,13 @@ use OpenApi\Attributes as OA;
 use Override;
 
 /**
- * Read API for published GeoParquet snapshots of a relation: list, metadata,
- * and the files themselves with HEAD + byte-range support so Parquet readers
- * (DuckDB read_parquet) can fetch footers and row groups selectively.
+ * Read API for published snapshots of a relation: list, metadata, and the
+ * files themselves with HEAD + byte-range support so Parquet readers (DuckDB
+ * read_parquet) can fetch footers and row groups selectively.
+ *
+ * A snapshot holds one data file per produced output format (SnapshotFormat).
+ * `/data` serves the Parquet, as it always has; `/data/{format}` serves a
+ * named one.
  *
  * Authorization runs before any catalog file name or storage call: super
  * users always, sub-users by schema ownership or layer read privilege, and
@@ -59,6 +64,7 @@ use Override;
         new OA\Property(property: "size_bytes", type: "integer"),
         new OA\Property(property: "schema_version", type: "string"),
         new OA\Property(property: "files", type: "array", items: new OA\Items(type: "object")),
+        new OA\Property(property: "formats", description: "One entry per requested output format; a produced one carries its `href` under /data/{format}.", type: "array", items: new OA\Items(ref: "#/components/schemas/SnapshotFormatResult")),
         new OA\Property(property: "published", type: "string", format: "date-time"),
     ],
     type: "object"
@@ -68,7 +74,6 @@ use Override;
 class RelationSnapshot extends AbstractApi
 {
     private const int CHUNK = 1048576;
-    private const string PARQUET = 'application/vnd.apache.parquet';
 
     private SnapshotModel $snapshot;
     private SnapshotAuthorizer $authorizer;
@@ -121,15 +126,47 @@ class RelationSnapshot extends AbstractApi
                 'size_bytes' => (int)$f['size_bytes'],
                 'href' => $this->base() . "/$date/files/{$f['name']}",
             ], $this->filesOf($row)),
+            // Every format the snapshot was asked for and what became of it; a
+            // produced one says where to download it, a skipped one why there
+            // is nothing to download.
+            'formats' => array_map(function (array $f) use ($date) {
+                if (($f['status'] ?? null) === 'produced') {
+                    $f['href'] = $this->base() . "/$date/data/{$f['format']}";
+                }
+                return $f;
+            }, SnapshotModel::presentFormats($row)),
             'published' => $row['published'],
         ];
         if ($full) {
             $out['srs'] = $row['srs'] !== null ? (int)$row['srs'] : null;
             $out['relation_schema'] = $row['relation_schema'] !== null ? json_decode($row['relation_schema'], true) : null;
             $out['crs'] = $this->crsOf($row);
-            $out['_links'] = ['data' => $this->base() . "/$date/data", 'files' => $out['files']];
+            $out['_links'] = ['files' => $out['files']];
+            // _links.data is the Parquet, as it has always been; a snapshot
+            // without one (every Parquet-less format list) simply has no such
+            // link, and its formats carry the hrefs instead.
+            if ($this->producedFormat($out['formats'], 'parquet') !== null) {
+                $out['_links'] = ['data' => $this->base() . "/$date/data"] + $out['_links'];
+            }
         }
         return $out;
+    }
+
+    /**
+     * One produced entry of a presented formats list, or null when that format
+     * was skipped or never requested.
+     *
+     * @param array<int, array<string, mixed>> $formats
+     * @return array<string, mixed>|null
+     */
+    private function producedFormat(array $formats, string $id): ?array
+    {
+        foreach ($formats as $f) {
+            if (($f['status'] ?? null) === 'produced' && ($f['format'] ?? null) === $id) {
+                return $f;
+            }
+        }
+        return null;
     }
 
     /** The CRS as written to metadata.json: requested srs, else the native SRID stored by the worker in metadata. */
@@ -257,14 +294,43 @@ class RelationSnapshot extends AbstractApi
             new OA\Response(response: 502, description: 'Snapshot storage unavailable'),
         ]
     )]
+    #[OA\Get(path: '/api/v4/schemas/{schema}/relations/{relation}/snapshots/{date}/data/{format}', operationId: 'getRelationSnapshotDataFormat', description: "The snapshot's data file in one named output format. Same HEAD/Range/redirect semantics as /data. 400 for an unknown format id, 404 when the snapshot did not produce that format (it was skipped or never requested).", tags: ['Snapshots'],
+        parameters: [
+            new OA\Parameter(name: 'schema', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relation', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'date', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'format', description: 'Output format id', in: 'path', required: true, schema: new OA\Schema(type: 'string', enum: SnapshotFormat::IDS), example: 'flatgeobuf'),
+            new OA\Parameter(name: 'Range', in: 'header', required: false, schema: new OA\Schema(type: 'string'), example: 'bytes=0-1023'),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Whole file'),
+            new OA\Response(response: 206, description: 'Partial content'),
+            new OA\Response(response: 302, description: 'Redirect to a presigned URL (redirect mode)'),
+            new OA\Response(response: 400, description: 'Unknown format id'),
+            new OA\Response(response: 403, description: 'Insufficient privileges'),
+            new OA\Response(response: 404, description: 'No published snapshot for that date, or that format was not produced'),
+            new OA\Response(response: 416, description: 'Range not satisfiable'),
+            new OA\Response(response: 502, description: 'Snapshot storage unavailable'),
+        ]
+    )]
     public function get_data(): Response
     {
-        return $this->serve($this->dataFile(), false);
+        return $this->serve($this->dataFileFor($this->requestedFormat()), false);
     }
 
     public function head_data(): Response
     {
-        return $this->serve($this->dataFile(), true);
+        return $this->serve($this->dataFileFor($this->requestedFormat()), true);
+    }
+
+    /**
+     * The format id in the `[file]` segment of the data route, or null for a
+     * bare `/data`. validate() has already checked its shape.
+     */
+    private function requestedFormat(): ?string
+    {
+        $format = (string)$this->route->getParam('file');
+        return $format === '' ? null : $format;
     }
 
     #[OA\Get(path: '/api/v4/schemas/{schema}/relations/{relation}/snapshots/{date}/files/{file}', operationId: 'getRelationSnapshotFile', description: "One file of the snapshot by catalog name (data-<id>.parquet, metadata-<id>.json). Same HEAD/Range semantics as /data.", tags: ['Snapshots'],
@@ -307,20 +373,43 @@ class RelationSnapshot extends AbstractApi
     {
     }
 
-    /** @return array{row:array, file:array{name:string,size_bytes:int}} */
-    private function dataFile(): array
+    /**
+     * The data file to serve: the one of $format, or — for a bare `/data` —
+     * the Parquet a client has always got there.
+     *
+     * @param string|null $format A format id, or null for `/data`.
+     * @return array{row:array, file:array{name:string,size_bytes:int}}
+     * @throws GC2Exception 400 INVALID_REQUEST unknown format id,
+     *     404 NO_SNAPSHOT_ERROR the snapshot has no such file,
+     *     409 MULTI_FILE_SNAPSHOT `/data` is ambiguous
+     */
+    private function dataFileFor(?string $format): array
     {
+        if ($format !== null && !SnapshotFormat::has($format)) {
+            throw new GC2Exception("Unknown snapshot format '$format'; known formats are " . implode(', ', SnapshotFormat::ids()), 400, null, "INVALID_REQUEST");
+        }
         $row = $this->authorizedRow();
-        $data = array_values(array_filter($this->filesOf($row), fn($f) => str_ends_with($f['name'], '.parquet')));
-        if (count($data) === 0) {
+        $produced = array_values(array_filter(SnapshotModel::presentFormats($row), fn(array $f) => ($f['status'] ?? null) === 'produced'));
+        if ($format !== null) {
+            $entry = $this->producedFormat($produced, $format);
+            if ($entry === null) {
+                throw new GC2Exception("This snapshot has no $format file", 404, null, "NO_SNAPSHOT_ERROR");
+            }
+            return ['row' => $row, 'file' => ['name' => $entry['file'], 'size_bytes' => (int)$entry['size_bytes']]];
+        }
+        if ($produced === []) {
             throw new GC2Exception("Snapshot has no data file", 404, null, "NO_SNAPSHOT_ERROR");
         }
-        if (count($data) > 1) {
-            // GC2Exception carries no data payload, so the names go in the
+        // Bare /data: the Parquet if there is one (unchanged for every client
+        // written before formats were selectable), else the only file there is.
+        $entry = $this->producedFormat($produced, 'parquet') ?? (count($produced) === 1 ? $produced[0] : null);
+        if ($entry === null) {
+            // GC2Exception carries no data payload, so the hrefs go in the
             // message: a client that gets 409 must know what to fetch instead.
-            throw new GC2Exception("Snapshot has " . count($data) . " data files; fetch them via /files/{file}: " . implode(', ', array_column($data, 'name')), 409, null, "MULTI_FILE_SNAPSHOT");
+            $hrefs = array_map(fn(array $f) => "/data/{$f['format']}", $produced);
+            throw new GC2Exception("Snapshot has " . count($produced) . " data files and no Parquet; fetch one by format: " . implode(', ', $hrefs), 409, null, "MULTI_FILE_SNAPSHOT");
         }
-        return ['row' => $row, 'file' => $data[0]];
+        return ['row' => $row, 'file' => ['name' => $entry['file'], 'size_bytes' => (int)$entry['size_bytes']]];
     }
 
     /** @return array{row:array, file:array{name:string,size_bytes:int}} */
@@ -364,7 +453,12 @@ class RelationSnapshot extends AbstractApi
         $size = (int)$target['file']['size_bytes'];
         $ref = $this->refOf($row);
         $storage = $this->storage();
-        $contentType = str_ends_with($name, '.json') ? 'application/json' : self::PARQUET;
+        // metadata-<id>.json is the one file that belongs to no format; every
+        // other name is a format's data file, and the registry owns its media
+        // type. Anything the registry does not know is served as bytes.
+        $contentType = str_ends_with($name, '.json')
+            ? 'application/json'
+            : (SnapshotFormat::fromExtension($name)?->mediaType ?? 'application/octet-stream');
 
         if ((App::$param['snapshot']['download'] ?? 'proxy') === 'redirect') {
             $url = $this->withStorage(fn() => $storage->downloadUrl($ref, $name, (int)(App::$param['snapshot']['urlTtl'] ?? 300)));
@@ -487,8 +581,12 @@ class RelationSnapshot extends AbstractApi
         if ($action === 'files' && (empty($this->route->getParam('file')) || preg_match('#[/\\\\]#', (string)$this->route->getParam('file')))) {
             throw new GC2Exception("A file name is required", 400, null, "INVALID_REQUEST");
         }
-        if ($action === 'data' && !empty($this->route->getParam('file'))) {
-            throw new GC2Exception("Unknown resource", 404, null, "NO_SNAPSHOT_ERROR");
+        // /data/{format}: a format id, checked against the registry in
+        // dataFileFor(). The shape is checked here so nothing odd reaches a
+        // lookup, and a caller gets one answer (400) for "that is not a format
+        // id" whether it is misspelled or miscased.
+        if ($action === 'data' && !empty($this->route->getParam('file')) && !preg_match('/^[a-z0-9]+$/', (string)$this->route->getParam('file'))) {
+            throw new GC2Exception("A snapshot format id is " . implode(' or ', SnapshotFormat::ids()), 400, null, "INVALID_REQUEST");
         }
     }
 
