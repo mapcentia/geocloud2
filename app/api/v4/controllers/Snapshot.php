@@ -30,11 +30,13 @@ use Override;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * Asynchronous Parquet snapshots of a table or view to S3.
+ * Asynchronous snapshots of a table or view to object storage.
  *
  * POST queues a job (202) and a cron worker (app/scripts/snapshot_worker.php)
- * exports the relation with ogr2ogr and uploads data.parquet + metadata.json.
- * GET returns the job status. Super-user only.
+ * exports the relation with ogr2ogr in every requested output format
+ * (SnapshotFormat: Parquet, FlatGeobuf) and uploads one data-<id>.<ext> per
+ * format plus metadata-<id>.json. GET returns the job status, including what
+ * became of each format. Super-user only.
  *
  * @package app\api\v4
  */
@@ -51,6 +53,20 @@ use Symfony\Component\Validator\Constraints as Assert;
     type: "object"
 )]
 #[OA\Schema(
+    schema: "SnapshotFormatResult",
+    description: "One output format of a snapshot and what became of it: `requested` before the worker ran, then `produced` (with file, size and media type) or `skipped` (with a reason, e.g. a geometry-only format on a relation without geometry).",
+    properties: [
+        new OA\Property(property: "format", type: "string", enum: SnapshotFormat::IDS, example: "parquet"),
+        new OA\Property(property: "status", type: "string", enum: ["requested", "produced", "skipped"], example: "produced"),
+        new OA\Property(property: "file", description: "Produced only: file name in the snapshot directory.", type: "string", example: "data-0b8c2f2e-2f5a-4d9c-9d3a-1b2c3d4e5f60.parquet"),
+        new OA\Property(property: "size_bytes", description: "Produced only.", type: "integer", example: 123456),
+        new OA\Property(property: "media_type", description: "Produced only.", type: "string", example: "application/vnd.apache.parquet"),
+        new OA\Property(property: "reason", description: "Skipped only: why this format could not be produced.", type: "string", example: "relation has no geometry column"),
+        new OA\Property(property: "href", description: "Produced only, and only in the relation snapshot read API: where to download this format.", type: "string", example: "/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16/data/parquet"),
+    ],
+    type: "object"
+)]
+#[OA\Schema(
     schema: "SnapshotRequest",
     description: "A request to snapshot a table or view to Parquet on S3.",
     required: ["schema", "relation"],
@@ -58,6 +74,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(property: "schema", title: "Schema", description: "Schema of the relation.", type: "string", example: "geodanmark"),
         new OA\Property(property: "relation", title: "Relation", description: "Table or view name.", type: "string", example: "bygning"),
         new OA\Property(property: "srs", title: "SRS", description: "Optional EPSG code to reproject to. Omit to keep the native SRID.", type: "integer", example: 25832),
+        new OA\Property(property: "formats", title: "Formats", description: "Output formats to produce, in the order they are produced. Omit to use the server default (App.php `snapshot.formats`). Must be non-empty and free of duplicates. A format that needs geometry (FlatGeobuf) is skipped with a reason for a relation without a geometry column — unless every requested format needs one, which is refused up front.", type: "array", items: new OA\Items(type: "string", enum: SnapshotFormat::IDS), example: ["parquet", "flatgeobuf"]),
     ],
     type: "object"
 )]
@@ -69,6 +86,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(property: "schema", type: "string", example: "geodanmark"),
         new OA\Property(property: "relation", type: "string", example: "bygning"),
         new OA\Property(property: "srs", type: "integer", example: 25832, nullable: true),
+        new OA\Property(property: "formats", description: "One entry per requested output format and its outcome.", type: "array", items: new OA\Items(ref: "#/components/schemas/SnapshotFormatResult")),
         new OA\Property(property: "status", type: "string", enum: ["pending", "running", "succeeded", "failed", "superseded"]),
         new OA\Property(property: "snapshot_date", description: "UTC date the export ran; the {date} segment of the relation snapshot read API.", type: "string", format: "date", example: "2026-09-16", nullable: true),
         new OA\Property(property: "s3_path", type: "string", example: "s3://gc2-parquet/prod/mydb/schema=geodanmark/relation=bygning/_gc2_snapshot_date=2026-09-15/", nullable: true),
@@ -109,6 +127,7 @@ class Snapshot extends AbstractApi
             'schema' => $row['schema_name'],
             'relation' => $row['relation_name'],
             'srs' => $row['srs'] !== null ? (int)$row['srs'] : null,
+            'formats' => SnapshotModel::presentFormats($row),
             'status' => $row['status'],
             // Exposed so a client that queued a snapshot can address it in the
             // read API (/schemas/{s}/relations/{r}/snapshots/{snapshot_date})
@@ -199,7 +218,8 @@ class Snapshot extends AbstractApi
 
         // Check every request before queueing any, so a bad list queues nothing.
         $seen = [];
-        foreach ($requests as $r) {
+        $formats = [];
+        foreach ($requests as $i => $r) {
             $schema = (string)$r['schema'];
             $relation = (string)$r['relation'];
             if (isset($seen["$schema.$relation"])) {
@@ -212,13 +232,22 @@ class Snapshot extends AbstractApi
             if ($this->snapshot->hasActive($schema, $relation)) {
                 throw new GC2Exception("A snapshot of $schema.$relation is already pending or running", 409, null, "SNAPSHOT_IN_PROGRESS");
             }
+            // validate() has already checked that every id is known; what is
+            // left is whether this relation can be written in any of them.
+            $formats[$i] = array_values($r['formats'] ?? SnapshotFormat::defaults());
+            $needGeometry = array_values(array_filter($formats[$i], fn(string $f) => SnapshotFormat::get($f)->requiresGeometry));
+            // Only when *every* format needs geometry is the request refused:
+            // otherwise the worker produces what it can and records a reason
+            // for the rest. The lookup is skipped unless it can change the
+            // outcome, so the common request costs no extra query.
+            if (count($needGeometry) === count($formats[$i]) && $this->snapshot->spatialColumn($schema, $relation) === null) {
+                throw new GC2Exception("Relation $schema.$relation has no geometry column; formats [" . implode(', ', $needGeometry) . "] cannot be produced", 400, null, "INVALID_REQUEST");
+            }
         }
         $accepted = [];
-        foreach ($requests as $r) {
+        foreach ($requests as $i => $r) {
             $srs = isset($r['srs']) ? (int)$r['srs'] : null;
-            // Task 4 wires the request's own `formats`; until then every
-            // snapshot is produced in the server default formats.
-            $id = $this->snapshot->create((string)$r['schema'], (string)$r['relation'], $srs, $uid, SnapshotFormat::defaults());
+            $id = $this->snapshot->create((string)$r['schema'], (string)$r['relation'], $srs, $uid, $formats[$i]);
             $accepted[] = ['id' => $id, 'status' => 'pending', '_links' => ['self' => "/api/v4/snapshots/$id"]];
         }
         return new AcceptedResponse($isList ? $accepted : $accepted[0]);
@@ -255,6 +284,14 @@ class Snapshot extends AbstractApi
             if (is_array($decoded) && array_is_list($decoded) && $decoded === []) {
                 throw new GC2Exception("An empty list of snapshot requests is not allowed", 400, null, "INVALID_REQUEST");
             }
+            // Before the Assert\Choice below, which would answer with
+            // Symfony's "not a valid choice" and name neither the offending id
+            // nor the ones that would work.
+            if (is_array($decoded)) {
+                foreach (array_is_list($decoded) ? $decoded : [$decoded] as $one) {
+                    $this->assertKnownFormats(is_array($one) ? ($one['formats'] ?? null) : null);
+                }
+            }
             $this->validateRequest(self::getAssert(), Input::getBody(), $method);
         }
     }
@@ -273,6 +310,32 @@ class Snapshot extends AbstractApi
             'schema' => new Assert\Required($name),
             'relation' => new Assert\Required($name),
             'srs' => new Assert\Optional([new Assert\Type('integer'), new Assert\Positive()]),
+            'formats' => new Assert\Optional([
+                new Assert\Type('array'),
+                new Assert\Count(min: 1),
+                new Assert\All([new Assert\Type('string'), new Assert\Choice(SnapshotFormat::ids())]),
+                new Assert\Unique(),
+            ]),
         ]);
+    }
+
+    /**
+     * Rejects an unknown format id with the message the spec asks for: the id
+     * that was sent and the ids that exist. Anything that is not a list of
+     * strings is left to the Assert\Collection, whose message already says
+     * what the field must look like.
+     *
+     * @throws GC2Exception 400 INVALID_REQUEST
+     */
+    private function assertKnownFormats(mixed $formats): void
+    {
+        if (!is_array($formats)) {
+            return;
+        }
+        foreach ($formats as $id) {
+            if (is_string($id) && !SnapshotFormat::has($id)) {
+                throw new GC2Exception("Unknown snapshot format '$id'; known formats are " . implode(', ', SnapshotFormat::ids()), 400, null, "INVALID_REQUEST");
+            }
+        }
     }
 }

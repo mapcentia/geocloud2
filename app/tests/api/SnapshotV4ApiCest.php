@@ -85,6 +85,28 @@ class SnapshotV4ApiCest
             ],
         ]));
         $I->seeResponseCodeIs(HttpCode::CREATED);
+
+        // A second spatial table, so the formats tests can queue snapshots
+        // without colliding with the pending one on poi.
+        $I->sendPOST('/api/v4/schemas/' . $this->schema . '/tables', json_encode([
+            'name' => 'poi_fmt',
+            'columns' => [
+                ['name' => 'gid', 'type' => 'serial'],
+                ['name' => 'the_geom', 'type' => 'geometry(Point,4326)'],
+            ],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+
+        // No geometry column at all: every geometry-only format must be
+        // refused up front for this one.
+        $I->sendPOST('/api/v4/schemas/' . $this->schema . '/tables', json_encode([
+            'name' => 'nogeom',
+            'columns' => [
+                ['name' => 'gid', 'type' => 'serial'],
+                ['name' => 'name', 'type' => 'varchar'],
+            ],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
     }
 
     public function shouldQueueSnapshotAndReturn202(ApiTester $I)
@@ -122,6 +144,17 @@ class SnapshotV4ApiCest
         $I->assertTrue(property_exists($body, 'created'));
         $I->assertTrue(property_exists($body, 'started'));
         $I->assertTrue(property_exists($body, 'finished'));
+
+        // No `formats` in the request: the row carries the server default
+        // (App.php snapshot.formats, built-in ["parquet"]), rendered with a
+        // status like any other formats list.
+        $formats = json_decode($I->grabResponse(), true)['formats'];
+        $I->assertIsArray($formats);
+        $I->assertNotEmpty($formats, 'a snapshot always has at least one format');
+        foreach ($formats as $f) {
+            $I->assertContains($f['format'], ['parquet', 'flatgeobuf'], 'only known format ids');
+            $I->assertContains($f['status'], ['requested', 'produced', 'skipped']);
+        }
     }
 
     public function shouldListSnapshotsWithFilter(ApiTester $I)
@@ -183,6 +216,85 @@ class SnapshotV4ApiCest
 
         $I->sendPOST('/api/v4/snapshots', json_encode([]));
         $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+    }
+
+    public function shouldQueueSnapshotWithChosenFormats(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendPOST('/api/v4/snapshots', json_encode([
+            'schema' => $this->schema, 'relation' => 'poi_fmt', 'formats' => ['parquet', 'flatgeobuf'],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::ACCEPTED);
+        $id = json_decode($I->grabResponse())->id;
+
+        $I->sendGET('/api/v4/snapshots/' . $id);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $body = json_decode($I->grabResponse(), true);
+        $I->assertSame(['parquet', 'flatgeobuf'], array_column($body['formats'], 'format'), 'both formats, in request order');
+        if (in_array($body['status'], ['pending', 'running'], true)) {
+            $I->assertSame([
+                ['format' => 'parquet', 'status' => 'requested'],
+                ['format' => 'flatgeobuf', 'status' => 'requested'],
+            ], $body['formats'], 'before the worker runs every format is merely requested');
+        } else {
+            // A dev stack with a snapshot cron may already have run it.
+            foreach ($body['formats'] as $f) {
+                $I->assertContains($f['status'], ['produced', 'skipped']);
+            }
+        }
+    }
+
+    public function shouldRejectBadFormats(ApiTester $I)
+    {
+        $this->asSuper($I);
+        // An unknown id names itself and the known ids, so a client can fix it.
+        $I->sendPOST('/api/v4/snapshots', json_encode([
+            'schema' => $this->schema, 'relation' => 'poi_fmt', 'formats' => ['geojson'],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->seeResponseContainsJson(['errorCode' => 'INVALID_REQUEST']);
+        $message = json_decode($I->grabResponse())->message;
+        $I->assertStringContainsString('geojson', $message);
+        $I->assertStringContainsString('parquet', $message);
+        $I->assertStringContainsString('flatgeobuf', $message);
+
+        foreach ([[], ['parquet', 'parquet'], 'parquet', [4326]] as $formats) {
+            $I->sendPOST('/api/v4/snapshots', json_encode([
+                'schema' => $this->schema, 'relation' => 'poi_fmt', 'formats' => $formats,
+            ]));
+            $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        }
+
+        // In an array request one bad element refuses the whole list.
+        $I->sendPOST('/api/v4/snapshots', json_encode([
+            ['schema' => $this->schema, 'relation' => 'poi_fmt'],
+            ['schema' => $this->schema, 'relation' => 'nogeom', 'formats' => ['nope']],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->sendGET('/api/v4/snapshots?schema=' . $this->schema . '&relation=nogeom');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertCount(0, json_decode($I->grabResponse()), 'nothing was queued');
+    }
+
+    public function shouldRejectGeometryOnlyFormatsForNonSpatialRelation(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendPOST('/api/v4/snapshots', json_encode([
+            'schema' => $this->schema, 'relation' => 'nogeom', 'formats' => ['flatgeobuf'],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->seeResponseContainsJson(['errorCode' => 'INVALID_REQUEST']);
+        $message = json_decode($I->grabResponse())->message;
+        $I->assertStringContainsString('has no geometry column', $message);
+        $I->assertStringContainsString('flatgeobuf', $message);
+        $I->assertStringContainsString('cannot be produced', $message);
+
+        // Asking for a format the relation *can* be written in is fine: the
+        // geometry-only one is skipped with a reason by the worker.
+        $I->sendPOST('/api/v4/snapshots', json_encode([
+            'schema' => $this->schema, 'relation' => 'nogeom', 'formats' => ['parquet', 'flatgeobuf'],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::ACCEPTED);
     }
 
     public function shouldQueueSeveralSnapshotsFromAnArrayAllOrNothing(ApiTester $I)

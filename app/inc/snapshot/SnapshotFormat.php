@@ -30,6 +30,16 @@ final readonly class SnapshotFormat
     public const array DEFAULT_FORMATS = ['parquet'];
 
     /**
+     * The registry's ids as a constant expression, for the one place that
+     * cannot call ids(): a PHP attribute argument (the OpenAPI `enum` on the
+     * `formats` property and the `/data/{format}` parameter). The registry
+     * below stays the source of truth — SnapshotFormatTest asserts the two
+     * agree, so adding a format without extending this list fails a test
+     * rather than quietly shipping a stale enum.
+     */
+    public const array IDS = ['parquet', 'flatgeobuf'];
+
+    /**
      * Type mapping ogr2ogr needs for both drivers: PostgreSQL `time` and
      * `bytea` columns have no target type of their own and would otherwise
      * abort the export.

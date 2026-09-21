@@ -146,4 +146,16 @@ class SnapshotFormatTest extends Unit
         $this->expectException(RuntimeException::class);
         SnapshotFormat::defaults();
     }
+
+    /**
+     * The OpenAPI enums on `formats` and `/data/{format}` are PHP attribute
+     * arguments and can only be constant expressions, so they read the IDS
+     * constant instead of ids(). The registry stays the source of truth: a
+     * format added there without extending IDS fails here rather than shipping
+     * a stale enum to the SDK and MCP generators.
+     */
+    public function testTheIdsConstantMatchesTheRegistry(): void
+    {
+        $this->assertSame(SnapshotFormat::ids(), SnapshotFormat::IDS);
+    }
 }

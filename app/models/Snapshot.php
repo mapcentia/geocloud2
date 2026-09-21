@@ -55,6 +55,41 @@ class Snapshot extends Model
     }
 
     /**
+     * The relation's first spatial column — geometry or geography — or null
+     * when it has neither. Both views cover tables, views and materialized
+     * views alike, and geometry columns are preferred over geography ones so
+     * the worker's footprint is measured on the same column as before
+     * geography was considered at all.
+     *
+     * A geography relation counts as spatial: ogr2ogr exports it happily, so a
+     * format that requires geometry must not be refused or skipped for it.
+     *
+     * Shared by the worker (which skips a geometry-only format for a relation
+     * without one) and the job API (which refuses a request whose *every*
+     * format needs geometry), so both answer from the same query.
+     *
+     * @return array{column:string, geography:bool}|null
+     */
+    public function spatialColumn(string $schema, string $relation): ?array
+    {
+        $sql = "SELECT column_name, geography FROM (
+                    SELECT f_geometry_column AS column_name, false AS geography FROM geometry_columns
+                    WHERE f_table_schema = :schema AND f_table_name = :relation
+                    UNION ALL
+                    SELECT f_geography_column, true FROM geography_columns
+                    WHERE f_table_schema = :schema AND f_table_name = :relation
+                ) c
+                ORDER BY geography, column_name LIMIT 1";
+        $res = $this->prepare($sql);
+        $this->execute($res, ['schema' => $schema, 'relation' => $relation]);
+        $row = $this->fetchRow($res);
+        if ($row === null || ($row['column_name'] ?? null) === null) {
+            return null;
+        }
+        return ['column' => (string)$row['column_name'], 'geography' => filter_var($row['geography'], FILTER_VALIDATE_BOOLEAN)];
+    }
+
+    /**
      * True when a pending snapshot exists for the relation, or a running one
      * that is still within STALE_RUNNING_INTERVAL of its start. A running row
      * older than that is presumed to have died with its worker and no longer

@@ -109,7 +109,7 @@ class SnapshotWorker
             }
             // Everything that describes the relation rather than one output
             // file is read once, before the first export.
-            $spatialColumn = $this->spatialColumn($schema, $relation);
+            $spatialColumn = $this->snapshot->spatialColumn($schema, $relation);
             $crs = $srs ?? $this->nativeSrid($schema, $relation);
             // Measured before the export and on a separate connection, so on a
             // live table it is approximate — the same caveat as $rowCount below.
@@ -346,37 +346,6 @@ class SnapshotWorker
             return null; // empty relation: no extent
         }
         return [(float)$row['minx'], (float)$row['miny'], (float)$row['maxx'], (float)$row['maxy']];
-    }
-
-    /**
-     * The relation's first spatial column — geometry or geography — or null
-     * when it has neither. Both views cover tables, views and materialized
-     * views alike, and geometry columns are preferred over geography ones so
-     * the footprint below is measured on the same column as before geography
-     * was considered at all.
-     *
-     * A geography relation counts as spatial: ogr2ogr exports it happily, so a
-     * format that requires geometry must not be skipped for it.
-     *
-     * @return array{column:string, geography:bool}|null
-     */
-    private function spatialColumn(string $schema, string $relation): ?array
-    {
-        $sql = "SELECT column_name, geography FROM (
-                    SELECT f_geometry_column AS column_name, false AS geography FROM geometry_columns
-                    WHERE f_table_schema = :schema AND f_table_name = :relation
-                    UNION ALL
-                    SELECT f_geography_column, true FROM geography_columns
-                    WHERE f_table_schema = :schema AND f_table_name = :relation
-                ) c
-                ORDER BY geography, column_name LIMIT 1";
-        $res = $this->model->prepare($sql);
-        $this->model->execute($res, ['schema' => $schema, 'relation' => $relation]);
-        $row = $this->model->fetchRow($res);
-        if ($row === null || ($row['column_name'] ?? null) === null) {
-            return null;
-        }
-        return ['column' => (string)$row['column_name'], 'geography' => filter_var($row['geography'], FILTER_VALIDATE_BOOLEAN)];
     }
 
     /**
