@@ -276,7 +276,7 @@ class RelationSnapshot extends AbstractApi
         return new GetResponse(data: array_map(fn($r) => $this->present($r, false), $rows));
     }
 
-    #[OA\Get(path: '/api/v4/schemas/{schema}/relations/{relation}/snapshots/{date}/data', operationId: 'getRelationSnapshotData', description: "The snapshot's Parquet file. Supports HEAD and single byte ranges (206/416). In redirect mode answers 302 to a short-lived storage URL.", tags: ['Snapshots'],
+    #[OA\Get(path: '/api/v4/schemas/{schema}/relations/{relation}/snapshots/{date}/data', operationId: 'getRelationSnapshotData', description: "The snapshot's primary data file: the Parquet when produced, else the only produced file; 409 when several formats were produced and none is Parquet (use /data/{format}). Supports HEAD and single byte ranges (206/416). In redirect mode answers 302 to a short-lived storage URL.", tags: ['Snapshots'],
         parameters: [
             new OA\Parameter(name: 'schema', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'relation', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
@@ -284,12 +284,12 @@ class RelationSnapshot extends AbstractApi
             new OA\Parameter(name: 'Range', in: 'header', required: false, schema: new OA\Schema(type: 'string'), example: 'bytes=0-1023'),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Whole file', content: new OA\MediaType(mediaType: 'application/vnd.apache.parquet')),
+            new OA\Response(response: 200, description: 'Whole file, in the media type of the format served (application/vnd.apache.parquet for Parquet)'),
             new OA\Response(response: 206, description: 'Partial content'),
             new OA\Response(response: 302, description: 'Redirect to a presigned URL (redirect mode)'),
             new OA\Response(response: 403, description: 'Insufficient privileges'),
             new OA\Response(response: 404, description: 'No published snapshot for that date'),
-            new OA\Response(response: 409, description: 'Snapshot has several files; use /files/{file}'),
+            new OA\Response(response: 409, description: 'Several formats produced and none is Parquet; the message lists /data/{format} for each'),
             new OA\Response(response: 416, description: 'Range not satisfiable'),
             new OA\Response(response: 502, description: 'Snapshot storage unavailable'),
         ]
