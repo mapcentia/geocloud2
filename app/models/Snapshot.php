@@ -191,12 +191,14 @@ class Snapshot extends Model
      *
      * @param array<int, array{column_name:string, data_type:string}> $relationSchema
      * @param array<int, array{name:string, size_bytes:int}> $files
+     * @param array{0:float, 1:float, 2:float, 3:float}|null $bbox WGS84 footprint, null for a
+     *     non-spatial or empty relation. Feeds the snapshot's STAC Item geometry.
      * @return string|null uuid of the superseded row, so the caller can delete its files
      * @throws GC2Exception 404 NO_SNAPSHOT_ERROR when $uuid is unknown or not currently 'running'
      */
-    public function publish(string $uuid, string $snapshotDate, string $location, int $rowCount, string $schemaVersion, array $relationSchema, array $files): ?string
+    public function publish(string $uuid, string $snapshotDate, string $location, int $rowCount, string $schemaVersion, array $relationSchema, array $files, ?array $bbox = null): ?string
     {
-        return $this->withTransaction(function () use ($uuid, $snapshotDate, $location, $rowCount, $schemaVersion, $relationSchema, $files) {
+        return $this->withTransaction(function () use ($uuid, $snapshotDate, $location, $rowCount, $schemaVersion, $relationSchema, $files, $bbox) {
             $res = $this->prepare("UPDATE settings.snapshots SET status = 'superseded'
                                    WHERE uuid <> :uuid AND status = 'succeeded' AND snapshot_date = :date
                                      AND (schema_name, relation_name) = (SELECT schema_name, relation_name FROM settings.snapshots WHERE uuid = :uuid)
@@ -208,7 +210,7 @@ class Snapshot extends Model
             $res = $this->prepare("UPDATE settings.snapshots
                                    SET status = 'succeeded', snapshot_date = :date, s3_path = :location, row_count = :row_count,
                                        schema_version = :schema_version, relation_schema = :relation_schema,
-                                       files = :files, size_bytes = :size_bytes, error = NULL,
+                                       files = :files, size_bytes = :size_bytes, bbox = :bbox, error = NULL,
                                        published = now(), finished = now()
                                    WHERE uuid = :uuid AND status = 'running'");
             $res->bindValue(':uuid', $uuid);
@@ -219,6 +221,7 @@ class Snapshot extends Model
             $res->bindValue(':relation_schema', json_encode($relationSchema));
             $res->bindValue(':files', json_encode($files));
             $res->bindValue(':size_bytes', $sizeBytes, PDO::PARAM_INT);
+            $res->bindValue(':bbox', $bbox === null ? null : json_encode(array_map(fn($v) => (float)$v, $bbox)), $bbox === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
             $this->execute($res);
             if ($res->rowCount() === 0) {
                 throw new GC2Exception("No snapshot with that id", 404, null, "NO_SNAPSHOT_ERROR");
@@ -245,6 +248,79 @@ class Snapshot extends Model
         $res->bindValue(':limit', max(1, $limit), PDO::PARAM_INT);
         $this->execute($res);
         return $this->fetchAll($res, 'assoc');
+    }
+
+    /**
+     * Every visible snapshot of the database, grouped by relation and newest
+     * date first — the input to the static STAC catalog, which is rebuilt in
+     * full after each publish. `files` and `bbox` come back decoded.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function listAllPublished(): array
+    {
+        $sql = "SELECT * FROM settings.snapshots
+                WHERE status = 'succeeded' AND published IS NOT NULL AND snapshot_date IS NOT NULL
+                ORDER BY schema_name, relation_name, snapshot_date DESC";
+        $res = $this->prepare($sql);
+        $this->execute($res);
+        return array_map(function (array $row) {
+            $row['files'] = is_string($row['files'] ?? null) ? (json_decode($row['files'], true) ?: []) : ($row['files'] ?? []);
+            $bbox = is_string($row['bbox'] ?? null) ? json_decode($row['bbox'], true) : ($row['bbox'] ?? null);
+            $row['bbox'] = is_array($bbox) && count($bbox) === 4 ? array_map(fn($v) => (float)$v, array_values($bbox)) : null;
+            return $row;
+        }, $this->fetchAll($res, 'assoc'));
+    }
+
+    /**
+     * Layer metadata (title, abstract, tags) of the given relations, for the
+     * STAC collections. Keyed "schema.relation"; a relation without a
+     * registered geometry column — a non-spatial table, or one never seen by
+     * the GUI — is simply absent, and the caller falls back.
+     *
+     * Reads settings.geometry_columns_view rather than the
+     * settings.geometry_columns_join table, because only the view carries
+     * f_table_schema/f_table_name (the table is keyed by _key_). A relation
+     * with several geometry columns yields several rows; the first one that
+     * has any metadata wins.
+     *
+     * @param array<int, string> $relations "schema.relation" keys
+     * @return array<string, array{title:?string, description:?string, keywords:array}>
+     */
+    public function relationMeta(array $relations): array
+    {
+        $relations = array_values(array_unique($relations));
+        if ($relations === []) {
+            return [];
+        }
+        $names = [];
+        $params = [];
+        foreach ($relations as $i => $relation) {
+            $names[] = ":r$i";
+            $params["r$i"] = $relation;
+        }
+        $sql = "SELECT f_table_schema, f_table_name, f_table_title, f_table_abstract, tags
+                FROM settings.geometry_columns_view
+                WHERE f_table_schema || '.' || f_table_name IN (" . implode(', ', $names) . ")";
+        $res = $this->prepare($sql);
+        $this->execute($res, $params);
+
+        $meta = [];
+        foreach ($this->fetchAll($res, 'assoc') as $row) {
+            $key = $row['f_table_schema'] . '.' . $row['f_table_name'];
+            $tags = is_string($row['tags'] ?? null) ? json_decode($row['tags'], true) : ($row['tags'] ?? null);
+            $entry = [
+                'title' => $row['f_table_title'] ?? null,
+                'description' => $row['f_table_abstract'] ?? null,
+                'keywords' => is_array($tags) ? array_values($tags) : [],
+            ];
+            $existing = $meta[$key] ?? null;
+            // Several geometry columns: keep the first row that says anything.
+            if ($existing === null || ($existing['title'] === null && $existing['description'] === null && $existing['keywords'] === [])) {
+                $meta[$key] = $entry;
+            }
+        }
+        return $meta;
     }
 
     /**

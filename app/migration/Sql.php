@@ -428,6 +428,9 @@ SQL;
         $sqls[] = "ALTER TABLE settings.snapshots ADD COLUMN files JSONB";
         $sqls[] = "ALTER TABLE settings.snapshots ADD COLUMN size_bytes BIGINT";
         $sqls[] = "ALTER TABLE settings.snapshots ADD COLUMN published TIMESTAMP WITH TIME ZONE";
+        // WGS84 footprint of the relation at snapshot time ([minx,miny,maxx,maxy]
+        // or null), the geometry of the snapshot's STAC Item.
+        $sqls[] = "ALTER TABLE settings.snapshots ADD COLUMN bbox JSONB";
         $sqls[] = "ALTER TABLE settings.snapshots DROP CONSTRAINT snapshots_status_check";
         $sqls[] = "ALTER TABLE settings.snapshots ADD CONSTRAINT snapshots_status_check CHECK (status IN ('pending', 'running', 'succeeded', 'failed', 'superseded'))";
         $sqls[] = "CREATE UNIQUE INDEX snapshots_published_unique_idx ON settings.snapshots (schema_name, relation_name, snapshot_date) WHERE status = 'succeeded'";

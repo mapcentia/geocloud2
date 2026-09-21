@@ -295,6 +295,71 @@ class SnapshotModelTest extends Unit
         $m->publish($uuid, '2026-09-16', 's3://b/x/', 1, 'v1', [], []);
     }
 
+    public function testListAllPublishedIsOrderedDecodedAndShowsOnlyVisibleRows(): void
+    {
+        $m = $this->model();
+        $cols = [['column_name' => 'gid', 'data_type' => 'integer']];
+        $f = [['name' => 'data-x.parquet', 'size_bytes' => 7]];
+
+        $aOld = $m->create('zcat', 'a', null, self::$database);
+        $aNew = $m->create('zcat', 'a', null, self::$database);
+        $b = $m->create('zcat', 'b', null, self::$database);
+        $failed = $m->create('zcat', 'b', null, self::$database);
+        $unpublished = $m->create('zcat', 'c', null, self::$database);
+        $pending = $m->create('zcat', 'd', null, self::$database);
+        $m->claimPending(5); // pending stays pending
+        $m->publish($aOld, '2026-09-10', 's3://b/1/', 1, 'v1', $cols, $f);
+        $m->publish($aNew, '2026-09-12', 's3://b/2/', 2, 'v2', $cols, $f, [1.5, 2.5, 3.5, 4.5]);
+        $m->publish($b, '2026-09-11', 's3://b/3/', 3, 'v1', $cols, $f);
+        $m->finish($failed, 'failed', null, null, 'boom');
+        // Succeeded but never published (finish(), not publish()): invisible.
+        $m->finish($unpublished, 'succeeded', 's3://b/4/', 4, null);
+
+        $all = $m->listAllPublished();
+        $uuids = array_column($all, 'uuid');
+        $this->assertNotContains($failed, $uuids);
+        $this->assertNotContains($pending, $uuids);
+        $this->assertNotContains($unpublished, $uuids, 'only rows with a published timestamp are in the catalog');
+
+        $mine = array_values(array_filter($all, fn($r) => $r['schema_name'] === 'zcat'));
+        $this->assertSame(
+            [['a', '2026-09-12'], ['a', '2026-09-10'], ['b', '2026-09-11']],
+            array_map(fn($r) => [$r['relation_name'], $r['snapshot_date']], $mine),
+            'by relation, newest date first'
+        );
+
+        $sortKeys = array_map(fn($r) => [$r['schema_name'], $r['relation_name']], $all);
+        $sorted = $sortKeys;
+        sort($sorted);
+        $this->assertSame($sorted, $sortKeys, 'the whole list is grouped by schema and relation');
+
+        $this->assertEquals($f, $mine[0]['files'], 'files is decoded');
+        $this->assertSame([1.5, 2.5, 3.5, 4.5], $mine[0]['bbox'], 'bbox is decoded');
+        $this->assertNull($mine[1]['bbox'], 'a snapshot published without a bbox has none');
+        $this->assertSame(2, (int)$mine[0]['row_count']);
+    }
+
+    public function testRelationMetaReadsTitleAbstractAndTagsAndSkipsUnknownRelations(): void
+    {
+        $m = $this->model();
+        $res = $m->prepare("CREATE SCHEMA IF NOT EXISTS meta_rel");
+        $m->execute($res);
+        $res = $m->prepare("CREATE TABLE IF NOT EXISTS meta_rel.pts (gid serial PRIMARY KEY, the_geom geometry(Point, 4326))");
+        $m->execute($res);
+        $res = $m->prepare("INSERT INTO settings.geometry_columns_join (_key_, f_table_title, f_table_abstract, tags)
+                            VALUES ('meta_rel.pts.the_geom', 'Points of interest', 'What it is', '[\"poi\", \"test\"]')
+                            ON CONFLICT (_key_) DO UPDATE SET f_table_title = excluded.f_table_title");
+        $m->execute($res);
+
+        $meta = $m->relationMeta(['meta_rel.pts', 'meta_rel.nothing_here']);
+        $this->assertArrayNotHasKey('meta_rel.nothing_here', $meta, 'an unregistered relation has no metadata row');
+        $this->assertSame('Points of interest', $meta['meta_rel.pts']['title']);
+        $this->assertSame('What it is', $meta['meta_rel.pts']['description']);
+        $this->assertSame(['poi', 'test'], $meta['meta_rel.pts']['keywords']);
+
+        $this->assertSame([], $m->relationMeta([]), 'no relations, no query');
+    }
+
     private function post(string $path, array $body): ?array
     {
         $ctx = stream_context_create([
