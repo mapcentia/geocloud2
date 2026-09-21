@@ -1617,7 +1617,7 @@ function cleanUp(int $success = 0): void
             try {
                 $snap = new \app\models\Snapshot(new \app\inc\Connection(database: $db));
                 if (!$snap->hasActive($schema, $safeName)) {
-                    $snap->create($schema, $safeName, null, $db);
+                    $snap->create($schema, $safeName, null, $db, \app\inc\snapshot\SnapshotFormat::defaults());
                     print "\nInfo: Snapshot queued for $schema.$safeName";
                 }
             } catch (\Throwable $e) {

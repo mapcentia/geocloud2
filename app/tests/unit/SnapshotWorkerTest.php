@@ -82,7 +82,7 @@ class SnapshotWorkerTest extends Unit
 
     public function testTableSnapshotSucceedsAndWritesParquetAndMetadata(): void
     {
-        $uuid = $this->snapshot()->create('snap', 'points', null, self::$database);
+        $uuid = $this->snapshot()->create('snap', 'points', null, self::$database, ['parquet']);
         $day = gmdate('Y-m-d'); // captured before the run so a midnight UTC rollover can't flake this
         $summary = $this->worker()->processPending(5);
 
@@ -142,7 +142,7 @@ class SnapshotWorkerTest extends Unit
 
     public function testViewSnapshotWithRequestedSrsReportsThatCrs(): void
     {
-        $uuid = $this->snapshot()->create('snap', 'points_view', 4326, self::$database);
+        $uuid = $this->snapshot()->create('snap', 'points_view', 4326, self::$database, ['parquet']);
         $day = gmdate('Y-m-d'); // captured before the run so a midnight UTC rollover can't flake this
         $summary = $this->worker()->processPending(5);
         $this->assertSame(1, $summary['succeeded'], 'error: ' . ($this->snapshot()->get($uuid)['data']['error'] ?? ''));
@@ -155,8 +155,8 @@ class SnapshotWorkerTest extends Unit
 
     public function testMaterializedViewSnapshotHasRealSchemaVersion(): void
     {
-        $mvUuid = $this->snapshot()->create('snap', 'points_mv', null, self::$database);
-        $tableUuid = $this->snapshot()->create('snap', 'points', null, self::$database);
+        $mvUuid = $this->snapshot()->create('snap', 'points_mv', null, self::$database, ['parquet']);
+        $tableUuid = $this->snapshot()->create('snap', 'points', null, self::$database, ['parquet']);
         $day = gmdate('Y-m-d'); // captured before the run so a midnight UTC rollover can't flake this
         $summary = $this->worker()->processPending(5);
         $this->assertSame(2, $summary['succeeded']);
@@ -176,7 +176,7 @@ class SnapshotWorkerTest extends Unit
 
     public function testRelationWithoutGeometryHasNullCrs(): void
     {
-        $uuid = $this->snapshot()->create('snap', 'plain', null, self::$database);
+        $uuid = $this->snapshot()->create('snap', 'plain', null, self::$database, ['parquet']);
         $day = gmdate('Y-m-d'); // captured before the run so a midnight UTC rollover can't flake this
         $summary = $this->worker()->processPending(5);
         $this->assertSame(1, $summary['succeeded'], 'error: ' . ($this->snapshot()->get($uuid)['data']['error'] ?? ''));
@@ -190,7 +190,7 @@ class SnapshotWorkerTest extends Unit
 
     public function testMissingRelationFailsRowWithError(): void
     {
-        $uuid = $this->snapshot()->create('snap', 'does_not_exist', null, self::$database);
+        $uuid = $this->snapshot()->create('snap', 'does_not_exist', null, self::$database, ['parquet']);
         $summary = $this->worker()->processPending(5);
         $this->assertSame(1, $summary['failed']);
 
@@ -210,7 +210,7 @@ class SnapshotWorkerTest extends Unit
 
     public function testRerunSameDaySupersedesAndDeletesOldFile(): void
     {
-        $first = $this->snapshot()->create('snap', 'points', null, self::$database);
+        $first = $this->snapshot()->create('snap', 'points', null, self::$database, ['parquet']);
         $this->worker()->processPending(5);
         // The worker's own snapshot_date, not gmdate() after the fact: the two
         // differ if the run straddles midnight UTC and the paths below would
@@ -219,7 +219,7 @@ class SnapshotWorkerTest extends Unit
         $partition = 'unit/' . self::$database . '/schema=snap/relation=points/_gc2_snapshot_date=' . $day . '/';
         $this->assertFileExists($this->storeDir . '/' . $partition . 'data-' . $first . '.parquet');
 
-        $second = $this->snapshot()->create('snap', 'points', null, self::$database);
+        $second = $this->snapshot()->create('snap', 'points', null, self::$database, ['parquet']);
         $summary = $this->worker()->processPending(5);
         $this->assertSame(1, $summary['succeeded']);
 
@@ -239,7 +239,7 @@ class SnapshotWorkerTest extends Unit
 
     public function testCatalogIsWrittenAfterASuccessfulSnapshot(): void
     {
-        $uuid = $this->snapshot()->create('snap', 'points', null, self::$database);
+        $uuid = $this->snapshot()->create('snap', 'points', null, self::$database, ['parquet']);
         $summary = $this->worker()->processPending(5);
         $this->assertSame(1, $summary['succeeded'], 'error: ' . ($this->snapshot()->get($uuid)['data']['error'] ?? ''));
         $day = $this->snapshot()->get($uuid)['data']['snapshot_date'];
@@ -272,7 +272,7 @@ class SnapshotWorkerTest extends Unit
 
     public function testCatalogItemOfARelationWithoutGeometryHasNoFootprint(): void
     {
-        $uuid = $this->snapshot()->create('snap', 'plain', null, self::$database);
+        $uuid = $this->snapshot()->create('snap', 'plain', null, self::$database, ['parquet']);
         $this->assertSame(1, $this->worker()->processPending(5)['succeeded']);
         $day = $this->snapshot()->get($uuid)['data']['snapshot_date'];
 
@@ -288,7 +288,7 @@ class SnapshotWorkerTest extends Unit
 
     public function testFailedRunWritesNoCatalog(): void
     {
-        $this->snapshot()->create('snap', 'does_not_exist', null, self::$database);
+        $this->snapshot()->create('snap', 'does_not_exist', null, self::$database, ['parquet']);
         $this->assertSame(1, $this->worker()->processPending(5)['failed']);
         $this->assertFileDoesNotExist($this->catalogDir() . 'catalog.json', 'the catalog is only rebuilt after a publish');
     }
@@ -301,7 +301,7 @@ class SnapshotWorkerTest extends Unit
      */
     public function testCatalogWriteFailureLeavesTheSnapshotSucceededAndWritesTheRest(): void
     {
-        $uuid = $this->snapshot()->create('snap', 'points', null, self::$database);
+        $uuid = $this->snapshot()->create('snap', 'points', null, self::$database, ['parquet']);
         $storage = new class(new LocalSnapshotStorage($this->storeDir, 'unit')) implements \app\inc\snapshot\SnapshotStorage {
             public function __construct(private readonly LocalSnapshotStorage $inner)
             {
@@ -380,7 +380,7 @@ class SnapshotWorkerTest extends Unit
 
     public function testFailedRunIsNotPublishedAndLeavesNoFiles(): void
     {
-        $uuid = $this->snapshot()->create('snap', 'does_not_exist', null, self::$database);
+        $uuid = $this->snapshot()->create('snap', 'does_not_exist', null, self::$database, ['parquet']);
         $this->worker()->processPending(5);
         $row = $this->snapshot()->get($uuid)['data'];
         $this->assertSame('failed', $row['status']);

@@ -49,7 +49,7 @@ class SnapshotModelTest extends Unit
     public function testCreateReturnsUuidAndGetReadsPendingRow(): void
     {
         $m = $this->model();
-        $uuid = $m->create('public', 'roads', 25832, self::$database);
+        $uuid = $m->create('public', 'roads', 25832, self::$database, ['parquet']);
         $this->assertMatchesRegularExpression('/^[0-9a-f-]{36}$/', $uuid);
 
         $row = $m->get($uuid)['data'];
@@ -64,7 +64,7 @@ class SnapshotModelTest extends Unit
     public function testCreateWithoutSrsStoresNull(): void
     {
         $m = $this->model();
-        $uuid = $m->create('public', 'nosrs', null, self::$database);
+        $uuid = $m->create('public', 'nosrs', null, self::$database, ['parquet']);
         $this->assertNull($m->get($uuid)['data']['srs']);
     }
 
@@ -88,7 +88,7 @@ class SnapshotModelTest extends Unit
         $this->assertFalse($m->hasActive('public', 'active_' . __LINE__));
 
         $rel = 'active_rel';
-        $uuid = $m->create('public', $rel, null, self::$database);
+        $uuid = $m->create('public', $rel, null, self::$database, ['parquet']);
         $this->assertTrue($m->hasActive('public', $rel));
 
         $claimed = $m->claimPending(100);
@@ -105,8 +105,8 @@ class SnapshotModelTest extends Unit
         // Drain anything left by other tests so the limit assertion is exact.
         $m->claimPending(1000);
 
-        $a = $m->create('public', 'claim_a', null, self::$database);
-        $b = $m->create('public', 'claim_b', null, self::$database);
+        $a = $m->create('public', 'claim_a', null, self::$database, ['parquet']);
+        $b = $m->create('public', 'claim_b', null, self::$database, ['parquet']);
 
         $first = $m->claimPending(1);
         $this->assertCount(1, $first);
@@ -124,7 +124,7 @@ class SnapshotModelTest extends Unit
     public function testFinishStoresOutcomeAndFinishedTimestamp(): void
     {
         $m = $this->model();
-        $ok = $m->create('public', 'finish_ok', null, self::$database);
+        $ok = $m->create('public', 'finish_ok', null, self::$database, ['parquet']);
         $columns = [['column_name' => 'gid', 'data_type' => 'integer'], ['column_name' => 'geom', 'data_type' => 'geometry(Point,25832)']];
         // finish() only finalises a claimed ('running') row, so claim first.
         $m->claimPending(1000);
@@ -139,7 +139,7 @@ class SnapshotModelTest extends Unit
         $this->assertEquals($columns, json_decode($row['relation_schema'], true), 'relation_schema round-trips through jsonb');
         $this->assertNotNull($row['finished']);
 
-        $bad = $m->create('public', 'finish_bad', null, self::$database);
+        $bad = $m->create('public', 'finish_bad', null, self::$database, ['parquet']);
         $m->claimPending(1000);
         $m->finish($bad, 'failed', null, null, 'ogr2ogr exploded');
         $row = $m->get($bad)['data'];
@@ -158,7 +158,7 @@ class SnapshotModelTest extends Unit
     public function testFinishIgnoresRowsNotRunning(): void
     {
         $m = $this->model();
-        $uuid = $m->create('finish_guard', 'rel', null, self::$database);
+        $uuid = $m->create('finish_guard', 'rel', null, self::$database, ['parquet']);
         // Not claimed: the row is 'pending', so no worker owns it.
         $m->finish($uuid, 'failed', null, null, 'not mine to fail');
 
@@ -174,8 +174,8 @@ class SnapshotModelTest extends Unit
         // Drain anything left by other tests so claimPending(100) below is exact.
         $m->claimPending(1000);
 
-        $stale = $m->create('public', 'stale_rel', null, self::$database);
-        $fresh = $m->create('public', 'fresh_rel', null, self::$database);
+        $stale = $m->create('public', 'stale_rel', null, self::$database, ['parquet']);
+        $fresh = $m->create('public', 'fresh_rel', null, self::$database, ['parquet']);
 
         $claimed = $m->claimPending(100);
         $staleRow = $claimed[array_search($stale, array_column($claimed, 'uuid'), true)];
@@ -205,8 +205,8 @@ class SnapshotModelTest extends Unit
     public function testListIsNewestFirstAndFilters(): void
     {
         $m = $this->model();
-        $m->create('lst', 'one', null, self::$database);
-        $newest = $m->create('lst', 'two', null, self::$database);
+        $m->create('lst', 'one', null, self::$database, ['parquet']);
+        $newest = $m->create('lst', 'two', null, self::$database, ['parquet']);
 
         $all = $m->list();
         $this->assertSame($newest, $all[0]['uuid']);
@@ -227,7 +227,7 @@ class SnapshotModelTest extends Unit
         $files = [['name' => 'data-a.parquet', 'size_bytes' => 10]];
         $cols = [['column_name' => 'gid', 'data_type' => 'integer']];
 
-        $first = $m->create('pub', 'rel', null, self::$database);
+        $first = $m->create('pub', 'rel', null, self::$database, ['parquet']);
         $m->claimPending(100);
         $this->assertNull($m->publish($first, '2026-09-16', 's3://b/x/', 5, 'v1', $cols, $files));
 
@@ -240,7 +240,7 @@ class SnapshotModelTest extends Unit
         $this->assertNotNull($row['published']);
         $this->assertNotNull($row['finished']);
 
-        $second = $m->create('pub', 'rel', null, self::$database);
+        $second = $m->create('pub', 'rel', null, self::$database, ['parquet']);
         $m->claimPending(100);
         $this->assertSame($first, $m->publish($second, '2026-09-16', 's3://b/y/', 6, 'v1', $cols, [['name' => 'data-b.parquet', 'size_bytes' => 12]]));
 
@@ -255,10 +255,10 @@ class SnapshotModelTest extends Unit
         $cols = [['column_name' => 'gid', 'data_type' => 'integer']];
         $f = [['name' => 'data-x.parquet', 'size_bytes' => 1]];
 
-        $old = $m->create('lp', 'rel', null, self::$database);
-        $new = $m->create('lp', 'rel', null, self::$database);
-        $failed = $m->create('lp', 'rel', null, self::$database);
-        $pending = $m->create('lp', 'rel', null, self::$database);
+        $old = $m->create('lp', 'rel', null, self::$database, ['parquet']);
+        $new = $m->create('lp', 'rel', null, self::$database, ['parquet']);
+        $failed = $m->create('lp', 'rel', null, self::$database, ['parquet']);
+        $pending = $m->create('lp', 'rel', null, self::$database, ['parquet']);
         $m->claimPending(3); // claims old, new, failed (oldest first); pending stays pending
         $m->publish($old, '2026-09-14', 's3://b/1/', 1, 'v', $cols, $f);
         $m->publish($new, '2026-09-15', 's3://b/2/', 1, 'v', $cols, $f);
@@ -288,7 +288,7 @@ class SnapshotModelTest extends Unit
     public function testPublishRequiresRunningRow(): void
     {
         $m = $this->model();
-        $uuid = $m->create('pub_unclaimed', 'rel', null, self::$database);
+        $uuid = $m->create('pub_unclaimed', 'rel', null, self::$database, ['parquet']);
         // Not claimed: row is still 'pending', not 'running'.
         $this->expectException(GC2Exception::class);
         $this->expectExceptionCode(404);
@@ -301,12 +301,12 @@ class SnapshotModelTest extends Unit
         $cols = [['column_name' => 'gid', 'data_type' => 'integer']];
         $f = [['name' => 'data-x.parquet', 'size_bytes' => 7]];
 
-        $aOld = $m->create('zcat', 'a', null, self::$database);
-        $aNew = $m->create('zcat', 'a', null, self::$database);
-        $b = $m->create('zcat', 'b', null, self::$database);
-        $failed = $m->create('zcat', 'b', null, self::$database);
-        $unpublished = $m->create('zcat', 'c', null, self::$database);
-        $pending = $m->create('zcat', 'd', null, self::$database);
+        $aOld = $m->create('zcat', 'a', null, self::$database, ['parquet']);
+        $aNew = $m->create('zcat', 'a', null, self::$database, ['parquet']);
+        $b = $m->create('zcat', 'b', null, self::$database, ['parquet']);
+        $failed = $m->create('zcat', 'b', null, self::$database, ['parquet']);
+        $unpublished = $m->create('zcat', 'c', null, self::$database, ['parquet']);
+        $pending = $m->create('zcat', 'd', null, self::$database, ['parquet']);
         $m->claimPending(5); // pending stays pending
         $m->publish($aOld, '2026-09-10', 's3://b/1/', 1, 'v1', $cols, $f);
         $m->publish($aNew, '2026-09-12', 's3://b/2/', 2, 'v2', $cols, $f, [1.5, 2.5, 3.5, 4.5]);
@@ -381,6 +381,97 @@ class SnapshotModelTest extends Unit
         $this->assertNull($meta['meta_blank.pts']['title']);
         $this->assertNull($meta['meta_blank.pts']['description']);
         $this->assertSame([], $meta['meta_blank.pts']['keywords']);
+    }
+
+    public function testCreateStoresTheRequestedFormats(): void
+    {
+        $m = $this->model();
+        $uuid = $m->create('fmt', 'rel', null, self::$database, ['parquet', 'flatgeobuf']);
+
+        $row = $m->get($uuid)['data'];
+        $this->assertSame(['parquet', 'flatgeobuf'], $row['formats'], 'the requested list comes back decoded, in request order');
+        $this->assertSame(
+            [
+                ['format' => 'parquet', 'status' => 'requested'],
+                ['format' => 'flatgeobuf', 'status' => 'requested'],
+            ],
+            Snapshot::presentFormats($row),
+            'before the worker runs, every requested format is only requested'
+        );
+    }
+
+    public function testPublishStoresThePerFormatResults(): void
+    {
+        $m = $this->model();
+        $cols = [['column_name' => 'gid', 'data_type' => 'integer']];
+        $uuid = $m->create('fmtpub', 'rel', null, self::$database, ['parquet', 'flatgeobuf']);
+        $m->claimPending(100);
+
+        $files = [
+            ['name' => "data-$uuid.parquet", 'size_bytes' => 120],
+            ['name' => "data-$uuid.fgb", 'size_bytes' => 80],
+        ];
+        $results = [
+            ['format' => 'parquet', 'status' => 'produced', 'file' => "data-$uuid.parquet", 'size_bytes' => 120, 'media_type' => 'application/vnd.apache.parquet'],
+            ['format' => 'flatgeobuf', 'status' => 'produced', 'file' => "data-$uuid.fgb", 'size_bytes' => 80, 'media_type' => 'application/flatgeobuf'],
+        ];
+        $m->publish($uuid, '2026-09-21', 's3://b/f/', 4, 'v1', $cols, $files, [1.0, 2.0, 3.0, 4.0], $results);
+
+        $row = $m->getPublished('fmtpub', 'rel', '2026-09-21')['data'];
+        // assertEquals, not assertSame: jsonb reorders the keys of each object.
+        $this->assertEquals($results, $row['formats'], 'the results replace the requested list on publish');
+        $this->assertSame($results, Snapshot::presentFormats($row), 'the presenter normalises the stored results');
+        $this->assertSame(200, (int)$row['size_bytes'], 'size_bytes still sums every file');
+
+        $this->assertEquals($results, $m->list('fmtpub', 'rel')[0]['formats'], 'list() decodes formats too');
+        $this->assertEquals($results, $m->listPublished('fmtpub', 'rel')[0]['formats']);
+        $published = array_values(array_filter($m->listAllPublished(), fn($r) => $r['uuid'] === $uuid));
+        $this->assertEquals($results, $published[0]['formats']);
+    }
+
+    public function testPublishStoresASkippedFormatWithItsReason(): void
+    {
+        $m = $this->model();
+        $uuid = $m->create('fmtskip', 'rel', null, self::$database, ['parquet', 'flatgeobuf']);
+        $m->claimPending(100);
+        $results = [
+            ['format' => 'parquet', 'status' => 'produced', 'file' => "data-$uuid.parquet", 'size_bytes' => 9, 'media_type' => 'application/vnd.apache.parquet'],
+            ['format' => 'flatgeobuf', 'status' => 'skipped', 'reason' => 'relation has no geometry column'],
+        ];
+        $cols = [['column_name' => 'gid', 'data_type' => 'integer']];
+        $m->publish($uuid, '2026-09-21', 's3://b/s/', 1, 'v1', $cols, [['name' => "data-$uuid.parquet", 'size_bytes' => 9]], null, $results);
+
+        $presented = Snapshot::presentFormats($m->get($uuid)['data']);
+        $this->assertSame($results[1], $presented[1], 'a skipped format keeps its reason and carries no file');
+    }
+
+    public function testPresentFormatsDerivesFromFilesForARowWithoutTheColumn(): void
+    {
+        $uuid = '11112222-3333-4444-5555-666677778888';
+        $row = [
+            'uuid' => $uuid,
+            'status' => 'succeeded',
+            'formats' => [],
+            'files' => json_encode([
+                ['name' => "data-$uuid.parquet", 'size_bytes' => 4096],
+                ['name' => "data-$uuid.fgb", 'size_bytes' => 512],
+                ['name' => "metadata-$uuid.json", 'size_bytes' => 300],
+            ]),
+        ];
+        $this->assertSame(
+            [
+                ['format' => 'parquet', 'status' => 'produced', 'file' => "data-$uuid.parquet", 'size_bytes' => 4096, 'media_type' => 'application/vnd.apache.parquet'],
+                ['format' => 'flatgeobuf', 'status' => 'produced', 'file' => "data-$uuid.fgb", 'size_bytes' => 512, 'media_type' => 'application/flatgeobuf'],
+            ],
+            Snapshot::presentFormats($row),
+            'a row written before the formats column is described by its files; metadata.json is not a format'
+        );
+    }
+
+    public function testPresentFormatsOfARowWithNeitherFormatsNorFilesIsEmpty(): void
+    {
+        $this->assertSame([], Snapshot::presentFormats(['status' => 'pending', 'formats' => null, 'files' => null]));
+        $this->assertSame([], Snapshot::presentFormats([]));
     }
 
     private function post(string $path, array $body): ?array

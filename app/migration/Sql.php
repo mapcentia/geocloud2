@@ -431,6 +431,11 @@ SQL;
         // WGS84 footprint of the relation at snapshot time ([minx,miny,maxx,maxy]
         // or null), the geometry of the snapshot's STAC Item.
         $sqls[] = "ALTER TABLE settings.snapshots ADD COLUMN IF NOT EXISTS bbox JSONB";
+        // Output formats of the snapshot: the requested format ids while the row
+        // waits, the per-format result (produced with file/size/media type, or
+        // skipped with a reason) once it is published. A row from before this
+        // column is described by its files instead.
+        $sqls[] = "ALTER TABLE settings.snapshots ADD COLUMN IF NOT EXISTS formats JSONB";
         $sqls[] = "ALTER TABLE settings.snapshots DROP CONSTRAINT snapshots_status_check";
         $sqls[] = "ALTER TABLE settings.snapshots ADD CONSTRAINT snapshots_status_check CHECK (status IN ('pending', 'running', 'succeeded', 'failed', 'superseded'))";
         $sqls[] = "CREATE UNIQUE INDEX snapshots_published_unique_idx ON settings.snapshots (schema_name, relation_name, snapshot_date) WHERE status = 'succeeded'";

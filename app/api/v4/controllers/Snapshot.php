@@ -21,6 +21,7 @@ use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Model;
 use app\inc\Route2;
+use app\inc\snapshot\SnapshotFormat;
 use app\inc\snapshot\SnapshotStorageFactory;
 use app\models\Snapshot as SnapshotModel;
 use OpenApi\Annotations\OpenApi;
@@ -215,7 +216,9 @@ class Snapshot extends AbstractApi
         $accepted = [];
         foreach ($requests as $r) {
             $srs = isset($r['srs']) ? (int)$r['srs'] : null;
-            $id = $this->snapshot->create((string)$r['schema'], (string)$r['relation'], $srs, $uid);
+            // Task 4 wires the request's own `formats`; until then every
+            // snapshot is produced in the server default formats.
+            $id = $this->snapshot->create((string)$r['schema'], (string)$r['relation'], $srs, $uid, SnapshotFormat::defaults());
             $accepted[] = ['id' => $id, 'status' => 'pending', '_links' => ['self' => "/api/v4/snapshots/$id"]];
         }
         return new AcceptedResponse($isList ? $accepted : $accepted[0]);

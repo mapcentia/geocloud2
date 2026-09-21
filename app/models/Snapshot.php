@@ -10,6 +10,7 @@ namespace app\models;
 
 use app\exceptions\GC2Exception;
 use app\inc\Model;
+use app\inc\snapshot\SnapshotFormat;
 use PDO;
 
 /**
@@ -32,17 +33,23 @@ class Snapshot extends Model
 
     /**
      * Inserts a pending snapshot request and returns its uuid.
+     *
+     * @param array<int, string> $formats Requested output format ids
+     *     (SnapshotFormat::ids()), in the order the worker produces them. The
+     *     caller validates them; they are stored as given and become the
+     *     per-format results on publish().
      */
-    public function create(string $schema, string $relation, ?int $srs, string $username): string
+    public function create(string $schema, string $relation, ?int $srs, string $username, array $formats): string
     {
-        $sql = "INSERT INTO settings.snapshots (schema_name, relation_name, srs, username)
-                VALUES (:schema, :relation, :srs, :username)
+        $sql = "INSERT INTO settings.snapshots (schema_name, relation_name, srs, username, formats)
+                VALUES (:schema, :relation, :srs, :username, :formats)
                 RETURNING uuid";
         $res = $this->prepare($sql);
         $res->bindValue(':schema', $schema);
         $res->bindValue(':relation', $relation);
         $res->bindValue(':srs', $srs, $srs === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
         $res->bindValue(':username', $username);
+        $res->bindValue(':formats', json_encode(array_values($formats)));
         $this->execute($res);
         return $res->fetchColumn();
     }
@@ -150,7 +157,7 @@ class Snapshot extends Model
         return [
             'success' => true,
             'message' => "Snapshot fetched",
-            'data' => $row,
+            'data' => $this->withFormats($row),
         ];
     }
 
@@ -180,7 +187,7 @@ class Snapshot extends Model
         }
         $res->bindValue(':limit', max(1, $limit), PDO::PARAM_INT);
         $this->execute($res);
-        return $this->fetchAll($res, 'assoc');
+        return array_map($this->withFormats(...), $this->fetchAll($res, 'assoc'));
     }
 
     /**
@@ -193,12 +200,20 @@ class Snapshot extends Model
      * @param array<int, array{name:string, size_bytes:int}> $files
      * @param array{0:float, 1:float, 2:float, 3:float}|null $bbox WGS84 footprint, null for a
      *     non-spatial or empty relation. Feeds the snapshot's STAC Item geometry.
+     * @param array<int, array<string, mixed>> $formats Per-format outcome of the
+     *     run, replacing the requested list stored at create(): one entry per
+     *     requested format, `produced` (with file, size_bytes, media_type) or
+     *     `skipped` (with a reason). A caller that has no results — the legacy
+     *     single-format callers and their tests — gets them derived from $files,
+     *     so a published row always describes its formats rather than what was
+     *     asked for.
      * @return string|null uuid of the superseded row, so the caller can delete its files
      * @throws GC2Exception 404 NO_SNAPSHOT_ERROR when $uuid is unknown or not currently 'running'
      */
-    public function publish(string $uuid, string $snapshotDate, string $location, int $rowCount, string $schemaVersion, array $relationSchema, array $files, ?array $bbox = null): ?string
+    public function publish(string $uuid, string $snapshotDate, string $location, int $rowCount, string $schemaVersion, array $relationSchema, array $files, ?array $bbox = null, array $formats = []): ?string
     {
-        return $this->withTransaction(function () use ($uuid, $snapshotDate, $location, $rowCount, $schemaVersion, $relationSchema, $files, $bbox) {
+        $formats = $formats === [] ? self::formatsFromFiles($files) : array_values($formats);
+        return $this->withTransaction(function () use ($uuid, $snapshotDate, $location, $rowCount, $schemaVersion, $relationSchema, $files, $bbox, $formats) {
             $res = $this->prepare("UPDATE settings.snapshots SET status = 'superseded'
                                    WHERE uuid <> :uuid AND status = 'succeeded' AND snapshot_date = :date
                                      AND (schema_name, relation_name) = (SELECT schema_name, relation_name FROM settings.snapshots WHERE uuid = :uuid)
@@ -210,7 +225,7 @@ class Snapshot extends Model
             $res = $this->prepare("UPDATE settings.snapshots
                                    SET status = 'succeeded', snapshot_date = :date, s3_path = :location, row_count = :row_count,
                                        schema_version = :schema_version, relation_schema = :relation_schema,
-                                       files = :files, size_bytes = :size_bytes, bbox = :bbox, error = NULL,
+                                       files = :files, size_bytes = :size_bytes, bbox = :bbox, formats = :formats, error = NULL,
                                        published = now(), finished = now()
                                    WHERE uuid = :uuid AND status = 'running'");
             $res->bindValue(':uuid', $uuid);
@@ -222,6 +237,7 @@ class Snapshot extends Model
             $res->bindValue(':files', json_encode($files));
             $res->bindValue(':size_bytes', $sizeBytes, PDO::PARAM_INT);
             $res->bindValue(':bbox', $bbox === null ? null : json_encode(array_map(fn($v) => (float)$v, $bbox)), $bbox === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+            $res->bindValue(':formats', json_encode($formats));
             $this->execute($res);
             if ($res->rowCount() === 0) {
                 throw new GC2Exception("No snapshot with that id", 404, null, "NO_SNAPSHOT_ERROR");
@@ -247,7 +263,7 @@ class Snapshot extends Model
         $res->bindValue(':relation', $relation);
         $res->bindValue(':limit', max(1, $limit), PDO::PARAM_INT);
         $this->execute($res);
-        return $this->fetchAll($res, 'assoc');
+        return array_map($this->withFormats(...), $this->fetchAll($res, 'assoc'));
     }
 
     /**
@@ -268,7 +284,7 @@ class Snapshot extends Model
             $row['files'] = is_string($row['files'] ?? null) ? (json_decode($row['files'], true) ?: []) : ($row['files'] ?? []);
             $bbox = is_string($row['bbox'] ?? null) ? json_decode($row['bbox'], true) : ($row['bbox'] ?? null);
             $row['bbox'] = is_array($bbox) && count($bbox) === 4 ? array_map(fn($v) => (float)$v, array_values($bbox)) : null;
-            return $row;
+            return $this->withFormats($row);
         }, $this->fetchAll($res, 'assoc'));
     }
 
@@ -344,6 +360,115 @@ class Snapshot extends Model
         if (!$row) {
             throw new GC2Exception("No snapshot of $schema.$relation for $snapshotDate", 404, null, "NO_SNAPSHOT_ERROR");
         }
-        return ['success' => true, 'message' => "Snapshot fetched", 'data' => $row];
+        return ['success' => true, 'message' => "Snapshot fetched", 'data' => $this->withFormats($row)];
+    }
+
+    /**
+     * The row with its `formats` column decoded — the shape every reader of a
+     * row expects, whether the column holds the requested id list, the
+     * per-format results, or nothing at all (a row written before the column
+     * existed, which reads as an empty list and is described by its files).
+     *
+     * @param array<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    private function withFormats(array $row): array
+    {
+        $row['formats'] = self::decodeFormats($row['formats'] ?? null);
+        return $row;
+    }
+
+    /**
+     * The snapshot's formats as the API shows them (spec: one entry per
+     * format with a status):
+     *
+     * - a requested list (strings, written by create()) renders as
+     *   `{format, status: requested}` — the row has not run yet;
+     * - stored results (objects, written by publish()) are normalised to
+     *   `{format, status, file, size_bytes, media_type}` for a produced format
+     *   and `{format, status, reason}` for a skipped one — jsonb does not keep
+     *   key order, so the presenter fixes it;
+     * - nothing stored (a row from before the column) is derived from `files`
+     *   by extension, every file a produced format.
+     *
+     * @param array<string, mixed> $row A row as get()/list() return it.
+     * @return array<int, array<string, mixed>>
+     */
+    public static function presentFormats(array $row): array
+    {
+        $stored = self::decodeFormats($row['formats'] ?? null);
+        if ($stored === []) {
+            return self::formatsFromFiles(self::decodeFormats($row['files'] ?? null));
+        }
+        $presented = [];
+        foreach ($stored as $entry) {
+            if (is_string($entry)) {
+                $presented[] = ['format' => $entry, 'status' => 'requested'];
+                continue;
+            }
+            if (!is_array($entry) || !isset($entry['format'])) {
+                continue;
+            }
+            $id = (string)$entry['format'];
+            $status = (string)($entry['status'] ?? 'produced');
+            $out = ['format' => $id, 'status' => $status];
+            if ($status === 'produced') {
+                $out['file'] = (string)($entry['file'] ?? '');
+                $out['size_bytes'] = (int)($entry['size_bytes'] ?? 0);
+                $out['media_type'] = (string)($entry['media_type'] ?? (SnapshotFormat::has($id) ? SnapshotFormat::get($id)->mediaType : 'application/octet-stream'));
+            } elseif (isset($entry['reason'])) {
+                $out['reason'] = (string)$entry['reason'];
+            }
+            $presented[] = $out;
+        }
+        return $presented;
+    }
+
+    /**
+     * Per-format results read off a file list: every file whose extension
+     * belongs to a format counts as produced, everything else (metadata.json)
+     * is not a format. How a snapshot published before the `formats` column
+     * describes itself.
+     *
+     * @param array<int, mixed> $files
+     * @return array<int, array<string, mixed>>
+     */
+    private static function formatsFromFiles(array $files): array
+    {
+        $results = [];
+        foreach ($files as $file) {
+            $name = is_array($file) ? (string)($file['name'] ?? '') : '';
+            $format = $name === '' ? null : SnapshotFormat::fromExtension($name);
+            if ($format === null) {
+                continue;
+            }
+            $results[] = [
+                'format' => $format->id,
+                'status' => 'produced',
+                'file' => $name,
+                'size_bytes' => (int)($file['size_bytes'] ?? 0),
+                'media_type' => $format->mediaType,
+            ];
+        }
+        return $results;
+    }
+
+    /**
+     * A JSONB column as a list. It reaches us as a raw string from PDO (and as
+     * an array once a caller has decoded it); null, an empty string and
+     * anything that is not a JSON array all read as no list at all.
+     *
+     * @return array<int, mixed>
+     */
+    private static function decodeFormats(mixed $value): array
+    {
+        if (is_array($value)) {
+            return array_values($value);
+        }
+        if (is_string($value) && $value !== '') {
+            $decoded = json_decode($value, true);
+            return is_array($decoded) ? array_values($decoded) : [];
+        }
+        return [];
     }
 }
