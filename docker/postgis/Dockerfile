@@ -1,7 +1,7 @@
 ARG PHP_VERSION=8.4
-ARG POSTGRES_VERSION=15
+ARG POSTGRES_VERSION=17
 
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 LABEL maintainer="Martin Høgh <mh@mapcentia.com>"
 
 RUN export DEBIAN_FRONTEND=noninteractive
@@ -29,7 +29,7 @@ RUN apt-get -y install vim git php${PHP_VERSION}-pgsql php${PHP_VERSION}-cli cur
     osm2pgsql unixodbc
 
 # Install msodbcsql17 and msodbcsql18
-RUN curl -sSL -O https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb \
+RUN curl -sSL -O https://packages.microsoft.com/config/debian/13/packages-microsoft-prod.deb \
     && dpkg -i packages-microsoft-prod.deb \
     && rm packages-microsoft-prod.deb \
     && apt-get update \
@@ -39,12 +39,12 @@ RUN curl -sSL -O https://packages.microsoft.com/config/debian/12/packages-micros
 RUN sed -i "s#MinProtocol = TLSv1.2#MinProtocol = TLSv1.0#g" /etc/ssl/openssl.cnf
 
 # Install tds_fdw
-RUN export TDS_FDW_VERSION="2.0.3" &&\
-    wget https://github.com/tds-fdw/tds_fdw/archive/v${TDS_FDW_VERSION}.tar.gz &&\
-    tar -xvzf v${TDS_FDW_VERSION}.tar.gz &&\
-    cd tds_fdw-${TDS_FDW_VERSION}/ &&\
-    make USE_PGXS=1 &&\
-    make USE_PGXS=1 install
+#RUN export TDS_FDW_VERSION="2.0.3" &&\
+#    wget https://github.com/tds-fdw/tds_fdw/archive/v${TDS_FDW_VERSION}.tar.gz &&\
+#    tar -xvzf v${TDS_FDW_VERSION}.tar.gz &&\
+#    cd tds_fdw-${TDS_FDW_VERSION}/ &&\
+#    make USE_PGXS=1 &&\
+#    make USE_PGXS=1 install
 
 # Clone GC2 from GitHub
 RUN mkdir /var/www &&\
