@@ -113,6 +113,7 @@ services:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
   postgres:
     image: postgis/postgis:16-3.4
+    shm_size: 2gb
     container_name: postgres
     restart: unless-stopped
     ports:
