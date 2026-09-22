@@ -89,8 +89,18 @@ metadata). Old rows without the column: `formats` derived from `files`
 `metadata-<uuid>.json` gets the same `formats` array. Its existing `files`
 array is unchanged.
 
-Scheduler jobs: `snapshot: true` enqueues with `SnapshotFormat::defaults()`.
-A per-job `snapshot_formats` field is a follow-up, not part of this change.
+### Scheduler jobs
+
+A job with `snapshot: true` enqueues with `SnapshotFormat::defaults()` unless
+the job names its own formats. `jobs.snapshot_formats JSONB` (`NULL` = the
+server default) holds them, written through `snapshot_formats` on
+`POST`/`PATCH /api/v4/scheduler/jobs` with the same rule as `formats` here
+(null, or a non-empty unique list of known ids, else 400 `INVALID_REQUEST`);
+`Job::buildGetCmd()` passes a non-null list to `get.php` as
+`--snapshotFormats <base64 of the JSON list>`. The non-spatial rule stays in
+the worker: a geometry-only list on a non-spatial relation yields a failed
+snapshot with the worker's reason, not a refusal at job level (nothing knows
+at write time what the relation will look like after the next import).
 
 ## 3. Worker — `SnapshotWorker::runOne`
 
@@ -268,7 +278,6 @@ API:
 
 ## 9. Follow-ups (not in scope)
 
-- Per-job `snapshot_formats` on scheduler jobs.
 - Further formats (GeoJSON, GeoPackage, CSV): registry entries; GeoPackage
   would need `requiresGeometry: false` and a media type
   `application/geopackage+sqlite3`.

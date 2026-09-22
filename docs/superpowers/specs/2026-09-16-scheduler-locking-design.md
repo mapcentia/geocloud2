@@ -258,7 +258,7 @@ Resource (what GET returns):
   "schedule": "0 3 * * *",            // "min hour dayofmonth month dayofweek", the five jobs columns joined
   "epsg": 25832, "type": "AUTO", "encoding": "UTF8", "extra": null,
   "delete_append": false, "download_schema": true, "presql": null, "postsql": null,
-  "active": true, "snapshot": false,
+  "active": true, "snapshot": false, "snapshot_formats": null,   // null = the server default snapshot.formats
   "lastcheck": true, "lasttimestamp": "2026-09-16T03:00:12+00:00", "lastrun": null, "report": {…}
 }
 ```
@@ -267,16 +267,19 @@ Resource (what GET returns):
 |---|---|---|
 | GET | `/jobs` | all jobs of the caller's database, ordered by id |
 | GET | `/jobs/{id}` | one job (object), or several with comma separated ids `/jobs/5497,5498` (array); 404 `JOB_NOT_FOUND` when any id is not in the caller's database |
-| POST | `/jobs` | create one job (object) or several (array of objects); required `name, schema, url, schedule`; defaults `epsg 4326`, `type "AUTO"`, `encoding "UTF8"`, `delete_append false`, `download_schema true`, `active true`, `snapshot false`; 201 + `Location` |
-| PATCH | `/jobs/{id}` | single id only; partial update of any writable field; 303 + `Location` |
+| POST | `/jobs` | create one job (object) or several (array of objects); required `name, schema, url, schedule`; defaults `epsg 4326`, `type "AUTO"`, `encoding "UTF8"`, `delete_append false`, `download_schema true`, `active true`, `snapshot false`, `snapshot_formats null`; 201 + `Location` |
+| PATCH | `/jobs/{id}` | single id only; partial update of any writable field (`snapshot_formats: null` resets the job to the server default); 303 + `Location` |
 | DELETE | `/jobs/{id}` | one id or comma separated ids; all ids are checked before anything is deleted; 204; 404 `JOB_NOT_FOUND`; 409 `JOB_RUNNING` while a run of any listed job is `running` |
 
 Validation: `schedule` must be a valid five-field cron expression
 (`Cron\CronExpression`, the library `Job::validateCronExpression` already
 uses); `name` is normalised with `Model::toAscii(…, '_')` like v2; `epsg`
-positive int; booleans typed; `url` non-empty string. Errors 400
-`INVALID_REQUEST`. The `cron` column is written with the same string as
-`schedule` for the legacy readers.
+positive int; booleans typed; `url` non-empty string; `snapshot_formats` is
+`null` or a non-empty, duplicate-free list of ids in `SnapshotFormat::ids()`
+(stored as JSONB in `jobs.snapshot_formats`, `NULL` meaning the server default
+`snapshot.formats`; `get.php` receives it as `--snapshotFormats <base64 JSON>`).
+Errors 400 `INVALID_REQUEST`. The `cron` column is written with the same string
+as `schedule` for the legacy readers.
 
 ### Runs: `api/v4/scheduler/runs/[uuid]` (controller `SchedulerRun`)
 
