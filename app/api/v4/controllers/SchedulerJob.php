@@ -20,6 +20,7 @@ use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Route2;
 use app\inc\SchedulerLock;
+use app\inc\snapshot\SnapshotFormat;
 use app\models\Job;
 use OpenApi\Annotations\OpenApi;
 use OpenApi\Attributes as OA;
@@ -48,6 +49,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     new OA\Property(property: "postsql", type: "string", nullable: true),
     new OA\Property(property: "active", type: "boolean", example: true),
     new OA\Property(property: "snapshot", description: "Queue a Parquet snapshot after each successful import", type: "boolean", example: false),
+    new OA\Property(property: "snapshot_formats", description: "Formats of the snapshot queued after a successful import (when snapshot is true); null = the server default snapshot.formats", type: "array", items: new OA\Items(type: "string", enum: SnapshotFormat::IDS), example: ["parquet", "flatgeobuf"], nullable: true),
 ], type: "object")]
 #[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
 #[Controller(route: 'api/v4/scheduler/jobs/[id]', scope: Scope::SUPER_USER_ONLY)]
@@ -72,6 +74,7 @@ class SchedulerJob extends AbstractApi
             'epsg' => $r['epsg'] !== null ? (int)$r['epsg'] : null, 'type' => $r['type'], 'encoding' => $r['encoding'], 'extra' => $r['extra'],
             'delete_append' => (bool)$r['delete_append'], 'download_schema' => (bool)$r['download_schema'],
             'presql' => $r['presql'], 'postsql' => $r['postsql'], 'active' => (bool)$r['active'], 'snapshot' => (bool)$r['snapshot'],
+            'snapshot_formats' => is_string($r['snapshot_formats'] ?? null) ? json_decode($r['snapshot_formats'], true) : null,
             'lastcheck' => $r['lastcheck'] !== null ? (bool)$r['lastcheck'] : null, 'lasttimestamp' => $r['lasttimestamp'], 'lastrun' => $r['lastrun'],
             'report' => is_string($r['report'] ?? null) ? json_decode($r['report'], true) : null,
         ];
@@ -218,6 +221,17 @@ class SchedulerJob extends AbstractApi
             'extra' => new Assert\Optional(), 'presql' => new Assert\Optional(), 'postsql' => new Assert\Optional(),
             'delete_append' => new Assert\Optional(new Assert\Type('bool')), 'download_schema' => new Assert\Optional(new Assert\Type('bool')),
             'active' => new Assert\Optional(new Assert\Type('bool')), 'snapshot' => new Assert\Optional(new Assert\Type('bool')),
+            // null is allowed (and on PATCH it resets the job to the server
+            // default); anything else must be a non-empty, duplicate-free list
+            // of known format ids. Job::toColumns() enforces the same rule for
+            // callers that reach the model directly.
+            'snapshot_formats' => new Assert\Optional([new Assert\AtLeastOneOf([
+                new Assert\IsNull(),
+                new Assert\Sequentially([
+                    new Assert\Type('array'), new Assert\Count(min: 1), new Assert\Unique(),
+                    new Assert\All([new Assert\Type('string'), new Assert\Choice(SnapshotFormat::IDS)]),
+                ]),
+            ])]),
         ]);
     }
 }

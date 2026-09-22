@@ -53,8 +53,50 @@ class SchedulerJobV4ApiCest
         $I->seeResponseContainsJson([
             'id' => $this->jobId, 'name' => 'my_job', 'schema' => 'public', 'schedule' => '15 3 * * 1-5',
             'epsg' => 25832, 'type' => 'AUTO', 'encoding' => 'UTF8', 'delete_append' => false, 'download_schema' => true,
-            'active' => true, 'snapshot' => true,
+            'active' => true, 'snapshot' => true, 'snapshot_formats' => null,
         ]);
+    }
+
+    /**
+     * Per-job snapshot formats: a list is stored and read back, an unknown id
+     * is refused, and PATCH null resets the job to the server default.
+     */
+    public function shouldTakeSnapshotFormats(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendPOST('/api/v4/scheduler/jobs', json_encode([
+            'name' => 'fmt job', 'schema' => 'public', 'url' => 'https://example.com/data.zip', 'schedule' => '0 2 * * *',
+            'active' => false, 'snapshot' => true, 'snapshot_formats' => ['parquet', 'flatgeobuf'],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $id = (int)basename($I->grabHttpHeader('Location'));
+
+        $I->sendGET('/api/v4/scheduler/jobs/' . $id);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertSame(['parquet', 'flatgeobuf'], json_decode($I->grabResponse())->snapshot_formats);
+
+        // Unknown, duplicate, empty and non-array values are all 400.
+        foreach ([['geojson'], ['parquet', 'parquet'], [], 'parquet'] as $bad) {
+            $I->sendPOST('/api/v4/scheduler/jobs', json_encode([
+                'name' => 'fmt bad', 'schema' => 'public', 'url' => 'https://example.com/data.zip',
+                'schedule' => '0 2 * * *', 'snapshot' => true, 'snapshot_formats' => $bad,
+            ]));
+            $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        }
+
+        // null resets the job to the server default.
+        $I->stopFollowingRedirects();
+        $I->sendPATCH('/api/v4/scheduler/jobs/' . $id, json_encode(['snapshot_formats' => null]));
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $I->startFollowingRedirects();
+        $I->sendGET('/api/v4/scheduler/jobs/' . $id);
+        $I->assertNull(json_decode($I->grabResponse())->snapshot_formats);
+
+        $I->sendPATCH('/api/v4/scheduler/jobs/' . $id, json_encode(['snapshot_formats' => ['nope']]));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+
+        $I->sendDELETE('/api/v4/scheduler/jobs/' . $id);
+        $I->seeResponseCodeIs(HttpCode::NO_CONTENT);
     }
 
     public function shouldValidateOnCreate(ApiTester $I)
