@@ -201,7 +201,13 @@ final class SchedulerLock
         if (strlen($log) <= self::LOG_MAX_BYTES) {
             return $log;
         }
-        return "[log truncated to last " . self::LOG_MAX_BYTES . " bytes]\n" . substr($log, -self::LOG_MAX_BYTES);
+        return self::truncationHeader(self::LOG_MAX_BYTES) . substr($log, -self::LOG_MAX_BYTES);
+    }
+
+    /** The one wording of the "head dropped" line, shared with RunLog so a second truncation is a no-op. */
+    public static function truncationHeader(int $maxBytes): string
+    {
+        return "[log truncated to last $maxBytes bytes]\n";
     }
 
     /**

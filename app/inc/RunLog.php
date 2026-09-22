@@ -38,7 +38,7 @@ final class RunLog
     /** The captured output, with a truncation header when the head was dropped. */
     public function contents(): string
     {
-        return ($this->truncated ? "[log truncated to last {$this->maxBytes} bytes]\n" : '') . $this->buffer;
+        return ($this->truncated ? SchedulerLock::truncationHeader($this->maxBytes) : '') . $this->buffer;
     }
 
     /** Bytes currently held (without the header). */
