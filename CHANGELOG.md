@@ -34,6 +34,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Meta fields fall back to ordering by `_value` when `_order` is empty.
 
 ### Fixed
+- Scheduler: overwrite imports never got the GIST index on `the_geom` (the check ran against the final table before it was created); new and re-imported tables are indexed again.
 - Scheduler: due jobs did not start from cron when php lives in `/usr/local/bin`; curl failures now end the run as failed instead of overwriting the table; `Content-Type` sniffing has a timeout; the scheduler OpenAPI describes optional list forms, partial PATCH and job name normalisation.
 - v4 scope violations answer `403` instead of `500`.
 - Apache keeps the backend `Content-Length` on HEAD and 206 responses (`ap_trust_cgilike_cl`), and CORS allows `Range`/`If-Range` and exposes the range and caching headers.

@@ -60,6 +60,14 @@ class SchedulerRunV4ApiCest
 
         $I->assertFalse(property_exists($run, 'log'), 'the listing never carries the log');
 
+        // The overwrite import must leave a GIST index on the_geom (get.php once
+        // decided this from the final table before it existed and never indexed).
+        if ($run->status === 'succeeded') {
+            $I->sendPOST('/api/v4/sql', json_encode(['q' => "SELECT indexdef FROM pg_indexes WHERE schemaname = 'public' AND tablename = 'run_test' AND indexdef ILIKE '%USING gist (the_geom)%'"]));
+            $I->seeResponseCodeIs(HttpCode::OK);
+            $I->assertStringContainsString('USING gist (the_geom)', $I->grabResponse(), 'imported table has a GIST index');
+        }
+
         $I->sendGET('/api/v4/scheduler/runs/' . $this->runUuid);
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseContainsJson(['uuid' => $this->runUuid, 'job' => $this->jobId]);

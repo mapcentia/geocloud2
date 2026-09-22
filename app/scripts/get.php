@@ -1451,21 +1451,12 @@ if ($o != "-overwrite") {
     $sql = "SELECT * INTO {$schema}.{$safeName} FROM {$workingSchema}.{$randTableName}";
     $pkSql = "ALTER TABLE {$schema}.{$safeName} ADD PRIMARY KEY (gid)";
 
-    // Check for the_geom and create GIST index on it
-    $sqlCheckForGeom = "SELECT column_name FROM information_schema.columns WHERE table_schema='{$schema}' AND table_name='{$safeName}' and column_name='the_geom'";
-    $res = $table->prepare($sqlCheckForGeom);
-    try {
-        $res->execute();
-        $row = $table->fetchRow($res);
-        if ($row) {
-            $idxSql = "CREATE INDEX {$safeName}_gix ON {$schema}.{$safeName} USING GIST (the_geom)";
-        }
-    } catch (PDOException $e) {
-        print "\nError: ";
-        print_r($e->getMessage());
-        $lastError = $e->getMessage();
-        cleanUp();
-        exit(1);
+    // GIST index on the_geom. Decided from the working table's columns
+    // ($fields): the final table was just dropped and only exists after the
+    // SELECT INTO below, so asking information_schema about it here always
+    // said "no geometry" and no import ever got its spatial index.
+    if (in_array('the_geom', $fields, true)) {
+        $idxSql = "CREATE INDEX {$safeName}_gix ON {$schema}.{$safeName} USING GIST (the_geom)";
     }
 
 }
