@@ -84,6 +84,7 @@ ALTER TABLE started_jobs ADD COLUMN status      VARCHAR(16) NOT NULL DEFAULT 'ru
 ALTER TABLE started_jobs ADD COLUMN host        VARCHAR(255);
 ALTER TABLE started_jobs ADD COLUMN slot        INTEGER;
 ALTER TABLE started_jobs ADD COLUMN exit_reason TEXT;
+ALTER TABLE started_jobs ADD COLUMN log TEXT;        -- the run's stdout, see "Run log"
 ALTER TABLE started_jobs ADD CONSTRAINT started_jobs_status_check
   CHECK (status IN ('running', 'succeeded', 'failed', 'skipped', 'lost'));
 CREATE INDEX started_jobs_running_idx ON started_jobs (id) WHERE status = 'running';
@@ -335,3 +336,19 @@ appends `--manual 1` to the get.php command line; `scheduler_run_job.php`
 (cron) does not. get.php reads `--manual` (default 0) and skips the cooldown
 check when it is set; the run row's `name` keeps the trigger label the caller
 passes (`Started by Scheduler`, `Started from web-ui`, `Started via API v4 by …`).
+
+## Run log
+
+Everything `get.php` prints after the run is registered is also kept for
+`started_jobs.log`: an output buffer (`ob_start` with a 4 KB chunk size)
+appends each chunk to an in-memory `RunLog` and hands it back unchanged, so
+stdout and the per-job log file are exactly as before. The captured text is
+written to the row by `SchedulerLock::writeLog()` at every heartbeat (so a
+running job's log is visible while it runs) and passed to `finishRun()` on
+every exit path (`cleanUp()`, SIGINT/SIGTERM handlers, shutdown function).
+The log is capped at `SchedulerLock::LOG_MAX_BYTES` (1 MB); the tail is
+kept and a first line `[log truncated to last N bytes]` says so. Lock and
+cooldown skips write no log (their reason is in `exit_reason`).
+
+API: `GET /api/v4/scheduler/runs/{uuid}` carries `log` (string|null);
+listings never do (`runsFor()` selects every column but `log`).

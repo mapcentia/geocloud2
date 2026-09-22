@@ -517,6 +517,7 @@ SQL;
         $sqls[] = "ALTER TABLE started_jobs ADD COLUMN host VARCHAR(255)";
         $sqls[] = "ALTER TABLE started_jobs ADD COLUMN slot INTEGER";
         $sqls[] = "ALTER TABLE started_jobs ADD COLUMN exit_reason TEXT";
+        $sqls[] = "ALTER TABLE started_jobs ADD COLUMN log TEXT";
         // The ADD COLUMN above defaults every pre-existing row's started_at to
         // the moment the migration ran; `created` holds the real value.
         // Idempotent: on a second run no row matches.

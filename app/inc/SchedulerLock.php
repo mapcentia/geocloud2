@@ -29,6 +29,10 @@ use RuntimeException;
 final class SchedulerLock
 {
     public const int JOB_LOCK_CLASS = 42001;
+    /** Cap on started_jobs.log; the tail is kept. */
+    public const int LOG_MAX_BYTES = 1048576;
+    /** started_jobs columns of a listing row: everything but log. */
+    private const string LIST_COLUMNS = 'uuid, pid, created, id, db, name, started_at, heartbeat, finished_at, status, host, slot, exit_reason';
     public const int SLOT_LOCK_CLASS = 42002;
     public const int DEFAULT_MAX_JOBS = 20;
 
@@ -160,13 +164,44 @@ final class SchedulerLock
         return $st->fetchColumn();
     }
 
-    public function finishRun(string $uuid, string $status, ?string $reason = null): void
+    public function finishRun(string $uuid, string $status, ?string $reason = null, ?string $log = null): void
     {
         if (!in_array($status, ['succeeded', 'failed', 'lost'], true)) {
             throw new RuntimeException("Not a final status: $status");
         }
-        $st = $this->pdo()->prepare("UPDATE started_jobs SET status = :status, finished_at = now(), exit_reason = :reason WHERE uuid = :uuid AND status = 'running'");
-        $st->execute(['status' => $status, 'reason' => $reason, 'uuid' => $uuid]);
+        $sql = "UPDATE started_jobs SET status = :status, finished_at = now(), exit_reason = :reason"
+            . ($log !== null ? ", log = :log" : "")
+            . " WHERE uuid = :uuid AND status = 'running'";
+        $params = ['status' => $status, 'reason' => $reason, 'uuid' => $uuid];
+        if ($log !== null) {
+            $params['log'] = self::truncateLog($log);
+        }
+        $st = $this->pdo()->prepare($sql);
+        $st->execute($params);
+    }
+
+    /**
+     * Stores the run's stdout so far (any status: the final write can land
+     * after finishRun()). Best effort like heartbeat(): a registry hiccup
+     * must never interrupt the import it is reporting on.
+     */
+    public function writeLog(string $uuid, string $log): void
+    {
+        try {
+            $st = $this->pdo()->prepare("UPDATE started_jobs SET log = :log WHERE uuid = :uuid");
+            $st->execute(['log' => self::truncateLog($log), 'uuid' => $uuid]);
+        } catch (\Throwable $e) {
+            error_log("scheduler writeLog failed: " . $e->getMessage());
+        }
+    }
+
+    /** The last LOG_MAX_BYTES of $log, with a header line when something was dropped. */
+    public static function truncateLog(string $log): string
+    {
+        if (strlen($log) <= self::LOG_MAX_BYTES) {
+            return $log;
+        }
+        return "[log truncated to last " . self::LOG_MAX_BYTES . " bytes]\n" . substr($log, -self::LOG_MAX_BYTES);
     }
 
     /**
@@ -199,9 +234,11 @@ final class SchedulerLock
      */
     public function runsFor(string $db, int $finishedLimit = 50): array
     {
-        $st = $this->pdo()->prepare("(SELECT * FROM started_jobs WHERE db = :db AND status = 'running' ORDER BY started_at DESC)
+        // Listings never carry the log (up to 1 MB per row); run() does.
+        $cols = self::LIST_COLUMNS;
+        $st = $this->pdo()->prepare("(SELECT $cols FROM started_jobs WHERE db = :db AND status = 'running' ORDER BY started_at DESC)
                                    UNION ALL
-                                   (SELECT * FROM started_jobs WHERE db = :db2 AND status <> 'running' ORDER BY started_at DESC LIMIT :lim)");
+                                   (SELECT $cols FROM started_jobs WHERE db = :db2 AND status <> 'running' ORDER BY started_at DESC LIMIT :lim)");
         $st->bindValue('db', $db);
         $st->bindValue('db2', $db);
         $st->bindValue('lim', max(1, $finishedLimit), PDO::PARAM_INT);

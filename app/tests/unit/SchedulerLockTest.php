@@ -231,4 +231,25 @@ class SchedulerLockTest extends Unit
         $this->assertSame($first, $latest['uuid'], 'skipped rows never count as a run');
         $this->assertSame('succeeded', $latest['status']);
     }
+    public function testRunLogIsStoredTruncatedAndKeptOutOfListings(): void
+    {
+        $s = $this->session();
+        $uuid = $s->startRun($this->jobId, 'schedlocktest', 'log test', 4247, 1, 'unit-host');
+        $s->writeLog($uuid, "Info: one\nInfo: two");
+        $this->assertSame("Info: one\nInfo: two", $s->run($uuid, 'schedlocktest')['log']);
+        foreach ($s->runsFor('schedlocktest') as $row) {
+            $this->assertArrayNotHasKey('log', $row, 'listings never carry the log');
+        }
+        $big = str_repeat('x', SchedulerLock::LOG_MAX_BYTES + 100) . 'END';
+        $s->finishRun($uuid, 'succeeded', null, $big);
+        $stored = $s->run($uuid, 'schedlocktest')['log'];
+        $this->assertStringStartsWith('[log truncated to last ' . SchedulerLock::LOG_MAX_BYTES . ' bytes]', $stored);
+        $this->assertStringEndsWith('END', $stored);
+        $this->assertSame(SchedulerLock::LOG_MAX_BYTES, strlen(substr($stored, strpos($stored, "\n") + 1)));
+        // writeLog still works on a finished row (the shutdown hook's last write)
+        $s->writeLog($uuid, 'final');
+        $this->assertSame('final', $s->run($uuid, 'schedlocktest')['log']);
+        $s->release();
+    }
+
 }

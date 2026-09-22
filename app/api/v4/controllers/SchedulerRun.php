@@ -40,6 +40,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     new OA\Property(property: "status", type: "string", enum: ["running", "succeeded", "failed", "skipped", "lost"]), new OA\Property(property: "stale", description: "No progress signal (heartbeat or start) for 5 minutes", type: "boolean"),
     new OA\Property(property: "started_at", type: "string", format: "date-time"), new OA\Property(property: "heartbeat", type: "string", format: "date-time", nullable: true),
     new OA\Property(property: "finished_at", type: "string", format: "date-time", nullable: true), new OA\Property(property: "exit_reason", type: "string", nullable: true),
+    new OA\Property(property: "log", description: "stdout of the run (the Info/Warning/Error lines get.php prints), updated at every heartbeat and on finish; capped at 1 MB with the tail kept. Only in the single-run response, never in listings.", type: "string", nullable: true),
 ], type: "object")]
 #[AcceptableMethods(['GET', 'POST', 'DELETE', 'HEAD', 'OPTIONS'])]
 #[Controller(route: 'api/v4/scheduler/runs/[uuid]', scope: Scope::SUPER_USER_ONLY)]
@@ -57,9 +58,9 @@ class SchedulerRun extends AbstractApi
         $this->resource = 'scheduler-run';
     }
 
-    private function present(array $r): array
+    private function present(array $r, bool $withLog = false): array
     {
-        return [
+        $out = [
             'uuid' => $r['uuid'], 'job' => (int)$r['id'], 'name' => $r['name'], 'pid' => (int)$r['pid'], 'host' => $r['host'],
             'slot' => $r['slot'] !== null ? (int)$r['slot'] : null, 'status' => $r['status'],
             // No progress signal for 5 minutes. A run that died before its
@@ -67,6 +68,10 @@ class SchedulerRun extends AbstractApi
             'stale' => $r['status'] === 'running' && (time() - strtotime($r['heartbeat'] ?? $r['started_at'])) > 300,
             'started_at' => $r['started_at'], 'heartbeat' => $r['heartbeat'], 'finished_at' => $r['finished_at'], 'exit_reason' => $r['exit_reason'],
         ];
+        if ($withLog) {
+            $out['log'] = $r['log'] ?? null;
+        }
+        return $out;
     }
 
     /** @return array<int, array<string,mixed>> runs of the caller's database after reaping */
@@ -79,7 +84,7 @@ class SchedulerRun extends AbstractApi
         return $rows;
     }
 
-    #[OA\Get(path: '/api/v4/scheduler/runs/{uuid}', operationId: 'getSchedulerRun', description: "Get one run, or list runs (running first, then the newest finished). Filters: ?job=, ?status=.", tags: ['Scheduler'],
+    #[OA\Get(path: '/api/v4/scheduler/runs/{uuid}', operationId: 'getSchedulerRun', description: "Get one run (with its log), or list runs (running first, then the newest finished; without log). Filters: ?job=, ?status=.", tags: ['Scheduler'],
         parameters: [new OA\Parameter(name: 'uuid', description: 'Run uuid. Omit to list runs (running plus the newest finished ones).', in: 'path', required: false, schema: new OA\Schema(type: 'string')), new OA\Parameter(name: 'job', in: 'query', required: false, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string'))],
         responses: [new OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/SchedulerRun")), new OA\Response(response: 404, description: 'Not found')])]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -97,7 +102,7 @@ class SchedulerRun extends AbstractApi
             if ($run === null) {
                 throw new GC2Exception("Run $uuid not found", 404, null, "RUN_NOT_FOUND");
             }
-            return $this->getResponse([$this->present($run)], single: true);
+            return $this->getResponse([$this->present($run, withLog: true)], single: true);
         }
         $rows = $this->runs();
         $job = isset($_GET['job']) && ctype_digit((string)$_GET['job']) ? (int)$_GET['job'] : null;

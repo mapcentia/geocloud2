@@ -58,9 +58,15 @@ class SchedulerRunV4ApiCest
         $I->assertTrue(property_exists($run, 'host') && property_exists($run, 'stale') && property_exists($run, 'exit_reason'));
         $this->runUuid = $run->uuid;
 
+        $I->assertFalse(property_exists($run, 'log'), 'the listing never carries the log');
+
         $I->sendGET('/api/v4/scheduler/runs/' . $this->runUuid);
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->seeResponseContainsJson(['uuid' => $this->runUuid, 'job' => $this->jobId]);
+        $single = json_decode($I->grabResponse());
+        $I->assertTrue(property_exists($single, 'log'), 'the single run carries the log');
+        $I->assertIsString($single->log, 'log of run: ' . json_encode($single));
+        $I->assertStringContainsString('Info: Run ' . $this->runUuid . ' registered', $single->log);
     }
 
     public function shouldReject404AndUnknownJob(ApiTester $I)

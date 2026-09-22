@@ -143,6 +143,41 @@ if ($minInterval > 0) {
 $runUuid = $schedulerLock->startRun((int)$jobId, $db, $runName ?? $safeName, $runPid, null, $runHost);
 print "\nInfo: Run {$runUuid} registered";
 
+// Everything printed from here on is also kept for started_jobs.log: the
+// buffer callback hands each chunk back unchanged, so stdout (and the
+// per-job log file it is redirected to) see exactly what they always did.
+$runLog = new \app\inc\RunLog();
+ob_start(function (string $chunk) use ($runLog): string {
+    $runLog->append($chunk);
+    return $chunk;
+}, 4096);
+
+/** Pushes the output captured so far into the registry row (best effort). */
+function flushRunLog(): void
+{
+    global $schedulerLock, $runUuid, $runLog;
+    if ($runUuid === null || !isset($runLog)) {
+        return;
+    }
+    if (ob_get_level() > 0) {
+        ob_flush();
+    }
+    $schedulerLock->writeLog($runUuid, $runLog->contents());
+}
+
+/** The captured output for a final finishRun(): ends buffering so the last chunk is in. */
+function runLogContents(): ?string
+{
+    global $runLog;
+    if (!isset($runLog)) {
+        return null;
+    }
+    while (ob_get_level() > 0) {
+        ob_end_flush();
+    }
+    return $runLog->contents();
+}
+
 // Bookkeeping when the process dies without reaching cleanUp(): the locks
 // are released by Postgres regardless; this only keeps the registry honest.
 register_shutdown_function(function () use (&$schedulerLock, &$runUuid) {
@@ -151,8 +186,12 @@ register_shutdown_function(function () use (&$schedulerLock, &$runUuid) {
     }
     $err = error_get_last();
     $reason = $err !== null ? "terminated: " . $err['message'] : "terminated";
+    $log = runLogContents();
     try {
-        $schedulerLock->finishRun($runUuid, 'failed', $reason); // no-op if cleanUp() already finalised
+        $schedulerLock->finishRun($runUuid, 'failed', $reason, $log); // no-op if cleanUp() already finalised
+        if ($log !== null) {
+            $schedulerLock->writeLog($runUuid, $log); // the row is final either way: keep the complete log
+        }
     } catch (Throwable) {
     }
 });
@@ -162,7 +201,7 @@ if (function_exists('pcntl_async_signals')) {
         print "\nError: Terminated by SIGINT (timeout).";
         if ($runUuid !== null) {
             try {
-                $schedulerLock->finishRun($runUuid, 'failed', 'timeout');
+                $schedulerLock->finishRun($runUuid, 'failed', 'timeout', runLogContents());
             } catch (Throwable) {
             }
         }
@@ -171,7 +210,7 @@ if (function_exists('pcntl_async_signals')) {
     pcntl_signal(SIGTERM, function () use (&$schedulerLock, &$runUuid) {
         if ($runUuid !== null) {
             try {
-                $schedulerLock->finishRun($runUuid, 'failed', 'terminated');
+                $schedulerLock->finishRun($runUuid, 'failed', 'terminated', runLogContents());
             } catch (Throwable) {
             }
         }
@@ -384,6 +423,7 @@ function getCmd(): void
     global $schedulerLock, $runUuid, $lastError;
     if ($runUuid !== null) {
         $schedulerLock->heartbeat($runUuid);
+        flushRunLog();
     }
 
     $report[DOWNLOADTYPE] = URL;
@@ -486,6 +526,7 @@ function fetchPart(string $label, string $requestUrl): array
     global $schedulerLock, $runUuid;
     if ($runUuid !== null) {
         $schedulerLock->heartbeat($runUuid);
+        flushRunLog();
     }
     $pass = true; // each attempt starts clean so a successful retry counts
     $counts = ['matched' => null, 'returned' => null];
@@ -990,6 +1031,7 @@ function getCmdFile(): void
     global $schedulerLock, $runUuid;
     if ($runUuid !== null) {
         $schedulerLock->heartbeat($runUuid);
+        flushRunLog();
     }
 
     $report[DOWNLOADTYPE] = FILE;
@@ -1095,6 +1137,7 @@ function getCmdZip(): void
     global $schedulerLock, $runUuid, $lastError;
     if ($runUuid !== null) {
         $schedulerLock->heartbeat($runUuid);
+        flushRunLog();
     }
 
     $report[DOWNLOADTYPE] = ZIP;
@@ -1228,6 +1271,7 @@ $slot = $schedulerLock->acquireSlot($maxJobs, function (int $max, int $sleep) us
     // The run is already registered (right after the job lock), so keep it
     // from looking stale while it queues.
     $schedulerLock->heartbeat($runUuid);
+    flushRunLog();
 });
 $schedulerLock->assignSlot($runUuid, $slot);
 print "\nInfo: Run {$runUuid} registered on slot {$slot}";
@@ -1635,7 +1679,7 @@ function cleanUp(int $success = 0): void
     }
 
     if ($runUuid !== null) {
-        $schedulerLock->finishRun($runUuid, $success ? 'succeeded' : 'failed', $success ? null : ($lastError ?? 'see job log'));
+        $schedulerLock->finishRun($runUuid, $success ? 'succeeded' : 'failed', $success ? null : ($lastError ?? 'see job log'), runLogContents());
     }
 }
 
