@@ -1225,12 +1225,13 @@ function getCmdZip(): void
         }
 
     }
-    $isCsv = false;
     if (array_reverse(explode('.', $outFileName))[0] == "json") {
         $csvFile = $outFileName . ".csv";
         Util::json2cvs($outFileName, $csvFile);
         $outFileName = $csvFile;
         $isCsv = true;
+    } else {
+        $isCsv =  isCsv($outFileName);
     }
 
     $extraArgs = [
