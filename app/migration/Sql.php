@@ -495,6 +495,8 @@ SQL;
         $sqls[] = "ALTER TABLE jobs ADD COLUMN report jsonb";
         $sqls[] = "ALTER TABLE jobs ADD COLUMN active BOOL DEFAULT TRUE";
         $sqls[] = "ALTER TABLE jobs ADD COLUMN snapshot BOOL DEFAULT FALSE";
+        // Per-job snapshot formats; NULL means the server default (snapshot.formats in App.php).
+        $sqls[] = "ALTER TABLE jobs ADD COLUMN snapshot_formats JSONB";
         $sqls[] = "CREATE EXTENSION \"uuid-ossp\"";
         $sqls[] = "create table public.started_jobs
                     (

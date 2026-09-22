@@ -5,6 +5,7 @@
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  */
 
+use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\models\Job;
 use Codeception\Test\Unit;
@@ -123,6 +124,66 @@ class JobSnapshotFlagTest extends Unit
         } finally {
             foreach ($created as $id) {
                 $job->deleteJob((object)['id' => $id]);
+            }
+        }
+    }
+
+    /**
+     * snapshot_formats: the per-job format list the v4 API writes and
+     * buildGetCmd() passes on to get.php. Validation lives in
+     * Job::toColumns(), so it covers createJob(), patchJob() and the
+     * validateFields() pre-check of a POST list alike.
+     */
+    public function testSnapshotFormatsValidationAndRoundTrip(): void
+    {
+        $job = $this->job();
+        $uniq = uniqid();
+        $fields = fn(string $name, array $extra = []) => array_merge([
+            'name' => $name, 'schema' => 'public', 'url' => 'http://example.invalid/x.zip',
+            'schedule' => '0 3 * * *', 'snapshot' => true,
+        ], $extra);
+        $created = [];
+        try {
+            // null (and an absent property) stores NULL: use the server default.
+            $id = $job->createJob($fields('snapfmtnull_' . $uniq), self::DB);
+            $created[] = $id;
+            $this->assertNull($job->getById($id, self::DB)['snapshot_formats'], 'absent means NULL');
+            $job->patchJob($id, self::DB, ['snapshot_formats' => ['flatgeobuf']]);
+            $this->assertSame(['flatgeobuf'], json_decode($job->getById($id, self::DB)['snapshot_formats'], true));
+            $job->patchJob($id, self::DB, ['snapshot_formats' => null]);
+            $this->assertNull($job->getById($id, self::DB)['snapshot_formats'], 'null resets to the server default');
+
+            // A list round-trips in the requested order.
+            $id = $job->createJob($fields('snapfmtlist_' . $uniq, ['snapshot_formats' => ['parquet', 'flatgeobuf']]), self::DB);
+            $created[] = $id;
+            $this->assertSame(['parquet', 'flatgeobuf'], json_decode($job->getById($id, self::DB)['snapshot_formats'], true));
+
+            foreach ([
+                         'unknown id' => ['geojson'],
+                         'duplicates' => ['parquet', 'parquet'],
+                         'empty list' => [],
+                         'not a list' => ['0' => 'parquet', 'x' => 'flatgeobuf'],
+                         'not a string' => [1],
+                         'not an array' => 'parquet',
+                     ] as $why => $bad) {
+                try {
+                    $job->validateFields($fields('snapfmtbad_' . $uniq, ['snapshot_formats' => $bad]));
+                    $this->fail("$why should be refused");
+                } catch (GC2Exception $e) {
+                    $this->assertSame(400, $e->getCode(), $why);
+                    $this->assertSame('INVALID_REQUEST', $e->getErrorCode(), $why);
+                }
+            }
+            // The message names the offending id and the known ones.
+            try {
+                $job->validateFields($fields('x', ['snapshot_formats' => ['geojson']]));
+            } catch (GC2Exception $e) {
+                $this->assertStringContainsString('geojson', $e->getMessage());
+                $this->assertStringContainsString('parquet', $e->getMessage());
+            }
+        } finally {
+            foreach ($created as $id) {
+                $job->deleteJobById($id, self::DB);
             }
         }
     }

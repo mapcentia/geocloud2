@@ -86,6 +86,29 @@ class JobRunJobCommandTest extends Unit
         $this->assertStringContainsString('--manual 1', $cmd);
         $this->assertStringContainsString('--manual 0', Job::buildGetCmd($this->row()));
     }
+    /**
+     * A job without a per-job format list must not pass --snapshotFormats at
+     * all, so get.php falls back to the server default (SnapshotFormat::
+     * defaults()); with a list it is passed base64 encoded like --extra, so
+     * neither the JSON quoting nor a hand-edited jobs row can reach the shell.
+     */
+    public function testSnapshotFormatsOptionIsOmittedWhenTheJobHasNoList(): void
+    {
+        $this->assertStringNotContainsString('--snapshotFormats', Job::buildGetCmd($this->row()));
+        $this->assertStringNotContainsString('--snapshotFormats', Job::buildGetCmd($this->row(['snapshot_formats' => null])));
+        $this->assertStringNotContainsString('--snapshotFormats', Job::buildGetCmd($this->row(['snapshot_formats' => ''])));
+    }
+
+    public function testSnapshotFormatsOptionIsBase64EncodedJson(): void
+    {
+        $cmd = Job::buildGetCmd($this->row(['snapshot' => '1', 'snapshot_formats' => '["parquet", "flatgeobuf"]']));
+        $this->assertMatchesRegularExpression("/ --snapshotFormats '([A-Za-z0-9+\/=]+)'/", $cmd);
+        preg_match("/ --snapshotFormats '([A-Za-z0-9+\/=]+)'/", $cmd, $m);
+        $this->assertSame(['parquet', 'flatgeobuf'], json_decode(base64_decode($m[1]), true));
+        // Nothing of the JSON itself (quotes, brackets) reaches the command line.
+        $this->assertStringNotContainsString('["parquet"', $cmd);
+    }
+
     public function testSpawnsWithTheRunningPhpBinaryNotABarePhp(): void
     {
         $cmd = Job::buildGetCmd(['id' => 1, 'db' => 'd', 'schema' => 's', 'name' => 'n', 'url' => 'https://e.com/a', 'epsg' => 4326,

@@ -13,6 +13,7 @@ ini_set('max_execution_time', "0");
 use app\exceptions\GC2Exception;
 use app\inc\Model;
 use app\inc\SchedulerLock;
+use app\inc\snapshot\SnapshotFormat;
 use Cron\CronExpression;
 use InvalidArgumentException;
 
@@ -212,6 +213,12 @@ class Job extends Model
             . " --downloadSchema {$job["download_schema"]}"
             . " --snapshot {$job["snapshot"]}"
             . " --manual " . ($manual ? 1 : 0);
+        // Per-job snapshot formats only when the job has a list; without the
+        // option get.php falls back to the server default. Base64 like
+        // --extra, so the JSON's quotes never reach the shell at all.
+        if (!empty($job["snapshot_formats"])) {
+            $cmd .= " --snapshotFormats " . escapeshellarg(base64_encode((string)$job["snapshot_formats"]));
+        }
         if ($name !== null && $name !== '') {
             $cmd .= " --name " . base64_encode($name);
         }
@@ -307,7 +314,7 @@ class Job extends Model
     }
 
     private const array WRITABLE = ['name', 'schema', 'url', 'schedule', 'epsg', 'type', 'encoding', 'extra',
-        'delete_append', 'download_schema', 'presql', 'postsql', 'active', 'snapshot'];
+        'delete_append', 'download_schema', 'presql', 'postsql', 'active', 'snapshot', 'snapshot_formats'];
     private const array BOOLS = ['delete_append', 'download_schema', 'active', 'snapshot'];
 
     public function getById(int $id, string $db): ?array
@@ -324,7 +331,7 @@ class Job extends Model
      */
     public function createJob(array $fields, string $db): int
     {
-        $cols = $this->toColumns($fields + ['epsg' => 4326, 'type' => 'AUTO', 'encoding' => 'UTF8', 'delete_append' => false, 'download_schema' => true, 'active' => true, 'snapshot' => false]);
+        $cols = $this->toColumns($fields + ['epsg' => 4326, 'type' => 'AUTO', 'encoding' => 'UTF8', 'delete_append' => false, 'download_schema' => true, 'active' => true, 'snapshot' => false, 'snapshot_formats' => null]);
         $cols['db'] = $db;
         $names = array_keys($cols);
         $sql = "INSERT INTO jobs (" . implode(', ', $names) . ") VALUES (:" . implode(', :', $names) . ") RETURNING id";
@@ -372,6 +379,35 @@ class Job extends Model
         $this->toColumns($fields);
     }
 
+    /**
+     * The snapshot_formats column's value: NULL (use the server default), or a
+     * JSON list of known format ids. Validated here rather than in the
+     * controller so createJob(), patchJob() and the validateFields() pre-check
+     * of a POST list all refuse the same input.
+     *
+     * @throws GC2Exception 400 INVALID_REQUEST on anything but null or a
+     *     non-empty list of unique known ids.
+     */
+    private static function toSnapshotFormats(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+        $known = implode(', ', SnapshotFormat::ids());
+        if (!is_array($value) || !array_is_list($value) || $value === []) {
+            throw new GC2Exception("snapshot_formats must be null or a non-empty array of format ids; known formats are $known", 400, null, "INVALID_REQUEST");
+        }
+        foreach ($value as $id) {
+            if (!is_string($id) || !SnapshotFormat::has($id)) {
+                throw new GC2Exception("Unknown snapshot format '" . (is_string($id) ? $id : gettype($id)) . "' in snapshot_formats; known formats are $known", 400, null, "INVALID_REQUEST");
+            }
+        }
+        if (count(array_unique($value)) !== count($value)) {
+            throw new GC2Exception("snapshot_formats must not repeat a format id; known formats are $known", 400, null, "INVALID_REQUEST");
+        }
+        return json_encode(array_values($value));
+    }
+
     private function toColumns(array $fields): array
     {
         $cols = [];
@@ -397,6 +433,8 @@ class Job extends Model
                 $cols[$k] = filter_var($v, FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
             } elseif ($k === 'epsg') {
                 $cols['epsg'] = (string)(int)$v;
+            } elseif ($k === 'snapshot_formats') {
+                $cols['snapshot_formats'] = self::toSnapshotFormats($v);
             } else {
                 $cols[$k] = $v;
             }
