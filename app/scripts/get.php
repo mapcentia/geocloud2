@@ -63,6 +63,7 @@ $longopts = array(
     "postSql:",
     "downloadSchema:",
     "snapshot:",
+    "snapshotFormats:",
     "manual:",
     "name:",
 );
@@ -82,6 +83,15 @@ $preSql = $options["preSql"] == "null" ? null : base64_decode($options["preSql"]
 $postSql = $options["postSql"] == "null" ? null : base64_decode($options["postSql"]);
 $downloadSchema = $options["downloadSchema"];
 $snapshotAfterImport = $options["snapshot"] ?? null;
+// Per-job snapshot formats (base64 encoded JSON list, see Job::buildGetCmd).
+// Absent (or unusable) means the server default, SnapshotFormat::defaults().
+$snapshotFormats = null;
+if (!empty($options["snapshotFormats"])) {
+    $decoded = json_decode((string)base64_decode((string)$options["snapshotFormats"]), true);
+    if (is_array($decoded) && $decoded !== []) {
+        $snapshotFormats = array_values($decoded);
+    }
+}
 $manualStart = !empty($options["manual"]);
 $runName = !empty($options["name"]) ? (base64_decode($options["name"]) ?: null) : null;
 
@@ -1523,7 +1533,7 @@ print "\nInfo: Data imported into " . $schema . "." . $safeName;
 // ========
 function cleanUp(int $success = 0): void
 {
-    global $schema, $workingSchema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db, $report, $snapshotAfterImport, $schedulerLock, $runUuid, $lastError, $conn;
+    global $schema, $workingSchema, $randTableName, $table, $jobId, $dir, $tempFile, $safeName, $db, $report, $snapshotAfterImport, $snapshotFormats, $schedulerLock, $runUuid, $lastError, $conn;
 
     // Unlink temp file
     // ================
@@ -1617,8 +1627,9 @@ function cleanUp(int $success = 0): void
             try {
                 $snap = new \app\models\Snapshot(new \app\inc\Connection(database: $db));
                 if (!$snap->hasActive($schema, $safeName)) {
-                    $snap->create($schema, $safeName, null, $db, \app\inc\snapshot\SnapshotFormat::defaults());
-                    print "\nInfo: Snapshot queued for $schema.$safeName";
+                    $formats = $snapshotFormats ?? \app\inc\snapshot\SnapshotFormat::defaults();
+                    $snap->create($schema, $safeName, null, $db, $formats);
+                    print "\nInfo: Snapshot queued for $schema.$safeName (formats: " . implode(', ', $formats) . ")";
                 }
             } catch (\Throwable $e) {
                 print "\nWarning: could not queue snapshot: " . $e->getMessage();
