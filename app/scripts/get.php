@@ -428,7 +428,7 @@ function getCmd(): void
         $extraArgs[] = "-oo " . escapeshellarg("X_POSSIBLE_NAMES=lon*,Lon*,x,X");
         $extraArgs[] = "-oo " . escapeshellarg("Y_POSSIBLE_NAMES=lat*,Lat*,y,Y");
         $extraArgs[] = "-oo " . escapeshellarg("AUTODETECT_TYPE=YES");
-        $extraArgs[] = "-oo " . escapeshellarg("GEOM_POSSIBLE_NAMES=geometri");
+        $extraArgs[] = "-oo " . escapeshellarg("GEOM_POSSIBLE_NAMES=geometri,position");
     }
 
     $source = $isCsv ? escapeshellarg("CSV:" . $tmpFilePath) : escapeshellarg($tmpFilePath);
@@ -1183,7 +1183,7 @@ function getCmdZip(): void
     if ($isCsv) {
         $extraArgs[] = "-oo " . escapeshellarg("X_POSSIBLE_NAMES=lon*,Lon*,x,X");
         $extraArgs[] = "-oo " . escapeshellarg("Y_POSSIBLE_NAMES=lat*,Lat*,y,Y");
-        $extraArgs[] = "-oo " . escapeshellarg("GEOM_POSSIBLE_NAMES=geometri");
+        $extraArgs[] = "-oo " . escapeshellarg("GEOM_POSSIBLE_NAMES=geometri,position");
     }
 
     $cmd = buildOgr2ogrCmd(
