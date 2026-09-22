@@ -141,7 +141,6 @@ if ($minInterval > 0) {
 // hour-long) wait for a run slot: a lock-holding run must never be invisible
 // to the API. The slot is filled in by assignSlot() once one is acquired.
 $runUuid = $schedulerLock->startRun((int)$jobId, $db, $runName ?? $safeName, $runPid, null, $runHost);
-print "\nInfo: Run {$runUuid} registered";
 
 // Everything printed from here on is also kept for started_jobs.log: the
 // buffer callback hands each chunk back unchanged, so stdout (and the
@@ -151,6 +150,7 @@ ob_start(function (string $chunk) use ($runLog): string {
     $runLog->append($chunk);
     return $chunk;
 }, 4096);
+print "\nInfo: Run {$runUuid} registered";
 
 /** Pushes the output captured so far into the registry row (best effort). */
 function flushRunLog(): void
@@ -165,7 +165,20 @@ function flushRunLog(): void
     $schedulerLock->writeLog($runUuid, $runLog->contents());
 }
 
-/** The captured output for a final finishRun(): ends buffering so the last chunk is in. */
+/** The captured output so far, buffering kept open (cleanUp() prints more after finishing the row). */
+function runLogSnapshot(): ?string
+{
+    global $runLog;
+    if (!isset($runLog)) {
+        return null;
+    }
+    if (ob_get_level() > 0) {
+        ob_flush();
+    }
+    return $runLog->contents();
+}
+
+/** The captured output for the very last write: ends buffering so the final chunk is in. */
 function runLogContents(): ?string
 {
     global $runLog;
@@ -1679,7 +1692,9 @@ function cleanUp(int $success = 0): void
     }
 
     if ($runUuid !== null) {
-        $schedulerLock->finishRun($runUuid, $success ? 'succeeded' : 'failed', $success ? null : ($lastError ?? 'see job log'), runLogContents());
+        // Snapshot, not the final contents: the lines printed below still reach
+        // the row through the shutdown hook's last writeLog().
+        $schedulerLock->finishRun($runUuid, $success ? 'succeeded' : 'failed', $success ? null : ($lastError ?? 'see job log'), runLogSnapshot());
     }
 }
 
