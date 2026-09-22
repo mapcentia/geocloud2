@@ -209,7 +209,6 @@ wmsLayer.init = function (record) {
                     var f = Ext.getCmp('sqlForm');
                     if (f.form.isValid()) {
                         var values = f.form.getValues();
-                        values.data = encodeURIComponent(values.data);
                         var param = {
                             data: values
                         };
