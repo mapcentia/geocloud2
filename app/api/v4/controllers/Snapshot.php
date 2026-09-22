@@ -190,7 +190,7 @@ class Snapshot extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Post(path: '/api/v4/snapshots', operationId: 'postSnapshot', description: "Queue a Parquet snapshot of one relation (object) or several (array of objects). Returns 202; poll the returned link(s) for status. With an array, every relation is checked before anything is queued.", tags: ['Snapshots'])]
+    #[OA\Post(path: '/api/v4/snapshots', operationId: 'postSnapshot', description: "Queue a snapshot of one relation (object) or several (array of objects) in the requested formats (Parquet, FlatGeobuf; see formats). Returns 202; poll the returned link(s) for status. With an array, every relation is checked before anything is queued.", tags: ['Snapshots'])]
     #[OA\RequestBody(description: 'Relation(s) to snapshot.', required: true, content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/SnapshotRequest"),
         new OA\Schema(type: 'array', items: new OA\Items(ref: "#/components/schemas/SnapshotRequest"))]))]
     #[OA\Response(response: 202, description: 'Accepted; poll _links.self for status. An object for a single request, an array for an array request.',
