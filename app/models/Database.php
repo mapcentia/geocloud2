@@ -211,7 +211,10 @@ class Database extends Model
     public function listAllSchemas(): array
     {
         $arr = [];
-        $sql = "SELECT n.nspname AS schema_name, count(c.oid) AS count
+        // count: every relation kind; table_count: what GET /api/v4/schemas/{schema}/tables
+        // lists (pg_tables + pg_views, i.e. relkind r, p and v) — cheap, from the catalog.
+        $sql = "SELECT n.nspname AS schema_name, count(c.oid) AS count,
+                   count(c.oid) FILTER (WHERE c.relkind IN ('r','p','v')) AS table_count
             FROM pg_catalog.pg_namespace n
             LEFT JOIN pg_catalog.pg_class c ON c.relnamespace = n.oid AND c.relkind IN ('r','v','m','f','p')
             WHERE n.nspname NOT LIKE 'pg_%'
@@ -225,7 +228,7 @@ class Database extends Model
             return ['success' => false, 'message' => $e->getMessage(), 'code' => 401];
         }
         while ($row = $this->fetchRow($res)) {
-            $arr[] = ['schema' => $row['schema_name'], 'count' => (int)$row['count']];
+            $arr[] = ['schema' => $row['schema_name'], 'count' => (int)$row['count'], 'table_count' => (int)$row['table_count']];
         }
         return ['success' => true, 'data' => $arr];
     }
