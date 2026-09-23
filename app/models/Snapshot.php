@@ -379,11 +379,6 @@ class Snapshot extends Model
         return $meta;
     }
 
-    /**
-     * One visible snapshot by relation and date.
-     *
-     * @throws GC2Exception 404 NO_SNAPSHOT_ERROR
-     */
     /** The newest published snapshot of a relation (by snapshot date, then publish time). */
     public function getLatestPublished(string $schema, string $relation): array
     {
@@ -400,6 +395,11 @@ class Snapshot extends Model
         return ['success' => true, 'message' => "Snapshot fetched", 'data' => $this->withFormats($row)];
     }
 
+    /**
+     * One visible snapshot by relation and date.
+     *
+     * @throws GC2Exception 404 NO_SNAPSHOT_ERROR
+     */
     public function getPublished(string $schema, string $relation, string $snapshotDate): array
     {
         $sql = "SELECT * FROM settings.snapshots

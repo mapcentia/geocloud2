@@ -122,12 +122,6 @@ final class StacCatalogWriter
         ];
     }
 
-    /**
-     * @param array{title?:?string, description?:?string, keywords?:array} $meta
-     * @param array<int, array<string, mixed>> $rows Newest first.
-     * @param array<string, array<string, mixed>> $items Items by snapshot date.
-     * @return array<string, mixed>
-     */
     /** @param list<string> $dates */
     private static function newestDate(array $dates): ?string
     {
@@ -144,7 +138,7 @@ final class StacCatalogWriter
         $item = $items[$newest];
         $assets = [];
         foreach ($item['assets'] as $key => $asset) {
-            $assets[$key] = ['href' => "./_gc2_snapshot_date=$newest/" . ltrim($asset['href'], './'), 'type' => $asset['type']];
+            $assets[$key] = ['href' => "./_gc2_snapshot_date=$newest/" . (str_starts_with($asset['href'], './') ? substr($asset['href'], 2) : $asset['href']), 'type' => $asset['type']];
         }
         return [
             'collection' => $id,
@@ -155,6 +149,12 @@ final class StacCatalogWriter
         ];
     }
 
+    /**
+     * @param array{title?:?string, description?:?string, keywords?:array} $meta
+     * @param array<int, array<string, mixed>> $rows Newest first.
+     * @param array<string, array<string, mixed>> $items Items by snapshot date.
+     * @return array<string, mixed>
+     */
     private function collection(string $id, string $title, array $meta, array $rows, array $items): array
     {
         $dates = array_map(fn($r) => (string)$r['snapshot_date'], $rows);
