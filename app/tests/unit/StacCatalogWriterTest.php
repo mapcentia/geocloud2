@@ -116,20 +116,42 @@ class StacCatalogWriterTest extends Unit
         ], []);
         $collection = $docs['schema=snap/relation=points/collection.json'];
 
-        $this->assertSame(['root', 'parent', 'item', 'item', 'item'], array_column($collection['links'], 'rel'));
+        $this->assertSame(['root', 'parent', 'latest-version', 'item', 'item', 'item'], array_column($collection['links'], 'rel'));
         $this->assertSame('../../catalog.json', $collection['links'][0]['href']);
         $this->assertSame('../../catalog.json', $collection['links'][1]['href']);
+        $this->assertSame('./_gc2_snapshot_date=2026-09-16/item.json', $collection['links'][2]['href'], 'latest-version is the newest item');
         $this->assertSame(
             [
                 './_gc2_snapshot_date=2026-09-16/item.json',
                 './_gc2_snapshot_date=2026-09-15/item.json',
                 './_gc2_snapshot_date=2026-09-14/item.json',
             ],
-            array_column(array_slice($collection['links'], 2), 'href'),
+            array_column(array_slice($collection['links'], 3), 'href'),
             'items are linked newest first'
         );
-        $this->assertSame('application/geo+json', $collection['links'][2]['type']);
+        $this->assertSame('application/geo+json', $collection['links'][3]['type']);
         $this->assertCount(3, array_filter(array_keys($docs), fn($p) => str_ends_with($p, 'item.json')));
+    }
+
+    public function testLatestPointerNamesTheNewestSnapshotWithoutTouchingTheHiveLayout(): void
+    {
+        $docs = $this->writer()->build([
+            $this->row(['snapshot_date' => '2026-09-14', 'uuid' => 'a']),
+            $this->row(['snapshot_date' => '2026-09-16', 'uuid' => 'c']),
+        ], []);
+        $latest = $docs['schema=snap/relation=points/latest.json'];
+        $this->assertSame('2026-09-16', $latest['snapshot_date']);
+        $this->assertSame('c', $latest['snapshot_id']);
+        $this->assertSame('./_gc2_snapshot_date=2026-09-16/item.json', $latest['item']);
+        $this->assertMatchesRegularExpression('#^\./_gc2_snapshot_date=2026-09-16/data-[^/]+\.parquet$#', $latest['assets']['data']['href'], 'asset href points into the newest partition');
+        $this->assertSame('application/vnd.apache.parquet', $latest['assets']['data']['type']);
+        // Every path under the relation is either a JSON document or inside a partition.
+        foreach (array_keys($docs) as $path) {
+            $this->assertTrue(str_ends_with($path, '.json'), $path);
+            if (str_contains($path, '/relation=') && !str_contains($path, '_gc2_snapshot_date=')) {
+                $this->assertMatchesRegularExpression('#/relation=[^/]+/(collection|latest)\.json$#', $path);
+            }
+        }
     }
 
     public function testCollectionExtentUnionsBboxesAndSpansOldestToNewestDate(): void
@@ -312,7 +334,7 @@ class StacCatalogWriterTest extends Unit
     {
         $paths = array_keys($this->writer()->build([$this->row(), $this->row(['relation_name' => 'other'])], []));
         $this->assertSame('catalog.json', end($paths));
-        $this->assertCount(5, $paths, 'two collections, two items and the catalog');
+        $this->assertCount(7, $paths, 'two collections, two latest pointers, two items and the catalog');
     }
 
     public function testEncodeIsPrettyPrintedWithUnescapedSlashes(): void

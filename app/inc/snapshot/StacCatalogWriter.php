@@ -88,6 +88,9 @@ final class StacCatalogWriter
                 $documents["$dir/_gc2_snapshot_date={$row['snapshot_date']}/item.json"] = $items[$row['snapshot_date']];
             }
             $documents["$dir/collection.json"] = $this->collection($id, $title, $meta, $rows, $items);
+            // A JSON pointer, never a data file or a directory: anything else
+            // beside the _gc2_snapshot_date= partitions would break Hive readers.
+            $documents["$dir/latest.json"] = $this->latest($id, $rows, $items);
             $children[] = [
                 'rel' => 'child',
                 'href' => "./$dir/collection.json",
@@ -125,6 +128,33 @@ final class StacCatalogWriter
      * @param array<string, array<string, mixed>> $items Items by snapshot date.
      * @return array<string, mixed>
      */
+    /** @param list<string> $dates */
+    private static function newestDate(array $dates): ?string
+    {
+        return $dates === [] ? null : max($dates);
+    }
+
+    /**
+     * latest.json: where the newest snapshot of the relation is, for clients
+     * that want one fixed path per relation. Same relative hrefs as the item.
+     */
+    private function latest(string $id, array $rows, array $items): array
+    {
+        $newest = self::newestDate(array_map(fn($r) => (string)$r['snapshot_date'], $rows));
+        $item = $items[$newest];
+        $assets = [];
+        foreach ($item['assets'] as $key => $asset) {
+            $assets[$key] = ['href' => "./_gc2_snapshot_date=$newest/" . ltrim($asset['href'], './'), 'type' => $asset['type']];
+        }
+        return [
+            'collection' => $id,
+            'snapshot_date' => $newest,
+            'snapshot_id' => $item['properties']['gc2:snapshot_id'] ?? null,
+            'item' => "./_gc2_snapshot_date=$newest/item.json",
+            'assets' => $assets,
+        ];
+    }
+
     private function collection(string $id, string $title, array $meta, array $rows, array $items): array
     {
         $dates = array_map(fn($r) => (string)$r['snapshot_date'], $rows);
@@ -152,6 +182,10 @@ final class StacCatalogWriter
             ['rel' => 'root', 'href' => '../../catalog.json', 'type' => 'application/json'],
             ['rel' => 'parent', 'href' => '../../catalog.json', 'type' => 'application/json'],
         ];
+        $newest = self::newestDate($dates);
+        if ($newest !== null) {
+            $links[] = ['rel' => 'latest-version', 'href' => "./_gc2_snapshot_date=$newest/item.json", 'type' => 'application/geo+json', 'title' => 'Newest snapshot'];
+        }
         foreach ($dates as $date) {
             $links[] = ['rel' => 'item', 'href' => "./_gc2_snapshot_date=$date/item.json", 'type' => 'application/geo+json'];
         }

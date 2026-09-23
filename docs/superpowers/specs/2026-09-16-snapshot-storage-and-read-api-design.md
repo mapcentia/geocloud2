@@ -549,3 +549,20 @@ succeeded, because its data is already published and visible through the API.
 - **Nothing serves these documents through the authenticated read API**; on S3
   they are exactly as reachable as the bucket policy makes them, and they name
   every published relation and its row counts.
+
+## "latest" alias (2026-09-23)
+
+`latest` is a reserved value of the `{date}` segment in the read API:
+`…/snapshots/latest[/data[/{format}]|/files/{name}]` resolves to the newest
+published snapshot of the relation (`Snapshot::getLatestPublished()`: newest
+`snapshot_date`, then newest `published`) and then behaves exactly like the
+dated URL. The metadata still carries the real `snapshot_date` and every
+dated href, plus `_links.latest`. Proxied `latest` downloads answer
+`Cache-Control: private, no-cache`; redirect mode issues a fresh presigned
+URL per request. 404 `NO_SNAPSHOT_ERROR` when nothing is published.
+
+The store keeps its Hive layout untouched: no `latest` directory and no data
+file outside `_gc2_snapshot_date=…`. The STAC rebuild writes a JSON pointer
+`schema=X/relation=Y/latest.json` (`collection`, `snapshot_date`,
+`snapshot_id`, `item`, `assets` with relative hrefs) and the collection gets
+a `rel: latest-version` link to the newest item.

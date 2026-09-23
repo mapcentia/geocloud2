@@ -384,6 +384,22 @@ class Snapshot extends Model
      *
      * @throws GC2Exception 404 NO_SNAPSHOT_ERROR
      */
+    /** The newest published snapshot of a relation (by snapshot date, then publish time). */
+    public function getLatestPublished(string $schema, string $relation): array
+    {
+        $sql = "SELECT * FROM settings.snapshots
+                WHERE schema_name = :schema AND relation_name = :relation
+                  AND status = 'succeeded' AND published IS NOT NULL
+                ORDER BY snapshot_date DESC, published DESC LIMIT 1";
+        $res = $this->prepare($sql);
+        $this->execute($res, ['schema' => $schema, 'relation' => $relation]);
+        $row = $this->fetchRow($res);
+        if (!$row) {
+            throw new GC2Exception("No published snapshot of $schema.$relation", 404, null, "NO_SNAPSHOT_ERROR");
+        }
+        return ['success' => true, 'message' => "Snapshot fetched", 'data' => $this->withFormats($row)];
+    }
+
     public function getPublished(string $schema, string $relation, string $snapshotDate): array
     {
         $sql = "SELECT * FROM settings.snapshots

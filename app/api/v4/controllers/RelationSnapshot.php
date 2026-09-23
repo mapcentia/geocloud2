@@ -101,6 +101,22 @@ class RelationSnapshot extends AbstractApi
         $this->relationName = (string)$this->route->getParam('relation');
     }
 
+    /** Reserved {date} value: the newest published snapshot, a fixed URL clients can keep. */
+    private const string LATEST = 'latest';
+
+    private function isLatest(): bool
+    {
+        return (string)$this->route->getParam('date') === self::LATEST;
+    }
+
+    /** The published row the {date} segment names, "latest" resolving to the newest. */
+    private function rowForDate(): array
+    {
+        return $this->isLatest()
+            ? $this->snapshot->getLatestPublished($this->schemaName, $this->relationName)['data']
+            : $this->snapshot->getPublished($this->schemaName, $this->relationName, (string)$this->route->getParam('date'))['data'];
+    }
+
     private function base(): string
     {
         return "/api/v4/schemas/{$this->schemaName}/relations/{$this->relationName}/snapshots";
@@ -148,6 +164,8 @@ class RelationSnapshot extends AbstractApi
             if ($this->producedFormat($out['formats'], 'parquet') !== null) {
                 $out['_links'] = ['data' => $this->base() . "/$date/data"] + $out['_links'];
             }
+            // The fixed URL of whatever is newest; the dated hrefs above pin this snapshot.
+            $out['_links']['latest'] = $this->base() . '/' . self::LATEST;
         }
         return $out;
     }
@@ -254,7 +272,7 @@ class RelationSnapshot extends AbstractApi
         parameters: [
             new OA\Parameter(name: 'schema', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'relation', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
-            new OA\Parameter(name: 'date', description: 'Snapshot date YYYY-MM-DD', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'date', description: 'Snapshot date YYYY-MM-DD, or "latest" for the newest published snapshot (a fixed URL; the response still carries the real snapshot_date)', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'latest'),
         ],
         responses: [
             new OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/RelationSnapshot")),
@@ -269,8 +287,7 @@ class RelationSnapshot extends AbstractApi
         $this->authorizer->assertCanRead($this->route->jwt['data'], $this->schemaName, $this->relationName);
         $date = $this->route->getParam('date');
         if (!empty($date)) {
-            $row = $this->snapshot->getPublished($this->schemaName, $this->relationName, $date)['data'];
-            return new GetResponse(data: $this->present($row, true));
+            return new GetResponse(data: $this->present($this->rowForDate(), true));
         }
         $rows = $this->snapshot->listPublished($this->schemaName, $this->relationName);
         return new GetResponse(data: array_map(fn($r) => $this->present($r, false), $rows));
@@ -280,7 +297,7 @@ class RelationSnapshot extends AbstractApi
         parameters: [
             new OA\Parameter(name: 'schema', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'relation', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
-            new OA\Parameter(name: 'date', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'date', description: 'Snapshot date YYYY-MM-DD, or "latest" for the newest published snapshot', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'latest'),
             new OA\Parameter(name: 'Range', in: 'header', required: false, schema: new OA\Schema(type: 'string'), example: 'bytes=0-1023'),
         ],
         responses: [
@@ -298,7 +315,7 @@ class RelationSnapshot extends AbstractApi
         parameters: [
             new OA\Parameter(name: 'schema', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'relation', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
-            new OA\Parameter(name: 'date', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'date', description: 'Snapshot date YYYY-MM-DD, or "latest" for the newest published snapshot', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'latest'),
             new OA\Parameter(name: 'format', description: 'Output format id', in: 'path', required: true, schema: new OA\Schema(type: 'string', enum: SnapshotFormat::IDS), example: 'flatgeobuf'),
             new OA\Parameter(name: 'Range', in: 'header', required: false, schema: new OA\Schema(type: 'string'), example: 'bytes=0-1023'),
         ],
@@ -337,7 +354,7 @@ class RelationSnapshot extends AbstractApi
         parameters: [
             new OA\Parameter(name: 'schema', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'relation', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
-            new OA\Parameter(name: 'date', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'date', description: 'Snapshot date YYYY-MM-DD, or "latest" for the newest published snapshot', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'latest'),
             new OA\Parameter(name: 'file', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
         ],
         responses: [
@@ -437,7 +454,7 @@ class RelationSnapshot extends AbstractApi
     private function authorizedRow(): array
     {
         $this->authorizer->assertCanRead($this->route->jwt['data'], $this->schemaName, $this->relationName);
-        return $this->snapshot->getPublished($this->schemaName, $this->relationName, (string)$this->route->getParam('date'))['data'];
+        return $this->rowForDate();
     }
 
     /**
@@ -472,7 +489,9 @@ class RelationSnapshot extends AbstractApi
             'Accept-Ranges' => 'bytes',
             'ETag' => '"' . $row['uuid'] . '"',
             'Last-Modified' => gmdate('D, d M Y H:i:s \G\M\T', strtotime($row['published'])),
-            'Cache-Control' => 'private, max-age=0',
+            // /latest points at a different snapshot after every publish: make
+            // caches revalidate rather than serve yesterday's file.
+            'Cache-Control' => $this->isLatest() ? 'private, no-cache' : 'private, max-age=0',
         ];
         try {
             $range = RangeRequest::parse($_SERVER['HTTP_RANGE'] ?? null, $size);
@@ -564,9 +583,9 @@ class RelationSnapshot extends AbstractApi
         if (!in_array($method, ['get', 'head'], true)) {
             return;
         }
-        if (!empty($date)) {
+        if (!empty($date) && (string)$date !== self::LATEST) {
             if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', (string)$date, $m)) {
-                throw new GC2Exception("Snapshot date must be YYYY-MM-DD", 400, null, "INVALID_REQUEST");
+                throw new GC2Exception("Snapshot date must be YYYY-MM-DD or latest", 400, null, "INVALID_REQUEST");
             }
             if (!checkdate((int)$m[2], (int)$m[3], (int)$m[1])) {
                 throw new GC2Exception("Snapshot date must be YYYY-MM-DD", 400, null, "INVALID_REQUEST");

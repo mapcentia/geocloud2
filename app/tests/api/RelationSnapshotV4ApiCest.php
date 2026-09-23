@@ -208,6 +208,29 @@ class RelationSnapshotV4ApiCest
         $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
     }
 
+    public function shouldResolveLatestToTheNewestSnapshot(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendGET($this->base() . '/latest');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $latest = json_decode($I->grabResponse());
+        $I->assertEquals($this->date, $latest->snapshot_date, 'latest carries the real date');
+        $I->assertEquals($this->base() . '/latest', $latest->_links->latest);
+        $I->assertEquals($this->base() . '/' . $this->date . '/data', $latest->_links->data, 'dated hrefs pin the snapshot');
+        $I->sendGET($this->base() . '/' . $this->date);
+        $I->assertEquals($latest, json_decode($I->grabResponse()), 'same object as the dated URL');
+
+        $I->sendHEAD($this->base() . '/latest/data/flatgeobuf');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeHttpHeader('Content-Type', 'application/flatgeobuf');
+        $I->seeHttpHeader('Cache-Control', 'private, no-cache');
+        $I->sendGET($this->base() . '/latest/files/metadata-' . $latest->snapshot_id . '.json');
+        $I->seeResponseCodeIs(HttpCode::OK);
+
+        $I->sendGET('/api/v4/schemas/' . $this->schema . '/relations/no_such_relation/snapshots/latest');
+        $I->seeResponseCodeIsClientError();
+    }
+
     public function shouldRejectUnsafeNames(ApiTester $I)
     {
         $this->asSuper($I);
