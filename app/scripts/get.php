@@ -1231,7 +1231,7 @@ function getCmdZip(): void
         $outFileName = $csvFile;
         $isCsv = true;
     } else {
-        $isCsv =  isCsv($outFileName);
+        $isCsv = isCsv($outFileName);
     }
 
     $extraArgs = [
@@ -1658,7 +1658,12 @@ function cleanUp(int $success = 0): void
         $layer = new Layer(connection: $conn);
         $layer->updateLastmodified(schema: $schema, table: $safeName);
         print "\nInfo: Last modified value updated";
-        $layer->insertDefaultMeta();
+        try {
+            $layer->insertDefaultMeta();
+        } catch (PDOException $e) {
+            print "\nWarning: ";
+            print_r($e->getMessage());
+        }
 
         print "\nInfo: Clear cache for layer $schema.$safeName";
         $relName = $schema . '.' . $safeName;
