@@ -43,10 +43,11 @@ use Symfony\Component\Validator\Constraints as Assert;
             example: "my-schema",
         ),
         new OA\Property(
-            property: "table_count",
+            property: "_table_count",
             title: "Table count",
-            description: "Number of tables and views in the schema (what /tables lists). Always present, also with namesOnly=true, so a client can list schemas without loading every table.",
+            description: "Read-only. Number of tables, views and materialized views in the schema (what /tables lists). Always present, also with namesOnly=true, so a client can list schemas without loading every table.",
             type: "integer",
+            readOnly: true,
             example: 12,
         ),
         new OA\Property(
@@ -90,7 +91,7 @@ class Schema extends AbstractApi
      */
     #[OA\Get(path: '/api/v4/schemas/{schema}', operationId: 'getSchema', description: "Get schema(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
-    #[OA\Parameter(name: 'namesOnly', description: 'Return only schema names and table_count (omit tables and sequences). Much faster: the full listing loads the definition of every table.', in: 'query', required: false, schema: new OA\Schema(type: 'boolean'), example: true)]
+    #[OA\Parameter(name: 'namesOnly', description: 'Return only schema names and _table_count (omit tables and sequences). Much faster: the full listing loads the definition of every table.', in: 'query', required: false, schema: new OA\Schema(type: 'boolean'), example: true)]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/Schema"),
         new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/Schema"))]),
         links: [
@@ -123,7 +124,7 @@ class Schema extends AbstractApi
                 ];
                 $t = [
                     'name' => $name,
-                    'table_count' => $tableCounts[$name] ?? 0,
+                    '_table_count' => $tableCounts[$name] ?? 0,
                 ];
                 if (!in_array(Input::get('namesOnly'), ['', 'true', '1', 't'], true)) {
                     $t['tables'] = Table::getTables($name, $this);
@@ -142,7 +143,7 @@ class Schema extends AbstractApi
                 ];
                 $t = [
                     'name' => $schema,
-                    'table_count' => $tableCounts[$schema] ?? 0,
+                    '_table_count' => $tableCounts[$schema] ?? 0,
                 ];
                 if (!in_array(Input::get('namesOnly'), ['', 'true', '1', 't'], true)) {
                     $t['tables'] = Table::getTables($schema, $this);

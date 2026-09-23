@@ -212,9 +212,9 @@ class Database extends Model
     {
         $arr = [];
         // count: every relation kind; table_count: what GET /api/v4/schemas/{schema}/tables
-        // lists (pg_tables + pg_views, i.e. relkind r, p and v) — cheap, from the catalog.
+        // lists (tables, views and materialized views: relkind r, p, v, m) — cheap, from the catalog.
         $sql = "SELECT n.nspname AS schema_name, count(c.oid) AS count,
-                   count(c.oid) FILTER (WHERE c.relkind IN ('r','p','v')) AS table_count
+                   count(c.oid) FILTER (WHERE c.relkind IN ('r','p','v','m')) AS table_count
             FROM pg_catalog.pg_namespace n
             LEFT JOIN pg_catalog.pg_class c ON c.relnamespace = n.oid AND c.relkind IN ('r','v','m','f','p')
             WHERE n.nspname NOT LIKE 'pg_%'

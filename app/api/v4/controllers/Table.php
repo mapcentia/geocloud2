@@ -44,6 +44,9 @@ use Symfony\Component\Validator\Constraints as Assert;
             type: "string",
             example: "my-column",
         ),
+        new OA\Property(property: "_type", description: "Read-only. TABLE, VIEW or MATERIALIZED VIEW.", type: "string", readOnly: true, example: "TABLE"),
+        new OA\Property(property: "_events", description: "Read-only. Whether realtime change events are enabled on the table.", type: "boolean", readOnly: true, example: false),
+        new OA\Property(property: "_column_count", description: "Read-only. Number of columns. Always present, also with namesOnly=true, so a listing can show sizes without loading every column.", type: "integer", readOnly: true, example: 7),
         new OA\Property(
             property: "columns",
             title: "Columns",
@@ -94,7 +97,7 @@ class Table extends AbstractApi
     #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}', operationId: 'getTable', description: "Get table(s).", tags: ['Schema'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'my_table')]
-    #[OA\Parameter(name: 'namesOnly', description: 'Return only table names (omit columns, indexes, constraints, and other details).', in: 'query', required: false, schema: new OA\Schema(type: 'boolean'), example: true)]
+    #[OA\Parameter(name: 'namesOnly', description: 'Return only table names with the read-only facts (_type, _events, _column_count, _links); omit columns, comment, indexes and constraints. One catalog query for the whole schema, so use it for listings.', in: 'query', required: false, schema: new OA\Schema(type: 'boolean'), example: true)]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(oneOf: [new OA\Schema(ref: "#/components/schemas/Table"),
         new OA\Schema(type: "array", items: new OA\Items(ref: "#/components/schemas/Table"))]),
         links: [
@@ -328,21 +331,85 @@ class Table extends AbstractApi
      * @throws PhpfastcacheInvalidArgumentException
      * @throws GC2Exception
      */
+    private static function namesOnly(): bool
+    {
+        return in_array(Input::get('namesOnly'), ['', 'true', '1', 't'], true);
+    }
+
+    /**
+     * One catalog query for the cheap facts about the relations of a schema
+     * (or one relation): kind, column count and whether the notify trigger
+     * is installed. Backs the namesOnly listings, which must not build a
+     * TableModel per relation — that costs a handful of queries each.
+     *
+     * @return array<string, array{type:string, column_count:int, events:bool}> keyed by relation name
+     */
+    private static function summaries(ApiInterface $self, string $schema, ?string $relation = null): array
+    {
+        $model = new Model(connection: $self->connection);
+        $sql = "SELECT c.relname AS name, c.relkind,
+                       (SELECT count(*) FROM pg_attribute a WHERE a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped) AS column_count,
+                       EXISTS (SELECT 1 FROM pg_trigger t WHERE t.tgrelid = c.oid AND t.tgname = '_gc2_notify_transaction_trigger') AS events
+                FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+                WHERE n.nspname = :schema AND c.relkind IN ('r', 'p', 'v', 'm')"
+            . ($relation !== null ? " AND c.relname = :relation" : "")
+            . " ORDER BY c.relname";
+        $res = $model->prepare($sql);
+        $params = ['schema' => $schema];
+        if ($relation !== null) {
+            $params['relation'] = $relation;
+        }
+        $model->execute($res, $params);
+        $types = ['r' => 'TABLE', 'p' => 'TABLE', 'v' => 'VIEW', 'm' => 'MATERIALIZED VIEW'];
+        $out = [];
+        while ($row = $model->fetchRow($res)) {
+            $out[$row['name']] = [
+                'type' => $types[$row['relkind']],
+                'column_count' => (int)$row['column_count'],
+                'events' => filter_var($row['events'], FILTER_VALIDATE_BOOLEAN),
+            ];
+        }
+        return $out;
+    }
+
+    /** The namesOnly shape of one relation: name, read-only facts and links, no definition. */
+    private static function summaryResponse(string $schema, string $name, array $summary): array
+    {
+        return [
+            'name' => $name,
+            '_type' => $summary['type'],
+            '_events' => $summary['events'],
+            '_column_count' => $summary['column_count'],
+            '_links' => self::links($schema, $name),
+        ];
+    }
+
+    private static function links(string $schema, string $name): array
+    {
+        return [
+            'columns' => "/api/v4/schemas/$schema/tables/$name/columns",
+            'indices' => "/api/v4/schemas/$schema/tables/$name/indices",
+            'constraints' => "/api/v4/schemas/$schema/tables/$name/constraints",
+            'privileges' => "/api/v4/schemas/$schema/tables/$name/privileges",
+        ];
+    }
+
     public static function getTable(TableModel $table, ApiInterface $self): array
     {
-        $columns = Column::getColumns($table);
-        $constraints = Constraint::getConstraints($table);
-        $indices = Index::getIndices($table);
-        $comment = $table->getComment();
-        $response['name'] = $table->tableWithOutSchema;
-        if (!in_array(Input::get('namesOnly'), ['', 'true', '1', 't'], true)) {
-            $response['columns'] = $columns;
-            $response['comment'] = $comment;
-            $response['indices'] = $indices;
-            $response['constraints'] = $constraints;
+        if (self::namesOnly()) {
+            $summary = self::summaries($self, $table->schema, $table->tableWithOutSchema)[$table->tableWithOutSchema] ?? null;
+            if ($summary !== null) {
+                return $self->runPostExtension('processGetTable', $table, self::summaryResponse($table->schema, $table->tableWithOutSchema, $summary));
+            }
         }
+        $response['name'] = $table->tableWithOutSchema;
+        $response['columns'] = Column::getColumns($table);
+        $response['comment'] = $table->getComment();
+        $response['indices'] = Index::getIndices($table);
+        $response['constraints'] = Constraint::getConstraints($table);
         $response['_type'] = $table->relType;
         $response['_events'] = $table->isNotifyTriggerInstalled();
+        $response['_column_count'] = count($response['columns']);
         $response['_links'] = [
             'columns' => "/api/v4/schemas/$table->schema/tables/$table->tableWithOutSchema/columns",
             'indices' => "/api/v4/schemas/$table->schema/tables/$table->tableWithOutSchema/indices",
@@ -362,6 +429,13 @@ class Table extends AbstractApi
     public static function getTables(string $schema, ApiInterface $self): array
     {
         $rels = [];
+        if (self::namesOnly()) {
+            // One query for the whole schema instead of a TableModel per relation.
+            foreach (self::summaries($self, $schema) as $name => $summary) {
+                $rels[] = self::summaryResponse($schema, $name, $summary);
+            }
+            return $rels;
+        }
         $tables = new Model(connection: $self->connection)->getTableNamesFromSchema($schema);
         $views = new Model(connection: $self->connection)->getViewNamesFromSchema($schema);
         foreach ([...$tables, ...$views] as $name) {
