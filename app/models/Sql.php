@@ -426,6 +426,7 @@ class Sql extends Model
 
             // CSV output
             // ================
+            header("Content-Type: text/plain; charset=utf-8");
 
             $withGeom = $geoformat;
             $separator = ";";
@@ -550,10 +551,11 @@ class Sql extends Model
             $csv = implode("\n", $lines);
 
             if ($format == "csv") {
+                header("Content-Type: text/csv; charset=utf-8");
                 header('Content-Disposition: attachment; filename="file.csv"');
                 ob_clean();
                 flush();
-                echo $csv;
+                echo "\xEF\xBB\xBF" . $csv;
                 return [];
             }
 

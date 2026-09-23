@@ -42,7 +42,7 @@ final class BasicAuth
      * @param bool $isTransaction
      * @return void
      * @throws ServiceException|InvalidArgumentException
-     * @throws \Throwable
+     * @throws PDOException
      */
     public function authenticate(string $layerName, bool $isTransaction): void
     {
@@ -67,17 +67,15 @@ final class BasicAuth
         $split = explode(".", $layerName);
         $schema = $split[0];
         if ($this->isSubuser && $this->user != $schema) {
-            $schema = $split[0];
-            $table = $split[1];
-            $sql = "SELECT * FROM settings.getColumns('f_table_schema = ''$schema'' AND f_table_name = ''$table''', 'r_table_schema = ''$schema'' AND r_table_name = ''$table''')";
-            $postgisObject = new Model(connection: $this->connection);
-            $res = $postgisObject->prepare($sql);
+            $model = new Model(connection: $this->connection);
+            $sql = "SELECT privileges FROM settings.geometry_columns_join WHERE _key_ LIKE :key";
+            $res = $model->prepare($sql);
             try {
-                $postgisObject->execute($res);
+                $model->execute($res, array("key" => $layerName . ".%"));
             } catch (PDOException $e) {
                 throw new ServiceException($e->getMessage());
             }
-            while ($row = $postgisObject->fetchRow($res)) {
+            while ($row = $model->fetchRow($res)) {
                 $privileges = json_decode($row["privileges"], true);
                 $authorization = new Authorization(connection: $this->connection);
                 $privilege = $authorization->extractHighestPrivilege($privileges, $this->user, $userGroupFullChain);

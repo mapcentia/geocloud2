@@ -561,7 +561,13 @@ class Table extends Model
                             }
                             $value = json_encode($rec, JSON_UNESCAPED_UNICODE);
                         }
-                    } else {
+
+                    }
+                    // We need to make sure some keys are not URL-encoded when they are written to the database.
+                    if (in_array($key, ["data", "meta_url", "wmssource", "wmsclientepsgs", "bitmapsource", "note", "legend_url"])) {
+                        $value = urldecode($value);
+                    }
+                    else {
                         if (is_object($value) || is_array($value)) {
                             $value = json_encode($value, JSON_UNESCAPED_UNICODE);
                         }

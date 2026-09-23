@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2025 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -19,6 +19,7 @@ use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Phpfastcache\Exceptions\PhpfastcacheLogicException;
 use Psr\Cache\InvalidArgumentException;
+use Throwable;
 
 
 /**
@@ -99,6 +100,7 @@ class Layer extends Table
      * @param string $column
      * @return string|null
      * @throws PDOException
+     * @throws Throwable
      */
     public function getValueFromKey(string $_key_, string $column): ?string
     {
@@ -122,10 +124,10 @@ class Layer extends Table
         }
 
         // Case 2: We are looking for a column that only exists in the view
-        $view_columns = ["coord_dimension", "srid", "type", "_key_"]; // _key_ is added to the list in order to check for relevancy.
+        $viewColumns = ["coord_dimension", "srid", "type", "_key_"]; // _key_ is added to the list in order to check for relevancy.
         $columnEsc = str_replace('"', '""', $column);
 
-        if (in_array($column, $view_columns)) {
+        if (in_array($column, $viewColumns)) {
             // Escape values by doubling single quotes (PostgreSQL string escape)
             $schemaEsc = str_replace("'", "''", $schema);
             $tableEsc = str_replace("'", "''", $table);
@@ -778,16 +780,22 @@ class Layer extends Table
 
     /**
      * @throws PDOException|InvalidArgumentException|GC2Exception
+     * @throws Throwable
      */
     public function setPrivilegesOnAll(string $subuser, string $privilege): void
     {
+        // Using jsonb_build_object and COALESCE to efficiently update privileges
         new User($subuser)->doesUserExist();
+        // Start by clearing the cache on schema changes
         $this->clearCacheOnSchemaChanges();
-        $path = "{" . $subuser . "}";
-        $privilege = "\"" . $privilege . "\"";
-        $sql = "update settings.geometry_columns_join set privileges = jsonb_set(privileges, :path, :privilege)";
+        // Execute the SQL to update privileges for the specified subuser, but skip writing to the layers that doesnt have to be modified
+        $sql = "
+            UPDATE settings.geometry_columns_join 
+            SET privileges = COALESCE(privileges, '{}'::jsonb) || jsonb_build_object(:subuser, :privilege) 
+            WHERE privileges->>:subuser IS DISTINCT FROM :privilege;
+        ";
         $res = $this->prepare($sql);
-        $this->execute($res, ["path" => $path, "privilege" => $privilege]);
+        $this->execute($res, ["subuser" => $subuser, "privilege" => $privilege]);
     }
 
     /**
