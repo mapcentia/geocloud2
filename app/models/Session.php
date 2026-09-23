@@ -250,12 +250,12 @@ class Session extends Model
                 // Handle signature or validation errors
                 throw new GC2Exception('Invalid ID token: ' . $e->getMessage());
             }
-            $allowedDatabases = explode(',', $payload->database);
+            $allowedDatabases = array_map('trim', explode(',', $payload->database));
             if (!in_array($parentDb, $allowedDatabases) && $payload->database != "*") {
                 throw new GC2Exception('Wanted database not allowed: ' . $parentDb . '. Allowed: ' . implode(', ', $allowedDatabases) . '.');
             }
             if ($superuser) {
-                $databasesWithSuperuser = explode(',', $payload->superuser ?? "");
+                $databasesWithSuperuser = array_map('trim', explode(',', $payload->superuser ?? ""));
                 if (!in_array($parentDb, $databasesWithSuperuser) && $payload->superuser != "*") {
                     throw new GC2Exception('Wanted database is not allowed with superuser privileges: ' . $parentDb . '. Allowed: ' . implode(', ', $databasesWithSuperuser));
                 }
