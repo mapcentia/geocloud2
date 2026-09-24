@@ -80,7 +80,7 @@ final class BasicAuth
             while ($row = $postgisObject->fetchRow($res)) {
                 $privileges = json_decode($row["privileges"], true);
                 $authorization = new Authorization(connection: $this->connection);
-                $privilege = $authorization->extractHighestPrivilege($privileges, $this->user, $userGroupFullChain);
+                $privilege = $authorization->extractHighestPrivilege($privileges ?? [], $this->user, $userGroupFullChain);
                 $isOwner = $authorization->isOwner($this->user, $userGroupFullChain, $schema);
                 $insufficient = ($privilege === "none" || ($privilege === "read" && $isTransaction));
                 if ($insufficient && !$isOwner) {
