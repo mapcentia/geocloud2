@@ -18,7 +18,7 @@ use app\models\Database;
 new App();
 
 const WORKING_DIR = '_gc2scheduler';
-const LIMIT = 3600 * 24;
+const LIMIT = 3600 * 4;
 // Retention for the scheduler run registry (gc2scheduler.started_jobs).
 // Nothing else ever deletes from it and a misconfigured job with a cooldown
 // writes a skipped row a minute, so it grows without bound.
