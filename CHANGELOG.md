@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.9.1]
+### Added
+- Cache Basic-auth allow decisions on the legacy /ows and /wms endpoints
+
+### Fixed
+- Handle null privileges in extractHighestPrivilege function.
+
 ## [2026.9.0]
 ### Added
 - **Parquet snapshots.** `POST /api/v4/snapshots` queues an export of a table or view to (Geo)Parquet and, optionally, FlatGeobuf; a cron worker writes the files to S3 or local storage and publishes them in a per-database, per-relation, per-date layout. `GET /api/v4/snapshots` reports status. Formats are chosen per request (`formats`) with a server default in `App.php`; formats a relation cannot produce are skipped with a reason.
