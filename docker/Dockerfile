@@ -321,14 +321,14 @@ RUN a2disconf other-vhosts-access-log
 COPY conf/fpm/opcache.ini /etc/php/${PHP_VERSION}/mods-available/
 
 # ogr2postgis
-RUN git clone --branch gui https://github.com/mapcentia/ogr2postgis.git \
-    && cd ogr2postgis \
-    && mkdir build && cd build \
-    && cmake .. \
-    && make -j"$(nproc)" \
-    && make install \
-    && cd ../.. \
-    && rm -rf ogr2postgis
+#RUN git clone --branch gui https://github.com/mapcentia/ogr2postgis.git \
+#    && cd ogr2postgis \
+#    && mkdir build && cd build \
+#    && cmake .. \
+#    && make -j"$(nproc)" \
+#    && make install \
+#    && cd ../.. \
+#    && rm -rf ogr2postgis
 
 # gc2-cli
 RUN npm install @mapcentia/gc2-cli -g
