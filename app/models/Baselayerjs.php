@@ -20,20 +20,8 @@ class Baselayerjs extends Controller
      */
     public function getSettings(): array
     {
-        // Merge metaConfig with custom metaConfig and remove dups.
-        $metaConfig = !empty(App::$param['metaConfig']) ? array_merge(App::$param['metaConfig'] ?? [], Globals::$metaConfig) : Globals::$metaConfig;
-        $arr = [];
-        $final = [];
-        foreach ($metaConfig as $v) {
-            if (isset($arr[$v["fieldsetName"]])) {
-                continue;
-            }
-            $arr[$v["fieldsetName"]] = $v;
-        }
-        foreach ($arr as $value) {
-            $final[] = $value;
-        }
-        $metaConfig = $final;
+        // Custom metaConfig merged with the defaults. Same result as GET /api/v4/meta-config.
+        $metaConfig = Globals::getMetaConfig();
 
         $settingsRawJSON = '';
         $settingsRawJSON .= "{";

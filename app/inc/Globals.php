@@ -8,6 +8,8 @@
 
 namespace app\inc;
 
+use app\conf\App;
+
 
 /**
  * Class that is a namespace for all global GC2 variables
@@ -362,4 +364,28 @@ class Globals
             ],
         ],
     ];
+
+    /**
+     * The effective metaConfig: the custom fieldsets from App.php merged with the
+     * built-in defaults above, de-duplicated by fieldsetName so a custom fieldset
+     * replaces the built-in one with the same name.
+     *
+     * Single source of truth for the old GUI (/api/v1/baselayerjs, through
+     * Baselayerjs::getSettings) and GET /api/v4/meta-config.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function getMetaConfig(): array
+    {
+        $metaConfig = !empty(App::$param['metaConfig']) ? array_merge(App::$param['metaConfig'], self::$metaConfig) : self::$metaConfig;
+        $byFieldsetName = [];
+        foreach ($metaConfig as $fieldset) {
+            // Custom fieldsets come first, so the first one seen wins.
+            if (isset($byFieldsetName[$fieldset["fieldsetName"]])) {
+                continue;
+            }
+            $byFieldsetName[$fieldset["fieldsetName"]] = $fieldset;
+        }
+        return array_values($byFieldsetName);
+    }
 }
