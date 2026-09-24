@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-09-24T11:18:39.145101+00:00",
+  "tool": {
+    "name": "syft",
+    "version": "1.51.1",
+    "sha256": "abca2def61de9952fa06d3977bb1e064818facb9badfce502b450d3d6846a91f"
+  },
+  "config_sha256": "821ae19f385ecda6b6c024dd5312a9a773f84f200f5aaea18215f7faa835c3f1",
+  "commit": "4ed69ee2c530b888c88d3a3942c157b6b6003cd7",
+  "scope": "git-archive snapshot of tag + delivered image by digest + GIS-native supplement",
+  "working_tree_dirty": true
+}

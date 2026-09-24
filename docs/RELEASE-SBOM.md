@@ -32,7 +32,7 @@ Hver udgivelse (= ét git-tag) skal have en committet, valideret SBOM under
 4. Generér SBOM'en (tilføj `--grype`, hvis du vil sårbarhedsscanne i samme kørsel):
 
        python3 sbom/generate.py --syft /sti/til/syft \
-         --tag YYYY.MINOR.PATCH --image mapcentia/gc2:php8.4-N \
+         --tag YYYY.MINOR.PATCH --image mapcentia/gc2:php8.4-trixie-N \
          --grype /sti/til/grype
 
    Med `--grype` scannes image-SBOM'en (`gc2-image.cdx.json`); resultatet

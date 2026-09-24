@@ -1,0 +1,45 @@
+{
+  "schema": "CycloneDX 1.7",
+  "validator": "Ajv",
+  "validatorVersion": "8.20.0",
+  "uncheckedFormats": [
+    "iri-reference",
+    "idn-email"
+  ],
+  "files": {
+    "gc2-source.cdx.json": {
+      "schemaValid": true,
+      "referencesValid": true,
+      "libraryComponents": 2084,
+      "fileComponents": 8,
+      "librariesMissingVersion": 0,
+      "librariesMissingPurl": 0,
+      "librariesWithoutLicenseMetadata": 197,
+      "dependencyGraphNodes": 1118,
+      "sha256": "9d58a7e8e6cc87c05d0f197c0c7d8f9699cac96d9ba0853fa8fafb4d38eafd7f"
+    },
+    "gc2-image.cdx.json": {
+      "schemaValid": true,
+      "referencesValid": true,
+      "libraryComponents": 1627,
+      "fileComponents": 67757,
+      "librariesMissingVersion": 0,
+      "librariesMissingPurl": 0,
+      "librariesWithoutLicenseMetadata": 54,
+      "dependencyGraphNodes": 937,
+      "sha256": "7e25bc43dbcc93a1f33b937e93b2b9bc0203c74f6c7c7ef941a636c3ff1ae5bf"
+    },
+    "gis-native.cdx.json": {
+      "schemaValid": true,
+      "referencesValid": true,
+      "libraryComponents": 7,
+      "fileComponents": 0,
+      "librariesMissingVersion": 0,
+      "librariesMissingPurl": 0,
+      "librariesWithoutLicenseMetadata": 7,
+      "dependencyGraphNodes": 0,
+      "sha256": "8dbc9e42e381835ffcef9e3072674a7aded84818e2adf59c84b2e08f063e7ee4"
+    }
+  },
+  "all_passed": true
+}

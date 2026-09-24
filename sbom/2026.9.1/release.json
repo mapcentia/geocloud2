@@ -1,0 +1,58 @@
+{
+  "product": "gc2",
+  "git_tag": "2026.9.1",
+  "git_commit": "4ed69ee2c530b888c88d3a3942c157b6b6003cd7",
+  "image": {
+    "ref": "mapcentia/gc2:php8.4-trixie-1",
+    "digest": "sha256:87c718b865209d6b7d3662c99501986809187194f2ee4776093319d6d682ed30",
+    "platform": "linux/amd64",
+    "image_version": "php8.4-trixie-1"
+  },
+  "generated_at": "2026-09-24T11:18:39.145101+00:00",
+  "tool": {
+    "name": "syft",
+    "version": "1.51.1",
+    "sha256": "abca2def61de9952fa06d3977bb1e064818facb9badfce502b450d3d6846a91f"
+  },
+  "config_sha256": "821ae19f385ecda6b6c024dd5312a9a773f84f200f5aaea18215f7faa835c3f1",
+  "artifacts": {
+    "gc2-source.cdx.json": {
+      "sha256": "9d58a7e8e6cc87c05d0f197c0c7d8f9699cac96d9ba0853fa8fafb4d38eafd7f",
+      "format": "CycloneDX 1.7",
+      "components": 2092
+    },
+    "gc2-image.cdx.json": {
+      "sha256": "7e25bc43dbcc93a1f33b937e93b2b9bc0203c74f6c7c7ef941a636c3ff1ae5bf",
+      "format": "CycloneDX 1.7",
+      "components": 69384
+    },
+    "gis-native.cdx.json": {
+      "sha256": "8dbc9e42e381835ffcef9e3072674a7aded84818e2adf59c84b2e08f063e7ee4",
+      "format": "CycloneDX 1.7",
+      "components": 7
+    }
+  },
+  "validation": {
+    "all_passed": true
+  },
+  "scope": {
+    "source": "tracked git-archive of tag",
+    "image": "scanned by digest",
+    "gis_native": "hand-maintained supplement from Dockerfile pins",
+    "vulnerability_scan": "performed with grype; findings require triage (see docs/RELEASE-SBOM.md)"
+  },
+  "vulnerability_scan": {
+    "tool": {
+      "name": "grype",
+      "version": "0.118.0",
+      "sha256": "91705979c6ccb736b87e3250831f5e1a35f13767fd2032ffa85c55b1e6f58f90"
+    },
+    "db": {
+      "schemaVersion": "v6.1.9",
+      "built": "2026-09-24T06:31:52Z"
+    },
+    "target": "gc2-image.cdx.json",
+    "output": "vulns.cdx.json",
+    "note": "Findings are candidates; exploitability is decided in triage. GIS-native components (generic/github purls) are not matched by the vulnerability feeds and must be tracked upstream manually."
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.7",
+  "metadata": {
+    "component": {
+      "type": "application",
+      "name": "gc2-gis-native",
+      "version": "2026.9.1",
+      "bom-ref": "gc2-gis-native@2026.9.1"
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "gdal",
+      "version": "3.12.4",
+      "purl": "pkg:generic/gdal@3.12.4",
+      "bom-ref": "pkg:generic/gdal@3.12.4",
+      "description": "Bygget med ECW 3.3 + LibKML + Arrow/Parquet 25.0.1 (GeoParquet) (ECW_VERSION=3)"
+    },
+    {
+      "type": "library",
+      "name": "mapserver",
+      "version": "8.0-rsvg_fix",
+      "purl": "pkg:github/mapcentia/mapserver@rsvg_fix",
+      "bom-ref": "pkg:github/mapcentia/mapserver@rsvg_fix",
+      "description": "Branch-klon; commit ikke pinnet i Dockerfile"
+    },
+    {
+      "type": "library",
+      "name": "mapcache",
+      "version": "branch-1-12",
+      "purl": "pkg:github/mapserver/mapcache@branch-1-12",
+      "bom-ref": "pkg:github/mapserver/mapcache@branch-1-12",
+      "description": "Bygget med WITH_MEMCACHE=1"
+    },
+    {
+      "type": "library",
+      "name": "swig",
+      "version": "master",
+      "purl": "pkg:github/swig/swig@master",
+      "bom-ref": "pkg:github/swig/swig@master",
+      "description": "Kloned fra master; PHP8-support"
+    },
+    {
+      "type": "library",
+      "name": "ogr2postgis",
+      "version": "gui",
+      "purl": "pkg:github/mapcentia/ogr2postgis@gui",
+      "bom-ref": "pkg:github/mapcentia/ogr2postgis@gui"
+    },
+    {
+      "type": "library",
+      "name": "libecwj2",
+      "version": "3.3",
+      "purl": "pkg:generic/libecwj2@3.3",
+      "bom-ref": "pkg:generic/libecwj2@3.3",
+      "description": "ECW/JPEG2000 SDK; ECW_VERSION build-arg styrer 3.3 vs 5.3"
+    },
+    {
+      "type": "library",
+      "name": "qgis-server",
+      "version": "apt-ltr",
+      "purl": "pkg:generic/qgis-server@apt-ltr",
+      "bom-ref": "pkg:generic/qgis-server@apt-ltr",
+      "description": "Fra qgis.org debian-ltr; faktisk version aflaeses i imaget"
+    }
+  ]
+}
