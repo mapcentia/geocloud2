@@ -30,7 +30,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - CLI scripts that loop over all databases release each database's connection (`Model::disconnect()`).
 - `Job::runJob` shell-escapes every value of the `get.php` command line and spawns it with the running php binary.
 - MapCache config is kept in sync by a PHP cron job with Apache configtest and rollback instead of the shell watcher, and the Layer API only regenerates it for caching-relevant changes.
-- v4 OWS caches per-layer allow decisions in Redis for 60 s; HTTP Basic auth checks the primary login password before the viewer password (`httpBasicViewerFallback`).
+- v4 OWS and the legacy `/ows`/`/wms` endpoint cache Basic-authenticated per-layer allow decisions for 60 s (same cache entries for both); HTTP Basic auth checks the primary login password before the viewer password (`httpBasicViewerFallback`).
 - Dynamic symbols and labels: classes take any number of styles and labels; class JSON keys are unprefixed (legacy formats stay readable); fixed ids are assigned on save.
 - MapCache config generation refactored into a worker-safe model; front-end build migrated from Grunt to plain Node scripts; the dashboard toolchain runs on Node 24.
 - Meta fields fall back to ordering by `_value` when `_order` is empty.

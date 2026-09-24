@@ -24,6 +24,9 @@ use Throwable;
  */
 class Controller
 {
+    /** Lifetime of a cached Basic-auth read allow; keep in sync with app\ows\LayerGate. */
+    private const int OWS_AUTH_CACHE_TTL = 60;
+
     public array $response;
 
     const string USED_RELS_KEY = "checked_relations";
@@ -178,10 +181,29 @@ class Controller
      */
     public function basicHttpAuthLayer(string $layer): void
     {
+        // Same allow cache as app\ows\LayerGate (v4 OWS/WFS), same key, so the
+        // two endpoints share entries: a Basic-authenticated read allow is kept
+        // for 60 s, keyed by a hash of the credentials, database and layer.
+        // Only authenticated allows are cached — anonymous requests must notice
+        // a switch to Read/write at once, and a wrong password is never cached
+        // because authenticate() challenges before the entry is written.
+        $authUser = Input::getAuthUser();
+        $item = null;
+        if (!empty($authUser)) {
+            $identity = 'b:' . hash('sha256', $authUser . ':' . (Input::getAuthPw() ?? ''));
+            $item = Cache::getItem($this->connection->database . '_owsauth_' . hash('sha256', $identity . '|' . $layer . '|r'));
+            if ($item->isHit() && $item->get() === true) {
+                return;
+            }
+        }
         $postgisObject = new Model(connection: $this->connection);
         $auth = $postgisObject->getGeometryColumns($layer, "authentication");
-        if ($auth == "Read/write" || !empty(Input::getAuthUser())) {
+        if ($auth == "Read/write" || !empty($authUser)) {
             new BasicAuth(connection: $this->connection)->authenticate($layer, false);
+        }
+        if ($item !== null) {
+            $item->set(true)->expiresAfter(self::OWS_AUTH_CACHE_TTL);
+            Cache::save($item);
         }
     }
 

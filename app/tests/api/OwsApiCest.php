@@ -203,6 +203,27 @@ class OwsApiCest
         $I->assertStringNotContainsStringIgnoringCase('ServiceExceptionReport', $I->grabResponse());
     }
 
+    // The legacy /ows endpoint (Basic auth only) shares the same 60 s allow cache: the
+    // first Basic request on the Read/write layer authenticates and caches, the second
+    // identical request is served from the cached allow. A wrong password is never cached.
+    public function shouldServeLegacyGetMapWithBasicAuthTwiceViaCachedAllow(ApiTester $I)
+    {
+        $qs = 'SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=' . $this->schemaName . '.roads'
+            . '&CRS=EPSG:4326&BBOX=-1,-1,1,1&WIDTH=64&HEIGHT=64&FORMAT=image/png&STYLES=';
+        $I->deleteHeader('Authorization');
+        foreach ([1, 2] as $attempt) {
+            $I->amHttpAuthenticated($this->userId, $this->password);
+            $I->sendGET('/ows/' . $this->userId . '/' . $this->schemaName . '?' . $qs);
+            $I->seeResponseCodeIs(HttpCode::OK);
+            $I->assertStringContainsString('image/png', strtolower($I->grabHttpHeader('Content-Type')), "attempt $attempt");
+            $I->assertStringNotContainsStringIgnoringCase('ServiceExceptionReport', $I->grabResponse(), "attempt $attempt");
+        }
+        $I->amHttpAuthenticated($this->userId, 'wrong-' . $this->password);
+        $I->sendGET('/ows/' . $this->userId . '/' . $this->schemaName . '?' . $qs);
+        $I->seeResponseCodeIs(HttpCode::UNAUTHORIZED);
+        $I->deleteHeader('Authorization');
+    }
+
     public function shouldReturnServiceExceptionForUnknownLayer(ApiTester $I)
     {
         $qs = 'SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=' . $this->schemaName . '.nope'
