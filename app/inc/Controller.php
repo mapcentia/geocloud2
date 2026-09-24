@@ -181,9 +181,6 @@ class Controller
      */
     public function basicHttpAuthLayer(string $layer): void
     {
-        // Same allow cache as app\ows\LayerGate (v4 OWS/WFS), same key, so the
-        // two endpoints share entries: a Basic-authenticated read allow is kept
-        // for 60 s, keyed by a hash of the credentials, database and layer.
         // Only authenticated allows are cached — anonymous requests must notice
         // a switch to Read/write at once, and a wrong password is never cached
         // because authenticate() challenges before the entry is written.
