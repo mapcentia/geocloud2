@@ -274,11 +274,15 @@ if (sizeof(explode("|http", $url)) > 1) {
         // HEAD/GET) is not fatal -- the extension check below still decides.
         $ctx = stream_context_create(['http' => ['timeout' => 30]]);
         $headers = get_headers($url, false, $ctx) ?: [];
+        // Util::headersSayZip() rather than one exact spelling of the type: GC2's
+        // own SQL API answers "application/zip, application/octet-stream" for a
+        // format=ogr/… query, which an exact comparison misses — and the URL of
+        // such a query has no .zip for the extension check below to fall back on.
+        if (Util::headersSayZip($headers)) {
+            $getFunction = "getCmdZip";
+        }
         print "\n\nheaders\n";
         foreach ($headers as $header) {
-            if ($header == "Content-Type: application/zip") {
-                $getFunction = "getCmdZip";
-            }
             if (str_contains($header, "text/csv")) {
                 $contentIsCsv = true;
                 $getFunction = "getCmd";
@@ -1164,9 +1168,13 @@ function getCmdZip(): void
     $report[DOWNLOADTYPE] = ZIP;
 
     print "\nInfo: Fetching remote zip...";
+    // A neutral name: $extCheck2 is only set when the URL's extension decided
+    // this function, not when the response headers did (a format=ogr/… query has
+    // no extension at all), and the kind is read off the bytes below anyway.
+    $archivePath = $dir . "/" . $tempFile . ".download";
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
-    $fp = fopen($dir . "/" . $tempFile . "." . $extCheck2[0], 'w+');
+    $fp = fopen($archivePath, 'w+');
     curl_setopt($ch, CURLOPT_FILE, $fp);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -1182,21 +1190,29 @@ function getCmdZip(): void
         cleanUp();
         exit(1);
     }
-    $ext = array("shp", "tab", "geojson", "gml", "kml", "mif", "gdb", "csv", "json", "gpkg");
+    $ext = array("shp", "tab", "geojson", "gml", "kml", "mif", "gdb", "csv", "json", "gpkg", "fgb");
+
+    // Which kind of archive this is comes from the file's own first bytes. The
+    // condition here used to be `!strtolower($extCheck2[0]) == "gz"`, which ! binds
+    // before == and is therefore false for every input: the ZipArchive branch was
+    // unreachable and a zip was handed to gzopen(), which in transparent mode
+    // copies it byte for byte, so nothing was ever unpacked.
+    $archiveKind = Util::archiveKind($archivePath);
 
     // ZIP start
     // =========
-    if (!strtolower($extCheck2[0]) == "gz") {
+    if ($archiveKind !== 'gz') {
         $zip = new ZipArchive;
-        $res = $zip->open($dir . "/" . $tempFile . "." . $extCheck2[0]);
-        if ($res === false) {
+        $res = $zip->open($archivePath);
+        if ($res !== true) {
             print "Error: Could not unzip file";
+            $lastError = "could not unzip the downloaded file";
             cleanUp();
             exit(1);
         }
         $zip->extractTo($dir . "/" . $tempFile);
         $zip->close();
-        unlink($dir . "/" . $tempFile . "." . $extCheck2[0]);
+        unlink($archivePath);
     }
 
     // GZIP start
@@ -1204,9 +1220,9 @@ function getCmdZip(): void
     else {
         $bufferSize = 4096; // read 4kb at a time
         mkdir($dir . "/" . $tempFile);
-        $outFileName = str_replace('.gz', '', $dir . "/" . $tempFile . "/" . $tempFile . "." . $extCheck2[0]);
+        $outFileName = $dir . "/" . $tempFile . "/" . $tempFile;
 
-        $file = gzopen($dir . "/" . $tempFile . "." . $extCheck2[0], 'rb');
+        $file = gzopen($archivePath, 'rb');
 
         if (!$file) {
             print "Error: Could not gunzip file";
