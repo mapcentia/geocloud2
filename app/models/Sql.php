@@ -50,7 +50,7 @@ class Sql extends Model
     private const string DEFAULT_TIMETZ_FORMAT = 'H:i:s P';
     private const string DEFAULT_DATE_FORMAT = 'Y-m-d';
 
-    private const array NO_ZIP_FORMATS = ['ogr/GPX', 'ogr/Parquet'];
+    private const array NO_ZIP_FORMATS = ['ogr/gpx', 'ogr/parquet', 'ogr/flatgeobuf'];
     private WrapperConnection|null $wrapperConnection = null;
 
     private DefaultTypeConverterFactory $defaultTypeConverterFactory;
@@ -158,7 +158,7 @@ class Sql extends Model
                     }
                 }
             }
-            if (in_array($format, self::NO_ZIP_FORMATS)) {
+            if (in_array($format, array_map('strtolower',self::NO_ZIP_FORMATS))) {
                 $contentType = $format == "ogr/GPX" ? "application/gpx, application/octet-stream" : "application/octet-stream";
                 header("Content-type: $contentType");
                 header("Content-Disposition: attachment; filename=\"$fileOrFolder\"");
