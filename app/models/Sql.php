@@ -134,9 +134,19 @@ class Sql extends Model
         $view = self::toAscii($name, null, "_");
         $formatSplit = explode("/", $format);
         if (sizeof($formatSplit) == 2 && $formatSplit[0] == "ogr") {
+            // GDAL takes a driver name in any case — ogr/FlatGeobuf is as valid as
+            // ogr/flatgeobuf — so every decision below compares the normalised
+            // format, while ogr2ogr keeps the caller's own spelling.
+            $formatId = strtolower($format);
             $fileOrFolder = $nln ? $nln . $name : $view;
             $fileOrFolder .= "." . self::toAscii($formatSplit[1], null, "_");
-            $path = App::$param['path'] . "app/tmp/" . $this->connection->database . "/__vectors/" . $fileOrFolder;
+            $vectorDir = App::$param['path'] . "app/tmp/" . $this->connection->database . "/__vectors";
+            // A database that has never run a vector job has no directory here, and
+            // ogr2ogr only reports that its driver "failed to create" the output.
+            if (!is_dir($vectorDir) && !@mkdir($vectorDir, 0777, true) && !is_dir($vectorDir)) {
+                throw new GC2Exception("Could not create the export directory", 500, null, "EXPORT_DIR");
+            }
+            $path = $vectorDir . "/" . $fileOrFolder;
             $cmd = "ogr2ogr " .
                 "-mapFieldType Time=String,Binary=String " .
                 "-f \"" . explode("/", $format)[1] . "\" " . $path . " " .
@@ -158,8 +168,8 @@ class Sql extends Model
                     }
                 }
             }
-            if (in_array($format, array_map('strtolower',self::NO_ZIP_FORMATS))) {
-                $contentType = $format == "ogr/GPX" ? "application/gpx, application/octet-stream" : "application/octet-stream";
+            if (in_array($formatId, self::NO_ZIP_FORMATS, true)) {
+                $contentType = $formatId === "ogr/gpx" ? "application/gpx, application/octet-stream" : "application/octet-stream";
                 header("Content-type: $contentType");
                 header("Content-Disposition: attachment; filename=\"$fileOrFolder\"");
                 readfile($path);

@@ -86,4 +86,51 @@ class SqlJsonFormatApiCest
         // The string is valid JSON that decodes to the same structure v4 returns directly.
         $I->assertSame($this->expected, json_decode($value, true));
     }
+
+    /**
+     * ogr formats and the case the caller happens to write them in.
+     *
+     * NO_ZIP_FORMATS decides whether the export is streamed as itself or zipped,
+     * and the driver name in `format` is the caller's spelling: GDAL accepts
+     * "ogr/FlatGeobuf" as happily as "ogr/flatgeobuf", so both must reach the same
+     * decision. The scheduler cares: app/scripts/get.php unpacks a zip and hands
+     * anything else to ogr2ogr as it stands.
+     */
+    public function shouldNotZipANoZipFormatWhateverCaseItIsAskedFor(ApiTester $I)
+    {
+        // A registered relation, so ogr2ogr can read the geometry's SRS from
+        // geometry_columns: a bare SELECT has no coordinate system to transform from.
+        $I->deleteHeader('Cookie');
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
+        $I->sendPOST('/api/v4/schemas', json_encode(['name' => 'fmt']));
+        $I->sendPOST('/api/v4/schemas/fmt/tables', json_encode(['name' => 'pts', 'columns' => [
+            ['name' => 'gid', 'type' => 'serial'],
+            ['name' => 'the_geom', 'type' => 'geometry(Point,4326)'],
+        ]]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $I->sendPOST('/api/v4/sql', json_encode(['q' =>
+            "INSERT INTO fmt.pts (the_geom) VALUES (ST_SetSRID(ST_Point(10.1, 56.1), 4326))"]));
+        $I->seeResponseCodeIsSuccessful();
+
+        $I->deleteHeader('Authorization');
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $this->cookie);
+        $q = "SELECT gid, the_geom FROM fmt.pts";
+
+        foreach (['ogr/flatgeobuf', 'ogr/FlatGeobuf', 'ogr/FLATGEOBUF'] as $format) {
+            $I->sendPOST('/api/v2/sql/' . $this->userId, json_encode(['q' => $q, 'format' => $format, 'srs' => 4326]));
+            $I->seeResponseCodeIs(HttpCode::OK);
+            // The two branches differ in their headers: the zip one appends .zip to
+            // the attachment name and answers application/zip. (The streamed body
+            // itself does not survive Codeception's response handling.)
+            $type = (string)$I->grabHttpHeader('Content-Type');
+            $disposition = (string)$I->grabHttpHeader('Content-Disposition');
+            $I->assertStringNotContainsString('application/zip', $type,
+                "$format is a NO_ZIP format and must not be zipped");
+            $I->assertStringContainsString('application/octet-stream', $type);
+            $I->assertStringEndsWith('.flatgeobuf"', $disposition,
+                "$format must be streamed as itself, not as a .zip");
+        }
+    }
 }
