@@ -71,9 +71,9 @@ class Job extends Model
     public function newJob(object $data, string $db): array
     {
         $this->validateCronExpression($data);
-        $sql = "INSERT INTO jobs (db, name, schema, url, cron, epsg, type, min, hour, dayofmonth, month, dayofweek, encoding, extra, delete_append, download_schema, presql, postsql, active, snapshot) VALUES(:db, :name, :schema, :url, :cron, :epsg, :type, :min, :hour, :dayofmonth, :month, :dayofweek, :encoding, :extra, :delete_append, :download_schema, :presql, :postsql, :active, :snapshot)";
+        $sql = "INSERT INTO jobs (db, name, schema, url, cron, epsg, type, min, hour, dayofmonth, month, dayofweek, encoding, extra, delete_append, download_schema, presql, postsql, active, snapshot, use_sortby) VALUES(:db, :name, :schema, :url, :cron, :epsg, :type, :min, :hour, :dayofmonth, :month, :dayofweek, :encoding, :extra, :delete_append, :download_schema, :presql, :postsql, :active, :snapshot, :use_sortby)";
         $res = $this->prepare($sql);
-        $res->execute(array(":db" => $db, ":name" => Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":extra" => $data->extra, ":delete_append" => filter_var($data->delete_append ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0, ":download_schema" => filter_var($data->download_schema ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0, ":presql" => $data->presql, ":postsql" => $data->postsql, ":active" => filter_var($data->active ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0, ":snapshot" => filter_var($data->snapshot ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0));
+        $res->execute(array(":db" => $db, ":name" => Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":extra" => $data->extra, ":delete_append" => filter_var($data->delete_append ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0, ":download_schema" => filter_var($data->download_schema ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0, ":presql" => $data->presql, ":postsql" => $data->postsql, ":active" => filter_var($data->active ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0, ":snapshot" => filter_var($data->snapshot ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0, ":use_sortby" => filter_var($data->use_sortby ?? true, FILTER_VALIDATE_BOOLEAN) ? 1 : 0));
         $response['success'] = true;
         $response['message'] = "Jobs created";
         return $response;
@@ -82,6 +82,11 @@ class Job extends Model
     /**
      * Booleans are bound the same way as in newJob(); see the note there.
      *
+     * use_sortby is the exception: an absent property binds null and COALESCE
+     * keeps the stored value, because clients that predate the column — the
+     * ExtJS scheduler form submits the whole job — would otherwise re-enable on
+     * every save a sortBy the job's server rejects.
+     *
      * @param object $data
      * @return array<bool|string|int>
      * @throws GC2Exception
@@ -89,9 +94,9 @@ class Job extends Model
     public function updateJob(object $data): array
     {
         $this->validateCronExpression($data);
-        $sql = "UPDATE jobs SET name=:name, schema=:schema, url=:url, cron=:cron, epsg=:epsg, type=:type, min=:min, hour=:hour, dayofmonth=:dayofmonth, month=:month, dayofweek=:dayofweek, encoding=:encoding, extra=:extra, delete_append=:delete_append, download_schema=:download_schema, presql=:presql, postsql=:postsql, active=:active, snapshot=:snapshot WHERE id=:id";
+        $sql = "UPDATE jobs SET name=:name, schema=:schema, url=:url, cron=:cron, epsg=:epsg, type=:type, min=:min, hour=:hour, dayofmonth=:dayofmonth, month=:month, dayofweek=:dayofweek, encoding=:encoding, extra=:extra, delete_append=:delete_append, download_schema=:download_schema, presql=:presql, postsql=:postsql, active=:active, snapshot=:snapshot, use_sortby=COALESCE(:use_sortby, use_sortby) WHERE id=:id";
         $res = $this->prepare($sql);
-        $res->execute(array(":name" => Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":id" => $data->id, ":extra" => $data->extra, "delete_append" => filter_var($data->delete_append ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0, "download_schema" => filter_var($data->download_schema ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0, "presql" => $data->presql, "postsql" => $data->postsql, "active" => filter_var($data->active ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0, "snapshot" => filter_var($data->snapshot ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0));
+        $res->execute(array(":name" => Model::toAscii($data->name, NULL, "_"), ":schema" => $data->schema, ":url" => $data->url, ":cron" => $data->cron, ":epsg" => $data->epsg, ":type" => $data->type, ":min" => $data->min, ":hour" => $data->hour, ":dayofmonth" => $data->dayofmonth, ":month" => $data->month, ":dayofweek" => $data->dayofweek, ":encoding" => $data->encoding, ":id" => $data->id, ":extra" => $data->extra, "delete_append" => filter_var($data->delete_append ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0, "download_schema" => filter_var($data->download_schema ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0, "presql" => $data->presql, "postsql" => $data->postsql, "active" => filter_var($data->active ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0, "snapshot" => filter_var($data->snapshot ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0, "use_sortby" => isset($data->use_sortby) ? (filter_var($data->use_sortby, FILTER_VALIDATE_BOOLEAN) ? 1 : 0) : null));
         $response['success'] = true;
         $response['message'] = "Jobs updated";
         return $response;
@@ -212,6 +217,10 @@ class Job extends Model
             . " --postSql " . (!empty($job["postsql"]) ? base64_encode($job["postsql"]) : "null")
             . " --downloadSchema {$job["download_schema"]}"
             . " --snapshot {$job["snapshot"]}"
+            // Always a literal 0 or 1: a bare false would interpolate to the
+            // empty string and getopt would read the next option as its value.
+            // Absent (a row from before the column) keeps sorting on.
+            . " --useSortBy " . (self::flagOn($job["use_sortby"] ?? true) ? 1 : 0)
             . " --manual " . ($manual ? 1 : 0);
         // Per-job snapshot formats only when the job has a list; without the
         // option get.php falls back to the server default. Base64 like
@@ -313,9 +322,23 @@ class Job extends Model
         }
     }
 
+    /**
+     * A jobs boolean as read back from the row. PDO hands these over as real
+     * booleans, but a textual fetch gives Postgres' own 't'/'f', which
+     * FILTER_VALIDATE_BOOLEAN does not know — and it fails towards false, which
+     * for use_sortby would silently drop the sortBy the server needs.
+     */
+    private static function flagOn(mixed $value): bool
+    {
+        if (is_string($value) && in_array(strtolower($value), ['t', 'f'], true)) {
+            return strtolower($value) === 't';
+        }
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
+
     private const array WRITABLE = ['name', 'schema', 'url', 'schedule', 'epsg', 'type', 'encoding', 'extra',
-        'delete_append', 'download_schema', 'presql', 'postsql', 'active', 'snapshot', 'snapshot_formats'];
-    private const array BOOLS = ['delete_append', 'download_schema', 'active', 'snapshot'];
+        'delete_append', 'download_schema', 'presql', 'postsql', 'active', 'snapshot', 'snapshot_formats', 'use_sortby'];
+    private const array BOOLS = ['delete_append', 'download_schema', 'active', 'snapshot', 'use_sortby'];
 
     public function getById(int $id, string $db): ?array
     {

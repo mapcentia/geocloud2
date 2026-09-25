@@ -38,6 +38,8 @@ final class WfsPaging
         /** @var list<string> raw "key=value" pairs of the original query, paging keys removed */
         private readonly array  $otherPairs,
         private readonly string $version,
+        /** False for a server that rejects sortBy: no page URL ever carries one. */
+        public readonly bool    $useSortBy = true,
     )
     {
     }
@@ -45,8 +47,12 @@ final class WfsPaging
     /**
      * Returns paging for a plain WFS 2.0.0 GetFeature URL, null for anything
      * else (grid notation, other versions/requests, explicit startIndex).
+     *
+     * $useSortBy false (jobs.use_sortby, --useSortBy 0) is for a server that
+     * rejects sortBy: the parameter is then left out of every page URL, even
+     * if the job URL asked for it.
      */
-    public static function detect(string $url): ?self
+    public static function detect(string $url, bool $useSortBy = true): ?self
     {
         if (count(explode('|http', $url)) > 1) {
             return null;
@@ -78,7 +84,7 @@ final class WfsPaging
         if ($pageSize <= 0) {
             $pageSize = self::DEFAULT_PAGE_SIZE;
         }
-        $sortBy = isset($params['sortby']) && $params['sortby'] !== '' ? $params['sortby'] : null;
+        $sortBy = $useSortBy && isset($params['sortby']) && $params['sortby'] !== '' ? $params['sortby'] : null;
 
         $base = $parts['scheme'] . '://' . $parts['host']
             . (isset($parts['port']) ? ':' . $parts['port'] : '')
@@ -90,12 +96,20 @@ final class WfsPaging
             $k = strtolower(urldecode(explode('=', $pair, 2)[0]));
             return !in_array($k, self::PAGING_KEYS, true);
         }));
-        return new self($typeNames, $pageSize, $sortBy, $base, $other, $params['version']);
+        return new self($typeNames, $pageSize, $sortBy, $base, $other, $params['version'], $useSortBy);
     }
 
+    /**
+     * The sortBy property get.php derived from DescribeFeatureType. Ignored
+     * when the job turned sorting off, so the derivation cannot put back what
+     * the server rejects.
+     */
     public function withSortBy(?string $sortBy): self
     {
-        return new self($this->typeNames, $this->pageSize, $sortBy, $this->baseWithoutQuery, $this->otherPairs, $this->version);
+        if (!$this->useSortBy) {
+            return $this;
+        }
+        return new self($this->typeNames, $this->pageSize, $sortBy, $this->baseWithoutQuery, $this->otherPairs, $this->version, true);
     }
 
     /**

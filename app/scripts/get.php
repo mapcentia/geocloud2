@@ -64,6 +64,7 @@ $longopts = array(
     "downloadSchema:",
     "snapshot:",
     "snapshotFormats:",
+    "useSortBy:",
     "manual:",
     "name:",
 );
@@ -83,6 +84,9 @@ $preSql = $options["preSql"] == "null" ? null : base64_decode($options["preSql"]
 $postSql = $options["postSql"] == "null" ? null : base64_decode($options["postSql"]);
 $downloadSchema = $options["downloadSchema"];
 $snapshotAfterImport = $options["snapshot"] ?? null;
+// jobs.use_sortby: false for a WFS that rejects sortBy. Absent (a manual run of
+// this script, or a job row from before the column) keeps sorting on.
+$useSortBy = filter_var($options["useSortBy"] ?? true, FILTER_VALIDATE_BOOLEAN);
 // Per-job snapshot formats (base64 encoded JSON list, see Job::buildGetCmd).
 // Absent (or unusable) means the server default, SnapshotFormat::defaults().
 $snapshotFormats = null;
@@ -255,10 +259,11 @@ if (sizeof(explode("|http", $url)) > 1) {
     }
     $grid = null;
     // A plain WFS 2.0.0 GetFeature URL is paged with startIndex/count (and
-    // sortBy when it can be determined). Grid ("|") jobs and WFS 1.x keep
-    // their existing paths; an explicit startIndex means the caller pages.
+    // sortBy when it can be determined, unless the job set use_sortby false
+    // because its server rejects the parameter). Grid ("|") jobs and WFS 1.x
+    // keep their existing paths; an explicit startIndex means the caller pages.
     $wfsPaging = null;
-    if (!$getFunction && ($wfsPaging = WfsPaging::detect($url)) !== null) {
+    if (!$getFunction && ($wfsPaging = WfsPaging::detect($url, $useSortBy)) !== null) {
         print "\nInfo: WFS 2.0.0 GetFeature detected. Using startIndex/count paging (count={$wfsPaging->pageSize}).";
         $getFunction = "getCmdWfsPaging";
     }
@@ -984,8 +989,9 @@ function finalizePagedTables(): void
 
 /**
  * WFS 2.0.0 paging: fetches the job URL page by page with startIndex/count
- * (and sortBy when the DescribeFeatureType response has an id-like
- * property), loads each page like a grid cell, then unions the pages.
+ * (and sortBy when the DescribeFeatureType response has an id-like property,
+ * unless the job turned sorting off), loads each page like a grid cell, then
+ * unions the pages.
  */
 function getCmdWfsPaging(): void
 {
@@ -995,7 +1001,9 @@ function getCmdWfsPaging(): void
 
     print "\nInfo: Start WFS paged download (count={$wfsPaging->pageSize})...";
 
-    if ($wfsPaging->sortBy !== null) {
+    if (!$wfsPaging->useSortBy) {
+        print "\nInfo: sortBy is turned off for this job. Paging with startIndex/count only; the server must page in a stable order.";
+    } elseif ($wfsPaging->sortBy !== null) {
         print "\nInfo: sortBy from URL: {$wfsPaging->sortBy}";
     } else {
         $property = null;

@@ -53,8 +53,46 @@ class SchedulerJobV4ApiCest
         $I->seeResponseContainsJson([
             'id' => $this->jobId, 'name' => 'my_job', 'schema' => 'public', 'schedule' => '15 3 * * 1-5',
             'epsg' => 25832, 'type' => 'AUTO', 'encoding' => 'UTF8', 'delete_append' => false, 'download_schema' => true,
-            'active' => true, 'snapshot' => true, 'snapshot_formats' => null,
+            'active' => true, 'snapshot' => true, 'snapshot_formats' => null, 'use_sortby' => true,
         ]);
+    }
+
+    /**
+     * use_sortby: the opt-out for WFS 2.0.0 servers that reject sortBy. Unlike
+     * the other flags it defaults to true, so a POST that says nothing about it
+     * keeps the scheduler's automatic sorting.
+     */
+    public function shouldTakeUseSortBy(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendPOST('/api/v4/scheduler/jobs', json_encode([
+            'name' => 'No sort job', 'schema' => 'public', 'schedule' => '0 2 * * *',
+            'url' => 'https://example.com/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=a:b',
+            'use_sortby' => false,
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $id = (int)basename($I->grabHttpHeader('Location'));
+
+        $I->sendGET('/api/v4/scheduler/jobs/' . $id);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertFalse(json_decode($I->grabResponse())->use_sortby);
+
+        // PATCH turns it back on, and a PATCH about something else leaves it alone.
+        $I->stopFollowingRedirects();
+        $I->sendPATCH('/api/v4/scheduler/jobs/' . $id, json_encode(['use_sortby' => true]));
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $I->sendPATCH('/api/v4/scheduler/jobs/' . $id, json_encode(['presql' => 'SELECT 1']));
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $I->startFollowingRedirects();
+        $I->sendGET('/api/v4/scheduler/jobs/' . $id);
+        $I->assertTrue(json_decode($I->grabResponse())->use_sortby);
+
+        // A non-boolean is refused by the assert, not coerced.
+        $I->sendPATCH('/api/v4/scheduler/jobs/' . $id, json_encode(['use_sortby' => 'nope']));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+
+        $I->sendDELETE('/api/v4/scheduler/jobs/' . $id);
+        $I->seeResponseCodeIsSuccessful();
     }
 
     /**

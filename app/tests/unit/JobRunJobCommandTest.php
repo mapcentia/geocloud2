@@ -30,7 +30,7 @@ class JobRunJobCommandTest extends Unit
             'id' => 42, 'db' => 'mydb', 'schema' => 'public', 'name' => 'roads',
             'url' => 'https://example.com/x.geojson', 'epsg' => 25832, 'type' => 'AUTO',
             'encoding' => 'UTF8', 'delete_append' => '0', 'download_schema' => '1',
-            'snapshot' => '0', 'extra' => null, 'presql' => null, 'postsql' => null,
+            'snapshot' => '0', 'use_sortby' => true, 'extra' => null, 'presql' => null, 'postsql' => null,
         ], $extra);
     }
 
@@ -86,6 +86,25 @@ class JobRunJobCommandTest extends Unit
         $this->assertStringContainsString('--manual 1', $cmd);
         $this->assertStringContainsString('--manual 0', Job::buildGetCmd($this->row()));
     }
+    /**
+     * jobs.use_sortby reaches get.php as --useSortBy 1/0, and always as a
+     * literal 0 or 1: a bare `false` would interpolate to the empty string and
+     * getopt would then read the *next* option as the value.
+     */
+    public function testUseSortByIsPassedAsZeroOrOne(): void
+    {
+        $this->assertStringContainsString(' --useSortBy 1', Job::buildGetCmd($this->row()));
+        $this->assertStringContainsString(' --useSortBy 1', Job::buildGetCmd($this->row(['use_sortby' => 't'])));
+        $this->assertStringContainsString(' --useSortBy 0', Job::buildGetCmd($this->row(['use_sortby' => false])));
+        $this->assertStringContainsString(' --useSortBy 0', Job::buildGetCmd($this->row(['use_sortby' => 'f'])));
+        $this->assertStringNotContainsString('--useSortBy  ', Job::buildGetCmd($this->row(['use_sortby' => false])));
+
+        // A row from before the column existed keeps today's behaviour.
+        $row = $this->row();
+        unset($row['use_sortby']);
+        $this->assertStringContainsString(' --useSortBy 1', Job::buildGetCmd($row));
+    }
+
     /**
      * A job without a per-job format list must not pass --snapshotFormats at
      * all, so get.php falls back to the server default (SnapshotFormat::

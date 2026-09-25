@@ -514,6 +514,10 @@ SQL;
     public static function gc2scheduler(): array
     {
         $sqls[] = "ALTER TABLE jobs ALTER url TYPE TEXT";
+        // Opt out of the automatic WFS 2.0.0 sortBy (WfsPaging, get.php
+        // getCmdWfsPaging) for a server that rejects the parameter. Defaults to
+        // true, so existing jobs keep paging in a stable order.
+        $sqls[] = "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS use_sortby BOOLEAN DEFAULT true";
         $sqls[] = "ALTER TABLE jobs ADD COLUMN delete_append BOOL DEFAULT FALSE";
         $sqls[] = "ALTER TABLE jobs ADD COLUMN lastrun timestamp with time zone";
         $sqls[] = "ALTER TABLE jobs ADD COLUMN presql text";

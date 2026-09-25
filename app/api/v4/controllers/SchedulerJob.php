@@ -49,6 +49,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     new OA\Property(property: "postsql", type: "string", nullable: true),
     new OA\Property(property: "active", type: "boolean", example: true),
     new OA\Property(property: "snapshot", description: "Queue a Parquet snapshot after each successful import", type: "boolean", example: false),
+    new OA\Property(property: "use_sortby", description: "Sort the automatic WFS 2.0.0 paging (startIndex/count) by an id-like property, so pages do not overlap or skip rows. Set false for a WFS 2.0.0 server that rejects sortBy; the server must then page in a stable order by itself. Default true, and irrelevant to jobs that are not paged WFS 2.0.0.", type: "boolean", example: true),
     new OA\Property(property: "snapshot_formats", description: "Formats of the snapshot queued after a successful import (when snapshot is true); null = the server default snapshot.formats", type: "array", items: new OA\Items(type: "string", enum: SnapshotFormat::IDS), example: ["parquet", "flatgeobuf"], nullable: true),
 ], type: "object")]
 #[AcceptableMethods(['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])]
@@ -73,7 +74,7 @@ class SchedulerJob extends AbstractApi
             'schedule' => trim("{$r['min']} {$r['hour']} {$r['dayofmonth']} {$r['month']} {$r['dayofweek']}"),
             'epsg' => $r['epsg'] !== null ? (int)$r['epsg'] : null, 'type' => $r['type'], 'encoding' => $r['encoding'], 'extra' => $r['extra'],
             'delete_append' => (bool)$r['delete_append'], 'download_schema' => (bool)$r['download_schema'],
-            'presql' => $r['presql'], 'postsql' => $r['postsql'], 'active' => (bool)$r['active'], 'snapshot' => (bool)$r['snapshot'],
+            'presql' => $r['presql'], 'postsql' => $r['postsql'], 'active' => (bool)$r['active'], 'snapshot' => (bool)$r['snapshot'], 'use_sortby' => (bool)$r['use_sortby'],
             'snapshot_formats' => is_string($r['snapshot_formats'] ?? null) ? json_decode($r['snapshot_formats'], true) : null,
             'lastcheck' => $r['lastcheck'] !== null ? (bool)$r['lastcheck'] : null, 'lasttimestamp' => $r['lasttimestamp'], 'lastrun' => $r['lastrun'],
             'report' => is_string($r['report'] ?? null) ? json_decode($r['report'], true) : null,
@@ -221,6 +222,7 @@ class SchedulerJob extends AbstractApi
             'extra' => new Assert\Optional(), 'presql' => new Assert\Optional(), 'postsql' => new Assert\Optional(),
             'delete_append' => new Assert\Optional(new Assert\Type('bool')), 'download_schema' => new Assert\Optional(new Assert\Type('bool')),
             'active' => new Assert\Optional(new Assert\Type('bool')), 'snapshot' => new Assert\Optional(new Assert\Type('bool')),
+            'use_sortby' => new Assert\Optional(new Assert\Type('bool')),
             // null is allowed (and on PATCH it resets the job to the server
             // default); anything else must be a non-empty, duplicate-free list
             // of known format ids. Job::toColumns() enforces the same rule for

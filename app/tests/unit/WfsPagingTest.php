@@ -66,6 +66,38 @@ class WfsPagingTest extends Unit
         $this->assertSame(self::URL . '&startIndex=300&count=100&sortBy=gml_id', $withSort->pageUrl(300));
     }
 
+    /**
+     * Some WFS 2.0.0 servers reject sortBy outright, so a job can turn it off
+     * (jobs.use_sortby, --useSortBy). Then no page URL may carry a sortBy —
+     * not one the job URL asked for, and not one get.php derived from
+     * DescribeFeatureType afterwards.
+     */
+    public function testSortByCanBeTurnedOffForServersThatRejectIt(): void
+    {
+        $p = WfsPaging::detect(self::URL . '&sortBy=STATE_NAME', useSortBy: false);
+        $this->assertNotNull($p);
+        $this->assertFalse($p->useSortBy);
+        $this->assertNull($p->sortBy, 'a sortBy in the job URL is dropped too');
+        $this->assertSame(self::URL . '&startIndex=0&count=10000', $p->pageUrl(0));
+
+        // get.php calls withSortBy() with whatever DescribeFeatureType yielded;
+        // with sorting off it must not come back.
+        $derived = $p->withSortBy('gml_id');
+        $this->assertNull($derived->sortBy);
+        $this->assertStringNotContainsString('sortBy', $derived->pageUrl(10000));
+
+        // Everything else about the paging is unchanged.
+        $this->assertSame(self::URL . '&startIndex=10000&count=10000', $p->pageUrl(10000));
+        $this->assertSame('topp:states', $p->typeNames);
+    }
+
+    public function testSortByIsOnUnlessTurnedOff(): void
+    {
+        $this->assertTrue(WfsPaging::detect(self::URL)->useSortBy, 'sorting stays on by default');
+        $this->assertSame('gml_id', WfsPaging::detect(self::URL)->withSortBy('gml_id')->sortBy);
+        $this->assertSame('STATE_NAME', WfsPaging::detect(self::URL . '&sortBy=STATE_NAME', useSortBy: true)->sortBy);
+    }
+
     public function testPageUrlDoesNotDuplicateCountWhenReplacing(): void
     {
         // A count already in the URL is the page size; pageUrl must not send two different counts.

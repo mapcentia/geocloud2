@@ -129,6 +129,53 @@ class JobSnapshotFlagTest extends Unit
     }
 
     /**
+     * jobs.use_sortby is the one boolean that defaults to TRUE: a job says
+     * nothing about sorting unless its WFS rejects sortBy, so an omitted
+     * property (and the ExtJS form, which never sends it) must leave paging
+     * sorted — the opposite default from every other flag here.
+     */
+    public function testUseSortByDefaultsToTrueAndRoundTrips(): void
+    {
+        $job = $this->job();
+        $uniq = uniqid();
+        $omitted = 'sortbydefault_' . $uniq;
+        $off = 'sortbyoff_' . $uniq;
+        $created = [];
+        try {
+            $job->newJob($this->payload($omitted), self::DB);
+            $row = $this->rowByName($job, $omitted);
+            $created[] = $row['id'];
+            $this->assertTrue($row['use_sortby'], 'omitted use_sortby keeps sorting on');
+
+            $job->newJob($this->payload($off, ['use_sortby' => false]), self::DB);
+            $row = $this->rowByName($job, $off);
+            $created[] = $row['id'];
+            $this->assertFalse($row['use_sortby'], 'false is stored as false, not rejected');
+
+            // updateJob turns it off and back on again.
+            $first = $this->rowByName($job, $omitted);
+            $job->updateJob($this->payload($omitted, ['id' => $first['id'], 'use_sortby' => false]));
+            $this->assertFalse($this->rowByName($job, $omitted)['use_sortby']);
+            $job->updateJob($this->payload($omitted, ['id' => $first['id'], 'use_sortby' => true]));
+            $this->assertTrue($this->rowByName($job, $omitted)['use_sortby']);
+
+            // An update that says nothing about sorting must leave the stored value
+            // alone in both directions. The ExtJS scheduler form does not know the
+            // field, so a save there must not re-enable a sortBy the server rejects.
+            $job->updateJob($this->payload($omitted, ['id' => $first['id']]));
+            $this->assertTrue($this->rowByName($job, $omitted)['use_sortby'], 'an unrelated update keeps it on');
+
+            $job->updateJob($this->payload($omitted, ['id' => $first['id'], 'use_sortby' => false]));
+            $job->updateJob($this->payload($omitted, ['id' => $first['id']]));
+            $this->assertFalse($this->rowByName($job, $omitted)['use_sortby'], 'an unrelated update keeps it off');
+        } finally {
+            foreach ($created as $id) {
+                $job->deleteJob((object)['id' => $id]);
+            }
+        }
+    }
+
+    /**
      * snapshot_formats: the per-job format list the v4 API writes and
      * buildGetCmd() passes on to get.php. Validation lives in
      * Job::toColumns(), so it covers createJob(), patchJob() and the
