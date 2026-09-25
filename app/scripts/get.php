@@ -11,19 +11,19 @@ set_time_limit(0);
 include_once(__DIR__ . "/../conf/App.php");
 include_once(__DIR__ . "/../vendor/autoload.php");
 
-
 use app\conf\App;
 use app\conf\Connection;
-use app\controllers\Tilecache;
 use app\inc\Cache;
 use app\inc\SchedulerLock;
 use app\inc\Util;
 use app\inc\WfsPaging;
-use app\models\Database;
 use app\models\Layer;
 use app\models\Table;
 
 new App();
+
+$memoryLimit = App::$param['memoryLimit'] ?? '128M';
+ini_set('memory_limit', $memoryLimit);
 
 Cache::setInstance();
 
