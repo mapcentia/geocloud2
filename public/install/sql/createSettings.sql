@@ -2,7 +2,7 @@ CREATE SCHEMA settings;
 SET search_path = settings, pg_catalog;
 CREATE TABLE geometry_columns_join (
 	_key_ varchar(255) not null,
-    f_table_abstract character varying(256),
+    f_table_abstract text,
     f_table_title character varying(256),
     editable bool DEFAULT 'true',
     created timestamp with time zone DEFAULT ('now'::text)::timestamp(0) with time zone,

@@ -440,6 +440,33 @@ SQL;
         $sqls[] = "ALTER TABLE settings.snapshots ADD CONSTRAINT snapshots_status_check CHECK (status IN ('pending', 'running', 'succeeded', 'failed', 'superseded'))";
         $sqls[] = "CREATE UNIQUE INDEX snapshots_published_unique_idx ON settings.snapshots (schema_name, relation_name, snapshot_date) WHERE status = 'succeeded'";
 
+        // A relation abstract holds a real description — the Danish grunddata in
+        // the "dk" database run to ~800 characters — which the original
+        // varchar(256) truncates with SQLSTATE 22001. The history table above is
+        // created with LIKE, so it carries the same narrow type and its audit
+        // trigger fails the write from behind; both have to be retyped. Guarded,
+        // so it happens once: Postgres refuses to alter a column a view selects,
+        // so the dependent view goes first and the Views1.php include below
+        // recreates it in the same run.
+        $sqls[] = "DO $$
+            BEGIN
+                IF EXISTS (SELECT 1 FROM information_schema.columns
+                           WHERE table_schema = 'settings'
+                             AND table_name = 'geometry_columns_join'
+                             AND column_name = 'f_table_abstract'
+                             AND data_type <> 'text') THEN
+                    DROP VIEW IF EXISTS settings.geometry_columns_view;
+                    ALTER TABLE settings.geometry_columns_join ALTER COLUMN f_table_abstract TYPE text;
+                END IF;
+                IF EXISTS (SELECT 1 FROM information_schema.columns
+                           WHERE table_schema = 'settings'
+                             AND table_name = 'geometry_columns_join_history'
+                             AND column_name = 'f_table_abstract'
+                             AND data_type <> 'text') THEN
+                    ALTER TABLE settings.geometry_columns_join_history ALTER COLUMN f_table_abstract TYPE text;
+                END IF;
+            END $$;";
+
         include 'Views1.php';
         return $sqls;
     }
