@@ -1663,14 +1663,21 @@ function cleanUp(int $success = 0): void
     print "\nInfo: Temp table dropped.";
 
     if ($success) {
+        // Touching the layer's metadata is not what the job succeeded at, and a
+        // source that legitimately held no features leaves nothing to touch: the
+        // relation was never created, so updateLastmodified() throws "columns not
+        // found" (see finalizePagedTables(), which reports success for an empty
+        // download). Nothing here may escape — cleanUp() is what finalises both
+        // the jobs row and the run registry, so a throw would hand the run to the
+        // shutdown hook, which can only call it "failed" and contradict the
+        // lastcheck written above.
         $layer = new Layer(connection: $conn);
-        $layer->updateLastmodified(schema: $schema, table: $safeName);
-        print "\nInfo: Last modified value updated";
         try {
+            $layer->updateLastmodified(schema: $schema, table: $safeName);
+            print "\nInfo: Last modified value updated";
             $layer->insertDefaultMeta();
-        } catch (PDOException $e) {
-            print "\nWarning: ";
-            print_r($e->getMessage());
+        } catch (Throwable $e) {
+            print "\nNotice: no layer metadata to update for {$schema}.{$safeName}: " . $e->getMessage();
         }
 
         print "\nInfo: Clear cache for layer $schema.$safeName";
