@@ -84,6 +84,9 @@ class SchedulerRun extends AbstractApi
         return $rows;
     }
 
+    /**
+     * @throws GC2Exception
+     */
     #[OA\Get(path: '/api/v4/scheduler/runs/{uuid}', operationId: 'getSchedulerRun', description: "Get one run (with its log), or list runs (running first, then the newest finished; without log). Filters: ?job=, ?status=.", tags: ['Scheduler'],
         parameters: [new OA\Parameter(name: 'uuid', description: 'Run uuid. Omit to list runs (running plus the newest finished ones).', in: 'path', required: false, schema: new OA\Schema(type: 'string')), new OA\Parameter(name: 'job', in: 'query', required: false, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string'))],
         responses: [new OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/SchedulerRun")), new OA\Response(response: 404, description: 'Not found')])]
@@ -97,7 +100,7 @@ class SchedulerRun extends AbstractApi
             // falls outside the newest-50 listing.
             $lock = new SchedulerLock();
             $lock->reap();
-            $run = $lock->run((string)$uuid, $this->db);
+            $run = $lock->run($uuid, $this->db);
             $lock->release();
             if ($run === null) {
                 throw new GC2Exception("Run $uuid not found", 404, null, "RUN_NOT_FOUND");
@@ -111,8 +114,11 @@ class SchedulerRun extends AbstractApi
         return $this->getResponse(array_map(fn($r) => $this->present($r), $rows));
     }
 
-    #[OA\Post(path: '/api/v4/scheduler/runs', operationId: 'postSchedulerRun', description: "Start a job now. Asynchronous: poll the runs list for the new run.", tags: ['Scheduler'],
-        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ["job"], properties: [new OA\Property(property: "job", type: "integer"), new OA\Property(property: "force", description: "Ignore delete_append and overwrite", type: "boolean")], type: "object")),
+    /**
+     * @throws GC2Exception
+     */
+    #[OA\Post(path: '/api/v4/scheduler/runs', operationId: 'postSchedulerRun', description: "Start a job now. Asynchronous: poll the runs list for the new run.", requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ["job"], properties: [new OA\Property(property: "job", type: "integer"), new OA\Property(property: "force", description: "Ignore delete_append and overwrite", type: "boolean")], type: "object")),
+        tags: ['Scheduler'],
         responses: [new OA\Response(response: 202, description: 'Starting'), new OA\Response(response: 404, description: 'Job not found'), new OA\Response(response: 409, description: 'A run of the job is already running')])]
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -135,6 +141,9 @@ class SchedulerRun extends AbstractApi
         return new AcceptedResponse(['job' => $jobId, 'status' => 'starting', '_links' => ['runs' => "/api/v4/scheduler/runs?job=$jobId"]]);
     }
 
+    /**
+     * @throws GC2Exception
+     */
     #[OA\Delete(path: '/api/v4/scheduler/runs/{uuid}', operationId: 'deleteSchedulerRun', description: "Stop a running run: SIGINT, then SIGKILL after 30 s.", tags: ['Scheduler'],
         parameters: [new OA\Parameter(name: 'uuid', in: 'path', required: true, schema: new OA\Schema(type: 'string'))],
         responses: [new OA\Response(response: 200, description: 'Signal sent'), new OA\Response(response: 404, description: 'No running run with that uuid'), new OA\Response(response: 409, description: 'The run is on another host')])]
@@ -159,16 +168,25 @@ class SchedulerRun extends AbstractApi
         return new GetResponse(data: ['uuid' => $uuid, 'signal' => 'SIGINT']);
     }
 
+    /**
+     * @throws GC2Exception
+     */
     public function put_index(): Response
     {
         throw new GC2Exception("Method not allowed", 405, null, "METHOD_NOT_ALLOWED");
     }
 
+    /**
+     * @throws GC2Exception
+     */
     public function patch_index(): Response
     {
         throw new GC2Exception("Method not allowed", 405, null, "METHOD_NOT_ALLOWED");
     }
 
+    /**
+     * @throws GC2Exception
+     */
     #[Override]
     public function validate(): void
     {
