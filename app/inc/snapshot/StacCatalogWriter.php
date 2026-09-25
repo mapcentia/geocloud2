@@ -200,7 +200,7 @@ final class StacCatalogWriter
         $collection += [
             'id' => $id,
             'title' => $title,
-            'description' => $this->text($meta['meta_desc'] ?? null) ?? "Snapshots of $id",
+            'description' => $this->text($meta['abstract'] ?? null) ?? "Snapshots of $id",
             'keywords' => array_values(array_filter($meta['keywords'] ?? [], 'is_string')),
             // GC2 knows nothing about the licence of the data it snapshots.
             'license' => 'other',
