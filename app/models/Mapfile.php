@@ -399,7 +399,7 @@ SYMBOLS;
         $s = "STYLE\n";
 
         if (!empty($style['symbol'])) {
-            $sym = $style['symbol'];
+            $sym = str_starts_with($style['symbol'], "http") ?  Util::encodeUrl($style['symbol']) : $style['symbol'];
             $d = str_starts_with($sym, "[") ? "" : "'";
             $s .= "SYMBOL {$d}{$sym}{$d}\n";
         }

@@ -590,4 +590,18 @@ class Util
             substr($userString, $separatorPosition + 1),
         ];
     }
+
+    public static function encodeUrl(string $url): string
+    {
+        return preg_replace_callback(
+            '/%(?:[0-9A-Fa-f]{2})|[^A-Za-z0-9\-._~:\/?#\[\]@!$&\'()*+,;=%]/u',
+            function ($match) {
+                if ($match[0][0] === '%') {
+                    return $match[0];
+                }
+                return rawurlencode($match[0]);
+            },
+            $url
+        );
+    }
 }
