@@ -22,7 +22,9 @@ final class MapfilePatcher
         foreach ($layers as $layer) {
             [$schema, $table] = self::split($layer);
             if (!empty($filters[$layer])) {
-                $where = 'WHERE ' . implode(' AND ', $filters[$layer]);
+                // The marker sits inside the double-quoted DATA string, so a double
+                // quote in the clause (a quoted identifier) must be escaped for MapServer.
+                $where = 'WHERE ' . str_replace('"', '\\"', implode(' AND ', $filters[$layer]));
                 $content = str_replace("/*FILTER_$schema.$table*/", $where, $content, $count);
                 if ($count === 0) {
                     // Fail closed: a filter was required for this layer but the marker

@@ -133,7 +133,7 @@ class Wms extends Controller
      */
     private static function xmlEscape(string $string): string
     {
-        return str_replace(array('&', '<', '>', '\'', '"', '/'), array('\&amp;', '\&lt;', '\&gt;', '\&apos;', '\&quot;', '\/'), $string);
+        return str_replace(['&', '<', '>', '\'', '"'], ['&amp;', '&lt;', '&gt;', '&apos;', '&quot;'], $string);
     }
 
     /**
@@ -231,15 +231,7 @@ class Wms extends Controller
             $disableLabels = isset($_GET["labels"]) && $_GET["labels"] == "false";
             // If QGIS is used
             if ($qgs && sizeof($this->layers) == 1) {
-                // Read the file
-                $file = fopen($qgs, "r");
-                $str = fread($file, filesize($qgs));
-                fclose($file);
-                // Write out a tmp MapFile
-                $mapFile = "/var/www/geocloud2/app/tmp/$name.qgs";
-                $newMapFile = fopen($mapFile, "w");
-                fwrite($newMapFile, $str);
-                fclose($newMapFile);
+                $str = file_get_contents($qgs);
                 foreach ($this->layers as $layer) {
                     $split = explode(".", $layer);
                     $versionWhere = $model->doesColumnExist("$split[0].$split[1]", "gc2_version_gid")["exists"] ? "gc2_version_end_date IS NULL" : "";
@@ -254,15 +246,16 @@ class Wms extends Controller
                         $where = "($where AND $versionWhere)";
                     }
                     if (!empty($where)) {
-                        $sedCmd = 'sed -i "/table=\"' . $split[0] . '\".\"' . $split[1] . '\"/s/sql=.*</sql=' . self::xmlEscape($where) . '</g" ' . $mapFile;
-                        shell_exec($sedCmd);
+                        $str = self::setQgsSql($str, $split[0], $split[1], $where);
                     }
                 }
                 if ($disableLabels) {
                     $useFilters = true;
-                    $sedCmd = 'sed -i "s/labelsEnabled=\"1\"/labelsEnabled=\"0\"/g" ' . $mapFile;
-                    shell_exec($sedCmd);
+                    $str = str_replace('labelsEnabled="1"', 'labelsEnabled="0"', $str);
                 }
+                // Write out a tmp project file
+                $mapFile = "/var/www/geocloud2/app/tmp/$name.qgs";
+                file_put_contents($mapFile, $str);
                 $url = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=$mapFile&" . $_SERVER["QUERY_STRING"];
             } // MapServer is used
             else {
@@ -271,29 +264,21 @@ class Wms extends Controller
                     default => $db . "_" . $schema . "_wms.map",
                 };
                 $path = "/var/www/geocloud2/app/wms/mapfiles/$mapFile";
-                // Write out a tmp MapFile
-                $tmpMapFile = $this->writeTmpMapFile($path);
-                $split = [];
+                $str = file_get_contents($path);
                 foreach ($this->layers as $layer) {
                     $layer = sizeof(explode(":", $layer)) > 1 ? explode(":", $layer)[1] : $layer;
                     $split = explode(".", $layer);
                     if (!empty($filters[$layer])) {
                         $useFilters = true;
-                        $where = implode(" AND ", $filters[$layer]);
-                        $search = '/*FILTER_' . $split[0] . '.' . $split[1] . '*/';
-                        $replace = 'WHERE ' . str_replace('"', '\"', $where);
-                        $mapFileContent = file_get_contents($tmpMapFile);
-                        $mapFileContent = str_replace($search, $replace, $mapFileContent);
-                        file_put_contents($tmpMapFile, $mapFileContent);
+                        $str = self::setMapfileFilter($str, $split[0], $split[1], implode(" AND ", $filters[$layer]));
+                    }
+                    if ($disableLabels) {
+                        $useFilters = true;
+                        $str = self::removeMapfileLabels($str, $split[0], $split[1]);
                     }
                 }
-                if ($disableLabels) {
-                    $useFilters = true;
-                    // Strip every numbered label block (#START_LABEL<n>_… to #END_LABEL<n>_…) for the layer.
-                    // The [0-9]* covers any label count, including old mapfiles with only LABEL1/LABEL2.
-                    $sedCmd = 'sed -i "/#START_LABEL[0-9]*_' . $split[0] . '.' . $split[1] . '/,/#END_LABEL[0-9]*_' . $split[0] . '.' . $split[1] . '/c\ " ' . $tmpMapFile;
-                    shell_exec($sedCmd);
-                }
+                // Write out a tmp MapFile
+                $tmpMapFile = $this->writeTmpMapFile($str);
                 $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=$tmpMapFile&{$_SERVER["QUERY_STRING"]}";
             }
         }
@@ -387,18 +372,16 @@ class Wms extends Controller
         };
         if (sizeof($filters) > 0) {
             $path = "/var/www/geocloud2/app/wms/mapfiles/$mapFile";
-            // Write out a tmp MapFile
-            $tmpMapFile = $this->writeTmpMapFile($path);
+            $str = file_get_contents($path);
             foreach ($this->layers as $layer) {
                 $layer = sizeof(explode(":", $layer)) > 1 ? explode(":", $layer)[1] : $layer;
                 $split = explode(".", $layer);
                 if (!empty($filters[$layer])) {
-                    // Use sed to replace sql= parameter
-                    $where = implode(" AND ", $filters[$layer]);
-                    $sedCmd = 'sed -i "s;/\*FILTER_' . $split[0] . '.' . $split[1] . '\*/;WHERE ' . $where . ';g" ' . $tmpMapFile;
-                    shell_exec($sedCmd);
+                    $str = self::setMapfileFilter($str, $split[0], $split[1], implode(" AND ", $filters[$layer]));
                 }
             }
+            // Write out a tmp MapFile
+            $tmpMapFile = $this->writeTmpMapFile($str);
             $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=$tmpMapFile";
         } else {
             $url = "http://127.0.0.1/cgi-bin/mapserv.fcgi?map=/var/www/geocloud2/app/wms/mapfiles/$mapFile";
@@ -453,18 +436,46 @@ class Wms extends Controller
      * @param string $path
      * @return string
      */
-    private function writeTmpMapFile(string $path): string
+    private function writeTmpMapFile(string $content): string
     {
-        // Read the file
-        $file = fopen($path, "r");
-        $str = fread($file, filesize($path));
-        fclose($file);
-        // Write out a tmp MapFile
         $name = md5(rand(1, 999999999) . microtime());
         $tmpMapFile = "/var/www/geocloud2/app/tmp/$name.map";
-        $newMapFile = fopen($tmpMapFile, "w");
-        fwrite($newMapFile, $str);
-        fclose($newMapFile);
+        file_put_contents($tmpMapFile, $content);
         return $tmpMapFile;
+    }
+
+    /**
+     * Replaces the /*FILTER_schema.table*\/ marker in a mapfile DATA statement with a WHERE clause.
+     * DATA is a double-quoted MapServer string, so double quotes in the clause are escaped.
+     */
+    private static function setMapfileFilter(string $content, string $schema, string $table, string $where): string
+    {
+        return str_replace("/*FILTER_$schema.$table*/", 'WHERE ' . str_replace('"', '\"', $where), $content);
+    }
+
+    /**
+     * Strips every numbered label block (#START_LABEL<n>_… to #END_LABEL<n>_…) for the layer.
+     * The [0-9]* covers any label count, including old mapfiles with only LABEL1/LABEL2.
+     */
+    private static function removeMapfileLabels(string $content, string $schema, string $table): string
+    {
+        $needle = preg_quote("$schema.$table", '/');
+        $pattern = '/^[^\r\n]*#START_LABEL[0-9]*_' . $needle . '.*?#END_LABEL[0-9]*_' . $needle . '[^\r\n]*\R?/ms';
+        return preg_replace($pattern, '', $content);
+    }
+
+    /**
+     * Sets sql=… on the QGIS datasource line(s) for table="schema"."table" (up to the last "<" on the line).
+     */
+    private static function setQgsSql(string $content, string $schema, string $table, string $where): string
+    {
+        $tableAttr = 'table="' . $schema . '"."' . $table . '"';
+        $sql = 'sql=' . self::xmlEscape($where) . '<';
+        return preg_replace_callback('/^.*$/m', function (array $m) use ($tableAttr, $sql): string {
+            if (!str_contains($m[0], $tableAttr)) {
+                return $m[0];
+            }
+            return preg_replace_callback('/sql=.*</', fn() => $sql, $m[0]);
+        }, $content);
     }
 }

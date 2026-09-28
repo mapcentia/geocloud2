@@ -19,6 +19,15 @@ class MapfilePatcherTest extends Unit
         $this->assertStringNotContainsString('/*FILTER_test.roads*/', $out);
     }
 
+    // A double quote in the filter must not terminate the mapfile's double-quoted DATA string.
+    public function testMapfileFilterEscapesDoubleQuotes(): void
+    {
+        $out = MapfilePatcher::patchMapfileContent(
+            $this->map(), ['test.roads' => ['("Type" = 1)']], false, ['test.roads']
+        );
+        $this->assertStringContainsString('WHERE (\\"Type\\" = 1)) as foo', $out);
+    }
+
     public function testDisableLabelsRemovesAllNumberedLabelBlocks(): void
     {
         $out = MapfilePatcher::patchMapfileContent($this->map(), [], true, ['test.roads']);

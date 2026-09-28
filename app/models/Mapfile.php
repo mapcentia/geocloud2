@@ -441,7 +441,7 @@ SYMBOLS;
     /**
      * Render a MapServer LABEL block from a single label entry (new format, un-prefixed keys).
      * $n is the 1-based label index, used only in the comment markers that
-     * Wms.php's disableLabels sed command targets.
+     * Wms.php's disableLabels removal targets.
      */
     public static function renderLabel(array $label, string $layerName, int $n): string
     {
