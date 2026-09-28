@@ -279,10 +279,12 @@ class Wms extends Controller
                     $split = explode(".", $layer);
                     if (!empty($filters[$layer])) {
                         $useFilters = true;
-                        // Use sed to replace sql= parameter
                         $where = implode(" AND ", $filters[$layer]);
-                        $sedCmd = 'sed -i "s;/\*FILTER_' . $split[0] . '.' . $split[1] . '\*/;WHERE ' . $where . ';g" ' . $tmpMapFile;
-                        shell_exec($sedCmd);
+                        $search = '/*FILTER_' . $split[0] . '.' . $split[1] . '*/';
+                        $replace = 'WHERE ' . str_replace('"', '\"', $where);
+                        $mapFileContent = file_get_contents($tmpMapFile);
+                        $mapFileContent = str_replace($search, $replace, $mapFileContent);
+                        file_put_contents($tmpMapFile, $mapFileContent);
                     }
                 }
                 if ($disableLabels) {
