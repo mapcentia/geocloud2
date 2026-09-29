@@ -47,6 +47,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(property: "_type", description: "Read-only. TABLE, VIEW or MATERIALIZED VIEW.", type: "string", readOnly: true, example: "TABLE"),
         new OA\Property(property: "_events", description: "Read-only. Whether realtime change events are enabled on the table.", type: "boolean", readOnly: true, example: false),
         new OA\Property(property: "_column_count", description: "Read-only. Number of columns. Always present, also with namesOnly=true, so a listing can show sizes without loading every column.", type: "integer", readOnly: true, example: 7),
+    new OA\Property(property: "_geometry_columns", description: "Read-only. The relation's geometry and geography columns, in column order; an empty array for a relation without any. Always present, also with namesOnly=true, so a client can find the spatial relations of a schema from the listing alone. Type and SRID are read off the column's typmod, the same source PostGIS' geometry_columns/geography_columns views use, so a column declared plain `geometry` reports type Geometry and SRID 0. Relations owned by an extension report an empty array: public.raster_columns.extent is PostGIS' own, not the user's data.", type: "array", items: new OA\Items(properties: [new OA\Property(property: "name", type: "string", example: "the_geom"), new OA\Property(property: "type", type: "string", example: "MultiPolygon"), new OA\Property(property: "srid", type: "integer", example: 25832)], type: "object"), readOnly: true),
         new OA\Property(
             property: "columns",
             title: "Columns",
@@ -342,10 +343,11 @@ class Table extends AbstractApi
      * is installed. Backs the namesOnly listings, which must not build a
      * TableModel per relation — that costs a handful of queries each.
      *
-     * @return array<string, array{type:string, column_count:int, events:bool}> keyed by relation name
+     * @return array<string, array{type:string, column_count:int, events:bool, geometry_columns:list<array{name:string, type:string, srid:int}>}> keyed by relation name
      */
     private static function summaries(ApiInterface $self, string $schema, ?string $relation = null): array
     {
+        $geometry = self::geometryColumns($self, $schema, $relation);
         $model = new Model(connection: $self->connection);
         $sql = "SELECT c.relname AS name, c.relkind,
                        (SELECT count(*) FROM pg_attribute a WHERE a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped) AS column_count,
@@ -367,6 +369,58 @@ class Table extends AbstractApi
                 'type' => $types[$row['relkind']],
                 'column_count' => (int)$row['column_count'],
                 'events' => filter_var($row['events'], FILTER_VALIDATE_BOOLEAN),
+                'geometry_columns' => $geometry[$row['name']] ?? [],
+            ];
+        }
+        return $out;
+    }
+
+    /**
+     * The geometry and geography columns of a schema's relations, from one catalog
+     * query: name, type and SRID per column, keyed by relation name.
+     *
+     * Type and SRID are read off the column's typmod with PostGIS' own helpers, the
+     * same source its geometry_columns/geography_columns views use, so a column
+     * declared plain `geometry` reports type Geometry and SRID 0 rather than costing
+     * a scan of the data.
+     *
+     * Relations owned by an extension are left out: PostGIS ships views of its own,
+     * and public.raster_columns.extent is a geometry column that says nothing about
+     * the user's data. /api/v4/meta never showed them either, because it only knows
+     * relations registered as layers.
+     *
+     * @return array<string, list<array{name:string, type:string, srid:int}>>
+     */
+    private static function geometryColumns(ApiInterface $self, string $schema, ?string $relation = null): array
+    {
+        $model = new Model(connection: $self->connection);
+        $sql = "SELECT c.relname AS relation, a.attname AS name,
+                       postgis_typmod_type(a.atttypmod) AS type,
+                       postgis_typmod_srid(a.atttypmod) AS srid
+                FROM pg_attribute a
+                JOIN pg_class c ON c.oid = a.attrelid
+                JOIN pg_namespace n ON n.oid = c.relnamespace
+                JOIN pg_type t ON t.oid = a.atttypid
+                WHERE n.nspname = :schema
+                  AND c.relkind IN ('r', 'p', 'v', 'm')
+                  AND t.typname IN ('geometry', 'geography')
+                  AND a.attnum > 0 AND NOT a.attisdropped
+                  AND NOT EXISTS (SELECT 1 FROM pg_depend d
+                                  WHERE d.classid = 'pg_class'::regclass AND d.objid = c.oid AND d.deptype = 'e')"
+            . ($relation !== null ? " AND c.relname = :relation" : "")
+            . " ORDER BY c.relname, a.attnum";
+        $res = $model->prepare($sql);
+        $params = ['schema' => $schema];
+        if ($relation !== null) {
+            $params['relation'] = $relation;
+        }
+        $model->execute($res, $params);
+        $out = [];
+        while ($row = $model->fetchRow($res)) {
+            $out[$row['relation']][] = [
+                'name' => $row['name'],
+                'type' => $row['type'],
+                'srid' => (int)$row['srid'],
             ];
         }
         return $out;
@@ -380,6 +434,7 @@ class Table extends AbstractApi
             '_type' => $summary['type'],
             '_events' => $summary['events'],
             '_column_count' => $summary['column_count'],
+            '_geometry_columns' => $summary['geometry_columns'],
             '_links' => self::links($schema, $name),
         ];
     }
@@ -394,7 +449,12 @@ class Table extends AbstractApi
         ];
     }
 
-    public static function getTable(TableModel $table, ApiInterface $self): array
+    /**
+     * @param list<array{name:string, type:string, srid:int}>|null $geometryColumns Prefetched for
+     *     this relation, so a full listing pays one catalog query for the whole schema
+     *     instead of one per table. Null looks them up for this relation alone.
+     */
+    public static function getTable(TableModel $table, ApiInterface $self, ?array $geometryColumns = null): array
     {
         if (self::namesOnly()) {
             $summary = self::summaries($self, $table->schema, $table->tableWithOutSchema)[$table->tableWithOutSchema] ?? null;
@@ -410,6 +470,8 @@ class Table extends AbstractApi
         $response['_type'] = $table->relType;
         $response['_events'] = $table->isNotifyTriggerInstalled();
         $response['_column_count'] = count($response['columns']);
+        $response['_geometry_columns'] = $geometryColumns
+            ?? (self::geometryColumns($self, $table->schema, $table->tableWithOutSchema)[$table->tableWithOutSchema] ?? []);
         $response['_links'] = [
             'columns' => "/api/v4/schemas/$table->schema/tables/$table->tableWithOutSchema/columns",
             'indices' => "/api/v4/schemas/$table->schema/tables/$table->tableWithOutSchema/indices",
@@ -438,8 +500,10 @@ class Table extends AbstractApi
         }
         $tables = new Model(connection: $self->connection)->getTableNamesFromSchema($schema);
         $views = new Model(connection: $self->connection)->getViewNamesFromSchema($schema);
+        // Once for the schema, not once per relation.
+        $geometry = self::geometryColumns($self, $schema);
         foreach ([...$tables, ...$views] as $name) {
-            $rels[] = self::getTable(new TableModel(table: $schema . "." . $name, lookupForeignTables: false, connection: $self->connection), $self);
+            $rels[] = self::getTable(new TableModel(table: $schema . "." . $name, lookupForeignTables: false, connection: $self->connection), $self, $geometry[$name] ?? []);
         }
         return $rels;
     }

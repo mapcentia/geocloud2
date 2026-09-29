@@ -88,6 +88,69 @@ class SchemaListV4ApiCest
         $I->assertCount(1, $full->columns);
     }
 
+    /**
+     * _geometry_columns on the namesOnly summary: what the Map and Tile Cache pages
+     * need, from the same catalog query as _column_count, instead of loading every
+     * layer's metadata.
+     *
+     * Views are covered by the same query (relkind v/m) and keep their typmod, but
+     * the API cannot create one, so that case is verified by hand, not here.
+     */
+    public function shouldReportGeometryColumnsInTheSummary(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendPOST('/api/v4/schemas/' . $this->schema . '/tables', json_encode(['name' => 'geo', 'columns' => [
+            ['name' => 'gid', 'type' => 'serial'],
+            ['name' => 'the_geom', 'type' => 'geometry(MultiPolygon,25832)'],
+            ['name' => 'geog', 'type' => 'geography(Point,4326)'],
+            ['name' => 'plain', 'type' => 'geometry'],
+            ['name' => 'navn', 'type' => 'varchar'],
+        ]]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+
+        $I->sendGET('/api/v4/schemas/' . $this->schema . '/tables?namesOnly=true');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $tables = json_decode($I->grabResponse(), true);
+        $by = array_column($tables, null, 'name');
+
+        // Type and srid come from the column's typmod, exactly as PostGIS' own
+        // geometry_columns/geography_columns views read them.
+        $I->assertSame([
+            ['name' => 'the_geom', 'type' => 'MultiPolygon', 'srid' => 25832],
+            ['name' => 'geog', 'type' => 'Point', 'srid' => 4326],
+            ['name' => 'plain', 'type' => 'Geometry', 'srid' => 0],
+        ], $by['geo']['_geometry_columns'], 'geometry and geography columns, in column order');
+
+        $I->assertSame([], $by['a']['_geometry_columns'], 'a table without geometry reports an empty list');
+
+        // The full shape carries the same, so a client can rely on the field either way.
+        $I->sendGET('/api/v4/schemas/' . $this->schema . '/tables/geo');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $full = json_decode($I->grabResponse(), true);
+        $I->assertSame($by['geo']['_geometry_columns'], $full['_geometry_columns']);
+
+        $I->sendGET('/api/v4/schemas/' . $this->schema . '/tables/a?namesOnly=true');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertSame([], json_decode($I->grabResponse(), true)['_geometry_columns']);
+    }
+
+    /**
+     * PostGIS ships views of its own, and public.raster_columns has a geometry
+     * column (extent) that says nothing about the user's data. Relations owned by
+     * an extension therefore report no geometry columns.
+     */
+    public function shouldNotClaimGeometryOnPostgisOwnViews(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendGET('/api/v4/schemas/public/tables?namesOnly=true');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $by = array_column(json_decode($I->grabResponse(), true), null, 'name');
+        $I->assertArrayHasKey('raster_columns', $by, 'postgis_raster is installed in the template database');
+        $I->assertSame([], $by['raster_columns']['_geometry_columns'],
+            'raster_columns.extent belongs to postgis_raster, not to the user');
+        $I->assertSame([], $by['geometry_columns']['_geometry_columns']);
+    }
+
     public function shouldCleanUp(ApiTester $I)
     {
         $this->asSuper($I);
