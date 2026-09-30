@@ -30,6 +30,20 @@ class SeedCommandTest extends Unit
         return \app\conf\App::$param['path'] . 'app/wms/mapcache/' . $this->database . '.xml';
     }
 
+    /**
+     * The grid, taken from the install itself rather than hardcoded: this box's
+     * app/conf/grids only has "25832", not the plan's "GoogleMapsCompatible", and
+     * any hardcoded name is fragile across installs anyway.
+     */
+    private function grid(): string
+    {
+        $grids = \app\controllers\Mapcache::getGrids();
+        if ($grids === []) {
+            $this->markTestSkipped('this install has no grids in app/conf/grids');
+        }
+        return array_key_first($grids);
+    }
+
     private function command(array $over = []): SeedCommand
     {
         return new SeedCommand(
@@ -71,12 +85,20 @@ class SeedCommandTest extends Unit
 
     public function testValidationRejectsZoomAndThreadRanges(): void
     {
-        foreach ([[5, 2, 1, 'zoom_start above zoom_end'], [0, 4, 0, 'threads below one'], [0, 4, 99, 'threads above the cap'], [-1, 4, 1, 'negative zoom']] as [$start, $end, $threads, $why]) {
+        $grid = $this->grid();
+        $cases = [
+            [5, 2, 1, 'INVALID_REQUEST', 'zoom_start above zoom_end'],
+            [-1, 4, 1, 'INVALID_REQUEST', 'negative zoom'],
+            [0, 4, 0, 'INVALID_REQUEST', 'threads below one'],
+            [0, 4, 99, 'INVALID_REQUEST', 'threads above the cap'],
+        ];
+        foreach ($cases as [$start, $end, $threads, $code, $why]) {
             try {
-                SeedCommand::validate($this->database, 'myschema.roads', 'GoogleMapsCompatible', $start, $end, null, $threads);
+                SeedCommand::validate($this->database, 'myschema.roads', $grid, $start, $end, null, $threads);
                 $this->fail("accepted $why");
             } catch (GC2Exception $e) {
                 $this->assertSame(400, $e->getCode(), $why);
+                $this->assertSame($code, $e->getErrorCode(), "$why must fail on its own check, not an earlier one");
             }
         }
     }
@@ -84,6 +106,6 @@ class SeedCommandTest extends Unit
     public function testPathTraversalInTheTilesetIsRejected(): void
     {
         $this->expectException(GC2Exception::class);
-        SeedCommand::validate($this->database, '../../etc/passwd', 'GoogleMapsCompatible', 0, 1, null, 1);
+        SeedCommand::validate($this->database, '../../etc/passwd', $this->grid(), 0, 1, null, 1);
     }
 }
