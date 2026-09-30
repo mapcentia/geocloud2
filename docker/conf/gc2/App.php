@@ -65,6 +65,19 @@ class App
             "formats" => ["parquet"],
         ],
 
+        // Tile seeder (docs/superpowers/specs/2026-09-30-tileseeder-v4-design.md).
+        // maxConcurrent is per node: the cost is CPU and cache writes on that node.
+        "tileseeder" => [
+            "maxConcurrent" => 1,
+            "maxThreads" => 4,
+            "maxPending" => 20,
+            "maxHours" => 12,
+            "cancelGraceSeconds" => 10,
+            "logTailBytes" => 8192,
+            "keepLogHours" => 72,
+            "seedBinary" => "/usr/local/bin/mapcache_seed",
+        ],
+
         // MapCache config
         // In Docker use the names of the containers
         "mapCache" => [
