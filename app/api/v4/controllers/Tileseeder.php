@@ -41,29 +41,38 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\OpenApi(openapi: OpenApi::VERSION_3_1_0, security: [['bearerAuth' => []]])]
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
+    schema: 'SeedJobInput',
+    description: 'A seed job to queue. tileset, grid, zoom_start and zoom_end are required; every other property of SeedJob is server-owned and ignored (in fact rejected) on input.',
+    required: ['tileset', 'grid', 'zoom_start', 'zoom_end'],
+    allOf: [new OA\Schema(ref: '#/components/schemas/SeedJob')],
+)]
+#[OA\Schema(
     schema: 'SeedJob',
-    description: 'One tile seeding job. Queued by POST, run by a worker on whichever node claims it.',
+    description: 'One tile seeding job. Queued by POST, run by a worker on whichever node claims it. name, tileset, grid, zoom_start, zoom_end, extent_layer and threads are the request fields (see SeedJobInput); every other property is server-owned (readOnly) and only ever appears in a response.',
     properties: [
-        new OA\Property(property: 'uuid', type: 'string', example: 'c4a3797e-ec6b-4dac-9474-ada9083620f3'),
+        new OA\Property(property: 'uuid', description: 'Server-generated.', type: 'string', readOnly: true, example: 'c4a3797e-ec6b-4dac-9474-ada9083620f3'),
         new OA\Property(property: 'name', type: 'string', example: 'Seed roads'),
-        new OA\Property(property: 'status', description: 'pending, running, succeeded, failed or cancelled. Null for a row written before v4.', type: 'string', enum: ['pending', 'running', 'succeeded', 'failed', 'cancelled'], nullable: true),
-        new OA\Property(property: 'stale', description: 'Computed: running, but no heartbeat for 10 minutes, so the run or its node is gone.', type: 'boolean'),
-        new OA\Property(property: 'username', type: 'string'),
-        new OA\Property(property: 'tileset', type: 'string', example: 'myschema.roads'),
-        new OA\Property(property: 'grid', type: 'string', example: 'GoogleMapsCompatible'),
-        new OA\Property(property: 'zoom_start', type: 'integer', example: 0),
-        new OA\Property(property: 'zoom_end', type: 'integer', example: 12),
+        new OA\Property(property: 'status', description: 'pending, running, succeeded, failed or cancelled. Null for a row written before v4.', type: 'string', enum: ['pending', 'running', 'succeeded', 'failed', 'cancelled'], nullable: true, readOnly: true),
+        new OA\Property(property: 'stale', description: 'Computed: running, but no heartbeat for 10 minutes, so the run or its node is gone.', type: 'boolean', readOnly: true),
+        new OA\Property(property: 'username', description: 'Null for a legacy row written before v4.', type: 'string', nullable: true, readOnly: true),
+        new OA\Property(property: 'tileset', description: 'The mapcache tileset (layer key). Null only for a legacy row.', type: 'string', nullable: true, example: 'myschema.roads'),
+        new OA\Property(property: 'grid', description: 'Null only for a legacy row.', type: 'string', nullable: true, example: 'GoogleMapsCompatible'),
+        new OA\Property(property: 'zoom_start', description: 'Null only for a legacy row.', type: 'integer', nullable: true, example: 0),
+        new OA\Property(property: 'zoom_end', description: 'Null only for a legacy row.', type: 'integer', nullable: true, example: 12),
         new OA\Property(property: 'extent_layer', type: 'string', nullable: true),
-        new OA\Property(property: 'threads', type: 'integer', example: 2),
-        new OA\Property(property: 'host', description: 'The node that claimed the job.', type: 'string', nullable: true),
-        new OA\Property(property: 'pid', type: 'integer', nullable: true),
-        new OA\Property(property: 'created', type: 'string', format: 'date-time'),
-        new OA\Property(property: 'started', type: 'string', format: 'date-time', nullable: true),
-        new OA\Property(property: 'finished', type: 'string', format: 'date-time', nullable: true),
-        new OA\Property(property: 'heartbeat', type: 'string', format: 'date-time', nullable: true),
-        new OA\Property(property: 'cancel_requested', type: 'string', format: 'date-time', nullable: true),
-        new OA\Property(property: 'error', type: 'string', nullable: true),
-        new OA\Property(property: 'log', description: 'The tail of the seed output. Only on a single-job read.', type: 'string', nullable: true),
+        new OA\Property(property: 'threads', description: 'Null only for a legacy row.', type: 'integer', nullable: true, example: 2),
+        new OA\Property(property: 'host', description: 'The node that claimed the job.', type: 'string', nullable: true, readOnly: true),
+        new OA\Property(property: 'pid', type: 'integer', nullable: true, readOnly: true),
+        new OA\Property(property: 'created', type: 'string', format: 'date-time', readOnly: true),
+        new OA\Property(property: 'started', type: 'string', format: 'date-time', nullable: true, readOnly: true),
+        new OA\Property(property: 'finished', type: 'string', format: 'date-time', nullable: true, readOnly: true),
+        new OA\Property(property: 'heartbeat', type: 'string', format: 'date-time', nullable: true, readOnly: true),
+        new OA\Property(property: 'cancel_requested', type: 'string', format: 'date-time', nullable: true, readOnly: true),
+        new OA\Property(property: 'error', type: 'string', nullable: true, readOnly: true),
+        new OA\Property(property: 'log', description: 'The tail of the seed output. Only on a single-job read.', type: 'string', nullable: true, readOnly: true),
+        new OA\Property(property: '_links', type: 'object', readOnly: true, properties: [
+            new OA\Property(property: 'self', type: 'string', example: '/api/v4/tileseeder/jobs/c4a3797e-ec6b-4dac-9474-ada9083620f3'),
+        ]),
     ],
     type: 'object'
 )]
@@ -81,15 +90,20 @@ class Tileseeder extends AbstractApi
         $this->resource = 'tileseeder';
     }
 
-    #[OA\Post(path: '/api/v4/tileseeder/jobs', operationId: 'postSeedJob', description: "Queue one seed job (object) or several (array of objects). Asynchronous: answers 202 and a worker runs it. Requires write/owner on the tileset's relation.", tags: ['Tileseeder'],
+    #[OA\Post(path: '/api/v4/tileseeder/jobs', operationId: 'postSeedJob', description: "Queue one seed job (object) or several (array of objects). Asynchronous: answers 202 and a worker runs it. Requires write/owner on the tileset's relation. Every job in the list is validated and authorized before any of them is queued.", tags: ['Tileseeder'],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(oneOf: [
-            new OA\Schema(ref: '#/components/schemas/SeedJob'),
-            new OA\Schema(type: 'array', items: new OA\Items(ref: '#/components/schemas/SeedJob'))])),
+            new OA\Schema(ref: '#/components/schemas/SeedJobInput'),
+            new OA\Schema(type: 'array', items: new OA\Items(ref: '#/components/schemas/SeedJobInput'))])),
         responses: [
-            new OA\Response(response: 202, description: 'Queued; poll _links.self'),
-            new OA\Response(response: 400, description: 'Bad request'),
+            new OA\Response(response: 202, description: 'Queued; poll _links.self. An object for a single request, an array for an array request.',
+                headers: [new OA\Header(header: 'Location', description: 'The created job(s): /api/v4/tileseeder/jobs/<uuid[,uuid…]>', schema: new OA\Schema(type: 'string'))],
+                content: new OA\JsonContent(oneOf: [
+                    new OA\Schema(ref: '#/components/schemas/SeedJob'),
+                    new OA\Schema(type: 'array', items: new OA\Items(ref: '#/components/schemas/SeedJob'))])),
+            new OA\Response(response: 400, description: 'Bad request: malformed body, an empty list, or a field failing validation'),
             new OA\Response(response: 403, description: 'Insufficient privileges'),
             new OA\Response(response: 404, description: 'Unknown tileset'),
+            new OA\Response(response: 429, description: 'tileseeder.maxPending would be exceeded'),
         ])]
     #[AcceptableContentTypes(['application/json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -104,11 +118,18 @@ class Tileseeder extends AbstractApi
         if ($pending + count($list) > $max) {
             throw new GC2Exception("Too many queued seed jobs (max $max)", 429, null, 'TOO_MANY_PENDING');
         }
-        // Validate every job before writing any of them, so a bad list queues nothing.
+        // Validate every job before writing any of them, so a bad list queues
+        // nothing. SeedCommand::validate() must run before requireWrite(): it is
+        // what proves `tileset` is a real, known-safe tileset name before it is
+        // ever interpolated into settings.getColumns()'s literal-quoted SQL by
+        // requireWrite()'s privilege lookup (Model::getGeometryColumns() ->
+        // getColumns()) — the same hazard Snapshot::post_index() guards against
+        // for schema/relation. getAssert()'s Regex on tileset is the same rule
+        // one layer earlier; either alone would leave the other caller exposed.
         foreach ($list as $job) {
-            $this->requireWrite((string)$job['tileset']);
             SeedCommand::validate($jwt['database'], (string)$job['tileset'], (string)$job['grid'],
                 (int)$job['zoom_start'], (int)$job['zoom_end'], $job['extent_layer'] ?? null, (int)($job['threads'] ?? 1));
+            $this->requireWrite((string)$job['tileset']);
         }
         $rows = [];
         foreach ($list as $job) {
@@ -158,8 +179,16 @@ class Tileseeder extends AbstractApi
 
     #[OA\Delete(path: '/api/v4/tileseeder/jobs/{uuid}', operationId: 'deleteSeedJob', description: 'Ask for a seed job to stop. 204 when it was still queued (cancelled outright, or already finished), 202 when it is running and its worker has to act. Comma separated uuids allowed; every uuid is checked before anything is written.', tags: ['Tileseeder'],
         parameters: [new OA\Parameter(name: 'uuid', in: 'path', required: true, schema: new OA\Schema(type: 'string'))],
-        responses: [new OA\Response(response: 202, description: 'Stopping'), new OA\Response(response: 204, description: 'Cancelled or already finished'),
-            new OA\Response(response: 404, description: 'Not found')])]
+        responses: [
+            new OA\Response(response: 202, description: 'At least one job was running; its worker will finish the cancel.', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Stopping'),
+                new OA\Property(property: 'uuid', type: 'array', items: new OA\Items(type: 'string')),
+            ], type: 'object')),
+            new OA\Response(response: 204, description: 'Cancelled or already finished'),
+            new OA\Response(response: 400, description: 'A uuid is malformed'),
+            new OA\Response(response: 404, description: 'Not found'),
+        ])]
     #[Override]
     public function delete_index(): Response
     {
@@ -237,27 +266,49 @@ class Tileseeder extends AbstractApi
     {
         $method = Input::getMethod();
         if ($method === 'post') {
-            $this->validateRequest(collection: self::getAssert(), data: Input::getBody(), method: $method);
+            $decoded = json_decode(Input::getBody(), true);
+            // array_is_list(null) is a TypeError, and json_decode() of a bare
+            // scalar or "null" is neither a job object nor a list of them.
+            if (!is_array($decoded)) {
+                throw new GC2Exception('A JSON object or an array of objects is required', 400, null, 'INVALID_REQUEST');
+            }
+            // json_decode(..., true) makes {} and [] the same empty PHP array,
+            // so this also catches an empty object body.
+            if ($decoded === []) {
+                throw new GC2Exception('An empty list of seed job requests is not allowed', 400, null, 'INVALID_REQUEST');
+            }
+            $this->validateRequest(collection: self::getAssert($method), data: Input::getBody(), method: $method);
         }
         if ($method === 'delete' && empty($this->route->getParam('uuid'))) {
             throw new GC2Exception('A job uuid is required', 400, null, 'INVALID_REQUEST');
         }
     }
 
-    private static function getAssert(): Assert\Collection
+    /**
+     * tileset and extent_layer are interpolated into settings.getColumns()'s
+     * literal-quoted SQL (Model::getGeometryColumns() -> getColumns(), reached
+     * from requireWrite()) and into the mapcache_seed command line
+     * (SeedCommand::argv()): a positive class, not a negated one, so a quote or
+     * other SQL/shell metacharacter can never slip through. SeedCommand::validate()
+     * enforces the same class again once the tileset is known — see post_index().
+     */
+    private static function getAssert(string $method): Assert\Collection
     {
+        $ident = '/^[A-Za-z0-9_.:\-]+$/';
         return new Assert\Collection(
             fields: [
                 'name' => new Assert\Optional(new Assert\Type('string')),
-                'tileset' => new Assert\Required([new Assert\NotBlank(), new Assert\Type('string')]),
+                'tileset' => new Assert\Required([new Assert\NotBlank(), new Assert\Type('string'), new Assert\Regex($ident)]),
                 'grid' => new Assert\Required([new Assert\NotBlank(), new Assert\Type('string')]),
                 'zoom_start' => new Assert\Required(new Assert\Type('integer')),
                 'zoom_end' => new Assert\Required(new Assert\Type('integer')),
-                'extent_layer' => new Assert\Optional(new Assert\AtLeastOneOf([new Assert\Type('string'), new Assert\IsNull()])),
+                'extent_layer' => new Assert\Optional(new Assert\AtLeastOneOf([
+                    new Assert\IsNull(),
+                    new Assert\Sequentially([new Assert\Type('string'), new Assert\Regex($ident)]),
+                ])),
                 'threads' => new Assert\Optional(new Assert\Type('integer')),
             ],
             allowExtraFields: false,
-            allowMissingFields: true,
         );
     }
 

@@ -22,6 +22,22 @@ class TileseederV4ApiCest
         $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
     }
 
+    private function asSub(ApiTester $I): void
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Accept', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->subToken);
+    }
+
+    /** Count of pending jobs, read as super-user, for before/after "nothing queued" proofs. */
+    private function pendingCount(ApiTester $I): int
+    {
+        $this->asSuper($I);
+        $I->sendGET('/api/v4/tileseeder/jobs?status=pending');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        return count(json_decode($I->grabResponse(), true));
+    }
+
     public function shouldPrepare(ApiTester $I)
     {
         // array_key_first() on a numeric-looking grid name ("25832") returns an
@@ -89,31 +105,84 @@ class TileseederV4ApiCest
         $I->assertArrayNotHasKey('log', $list[0], 'the list leaves the log out');
     }
 
+    /**
+     * Five distinct failures, each asserted by its own errorCode: a wrong
+     * errorCode (e.g. the injection case answering 404 instead of failing
+     * validation, or the thread cap answering the grid error) must fail this
+     * test, not just "some 4xx".
+     */
     public function shouldRefuseWhatCannotBeSeeded(ApiTester $I)
     {
         $this->asSuper($I);
         foreach ([
-            ['tileset' => 'no.such_tileset', 'grid' => $this->grid, 'zoom_start' => 0, 'zoom_end' => 1],
-            ['tileset' => $this->schema . '.roads', 'grid' => 'NoSuchGrid', 'zoom_start' => 0, 'zoom_end' => 1],
-            ['tileset' => $this->schema . '.roads', 'grid' => $this->grid, 'zoom_start' => 5, 'zoom_end' => 1],
-            ['tileset' => $this->schema . '.roads; whoami', 'grid' => $this->grid, 'zoom_start' => 0, 'zoom_end' => 1],
-            ['tileset' => $this->schema . '.roads', 'grid' => $this->grid, 'zoom_start' => 0, 'zoom_end' => 1, 'threads' => 99],
-        ] as $body) {
-            $I->sendPOST('/api/v4/tileseeder/jobs', json_encode($body + ['name' => 'bad']));
+            ['tileset' => 'no.such_tileset', 'grid' => $this->grid, 'zoom_start' => 0, 'zoom_end' => 1, 'errorCode' => 'TILESET_NOT_FOUND'],
+            ['tileset' => $this->schema . '.roads', 'grid' => 'NoSuchGrid', 'zoom_start' => 0, 'zoom_end' => 1, 'errorCode' => 'UNKNOWN_GRID'],
+            ['tileset' => $this->schema . '.roads', 'grid' => $this->grid, 'zoom_start' => 5, 'zoom_end' => 1, 'errorCode' => 'INVALID_REQUEST'],
+            // Rejected by getAssert()'s Regex on `tileset` before it can reach
+            // requireWrite()/SeedCommand::validate() at all.
+            ['tileset' => $this->schema . '.roads; whoami', 'grid' => $this->grid, 'zoom_start' => 0, 'zoom_end' => 1, 'errorCode' => 'INPUT_VALIDATION_ERROR'],
+            ['tileset' => $this->schema . '.roads', 'grid' => $this->grid, 'zoom_start' => 0, 'zoom_end' => 1, 'threads' => 99, 'errorCode' => 'INVALID_REQUEST'],
+        ] as $case) {
+            $errorCode = $case['errorCode'];
+            unset($case['errorCode']);
+            $I->sendPOST('/api/v4/tileseeder/jobs', json_encode($case + ['name' => 'bad']));
             $I->seeResponseCodeIsClientError();
-            $I->seeResponseContainsJson(['success' => false]);
+            $I->seeResponseContainsJson(['success' => false, 'errorCode' => $errorCode]);
         }
+    }
+
+    /**
+     * A malformed body must be refused before anything is queued. An empty
+     * list and an empty object (json_decode(..., true) makes them the same
+     * PHP array) mirror Snapshot::validate()'s "empty list" rule; a bare
+     * JSON scalar or null must not reach array_is_list() in post_index(),
+     * which is a TypeError (and was a 500) for a non-array argument.
+     */
+    public function shouldRefuseMalformedBodies(ApiTester $I)
+    {
+        $before = $this->pendingCount($I);
+
+        foreach (['[]', '{}', 'null', '"seed roads"', '42'] as $rawBody) {
+            $I->sendPOST('/api/v4/tileseeder/jobs', $rawBody);
+            $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+            $I->seeResponseContainsJson(['success' => false, 'errorCode' => 'INVALID_REQUEST']);
+        }
+
+        $I->assertSame($before, $this->pendingCount($I), 'nothing was queued');
+    }
+
+    /**
+     * allowMissingFields must stay off: a POST missing zoom_start is a 400
+     * naming that field, not (int) null silently becoming a zoom-0 job.
+     */
+    public function shouldRefuseIncompletePayload(ApiTester $I)
+    {
+        $before = $this->pendingCount($I);
+
+        $this->asSuper($I);
+        $I->sendPOST('/api/v4/tileseeder/jobs', json_encode([
+            'tileset' => $this->schema . '.roads', 'grid' => $this->grid, 'zoom_end' => 1,
+        ]));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->seeResponseContainsJson(['success' => false, 'errorCode' => 'INPUT_VALIDATION_ERROR']);
+        $body = json_decode($I->grabResponse(), true);
+        $I->assertStringContainsString('zoom_start', $body['message'], 'names the missing field');
+
+        $I->assertSame($before, $this->pendingCount($I), 'nothing was queued');
     }
 
     /**
      * tileseeder.maxPending caps the queue per database, so one token cannot fill
      * it. An array POST is checked as a whole: 21 jobs in one request is refused
-     * and nothing is queued.
+     * and the pending count is unchanged (not just under the cap — a batch that
+     * partially queued would also satisfy "under the cap").
      */
     public function shouldRefuseMoreThanMaxPending(ApiTester $I)
     {
-        $this->asSuper($I);
+        $before = $this->pendingCount($I);
         $max = 20;   // App::$param['tileseeder']['maxPending'] default
+
+        $this->asSuper($I);
         $batch = array_fill(0, $max + 1, [
             'name' => 'flood', 'tileset' => $this->schema . '.roads', 'grid' => $this->grid,
             'zoom_start' => 0, 'zoom_end' => 1, 'threads' => 1,
@@ -122,10 +191,7 @@ class TileseederV4ApiCest
         $I->seeResponseCodeIs(HttpCode::TOO_MANY_REQUESTS);
         $I->seeResponseContainsJson(['errorCode' => 'TOO_MANY_PENDING']);
 
-        $I->sendGET('/api/v4/tileseeder/jobs?status=pending');
-        $I->seeResponseCodeIs(HttpCode::OK);
-        $I->assertLessThanOrEqual($max, count(json_decode($I->grabResponse(), true)),
-            'a refused batch queues nothing');
+        $I->assertSame($before, $this->pendingCount($I), 'a refused batch queues nothing');
     }
 
     public function shouldCancelAPendingJob(ApiTester $I)
@@ -165,6 +231,53 @@ class TileseederV4ApiCest
         $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
         $I->sendDELETE('/api/v4/tileseeder/jobs/' . $this->uuid);
         $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+    }
+
+    /**
+     * requireWrite()'s refusal branch: this suite's sub-user has no privilege
+     * on seedtest.roads, so a POST for it is 403, and nothing is queued. Uses
+     * the real, valid tileset name — after the Critical fix's reordering,
+     * SeedCommand::validate() has already passed by the time requireWrite()
+     * runs, so this is what actually exercises the privilege check, not the
+     * tileset lookup.
+     */
+    public function shouldRefuseSubUserWithoutPrivilege(ApiTester $I)
+    {
+        $before = $this->pendingCount($I);
+
+        $this->asSub($I);
+        $I->sendPOST('/api/v4/tileseeder/jobs', json_encode([
+            'name' => 'sub attempt', 'tileset' => $this->schema . '.roads', 'grid' => $this->grid,
+            'zoom_start' => 0, 'zoom_end' => 1, 'threads' => 1,
+        ]));
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+        $I->seeResponseContainsJson(['success' => false, 'errorCode' => 'INSUFFICIENT_PRIVILEGES']);
+
+        $I->assertSame($before, $this->pendingCount($I), 'the refused job was not queued');
+    }
+
+    /**
+     * The Critical fix, from the seat that actually reaches the vulnerable
+     * code path: a super-user returns early from requireWrite(), so only a
+     * sub-user's request ever gets far enough for tileset to reach
+     * Model::getGeometryColumns() -> getColumns(), which interpolates it into
+     * settings.getColumns()'s literal-quoted SQL. With SeedCommand::validate()
+     * (and getAssert()'s Regex, one layer earlier) run first, the
+     * injection-shaped tileset never gets that far.
+     */
+    public function shouldRefuseSubUserInjectionAttempt(ApiTester $I)
+    {
+        $before = $this->pendingCount($I);
+
+        $this->asSub($I);
+        $I->sendPOST('/api/v4/tileseeder/jobs', json_encode([
+            'name' => 'sub injection', 'tileset' => $this->schema . ".roads'' OR 1=1 --", 'grid' => $this->grid,
+            'zoom_start' => 0, 'zoom_end' => 1, 'threads' => 1,
+        ]));
+        $I->seeResponseCodeIsClientError();
+        $I->seeResponseContainsJson(['success' => false, 'errorCode' => 'INPUT_VALIDATION_ERROR']);
+
+        $I->assertSame($before, $this->pendingCount($I), 'the injection attempt queued nothing');
     }
 
     /**
