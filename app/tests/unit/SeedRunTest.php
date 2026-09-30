@@ -14,6 +14,7 @@ class SeedRunTest extends Unit
     protected UnitTester $tester;
     private string $stub;
     private array $created = [];
+    private array $extraFiles = [];
 
     protected function _before(): void
     {
@@ -23,6 +24,9 @@ class SeedRunTest extends Unit
     protected function _after(): void
     {
         @unlink($this->stub);
+        foreach ($this->extraFiles as $file) {
+            @unlink($file);
+        }
         $m = new SeedJob(connection: new Connection(database: 'mydb'));
         foreach ($this->created as $uuid) {
             $res = $m->prepare("DELETE FROM settings.seed_jobs WHERE uuid = :u");
@@ -105,6 +109,45 @@ class SeedRunTest extends Unit
         $done = $m->get($row['uuid']);
         $this->assertSame('cancelled', $done['status']);
         $this->assertNotNull($done['finished']);
+    }
+
+    /**
+     * The test above only ever exercises the pre-spawn cancel check (Minor 2):
+     * requestCancel() lands before seed_run.php is even started, so no child is
+     * ever spawned and stopChild() — the round-1 Critical fix, at three call
+     * sites — runs nowhere in the suite. This spawns seed_run.php itself with
+     * proc_open() so the test can act *after* a real mapcache_seed stand-in is
+     * running, cancel mid-run, and prove the SIGTERM/grace/SIGKILL sequence
+     * actually stops a live child rather than only a hoped-for one.
+     */
+    public function testACancelRequestMidRunStopsARealChildAndEndsCancelled(): void
+    {
+        $this->writeStub('trap "exit 0" TERM; while true; do echo tick; sleep 1; done');
+        $row = $this->claimed();
+
+        $outPath = $this->stub . '.out';
+        $this->extraFiles[] = $outPath;
+        $out = fopen($outPath, 'w');
+        $cmd = [PHP_BINARY, App::$param['path'] . 'app/scripts/seed_run.php',
+            '--database=mydb', '--uuid=' . $row['uuid'], '--binary=' . $this->stub];
+        $process = proc_open($cmd, [1 => $out, 2 => $out], $pipes);
+        $this->assertIsResource($process, 'seed_run.php could be spawned');
+
+        // Give seed_run.php time to pass the pre-spawn check and actually start
+        // the stub, so the cancel below lands while a real child is running.
+        sleep(1);
+        $m = new SeedJob(connection: new Connection(database: 'mydb'));
+        $m->requestCancel($row['uuid']);
+
+        $exit = proc_close($process);
+        fclose($out);
+
+        $this->assertSame(2, $exit);
+        $done = $m->get($row['uuid']);
+        $this->assertSame('cancelled', $done['status']);
+        $this->assertNotNull($done['finished']);
+        $this->assertNotNull($done['pid'], 'a real child was spawned before it was cancelled');
+        $this->assertFalse(is_dir('/proc/' . $done['pid']), 'the child was reaped, not left running');
     }
 
     /**

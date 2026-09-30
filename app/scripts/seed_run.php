@@ -86,7 +86,7 @@ register_shutdown_function(function () use (&$finalised, $finalise, &$process, $
         return;
     }
     stopChild($process, $grace);
-    if ($jobs->isCancelRequested($uuid)) {
+    if (wasCancelRequested($jobs, $uuid)) {
         $finalise('cancelled', null);
         return;
     }
@@ -95,14 +95,17 @@ register_shutdown_function(function () use (&$finalised, $finalise, &$process, $
 });
 if (function_exists('pcntl_async_signals')) {
     pcntl_async_signals(true);
-    foreach ([SIGINT, SIGTERM] as $sig) {
+    // SIGHUP/SIGQUIT too: the script must not depend on how its caller spawns it
+    // (e.g. under nohup, which only happens to cover SIGHUP) to keep the child
+    // from being orphaned.
+    foreach ([SIGINT, SIGTERM, SIGHUP, SIGQUIT] as $sig) {
         pcntl_signal($sig, function () use (&$process, $jobs, $uuid, $grace, $finalise) {
             stopChild($process, $grace);
             // A signal alone is not a cancellation: only cancel_requested is. A
             // 14-hour seed cut off by the worker's timeout is 'failed', not
             // 'cancelled' — the client must be able to tell that apart from its
             // own DELETE.
-            if ($jobs->isCancelRequested($uuid)) {
+            if (wasCancelRequested($jobs, $uuid)) {
                 $ok = $finalise('cancelled', null);
                 exit($ok ? 2 : 1);
             }
@@ -177,6 +180,23 @@ while (true) {
         exit($ok ? 2 : 1);
     }
     sleep(5);
+}
+
+/**
+ * isCancelRequested() for a teardown path (signal handler, shutdown function),
+ * where a dead Postgres must not turn into an uncaught exception: that would
+ * skip finalise() entirely and defeat the very Postgres-bounce case finalise()'s
+ * own try/catch exists for. An unrequested stop defaults to not-cancelled, which
+ * is also the spec-correct default — an unrequested stop is 'failed', not
+ * 'cancelled'.
+ */
+function wasCancelRequested(SeedJob $jobs, string $uuid): bool
+{
+    try {
+        return $jobs->isCancelRequested($uuid);
+    } catch (Throwable) {
+        return false;
+    }
 }
 
 /**
