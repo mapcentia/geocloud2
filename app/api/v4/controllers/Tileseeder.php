@@ -159,13 +159,18 @@ class Tileseeder extends AbstractApi
     }
 
     #[OA\Get(path: '/api/v4/tileseeder/jobs/{uuid}', operationId: 'getSeedJob', description: 'One seed job (object) with its log tail, or several by comma separated uuids (array).', tags: ['Tileseeder'],
-        parameters: [new OA\Parameter(name: 'uuid', in: 'path', required: true, schema: new OA\Schema(type: 'string'))],
-        responses: [new OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: '#/components/schemas/SeedJob')),
+        parameters: [new OA\Parameter(name: 'uuid', in: 'path', required: true, description: 'One uuid, or several comma separated. A single uuid answers an object, a list answers an array.', schema: new OA\Schema(type: 'string'))],
+        responses: [
+            new OA\Response(response: 200, description: 'Ok. An object for a single uuid, an array for a comma separated list.',
+                content: new OA\JsonContent(oneOf: [
+                    new OA\Schema(ref: '#/components/schemas/SeedJob'),
+                    new OA\Schema(type: 'array', items: new OA\Items(ref: '#/components/schemas/SeedJob'))])),
+            new OA\Response(response: 400, description: 'A uuid is malformed'),
             new OA\Response(response: 404, description: 'Not found')])]
     #[OA\Get(path: '/api/v4/tileseeder/jobs', operationId: 'getSeedJobs', description: "The caller's seed jobs, newest first, without the log. A super-user sees every job of the database.", tags: ['Tileseeder'],
         parameters: [
-            new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
-            new OA\Parameter(name: 'tileset', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'status', in: 'query', required: false, description: 'Keep only jobs in this status. An unknown status is not an error: it simply matches nothing and answers an empty array.', schema: new OA\Schema(type: 'string', enum: ['pending', 'running', 'succeeded', 'failed', 'cancelled'])),
+            new OA\Parameter(name: 'tileset', in: 'query', required: false, description: 'Keep only jobs for this tileset. Matched exactly; an unknown tileset answers an empty array.', schema: new OA\Schema(type: 'string')),
         ],
         responses: [new OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/SeedJob')))])]
     #[AcceptableAccepts(['application/json', '*/*'])]
