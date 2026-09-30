@@ -94,7 +94,7 @@ final class SeedJob extends Model
                 WHERE u.uuid = sub.uuid
                 RETURNING u.*";
         $res = $this->prepare($sql);
-        $this->execute($res, ['host' => self::host()]);
+        $this->execute($res, ['host' => self::currentHost()]);
         return $this->fetchRow($res) ?: null;
     }
 
@@ -162,6 +162,20 @@ final class SeedJob extends Model
     }
 
     /**
+     * How many rows this node is already running, per the database — the same
+     * source of truth `claimOne()` writes and the API reads. Counting live
+     * processes instead (`pgrep`) double-counts a run (its `timeout` wrapper and
+     * the `php` child are two processes for one job) and fails open to 0, hence
+     * unbounded claiming, when the process table can't be read at all.
+     */
+    public function countRunningOnHost(string $host): int
+    {
+        $res = $this->prepare("SELECT count(*) AS n FROM settings.seed_jobs WHERE status = 'running' AND host = :host");
+        $this->execute($res, ['host' => $host]);
+        return (int)($this->fetchRow($res)['n'] ?? 0);
+    }
+
+    /**
      * Rows whose run went away without finalising — SIGKILL, OOM, a dead node —
      * become 'failed' once the heartbeat has been quiet past the stale window.
      * Without this a row stays 'running' forever and its tileset looks busy.
@@ -224,7 +238,9 @@ final class SeedJob extends Model
         return strtotime($heartbeat) < strtotime('-' . self::STALE_RUNNING_INTERVAL);
     }
 
-    private static function host(): string
+    /** The node identity `claimOne()` stamps a claimed row with; public so a
+     *  caller (the worker tick) can count this node's own running rows with it. */
+    public static function currentHost(): string
     {
         return gethostname() ?: ($_SERVER['SERVER_ADDR'] ?? 'unknown');
     }

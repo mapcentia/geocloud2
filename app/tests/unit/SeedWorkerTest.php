@@ -53,6 +53,25 @@ class SeedWorkerTest extends Unit
         return ['seconds' => microtime(true) - $start, 'out' => implode("\n", $out)];
     }
 
+    /**
+     * Polls up to $timeoutSeconds for $check() to go true. Used to prove the
+     * spawned seed_run.php actually reached its own setPid() call — only the
+     * child process can write that, so waiting for it (instead of trusting the
+     * tick's stdout or a timing budget) is what makes a broken $runner path, a
+     * missing nohup/setsid, a dropped `&` or an unpassed --binary fail the test.
+     */
+    private function waitUntil(callable $check, float $timeoutSeconds = 5.0): bool
+    {
+        $deadline = microtime(true) + $timeoutSeconds;
+        do {
+            if ($check()) {
+                return true;
+            }
+            usleep(100000);
+        } while (microtime(true) < $deadline);
+        return $check();
+    }
+
     public function testTheTickClaimsSpawnsAndReturnsImmediately(): void
     {
         $row = $this->queue();
@@ -64,6 +83,18 @@ class SeedWorkerTest extends Unit
         $claimed = $m->get($row['uuid']);
         $this->assertSame('running', $claimed['status']);
         $this->assertNotNull($claimed['host'], 'the claim records which node took it');
+
+        // The status flip alone only proves claimOne() ran; it says nothing about
+        // whether a process was actually spawned. pid/log_path are written only by
+        // seed_run.php itself once it has bootstrapped and opened its log, so
+        // waiting for them proves a real child is behind the row.
+        $spawned = $this->waitUntil(function () use ($m, $row) {
+            $r = $m->get($row['uuid']);
+            return !empty($r['pid']) && !empty($r['log_path']);
+        });
+        $this->assertTrue($spawned, 'seed_run.php never reported a pid/log_path — no process was actually spawned');
+        $after = $m->get($row['uuid']);
+        $this->assertFileExists($after['log_path'], 'the spawned run writes its log where it says it did');
     }
 
     public function testTheTickReapsARunWhoseHeartbeatDied(): void
@@ -90,6 +121,36 @@ class SeedWorkerTest extends Unit
         $m = new SeedJob(connection: new Connection(database: 'mydb'));
         $this->assertSame('running', $m->get($first['uuid'])['status']);
         $this->assertSame('pending', $m->get($second['uuid'])['status'], 'the second waits its turn');
+    }
+
+    /**
+     * Capacity comes from settings.seed_jobs, not from counting live processes:
+     * a row already 'running' on this host — no process behind it needed for this
+     * test — must occupy the one slot maxConcurrent (default 1) allows, exactly as
+     * a real run claimed by an earlier tick would. Without the database-backed
+     * count (e.g. back on a process count that double-counts a run's timeout
+     * wrapper and its php child, or one that silently reads 0) this test claims
+     * the waiting row anyway.
+     */
+    public function testTheTickHonoursCapacityFromTheDatabase(): void
+    {
+        $blocking = $this->queue();
+        $m = new SeedJob(connection: new Connection(database: 'mydb'));
+        $res = $m->prepare("UPDATE settings.seed_jobs
+                               SET status = 'running', host = :host, started = now(), heartbeat = now()
+                             WHERE uuid = :u");
+        $m->execute($res, ['host' => SeedJob::currentHost(), 'u' => $blocking['uuid']]);
+
+        $waiting = $this->queue();
+        $this->tick();
+        $this->assertSame('pending', $m->get($waiting['uuid'])['status'],
+            'a running row already on this host fills the only slot');
+
+        $res = $m->prepare("UPDATE settings.seed_jobs SET status = 'succeeded', finished = now() WHERE uuid = :u");
+        $m->execute($res, ['u' => $blocking['uuid']]);
+        $this->tick();
+        $this->assertSame('running', $m->get($waiting['uuid'])['status'],
+            'the slot frees once the blocking row is no longer running');
     }
 
     public function testTheTickRemovesLogsPastTheRetentionWindow(): void

@@ -395,7 +395,10 @@ RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data php -f /var
 RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data flock -n /tmp/snapshot_worker.lock php -f /var/www/geocloud2/app/scripts/snapshot_worker.php > /proc/1/fd/1 2>&1"; } | crontab
 # Tile seeder: claim pending seed jobs and spawn one seed_run.php per job (see app/scripts/seed_worker.php).
 # flock -n guards against overlapping ticks when the previous tick has not returned yet.
-RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data flock -n /tmp/seed_worker.lock php -f /var/www/geocloud2/app/scripts/seed_worker.php > /proc/1/fd/1 2>&1"; } | crontab
+# -o (--close) closes the lock fd in the tick's child before it execs php, so the
+# detached seed run it spawns (which can live for hours) never inherits the lock;
+# without it every later tick would fail flock -n silently until the seed ends.
+RUN crontab -l 2>/dev/null | { cat; echo "* * * * * sudo -u www-data flock -n -o /tmp/seed_worker.lock php -f /var/www/geocloud2/app/scripts/seed_worker.php > /proc/1/fd/1 2>&1"; } | crontab
 
 # (Optional) finalize crontab
 RUN crontab -l 2>/dev/null | { cat; echo ""; } | crontab
