@@ -135,6 +135,40 @@ class SchemaListV4ApiCest
     }
 
     /**
+     * _columns on the namesOnly summary: the column names the SQL console needs for
+     * autocompletion, from the same catalog query as _column_count. Names only —
+     * types stay in the full form and on /columns, which keeps a listing small.
+     */
+    public function shouldReportColumnNamesInTheSummary(ApiTester $I)
+    {
+        $this->asSuper($I);
+        $I->sendGET('/api/v4/schemas/' . $this->schema . '/tables?namesOnly=true');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $by = array_column(json_decode($I->grabResponse(), true), null, 'name');
+
+        // Table column order (attnum), which is the order they were created in.
+        $I->assertSame(['gid', 'the_geom', 'geog', 'plain', 'navn'], $by['geo']['_columns']);
+        $I->assertSame(['gid'], $by['a']['_columns']);
+
+        // _column_count is the length of that list, for every relation in the schema.
+        foreach ($by as $name => $rel) {
+            $I->assertSame($rel['_column_count'], count($rel['_columns']), "count matches _columns for $name");
+        }
+
+        // The full shape and the single-table route carry the same list.
+        $I->sendGET('/api/v4/schemas/' . $this->schema . '/tables/geo');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $full = json_decode($I->grabResponse(), true);
+        $I->assertSame($by['geo']['_columns'], $full['_columns']);
+        $I->assertSame(array_column($full['columns'], 'name'), $full['_columns'],
+            'the full shape agrees with its own columns');
+
+        $I->sendGET('/api/v4/schemas/' . $this->schema . '/tables/geo?namesOnly=true');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertSame($by['geo']['_columns'], json_decode($I->grabResponse(), true)['_columns']);
+    }
+
+    /**
      * PostGIS ships views of its own, and public.raster_columns has a geometry
      * column (extent) that says nothing about the user's data. Relations owned by
      * an extension therefore report no geometry columns.
@@ -149,6 +183,9 @@ class SchemaListV4ApiCest
         $I->assertSame([], $by['raster_columns']['_geometry_columns'],
             'raster_columns.extent belongs to postgis_raster, not to the user');
         $I->assertSame([], $by['geometry_columns']['_geometry_columns']);
+        // A view still lists its columns; only the geometry claim is dropped.
+        $I->assertContains('extent', $by['raster_columns']['_columns']);
+        $I->assertSame($by['raster_columns']['_column_count'], count($by['raster_columns']['_columns']));
     }
 
     public function shouldCleanUp(ApiTester $I)

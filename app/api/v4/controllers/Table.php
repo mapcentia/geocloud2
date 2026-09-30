@@ -47,6 +47,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(property: "_type", description: "Read-only. TABLE, VIEW or MATERIALIZED VIEW.", type: "string", readOnly: true, example: "TABLE"),
         new OA\Property(property: "_events", description: "Read-only. Whether realtime change events are enabled on the table.", type: "boolean", readOnly: true, example: false),
         new OA\Property(property: "_column_count", description: "Read-only. Number of columns. Always present, also with namesOnly=true, so a listing can show sizes without loading every column.", type: "integer", readOnly: true, example: 7),
+    new OA\Property(property: "_columns", description: "Read-only. The relation's column names in table column order. Always present, also with namesOnly=true, so a client can offer autocompletion over a schema without loading every definition. Names only: types, comments and the rest stay in the full shape and on /columns.", type: "array", items: new OA\Items(type: "string"), readOnly: true, example: ["gid", "navn", "the_geom"]),
     new OA\Property(property: "_geometry_columns", description: "Read-only. The relation's geometry and geography columns, in column order; an empty array for a relation without any. Always present, also with namesOnly=true, so a client can find the spatial relations of a schema from the listing alone. Type and SRID are read off the column's typmod, the same source PostGIS' geometry_columns/geography_columns views use, so a column declared plain `geometry` reports type Geometry and SRID 0. Relations owned by an extension report an empty array: public.raster_columns.extent is PostGIS' own, not the user's data.", type: "array", items: new OA\Items(properties: [new OA\Property(property: "name", type: "string", example: "the_geom"), new OA\Property(property: "type", type: "string", example: "MultiPolygon"), new OA\Property(property: "srid", type: "integer", example: 25832)], type: "object"), readOnly: true),
         new OA\Property(
             property: "columns",
@@ -339,18 +340,24 @@ class Table extends AbstractApi
 
     /**
      * One catalog query for the cheap facts about the relations of a schema
-     * (or one relation): kind, column count and whether the notify trigger
+     * (or one relation): kind, column names and whether the notify trigger
      * is installed. Backs the namesOnly listings, which must not build a
      * TableModel per relation — that costs a handful of queries each.
      *
-     * @return array<string, array{type:string, column_count:int, events:bool, geometry_columns:list<array{name:string, type:string, srid:int}>}> keyed by relation name
+     * The column count is the length of the name list, so pg_attribute is
+     * scanned once per relation rather than once for the names and once to
+     * count them.
+     *
+     * @return array<string, array{type:string, column_count:int, columns:list<string>, events:bool, geometry_columns:list<array{name:string, type:string, srid:int}>}> keyed by relation name
      */
     private static function summaries(ApiInterface $self, string $schema, ?string $relation = null): array
     {
         $geometry = self::geometryColumns($self, $schema, $relation);
         $model = new Model(connection: $self->connection);
         $sql = "SELECT c.relname AS name, c.relkind,
-                       (SELECT count(*) FROM pg_attribute a WHERE a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped) AS column_count,
+                       (SELECT array_to_json(array_agg(a.attname ORDER BY a.attnum))
+                          FROM pg_attribute a
+                         WHERE a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped) AS columns,
                        EXISTS (SELECT 1 FROM pg_trigger t WHERE t.tgrelid = c.oid AND t.tgname = '_gc2_notify_transaction_trigger') AS events
                 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
                 WHERE n.nspname = :schema AND c.relkind IN ('r', 'p', 'v', 'm')"
@@ -365,9 +372,12 @@ class Table extends AbstractApi
         $types = ['r' => 'TABLE', 'p' => 'TABLE', 'v' => 'VIEW', 'm' => 'MATERIALIZED VIEW'];
         $out = [];
         while ($row = $model->fetchRow($res)) {
+            // A relation with no columns at all aggregates to SQL NULL, not to an empty array.
+            $columns = $row['columns'] !== null ? (json_decode($row['columns'], true) ?: []) : [];
             $out[$row['name']] = [
                 'type' => $types[$row['relkind']],
-                'column_count' => (int)$row['column_count'],
+                'column_count' => count($columns),
+                'columns' => $columns,
                 'events' => filter_var($row['events'], FILTER_VALIDATE_BOOLEAN),
                 'geometry_columns' => $geometry[$row['name']] ?? [],
             ];
@@ -434,6 +444,7 @@ class Table extends AbstractApi
             '_type' => $summary['type'],
             '_events' => $summary['events'],
             '_column_count' => $summary['column_count'],
+            '_columns' => $summary['columns'],
             '_geometry_columns' => $summary['geometry_columns'],
             '_links' => self::links($schema, $name),
         ];
@@ -470,6 +481,7 @@ class Table extends AbstractApi
         $response['_type'] = $table->relType;
         $response['_events'] = $table->isNotifyTriggerInstalled();
         $response['_column_count'] = count($response['columns']);
+        $response['_columns'] = array_column($response['columns'], 'name');
         $response['_geometry_columns'] = $geometryColumns
             ?? (self::geometryColumns($self, $table->schema, $table->tableWithOutSchema)[$table->tableWithOutSchema] ?? []);
         $response['_links'] = [
