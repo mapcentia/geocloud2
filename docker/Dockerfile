@@ -53,7 +53,7 @@ RUN pecl install raphf \
 ###############################################################################
 # SWIG > 4.0.0 to get PHP8 support
 ###############################################################################
-RUN git clone https://github.com/swig/swig.git \
+RUN git clone --depth 1 https://github.com/swig/swig.git \
     && cd swig \
     && mkdir build && cd build \
     && cmake .. \
@@ -241,8 +241,8 @@ RUN sed -i "s/session.gc_maxlifetime = 1440/session.gc_maxlifetime = 86400/g" /e
     && sed -i "s/post_max_size = 8M/post_max_size = 1000M/g" /etc/php/${PHP_VERSION}/fpm/php.ini
 
 # Build MapServer 8.0 from source
-RUN git clone --branch rsvg_fix https://github.com/mapcentia/mapserver.git \
-    && cd mapserver \
+RUN git clone --depth 1 --branch rel-8-6-6 https://github.com/MapServer/MapServer.git \
+    && cd MapServer \
     && mkdir build && cd build \
     && cmake \
       -DCMAKE_INSTALL_PREFIX=/opt \
@@ -271,7 +271,7 @@ RUN echo "extension=php_mapscriptng.so" >> /etc/php/${PHP_VERSION}/fpm/php.ini
 # MapCache >= 1.10 uses apr-util's built-in apr_memcache (WITH_MEMCACHE); libapr-memcache-dev is gone in trixie.
 RUN apt-get update && apt-get install -y --no-install-recommends libaprutil1-dev \
     && rm -rf /var/lib/apt/lists/*
-RUN git clone --branch branch-1-12 http://github.com/mapserver/mapcache.git \
+RUN git clone --depth 1 --branch rel-1-16-0 http://github.com/mapserver/mapcache.git \
     && cd mapcache \
     && mkdir build && cd build \
     && cmake .. -DWITH_MEMCACHE=1 \
@@ -321,7 +321,7 @@ RUN a2disconf other-vhosts-access-log
 COPY conf/fpm/opcache.ini /etc/php/${PHP_VERSION}/mods-available/
 
 # ogr2postgis
-RUN git clone --branch gui https://github.com/mapcentia/ogr2postgis.git \
+RUN git clone --depth 1 --branch gui https://github.com/mapcentia/ogr2postgis.git \
     && cd ogr2postgis \
     && mkdir build && cd build \
     && cmake .. \
@@ -342,7 +342,7 @@ HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=3 \
 # Clone GC2 from GitHub
 RUN mkdir -p /var/www \
     && cd /var/www \
-    && git clone https://github.com/mapcentia/geocloud2.git \
+    && git clone --depth 1 https://github.com/mapcentia/geocloud2.git \
     && cd geocloud2 \
     && git checkout ${GC2_REF}
 
