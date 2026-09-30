@@ -6,9 +6,9 @@
  * seed runs for hours and a cron tick must not. Every 5 seconds it writes a
  * heartbeat and the log tail, and re-reads cancel_requested: that flag is how a
  * request on any node stops a seed on this one. A shutdown function and signal
- * handlers finalise the row even when the process is killed, so a row is never
- * left 'running' by a process that is gone — the pattern get.php uses for
- * scheduler runs.
+ * handlers stop the child and finalise the row even when this process is killed,
+ * so a row is never left 'running' with an orphaned mapcache_seed still writing
+ * tiles behind it — the pattern get.php uses for scheduler runs.
  *
  * Usage: php seed_run.php --database=<db> --uuid=<uuid> [--binary=<path>]
  */
@@ -29,6 +29,17 @@ if (!$database || !$uuid) {
     fwrite(STDERR, "--database and --uuid are required\n");
     exit(1);
 }
+// Both reach the filesystem below (log path, mapcache config path) before either
+// touches SQL; refuse anything that is not the shape we expect rather than let a
+// crafted value walk a path.
+if (!preg_match('/^[0-9a-f-]{36}$/', $uuid)) {
+    fwrite(STDERR, "--uuid is not a valid UUID\n");
+    exit(1);
+}
+if (!preg_match('/^[A-Za-z0-9_\-]+$/', $database)) {
+    fwrite(STDERR, "--database contains invalid characters\n");
+    exit(1);
+}
 
 $jobs = new SeedJob(connection: new Connection(database: $database));
 $row = $jobs->get($uuid);
@@ -43,33 +54,60 @@ if (!is_dir($logDir)) {
 }
 $logPath = "$logDir/$uuid.log";
 $tailBytes = App::$param['tileseeder']['logTailBytes'] ?? 8192;
+$grace = App::$param['tileseeder']['cancelGraceSeconds'] ?? 10;
 
 $finalised = false;
-$finalise = function (string $status, ?string $error) use (&$finalised, $jobs, $uuid, $logPath, $tailBytes): void {
+/** Writes the outcome once. Never throws: a dying process must not fault out of
+ *  a shutdown/signal handler. Returns whether the write actually landed, so a
+ *  caller that promised a status in its exit code does not lie about it. */
+$finalise = function (string $status, ?string $error) use (&$finalised, $jobs, $uuid, $logPath, $tailBytes): bool {
     if ($finalised) {
-        return;
+        return true;
     }
     $finalised = true;
     try {
         $jobs->finish($uuid, $status, $error, tail($logPath, $tailBytes));
-    } catch (Throwable) {
-        // Best effort: a dying process must not throw out of a shutdown/signal
-        // handler. A row left 'running' here is still caught by reapStale().
+        return true;
+    } catch (Throwable $e) {
+        // Postgres bounce, connection drop, whatever it is: without this line the
+        // row is left 'running' and reapStale() reports it as a stale timeout ten
+        // minutes later, pointing the operator at the wrong cause with no trace.
+        error_log("seed_run.php: could not finalise job $uuid as '$status': " . $e->getMessage());
+        return false;
     }
 };
-// A crash, an OOM kill or the worker's `timeout` must still leave a finished row.
-register_shutdown_function(function () use (&$finalised, $finalise) {
-    if (!$finalised) {
-        $err = error_get_last();
-        $finalise('failed', $err !== null ? 'terminated: ' . $err['message'] : 'terminated');
+
+$process = null; // set once mapcache_seed is spawned; handlers below kill it first
+// A crash, an OOM kill, `docker stop`, a supervisord restart or the worker's
+// `timeout` must still stop the child and leave a finished row — never an
+// orphaned mapcache_seed and a row that claims 'cancelled' while it keeps running.
+register_shutdown_function(function () use (&$finalised, $finalise, &$process, $jobs, $uuid, $grace) {
+    if ($finalised) {
+        return;
     }
+    stopChild($process, $grace);
+    if ($jobs->isCancelRequested($uuid)) {
+        $finalise('cancelled', null);
+        return;
+    }
+    $err = error_get_last();
+    $finalise('failed', $err !== null ? 'terminated: ' . $err['message'] : 'terminated');
 });
 if (function_exists('pcntl_async_signals')) {
     pcntl_async_signals(true);
     foreach ([SIGINT, SIGTERM] as $sig) {
-        pcntl_signal($sig, function () use ($finalise) {
-            $finalise('cancelled', 'stopped by signal');
-            exit(2);
+        pcntl_signal($sig, function () use (&$process, $jobs, $uuid, $grace, $finalise) {
+            stopChild($process, $grace);
+            // A signal alone is not a cancellation: only cancel_requested is. A
+            // 14-hour seed cut off by the worker's timeout is 'failed', not
+            // 'cancelled' — the client must be able to tell that apart from its
+            // own DELETE.
+            if ($jobs->isCancelRequested($uuid)) {
+                $ok = $finalise('cancelled', null);
+                exit($ok ? 2 : 1);
+            }
+            $finalise('failed', 'terminated by signal');
+            exit(1);
         });
     }
 }
@@ -95,51 +133,112 @@ if (!empty($options['binary'])) {
     $argv[0] = $options['binary'];   // the tests drive a stub instead of mapcache_seed
 }
 
+// The window between claim and spawn: a cancel asked for before the child ever
+// started must not start it.
+if ($jobs->isCancelRequested($uuid)) {
+    $ok = $finalise('cancelled', null);
+    exit($ok ? 2 : 1);
+}
+
 $log = fopen($logPath, 'w');
-$process = proc_open($argv, [1 => $log, 2 => $log], $pipes, null,
-    $command->env($jobs->postgispw) + ['PATH' => getenv('PATH')]);
+if ($log === false) {
+    // Blame the actual cause (an unwritable app/tmp, e.g. root-owned from a cron
+    // run) rather than reporting "could not start mapcache_seed" for a binary
+    // that was never even tried.
+    $finalise('failed', "could not open log file for writing: $logPath");
+    exit(1);
+}
+// mapcache_seed's own build (GDAL/PROJ) may need LD_LIBRARY_PATH, PROJ_LIB,
+// GDAL_DATA or HOME; v3's exec() inherited the whole environment and this must
+// too. PGPASSWORD always wins over anything of the same name inherited.
+$inheritedEnv = getenv();
+$env = $command->env($jobs->postgispw) + (is_array($inheritedEnv) ? $inheritedEnv : []);
+$process = proc_open($argv, [1 => $log, 2 => $log], $pipes, null, $env);
 if (!is_resource($process)) {
     $finalise('failed', 'could not start ' . $argv[0]);
     exit(1);
 }
 $jobs->setPid($uuid, (int)proc_get_status($process)['pid'], $logPath);
 
-$grace = App::$param['tileseeder']['cancelGraceSeconds'] ?? 10;
-$cancelling = null;
 while (true) {
     $status = proc_get_status($process);
     if (!$status['running']) {
         $exit = $status['exitcode'];
-        if ($cancelling !== null) {
-            $finalise('cancelled', null);
-            exit(2);
-        }
-        $finalise($exit === 0 ? 'succeeded' : 'failed', $exit === 0 ? null : "mapcache_seed exited with $exit");
-        exit($exit === 0 ? 0 : 1);
+        $ok = $finalise($exit === 0 ? 'succeeded' : 'failed', $exit === 0 ? null : "mapcache_seed exited with $exit");
+        exit($ok && $exit === 0 ? 0 : 1);
     }
     $jobs->heartbeat($uuid, tail($logPath, $tailBytes));
-    if ($cancelling === null && $jobs->isCancelRequested($uuid)) {
-        $cancelling = time();
-        proc_terminate($process, SIGTERM);
-    } elseif ($cancelling !== null && time() - $cancelling >= $grace) {
-        proc_terminate($process, SIGKILL);
+    if ($jobs->isCancelRequested($uuid)) {
+        // Reuse the same stop sequence the handlers use: SIGTERM, wait the grace
+        // period, SIGKILL if it is still alive — written once, used everywhere a
+        // child must be stopped before the row is finalised.
+        stopChild($process, $grace);
+        $ok = $finalise('cancelled', null);
+        exit($ok ? 2 : 1);
     }
     sleep(5);
 }
 
-/** The last $bytes of the log, so a client sees what the process last said. */
+/**
+ * Stops the seeding child: SIGTERM, wait up to $grace seconds for it to exit on
+ * its own, then SIGKILL if it is still alive. Blocking is fine here — the row is
+ * about to be finalised either way, and this is the only place that sends a
+ * signal to the child, whether the trigger was a cooperative cancel or this
+ * process itself being killed.
+ */
+function stopChild(&$process, int $grace): void
+{
+    if (!is_resource($process)) {
+        return;
+    }
+    $status = proc_get_status($process);
+    if (!$status['running']) {
+        return;
+    }
+    proc_terminate($process, SIGTERM);
+    $deadline = time() + $grace;
+    do {
+        $status = proc_get_status($process);
+        if (!$status['running']) {
+            return;
+        }
+        sleep(1);
+    } while (time() < $deadline);
+    $status = proc_get_status($process);
+    if ($status['running']) {
+        proc_terminate($process, SIGKILL);
+        for ($i = 0; $i < 20; $i++) {
+            if (!proc_get_status($process)['running']) {
+                break;
+            }
+            usleep(100000);
+        }
+    }
+}
+
+/**
+ * The last $bytes of the log, so a client sees what the process last said.
+ *
+ * Reads through a freshly opened handle and sizes it with fseek()/ftell() on
+ * that handle rather than filesize($path): filesize() goes through PHP's
+ * per-process stat cache, which is never invalidated for a file this process
+ * only ever reads and someone else is still writing — a poll can see the size
+ * observed several polls ago while the file has grown to hundreds of kilobytes,
+ * and the whole thing is returned uncapped. A handle's own ftell() cannot be
+ * stale: it reflects the file exactly as this fopen() call just found it.
+ */
 function tail(string $path, int $bytes): ?string
 {
-    if (!is_file($path)) {
-        return null;
-    }
-    $size = filesize($path);
-    $fh = fopen($path, 'r');
+    $fh = @fopen($path, 'r');
     if ($fh === false) {
         return null;
     }
+    fseek($fh, 0, SEEK_END);
+    $size = ftell($fh);
     if ($size > $bytes) {
         fseek($fh, -$bytes, SEEK_END);
+    } else {
+        rewind($fh);
     }
     $out = stream_get_contents($fh);
     fclose($fh);
