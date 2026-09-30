@@ -42,9 +42,18 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[OA\Schema(
     schema: 'SeedJobInput',
-    description: 'A seed job to queue. tileset, grid, zoom_start and zoom_end are required; every other property of SeedJob is server-owned and ignored (in fact rejected) on input.',
+    description: 'The POST request body to queue a seed job. tileset, grid, zoom_start and zoom_end are required and, unlike their SeedJob response counterparts, never null here. Every other SeedJob property is server-owned and ignored (in fact rejected) on input.',
     required: ['tileset', 'grid', 'zoom_start', 'zoom_end'],
-    allOf: [new OA\Schema(ref: '#/components/schemas/SeedJob')],
+    properties: [
+        new OA\Property(property: 'name', description: 'Optional label for the job.', type: 'string', example: 'Seed roads'),
+        new OA\Property(property: 'tileset', description: 'The mapcache tileset (layer key).', type: 'string', example: 'myschema.roads'),
+        new OA\Property(property: 'grid', type: 'string', example: 'GoogleMapsCompatible'),
+        new OA\Property(property: 'zoom_start', type: 'integer', example: 0),
+        new OA\Property(property: 'zoom_end', type: 'integer', example: 12),
+        new OA\Property(property: 'extent_layer', type: 'string', nullable: true),
+        new OA\Property(property: 'threads', type: 'integer'),
+    ],
+    type: 'object',
 )]
 #[OA\Schema(
     schema: 'SeedJob',
