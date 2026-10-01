@@ -282,19 +282,50 @@ final class Mapcache extends AbstractApi
      */
     public static function schemaLayers(string $schema, Connection $connection): array
     {
-        if ($schema === 'sqlapi') {
+        if ($schema === 'sqlapi' || !preg_match('/^[A-Za-z_][A-Za-z0-9_\-]*$/', $schema)) {
             return [];
         }
+        // settings.getColumns() and not settings.geometry_columns_join: dropping a
+        // table leaves its row behind in the join table (81 of 285 on the install
+        // this was written against), and the config generator does not see those
+        // because getColumns() joins the real catalog. Reading the join table
+        // directly would authorize layers the merged tileset does not contain, and
+        // would let a stale name pass the existence check that makes an
+        // unresolvable tileset fail closed — measured: a stale name reached the
+        // upstream MapCache where a name with no row at all was refused.
+        //
+        // The schema is checked against a positive class above before it goes into
+        // the WHERE fragment, which getColumns() takes as SQL text.
+        // getColumns() costs 18-90 ms on a database of this size — far too much for a
+        // tile path — so the list is cached for the same window the endpoint already
+        // accepts for its authorization decisions, and busted by
+        // Table::clearCacheOnSchemaChanges() so a layer added or removed normally
+        // takes effect at once rather than after the TTL.
+        $cacheKey = $connection->database . '_mapcacheSchemaLayers_' . md5($schema);
+        $item = Cache::getItem($cacheKey);
+        if ($item !== null && $item->isHit() && is_array($item->get())) {
+            return $item->get();
+        }
+
         $model = new Model(connection: $connection);
-        $res = $model->prepare(
-            "SELECT DISTINCT split_part(_key_, '.', 1) || '.' || split_part(_key_, '.', 2) AS layer
-               FROM settings.geometry_columns_join
-              WHERE split_part(_key_, '.', 1) = :schema
-                AND COALESCE(enableows, true)
-              ORDER BY 1"
-        );
-        $model->execute($res, ['schema' => $schema]);
-        return array_values(array_map(fn($r) => $r['layer'], $model->fetchAll($res, 'assoc')));
+        $filter = "f_table_schema = '" . $schema . "' AND f_table_name NOTNULL AND f_geometry_column NOTNULL";
+        $rasterFilter = "r_table_schema = '" . $schema . "' AND r_table_name NOTNULL AND r_raster_column NOTNULL";
+        $res = $model->execQuery("SELECT f_table_schema, f_table_name, enableows FROM settings.getColumns("
+            . "'" . str_replace("'", "''", $filter) . "', '" . str_replace("'", "''", $rasterFilter) . "')");
+        $layers = [];
+        foreach ($model->fetchAll($res, 'assoc') as $row) {
+            if (!($row['enableows'] ?? true)) {
+                continue;
+            }
+            $layers[$row['f_table_schema'] . '.' . $row['f_table_name']] = true;
+        }
+        $names = array_keys($layers);
+        sort($names);
+        if ($item !== null) {
+            $item->set($names)->expiresAfter(self::AUTH_CACHE_TTL);
+            Cache::save($item);
+        }
+        return $names;
     }
 
     /**

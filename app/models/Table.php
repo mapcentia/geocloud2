@@ -135,6 +135,11 @@ class Table extends Model
             // 'authentication' level — a security window where a layer switched to Read/write
             // still answers anonymous WFS/OWS reads until the TTL expires.
             $this->postgisdb . '*_geometryColumns',
+            // Mapcache::schemaLayers() caches a schema's layer list, which decides
+            // which layers a merged per-schema tileset is authorized against.
+            // Leaving it stale means a layer just added to the schema is drawn into
+            // that tileset without its privileges being checked.
+            $this->postgisdb . '_mapcacheSchemaLayers_*',
         ];
         Cache::deleteByPatterns($patterns);
     }

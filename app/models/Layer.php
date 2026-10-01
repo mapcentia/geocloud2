@@ -42,6 +42,12 @@ class Layer extends Table
         $patterns = [
             $this->postgisdb . '*_meta_*',
             $this->postgisdb . '*_geometryColumns',
+            // Mapcache::schemaLayers() caches which layers a schema has, and that
+            // list decides what a merged per-schema tileset is authorized against.
+            // Leaving it stale means a layer just added to the schema is drawn into
+            // that tileset for up to the cache's lifetime without its privileges
+            // being checked.
+            $this->postgisdb . '_mapcacheSchemaLayers_*',
         ];
         Cache::deleteByPatterns($patterns);
     }
