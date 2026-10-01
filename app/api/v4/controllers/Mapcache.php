@@ -13,6 +13,7 @@ use app\api\v4\Controller;
 use app\api\v4\Responses\StreamedResponse;
 use app\api\v4\Scope;
 use app\conf\App;
+use app\controllers\Mapcache as MapcacheController;
 use app\exceptions\GC2Exception;
 use app\exceptions\ServiceException;
 use app\inc\BasicAuth;
@@ -108,22 +109,36 @@ final class Mapcache extends AbstractApi
                     // layer in that schema, so expand it and authorize each: the merged
                     // image shows them all, and the bare name on its own authorizes
                     // nothing, because no layer is called that.
+                    // Resolve every name to something real before authorizing it. A
+                    // name that resolves to nothing must fail closed: treating an
+                    // unknown name as readable is what made the gmaps grid-suffix
+                    // bug serve a protected layer anonymously, and it would reopen
+                    // the same hole the moment another parser gap appeared.
                     $expanded = [];
+                    $resolved = false;
+                    $connection = new Connection(database: $database);
+                    $configured = self::configuredTilesetNames();
                     foreach ($layers as $l) {
-                        if (str_contains($l, '.')) {
+                        $ofSchema = self::schemaLayers(explode('.', $l)[0], $connection);
+                        if (!str_contains($l, '.')) {
+                            // The merged per-schema tileset stands for every layer in
+                            // the schema: the image shows them all, so the caller has
+                            // to be allowed to read them all.
+                            if (!empty($ofSchema)) {
+                                array_push($expanded, ...$ofSchema);
+                                $resolved = true;
+                            }
+                        } elseif (in_array($l, $ofSchema, true)) {
                             $expanded[] = $l;
-                            continue;
+                            $resolved = true;
+                        } elseif (in_array($l, $configured, true)) {
+                            // Declared by the operator outside the layer model; it has
+                            // no privileges to check. Resolved, nothing to authorize.
+                            $resolved = true;
                         }
-                        $ofSchema = self::schemaLayers($l, new Connection(database: $database));
-                        if (empty($ofSchema)) {
-                            // A schema tileset with nothing behind it is a tileset we
-                            // cannot resolve; fall through to the fail-closed branch.
-                            continue;
-                        }
-                        array_push($expanded, ...$ofSchema);
                     }
                     $layers = array_values(array_unique($expanded));
-                    if (empty($layers) && self::looksLikeTileFetch($segments, $query)) {
+                    if (!$resolved && self::looksLikeTileFetch($segments, $query)) {
                         // A tile fetch whose tileset we could not resolve: fail closed.
                         throw new GC2Exception('Could not resolve tileset for authorization', 403, null, 'FORBIDDEN');
                     }
@@ -203,9 +218,14 @@ final class Mapcache extends AbstractApi
                 }
                 break;
             case 'gmaps':
-                // gmaps/{tileset}/{grid}/{z}/{x}/{y}.ext
+                // gmaps/{tileset}@{grid}/{z}/{x}/{y}.ext — the same "@" form as TMS.
+                // Taking the segment raw made the layer name "<layer>@<grid>", which
+                // matches no layer, and authorize()'s anonymous branch then treated
+                // it as readable: a Read/write layer's tiles were served to an
+                // unauthenticated caller (200 image/png, measured). The grid must be
+                // split off here, exactly as TMS does.
                 if (!empty($segments[1])) {
-                    $tilesets = [$segments[1]];
+                    $tilesets = [explode('@', $segments[1])[0]];
                 }
                 break;
         }
@@ -220,6 +240,26 @@ final class Mapcache extends AbstractApi
         // tileset for authorization" — so a schema tileset could be listed and
         // seeded but never fetched through the authorizing proxy.
         return array_values(array_filter($layers, fn($l) => $l !== ''));
+    }
+
+    /**
+     * The tileset names an operator declared outside GC2's layer model, in
+     * app/conf/mapcache/tilesets/. They have no geometry_columns_join row, so they
+     * cannot be authorized per layer — declaring one is the operator's decision to
+     * serve it on the proxy's own terms, and they are allowed through for exactly
+     * that reason. Everything else that resolves to no layer fails closed.
+     *
+     * @return list<string>
+     */
+    public static function configuredTilesetNames(): array
+    {
+        $names = [];
+        foreach (MapcacheController::getTileSets() as $xml) {
+            if (preg_match('/<tileset\s+name="([^"]+)"/i', $xml, $m)) {
+                $names[] = $m[1];
+            }
+        }
+        return $names;
     }
 
     /**
