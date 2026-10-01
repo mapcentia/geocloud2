@@ -204,8 +204,14 @@ foreach ($pendingDatabases as $database) {
                 // ten minutes later and blame a lost heartbeat for a process
                 // that never existed. Finalise it now with the real cause
                 // instead, and don't count it against this tick's capacity.
+                // The run may have started and failed on its own before the probe
+                // looked — an unwritable log directory, a broken config — in which
+                // case it already owns the row and this finish() is a no-op thanks
+                // to its WHERE status = 'running'. Read the row back and report what
+                // it says: a guess here is less true than what the run recorded.
                 $jobs->finish($row['uuid'], 'failed', 'could not spawn seed run', null);
-                echo "$database: FAILED to spawn seed {$row['uuid']}: could not spawn seed run\n";
+                $cause = $jobs->get($row['uuid'])['error'] ?? 'could not spawn seed run';
+                echo "$database: FAILED to seed {$row['uuid']}: $cause\n";
             }
         }
     } catch (Throwable $e) {
