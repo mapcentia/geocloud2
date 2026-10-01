@@ -315,12 +315,24 @@ Per AGENTS.md §7 the spec is the authority and deviations belong here.
   invisible. Measured with a www-data-owned fixture: the files survived and the
   response was `success: true`. Pre-existing; the sqlite branch's
   `sqlite/<db>/<schema>.sqlite3` is correct.
-- **The merged schema tileset cannot be served through the authorizing v4
-  proxy.** `Mapcache::extractLayers()` drops any name without a dot, so
-  `/api/v4/mapcache/database/<db>/wmts/1.0.0/<schema>/…` answers 403, while the
-  unauthenticated Apache alias serves it. So a schema configured here is only
-  reachable without authorization. Pre-existing, and genuinely a design question:
-  which layer's privileges should govern a tileset that merges many?
+- ~~**The merged schema tileset cannot be served through the authorizing v4
+  proxy.**~~ **Fixed 2026-10-01.** `extractLayers()` discarded any name without a
+  dot, so a tile fetch for `<schema>` failed closed with 403 through every service
+  (not only TMS, and GetCapabilities was unaffected because it is not a tile
+  fetch). A schema tileset now expands to the schema's OWS-enabled layers and each
+  is authorized — the rule the WMS path already applies when one request names
+  several layers, so the merged tileset inherits the strictest layer's
+  requirement.
+  Worth recording how nearly this went wrong: keeping the bare name without
+  expanding it authorizes *nothing*, because the anonymous branch looks it up with
+  `getGeometryColumns()`, gets null since no layer is called that, and falls
+  through to "readable anonymously". Measured at that point:
+  `dagi.dagi_politikreds2000` answered 401 anonymously while the `dagi` tileset
+  containing it answered 200.
+  The open question is narrower than before but still open: "every layer must be
+  readable" is a defensible rule, not necessarily the desired one. A schema with
+  one protected layer is now unreachable anonymously as a whole, which may be too
+  strict for a basemap-like schema.
 - **`_stored` and the empty object.** Worth remembering generally: an empty PHP
   array serialises as `[]`, which breaks a generated client that types a field as
   the object the schema declares. Cast to `(object)`.

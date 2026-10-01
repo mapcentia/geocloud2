@@ -104,6 +104,25 @@ final class Mapcache extends AbstractApi
                     $service = strtolower($query['SERVICE'] ?? ($segments[0] ?? ''));
 
                     $layers = self::extractLayers($service, $segments, $query);
+                    // A merged per-schema tileset (a name with no dot) stands for every
+                    // layer in that schema, so expand it and authorize each: the merged
+                    // image shows them all, and the bare name on its own authorizes
+                    // nothing, because no layer is called that.
+                    $expanded = [];
+                    foreach ($layers as $l) {
+                        if (str_contains($l, '.')) {
+                            $expanded[] = $l;
+                            continue;
+                        }
+                        $ofSchema = self::schemaLayers($l, new Connection(database: $database));
+                        if (empty($ofSchema)) {
+                            // A schema tileset with nothing behind it is a tileset we
+                            // cannot resolve; fall through to the fail-closed branch.
+                            continue;
+                        }
+                        array_push($expanded, ...$ofSchema);
+                    }
+                    $layers = array_values(array_unique($expanded));
                     if (empty($layers) && self::looksLikeTileFetch($segments, $query)) {
                         // A tile fetch whose tileset we could not resolve: fail closed.
                         throw new GC2Exception('Could not resolve tileset for authorization', 403, null, 'FORBIDDEN');
@@ -194,7 +213,48 @@ final class Mapcache extends AbstractApi
             fn($t) => preg_replace('/\.(mvt|json)$/i', '', trim($t)),
             $tilesets
         );
-        return array_values(array_filter($layers, fn($l) => $l !== '' && str_contains($l, '.')));
+        // A name with no dot is kept: it is the merged per-schema tileset (<schema>,
+        // <schema>.mvt), which MapCache serves and GetCapabilities advertises.
+        // Dropping it used to make this return nothing, and the caller's
+        // fail-closed branch then answered every tile fetch with "Could not resolve
+        // tileset for authorization" — so a schema tileset could be listed and
+        // seeded but never fetched through the authorizing proxy.
+        return array_values(array_filter($layers, fn($l) => $l !== ''));
+    }
+
+    /**
+     * The OWS-enabled layers of a schema, as "schema.table".
+     *
+     * A merged per-schema tileset is drawn from every layer in the schema, so the
+     * caller has to be allowed to read every one of them — the same rule the WMS
+     * path already applies when one request names several layers. Without this
+     * expansion, authorizing the bare schema name checks nothing: the anonymous
+     * branch looks the name up with getGeometryColumns(), gets null because no
+     * layer is called that, and falls through to "readable anonymously". Measured:
+     * dagi.dagi_politikreds2000 is Read/write and answers 401 anonymously, while
+     * the dagi tileset that contains it answered 200.
+     *
+     * The same filter the config generator applies, so authorization and content
+     * cannot disagree about what the merged tileset contains: enableows, and never
+     * the sqlapi schema.
+     *
+     * @return list<string>
+     */
+    public static function schemaLayers(string $schema, Connection $connection): array
+    {
+        if ($schema === 'sqlapi') {
+            return [];
+        }
+        $model = new Model(connection: $connection);
+        $res = $model->prepare(
+            "SELECT DISTINCT split_part(_key_, '.', 1) || '.' || split_part(_key_, '.', 2) AS layer
+               FROM settings.geometry_columns_join
+              WHERE split_part(_key_, '.', 1) = :schema
+                AND COALESCE(enableows, true)
+              ORDER BY 1"
+        );
+        $model->execute($res, ['schema' => $schema]);
+        return array_values(array_map(fn($r) => $r['layer'], $model->fetchAll($res, 'assoc')));
     }
 
     /**
