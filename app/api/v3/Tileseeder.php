@@ -31,6 +31,16 @@ use Exception;
  */
 class Tileseeder extends Controller
 {
+    /** Matches a real uuid (hex letters case-insensitive: pre-v4 Util::guid()
+     *  produced uppercase ones, and real legacy clients still hold those). Used
+     *  before any path segment reaches SeedJob::get() -- AGENTS.md §3. */
+    private const string UUID_PATTERN = '/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/';
+
+    private static function isUuid(mixed $value): bool
+    {
+        return is_string($value) && preg_match(self::UUID_PATTERN, $value) === 1;
+    }
+
     /**
      * @return array<mixed>
      *
@@ -55,13 +65,13 @@ class Tileseeder extends Controller
      *   ),
      *   @OA\Response(
      *     response="200",
-     *     description="Return the UUID and process id",
+     *     description="The queued job's uuid. pid is always null here: a worker, not this request, claims and runs the job.",
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
      *         type="object",
-     *         @OA\Property(property="uuid", type="string", example="C4A3797E-EC6B-4DAC-9474-ADA9083620F3"),
-     *         @OA\Property(property="pid",type="integer", example=20326)
+     *         @OA\Property(property="uuid", type="string", example="c4a3797e-ec6b-4dac-9474-ada9083620f3"),
+     *         @OA\Property(property="pid", type="integer", nullable=true, example=null)
      *       )
      *     )
      *   )
@@ -79,13 +89,19 @@ class Tileseeder extends Controller
         $zoomStart = (int)($arr["start"] ?? 0);
         $zoomEnd = (int)($arr["end"] ?? 0);
         $extent = $arr["extent"] ?? null;
-        if ($extent !== null && !is_string($extent)) {
+        if ($extent !== null) {
             // layer and grid get a (string) cast; extent does not, because null is a
-            // valid value for it. A non-scalar here used to reach
+            // valid value for it. A non-scalar (json_decode(..., true) only ever
+            // hands back an array here, never an object) used to reach
             // SeedCommand::validate()'s ?string parameter directly and crash with a
-            // TypeError (500); the old command-line-based code just interpolated it
-            // into a string and never noticed.
-            throw new GC2Exception('extent must be a string or null', 400, null, 'INVALID_REQUEST');
+            // TypeError (500). A scalar -- a numeric extent, say -- is cast the same
+            // way layer/grid already are, not rejected: an earlier, over-eager
+            // !is_string() guard turned {"extent":123} -- which used to coerce,
+            // validate and queue -- into a 400 too.
+            if (!is_scalar($extent)) {
+                throw new GC2Exception('extent must be a string or null', 400, null, 'INVALID_REQUEST');
+            }
+            $extent = (string)$extent;
         }
         $threads = (int)($arr["threads"] ?? 1);
 
@@ -164,7 +180,7 @@ class Tileseeder extends Controller
         // non-uuid string crashed Postgres with SQLSTATE 22P02, both as a 500 that
         // echoed internals back to the client. Neither ever matched a row, so both
         // get the same not-found shape the old (also broken) routing always gave.
-        if (!is_string($uuid) || !preg_match('/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/', $uuid)) {
+        if (!self::isUuid($uuid)) {
             return ["success" => false, "message" => "No job with uuid: " . $uuid];
         }
         $row = $jobs->get($uuid);
@@ -233,7 +249,12 @@ class Tileseeder extends Controller
     public function get_log(): array
     {
         $uuid = Route::getParam("uuid");
-        if (!$uuid) {
+        // No segment at all keeps its existing {"data":null} answer; so does a
+        // segment that isn't a real uuid (AGENTS.md §3) -- it used to reach
+        // SeedJob::get() directly and crash with Postgres's SQLSTATE 22P02,
+        // echoing the query back to the client, the same bug round 1 closed in
+        // delete_index() but left open here.
+        if (!self::isUuid($uuid)) {
             return ["data" => null];
         }
         $jwt = Jwt::extractPayload(Input::getJwtToken())["data"];

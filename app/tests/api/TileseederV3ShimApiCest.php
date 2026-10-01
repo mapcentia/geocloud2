@@ -175,6 +175,34 @@ class TileseederV3ShimApiCest
     }
 
     /**
+     * layer and grid get a (string) cast; extent must behave the same way for
+     * any scalar, not just get rejected outright -- a numeric extent used to
+     * coerce to "123", validate and queue before an earlier, over-eager
+     * !is_string() guard turned it into a 400 too.
+     */
+    public function shouldCoerceNumericExtentLikeLayerAndGrid(ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
+        $I->sendPOST('/api/v3/tileseeder', json_encode([
+            'name' => 'numeric extent', 'layer' => $this->schema . '.roads', 'grid' => $this->grid,
+            'start' => 0, 'end' => 1, 'extent' => 123, 'threads' => 1,
+        ]));
+        $I->seeResponseCodeIsSuccessful();
+        $body = json_decode($I->grabResponse(), true);
+        $I->assertArrayHasKey('uuid', $body);
+
+        // The queued row really did get extent_layer -- a (string) cast, not a
+        // rejection.
+        $I->sendGET('/api/v4/tileseeder/jobs/' . $body['uuid']);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertSame('123', json_decode($I->grabResponse(), true)['extent_layer']);
+
+        $I->sendDELETE('/api/v3/tileseeder/' . $body['uuid']);
+        $I->seeResponseCodeIsSuccessful();
+    }
+
+    /**
      * Everything shouldKeepTheV3Shapes() cannot exercise because the job it
      * queues stays 'pending' for its whole test: the status='running' filter
      * and the uuid/pid/name triple in GET's list, the preg_split()/end() last
@@ -216,6 +244,32 @@ class TileseederV3ShimApiCest
         $I->sendGET('/api/v3/tileseeder/log/' . $runningUuid);
         $I->seeResponseCodeIsSuccessful();
         $I->assertSame('Done', json_decode($I->grabResponse(), true)['data']);
+
+        // Uppercase uuids must keep working: pre-v4 Util::guid() produced them,
+        // and real legacy clients still hold those uppercase uuids today.
+        $I->sendGET('/api/v3/tileseeder/log/' . strtoupper($runningUuid));
+        $I->seeResponseCodeIsSuccessful();
+        $I->assertSame('Done', json_decode($I->grabResponse(), true)['data']);
+
+        // A segment that is not a real uuid must never reach SeedJob::get()
+        // (AGENTS.md §3): the same bug round 1 closed in delete_index() but
+        // left open here. Before the guard this answered 500 with Postgres's
+        // SQLSTATE 22P02 echoed back; the endpoint's own not-found shape is
+        // {"data":null}, same as a missing segment or an unknown-but-valid uuid.
+        $I->sendGET('/api/v3/tileseeder/log/not-a-uuid');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $garbageLog = json_decode($I->grabResponse(), true);
+        $I->assertNull($garbageLog['data']);
+        $I->assertStringNotContainsStringIgnoringCase('sqlstate', json_encode($garbageLog));
+
+        $unknownForLog = '00000000-0000-4000-8000-000000000001';
+        $I->sendGET('/api/v3/tileseeder/log/' . $unknownForLog);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertNull(json_decode($I->grabResponse(), true)['data']);
+
+        $I->sendGET('/api/v3/tileseeder/log');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertNull(json_decode($I->grabResponse(), true)['data']);
 
         // DELETE an unknown (but well-formed) uuid: the not-found shape.
         $unknown = '00000000-0000-4000-8000-000000000000';
