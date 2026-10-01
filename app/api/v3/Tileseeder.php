@@ -37,7 +37,7 @@ class Tileseeder extends Controller
      * @OA\Post(
      *   path="/api/v3/tileseeder",
      *   tags={"Tileseeder"},
-     *   summary="Starts a mapcache_seed process",
+     *   summary="Queues a tile seeding job; a worker runs it",
      *   security={{"bearerAuth":{}}},
      *   @OA\RequestBody(
      *     description="mapcache_seed parameters",
@@ -79,6 +79,14 @@ class Tileseeder extends Controller
         $zoomStart = (int)($arr["start"] ?? 0);
         $zoomEnd = (int)($arr["end"] ?? 0);
         $extent = $arr["extent"] ?? null;
+        if ($extent !== null && !is_string($extent)) {
+            // layer and grid get a (string) cast; extent does not, because null is a
+            // valid value for it. A non-scalar here used to reach
+            // SeedCommand::validate()'s ?string parameter directly and crash with a
+            // TypeError (500); the old command-line-based code just interpolated it
+            // into a string and never noticed.
+            throw new GC2Exception('extent must be a string or null', 400, null, 'INVALID_REQUEST');
+        }
         $threads = (int)($arr["threads"] ?? 1);
 
         SeedCommand::validate($database, $tileset, $grid, $zoomStart, $zoomEnd, $extent, $threads);
@@ -117,13 +125,15 @@ class Tileseeder extends Controller
      *   ),
      *   @OA\Response(
      *     response="200",
-     *     description="Operation status",
+     *     description="{success, pid} for one uuid, {success, pids} for *, or {success:false, message} when nothing matched",
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
      *         type="object",
-     *         @OA\Property(property="data", type="array", @OA\Items(type="array", @OA\Items(type="string"))),
-     *         @OA\Property(property="pid",type="integer", example=20326)
+     *         @OA\Property(property="success", type="boolean"),
+     *         @OA\Property(property="message", type="string", nullable=true, description="Present when success is false"),
+     *         @OA\Property(property="pid", type="object", nullable=true, description="{uuid, pid, name} of the cancelled job"),
+     *         @OA\Property(property="pids", type="array", nullable=true, @OA\Items(type="object"), description="One {uuid, pid, name} per job cancelled by *")
      *       )
      *     )
      *   )
@@ -139,7 +149,7 @@ class Tileseeder extends Controller
         $uuid = Route::getParam("uuid") ?? Input::getPath()->part(4);
         $jwt = Jwt::extractPayload(Input::getJwtToken())["data"];
         $jobs = new SeedJob(connection: new Connection(database: $jwt["database"]));
-        if ($uuid == "*") {
+        if ($uuid === "*") {
             $cancelled = [];
             foreach ($jobs->list(status: 'running', username: $jwt["uid"]) as $row) {
                 $jobs->requestCancel($row["uuid"]);
@@ -147,11 +157,26 @@ class Tileseeder extends Controller
             }
             return ["success" => true, "pids" => $cancelled];
         }
+        // AGENTS.md §3: validate the id segment with a positive regex before it
+        // reaches SQL. A missing segment (part(4) === null, e.g. a client that
+        // interpolated an empty variable) or anything that is not a real uuid used
+        // to reach SeedJob::get() directly: null crashed with a TypeError and a
+        // non-uuid string crashed Postgres with SQLSTATE 22P02, both as a 500 that
+        // echoed internals back to the client. Neither ever matched a row, so both
+        // get the same not-found shape the old (also broken) routing always gave.
+        if (!is_string($uuid) || !preg_match('/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/', $uuid)) {
+            return ["success" => false, "message" => "No job with uuid: " . $uuid];
+        }
         $row = $jobs->get($uuid);
         if ($row === null) {
             return ["success" => false, "message" => "No job with uuid: " . $uuid];
         }
-        $jobs->requestCancel($uuid);
+        $result = $jobs->requestCancel($uuid);
+        if ($result === 'noop') {
+            // Already finished, or a legacy row with no status at all (no v4 code
+            // ever claims it): nothing was cancelled, so do not say it was.
+            return ["success" => false, "message" => "No running job with uuid: " . $uuid];
+        }
         return ["success" => true, "pid" => ["uuid" => $row["uuid"], "pid" => $row["pid"] !== null ? (int)$row["pid"] : null, "name" => $row["name"]]];
     }
 
@@ -162,7 +187,7 @@ class Tileseeder extends Controller
      * @OA\Get(
      *   path="/api/v3/tileseeder",
      *   tags={"Tileseeder"},
-     *   summary="Get all running mapcache_seed processes started by user",
+     *   summary="Get every running seed job in the database (not filtered by user)",
      *   security={{"bearerAuth":{}}},
      *   @OA\Response(
      *     response="200",
