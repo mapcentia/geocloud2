@@ -281,11 +281,18 @@ class SeedWorkerTest extends Unit
         $this->tick(['mydb', 'aau']);
         $this->assertSame('pending', $mMydb->get($waitingFirst['uuid'])['status'],
             'pending-database-first order: a running row in the database visited later must still block it');
+        $this->assertSame(0, $mMydb->countRunningOnHost(SeedJob::currentHost()),
+            'pending-database-first order: nothing in mydb may have been claimed');
 
         // Blocked database visited first, pending database visited second: the
         // order that happened to refuse correctly even under round 2's bug.
         $waitingSecond = $this->queue('mydb');
         $this->tick(['aau', 'mydb']);
+        // Count rather than check $waitingSecond alone: mydb now holds two pending
+        // rows, and claimOne() takes the oldest, so a cap that let exactly one
+        // extra claim through would take $waitingFirst and leave this one pending.
+        $this->assertSame(0, $mMydb->countRunningOnHost(SeedJob::currentHost()),
+            'pending-database-second order: nothing in mydb may have been claimed');
         $this->assertSame('pending', $mMydb->get($waitingSecond['uuid'])['status'],
             'pending-database-second order: a running row in the database visited earlier must still block it');
     }
