@@ -133,4 +133,115 @@ class MapcachefileRenderTest extends Unit
             App::$param['s3'] = $orig;
         }
     }
+
+    /**
+     * The fallbacks are the per-schema loop's current literals — expires 60,
+     * metatile 3, metabuffer 0, PNG and MVT — and NOT layerSettings()' 30 and
+     * null. Getting this wrong changes every existing install's config silently.
+     */
+    public function testSchemaSettingsDefaults(): void
+    {
+        $set = Mapcachefile::schemaSettings(null, 'sqlite', 'dagi');
+        $this->assertSame('sqlite', $set['cache']);
+        $this->assertSame('PNG', $set['imageFormat']);
+        $this->assertSame('MVT', $set['vectorFormat']);
+        $this->assertSame(60, $set['expires']);
+        $this->assertSame(3, $set['metaSize']);
+        $this->assertSame(0, $set['metaBuffer']);
+        $this->assertNull($set['autoExpire']);
+        $this->assertNull($set['s3TileSet']);
+        $this->assertSame('dagi', $set['title']);
+        $this->assertSame('', $set['abstract']);
+    }
+
+    public function testSchemaSettingsFromDef(): void
+    {
+        $def = json_encode(['cache' => 'disk', 'ttl' => 86400, 'meta_size' => 5, 'meta_buffer' => 10,
+            'auto_expire' => 3600, 'title' => 'Danmarks administrative geografi', 'abstract' => 'DAGI']);
+        $set = Mapcachefile::schemaSettings(['schema' => 'dagi', 'def' => $def], 'sqlite', 'dagi');
+        $this->assertSame('disk', $set['cache']);
+        $this->assertSame(86400, $set['expires']);
+        $this->assertSame(5, $set['metaSize']);
+        $this->assertSame(10, $set['metaBuffer']);
+        $this->assertSame(3600, $set['autoExpire']);
+        $this->assertSame('Danmarks administrative geografi', $set['title']);
+        $this->assertSame('DAGI', $set['abstract']);
+    }
+
+    /**
+     * A schema has two tilesets of different kinds, so one stored format can
+     * only apply to the one it matches. A stored MVT must not turn the image
+     * tileset into MVT, and a stored jpeg must not touch the vector one.
+     */
+    public function testSchemaFormatAppliesOnlyToTheMatchingTileset(): void
+    {
+        $mvt = Mapcachefile::schemaSettings(['def' => json_encode(['format' => 'MVT'])], 'sqlite', 'dagi');
+        $this->assertSame('PNG', $mvt['imageFormat']);
+        $this->assertSame('MVT', $mvt['vectorFormat']);
+
+        $jpeg = Mapcachefile::schemaSettings(['def' => json_encode(['format' => 'jpeg_medium'])], 'sqlite', 'dagi');
+        $this->assertSame('jpeg_medium', $jpeg['imageFormat']);
+        $this->assertSame('MVT', $jpeg['vectorFormat']);
+    }
+
+    /** Review Focus 4: ttl is floored at 30, as layerSettings() floors it. */
+    public function testSchemaTtlIsFloored(): void
+    {
+        foreach ([0, 5, -100] as $ttl) {
+            $set = Mapcachefile::schemaSettings(['def' => json_encode(['ttl' => $ttl])], 'sqlite', 'dagi');
+            $this->assertSame($ttl === 0 ? 60 : 30, $set['expires'], "ttl $ttl");
+        }
+    }
+
+    /**
+     * Review Focus 1: the config is ONE file for the whole database, so
+     * <metatile>0 0</metatile> from a hand-edited row would make MapCache reject
+     * the document and take down every tileset in that database. The resolver is
+     * the second line of defence behind the API's validation.
+     */
+    public function testSchemaMetaSizeBelowOneFallsBack(): void
+    {
+        foreach ([0, -1] as $bad) {
+            $set = Mapcachefile::schemaSettings(['def' => json_encode(['meta_size' => $bad])], 'sqlite', 'dagi');
+            $this->assertSame(3, $set['metaSize'], "meta_size $bad must fall back to 3");
+        }
+        $this->assertSame(1, Mapcachefile::schemaSettings(['def' => json_encode(['meta_size' => 1])], 'sqlite', 'dagi')['metaSize']);
+    }
+
+    /**
+     * Review Focus 2: s3_tile_set is interpolated into the cache's object URL,
+     * so a value with a slash, ".." or whitespace could redirect writes to
+     * another prefix. Refuse it in the resolver as well as at the API.
+     */
+    public function testSchemaS3TileSetRejectsPathCharacters(): void
+    {
+        foreach (['other/prefix', '../escape', 'with space', 'semi;colon'] as $bad) {
+            $set = Mapcachefile::schemaSettings(['def' => json_encode(['s3_tile_set' => $bad])], 'sqlite', 'dagi');
+            $this->assertNull($set['s3TileSet'], "s3_tile_set '$bad' must be ignored");
+        }
+        $this->assertSame('dagi-tiles', Mapcachefile::schemaSettings(['def' => json_encode(['s3_tile_set' => 'dagi-tiles'])], 'sqlite', 'dagi')['s3TileSet']);
+    }
+
+    /**
+     * Review Focus 3: a hand-edited row can hold a def that is not an object.
+     * Every one of these must give the plain defaults rather than raise.
+     */
+    public function testSchemaSettingsSurvivesANonObjectDef(): void
+    {
+        foreach ([null, '', 'null', '[]', '[1,2]', '"a string"', '42', 'not json at all'] as $def) {
+            $set = Mapcachefile::schemaSettings(['def' => $def], 'sqlite', 'dagi');
+            $this->assertSame(60, $set['expires'], 'def ' . var_export($def, true) . ' must give the defaults');
+            $this->assertSame('sqlite', $set['cache']);
+            $this->assertSame(3, $set['metaSize']);
+        }
+    }
+
+    /** An unknown cache or format in a hand-edited row falls back rather than reaching the file. */
+    public function testSchemaUnknownCacheAndFormatFallBack(): void
+    {
+        $set = Mapcachefile::schemaSettings(['def' => json_encode(['cache' => 'redis', 'format' => 'WEBP'])], 'sqlite', 'dagi');
+        $this->assertSame('sqlite', $set['cache']);
+        $this->assertSame('PNG', $set['imageFormat']);
+        $this->assertSame('MVT', $set['vectorFormat']);
+    }
 }

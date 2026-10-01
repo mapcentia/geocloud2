@@ -74,6 +74,58 @@ class Mapcachefile extends Model
         ];
     }
 
+    /** The cache backends a schema may name. */
+    public const SCHEMA_CACHES = ['sqlite', 'disk', 'memcache', 's3'];
+    /** Image formats for the <schema> tileset. */
+    public const SCHEMA_IMAGE_FORMATS = ['PNG', 'jpeg_low', 'jpeg_medium', 'jpeg_high'];
+    /** Raw formats for the <schema>.mvt tileset. JSON is excluded: there is no merged .json tileset. */
+    public const SCHEMA_VECTOR_FORMATS = ['MVT'];
+
+    /**
+     * Resolve a settings.schema_settings row into the values the per-schema loop
+     * passes to renderTileset(). Pure — safe to unit test without a database.
+     *
+     * The fallbacks are the literals this loop used before the settings existed:
+     * expires 60, metatile 3, metabuffer 0, PNG and MVT, the schema name as the
+     * title, no abstract and no auto_expire. They are deliberately NOT
+     * layerSettings()' fallbacks (30, null), because reusing those would change
+     * every existing install's generated config without anyone asking.
+     *
+     * Every value is re-checked here even though the API validates on the way in:
+     * a row can be edited by hand, and this config is one file for the whole
+     * database, so a single bad value would make MapCache reject the document and
+     * take down every tileset in it. Anything unrecognised falls back.
+     *
+     * @param array<string, mixed>|null $row
+     * @return array<string, mixed>
+     */
+    public static function schemaSettings(?array $row, string $defaultCache, string $schema): array
+    {
+        $def = !empty($row['def']) ? json_decode($row['def']) : null;
+        $def = $def instanceof stdClass ? $def : new stdClass();
+
+        $format = !empty($def->format) ? (string)$def->format : null;
+        $metaSize = isset($def->meta_size) ? (int)$def->meta_size : 3;
+        $s3TileSet = !empty($def->s3_tile_set) ? (string)$def->s3_tile_set : null;
+
+        return [
+            'cache' => !empty($def->cache) && in_array($def->cache, self::SCHEMA_CACHES, true)
+                ? (string)$def->cache : $defaultCache,
+            'imageFormat' => $format !== null && in_array($format, self::SCHEMA_IMAGE_FORMATS, true) ? $format : 'PNG',
+            'vectorFormat' => $format !== null && in_array($format, self::SCHEMA_VECTOR_FORMATS, true) ? $format : 'MVT',
+            'expires' => !empty($def->ttl) ? max(30, (int)$def->ttl) : 60,
+            // A metatile below 1 is not a smaller metatile, it is a document
+            // MapCache refuses; fall back rather than emit it.
+            'metaSize' => $metaSize >= 1 ? $metaSize : 3,
+            'metaBuffer' => isset($def->meta_buffer) && (int)$def->meta_buffer >= 0 ? (int)$def->meta_buffer : 0,
+            'autoExpire' => !empty($def->auto_expire) ? (int)$def->auto_expire : null,
+            // Goes straight into the S3 object URL, so only a plain segment.
+            's3TileSet' => $s3TileSet !== null && preg_match('/^[A-Za-z0-9_\-.]+$/', $s3TileSet) ? $s3TileSet : null,
+            'title' => !empty($def->title) ? (string)$def->title : $schema,
+            'abstract' => !empty($def->abstract) ? (string)$def->abstract : '',
+        ];
+    }
+
     /**
      * A WMS source element. getfeatureinfo is only emitted when
      * $queryLayers is given (single-table PNG sources).
@@ -277,6 +329,7 @@ class Mapcachefile extends Model
         $wgs84bbox = !empty(App::$param['wgs84boundingbox']) ? implode(' ', App::$param['wgs84boundingbox']) : '-180 -90 180 90';
         $grids = Mapcache::getGrids();
         $gridNames = array_keys($grids);
+        $schemaSettingRows = (new SchemaSettings(connection: $this->connection))->all();
 
         $s = $this->renderHeader();
         foreach ($grids as $grid) {
@@ -328,19 +381,29 @@ class Mapcachefile extends Model
             }
         }
 
-        // Merged per-schema source/tileset with all the schema's layers.
+        // Merged per-schema source/tileset with all the schema's layers. Its
+        // settings come from settings.schema_settings; with no row the resolver
+        // returns exactly the literals this loop used before.
         foreach ($layersPerSchema as $schema => $layers) {
             $s .= "\n  <!-- $schema -->\n";
+            $set = self::schemaSettings($schemaSettingRows[$schema] ?? null, $defaultCache, $schema);
+            $cache = $set['cache'];
+            if ($cache == 's3' && $set['s3TileSet']) {
+                $cache = "s3_" . $schema;
+                $s .= self::renderS3Cache($cache, $set['s3TileSet'], perTileSet: false);
+            }
             $schemaUrl = empty(App::$param['useQgisForMergedLayers'][$schema])
                 ? $this->mapserverUrl($schema, 'wms')
                 : App::$param['mapCache']['wmsHost'] . "/cgi-bin/qgis_mapserv.fcgi?map=/var/www/geocloud2/app/wms/qgsfiles/parsed_"
                 . App::$param['useQgisForMergedLayers'][$schema] . "&transparent=true";
             $s .= self::renderWmsSource($schema, 'image/png', implode(',', $layers), $schemaUrl);
-            $s .= self::renderTileset($schema, $schema, $defaultCache, $gridNames, 'PNG', 60,
-                metaSize: 3, metaBuffer: 0, title: $schema);
+            $s .= self::renderTileset($schema, $schema, $cache, $gridNames, $set['imageFormat'], $set['expires'],
+                metaSize: $set['metaSize'], metaBuffer: $set['metaBuffer'], autoExpire: $set['autoExpire'],
+                title: $set['title'], abstract: $set['abstract']);
             if ($mvtEnabled) {
                 $s .= self::renderWmsSource("$schema.mvt", 'mvt', implode(',', $layers), $this->mapserverUrl($schema, 'wfs'));
-                $s .= self::renderTileset("$schema.mvt", "$schema.mvt", $defaultCache, $gridNames, 'MVT', 60, title: $schema);
+                $s .= self::renderTileset("$schema.mvt", "$schema.mvt", $cache, $gridNames, $set['vectorFormat'], $set['expires'],
+                    autoExpire: $set['autoExpire'], title: $set['title'], abstract: $set['abstract']);
             }
         }
 
