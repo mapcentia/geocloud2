@@ -76,10 +76,20 @@ class Mapcachefile extends Model
 
     /** The cache backends a schema may name. */
     public const SCHEMA_CACHES = ['sqlite', 'disk', 'memcache', 's3'];
-    /** Image formats for the <schema> tileset. */
+    /** Formats the <schema> tileset can be given. */
     public const SCHEMA_IMAGE_FORMATS = ['PNG', 'jpeg_low', 'jpeg_medium', 'jpeg_high'];
-    /** Raw formats for the <schema>.mvt tileset. JSON is excluded: there is no merged .json tileset. */
-    public const SCHEMA_VECTOR_FORMATS = ['MVT'];
+    /**
+     * What a schema's `format` setting may be — the image formats, and only those.
+     *
+     * The <schema>.mvt tileset is always MVT: that is its one possible value, so
+     * accepting 'MVT' as a setting would be a value that provably cannot change
+     * anything, which is the same reason JSON is refused (there is no merged
+     * .json tileset at all). If a second raw format ever exists, this is where a
+     * `vector_format` setting would start.
+     */
+    public const SCHEMA_INPUT_FORMATS = self::SCHEMA_IMAGE_FORMATS;
+    /** The <schema>.mvt tileset's format. Not configurable; reported for clarity. */
+    public const SCHEMA_VECTOR_FORMAT = 'MVT';
 
     /**
      * Resolve a settings.schema_settings row into the values the per-schema loop
@@ -104,25 +114,40 @@ class Mapcachefile extends Model
         $def = !empty($row['def']) ? json_decode($row['def']) : null;
         $def = $def instanceof stdClass ? $def : new stdClass();
 
-        $format = !empty($def->format) ? (string)$def->format : null;
-        $metaSize = isset($def->meta_size) ? (int)$def->meta_size : 3;
-        $s3TileSet = !empty($def->s3_tile_set) ? (string)$def->s3_tile_set : null;
+        // A hand-edited row can hold an object or array where a scalar belongs, and
+        // casting one to string raises an Error — which would stop the whole
+        // database's config from being generated, not just this schema's tileset.
+        $scalar = fn(string $key) => isset($def->$key) && is_scalar($def->$key) ? $def->$key : null;
+
+        $format = $scalar('format') !== null && $scalar('format') !== '' ? (string)$scalar('format') : null;
+        $metaSize = $scalar('meta_size') !== null ? (int)$scalar('meta_size') : 3;
+        $s3TileSet = $scalar('s3_tile_set') !== null && $scalar('s3_tile_set') !== '' ? (string)$scalar('s3_tile_set') : null;
+        $cache = $scalar('cache');
+        $ttl = $scalar('ttl');
+        $metaBuffer = $scalar('meta_buffer');
+        $autoExpire = $scalar('auto_expire');
+        $title = $scalar('title');
+        $abstract = $scalar('abstract');
 
         return [
-            'cache' => !empty($def->cache) && in_array($def->cache, self::SCHEMA_CACHES, true)
-                ? (string)$def->cache : $defaultCache,
+            'cache' => $cache !== null && in_array($cache, self::SCHEMA_CACHES, true)
+                ? (string)$cache : $defaultCache,
             'imageFormat' => $format !== null && in_array($format, self::SCHEMA_IMAGE_FORMATS, true) ? $format : 'PNG',
-            'vectorFormat' => $format !== null && in_array($format, self::SCHEMA_VECTOR_FORMATS, true) ? $format : 'MVT',
-            'expires' => !empty($def->ttl) ? max(30, (int)$def->ttl) : 60,
+            'vectorFormat' => self::SCHEMA_VECTOR_FORMAT,
+            'expires' => !empty($ttl) ? max(30, (int)$ttl) : 60,
             // A metatile below 1 is not a smaller metatile, it is a document
             // MapCache refuses; fall back rather than emit it.
             'metaSize' => $metaSize >= 1 ? $metaSize : 3,
-            'metaBuffer' => isset($def->meta_buffer) && (int)$def->meta_buffer >= 0 ? (int)$def->meta_buffer : 0,
-            'autoExpire' => !empty($def->auto_expire) ? (int)$def->auto_expire : null,
-            // Goes straight into the S3 object URL, so only a plain segment.
-            's3TileSet' => $s3TileSet !== null && preg_match('/^[A-Za-z0-9_\-.]+$/', $s3TileSet) ? $s3TileSet : null,
-            'title' => !empty($def->title) ? (string)$def->title : $schema,
-            'abstract' => !empty($def->abstract) ? (string)$def->abstract : '',
+            'metaBuffer' => $metaBuffer !== null && (int)$metaBuffer >= 0 ? (int)$metaBuffer : 0,
+            'autoExpire' => !empty($autoExpire) ? (int)$autoExpire : null,
+            // Goes straight into the S3 object URL, so a plain segment only. Dots
+            // are allowed inside the name but a dot-only value is refused: libcurl
+            // normalises '.' and '..' away, so tiles would land at the bucket root
+            // and collide with every other schema's objects in a shared bucket.
+            's3TileSet' => $s3TileSet !== null && preg_match('/^[A-Za-z0-9_\-.]+$/', $s3TileSet)
+            && trim($s3TileSet, '.') !== '' ? $s3TileSet : null,
+            'title' => $title !== null && $title !== '' ? (string)$title : $schema,
+            'abstract' => $abstract !== null && $abstract !== '' ? (string)$abstract : '',
         ];
     }
 
@@ -155,6 +180,27 @@ class Mapcachefile extends Model
     }
 
     /**
+     * Make a string safe to put inside a CDATA section.
+     *
+     * "]]>" closes the section, and everything after it is then parsed by MapCache
+     * as configuration rather than as text — a title could inject a <cache>
+     * element (a filesystem write as www-data, or an attacker-controlled S3 URL)
+     * and, because the result fails `apachectl configtest`, mapcache_conf.php
+     * reverts and stops reloading Apache, so no tile configuration takes effect
+     * for any database on the node until someone finds the value.
+     *
+     * The standard split keeps the text readable: "]]>" becomes "]]]]><![CDATA[>",
+     * which a parser reassembles into the original characters.
+     *
+     * Both the per-layer titles (f_table_title) and the per-schema ones pass
+     * through here, so this one place closes it for both.
+     */
+    private static function cdata(string $text): string
+    {
+        return str_replace(']]>', ']]]]><![CDATA[>', $text);
+    }
+
+    /**
      * A tileset element. Optional parts (metatile, metabuffer, auto_expire,
      * wgs84boundingbox) are only emitted when non-null.
      */
@@ -181,8 +227,8 @@ class Mapcachefile extends Model
             $s .= "    <auto_expire>$autoExpire</auto_expire>\n";
         }
         $s .= "    <metadata>\n";
-        $s .= "      <title><![CDATA[$title]]></title>\n";
-        $s .= "      <abstract><![CDATA[$abstract]]></abstract>\n";
+        $s .= "      <title><![CDATA[" . self::cdata($title) . "]]></title>\n";
+        $s .= "      <abstract><![CDATA[" . self::cdata($abstract) . "]]></abstract>\n";
         if ($wgs84bbox !== null) {
             $s .= "      <wgs84boundingbox>$wgs84bbox</wgs84boundingbox>\n";
         }

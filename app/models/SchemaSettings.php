@@ -43,10 +43,22 @@ final class SchemaSettings extends Model
      * Every row, keyed by schema name. Mapcachefile reads this once per config
      * generation rather than querying per schema.
      *
+     * Answers an empty list when the table is not there yet. Mapcachefile calls
+     * this unconditionally, so on an install where the code lands before
+     * `migration/run.php` has run, raising here would stop EVERY database from
+     * being able to regenerate a config that worked before — a deployment-order
+     * footgun out of all proportion to the feature. Missing settings simply mean
+     * the fallbacks, which is exactly the old behaviour.
+     *
      * @return array<string, array<string, mixed>>
      */
     public function all(): array
     {
+        $res = $this->prepare("SELECT to_regclass('settings.schema_settings') IS NOT NULL AS present");
+        $this->execute($res);
+        if (!$this->fetchRow($res)['present']) {
+            return [];
+        }
         $res = $this->prepare('SELECT schema, def, created FROM settings.schema_settings');
         $this->execute($res);
         $out = [];

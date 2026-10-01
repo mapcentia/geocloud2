@@ -18,6 +18,18 @@ use Codeception\Test\Unit;
  * If this fails after a change to the per-schema loop, the likely cause is
  * reusing layerSettings()' fallbacks (expires 30, metaSize null) instead of the
  * loop's own (60 and 3).
+ *
+ * The fixture is a snapshot of whatever mydb contained when it was captured, so
+ * adding or removing a layer or schema in mydb fails this test for a reason that
+ * has nothing to do with the code. **Do not simply recapture it from the current
+ * generator** — that would silently assert that the code agrees with itself and
+ * void the guarantee. A legitimate recapture runs the generator as it stood
+ * BEFORE this feature:
+ *
+ *   git show <commit-before-schema-settings>:app/models/Mapcachefile.php
+ *
+ * into a scratch copy under a different class name, generate with that, and write
+ * the result to app/tests/_data/mapcache_mydb_before.xml.
  */
 class MapcacheConfigUnchangedTest extends Unit
 {

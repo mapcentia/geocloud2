@@ -92,4 +92,16 @@ class SchemaSettingsModelTest extends Unit
             $this->model->delete($odd);
         }
     }
+
+    /**
+     * Mapcachefile::generate() calls all() unconditionally, so on an install where
+     * the code lands before migration/run.php has created the table, raising here
+     * would stop EVERY database from regenerating a config that worked before.
+     * Proven against a connection to a database that has no settings schema at all.
+     */
+    public function testAllAnswersEmptyWhenTheTableIsNotThereYet(): void
+    {
+        $model = new SchemaSettings(connection: new Connection(database: 'postgres'));
+        $this->assertSame([], $model->all());
+    }
 }

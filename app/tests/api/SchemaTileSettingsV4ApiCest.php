@@ -87,10 +87,14 @@ class SchemaTileSettingsV4ApiCest
         $I->assertSame(3, $body['meta_size']);
         $I->assertSame(0, $body['meta_buffer']);
         $I->assertSame('PNG', $body['format']);
-        $I->assertSame('MVT', $body['vector_format']);
+        $I->assertSame('MVT', $body['vector_format'], 'reported, but not configurable');
         $I->assertSame($this->schema, $body['title']);
         $I->assertTrue($body['schema_exists']);
-        $I->assertSame([], $body['_stored'], 'nothing is stored yet, so _stored must be empty');
+        $I->assertSame([], (array)$body['_stored'], 'nothing is stored yet, so _stored must be empty');
+        // An empty PHP array serialises as [], which breaks a generated client that
+        // types _stored as the object the OpenAPI schema declares.
+        $I->assertStringContainsString('"_stored":{}', $I->grabResponse(),
+            '_stored must serialise as a JSON object even when empty');
     }
 
     public function shouldStoreMergeAndReadBack(ApiTester $I): void
@@ -107,7 +111,7 @@ class SchemaTileSettingsV4ApiCest
         $I->assertSame('disk', $body['cache']);
         $I->assertSame(86400, $body['ttl']);
         $I->assertSame(5, $body['meta_size']);
-        $I->assertEqualsCanonicalizing(['cache' => 'disk', 'ttl' => 86400, 'meta_size' => 5], $body['_stored'],
+        $I->assertEqualsCanonicalizing(['cache' => 'disk', 'ttl' => 86400, 'meta_size' => 5], (array)$body['_stored'],
             '_stored must carry only what was actually set');
     }
 
@@ -119,7 +123,7 @@ class SchemaTileSettingsV4ApiCest
         $I->sendGET('/api/v4/schemas/' . $this->schema . '/tile');
         $body = json_decode($I->grabResponse(), true);
         $I->assertSame(60, $body['ttl'], 'removing ttl returns it to the fallback');
-        $I->assertArrayNotHasKey('ttl', $body['_stored']);
+        $I->assertArrayNotHasKey('ttl', (array)$body['_stored']);
         $I->assertSame('disk', $body['cache'], 'the other keys survive');
     }
 
@@ -133,7 +137,19 @@ class SchemaTileSettingsV4ApiCest
         $this->asSuper($I);
         foreach ([['meta_size' => 0], ['meta_size' => -1], ['meta_buffer' => -5], ['ttl' => 0],
                      ['s3_tile_set' => 'other/prefix'], ['s3_tile_set' => '../escape'], ['s3_tile_set' => 'with space'],
-                     ['cache' => 'redis'], ['format' => 'WEBP'], ['format' => 'JSON'], ['theme_column' => 'x']] as $body) {
+                     // libcurl normalises '.' and '..' away, so these would put the
+                     // schema's tiles at the bucket root, on top of every other
+                     // schema's objects in a shared bucket.
+                     ['s3_tile_set' => '..'], ['s3_tile_set' => '.'], ['s3_tile_set' => '...'],
+                     // Closing its own CDATA section would let a title inject
+                     // MapCache configuration; the generator escapes it, and the
+                     // API has no reason to accept it in the first place.
+                     ['title' => 'a]]></title><cache>evil</cache>'], ['abstract' => 'x]]>y'],
+                     ['cache' => 'redis'], ['format' => 'WEBP'], ['format' => 'JSON'],
+                     // MVT is the .mvt tileset's only possible value, so accepting it
+                     // as a setting would accept a value that cannot change anything.
+                     ['format' => 'MVT'],
+                     ['theme_column' => 'x']] as $body) {
             $I->sendPATCH('/api/v4/schemas/' . $this->schema . '/tile', json_encode($body));
             $I->seeResponseCodeIs(HttpCode::BAD_REQUEST, 'must refuse ' . json_encode($body));
             // INPUT_VALIDATION_ERROR is what AbstractApi::checkViolations() emits for an
@@ -144,7 +160,7 @@ class SchemaTileSettingsV4ApiCest
         // None of it may have been stored: _stored is still what the last good patch left.
         $I->sendGET('/api/v4/schemas/' . $this->schema . '/tile');
         $I->assertEqualsCanonicalizing(['cache' => 'disk', 'meta_size' => 5],
-            json_decode($I->grabResponse(), true)['_stored']);
+            (array)json_decode($I->grabResponse(), true)['_stored']);
     }
 
     /** Review Focus 5: a 300-character name must not reach a varchar(255) as a 500 with SQL in it. */
@@ -183,7 +199,7 @@ class SchemaTileSettingsV4ApiCest
         $I->sendDELETE('/api/v4/schemas/' . $this->gone . '/tile');
         $I->seeResponseCodeIs(HttpCode::NO_CONTENT);
         $I->sendGET('/api/v4/schemas/' . $this->gone . '/tile');
-        $I->assertSame([], json_decode($I->grabResponse(), true)['_stored']);
+        $I->assertSame([], (array)json_decode($I->grabResponse(), true)['_stored']);
     }
 
     public function shouldBeSuperUserOnly(ApiTester $I): void

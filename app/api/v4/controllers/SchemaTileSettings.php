@@ -48,7 +48,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     description: 'The PATCH body. Every field is optional; an explicit null removes that setting and returns it to its fallback. Unknown fields are rejected.',
     properties: [
         new OA\Property(property: 'cache', description: 'Cache backend.', type: 'string', enum: ['sqlite', 'disk', 'memcache', 's3'], nullable: true),
-        new OA\Property(property: 'format', description: 'PNG or a jpeg_* quality for the image tileset, or MVT for the vector one. Applied to the tileset whose kind it matches; JSON is not accepted, because there is no merged .json tileset for it to apply to.', type: 'string', enum: ['PNG', 'jpeg_low', 'jpeg_medium', 'jpeg_high', 'MVT'], nullable: true),
+        new OA\Property(property: 'format', description: "The image tileset's format — PNG or a jpeg_* quality. The .mvt tileset is always MVT, which is its only possible value, so there is nothing to configure there and 'MVT' is not accepted here; the response reports it as the read-only vector_format. 'JSON' is not accepted either, because no merged .json tileset exists.", type: 'string', enum: ['PNG', 'jpeg_low', 'jpeg_medium', 'jpeg_high'], nullable: true),
         new OA\Property(property: 'ttl', description: 'Seconds a tile stays valid (mapcache expires). Floored at 30. Defaults to 60.', type: 'integer', nullable: true, example: 86400),
         new OA\Property(property: 'auto_expire', description: 'Seconds after which an existing tile is refreshed on next access.', type: 'integer', nullable: true, example: 3600),
         new OA\Property(property: 'meta_size', description: 'Metatile size N, rendered as N x N tiles per WMS request. At least 1; defaults to 3.', type: 'integer', nullable: true, example: 5),
@@ -66,8 +66,8 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(property: 'schema', type: 'string', readOnly: true, example: 'dagi'),
         new OA\Property(property: 'schema_exists', description: 'False when the settings are waiting for their schema to come back.', type: 'boolean', readOnly: true),
         new OA\Property(property: 'cache', type: 'string', example: 'sqlite'),
-        new OA\Property(property: 'format', description: "The image tileset's format.", type: 'string', example: 'PNG'),
-        new OA\Property(property: 'vector_format', description: "The .mvt tileset's format.", type: 'string', example: 'MVT'),
+        new OA\Property(property: 'format', description: "The image tileset's format. Configurable.", type: 'string', example: 'PNG'),
+        new OA\Property(property: 'vector_format', description: "The .mvt tileset's format. Always MVT and not configurable — reported so a client does not have to assume it.", type: 'string', readOnly: true, example: 'MVT'),
         new OA\Property(property: 'ttl', type: 'integer', example: 60),
         new OA\Property(property: 'auto_expire', type: 'integer', nullable: true),
         new OA\Property(property: 'meta_size', type: 'integer', example: 3),
@@ -150,7 +150,10 @@ final class SchemaTileSettings extends AbstractApi
             's3_tile_set' => $set['s3TileSet'],
             'title' => $set['title'],
             'abstract' => $set['abstract'],
-            '_stored' => $stored,
+            // (object) so an empty set serialises as {} rather than [], which is
+            // what the OpenAPI schema declares and what a generated client with a
+            // typed map expects.
+            '_stored' => (object)$stored,
         ]], single: true);
     }
 
@@ -244,15 +247,24 @@ final class SchemaTileSettings extends AbstractApi
                     choices: Mapcachefile::SCHEMA_CACHES,
                     message: 'cache must be one of: ' . implode(', ', Mapcachefile::SCHEMA_CACHES))),
                 'format' => $nullOr(new Assert\Choice(
-                    choices: array_merge(Mapcachefile::SCHEMA_IMAGE_FORMATS, Mapcachefile::SCHEMA_VECTOR_FORMATS),
-                    message: 'format must be one of: ' . implode(', ', array_merge(Mapcachefile::SCHEMA_IMAGE_FORMATS, Mapcachefile::SCHEMA_VECTOR_FORMATS)))),
+                    choices: Mapcachefile::SCHEMA_INPUT_FORMATS,
+                    message: 'format must be one of: ' . implode(', ', Mapcachefile::SCHEMA_INPUT_FORMATS))),
                 'ttl' => $nullOr(new Assert\Type('integer'), new Assert\Positive()),
                 'auto_expire' => $nullOr(new Assert\Type('integer'), new Assert\Positive()),
                 'meta_size' => $nullOr(new Assert\Type('integer'), new Assert\Range(min: 1, max: 16)),
                 'meta_buffer' => $nullOr(new Assert\Type('integer'), new Assert\Range(min: 0, max: 512)),
-                's3_tile_set' => $nullOr(new Assert\Type('string'), new Assert\Length(max: 255), new Assert\Regex('/^[A-Za-z0-9_\-.]+$/')),
-                'title' => $nullOr(new Assert\Type('string'), new Assert\Length(max: 255)),
-                'abstract' => $nullOr(new Assert\Type('string'), new Assert\Length(max: 2048)),
+                // A plain path segment, and not a dot-only one: libcurl normalises
+                // '.' and '..' away, so those would put this schema's tiles at the
+                // bucket root, over every other schema's objects.
+                's3_tile_set' => $nullOr(new Assert\Type('string'), new Assert\Length(max: 255),
+                    new Assert\Regex('/^[A-Za-z0-9_\-.]+$/'), new Assert\Regex('/[^.]/')),
+                // "]]>" would close the CDATA section these are written into and let
+                // the rest be parsed as MapCache configuration. renderTileset()
+                // escapes it, but there is no reason to store it either.
+                'title' => $nullOr(new Assert\Type('string'), new Assert\Length(max: 255),
+                    new Assert\Regex(pattern: '/\]\]>/', match: false, message: 'title must not contain "]]>"')),
+                'abstract' => $nullOr(new Assert\Type('string'), new Assert\Length(max: 2048),
+                    new Assert\Regex(pattern: '/\]\]>/', match: false, message: 'abstract must not contain "]]>"')),
             ],
             allowExtraFields: false,
         );

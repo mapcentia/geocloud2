@@ -82,4 +82,28 @@ class TilecacheBustSchemaTest extends Unit
         $this->assertSame('memcache', Tilecache::cacheBackendFor($this->schema, $this->connection));
         $this->assertSame('memcache', Tilecache::cacheBackendFor($this->schema . '.json', $this->connection));
     }
+
+    /**
+     * The clear-cache endpoint's schema mode is DELETE
+     * /controllers/tilecache/schema/<schema>, where part(4) is the literal word
+     * "schema" and part(5) is the name. It used to resolve the backend by looking
+     * part(4) — the word "schema" — up as a layer, so it always got the install
+     * default: with cache "s3" or "memcache" on a schema the switch matched no
+     * branch and the method returned an empty response, reporting nothing at all
+     * while deleting nothing. This pins the resolution those two segments imply.
+     */
+    public function testTheSchemaModeOfTheEndpointResolvesTheSchemaNotTheWordSchema(): void
+    {
+        $this->settings->patch($this->schema, ['cache' => 'disk']);
+        // What delete_index() must ask about: part(5), the schema.
+        $this->assertSame('disk', Tilecache::cacheBackendFor($this->schema, $this->connection));
+        // What it used to ask about: the literal segment, which is no layer and no
+        // schema, so it can only ever answer the install default.
+        $this->assertSame($this->installDefault(), Tilecache::cacheBackendFor('schema', $this->connection));
+        $this->assertNotSame(
+            Tilecache::cacheBackendFor('schema', $this->connection),
+            Tilecache::cacheBackendFor($this->schema, $this->connection),
+            'if these agreed, this test could not tell the two readings apart'
+        );
+    }
 }

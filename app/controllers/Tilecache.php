@@ -34,12 +34,14 @@ class Tilecache extends Controller
      */
     public function delete_index(): array
     {
-        $layer = new \app\models\Layer();
-        $cache = $layer->getAll(Database::getDb(), true, Input::getPath()->part(4), false, true)["data"][0]["def"]->cache;
-
-        // Default
-        // =======
-        $cache = $cache ?: App::$param["mapCache"]["type"];
+        // In schema mode the route is .../tilecache/schema/<schema>, so part(4) is
+        // the literal word "schema" and the name is in part(5). Looking part(4) up
+        // as a layer — which this did — could only ever answer the install default,
+        // so a schema configured for another backend silently cleared nothing.
+        $target = Input::getPath()->part(4) === "schema"
+            ? (string)Input::getPath()->part(5)
+            : (string)Input::getPath()->part(4);
+        $cache = self::cacheBackendFor($target);
 
         $response = [];
         switch ($cache) {
@@ -117,6 +119,15 @@ class Tilecache extends Controller
 
                 $response['success'] = true;
                 $response['message'] = "Tile cache deleted.";
+                break;
+
+            default:
+                // s3 and memcache have no delete here. Saying so is the point: this
+                // used to fall through and return an empty response, so the caller
+                // was told nothing at all while nothing was deleted.
+                $response['success'] = false;
+                $response['message'] = "Cannot clear a '$cache' tile cache from here.";
+                $response['code'] = '501';
                 break;
         }
         return $response;
