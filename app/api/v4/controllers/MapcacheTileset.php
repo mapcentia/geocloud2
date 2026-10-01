@@ -68,15 +68,15 @@ final class MapcacheTileset extends AbstractApi
 
     #[OA\Delete(path: '/api/v4/mapcache/database/{database}/tileset/{tileset}', operationId: 'deleteMapcacheTileset', description: "Delete a MapCache tileset's cached tiles — a layer's tileset, or the merged per-schema one (a bare schema name). A FULL delete (no bbox/zoom) wipes the backend store directly — synchronous for sqlite/bdb (200), background for disk (202); s3/memcache are not supported for a full delete (400 — use a scoped delete or TTL/lifecycle). A SCOPED delete (bbox and/or zoom) runs mapcache_seed -m delete as a background job (202). Requires write/owner authorization.", tags: ['Mapcache'])]
     #[OA\Parameter(name: 'database', description: 'Database name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_database')]
-    #[OA\Parameter(name: 'tileset', description: 'Tileset name: a layer\'s "schema.table" (vector variants "schema.table.mvt"/".json"), or a bare "schema" for the merged per-schema tileset drawn from every layer in that schema ("schema.mvt" for its vector variant). Clearing a merged schema tileset is reserved for the database owner, because no single layer\'s privileges govern it; an unknown schema answers 404.', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema.roads')]
+    #[OA\Parameter(name: 'tileset', description: 'Tileset name: a layer\'s "schema.table" (vector variants "schema.table.mvt"/".json"), or a bare "schema" for the merged per-schema tileset drawn from every layer in that schema ("schema.mvt" for its vector variant). Clearing a merged schema tileset is reserved for the database super user, because no single layer\'s privileges govern it; an unknown schema answers 404.', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema.roads')]
     #[OA\Parameter(name: 'bbox', description: 'Optional extent to delete (triggers a scoped mapcache_seed delete): minx,miny,maxx,maxy in the grid SRS.', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: '890000,7260000,1730000,7870000')]
     #[OA\Parameter(name: 'zoom', description: 'Optional zoom range to delete (triggers a scoped mapcache_seed delete): minzoom,maxzoom (or a single zoom).', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: '0,12')]
     #[OA\Parameter(name: 'grid', description: 'Grid name for a scoped delete (default g20).', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'g20')]
     #[OA\Response(response: 200, description: 'Tile cache deleted (synchronous backend wipe)')]
     #[OA\Response(response: 202, description: 'Deletion job started (scoped seed, or background disk wipe)')]
-    #[OA\Response(response: 400, description: 'Bad request, or full delete unsupported for the backend (s3/memcache)')]
+    #[OA\Response(response: 400, description: "Bad request — a missing tileset, a malformed bbox/zoom/grid, a schema name that is not a possible one, or a full delete of an s3/memcache backend (use a scoped delete instead)")]
     #[OA\Response(response: 401, description: 'Authentication required')]
-    #[OA\Response(response: 403, description: 'Not authorized — including a non-owner clearing a merged per-schema tileset (SUPER_USER_ONLY)')]
+    #[OA\Response(response: 403, description: 'Not authorized — including anyone but the database super user clearing a merged per-schema tileset (SUPER_USER_ONLY)')]
     #[OA\Response(response: 404, description: 'Database cache config or tileset not found (scoped delete), or the schema of a merged tileset does not exist (SCHEMA_NOT_FOUND)')]
     #[Override]
     public function delete_index(): Response
@@ -198,7 +198,10 @@ final class MapcacheTileset extends AbstractApi
     private function requireSuperUserFor(string $database, string $schema): void
     {
         if (empty($this->route->jwt['data']['superUser'])) {
-            throw new GC2Exception('Clearing a merged per-schema tileset is reserved for the database owner',
+            // "super user" and not "owner": sub users belong to schemas in this API,
+            // so "owner" reads as schema owner, while the check is the database's
+            // super user — which is what the error code has always said.
+            throw new GC2Exception('Clearing a merged per-schema tileset is reserved for the database super user',
                 403, null, 'SUPER_USER_ONLY');
         }
         if (!preg_match('/^[A-Za-z_][A-Za-z0-9_\-]*$/', $schema)) {
