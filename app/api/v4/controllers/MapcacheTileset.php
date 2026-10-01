@@ -38,7 +38,17 @@ use Override;
  * scoped invalidation by extent and zoom range. Because a full-tileset delete over a large cache
  * can take a long time, the seed process is launched detached in the background and tracked in
  * settings.seed_jobs (the same table the tile seeder uses); the request returns 202 Accepted with
- * a job uuid/pid that can be polled or killed through the existing tileseeder tooling.
+ * that row's uuid and the pid of the process this request itself spawned.
+ *
+ * That row is NOT a tile seeder queue job, and the tileseeder endpoints cannot be used to follow or
+ * stop it. It is written through app\models\Tileseeder with no `status`, so no seed worker ever
+ * claims it, `GET /api/v3/tileseeder` (which lists `status = 'running'` rows) never shows it, and a
+ * `DELETE /api/v3/tileseeder/{uuid}` on it answers `{"success": false, "message": "No running job
+ * with uuid: …"}` — the delete keeps running. `GET /api/v4/tileseeder/jobs` does list it, with
+ * `status: null`, and a DELETE there is a no-op 204. The uuid is therefore a correlation id for the
+ * node's own logs and the `pid` is only meaningful on the node that served the request; stopping a
+ * scoped delete means killing that pid there. Putting these deletes on the queue is a behaviour
+ * change, not a doc fix, and has not been decided.
  *
  * Deletion is a write operation: it requires an authenticated owner/superuser or a sub-user with
  * `read/write` on the layer (Bearer token or HTTP Basic), independent of the layer's read-auth level.

@@ -14,8 +14,8 @@ namespace app\api\v4\Responses;
  */
 final class AcceptedResponse extends Response
 {
-    public function __construct(array|string|null $data)
+    public function __construct(array|string|null $data, ?string $location = null)
     {
-        parent::__construct(202, $data);
+        parent::__construct(202, $data, $location);
     }
 }

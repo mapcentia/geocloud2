@@ -467,6 +467,22 @@ SQL;
                 END IF;
             END $$;";
 
+        // The tile seeder queue (docs/superpowers/specs/2026-09-30-tileseeder-v4-design.md):
+        // a seed is a row a worker claims, so status, log and cancel work from any node.
+        // pid and host are only known once a worker has claimed the row.
+        $sqls[] = "ALTER TABLE settings.seed_jobs ALTER COLUMN pid DROP NOT NULL";
+        $sqls[] = "ALTER TABLE settings.seed_jobs ALTER COLUMN host DROP NOT NULL";
+        foreach ([
+            'status' => 'VARCHAR(16)', 'username' => 'VARCHAR(255)', 'tileset' => 'VARCHAR(255)',
+            'grid' => 'VARCHAR(255)', 'zoom_start' => 'SMALLINT', 'zoom_end' => 'SMALLINT',
+            'extent_layer' => 'VARCHAR(255)', 'threads' => 'SMALLINT',
+            'started' => 'TIMESTAMPTZ', 'finished' => 'TIMESTAMPTZ', 'heartbeat' => 'TIMESTAMPTZ',
+            'cancel_requested' => 'TIMESTAMPTZ', 'error' => 'TEXT', 'log' => 'TEXT', 'log_path' => 'TEXT',
+        ] as $col => $type) {
+            $sqls[] = "ALTER TABLE settings.seed_jobs ADD COLUMN IF NOT EXISTS $col $type";
+        }
+        $sqls[] = "CREATE INDEX IF NOT EXISTS seed_jobs_status_created_idx ON settings.seed_jobs (status, created)";
+
         include 'Views1.php';
         return $sqls;
     }

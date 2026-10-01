@@ -65,6 +65,24 @@ class App
             "formats" => ["parquet"],
         ],
 
+        // Tile seeder (docs/superpowers/specs/2026-09-30-tileseeder-v4-design.md).
+        // maxConcurrent is per node: the cost is CPU and cache writes on that node.
+        "tileseeder" => [
+            "maxConcurrent" => 1,
+            "maxThreads" => 4,
+            "maxPending" => 20,
+            "maxHours" => 12,
+            "cancelGraceSeconds" => 10,
+            "logTailBytes" => 8192,
+            // Node-local seed log files only (app/tmp/<db>/seed/*.log), not the log
+            // tail the API serves, which lives in the job row. Not a guarantee: the
+            // pre-existing clean_tmp_dir.php cron (daily) removes everything under
+            // app/tmp older than 4 hours, so on the standard image a seed log never
+            // survives much more than a day, whatever this says.
+            "keepLogHours" => 72,
+            "seedBinary" => "/usr/local/bin/mapcache_seed",
+        ],
+
         // MapCache config
         // In Docker use the names of the containers
         "mapCache" => [
