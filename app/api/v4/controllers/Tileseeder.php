@@ -45,12 +45,12 @@ use Symfony\Component\Validator\Constraints as Assert;
     description: 'The POST request body to queue a seed job. tileset, grid, zoom_start and zoom_end are required and, unlike their SeedJob response counterparts, never null here. Every other SeedJob property is server-owned and ignored (in fact rejected) on input.',
     required: ['tileset', 'grid', 'zoom_start', 'zoom_end'],
     properties: [
-        new OA\Property(property: 'name', description: 'Optional label for the job.', type: 'string', example: 'Seed roads'),
-        new OA\Property(property: 'tileset', description: 'The mapcache tileset (layer key).', type: 'string', example: 'myschema.roads'),
-        new OA\Property(property: 'grid', type: 'string', example: 'GoogleMapsCompatible'),
-        new OA\Property(property: 'zoom_start', type: 'integer', example: 0),
-        new OA\Property(property: 'zoom_end', type: 'integer', example: 12),
-        new OA\Property(property: 'extent_layer', type: 'string', nullable: true),
+        new OA\Property(property: 'name', description: 'Optional label for the job.', type: 'string', maxLength: 255, example: 'Seed roads'),
+        new OA\Property(property: 'tileset', description: 'The mapcache tileset (layer key).', type: 'string', maxLength: 255, example: 'myschema.roads'),
+        new OA\Property(property: 'grid', description: "One of the grids that tileset declares in the database's tile cache configuration (GC2 generates a grid called g20 for every tileset). Any other name is 400 UNKNOWN_GRID, and the message lists the grids the tileset does have.", type: 'string', maxLength: 255, example: 'g20'),
+        new OA\Property(property: 'zoom_start', description: "First zoom level to seed. Must be >= 0 and <= zoom_end.", type: 'integer', example: 0),
+        new OA\Property(property: 'zoom_end', description: "Last zoom level to seed. Must be within the grid's own zoom levels.", type: 'integer', example: 12),
+        new OA\Property(property: 'extent_layer', description: 'Optional relation whose features bound the seeded area. It must exist and the caller must have read privilege on it.', type: 'string', maxLength: 255, nullable: true),
         new OA\Property(property: 'threads', type: 'integer'),
     ],
     type: 'object',
@@ -110,8 +110,9 @@ class Tileseeder extends AbstractApi
                     new OA\Schema(ref: '#/components/schemas/SeedJob'),
                     new OA\Schema(type: 'array', items: new OA\Items(ref: '#/components/schemas/SeedJob'))])),
             new OA\Response(response: 400, description: 'Bad request: malformed body, an empty list, or a field failing validation'),
-            new OA\Response(response: 403, description: 'Insufficient privileges'),
-            new OA\Response(response: 404, description: 'Unknown tileset'),
+            new OA\Response(response: 403, description: 'Insufficient privileges on the tileset, or on the extent layer'),
+            new OA\Response(response: 404, description: 'Unknown tileset, or unknown extent layer'),
+            new OA\Response(response: 406, description: 'POST was addressed to a job uuid; POST the collection instead'),
             new OA\Response(response: 429, description: 'tileseeder.maxPending would be exceeded'),
         ])]
     #[AcceptableContentTypes(['application/json'])]
@@ -137,8 +138,18 @@ class Tileseeder extends AbstractApi
         // one layer earlier; either alone would leave the other caller exposed.
         foreach ($list as $job) {
             SeedCommand::validate($jwt['database'], (string)$job['tileset'], (string)$job['grid'],
-                (int)$job['zoom_start'], (int)$job['zoom_end'], $job['extent_layer'] ?? null, (int)($job['threads'] ?? 1));
+                (int)$job['zoom_start'], (int)$job['zoom_end'], $job['extent_layer'] ?? null, (int)($job['threads'] ?? 1),
+                $this->connection);
             $this->requireWrite((string)$job['tileset']);
+            // Spec §7: the extent layer must be a relation the caller may read.
+            // seed_run.php opens the OGR datasource as the configured Postgres
+            // superuser, so without this a sub-user with read/write on one
+            // tileset could derive the seeded extent from any relation in the
+            // database and read its bbox back out of the tile set it got.
+            // Existence is already proven by SeedCommand::validate() above.
+            if (!empty($job['extent_layer'])) {
+                $this->requireRead((string)$job['extent_layer']);
+            }
         }
         $rows = [];
         foreach ($list as $job) {
@@ -198,6 +209,9 @@ class Tileseeder extends AbstractApi
                 new OA\Property(property: 'success', type: 'boolean', example: true),
                 new OA\Property(property: 'message', type: 'string', example: 'Stopping'),
                 new OA\Property(property: 'uuid', type: 'array', items: new OA\Items(type: 'string')),
+                new OA\Property(property: '_links', description: 'Links to the cancelled job(s), for polling until the worker has acted.', type: 'object', properties: [
+                    new OA\Property(property: 'self', type: 'string', example: '/api/v4/tileseeder/jobs/c4a3797e-ec6b-4dac-9474-ada9083620f3'),
+                ]),
             ], type: 'object')),
             new OA\Response(response: 204, description: 'Cancelled or already finished'),
             new OA\Response(response: 400, description: 'A uuid is malformed'),
@@ -215,7 +229,11 @@ class Tileseeder extends AbstractApi
             $running = $this->jobs->requestCancel($u) === 'cancelling' || $running;
         }
         return $running
-            ? new AcceptedResponse(['success' => true, 'message' => 'Stopping', 'uuid' => $uuids])
+            // Spec §4.2: the 202 "links to itself for polling", in the same
+            // shape a GET answers with, so a client does not have to rebuild
+            // the URL to watch the cancel land.
+            ? new AcceptedResponse(['success' => true, 'message' => 'Stopping', 'uuid' => $uuids,
+                '_links' => ['self' => '/api/v4/tileseeder/jobs/' . implode(',', $uuids)]])
             : $this->deleteResponse();
     }
 
@@ -252,11 +270,38 @@ class Tileseeder extends AbstractApi
      */
     private function requireWrite(string $tileset): void
     {
+        $this->requirePrivilege($tileset, ['read/write'], 'Insufficient privileges to seed this tileset');
+    }
+
+    /**
+     * Read (or better) on a relation the request only reads: the extent layer.
+     * Same machinery as requireWrite(), one rank lower — the privilege vocabulary
+     * is none / read / read/write, so 'read' alone must be accepted here or an
+     * extent layer a sub-user can legitimately read would be refused.
+     *
+     * @throws GC2Exception|\Throwable
+     */
+    private function requireRead(string $relation): void
+    {
+        $this->requirePrivilege($relation, ['read', 'read/write'],
+            'Insufficient privileges to read this extent layer');
+    }
+
+    /**
+     * The privilege check both of the above share: owner (or super-user) passes,
+     * otherwise the caller's highest privilege on the relation — through its own
+     * grants and every group it inherits from — must be one of $accepted.
+     *
+     * @param list<string> $accepted
+     * @throws GC2Exception|\Throwable
+     */
+    private function requirePrivilege(string $relation, array $accepted, string $message): void
+    {
         $jwt = $this->route->jwt['data'];
         if (!empty($jwt['superUser'])) {
             return;
         }
-        $layer = preg_replace('/\.(mvt|json)$/i', '', $tileset);
+        $layer = preg_replace('/\.(mvt|json)$/i', '', $relation);
         $schema = explode('.', $layer)[0];
         $auth = new Authorization(connection: $this->connection);
         // User lives in the central user database and repoints whatever
@@ -269,10 +314,10 @@ class Tileseeder extends AbstractApi
             return;
         }
         $privileges = json_decode((string)new Model(connection: $this->connection)->getGeometryColumns($layer, 'privileges'), true) ?: [];
-        if ($auth->extractHighestPrivilege($privileges, $jwt['uid'], $chain) === 'read/write') {
+        if (in_array($auth->extractHighestPrivilege($privileges, $jwt['uid'], $chain), $accepted, true)) {
             return;
         }
-        throw new GC2Exception('Insufficient privileges to seed this tileset', 403, null, 'INSUFFICIENT_PRIVILEGES');
+        throw new GC2Exception($message, 403, null, 'INSUFFICIENT_PRIVILEGES');
     }
 
     #[Override]
@@ -293,8 +338,25 @@ class Tileseeder extends AbstractApi
             }
             $this->validateRequest(collection: self::getAssert($method), data: Input::getBody(), method: $method);
         }
+        // A uuid in the path is a resource, and POST creates one: queueing a job
+        // and silently ignoring the segment the client addressed is the mistake
+        // SchedulerJob, Snapshot and eight other controllers answer 406 for.
+        if ($method === 'post' && !empty($this->route->getParam('uuid'))) {
+            $this->postWithResource();
+        }
         if ($method === 'delete' && empty($this->route->getParam('uuid'))) {
             throw new GC2Exception('A job uuid is required', 400, null, 'INVALID_REQUEST');
+        }
+        // ?status[]=pending hands Input::get() an array, which reaches
+        // SeedJob::list(?string ...) as a TypeError — a 500 for what is plainly
+        // a bad request. Anything that is not a scalar (or absent) is refused.
+        if ($method === 'get') {
+            foreach (['status', 'tileset'] as $param) {
+                $value = Input::get($param);
+                if ($value !== null && !is_scalar($value)) {
+                    throw new GC2Exception("The $param filter must be a single value", 400, null, 'INVALID_REQUEST');
+                }
+            }
         }
     }
 
@@ -309,16 +371,21 @@ class Tileseeder extends AbstractApi
     private static function getAssert(string $method): Assert\Collection
     {
         $ident = '/^[A-Za-z0-9_.:\-]+$/';
+        // settings.seed_jobs stores all four of these as varchar(255), so without
+        // a length here a 300-character name reached Postgres and came back as
+        // SQLSTATE[22001] "value too long" — a 500 with the INSERT echoed to the
+        // client, for input the API can perfectly well refuse itself.
+        $maxLength = 255;
         return new Assert\Collection(
             fields: [
-                'name' => new Assert\Optional(new Assert\Type('string')),
-                'tileset' => new Assert\Required([new Assert\NotBlank(), new Assert\Type('string'), new Assert\Regex($ident)]),
-                'grid' => new Assert\Required([new Assert\NotBlank(), new Assert\Type('string')]),
+                'name' => new Assert\Optional([new Assert\Type('string'), new Assert\Length(max: $maxLength)]),
+                'tileset' => new Assert\Required([new Assert\NotBlank(), new Assert\Type('string'), new Assert\Length(max: $maxLength), new Assert\Regex($ident)]),
+                'grid' => new Assert\Required([new Assert\NotBlank(), new Assert\Type('string'), new Assert\Length(max: $maxLength)]),
                 'zoom_start' => new Assert\Required(new Assert\Type('integer')),
                 'zoom_end' => new Assert\Required(new Assert\Type('integer')),
                 'extent_layer' => new Assert\Optional(new Assert\AtLeastOneOf([
                     new Assert\IsNull(),
-                    new Assert\Sequentially([new Assert\Type('string'), new Assert\Regex($ident)]),
+                    new Assert\Sequentially([new Assert\Type('string'), new Assert\Length(max: $maxLength), new Assert\Regex($ident)]),
                 ])),
                 'threads' => new Assert\Optional(new Assert\Type('integer')),
             ],

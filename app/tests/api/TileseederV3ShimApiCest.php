@@ -13,14 +13,20 @@ class TileseederV3ShimApiCest
     private $token;
     private $schema = 'seedv3';
     private $uuid;
-    private $grid;
+    /**
+     * The grid the fixture config's tileset declares — "g20", which is what GC2's
+     * config generator writes for every real tileset. v3 used to pass `grid`
+     * straight to mapcache_seed, so a v3 client sending g20 worked; validating it
+     * against app/conf/grids (which has no g20) broke exactly that client, and
+     * this value is what keeps it working.
+     */
+    private $grid = 'g20';
 
     public function shouldPrepare(ApiTester $I)
     {
-        // Use whatever grid this environment's mapcache is actually configured
-        // with, the same way TileseederV4ApiCest does, rather than a hardcoded
-        // name that may not exist here.
-        $this->grid = (string)array_key_first(\app\controllers\Mapcache::getGrids());
+        $I->assertArrayNotHasKey($this->grid, \app\controllers\Mapcache::getGrids(),
+            'this install has a grid file called ' . $this->grid . ' in app/conf/grids, which makes this '
+            . 'cest pass for the wrong reason — rename the fixture grid');
         $ts = time();
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->sendPOST('/api/v2/user', json_encode(['name' => "seedv3 $ts", 'email' => "seedv3$ts@example.com", 'password' => $this->password]));
@@ -37,8 +43,19 @@ class TileseederV3ShimApiCest
         $I->seeResponseCodeIs(HttpCode::CREATED);
         // The tileset must exist in the database's mapcache config, exactly as
         // TileseederV4ApiCest sets it up: generating it from the layer is a
-        // different feature's job.
-        file_put_contents($this->configPath(), "<mapcache>\n  <tileset name=\"" . $this->schema . ".roads\"/>\n</mapcache>\n");
+        // different feature's job. Written the way GC2 writes a real one, with
+        // the grid defined at the top level and declared by the tileset — that
+        // declaration is what `grid` is validated against.
+        file_put_contents($this->configPath(), <<<XML
+            <mapcache>
+              <grid name="{$this->grid}">
+                <resolutions>1638.4 819.2 409.6 204.8 102.4 51.2 25.6 12.8</resolutions>
+              </grid>
+              <tileset name="{$this->schema}.roads">
+                <grid>{$this->grid}</grid>
+              </tileset>
+            </mapcache>
+            XML);
     }
 
     private function configPath(): string
@@ -177,10 +194,13 @@ class TileseederV3ShimApiCest
     /**
      * layer and grid get a (string) cast; extent must behave the same way for
      * any scalar, not just get rejected outright -- a numeric extent used to
-     * coerce to "123", validate and queue before an earlier, over-eager
-     * !is_string() guard turned it into a 400 too.
+     * coerce to "123" before an earlier, over-eager !is_string() guard turned it
+     * into a 400 too. It still coerces; what stops it now is the extent layer
+     * existence check spec §7 asks for, and the two are told apart by their error
+     * codes: a non-scalar never becomes a string (INVALID_REQUEST, above) while
+     * "123" does and is then looked up as a relation (EXTENT_LAYER_NOT_FOUND).
      */
-    public function shouldCoerceNumericExtentLikeLayerAndGrid(ApiTester $I)
+    public function shouldCoerceNumericExtentAndThenLookItUpAsARelation(ApiTester $I)
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
         $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
@@ -188,17 +208,60 @@ class TileseederV3ShimApiCest
             'name' => 'numeric extent', 'layer' => $this->schema . '.roads', 'grid' => $this->grid,
             'start' => 0, 'end' => 1, 'extent' => 123, 'threads' => 1,
         ]));
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        $I->seeResponseContainsJson(['success' => false, 'errorCode' => 'EXTENT_LAYER_NOT_FOUND']);
+    }
+
+    /**
+     * The v3 shim goes through the same validator as v4, so an extent that is a
+     * real relation of the database is queued and lands in the row v4 reads --
+     * and an extent that is not is a 404 now, instead of an exit-1 seed run
+     * minutes later in a log nobody reads (spec §7). The accepted case is what
+     * keeps the refusal from passing for the wrong reason.
+     */
+    public function shouldQueueWithARealExtentAndRefuseAnUnknownOne(ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
+        $I->sendPOST('/api/v3/tileseeder', json_encode([
+            'name' => 'real extent', 'layer' => $this->schema . '.roads', 'grid' => $this->grid,
+            'start' => 0, 'end' => 1, 'extent' => $this->schema . '.roads', 'threads' => 1,
+        ]));
         $I->seeResponseCodeIsSuccessful();
-        $body = json_decode($I->grabResponse(), true);
-        $I->assertArrayHasKey('uuid', $body);
-
-        // The queued row really did get extent_layer -- a (string) cast, not a
-        // rejection.
-        $I->sendGET('/api/v4/tileseeder/jobs/' . $body['uuid']);
+        $queued = json_decode($I->grabResponse(), true)['uuid'];
+        $I->sendGET('/api/v4/tileseeder/jobs/' . $queued);
         $I->seeResponseCodeIs(HttpCode::OK);
-        $I->assertSame('123', json_decode($I->grabResponse(), true)['extent_layer']);
+        $I->assertSame($this->schema . '.roads', json_decode($I->grabResponse(), true)['extent_layer']);
+        $I->sendDELETE('/api/v3/tileseeder/' . $queued);
+        $I->seeResponseCodeIsSuccessful();
 
-        $I->sendDELETE('/api/v3/tileseeder/' . $body['uuid']);
+        $I->sendPOST('/api/v3/tileseeder', json_encode([
+            'name' => 'unknown extent', 'layer' => $this->schema . '.roads', 'grid' => $this->grid,
+            'start' => 0, 'end' => 1, 'extent' => $this->schema . '.nosuchrelation', 'threads' => 1,
+        ]));
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        $I->seeResponseContainsJson(['success' => false, 'errorCode' => 'EXTENT_LAYER_NOT_FOUND']);
+    }
+
+    /**
+     * v3's own compatibility case for the grid fix: the grid this tileset
+     * declares is accepted and queued. Validated against app/conf/grids -- what
+     * the code did before this round -- the same request was a 400, which broke
+     * every v3 client that had been passing g20 straight through to the binary.
+     */
+    public function shouldAcceptTheGridTheTilesetDeclares(ApiTester $I)
+    {
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
+        $I->sendPOST('/api/v3/tileseeder', json_encode([
+            'name' => 'declared grid', 'layer' => $this->schema . '.roads', 'grid' => $this->grid,
+            'start' => 0, 'end' => 2, 'threads' => 1,
+        ]));
+        $I->seeResponseCodeIsSuccessful();
+        $uuid = json_decode($I->grabResponse(), true)['uuid'];
+        $I->sendGET('/api/v4/tileseeder/jobs/' . $uuid);
+        $I->assertSame($this->grid, json_decode($I->grabResponse(), true)['grid']);
+        $I->sendDELETE('/api/v3/tileseeder/' . $uuid);
         $I->seeResponseCodeIsSuccessful();
     }
 

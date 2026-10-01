@@ -105,8 +105,16 @@ class Tileseeder extends Controller
         }
         $threads = (int)($arr["threads"] ?? 1);
 
-        SeedCommand::validate($database, $tileset, $grid, $zoomStart, $zoomEnd, $extent, $threads);
-        $row = new SeedJob(connection: new Connection(database: $database))->queue([
+        // One Connection for both the validator (which uses it to prove an
+        // `extent` relation exists, spec §7) and the queue write, so v3 and v4
+        // validate against exactly the same database.
+        $connection = new Connection(database: $database);
+        SeedCommand::validate($database, $tileset, $grid, $zoomStart, $zoomEnd, $extent, $threads, $connection);
+        // No privilege check on `extent` here: index.php refuses every
+        // api/v3/tileseeder route that is not a super-user, and a super-user may
+        // read every relation in its own database anyway (the v4 controller's
+        // requireRead() returns early for exactly that case).
+        $row = new SeedJob(connection: $connection)->queue([
             'name' => $arr["name"] ?? $tileset,
             'username' => $jwt["uid"],
             'tileset' => $tileset,
