@@ -10,6 +10,12 @@
  * so a row is never left 'running' with an orphaned mapcache_seed still writing
  * tiles behind it — the pattern get.php uses for scheduler runs.
  *
+ * Ownership runs the other way too: whoever holds the row holds the outcome. If
+ * the heartbeat finds the row is no longer 'running' (the reaper, or a tick that
+ * mis-probed the spawn, got there first) this process stops its child and exits
+ * without writing a status at all, rather than overwriting what that other
+ * writer decided.
+ *
  * Usage: php seed_run.php --database=<db> --uuid=<uuid> [--binary=<path>]
  */
 
@@ -170,7 +176,24 @@ while (true) {
         $ok = $finalise($exit === 0 ? 'succeeded' : 'failed', $exit === 0 ? null : "mapcache_seed exited with $exit");
         exit($ok && $exit === 0 ? 0 : 1);
     }
-    $jobs->heartbeat($uuid, tail($logPath, $tailBytes));
+    if ($jobs->heartbeat($uuid, tail($logPath, $tailBytes)) === 0) {
+        // The row is not 'running' any more, so this process no longer owns it:
+        // the reaper failed it as stale (a PDO stall longer than the stale
+        // window), or the tick's own 200 ms posix_kill($pid, 0) probe read a
+        // false negative and finalised it as "could not spawn". Either way the
+        // other writer owns the row's outcome, and the only thing left that is
+        // this process's business is the child it started — which would
+        // otherwise keep writing tiles, unobservable and unstoppable
+        // (requestCancel() answers 'noop' for a non-running row) while the
+        // freed slot let the next tick start a second seed on top of it. Stop
+        // the child and leave the status alone, including from the shutdown
+        // function: $finalised is set first so a throw inside stopChild() can't
+        // let it write one either.
+        $finalised = true;
+        stopChild($process, $grace);
+        error_log("seed_run.php: job $uuid is no longer 'running' — someone else finished it; stopped the seed and exited without writing a status");
+        exit(1);
+    }
     if ($jobs->isCancelRequested($uuid)) {
         // Reuse the same stop sequence the handlers use: SIGTERM, wait the grace
         // period, SIGKILL if it is still alive — written once, used everywhere a

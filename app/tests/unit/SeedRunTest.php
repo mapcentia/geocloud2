@@ -151,6 +151,100 @@ class SeedRunTest extends Unit
     }
 
     /**
+     * Important 1 of the whole-branch review. heartbeat() and finish() both carry
+     * `AND status = 'running'`, and requestCancel() answers 'noop' for anything
+     * else, so a row taken out of 'running' while its run is alive — reapStale()
+     * after a long PDO stall, or the tick's own 200 ms posix_kill($pid, 0) spawn
+     * probe reading a false negative — used to leave a seed that could not be
+     * observed, cancelled or counted, writing tiles until the 12-hour timeout,
+     * while countRunningOnHost() dropped to 0 and the next tick claimed another
+     * seed on top of it.
+     *
+     * The run must notice instead: a heartbeat that updates no rows means someone
+     * else owns the row now, so stop the child and exit without writing a status
+     * over theirs. Remove the `=== 0` branch in seed_run.php's loop and this test
+     * fails on its "exited" assertion — the stub runs for a minute, far longer
+     * than the 25 s this waits — and, if it somehow did exit, on the error text,
+     * which a finalise() call would have replaced.
+     */
+    public function testARunWhoseRowLeavesRunningStopsItsChildAndKeepsOutOfTheStatus(): void
+    {
+        $this->writeStub('trap "exit 0" TERM; i=0; while [ $i -lt 60 ]; do echo tick; sleep 1; i=$((i+1)); done');
+        $row = $this->claimed();
+        $m = new SeedJob(connection: new Connection(database: 'mydb'));
+
+        $outPath = $this->stub . '.out';
+        $this->extraFiles[] = $outPath;
+        $out = fopen($outPath, 'w');
+        $process = proc_open([PHP_BINARY, App::$param['path'] . 'app/scripts/seed_run.php',
+            '--database=mydb', '--uuid=' . $row['uuid'], '--binary=' . $this->stub], [1 => $out, 2 => $out], $pipes);
+        $this->assertIsResource($process, 'seed_run.php could be spawned');
+
+        try {
+            // setPid() is written only once the stub is actually running, so this
+            // is what proves there is a live child to orphan in the first place.
+            $pid = null;
+            $deadline = microtime(true) + 10;
+            while ($pid === null && microtime(true) < $deadline) {
+                $pid = $m->get($row['uuid'])['pid'] ?? null;
+                if ($pid === null) {
+                    usleep(100000);
+                }
+            }
+            $this->assertNotNull($pid, 'the run started its child and recorded the pid');
+            $this->assertDirectoryExists('/proc/' . $pid, 'the child really is running');
+
+            // Exactly what reapStale() does to a row whose heartbeat went quiet.
+            $reaper = $m->prepare("UPDATE settings.seed_jobs
+                                      SET status = 'failed', finished = now(), error = 'stale: no heartbeat from somewhere'
+                                    WHERE uuid = :u");
+            $m->execute($reaper, ['u' => $row['uuid']]);
+
+            // The run heartbeats every 5 s; 25 s is five chances to notice.
+            $exit = null;
+            $deadline = microtime(true) + 25;
+            while (microtime(true) < $deadline) {
+                $status = proc_get_status($process);
+                if (!$status['running']) {
+                    $exit = $status['exitcode'];
+                    break;
+                }
+                usleep(200000);
+            }
+            $this->assertNotNull($exit, 'the run noticed it no longer owns its row and exited');
+            $this->assertSame(1, $exit, 'it exits abnormally: it did not finish the job');
+
+            $after = $m->get($row['uuid']);
+            $this->assertSame('failed', $after['status'], 'the reaper\'s status stands');
+            $this->assertStringContainsString('stale: no heartbeat', (string)$after['error'],
+                'the run must not overwrite the outcome the other writer decided');
+
+            // clearstatcache() per poll: the assertDirectoryExists() above put
+            // "/proc/$pid exists" in PHP's stat cache, which is never invalidated
+            // for a path this process only reads — without this the loop spins on
+            // a cached answer and the assertion fails on a child that is long gone.
+            $gone = microtime(true) + 5;
+            do {
+                clearstatcache(true, '/proc/' . $pid);
+                if (!is_dir('/proc/' . $pid)) {
+                    break;
+                }
+                usleep(100000);
+            } while (microtime(true) < $gone);
+            $this->assertDirectoryDoesNotExist('/proc/' . $pid,
+                'the seed child is stopped, not left writing tiles with nothing able to cancel it');
+        } finally {
+            if (is_resource($process)) {
+                if (proc_get_status($process)['running']) {
+                    proc_terminate($process, SIGKILL);
+                }
+                proc_close($process);
+            }
+            fclose($out);
+        }
+    }
+
+    /**
      * Tests 1 and 2 finish in well under 5s, so the loop body — heartbeat() and
      * the in-loop tail() — never runs at all; a stub outliving one poll is the
      * only way to exercise the mechanism the 10-minute stale window depends on.

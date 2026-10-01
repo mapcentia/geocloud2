@@ -98,13 +98,28 @@ final class SeedJob extends Model
         return $this->fetchRow($res) ?: null;
     }
 
-    /** Proof of life from the run, plus the current log tail. */
-    public function heartbeat(string $uuid, ?string $logTail = null): void
+    /**
+     * Proof of life from the run, plus the current log tail.
+     *
+     * Returns the number of rows it updated, which is 0 once the row is no
+     * longer 'running' — reaped as stale after a long PDO stall, or finalised by
+     * a tick whose `posix_kill($pid, 0)` probe returned a false negative. That is
+     * the only signal the run gets that someone else has taken ownership of its
+     * row, and without it the run kept seeding with nothing able to observe or
+     * stop it (requestCancel() answers 'noop' for a non-running row,
+     * countRunningOnHost() no longer counts it, so the next tick claimed another
+     * seed on top) until the 12-hour timeout. seed_run.php stops its child and
+     * exits on a 0 rather than writing a status the other writer owns.
+     *
+     * @return int rows updated: 1 while the row is still ours, 0 when it is not
+     */
+    public function heartbeat(string $uuid, ?string $logTail = null): int
     {
         $res = $this->prepare("UPDATE settings.seed_jobs
                                   SET heartbeat = now(), log = COALESCE(:log, log)
                                 WHERE uuid = :uuid AND status = 'running'");
         $this->execute($res, ['uuid' => $uuid, 'log' => $logTail]);
+        return $res->rowCount();
     }
 
     public function setPid(string $uuid, int $pid, ?string $logPath): void
