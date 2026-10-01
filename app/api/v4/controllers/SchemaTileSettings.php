@@ -49,19 +49,29 @@ use Symfony\Component\Validator\Constraints as Assert;
     properties: [
         new OA\Property(property: 'cache', description: 'Cache backend.', type: 'string', enum: ['sqlite', 'disk', 'memcache', 's3'], nullable: true),
         new OA\Property(property: 'format', description: "The image tileset's format — PNG or a jpeg_* quality. The .mvt tileset is always MVT, which is its only possible value, so there is nothing to configure there and 'MVT' is not accepted here; the response reports it as the read-only vector_format. 'JSON' is not accepted either, because no merged .json tileset exists.", type: 'string', enum: ['PNG', 'jpeg_low', 'jpeg_medium', 'jpeg_high'], nullable: true),
-        new OA\Property(property: 'ttl', description: 'Seconds a tile stays valid (mapcache expires). Floored at 30. Defaults to 60.', type: 'integer', nullable: true, example: 86400),
-        new OA\Property(property: 'auto_expire', description: 'Seconds after which an existing tile is refreshed on next access.', type: 'integer', nullable: true, example: 3600),
-        new OA\Property(property: 'meta_size', description: 'Metatile size N, rendered as N x N tiles per WMS request. At least 1; defaults to 3.', type: 'integer', nullable: true, example: 5),
-        new OA\Property(property: 'meta_buffer', description: 'Pixels drawn around each metatile and cropped afterwards.', type: 'integer', nullable: true, example: 10),
-        new OA\Property(property: 's3_tile_set', description: 'With cache "s3", the object-path segment for this schema. Letters, digits, dot, dash and underscore only: it is interpolated into the cache URL.', type: 'string', nullable: true),
-        new OA\Property(property: 'title', description: 'Shown in WMTS capabilities. Defaults to the schema name.', type: 'string', nullable: true),
-        new OA\Property(property: 'abstract', description: 'Shown in WMTS capabilities.', type: 'string', nullable: true),
+        new OA\Property(property: 'ttl', description: 'Seconds a tile stays valid (mapcache expires). Any positive value is accepted and then floored at 30 when the config is generated, so 5 behaves as 30. Defaults to 60.', type: 'integer', nullable: true, minimum: 1, example: 86400),
+        new OA\Property(property: 'auto_expire', description: 'Seconds after which an existing tile is refreshed on next access.', type: 'integer', nullable: true, minimum: 1, example: 3600),
+        new OA\Property(property: 'meta_size', description: 'Metatile size N, rendered as N x N tiles per WMS request. 1 to 16; defaults to 3.', type: 'integer', nullable: true, maximum: 16, minimum: 1, example: 5),
+        new OA\Property(property: 'meta_buffer', description: 'Pixels drawn around each metatile and cropped afterwards. 0 to 512; defaults to 0.', type: 'integer', nullable: true, maximum: 512, minimum: 0, example: 10),
+        new OA\Property(property: 's3_tile_set', description: 'With cache "s3", the object-path segment for this schema. Letters, digits, dot, dash and underscore only, and not dots alone: it is interpolated into the cache URL, and a dot-only value would put the tiles at the bucket root.', type: 'string', maxLength: 255, pattern: '^[A-Za-z0-9_\-.]+$', nullable: true),
+        new OA\Property(property: 'title', description: 'Shown in WMTS capabilities. Defaults to the schema name. Must not contain "]]>", which would close the CDATA section it is written into.', type: 'string', maxLength: 255, nullable: true),
+        new OA\Property(property: 'abstract', description: 'Shown in WMTS capabilities. Must not contain "]]>", which would close the CDATA section it is written into.', type: 'string', maxLength: 2048, nullable: true),
     ],
     type: 'object',
 )]
 #[OA\Schema(
     schema: 'SchemaTileSettings',
     description: 'The settings the config generator will actually use: stored values merged over the fallbacks. _stored carries only what is stored, so a form can tell a set value from a defaulted one, and schema_exists is false for settings left behind by a dropped schema.',
+    // Every field is always present, because the response is the stored values
+    // merged over the fallbacks — that is the whole reason this is a separate
+    // schema from SchemaTileSettingsInput, where every field is optional. Without
+    // the list a generator makes them all optional and a client has to null-check
+    // values the server always sends. auto_expire and s3_tile_set are required AND
+    // nullable: the key is always there, its value may be null. (Note the contrast
+    // with the tileseeder round's trap, which was a field required on INPUT while
+    // nullable in the response — that one misleads, this one does not.)
+    required: ['schema', 'schema_exists', 'cache', 'format', 'vector_format', 'ttl', 'auto_expire',
+        'meta_size', 'meta_buffer', 's3_tile_set', 'title', 'abstract', '_stored'],
     properties: [
         new OA\Property(property: 'schema', type: 'string', readOnly: true, example: 'dagi'),
         new OA\Property(property: 'schema_exists', description: 'False when the settings are waiting for their schema to come back.', type: 'boolean', readOnly: true),
