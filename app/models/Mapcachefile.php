@@ -38,7 +38,16 @@ class Mapcachefile extends Model
             $includeSchemasF = "AND f_table_schema in ($in)";
             $includeSchemasR = "AND r_table_schema in ($in)";
         }
-        $sql = "SELECT * FROM settings.getColumns('f_table_schema NOTNULL AND f_table_name NOTNULL AND f_geometry_column NOTNULL $includeSchemasF', 'r_table_schema NOTNULL AND r_table_name NOTNULL AND r_raster_column NOTNULL $includeSchemasR')";
+        // ORDER BY sort_id, because the merged per-schema tileset puts every layer of
+        // a schema in one LAYERS list and that order IS the draw order — later layers
+        // on top. A low sort_id means bottom, so ascending. settings.getColumns()
+        // selects sort_id but does not sort by it, so without this the order was
+        // whatever Postgres returned: geodk's extent (sort_id 10) came out above
+        // baggrund (20), and nothing kept the order the same from one generation to
+        // the next. f_table_name breaks ties so equal sort_ids cannot make the
+        // generated config churn.
+        $sql = "SELECT * FROM settings.getColumns('f_table_schema NOTNULL AND f_table_name NOTNULL AND f_geometry_column NOTNULL $includeSchemasF', 'r_table_schema NOTNULL AND r_table_name NOTNULL AND r_raster_column NOTNULL $includeSchemasR')
+                ORDER BY sort_id NULLS FIRST, f_table_name, f_geometry_column";
         return $this->execQuery($sql);
     }
 

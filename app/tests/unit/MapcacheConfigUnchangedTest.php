@@ -19,6 +19,12 @@ use Codeception\Test\Unit;
  * reusing layerSettings()' fallbacks (expires 30, metaSize null) instead of the
  * loop's own (60 and 3).
  *
+ * The baseline was deliberately moved once, when the merged per-schema source
+ * started ordering its LAYERS by sort_id (low = bottom). Before that the order was
+ * whatever Postgres returned. So "the generator as it stood before this feature"
+ * means before THAT change, not before schema tile settings — recapture from the
+ * commit that introduced the ORDER BY, or later.
+ *
  * The fixture is a snapshot of whatever mydb contained when it was captured, so
  * adding or removing a layer or schema in mydb fails this test for a reason that
  * has nothing to do with the code. **Do not simply recapture it from the current
