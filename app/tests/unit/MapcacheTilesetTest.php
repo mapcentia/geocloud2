@@ -155,6 +155,48 @@ class MapcacheTilesetTest extends Unit
         $this->assertSame(array_values(array_unique($layers)), $layers, 'no duplicates per geometry column');
     }
 
+    /**
+     * Dropping a table leaves its row in settings.geometry_columns_join, and this
+     * install has 81 such rows out of 285. The config generator does not see them —
+     * it goes through settings.getColumns(), which joins the real catalog — so a
+     * list built from the join table directly would authorize layers the merged
+     * tileset does not contain, and, worse, would let a stale name pass the
+     * existence check that makes an unresolvable tileset fail closed. Measured
+     * before this: a stale name reached the upstream MapCache (400) where a name
+     * with no row at all was correctly refused (403).
+     */
+    public function testSchemaLayersExcludesARowWhoseTableIsGone(): void
+    {
+        $conn = new Connection(database: 'mydb');
+        $model = new app\inc\Model(connection: $conn);
+        $schema = 'zz_ghost_' . substr(uniqid(), -6);
+        try {
+            $model->execQuery("CREATE SCHEMA \"$schema\"", 'PDO', 'transaction');
+            $model->execQuery("CREATE TABLE \"$schema\".alive (gid serial primary key, the_geom geometry(Point,4326))", 'PDO', 'transaction');
+            $model->execQuery("CREATE TABLE \"$schema\".doomed (gid serial primary key, the_geom geometry(Point,4326))", 'PDO', 'transaction');
+            foreach (['alive', 'doomed'] as $t) {
+                $res = $model->prepare("INSERT INTO settings.geometry_columns_join (_key_, enableows) VALUES (:k, true)
+                                        ON CONFLICT (_key_) DO NOTHING");
+                $model->execute($res, ['k' => "$schema.$t.the_geom"]);
+            }
+            $this->assertEqualsCanonicalizing(["$schema.alive", "$schema.doomed"],
+                Mapcache::schemaLayers($schema, $conn), 'both are layers while both tables exist');
+
+            // Drop the table but leave the row — exactly what GC2 does today.
+            $model->execQuery("DROP TABLE \"$schema\".doomed", 'PDO', 'transaction');
+            // No cache busting needed here: Cache::getItem() returns null under the
+            // CLI, so schemaLayers()' cache is inert in this suite. Through the web
+            // SAPI the list is cached for the endpoint's auth window and busted by
+            // Table::clearCacheOnSchemaChanges().
+            $this->assertSame(["$schema.alive"], Mapcache::schemaLayers($schema, $conn),
+                'the row whose table is gone must not be in the list');
+        } finally {
+            $res = $model->prepare("DELETE FROM settings.geometry_columns_join WHERE _key_ LIKE :p");
+            $model->execute($res, ['p' => $schema . '.%']);
+            $model->execQuery("DROP SCHEMA IF EXISTS \"$schema\" CASCADE", 'PDO', 'transaction');
+        }
+    }
+
     /** A schema with no layers resolves to nothing, so the caller can fail closed. */
     public function testSchemaLayersIsEmptyForAnUnknownSchema(): void
     {
