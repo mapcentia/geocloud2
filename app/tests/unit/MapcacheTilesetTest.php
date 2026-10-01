@@ -6,6 +6,7 @@
  */
 
 use app\api\v4\controllers\Mapcache;
+use app\inc\Connection;
 use Codeception\Test\Unit;
 
 class MapcacheTilesetTest extends Unit
@@ -57,10 +58,33 @@ class MapcacheTilesetTest extends Unit
         $this->assertSame(['s.a'], $this->layers('wmts', $segments));
     }
 
-    public function testUnqualifiedNameIsDropped(): void
+    /**
+     * A name without a dot is NOT dropped any more: it is the merged per-schema
+     * tileset, <schema> and <schema>.mvt, which MapCache really serves and which
+     * GetCapabilities really advertises. Dropping it meant extractLayers() came
+     * back empty, and the fail-closed branch answered every tile fetch with
+     * "Could not resolve tileset for authorization" — so a schema tileset could be
+     * listed and seeded but never fetched through the authorizing proxy.
+     *
+     * The old assumption behind this test, "tilesets are always schema.table", was
+     * true of layer tilesets only.
+     */
+    public function testAnUnqualifiedNameIsTheSchemaTileset(): void
     {
-        // Tilesets are always "schema.table"; an unqualified name is not a resolvable layer.
-        $this->assertSame([], $this->layers('wms', ['wms'], ['LAYERS' => 'justname']));
+        $this->assertSame(['justname'], $this->layers('wms', ['wms'], ['LAYERS' => 'justname']));
+        // Every service's path form reaches it, not just one.
+        $this->assertSame(['geodk'], $this->layers('tms', ['tms', '1.0.0', 'geodk@g20', '16', '1', '2.png'], []));
+        $this->assertSame(['geodk'], $this->layers('wmts', ['wmts', '1.0.0', 'geodk', 'default', 'g20', '16', '1', '2.png'], []));
+        $this->assertSame(['geodk'], $this->layers('gmaps', ['gmaps', 'geodk', 'g20', '16', '1', '2.png'], []));
+        // The vector variant resolves to the same schema.
+        $this->assertSame(['geodk'], $this->layers('tms', ['tms', '1.0.0', 'geodk.mvt@g20', '16', '1', '2.mvt'], []));
+    }
+
+    /** An empty or whitespace-only name is still nothing. */
+    public function testAnEmptyNameIsStillDropped(): void
+    {
+        $this->assertSame([], $this->layers('wms', ['wms'], ['LAYERS' => '']));
+        $this->assertSame([], $this->layers('wms', ['wms'], ['LAYERS' => '  ,  ']));
     }
 
     public function testUnknownServiceHasNoTileset(): void
@@ -83,5 +107,35 @@ class MapcacheTilesetTest extends Unit
             Mapcache::tail('/api/v4/mapcache/database/mydb/wmts/1.0.0/s.a/default/g20/8/136/78.png', 'mydb'));
         $this->assertSame('wms', Mapcache::tail('/api/v4/mapcache/database/mydb/wms', 'mydb'));
         $this->assertSame('', Mapcache::tail('/api/v4/mapcache/database/mydb', 'mydb'));
+    }
+
+    /**
+     * A merged per-schema tileset is drawn from every layer in the schema, so the
+     * caller must be allowed to read every one of them — the same rule the WMS
+     * path already applies when a request names several layers. Resolving the
+     * schema to that list is what makes the rule enforceable.
+     *
+     * Measured before this existed: dagi.dagi_politikreds2000 is Read/write, so
+     * anonymously it is challenged with 401 — while the dagi schema tileset, which
+     * contains it, answered 200. Keeping the dotless name without expanding it
+     * turns the merged tileset into a way around per-layer authorization.
+     */
+    public function testSchemaLayersListsTheSchemasOwsLayers(): void
+    {
+        $layers = Mapcache::schemaLayers('dagi', new Connection(database: 'mydb'));
+        $this->assertNotEmpty($layers, 'dagi has OWS-enabled layers in this install');
+        $this->assertContains('dagi.dagi_politikreds2000', $layers,
+            'the protected layer must be in the list, or authorizing the schema cannot protect it');
+        foreach ($layers as $l) {
+            $this->assertStringStartsWith('dagi.', $l);
+            $this->assertSame(2, count(explode('.', $l)), 'schema.table, without the geometry column');
+        }
+        $this->assertSame(array_values(array_unique($layers)), $layers, 'no duplicates per geometry column');
+    }
+
+    /** A schema with no layers resolves to nothing, so the caller can fail closed. */
+    public function testSchemaLayersIsEmptyForAnUnknownSchema(): void
+    {
+        $this->assertSame([], Mapcache::schemaLayers('zz_no_such_schema', new Connection(database: 'mydb')));
     }
 }
