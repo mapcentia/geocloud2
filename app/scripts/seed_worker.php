@@ -27,9 +27,13 @@
  * host = :host`), not from counting processes: pgrep matches both the `timeout`
  * wrapper and its `php` child for one run (double-counting), and fails open to 0
  * — unbounded claiming — the moment pgrep itself can't be read. The database is
- * the same source of truth claimOne() writes and the API already reads.
+ * the same source of truth claimOne() writes and the API already reads. The count
+ * is node-wide, per spec §6 ("while live children on this node < maxConcurrent"):
+ * it accumulates across every database this tick visits, not just one, so a node
+ * with hundreds of databases carrying pending rows still only ever runs
+ * maxConcurrent seeds at a time in total.
  *
- * Usage: php seed_worker.php [--database=<db>] [--binary=<path>]
+ * Usage: php seed_worker.php [--database=<db>[,<db>...]] [--binary=<path>]
  */
 
 use app\conf\App;
@@ -43,15 +47,25 @@ include_once(__DIR__ . "/../vendor/autoload.php");
 new App();
 
 $options = getopt("", ["database::", "binary::"]);
-$only = $options["database"] ?? null;
+$rawDatabase = $options["database"] ?? null;
 $binary = $options["binary"] ?? null;
 
-// Same shape seed_run.php itself enforces on the value once it receives it, so a
-// crafted --database can't walk the log-retention glob()/@unlink() below into a
-// path outside app/tmp/<database>/seed.
-if ($only !== null && !preg_match('/^[A-Za-z0-9_\-]+$/', $only)) {
-    fwrite(STDERR, "--database contains invalid characters\n");
-    exit(1);
+// A comma-separated list, like the v4 API's own "one of" id lists, so a manual
+// run (or a test) can target a small, explicit set of databases without either
+// running one seed_worker.php per database or scanning every database on the
+// node. A single value works exactly as before.
+$only = null;
+if ($rawDatabase !== null) {
+    $only = array_values(array_filter(array_map('trim', explode(',', $rawDatabase)), fn($v) => $v !== ''));
+    foreach ($only as $db) {
+        // Same shape seed_run.php itself enforces on the value once it receives
+        // it, so a crafted --database can't walk the log-retention
+        // glob()/@unlink() below into a path outside app/tmp/<database>/seed.
+        if (!preg_match('/^[A-Za-z0-9_\-]+$/', $db)) {
+            fwrite(STDERR, "--database contains invalid characters\n");
+            exit(1);
+        }
+    }
 }
 
 $maxConcurrent = App::$param['tileseeder']['maxConcurrent'] ?? 1;
@@ -74,9 +88,16 @@ $skip = ['rdsadmin', 'template1', 'template0', 'postgres', 'postgis_template', '
 // that window a lot (it's one SELECT, not a whole seed's lifetime) but doesn't
 // close it; a real fix would be a lock, which isn't worth adding for a rare
 // manual overlap.
-$databases = $only ? [$only] : new Database()->listAllDbs()['data'];
+$databases = $only ?: new Database()->listAllDbs()['data'];
+
+// Node-wide, not per database: hoisted out of the foreach and accumulated as it
+// progresses, so a run claimed in an earlier database in this same tick still
+// counts against the databases visited after it. Assigning this inside the loop
+// was round 1's bug — it reset the count for every database, so maxConcurrent
+// capped each database independently instead of the node as a whole.
+$live = 0;
 foreach ($databases as $database) {
-    if (!$only && in_array($database, $skip, true)) {
+    if ($only === null && in_array($database, $skip, true)) {
         continue;
     }
     $connection = new Connection(database: $database);
@@ -89,7 +110,7 @@ foreach ($databases as $database) {
             }
             // Counted after reapStale(): a row the reaper just failed must not
             // still occupy a slot this tick.
-            $live = $jobs->countRunningOnHost($host);
+            $live += $jobs->countRunningOnHost($host);
             while ($live < $maxConcurrent) {
                 $row = $jobs->claimOne();
                 if ($row === null) {
