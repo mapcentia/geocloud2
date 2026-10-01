@@ -483,6 +483,18 @@ SQL;
         }
         $sqls[] = "CREATE INDEX IF NOT EXISTS seed_jobs_status_created_idx ON settings.seed_jobs (status, created)";
 
+        // Per-schema tile settings for the merged <schema> tileset
+        // (docs/superpowers/specs/2026-10-01-schema-tile-settings-design.md).
+        // The row deliberately outlives its schema: dropping and recreating a
+        // schema is normal here, and the settings should survive it. A row for a
+        // schema that does not exist is never read, because Mapcachefile's
+        // per-schema loop iterates the schemas that actually have layers.
+        $sqls[] = "CREATE TABLE IF NOT EXISTS settings.schema_settings
+                    (
+                      schema  CHARACTER VARYING(255)    NOT NULL  PRIMARY KEY,
+                      def     JSONB,
+                      created TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT now()
+                    )";
         include 'Views1.php';
         return $sqls;
     }

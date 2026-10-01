@@ -34,12 +34,14 @@ class Tilecache extends Controller
      */
     public function delete_index(): array
     {
-        $layer = new \app\models\Layer();
-        $cache = $layer->getAll(Database::getDb(), true, Input::getPath()->part(4), false, true)["data"][0]["def"]->cache;
-
-        // Default
-        // =======
-        $cache = $cache ?: App::$param["mapCache"]["type"];
+        // In schema mode the route is .../tilecache/schema/<schema>, so part(4) is
+        // the literal word "schema" and the name is in part(5). Looking part(4) up
+        // as a layer — which this did — could only ever answer the install default,
+        // so a schema configured for another backend silently cleared nothing.
+        $target = Input::getPath()->part(4) === "schema"
+            ? (string)Input::getPath()->part(5)
+            : (string)Input::getPath()->part(4);
+        $cache = self::cacheBackendFor($target);
 
         $response = [];
         switch ($cache) {
@@ -118,8 +120,51 @@ class Tilecache extends Controller
                 $response['success'] = true;
                 $response['message'] = "Tile cache deleted.";
                 break;
+
+            default:
+                // s3 and memcache have no delete here. Saying so is the point: this
+                // used to fall through and return an empty response, so the caller
+                // was told nothing at all while nothing was deleted.
+                $response['success'] = false;
+                $response['message'] = "Cannot clear a '$cache' tile cache from here.";
+                $response['code'] = '501';
+                break;
         }
         return $response;
+    }
+
+    /**
+     * Which cache backend a tileset name lives in.
+     *
+     * A layer's tileset is decided by the layer's own def. A merged per-schema
+     * tileset — a bare schema name, or one whose only dot is the .mvt/.json
+     * suffix — is decided by settings.schema_settings. Anything unresolved falls
+     * back to the install default.
+     *
+     * Without the schema branch, clearing a schema tileset configured for disk or
+     * s3 would look in sqlite, delete nothing and report success.
+     */
+    static function cacheBackendFor(string $tilesetName, ?\app\inc\Connection $connection = null): string
+    {
+        $default = !empty(App::$param["mapCache"]["type"]) ? App::$param["mapCache"]["type"] : 'sqlite';
+
+        // Strip the format suffix: a vector tileset is <name>.mvt / <name>.json,
+        // and the settings belong to <name>.
+        $base = preg_replace('/\.(mvt|json)$/', '', $tilesetName);
+
+        // A GC2 layer key is always schema.table, so a name with no dot cannot be
+        // a layer — it is a merged per-schema tileset, and asking the Layer model
+        // about it would be both pointless and, under the CLI, fatal.
+        if (!str_contains($base, '.')) {
+            $row = (new \app\models\SchemaSettings(connection: $connection))->get($base);
+            $def = $row && $row['def'] ? json_decode($row['def']) : null;
+            return !empty($def->cache) ? (string)$def->cache : $default;
+        }
+
+        $db = $connection ? $connection->database : Database::getDb();
+        $layer = $connection ? new \app\models\Layer(connection: $connection) : new \app\models\Layer();
+        $meta = $layer->getAll($db, true, $tilesetName, false, true);
+        return $meta["data"][0]["def"]->cache ?? $default;
     }
 
     /**
@@ -134,9 +179,7 @@ class Tilecache extends Controller
         // Prefer an explicit connection (worker/FrankenPHP-safe) over the process
         // -global "current database"; fall back to the global for legacy callers.
         $db = $connection ? $connection->database : Database::getDb();
-        $layer = $connection ? new \app\models\Layer(connection: $connection) : new \app\models\Layer();
-        $cache = isset($layer->getAll($db, true, $layerName, false, true)["data"][0]["def"]->cache) ? $layer->getAll($db, true, $layerName, false, true)["data"][0]["def"]->cache : null;
-        $cache = $cache ?: App::$param["mapCache"]["type"];
+        $cache = self::cacheBackendFor($layerName, $connection);
         $response = [];
         $res = null;
 

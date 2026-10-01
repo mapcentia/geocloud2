@@ -263,3 +263,64 @@ tile, because nothing exercised the real artifact.
 - **The bare `&` that makes the generated config invalid XML**
   (`Mapcachefile::write()`, recorded in the tileseeder spec's §15) — this feature
   reads the table, not the file, so it is not blocked by it.
+
+## 10. Deviations recorded during implementation (2026-10-01)
+
+Per AGENTS.md §7 the spec is the authority and deviations belong here.
+
+- **§6 said body-validation errors answer `INVALID_REQUEST`.** They answer
+  `INPUT_VALIDATION_ERROR`, which is what `AbstractApi::checkViolations()` emits
+  for an `Assert\Collection` violation. `INVALID_REQUEST` is for the checks the
+  controller makes itself, such as a malformed schema name. Both are stable and
+  SCREAMING_SNAKE; the framework's own code was not worth overriding.
+- **§4 said `ttl` is "floored at 30".** A `ttl` of `0` means *unset* and gives the
+  fallback 60, because `!empty()` sends it there before the floor — the same shape
+  `layerSettings()` has. 5 and -100 do floor to 30. The API rejects 0 outright.
+- **§4 let `format` be set to `MVT`, which could never do anything.** The
+  `<schema>.mvt` tileset's only possible value *is* `MVT`, so storing it was a
+  provable no-op — the same defect `JSON` was refused for, one step subtler.
+  `format` now configures the image tileset only (`PNG`, `jpeg_*`), the response
+  reports `vector_format` as read-only, and the resolver no longer splits a stored
+  format between two tilesets. If a second raw format ever exists, that is when a
+  `vector_format` setting earns its place. Spotted by Martin asking why the input
+  schema had one `format` while the response had two.
+- **§4's table implies `meta_size` and `meta_buffer` apply to both tilesets.**
+  They reach `<schema>` only. The old loop passed no metatile for `<schema>.mvt`,
+  and the byte-identical requirement in §5 outranks the table: emitting one there
+  would change every install's config. A raw vector tileset has little use for a
+  metatile in any case.
+- **§6 asked for `OPTIONS` and `HEAD` stubs.** `Route2` answers both itself from
+  the `AcceptableMethods` list — `HEAD` 204, and `OPTIONS` validated against the
+  preflight's `Access-Control-Request-Method` — so a stub in the controller is
+  dead code and was removed. A bare `OPTIONS` with no preflight header is
+  correctly 406.
+- **§7's claim that fixing `Tilecache::bust()` fixes the clear-cache action was
+  wrong.** No production caller passes `bust()` a bare schema name; the action
+  that exists is `DELETE /controllers/tilecache/schema/<schema>`, which resolved
+  the backend by looking up the literal word "schema" as a layer. That is now
+  fixed, and a backend with no delete path answers 501 with a message instead of
+  the empty response it used to return.
+
+## 11. Follow-ups found while implementing
+
+- **`unlinkTiles()` reports success whether or not the deletion worked.** It runs
+  `exec("rm -R $dir 2> /dev/null")` and sets `success = true` without checking.
+  Measured: a root-owned cache directory (as a cron or a `docker exec` run leaves
+  behind) survives, and the caller is told "Tile cache deleted." Pre-existing and
+  identical for layers.
+- **The disk branch's schema-mode path does not match the layout MapCache
+  writes.** It globs `disk/<db>/<schema>.*` while the tiles are in
+  `disk/<db>/<schema>/…`; `unlinkTiles()` strips the `.*` and retries, so the
+  directory is attempted, but combined with the point above a failure is
+  invisible. Measured with a www-data-owned fixture: the files survived and the
+  response was `success: true`. Pre-existing; the sqlite branch's
+  `sqlite/<db>/<schema>.sqlite3` is correct.
+- **The merged schema tileset cannot be served through the authorizing v4
+  proxy.** `Mapcache::extractLayers()` drops any name without a dot, so
+  `/api/v4/mapcache/database/<db>/wmts/1.0.0/<schema>/…` answers 403, while the
+  unauthenticated Apache alias serves it. So a schema configured here is only
+  reachable without authorization. Pre-existing, and genuinely a design question:
+  which layer's privileges should govern a tileset that merges many?
+- **`_stored` and the empty object.** Worth remembering generally: an empty PHP
+  array serialises as `[]`, which breaks a generated client that types a field as
+  the object the schema declares. Cast to `(object)`.
