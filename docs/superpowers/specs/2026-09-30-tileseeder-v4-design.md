@@ -172,7 +172,13 @@ can take hours.
 
 **The run — `seed_run.php`** owns one job: it writes `pid`, runs `mapcache_seed`
 through `proc_open`, and every 5 seconds writes `heartbeat`, copies the log tail
-and re-reads `cancel_requested`. It finalises its own row (`succeeded` / `failed`
+and re-reads `cancel_requested`. The heartbeat is also how it learns it has *lost*
+the row: an update that touches no row means the row is no longer `running`
+(reaped as stale, or finalised by a tick whose spawn probe read a false negative),
+so the run stops its child and exits without writing a status — whoever took the
+row owns the outcome. Without that, a run taken out of `running` kept seeding with
+nothing able to observe or cancel it while its freed slot let the next tick start
+a second seed on top (recorded 2026-10-01). It finalises its own row (`succeeded` / `failed`
 with the exit code / `cancelled`), and a `register_shutdown_function` plus
 SIGINT/SIGTERM handlers finalise it even on a crash or on the `timeout` kill —
 exactly what `get.php` does for scheduler runs, so a row is never left `running`
@@ -199,10 +205,32 @@ new SeedCommand(database: 'mydb', tileset: '…', grid: '…', zoomStart: 0, zoo
 Rules it enforces, each with a unit test:
 
 - Every value passes through `escapeshellarg()`; nothing is interpolated raw.
-- `tileset` must exist as a `<tileset>` in the database's mapcache XML, `grid` in
-  `Mapcache::getGrids()`, and `extent_layer` must be a relation the caller may
-  read. Unknown values are `400 INVALID_REQUEST` before any process starts.
-- `zoom_start <= zoom_end`, both integers within the grid's levels.
+- `tileset` must exist as a `<tileset>` in the database's mapcache XML, `grid`
+  must be one of the `<grid>` children **that tileset declares**, and
+  `extent_layer` must be a relation that exists and that the caller may read.
+  Unknown values are refused before any process starts: `400 UNKNOWN_GRID`,
+  `404 TILESET_NOT_FOUND`, `404 EXTENT_LAYER_NOT_FOUND`,
+  `403 INSUFFICIENT_PRIVILEGES`.
+  *(Deviation, recorded 2026-10-01: this said `grid` in `Mapcache::getGrids()`,
+  which reads `app/conf/grids/*.xml`. That is the wrong authority and made the
+  feature unable to seed anything — GC2's generated config defines and every
+  tileset declares a single inline grid `g20`, which `getGrids()` never lists, so
+  the only accepted values were ones `mapcache_seed` then refused with "grid not
+  configured for tileset". It also broke v3, which passed `grid` straight to the
+  binary. `getGrids()` keeps its other callers; the seeder reads the tileset's own
+  declarations. `extent_layer` existence is checked by the validator — so the v3
+  shim gets it too — and the caller's read privilege by the v4 controller.)*
+- `zoom_start <= zoom_end`, both integers within the grid's levels (one level per
+  `<resolutions>` entry of that grid's definition; unbounded when the definition
+  does not say).
+- `-d` (the OGR datasource) and `-l` (the layer inside it) are passed **together
+  or not at all**: with no `extent_layer`, neither is passed and the seed covers
+  the grid's extent. *(Deviation, recorded 2026-10-01: `-d` used to be
+  unconditional. `mapcache_seed` validates the datasource before seeding and
+  exits 1 with "ogr datastore contains more than one layer" when `-l` is missing,
+  so every seed without an `extent_layer` — the normal case — failed; on a
+  datasource with one visible layer it silently clipped the seed to that layer's
+  extent instead.)*
 - `threads` is an integer in `1..tileseeder.maxThreads` (default 4).
 - The PostgreSQL password never appears in `argv()`; it is only in `env()`.
 

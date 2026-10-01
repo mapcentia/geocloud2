@@ -74,6 +74,11 @@ class App
             "maxHours" => 12,
             "cancelGraceSeconds" => 10,
             "logTailBytes" => 8192,
+            // Node-local seed log files only (app/tmp/<db>/seed/*.log), not the log
+            // tail the API serves, which lives in the job row. Not a guarantee: the
+            // pre-existing clean_tmp_dir.php cron (daily) removes everything under
+            // app/tmp older than 4 hours, so on the standard image a seed log never
+            // survives much more than a day, whatever this says.
             "keepLogHours" => 72,
             "seedBinary" => "/usr/local/bin/mapcache_seed",
         ],
