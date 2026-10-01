@@ -7,6 +7,14 @@ use Codeception\Test\Unit;
 /**
  * The tick: reap what died, claim what waits, spawn a run per job, return at once.
  * It must not run a seed inline — a seed lasts hours and the tick holds flock.
+ *
+ * Once the image is rebuilt with the real cron line, the once-a-minute tick
+ * running in this same dev container can claim one of these tests' own pending
+ * rows between a test queuing it and the test's own tick() call and spawn the
+ * real mapcache_seed against it. These tests use a tileset that doesn't exist,
+ * so a stray spawn like that fails fast rather than touching real cache data —
+ * but it can still flip an assertion. If a test here flakes with no obvious
+ * cause, check for exactly that race before assuming the code is wrong.
  */
 class SeedWorkerTest extends Unit
 {
@@ -54,6 +62,18 @@ class SeedWorkerTest extends Unit
      * and the seed binary proc_open spawns under it all share the process group
      * setsid created, so a single `kill -9 <pid>` only removes one link and
      * orphans the rest to init — kill the whole group instead.
+     *
+     * The group kill must go through posix_kill(), not exec('kill -9 -- -$pgid').
+     * exec() runs through /bin/sh, which is dash here, and dash's builtin kill
+     * rejects the `--` end-of-options marker ("Illegal number: -") and signals
+     * nothing — silently, since the call is wrapped in 2>/dev/null. That left
+     * four orphaned `sleep 30` and two unreaped stubs straight after a green
+     * suite; it self-cleared only because the stub sleeps 30s, the exact masking
+     * round 1 found one layer up. posix_kill() sends the signal directly, no
+     * shell involved. Guarded against the one way this could go wrong instead of
+     * right: if a spawn ever loses setsid, a matched pid's pgid is this test
+     * process's own group, and killing it would take codeception down with it —
+     * skip any pgid equal to posix_getpgrp().
      */
     private function killTree(string $database, string $uuid): void
     {
@@ -71,17 +91,33 @@ class SeedWorkerTest extends Unit
         if (!empty($row['pid'])) {
             $pids[] = (string)$row['pid'];
         }
-        foreach (array_unique(array_map('intval', $pids)) as $pid) {
-            if ($pid <= 0) {
-                continue;
-            }
+        $targets = array_values(array_filter(array_unique(array_map('intval', $pids)), fn($p) => $p > 0));
+        foreach ($targets as $pid) {
             $pgidOut = [];
             exec('ps -o pgid= -p ' . $pid . ' 2>/dev/null', $pgidOut);
             $pgid = (int)trim($pgidOut[0] ?? '0');
-            if ($pgid > 0) {
-                exec('kill -9 -- -' . $pgid . ' 2>/dev/null');
+            if ($pgid > 0 && $pgid !== posix_getpgrp()) {
+                posix_kill(-$pgid, SIGKILL);
             }
             exec('kill -9 ' . $pid . ' 2>/dev/null');
+        }
+
+        // SIGKILL to the whole group lands on the stub and its parent chain at
+        // essentially the same instant, so the stub briefly becomes a zombie
+        // under a parent that is itself dying — the kernel reparents it to this
+        // container's init, which reaps it asynchronously, not instantly. This
+        // test is not that parent (the shell exec() spawned to launch the chain
+        // already exited once it backgrounded it), so it cannot wait() on it
+        // directly; it can only wait for init to finish. posix_kill($pid, 0)
+        // still succeeds against a zombie (the pid is still in the process
+        // table, just defunct) and only starts failing once init has reaped it,
+        // so polling that is what actually confirms nothing is left — not just
+        // that a kill signal was sent.
+        $deadline = microtime(true) + 2.0;
+        foreach ($targets as $pid) {
+            while (posix_kill($pid, 0) && microtime(true) < $deadline) {
+                usleep(50000);
+            }
         }
     }
 
@@ -214,6 +250,44 @@ class SeedWorkerTest extends Unit
         $this->assertSame(1, $running,
             "expected exactly one of the two databases to claim (got mydb=$firstStatus, aau=$secondStatus)");
         $this->assertContains('pending', [$firstStatus, $secondStatus], 'the other database\'s row must still be waiting');
+    }
+
+    /**
+     * Extends the node-wide cap to the specific bug round 2 shipped: a row
+     * already 'running' on this host — simulating exactly what an earlier
+     * tick's claim leaves behind — sits in one database while a 'pending' row
+     * waits in the other. Round 2's $live was a running prefix sum: a database
+     * visited *before* the running row's database could never see it, so
+     * --database=mydb,aau (pending row first, running row second) claimed the
+     * pending row anyway, leaving two seeds live against a cap of one;
+     * reversing the order happened to refuse correctly. testTheTickHonours-
+     * MaxConcurrentAcrossDatabases above cannot catch this — both its rows
+     * start 'pending', so there is nothing for a database-order bug to hide
+     * behind. This one asserts both orders, since the bug was order-dependent.
+     */
+    public function testTheTickHonoursMaxConcurrentAcrossDatabasesRegardlessOfOrder(): void
+    {
+        $blocking = $this->queue('aau');
+        $m = new SeedJob(connection: new Connection(database: 'aau'));
+        $res = $m->prepare("UPDATE settings.seed_jobs
+                               SET status = 'running', host = :host, started = now(), heartbeat = now()
+                             WHERE uuid = :u");
+        $m->execute($res, ['host' => SeedJob::currentHost(), 'u' => $blocking['uuid']]);
+        $mMydb = new SeedJob(connection: new Connection(database: 'mydb'));
+
+        // Pending database visited first, blocked database visited second: the
+        // exact order the reviewer reproduced the bug with.
+        $waitingFirst = $this->queue('mydb');
+        $this->tick(['mydb', 'aau']);
+        $this->assertSame('pending', $mMydb->get($waitingFirst['uuid'])['status'],
+            'pending-database-first order: a running row in the database visited later must still block it');
+
+        // Blocked database visited first, pending database visited second: the
+        // order that happened to refuse correctly even under round 2's bug.
+        $waitingSecond = $this->queue('mydb');
+        $this->tick(['aau', 'mydb']);
+        $this->assertSame('pending', $mMydb->get($waitingSecond['uuid'])['status'],
+            'pending-database-second order: a running row in the database visited earlier must still block it');
     }
 
     /**

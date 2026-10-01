@@ -175,6 +175,15 @@ final class SeedJob extends Model
         return (int)($this->fetchRow($res)['n'] ?? 0);
     }
 
+    /** Cheap existence check, not a count: lets a caller decide whether a database
+     *  is worth a second visit without fetching or counting its pending rows. */
+    public function hasPending(): bool
+    {
+        $res = $this->prepare("SELECT EXISTS (SELECT 1 FROM settings.seed_jobs WHERE status = 'pending') AS e");
+        $this->execute($res);
+        return (bool)($this->fetchRow($res)['e'] ?? false);
+    }
+
     /**
      * Rows whose run went away without finalising — SIGKILL, OOM, a dead node —
      * become 'failed' once the heartbeat has been quiet past the stale window.
