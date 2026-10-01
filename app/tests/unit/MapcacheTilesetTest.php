@@ -45,6 +45,28 @@ class MapcacheTilesetTest extends Unit
         $this->assertSame(['s.a'], $this->layers('tms', $segments));
     }
 
+    /**
+     * SECURITY. MapCache's gmaps URL is gmaps/{tileset}@{grid}/{z}/{x}/{y}.ext —
+     * the same "@" form as TMS, not the gmaps/{tileset}/{grid}/… this parser's
+     * comment used to claim. Taking the segment raw made the layer name
+     * "dagi.x@g20", which matches no layer, so authorize()'s anonymous branch fell
+     * through to "readable anonymously" and MapCache then served a Read/write
+     * layer's tiles to an unauthenticated caller. Measured before the fix:
+     *
+     *   gmaps/dagi.dagi_politikreds2000@g20/10/540/320.png → 200 image/png, 7954 bytes
+     *   tms/1.0.0/dagi.dagi_politikreds2000@g20/…          → 401
+     *
+     * Introduced with the proxy itself in 731bf91a (2026-08-18).
+     */
+    public function testGoogleMapsTilesetStripsTheGrid(): void
+    {
+        $this->assertSame(['s.a'], $this->layers('gmaps', ['gmaps', 's.a@g20', '8', '136', '78.png'], []));
+        $this->assertSame(['geodk'], $this->layers('gmaps', ['gmaps', 'geodk@g20', '8', '136', '78.png'], []),
+            'a schema tileset over gmaps too');
+        $this->assertSame(['s.a'], $this->layers('gmaps', ['gmaps', 's.a.mvt@g20', '8', '136', '78.mvt'], []),
+            'the vector suffix is stripped after the grid');
+    }
+
     public function testGoogleMapsTileset(): void
     {
         $segments = ['gmaps', 's.a', 'g20', '8', '136', '78.png'];

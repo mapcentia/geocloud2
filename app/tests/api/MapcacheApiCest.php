@@ -225,6 +225,50 @@ class MapcacheApiCest
         $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
     }
 
+    /**
+     * SECURITY regression. MapCache's gmaps URL is gmaps/{tileset}@{grid}/…, so the
+     * proxy used to read the layer name as "s1.protroads@g20", match no layer, and
+     * fall through to "readable anonymously" — serving a Read/write layer's tiles
+     * to an unauthenticated caller (measured: 200 image/png, 7954 bytes, on a real
+     * protected layer). Present since the proxy was introduced in 731bf91a.
+     */
+    public function gmapsProtectedLayerAnonymousIsChallenged(ApiTester $I)
+    {
+        $this->anonymous($I);
+        $I->sendGET($this->gmaps('s1.protroads'));
+        $I->seeResponseCodeIs(HttpCode::UNAUTHORIZED);
+    }
+
+    public function gmapsProtectedLayerCorrectBasicPassesAuth(ApiTester $I)
+    {
+        $this->basic($I, $this->userId, $this->password);
+        $I->sendGET($this->gmaps('s1.protroads'));
+        $this->seePastAuth($I);
+    }
+
+    /**
+     * A name that looks like a layer but is none must fail closed, not fall through
+     * to "readable anonymously". That fall-through is what made the gmaps hole
+     * exploitable, and it would reopen it the moment any parser gap appears.
+     */
+    public function aDottedNameThatIsNoLayerFailsClosed(ApiTester $I)
+    {
+        $this->anonymous($I);
+        $I->sendGET($this->wmtsRestful('s1.no_such_table'));
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+        $I->sendGET($this->wmtsRestful('nosuchschema.nosuchtable'));
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+        // And with a valid token: unresolvable is unresolvable, not a privilege question.
+        $this->bearer($I);
+        $I->sendGET($this->wmtsRestful('s1.no_such_table'));
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+    }
+
+    private function gmaps(string $tileset): string
+    {
+        return '/api/v4/mapcache/database/' . $this->userId . '/gmaps/' . $tileset . '@g20/8/136/78.png';
+    }
+
     private function tms(string $tileset): string
     {
         return '/api/v4/mapcache/database/' . $this->userId . '/tms/1.0.0/' . $tileset . '@g20/8/136/78.png';
