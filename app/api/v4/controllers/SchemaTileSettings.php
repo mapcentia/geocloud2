@@ -71,7 +71,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     // with the tileseeder round's trap, which was a field required on INPUT while
     // nullable in the response — that one misleads, this one does not.)
     required: ['schema', 'schema_exists', 'cache', 'format', 'vector_format', 'ttl', 'auto_expire',
-        'meta_size', 'meta_buffer', 's3_tile_set', 'title', 'abstract', '_stored'],
+        'meta_size', 'meta_buffer', 's3_tile_set', 'title', 'abstract', '_stored', '_defaults'],
     properties: [
         new OA\Property(property: 'schema', type: 'string', readOnly: true, example: 'dagi'),
         new OA\Property(property: 'schema_exists', description: 'False when the settings are waiting for their schema to come back.', type: 'boolean', readOnly: true),
@@ -85,7 +85,8 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(property: 's3_tile_set', type: 'string', nullable: true),
         new OA\Property(property: 'title', type: 'string', example: 'dagi'),
         new OA\Property(property: 'abstract', type: 'string', example: ''),
-        new OA\Property(property: '_stored', description: 'Only the keys actually stored.', type: 'object', readOnly: true),
+        new OA\Property(property: '_stored', description: 'Only the keys actually stored, so a form can tell a set value from a defaulted one. An explicit null in a PATCH removes a key from here.', type: 'object', readOnly: true),
+        new OA\Property(property: '_defaults', description: 'What each setting would be if it were not stored — the patchable keys only. Reported even for a field that IS stored, which is when a form needs it: to show the default beside the value the user is about to clear.', type: 'object', readOnly: true),
     ],
     type: 'object'
 )]
@@ -147,6 +148,24 @@ final class SchemaTileSettings extends AbstractApi
         $row = $this->settings->get($schema);
         $stored = $row && $row['def'] ? (array)json_decode($row['def'], true) : [];
         $set = Mapcachefile::schemaSettings($row, $this->defaultCache(), $schema);
+        // What each setting would be if it were not stored. A form needs this even
+        // for a field that IS stored — that is precisely when it wants to show
+        // "default is 60" beside the value the user is about to clear, and the
+        // effective values cannot supply it, because once a field is stored the
+        // effective value is the stored one. Resolving a null row is the same code
+        // path the generator takes, so these cannot drift from the real defaults.
+        $fallback = Mapcachefile::schemaSettings(null, $this->defaultCache(), $schema);
+        $defaults = [
+            'cache' => $fallback['cache'],
+            'format' => $fallback['imageFormat'],
+            'ttl' => $fallback['expires'],
+            'auto_expire' => $fallback['autoExpire'],
+            'meta_size' => $fallback['metaSize'],
+            'meta_buffer' => $fallback['metaBuffer'],
+            's3_tile_set' => $fallback['s3TileSet'],
+            'title' => $fallback['title'],
+            'abstract' => $fallback['abstract'],
+        ];
         return $this->getResponse([[
             'schema' => $schema,
             'schema_exists' => $this->schemaExists($schema),
@@ -164,6 +183,7 @@ final class SchemaTileSettings extends AbstractApi
             // what the OpenAPI schema declares and what a generated client with a
             // typed map expects.
             '_stored' => (object)$stored,
+            '_defaults' => (object)$defaults,
         ]], single: true);
     }
 

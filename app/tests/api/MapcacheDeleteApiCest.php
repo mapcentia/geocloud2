@@ -56,12 +56,78 @@ class MapcacheDeleteApiCest
         $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
     }
 
-    // A qualified tileset ("schema.table") is required.
-    public function deleteRejectsUnqualifiedTileset(ApiTester $I)
+    /**
+     * A name without a dot is the merged per-schema tileset, not a malformed layer
+     * name — this endpoint used to reject it outright. An unknown schema is 404:
+     * a schema tileset exists only while its schema does, so a typo must not come
+     * back as a cheerful "0 tiles deleted".
+     */
+    public function deleteRejectsAnUnknownSchema(ApiTester $I)
     {
         $this->bearer($I);
-        $I->sendDELETE('/api/v4/mapcache/database/' . $this->userId . '/tileset/nodot');
-        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->sendDELETE('/api/v4/mapcache/database/' . $this->userId . '/tileset/nosuchschema');
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+    }
+
+    /** An empty tileset segment is still a bad request. */
+    public function deleteRejectsAnEmptyTileset(ApiTester $I)
+    {
+        $this->bearer($I);
+        $I->sendDELETE('/api/v4/mapcache/database/' . $this->userId . '/tileset/');
+        $I->seeResponseCodeIsClientError();
+    }
+
+    /**
+     * The merged schema tileset can be cleared. sqlite is the install default, so
+     * this takes the synchronous wipe: 200 even with nothing cached, because a
+     * delete that finds no tiles has still done its job.
+     */
+    public function deleteClearsASchemaTileset(ApiTester $I)
+    {
+        $this->bearer($I);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v4/schemas', json_encode(['name' => 'mcdsch']));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+
+        $I->sendDELETE('/api/v4/mapcache/database/' . $this->userId . '/tileset/mcdsch');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseContainsJson(['mode' => 'wipe', 'backend' => 'sqlite', 'tileset' => 'mcdsch']);
+
+        // And its vector variant resolves to the same schema rather than a layer.
+        $I->sendDELETE('/api/v4/mapcache/database/' . $this->userId . '/tileset/mcdsch.mvt');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->seeResponseContainsJson(['backend' => 'sqlite']);
+    }
+
+    /**
+     * No single layer's privileges can govern a tileset that merges every layer in
+     * a schema, so clearing one is super-user only. A sub user with write on its
+     * own layers must not be able to wipe the whole schema's cache.
+     */
+    public function deleteOfASchemaTilesetIsSuperUserOnly(ApiTester $I)
+    {
+        $ts = $this->date->getTimestamp();
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('/api/v2/session/start', json_encode([
+            'user' => $this->userId, 'password' => $this->password, 'schema' => 'public']));
+        $cookie = $I->capturePHPSESSID();
+        $I->haveHttpHeader('Cookie', 'PHPSESSID=' . $cookie);
+        $I->sendPOST('/api/v2/user', json_encode([
+            'name' => 'mcdsub' . $ts, 'email' => 'mcdsub' . $ts . '@example.com',
+            'password' => $this->password, 'subuser' => true]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $sub = json_decode($I->grabResponse())->data->screenname;
+        $I->deleteHeader('Cookie');
+        $I->sendPOST('/api/v4/oauth', json_encode([
+            'grant_type' => 'password', 'username' => $sub, 'password' => $this->password,
+            'database' => $this->userId, 'client_id' => 'gc2-cli']));
+        $subToken = json_decode($I->grabResponse())->access_token;
+        $I->assertNotEmpty($subToken, 'without a sub-user token this would pass for the wrong reason');
+
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $subToken);
+        $I->sendDELETE('/api/v4/mapcache/database/' . $this->userId . '/tileset/mcdsch');
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+        $this->bearer($I);
     }
 
     // Deletion is a write operation — anonymous is challenged.

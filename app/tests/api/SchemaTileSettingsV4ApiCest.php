@@ -97,6 +97,33 @@ class SchemaTileSettingsV4ApiCest
             '_stored must serialise as a JSON object even when empty');
     }
 
+    /**
+     * A form needs the default even for a field that IS stored — that is exactly
+     * when it wants to say "default is 60" beside the value the user is about to
+     * clear. The effective values cannot supply it: once a field is stored, the
+     * effective value IS the stored one.
+     */
+    public function shouldReportTheDefaultsSeparately(ApiTester $I): void
+    {
+        $this->asSuper($I);
+        $I->sendPATCH('/api/v4/schemas/' . $this->schema . '/tile', json_encode(['ttl' => 9999, 'cache' => 'disk']));
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $I->sendGET('/api/v4/schemas/' . $this->schema . '/tile');
+        $body = json_decode($I->grabResponse(), true);
+        $I->assertSame(9999, $body['ttl'], 'the effective value is the stored one');
+        $I->assertSame(60, $body['_defaults']['ttl'], 'and the default is still reported');
+        $I->assertSame('sqlite', $body['_defaults']['cache']);
+        $I->assertSame(3, $body['_defaults']['meta_size']);
+        $I->assertSame($this->schema, $body['_defaults']['title'], 'the title defaults to the schema name');
+        $I->assertNull($body['_defaults']['auto_expire']);
+        // The keys a form can patch, and only those: vector_format is not settable.
+        $I->assertEqualsCanonicalizing(
+            ['cache', 'format', 'ttl', 'auto_expire', 'meta_size', 'meta_buffer', 's3_tile_set', 'title', 'abstract'],
+            array_keys($body['_defaults']),
+            '_defaults carries exactly the patchable keys');
+        $I->sendDELETE('/api/v4/schemas/' . $this->schema . '/tile');
+    }
+
     public function shouldStoreMergeAndReadBack(ApiTester $I): void
     {
         $this->asSuper($I);

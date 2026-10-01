@@ -24,7 +24,9 @@ use app\inc\Jwt;
 use app\inc\Model;
 use app\inc\Route2;
 use app\inc\Util;
+use app\controllers\Tilecache;
 use app\models\Authorization;
+use app\models\Database;
 use app\models\Tileseeder;
 use app\models\User;
 use OpenApi\Attributes as OA;
@@ -64,9 +66,9 @@ final class MapcacheTileset extends AbstractApi
         $this->resource = 'mapcache';
     }
 
-    #[OA\Delete(path: '/api/v4/mapcache/database/{database}/tileset/{tileset}', operationId: 'deleteMapcacheTileset', description: "Delete a MapCache tileset's cached tiles. A FULL delete (no bbox/zoom) wipes the backend store directly — synchronous for sqlite/bdb (200), background for disk (202); s3/memcache are not supported for a full delete (400 — use a scoped delete or TTL/lifecycle). A SCOPED delete (bbox and/or zoom) runs mapcache_seed -m delete as a background job (202). Requires write/owner authorization.", tags: ['Mapcache'])]
+    #[OA\Delete(path: '/api/v4/mapcache/database/{database}/tileset/{tileset}', operationId: 'deleteMapcacheTileset', description: "Delete a MapCache tileset's cached tiles — a layer's tileset, or the merged per-schema one (a bare schema name). A FULL delete (no bbox/zoom) wipes the backend store directly — synchronous for sqlite/bdb (200), background for disk (202); s3/memcache are not supported for a full delete (400 — use a scoped delete or TTL/lifecycle). A SCOPED delete (bbox and/or zoom) runs mapcache_seed -m delete as a background job (202). Requires write/owner authorization.", tags: ['Mapcache'])]
     #[OA\Parameter(name: 'database', description: 'Database name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_database')]
-    #[OA\Parameter(name: 'tileset', description: 'Tileset name, i.e. the layer "schema.table" (vector variants "schema.table.mvt"/".json").', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema.roads')]
+    #[OA\Parameter(name: 'tileset', description: 'Tileset name: a layer\'s "schema.table" (vector variants "schema.table.mvt"/".json"), or a bare "schema" for the merged per-schema tileset drawn from every layer in that schema ("schema.mvt" for its vector variant). Clearing a merged schema tileset is reserved for the database owner, because no single layer\'s privileges govern it; an unknown schema answers 404.', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema.roads')]
     #[OA\Parameter(name: 'bbox', description: 'Optional extent to delete (triggers a scoped mapcache_seed delete): minx,miny,maxx,maxy in the grid SRS.', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: '890000,7260000,1730000,7870000')]
     #[OA\Parameter(name: 'zoom', description: 'Optional zoom range to delete (triggers a scoped mapcache_seed delete): minzoom,maxzoom (or a single zoom).', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: '0,12')]
     #[OA\Parameter(name: 'grid', description: 'Grid name for a scoped delete (default g20).', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'g20')]
@@ -74,21 +76,32 @@ final class MapcacheTileset extends AbstractApi
     #[OA\Response(response: 202, description: 'Deletion job started (scoped seed, or background disk wipe)')]
     #[OA\Response(response: 400, description: 'Bad request, or full delete unsupported for the backend (s3/memcache)')]
     #[OA\Response(response: 401, description: 'Authentication required')]
-    #[OA\Response(response: 403, description: 'Not authorized')]
-    #[OA\Response(response: 404, description: 'Database cache config or tileset not found (scoped delete)')]
+    #[OA\Response(response: 403, description: 'Not authorized — including a non-owner clearing a merged per-schema tileset (SUPER_USER_ONLY)')]
+    #[OA\Response(response: 404, description: 'Database cache config or tileset not found (scoped delete), or the schema of a merged tileset does not exist (SCHEMA_NOT_FOUND)')]
     #[Override]
     public function delete_index(): Response
     {
         $database = $this->route->getParam('database');
         $tileset = $this->route->getParam('tileset');
-        if (empty($tileset) || !str_contains($tileset, '.')) {
-            throw new GC2Exception('A qualified tileset name ("schema.table") is required', 400, null, 'BAD_REQUEST');
+        if (empty($tileset)) {
+            throw new GC2Exception('A tileset name is required', 400, null, 'BAD_REQUEST');
         }
-        // The tileset's underlying layer (vector .mvt/.json variants share the layer's privileges).
-        $layer = preg_replace('/\.(mvt|json)$/i', '', $tileset);
+        // The tileset's underlying name (vector .mvt/.json variants share the
+        // privileges of what they are drawn from).
+        $base = preg_replace('/\.(mvt|json)$/i', '', $tileset);
 
-        // Authorize before revealing whether the config/tileset exists.
-        $this->requireWrite($database, $layer);
+        // A name with no dot is the merged per-schema tileset — <schema> and
+        // <schema>.mvt, drawn from every layer in the schema at once. No single
+        // layer's privileges can govern it, so clearing one is super-user only,
+        // which is also how its settings are gated (api/v4/schemas/{schema}/tile).
+        $isSchemaTileset = !str_contains($base, '.');
+        if ($isSchemaTileset) {
+            $this->requireSuperUserFor($database, $base);
+        } else {
+            // Authorize before revealing whether the config/tileset exists.
+            $this->requireWrite($database, $base);
+        }
+        $layer = $base;
 
         // Read the URL query string directly: Input::get() parses the request BODY for DELETE, so
         // ?bbox=&zoom=&grid= would otherwise be silently ignored (a full-tileset delete).
@@ -108,7 +121,7 @@ final class MapcacheTileset extends AbstractApi
         if ($bbox !== null || $zoom !== null) {
             return $this->seedDelete($database, $tileset, $grid, $bbox, $zoom);
         }
-        return $this->wipeBackend($database, $tileset, $layer);
+        return $this->wipeBackend($database, $tileset, $layer, $isSchemaTileset);
     }
 
     /**
@@ -174,9 +187,35 @@ final class MapcacheTileset extends AbstractApi
      *
      * @throws GC2Exception
      */
-    private function wipeBackend(string $database, string $tileset, string $layer): Response
+    /**
+     * Super-user check plus existence, for a merged per-schema tileset.
+     *
+     * A schema tileset exists only while its schema does, so an unknown name is
+     * 404 rather than a cheerful "0 tiles deleted" that hides a typo.
+     *
+     * @throws GC2Exception
+     */
+    private function requireSuperUserFor(string $database, string $schema): void
     {
-        $cache = $this->cacheType($database, $layer);
+        if (empty($this->route->jwt['data']['superUser'])) {
+            throw new GC2Exception('Clearing a merged per-schema tileset is reserved for the database owner',
+                403, null, 'SUPER_USER_ONLY');
+        }
+        if (!preg_match('/^[A-Za-z_][A-Za-z0-9_\-]*$/', $schema)) {
+            throw new GC2Exception('Invalid schema name', 400, null, 'BAD_REQUEST');
+        }
+        if (!(new Database(new Connection(database: $database)))->doesSchemaExist($schema)) {
+            throw new GC2Exception('Schema not found', 404, null, 'SCHEMA_NOT_FOUND');
+        }
+    }
+
+    private function wipeBackend(string $database, string $tileset, string $layer, bool $isSchemaTileset = false): Response
+    {
+        // A schema's backend lives in settings.schema_settings, not in a layer's
+        // def — Tilecache::cacheBackendFor() is the one place that knows both.
+        $cache = $isSchemaTileset
+            ? Tilecache::cacheBackendFor($layer, new Connection(database: $database))
+            : $this->cacheType($database, $layer);
         $base = App::$param['path'] . 'app/wms/mapcache/';
         return match ($cache) {
             'sqlite' => $this->wipeSqlite($base . 'sqlite/' . $database . '/' . $tileset . '.sqlite3', $tileset),
