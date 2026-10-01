@@ -29,7 +29,10 @@ use Codeception\Test\Unit;
  *   git show <commit-before-schema-settings>:app/models/Mapcachefile.php
  *
  * into a scratch copy under a different class name, generate with that, and write
- * the result to app/tests/_data/mapcache_mydb_before.xml.
+ * the result to app/tests/_data/mapcache_mydb_before.xml — then blank the <id> and
+ * <secret> elements before committing it, the way withoutCredentials() does. The
+ * generated document carries this install's real S3 keys, and a fixture is a
+ * committed file.
  */
 class MapcacheConfigUnchangedTest extends Unit
 {
@@ -46,7 +49,25 @@ class MapcacheConfigUnchangedTest extends Unit
             $this->markTestSkipped('settings.schema_settings is not empty, so this is not a clean baseline');
         }
         $generated = (new Mapcachefile(new Connection(database: 'mydb')))->generate();
-        $this->assertSame(file_get_contents($fixture), $generated,
+        $this->assertSame(self::withoutCredentials(file_get_contents($fixture)), self::withoutCredentials($generated),
             'the generated config changed while no schema settings are stored');
+    }
+
+    /**
+     * Blank the S3 credentials on both sides before comparing.
+     *
+     * renderS3Cache() writes App::$param['s3']['id'] and ['secret'] into the
+     * document, so a captured fixture would otherwise carry this install's real
+     * keys into the repository — it did, until this was added. They are not what
+     * this test is about: everything else in the document is still compared byte
+     * for byte, so the guarantee is intact and two lines are neutralised.
+     */
+    private static function withoutCredentials(string $xml): string
+    {
+        return preg_replace(
+            ['/<id>[^<]*<\/id>/', '/<secret>[^<]*<\/secret>/'],
+            ['<id>REDACTED</id>', '<secret>REDACTED</secret>'],
+            $xml
+        );
     }
 }
