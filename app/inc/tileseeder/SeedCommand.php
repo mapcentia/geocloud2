@@ -12,6 +12,7 @@ use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Model;
 use SimpleXMLElement;
+use Throwable;
 
 /**
  * The mapcache_seed invocation for one seed job.
@@ -202,7 +203,19 @@ final class SeedCommand
         $previous = libxml_use_internal_errors(true);
         try {
             $xml = simplexml_load_file($config, SimpleXMLElement::class, LIBXML_NOERROR | LIBXML_RECOVER);
-            return $xml instanceof SimpleXMLElement ? $xml : null;
+            if (!$xml instanceof SimpleXMLElement) {
+                return null;
+            }
+            // LIBXML_RECOVER hands back an *uninitialised* element for a file with no
+            // root element at all (one byte of junk, or plain prose), and every access
+            // to it — including getName() — raises an Error rather than an exception.
+            // Probe it here so the caller turns it into INVALID_CACHE_CONFIG rather
+            // than a 500 carrying a PHP Error message.
+            try {
+                return $xml->getName() === '' ? null : $xml;
+            } catch (Throwable) {
+                return null;
+            }
         } finally {
             libxml_clear_errors();
             libxml_use_internal_errors($previous);

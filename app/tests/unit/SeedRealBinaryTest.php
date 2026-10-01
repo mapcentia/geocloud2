@@ -140,10 +140,20 @@ class SeedRealBinaryTest extends Unit
         // parse rejects the whole document. Without recovery this test would
         // silently skip on every real install — which is exactly the kind of
         // vacuous pass the stubs produced.
-        libxml_use_internal_errors(true);
+        $previous = libxml_use_internal_errors(true);
         $xml = simplexml_load_file($config, SimpleXMLElement::class, LIBXML_NOERROR | LIBXML_RECOVER);
         libxml_clear_errors();
+        libxml_use_internal_errors($previous);
         if (!$xml instanceof SimpleXMLElement) {
+            return null;
+        }
+        try {
+            // An uninitialised element (LIBXML_RECOVER on a file with no root) raises
+            // an Error on every access, getName() included.
+            if ($xml->getName() === '') {
+                return null;
+            }
+        } catch (Throwable) {
             return null;
         }
         foreach ($xml->tileset as $tileset) {
