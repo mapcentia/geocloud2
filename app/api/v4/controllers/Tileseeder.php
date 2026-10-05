@@ -51,7 +51,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(property: 'zoom_start', description: "First zoom level to seed. Must be >= 0 and <= zoom_end.", type: 'integer', example: 0),
         new OA\Property(property: 'zoom_end', description: "Last zoom level to seed. Must be within the grid's own zoom levels.", type: 'integer', example: 12),
         new OA\Property(property: 'extent_layer', description: 'Optional relation whose features bound the seeded area. It must exist and the caller must have read privilege on it.', type: 'string', maxLength: 255, nullable: true),
-        new OA\Property(property: 'threads', type: 'integer'),
+        new OA\Property(property: 'threads', description: 'How many seeding threads mapcache_seed runs (-n). 1 to tileseeder.maxThreads, which defaults to 4; a higher value is refused with 400 INVALID_REQUEST naming the limit, not clamped to it. Defaults to 1.', type: 'integer', nullable: true, minimum: 1, example: 2),
     ],
     type: 'object',
 )]
@@ -65,7 +65,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new OA\Property(property: 'stale', description: 'Computed: running, but no heartbeat for 10 minutes, so the run or its node is gone.', type: 'boolean', readOnly: true),
         new OA\Property(property: 'username', description: 'Null for a legacy row written before v4.', type: 'string', nullable: true, readOnly: true),
         new OA\Property(property: 'tileset', description: 'The mapcache tileset (layer key). Null only for a legacy row.', type: 'string', nullable: true, example: 'myschema.roads'),
-        new OA\Property(property: 'grid', description: 'Null only for a legacy row.', type: 'string', nullable: true, example: 'GoogleMapsCompatible'),
+        new OA\Property(property: 'grid', description: "Null only for a legacy row. The grid's NAME, as the tileset declares it — 'GoogleMapsCompatible' is the title of the same grid and is not accepted.", type: 'string', nullable: true, example: 'g20'),
         new OA\Property(property: 'zoom_start', description: 'Null only for a legacy row.', type: 'integer', nullable: true, example: 0),
         new OA\Property(property: 'zoom_end', description: 'Null only for a legacy row.', type: 'integer', nullable: true, example: 12),
         new OA\Property(property: 'extent_layer', type: 'string', nullable: true),
