@@ -212,6 +212,7 @@ gc2i18n = {
         "Make link": "Gør til link",
         "Show in click info": "Vis i klik-info",
         "No layers": "Ingen kort",
+        "Disable export": "Deaktiver eksport",
 
         "Search anything": "Søg i lag",
         "Update on movement": "Opdater ved flytning",

@@ -212,6 +212,7 @@ gc2i18n = {
         "Make link": "Make link",
         "Show in click info": "Show in click info",
         "No layers": "No layers",
+        "Disable export": "Disable export",
 
         "Search anything": "Search anything",
         "Update on movement": "Update on movement",
