@@ -78,6 +78,10 @@ tableStructure.init = function (record, db) {
             allowBlank: true
         },
         {
+            name: 'not_exportable',
+            allowBlank: true
+        },
+        {
             name: 'autocomplete',
             allowBlank: true
         },
@@ -358,6 +362,13 @@ tableStructure.init = function (record, db) {
                     header: __("Make link"),
                     dataIndex: 'link',
                     //width: 35
+                },
+                {
+                    id: "not_exportable",
+                    xtype: 'checkcolumn',
+                    header: __("Disable export"),
+                    dataIndex: 'not_exportable',
+                    //width: 40
                 },
                 {
                     id: "ignore",
