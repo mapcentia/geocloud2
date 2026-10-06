@@ -154,7 +154,7 @@ final class GetFeature implements HandlerInterface
             }
         } else {
             $fieldsArr = [];
-            foreach ($postgisObject->getMetaData($table, false, false, null, null, false, false) as $key => $value) {
+            foreach ($postgisObject->getMetaData($postgisschema . '.' . $table, false, false, null, null, false, false) as $key => $value) {
                 if (!preg_match(self::SPECIAL_CHARS, $key)) {
                     $fieldsArr[] = $key;
                 }

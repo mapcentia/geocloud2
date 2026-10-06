@@ -505,6 +505,17 @@ class Model
      */
     public function getMetaData(string $table, bool $temp = false, bool $restriction = true, ?array $restrictions = null, ?string $cacheKey = null, bool $getEnums = true, bool $lookupForeignTables = true): array
     {
+        $_schema = sizeof(explode(".", $table)) > 1 ? explode(".", $table)[0] : null;
+        $_table = sizeof(explode(".", $table)) > 1 ? explode(".", $table)[1] : $table;
+        if (!$temp) {
+            if (!$_schema) {
+                throw new GC2Exception("Schema must be provided in getMetaData for non-temp tables", 400);
+            } else {
+                $_schema = str_replace(".", "", $_schema);
+            }
+        } else {
+            $_schema = null;
+        }
         $cacheType = "metadata";
         $cacheRel = md5($cacheKey ?: $table);
         $cacheId = $this->connection->database . "_" . $cacheRel . "_" . $cacheType . "_" . ($temp ? 'temp' : 'notTemp') . "_" . ($restriction ? 'restriction' : 'notRestriction') . "_" . ($getEnums ? 'enums' : 'notEnums') . "_" . ($restrictions ? 'restrictions_' . md5(serialize($restrictions)) : 'noRestrictions');
@@ -514,16 +525,6 @@ class Model
             return $CachedString->get();
         } else {
             $arr = [];
-
-            $_schema = sizeof(explode(".", $table)) > 1 ? explode(".", $table)[0] : null;
-
-            $_table = sizeof(explode(".", $table)) > 1 ? explode(".", $table)[1] : $table;
-
-            if (!$_schema) {
-                $_schema = !empty($this->postgisschema) ? $this->postgisschema : "public";
-            } else {
-                $_schema = str_replace(".", "", $_schema);
-            }
             if (!$temp) {
                 $primaryKey = $this->getPrimeryKey($_schema . '.' . $_table)['attname'];
             } else {
@@ -599,7 +600,7 @@ class Model
                 $this->execute($res, array("table" => "\"" . $_schema . "\".\"" . $_table . "\""));
             }
             $index = $this->getIndexes($_schema, $_table);
-            $comments = $this->getColumnComments($_schema, $_table);
+            $comments = !$temp ? $this->getColumnComments($_schema, $_table) : [];
             $fieldconf = $this->getGeometryColumns($table, "fieldconf");
             if (!empty($fieldconf)) {
                 $fieldconf = json_decode($fieldconf);
