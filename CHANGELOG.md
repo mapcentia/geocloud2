@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.10.1]
+### Fixed
+- Call to app\inc\Model::getMetaData without a schema-qualified table name is buggy. Two tables can have the same name across schemas, so meta can be fetched from the wrong one. Now the method throws if schema is missing.
+- Added v3/Sql back for users who are still using it. The API is a wrapper around the v2 counterpart.
+
 ## [2026.10.0]
 ### Added
 - **Tile seeding is a queue.** `POST /api/v4/tileseeder/jobs` writes a row and answers `202`; a cron tick claims pending jobs under a node-wide cap and spawns one process per job. Status, the log tail and cancellation live in the row, so they work from any node — the v3 endpoint read `pgrep` and sent `kill -9` on whichever node happened to serve the request. `GET …/jobs[/{uuid}]` lists or reads one (with its log), `DELETE …/jobs/{uuid}` answers `204` when the job was still queued and `202` when a worker has to act. Jobs run `pending → running → succeeded | failed | cancelled`, with a computed `stale` when a run stops heartbeating. New `tileseeder` block in `App.php` (`maxConcurrent`, `maxThreads`, `maxPending`, `maxHours`, `cancelGraceSeconds`, `logTailBytes`, `keepLogHours`, and `seedBinary` to point at a non-standard `mapcache_seed`) and a once-a-minute cron entry.
