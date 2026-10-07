@@ -5,12 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [2026.10.1]
+## [2026.10.2] - 2026-7-10
+### Added
+- Add "not_exportable" field to table configuration and UI. This exclude the field from the column projection in the Vidi's Download widget. Vidi version >= 2026.10.1
+
+## [2026.10.1] - 2026-6-10
 ### Fixed
 - Call to app\inc\Model::getMetaData without a schema-qualified table name is buggy. Two tables can have the same name across schemas, so meta can be fetched from the wrong one. Now the method throws if schema is missing.
 - Added v3/Sql back for users who are still using it. The API is a wrapper around the v2 counterpart.
 
-## [2026.10.0]
+## [2026.10.0]  - 2026-5-10
 ### Added
 - **Tile seeding is a queue.** `POST /api/v4/tileseeder/jobs` writes a row and answers `202`; a cron tick claims pending jobs under a node-wide cap and spawns one process per job. Status, the log tail and cancellation live in the row, so they work from any node — the v3 endpoint read `pgrep` and sent `kill -9` on whichever node happened to serve the request. `GET …/jobs[/{uuid}]` lists or reads one (with its log), `DELETE …/jobs/{uuid}` answers `204` when the job was still queued and `202` when a worker has to act. Jobs run `pending → running → succeeded | failed | cancelled`, with a computed `stale` when a run stops heartbeating. New `tileseeder` block in `App.php` (`maxConcurrent`, `maxThreads`, `maxPending`, `maxHours`, `cancelGraceSeconds`, `logTailBytes`, `keepLogHours`, and `seedBinary` to point at a non-standard `mapcache_seed`) and a once-a-minute cron entry.
 - **Per-schema tile settings.** `GET|PATCH|DELETE /api/v4/schemas/{schema}/tile` configures the merged `<schema>` and `<schema>.mvt` tilesets — the ones drawn from every layer in a schema at once — with the same settings a single layer already had: `cache`, `format`, `ttl`, `auto_expire`, `meta_size`, `meta_buffer`, `s3_tile_set`, `title` and `abstract`. Every value was previously a literal in the config generator. `GET` answers the effective settings merged over the fallbacks, with `_stored` carrying only what is set and `_defaults` what each would be if it were not, so a form can show a default beside a value the user is about to clear. The settings deliberately survive dropping the schema, since dropping and recreating one is routine; `PATCH` still requires the schema to exist, so a typo cannot leave a row that takes effect months later.
@@ -37,14 +41,14 @@ and this project adheres to [CalVer](https://calver.org/).
 - A snapshot's STAC collection description reads the key `relationMeta()` actually returns, so the layer abstract reaches the catalog.
 - Style symbol URLs are encoded (`Util::encodeUrl`).
 
-## [2026.9.1]
+## [2026.9.1] - 2026-24-9
 ### Added
 - Cache Basic-auth allow decisions on the legacy /ows and /wms endpoints
 
 ### Fixed
 - Handle null privileges in extractHighestPrivilege function.
 
-## [2026.9.0]
+## [2026.9.0] - 2026-24-9
 ### Added
 - **Parquet snapshots.** `POST /api/v4/snapshots` queues an export of a table or view to (Geo)Parquet and, optionally, FlatGeobuf; a cron worker writes the files to S3 or local storage and publishes them in a per-database, per-relation, per-date layout. `GET /api/v4/snapshots` reports status. Formats are chosen per request (`formats`) with a server default in `App.php`; formats a relation cannot produce are skipped with a reason.
 - Fast listings for clients: `GET /api/v4/schemas` returns the read-only `_table_count` (tables, views and materialized views) on every schema, also with `namesOnly=true`; `GET /api/v4/schemas/{schema}/tables?namesOnly=true` is now one catalog query for the whole schema (before it still built every table's full definition and merely omitted it) and returns `name`, `_type`, `_events`, `_column_count` and `_links` per table. The full listings are unchanged apart from the new `_column_count`.
