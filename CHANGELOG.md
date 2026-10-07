@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.10.3] - 2026-7-10
+### Added
+- "Create view from" widget in the New Layer > Database View dialog. Pure GUI.
+
 ## [2026.10.2] - 2026-7-10
 ### Added
 - Add "not_exportable" field to table configuration and UI. This exclude the field from the column projection in the Vidi's Download widget. Vidi version >= 2026.10.1

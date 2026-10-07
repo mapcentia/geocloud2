@@ -2907,7 +2907,7 @@ $(document).ready(function () {
             layout: 'fit',
             modal: true,
             width: 800,
-            height: 350,
+            height: 380,
             closeAction: 'close',
             resizable: false,
             border: false,
