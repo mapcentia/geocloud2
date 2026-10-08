@@ -222,7 +222,7 @@ class Controller
         if ($subUser) {
             $apiKey = $response['data']->api_key_subuser->$subUser;
             $group = !empty($response['data']->userGroups->$subUser) ? json_decode($response['data']->userGroups->$subUser) : null;
-            $userGroupFullChain = $group ? new User(connection: $this->connection)->getFullInheritance($group, $this->connection->database) : null;
+            $userGroupFullChain = $group ? new User()->getFullInheritance($group, $this->connection->database) : null;
         } else {
             $apiKey = $response['data']->api_key;
         }

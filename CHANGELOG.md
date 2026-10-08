@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.10.4] - 2026-8-10
+### Fixed
+- In app\inc\Controller the app\model\User object was instantiated with injection of the Connection object from Controller, which is not correct.  
+  The object should be instantiated without injection of the connection object (or another connection object), because User will set the database to 'mapcentia'.
+
 ## [2026.10.3] - 2026-7-10
 ### Added
 - "Create view from" widget in the New Layer > Database View dialog. Pure GUI.
