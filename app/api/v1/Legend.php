@@ -80,10 +80,11 @@ class Legend extends Controller
                                 $data = base64_encode(ob_get_clean());
                                 $this->legendArr[$layerName]['classes'][0]['img'] = $data;
                                 $this->legendArr[$layerName]['classes'][0]['name'] = "_gc2_wms_legend";
+                                $this->legendArr[$layerName]['classes'][0]['ms_name'] = "_gc2_wms_legend";
                                 $this->legendArr[$layerName]['classes'][0]['expression'] = null;
                                 for ($i = 0; $i < $layer->numclasses; $i++) {
                                     $class = $layer->getClass($i);
-                                    $this->legendArr[$layerName]['classes'][$i]['name'] = $class->name;
+                                    $this->legendArr[$layerName]['classes'][$i]['ms_name'] = $class->name;
                                 }
                             }
                         } else {
@@ -93,6 +94,7 @@ class Legend extends Controller
                                 $data = base64_encode($icon->getBytes());
                                 $this->legendArr[$layerName]['classes'][$i]['img'] = $data;
                                 $this->legendArr[$layerName]['classes'][$i]['name'] = $class->name;
+                                $this->legendArr[$layerName]['classes'][$i]['ms_name'] = $class->name;
                                 $this->legendArr[$layerName]['classes'][$i]['expression'] = $class->getExpressionString();
 
                             }
@@ -143,7 +145,7 @@ class Legend extends Controller
                 $html .= "<table class=\"legend legend-body\">";
                 if (is_array($layer['classes'])) {
                     foreach ($layer['classes'] as $class) {
-                        if (!empty($class['name'])) {
+                        if (!empty($class['ms_name'])) {
                             $html .= "<tr><td style=\"padding: 3px\" class=\"legend img\"><img alt=\"\" src=\"data:image/png;base64, {$class['img']}\"></td>";
                             $html .= "<td style=\"padding: 3px\" class=\"legend legend-text\">" . (($class['name'] == "_gc2_wms_legend") ? "" : htmlentities($class['name'])) . "</td></tr>";
                         }
@@ -168,7 +170,7 @@ class Legend extends Controller
                 {
                     if (is_array($layer['classes'])) {
                         foreach ($layer['classes'] as $class) {
-                            if (!empty($class['name'])) {
+                            if (!empty($class['ms_name'])) {
                                 $classes[] = array(
                                     "name" => $class['name'],
                                     "expression" => $class['expression'],
