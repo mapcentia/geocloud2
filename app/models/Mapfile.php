@@ -793,8 +793,8 @@ SYMBOLS;
             // PROJECTION + TEMPLATE
             $s .= "PROJECTION\n\"init=EPSG:{$row['srid']}\"\nEND\nTEMPLATE \"test\"\n";
 
-            // Classes (not for WMS source layers)
-            if (!empty($layerData['classArr']) && !$row['wmssource']) {
+            // Classes (also for WMS source layers, so a class can be used for suppressing the legend graphic)
+            if (!empty($layerData['classArr'])) {
                 $s .= $this->renderClasses($layerData['classArr'], $layerArr, $layerName);
             }
 
