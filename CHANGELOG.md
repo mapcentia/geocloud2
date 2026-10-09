@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.10.5] - 2026-9-10
+### Fixed
+- The "Classes without names are skipped in the JSON legend API. They are already skipped in the HTML legend API." 
+  from 2026.6.6, now also affects WMS backed layers. To suppress the legend graphic, use a single class with an empty name.
+
 ## [2026.10.4] - 2026-8-10
 ### Fixed
 - In app\inc\Controller the app\model\User object was instantiated with injection of the Connection object from Controller, which is not correct.  
