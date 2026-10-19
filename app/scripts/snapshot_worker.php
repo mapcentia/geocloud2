@@ -27,6 +27,10 @@ use app\inc\snapshot\SnapshotStorageFactory;
 use app\models\Database;
 
 new App();
+
+$memoryLimit = App::$param['memoryLimit'] ?? '128M';
+ini_set('memory_limit', $memoryLimit);
+
 Cache::setInstance();
 
 try {
