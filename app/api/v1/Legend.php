@@ -184,6 +184,6 @@ class Legend extends Controller
                 }
             }
         }
-        return $json;
+        return !empty($json) ? $json : [['id' => null]];
     }
 }
