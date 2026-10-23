@@ -8,6 +8,7 @@
 
 namespace app\models;
 
+use app\conf\App;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Model;
@@ -254,7 +255,7 @@ class Keyvalue extends Model
             $response["data"] = $this->fetchRow($res) ?: [];
         }
         // HACK get rid of unnecessary meta in Vidi snapshots
-        if (isset($urlVars["like"]) && $urlVars["like"] == "state_snapshot_%") {
+        if (isset($urlVars["like"]) && $urlVars["like"] == "state_snapshot_%" && empty(App::$param['dontStripMetaInSnapShots'])) {
             if (!is_array($response["data"][0])) {
                 $parsed = !empty($response["data"]["value"]) ? json_decode($response["data"]["value"], true) : [];
                 unset($parsed["snapshot"]);
