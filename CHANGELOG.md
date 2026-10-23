@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.10.6] - 2026-23-10
+### Fixed
+- Regression: Without extracting the mime-type in SQL API with `convertDataUrlsToHttp`, Vidi can't decide widget. Was removed in the first place for optimization reasons.2026
+
 ## [2026.10.5] - 2026-9-10
 ### Fixed
 - The "Classes without names are skipped in the JSON legend API. They are already skipped in the HTML legend API." 
