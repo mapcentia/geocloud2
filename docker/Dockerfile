@@ -1,17 +1,19 @@
 ARG ECW_VERSION=3
 ARG PHP_VERSION=8.4
 ARG NODE_VERSION=24
+ARG DEBIAN_CODENAME=trixie
 
 ###############################################################################
 # Base image
 ###############################################################################
-FROM debian:trixie-slim AS base
+FROM debian:${DEBIAN_CODENAME}-slim AS base
 LABEL maintainer="Martin Høgh <mh@mapcentia.com>"
 
 # Non-interactive mode for apt
 ENV DEBIAN_FRONTEND=noninteractive
 # Debian release codename; used for the Sury PHP, Apache Arrow and QGIS apt suites.
-ENV DEBIAN_CODENAME=trixie
+ARG DEBIAN_CODENAME
+ENV DEBIAN_CODENAME=${DEBIAN_CODENAME}
 ARG PHP_VERSION
 ENV PHP_VERSION=${PHP_VERSION}
 ARG NODE_VERSION

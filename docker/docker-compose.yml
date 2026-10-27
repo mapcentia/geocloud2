@@ -13,6 +13,7 @@ services:
       args:
         - ECW_VERSION=3
         - PHP_VERSION=8.4
+        - DEBIAN_CODENAME=trixie
   gc2:
     image: mapcentia/gc2:php8.4-trixie-2
     privileged: true
@@ -23,6 +24,7 @@ services:
       args:
         - ECW_VERSION=3
         - PHP_VERSION=8.4
+        - DEBIAN_CODENAME=trixie
   dev:
     image: dev
     restart: unless-stopped
@@ -128,6 +130,20 @@ services:
       resources:
         limits:
           cpus: '8'
+  postgis:
+    image: mapcentia/postgis:pg11-postgis2-php8.4-bullseye-1
+    build:
+      context: ./postgis
+      dockerfile: Dockerfile
+      args:
+        - PHP_VERSION=8.4
+        - POSTGRES_VERSION=11
+        - POSTGIS_VERSION=2
+        - DEBIAN_CODENAME=bullseye
+    environment:
+      - GC2_PASSWORD=1234
+      - GC2_USER=gc2
+
   keycloak:
     image: quay.io/keycloak/keycloak:26.3.3
     command:
