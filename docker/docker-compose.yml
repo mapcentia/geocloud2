@@ -124,6 +124,10 @@ services:
     networks:
       - default
       - internal
+    deploy:
+      resources:
+        limits:
+          cpus: '8'
   keycloak:
     image: quay.io/keycloak/keycloak:26.3.3
     command:

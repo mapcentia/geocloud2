@@ -1,5 +1,6 @@
 ARG ECW_VERSION=3
 ARG PHP_VERSION=8.4
+ARG NODE_VERSION=24
 
 ###############################################################################
 # Base image
@@ -13,6 +14,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV DEBIAN_CODENAME=trixie
 ARG PHP_VERSION
 ENV PHP_VERSION=${PHP_VERSION}
+ARG NODE_VERSION
+ENV NODE_VERSION=${NODE_VERSION}
 
 # 1) Update and install wget + gnupg2 in the same step
 RUN apt-get -y  update && apt-get -y install wget gnupg2 && rm -rf /var/lib/apt/lists/*
@@ -74,7 +77,7 @@ RUN sed -i '/ServerTokens OS/c\ServerTokens Prod' /etc/apache2/conf-enabled/secu
 ###############################################################################
 # Node.js
 ###############################################################################
-RUN curl -sL https://deb.nodesource.com/setup_24.x -o nodesource_setup.sh &&\
+RUN curl -sL https://deb.nodesource.com/setup_${NODE_VERSION}.x -o nodesource_setup.sh &&\
     bash nodesource_setup.sh &&\
     apt-get install -y nodejs
 
@@ -168,6 +171,7 @@ RUN wget -q https://packages.apache.org/artifactory/arrow/debian/apache-arrow-ap
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         libarrow-dev=${ARROW_VERSION} \
+        libarrow-compute-dev=${ARROW_VERSION} \
         libarrow-acero-dev=${ARROW_VERSION} \
         libarrow-dataset-dev=${ARROW_VERSION} \
         libparquet-dev=${ARROW_VERSION} \
@@ -342,7 +346,7 @@ HEALTHCHECK --interval=5s --timeout=10s --start-period=5s --retries=3 \
 # Clone GC2 from GitHub
 RUN mkdir -p /var/www \
     && cd /var/www \
-    && git clone --depth 1 https://github.com/mapcentia/geocloud2.git \
+    && git clone https://github.com/mapcentia/geocloud2.git \
     && cd geocloud2 \
     && git checkout ${GC2_REF}
 
@@ -364,6 +368,9 @@ ENTRYPOINT ["/entrypoint.sh"]
 
 # Symlink Dashboard
 RUN ln -s /var/www/geocloud2/dashboard/build/ /var/www/geocloud2/public/dashboard
+
+#  CVE-2926-109618/619
+RUN echo "session.upload_progress.enabled = Off" >> /etc/php/${PHP_VERSION}/fpm/php.ini
 
 # Final CMD
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
