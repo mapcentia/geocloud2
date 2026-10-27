@@ -29,7 +29,7 @@ final class Connection
     )
     {
         \app\conf\Connection::$param['postgishost'] = \app\conf\Connection::$param['postgishost'] ?? getenv('POSTGRES_HOST');
-        \app\conf\Connection::$param['postgisport'] = \app\conf\Connection::$param['postgisport'] ?? getenv('POSTGRES_PORT') ?? '5432';
+        \app\conf\Connection::$param['postgisport'] = \app\conf\Connection::$param['postgisport'] ?? getenv('POSTGRES_PORT') ?: '5432';
         \app\conf\Connection::$param['postgisuser'] = \app\conf\Connection::$param['postgisuser'] ?? getenv('POSTGRES_USER');
         \app\conf\Connection::$param['postgisdb'] = \app\conf\Connection::$param['postgisdb'] ?? getenv('POSTGRES_DB');
         \app\conf\Connection::$param['postgispw'] = \app\conf\Connection::$param['postgispw'] ?? getenv('POSTGRES_PASSWORD');
