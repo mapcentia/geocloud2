@@ -337,7 +337,7 @@ final class MapcacheTileset extends AbstractApi
 
     /**
      * Requires write/owner authorization for the layer, independent of the layer's read-auth level.
-     * Superusers and schema owners always pass; sub-users need `read/write`. Bearer token and HTTP
+     * Superusers and schema owners always pass; sub-users need `write` or `all`. Bearer token and HTTP
      * Basic are both accepted; anonymous requests are challenged (401) or rejected.
      *
      * @throws GC2Exception|\Throwable
@@ -367,7 +367,7 @@ final class MapcacheTileset extends AbstractApi
                 return;
             }
             $privileges = json_decode((string)new Model(connection: $connection)->getGeometryColumns($layer, 'privileges'), true) ?: [];
-            if ($auth->extractHighestPrivilege($privileges, $jwt['uid'], $chain) === 'read/write') {
+            if (in_array($auth->extractHighestPrivilege($privileges, $jwt['uid'], $chain), ['write', 'all'], true)) {
                 return;
             }
             throw new GC2Exception('Insufficient privileges to delete the tile cache', 403, null, 'INSUFFICIENT_PRIVILEGES');

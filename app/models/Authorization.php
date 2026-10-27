@@ -151,12 +151,12 @@ class Authorization extends Model
             }
         }
         // Per-user/group privilege vocabulary stored on layers is
-        // "none" / "read" / "read/write" (see Layer::updatePrivileges).
+        // "none" / "read" / "write" / "all" (see Layer::updatePrivileges).
         $rank = [
             'none' => 0,
             'read' => 1,
             'write' => 2,
-            'read/write' => 2,
+            'all' => 3,
         ];
         $highest = array_reduce(
             $values,
