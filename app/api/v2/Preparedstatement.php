@@ -115,7 +115,8 @@ class Preparedstatement extends Controller
             return $response;
         }
 
-        $sql = strtr($statement["data"]["statement"], $params);
+        // Trim ; from end of statement
+        $sql = strtr(rtrim($statement["data"]["statement"], ';'), $params);
 
         try {
             $url = "http://127.0.0.1/api/v2/sql/{$user}";
