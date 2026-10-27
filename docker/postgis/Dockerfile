@@ -1,39 +1,73 @@
 ARG PHP_VERSION=8.4
 ARG POSTGRES_VERSION=17
+# 2 => PostGIS 2.5, 3 => PostGIS 3.x
+ARG POSTGIS_VERSION=3
+# PostgreSQL 11 is EOL. PostGIS 2.5 for PG11 only exists for bullseye (in the PGDG
+# archive). bookworm has PG11 with PostGIS 3 only, and buster has no PHP 8.4.
+ARG DEBIAN_CODENAME=trixie
 
-FROM debian:trixie-slim
+FROM debian:${DEBIAN_CODENAME}-slim
 LABEL maintainer="Martin Høgh <mh@mapcentia.com>"
 
-RUN export DEBIAN_FRONTEND=noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
+ARG DEBIAN_CODENAME
+ENV DEBIAN_CODENAME=${DEBIAN_CODENAME}
 ARG PHP_VERSION
 ENV PHP_VERSION=${PHP_VERSION}
 ARG POSTGRES_VERSION
 ENV POSTGRES_VERSION=${POSTGRES_VERSION}
+ARG POSTGIS_VERSION
+ENV POSTGIS_VERSION=${POSTGIS_VERSION}
 
-RUN apt-get -y update
-RUN apt-get -y install wget gnupg2
-
-# Add PHP8 repo
+# Add PGDG (PostgreSQL) and Sury (PHP) repos. Releases dropped from apt.postgresql.org
+# live on apt-archive.postgresql.org, and old packages like PostGIS 2.5 in <codename>-pgdg-archive.
 RUN set -eux; \
+    case "${POSTGIS_VERSION}:${DEBIAN_CODENAME}" in \
+        2:bullseye|3:bullseye|3:bookworm) ;; \
+        *) echo "POSTGIS_VERSION=${POSTGIS_VERSION} is not supported on ${DEBIAN_CODENAME} (2: bullseye, 3: bullseye/bookworm)"; exit 1 ;; \
+    esac; \
+    # bullseye is past LTS; its packages have moved to archive.debian.org
+    if [ "${DEBIAN_CODENAME}" = "bullseye" ]; then \
+        sed -i 's#http://deb.debian.org#http://archive.debian.org#g' /etc/apt/sources.list; \
+        echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99archive; \
+    fi; \
     apt-get update; \
-    apt-get install -y --no-install-recommends wget gnupg; \
+    apt-get install -y --no-install-recommends wget gnupg ca-certificates; \
+    wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/keyrings/pgdg.gpg; \
+    case "${DEBIAN_CODENAME}" in \
+        bookworm|trixie) PGDG_URL=https://apt.postgresql.org/pub/repos/apt ;; \
+        *) PGDG_URL=https://apt-archive.postgresql.org/pub/repos/apt ;; \
+    esac; \
+    echo "deb [signed-by=/usr/share/keyrings/pgdg.gpg] ${PGDG_URL} ${DEBIAN_CODENAME}-pgdg main" > /etc/apt/sources.list.d/pgdg.list; \
+    if [ "${POSTGIS_VERSION}" = "2" ]; then \
+        echo "deb [signed-by=/usr/share/keyrings/pgdg.gpg] https://apt-archive.postgresql.org/pub/repos/apt ${DEBIAN_CODENAME}-pgdg-archive main" >> /etc/apt/sources.list.d/pgdg.list; \
+    fi; \
     wget -qO /usr/share/keyrings/sury-php.gpg https://packages.sury.org/php/apt.gpg; \
-    echo "deb [signed-by=/usr/share/keyrings/sury-php.gpg] https://packages.sury.org/php/ bookworm main" > /etc/apt/sources.list.d/sury-php.list; \
+    echo "deb [signed-by=/usr/share/keyrings/sury-php.gpg] https://packages.sury.org/php/ ${DEBIAN_CODENAME} main" > /etc/apt/sources.list.d/sury-php.list; \
     apt-get update
 
-# Install packages
-RUN apt-get -y install vim git php${PHP_VERSION}-pgsql php${PHP_VERSION}-cli curl \
-    postgis postgresql-${POSTGRES_VERSION}-postgis-3 postgresql-${POSTGRES_VERSION}-pgrouting postgresql-${POSTGRES_VERSION}-ogr-fdw pgagent tdsodbc postgresql-server-dev-${POSTGRES_VERSION} libsybdb5 freetds-dev freetds-common gnupg gcc make \
-    pgbouncer locales-all osm2pgsql supervisor \
-    osm2pgsql unixodbc
+# Install packages. Disable the cluster auto-creation of postgresql-common first,
+# so only the ${POSTGRES_VERSION} cluster is created.
+RUN set -eux; \
+    if [ "${POSTGIS_VERSION}" = "2" ]; then POSTGIS_PKG=2.5; else POSTGIS_PKG=3; fi; \
+    apt-get -y install postgresql-common \
+    && sed -i 's/^#\?create_main_cluster.*/create_main_cluster = false/' /etc/postgresql-common/createcluster.conf \
+    && apt-get -y install vim git php${PHP_VERSION}-pgsql php${PHP_VERSION}-cli curl \
+    postgresql-${POSTGRES_VERSION} postgresql-client-${POSTGRES_VERSION} \
+    postgis postgresql-${POSTGRES_VERSION}-postgis-${POSTGIS_PKG} postgresql-${POSTGRES_VERSION}-postgis-${POSTGIS_PKG}-scripts \
+    postgresql-${POSTGRES_VERSION}-pgrouting postgresql-${POSTGRES_VERSION}-ogr-fdw pgagent tdsodbc postgresql-server-dev-${POSTGRES_VERSION} libsybdb5 freetds-dev freetds-common gcc make \
+    pgbouncer locales-all osm2pgsql supervisor unixodbc \
+    && pg_createcluster ${POSTGRES_VERSION} main \
+    && (odbcinst -q -d -n FreeTDS >/dev/null 2>&1 || odbcinst -i -d -f /usr/share/tdsodbc/odbcinst.ini) \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install msodbcsql17 and msodbcsql18
-RUN curl -sSL -O https://packages.microsoft.com/config/debian/13/packages-microsoft-prod.deb \
+RUN curl -sSL -O https://packages.microsoft.com/config/debian/$(. /etc/os-release && echo $VERSION_ID)/packages-microsoft-prod.deb \
     && dpkg -i packages-microsoft-prod.deb \
     && rm packages-microsoft-prod.deb \
     && apt-get update \
-    && ACCEPT_EULA=Y apt-get install -y msodbcsql17 msodbcsql18
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql17 msodbcsql18 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set MinProtocol to TLSv1.0 because some SQL Server doesn't support 1.2
 RUN sed -i "s#MinProtocol = TLSv1.2#MinProtocol = TLSv1.0#g" /etc/ssl/openssl.cnf
@@ -83,9 +117,18 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=2 \
     CMD psql -U postgres -t -c select || exit 1
 
 # Install gc2-cli
-RUN wget https://gc2-cli.s3.eu-west-1.amazonaws.com/versions/2025.4.0/d3a2e2c/apt/gc2_2025.4.0.d3a2e2c-1_amd64.deb -O gc2.deb \
-    && dpkg -i gc2.deb \
-    && rm gc2.deb
+# The .deb is zstd compressed, which dpkg on bullseye can't read, so repack it as xz there.
+RUN set -eux; \
+    wget https://gc2-cli.s3.eu-west-1.amazonaws.com/versions/2025.4.0/d3a2e2c/apt/gc2_2025.4.0.d3a2e2c-1_amd64.deb -O /tmp/gc2.deb; \
+    if ! dpkg-deb --info /tmp/gc2.deb >/dev/null 2>&1; then \
+        apt-get update && apt-get install -y --no-install-recommends zstd xz-utils binutils; \
+        mkdir /tmp/gc2deb && cd /tmp/gc2deb && ar x /tmp/gc2.deb; \
+        for t in control data; do zstd -d --rm $t.tar.zst && xz $t.tar; done; \
+        rm /tmp/gc2.deb && ar rc /tmp/gc2.deb debian-binary control.tar.xz data.tar.xz; \
+        cd / && rm -rf /tmp/gc2deb /var/lib/apt/lists/*; \
+    fi; \
+    dpkg -i /tmp/gc2.deb; \
+    rm /tmp/gc2.deb
 
 # Add Supervisor config and run the deamon
 ADD conf/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf

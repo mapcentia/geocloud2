@@ -5,7 +5,7 @@ export PGUSER=$GC2_USER
 
 if [ $1 == "/usr/bin/supervisord" ]; then
   # Start service so we can create GC2 system tables and users.
-  su postgres /bin/bash -c "/usr/lib/postgresql/17/bin/postgres -F -D /var/lib/postgresql/17/main -c config_file=/etc/postgresql/17/main/postgresql.conf -c log_destination=stderr"
+  pg_ctlcluster "$POSTGRES_VERSION" main start
 
   # But first we check if they are created. I.e. if the container is restarted
   if echo 'SELECT 1' | psql postgres >/dev/null 2>&1; then
@@ -16,7 +16,7 @@ INFO:   GC2 system already initiated.
         Doing nothing else than start the service.
 ****************************************************"
     # Stop the service, so it can be started in foreground.
-    service postgresql stop
+    pg_ctlcluster "$POSTGRES_VERSION" main stop
   else
     # First run
 
@@ -28,7 +28,7 @@ INFO:   GC2 system already initiated.
       echo $TIMEZONE >/etc/timezone
 
       # PGSQL
-      echo "timezone = '$TIMEZONE'" >>/etc/postgresql/17/main/postgresql.conf
+      echo "timezone = '$TIMEZONE'" >>/etc/postgresql/$POSTGRES_VERSION/main/postgresql.conf
     fi
 
     if [ -n "$GC2_USER" ]; then
@@ -70,7 +70,8 @@ WARNING: No locale has been set for the GC2
     psql postgres -U postgres -c "CREATE USER $GC2_USER WITH SUPERUSER CREATEROLE CREATEDB PASSWORD '$GC2_PASSWORD'" &&
       createdb template_geocloud -T template0 --encoding UTF-8 --locale $locale &&
       psql template_geocloud -c "create extension postgis" &&
-      psql template_geocloud -c "create extension postgis_raster" &&
+      # PostGIS 2.5 has raster inside the postgis extension
+      { [ "$POSTGIS_VERSION" = "2" ] || psql template_geocloud -c "create extension postgis_raster"; } &&
       psql template_geocloud -c "create extension pgcrypto" &&
       psql template_geocloud -c "create extension pgrouting" &&
       psql template_geocloud -f /var/www/geocloud2/public/install/geometry_columns_join.sql &&
@@ -108,9 +109,25 @@ WARNING: No locale has been set for the GC2
             );" &&
 
       # Pull from GitHub and run database migration
+      # The migration connects to this container's own database, so default the
+      # POSTGRES_* variables GC2 reads to the local cluster and the GC2 user.
       cd /var/www/geocloud2 && git config pull.rebase false && git pull &&
+      POSTGRES_HOST=${POSTGRES_HOST:-127.0.0.1} \
+      POSTGRES_PORT=${POSTGRES_PORT:-5432} \
+      POSTGRES_USER=${POSTGRES_USER:-$GC2_USER} \
+      POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-$GC2_PASSWORD} \
+      POSTGRES_DB=${POSTGRES_DB:-postgres} \
       php /var/www/geocloud2/app/migration/run.php &&
-      service postgresql stop
+      pg_ctlcluster "$POSTGRES_VERSION" main stop ||
+      {
+        # Stop the init server, or supervisord's postgres fails on postmaster.pid
+        echo "
+****************************************************
+ERROR:   GC2 initialisation failed. See the output above.
+****************************************************"
+        pg_ctlcluster "$POSTGRES_VERSION" main stop || true
+        exit 1
+      }
 
     #Add gc2 user to pgbouncer user list
     echo "\"$GC2_USER\" \"$GC2_PASSWORD\"" >>/etc/pgbouncer/userlist.txt
