@@ -24,11 +24,11 @@ class WfsInheritanceApiCest
     private $schemaName;
 
     private $authUser;    // the authenticating subuser (no direct privilege)
-    private $grpRw;       // group with read/write on the layer
+    private $grpRw;       // group with write on the layer
     private $grpR;        // group with read on the layer
     private $grpNone;     // group with no privilege
     private $grpMid;      // group with no privilege, member of grpGrand
-    private $grpGrand;    // group with read/write, two levels above authUser
+    private $grpGrand;    // group with write, two levels above authUser
 
     public function __construct()
     {
@@ -183,13 +183,13 @@ class WfsInheritanceApiCest
 
         // Grant per-layer privileges to the groups (not to authUser directly).
         $ownerCookie = $this->ownerSession($I);
-        $this->grantPrivilege($I, $ownerCookie, $this->grpRw, 'read/write');
+        $this->grantPrivilege($I, $ownerCookie, $this->grpRw, 'write');
         $ownerCookie = $this->ownerSession($I);
         $this->grantPrivilege($I, $ownerCookie, $this->grpR, 'read');
         $ownerCookie = $this->ownerSession($I);
-        $this->grantPrivilege($I, $ownerCookie, $this->grpGrand, 'read/write');
+        $this->grantPrivilege($I, $ownerCookie, $this->grpGrand, 'write');
 
-        // Transitive chain: grpMid inherits from grpGrand (read/write two levels up).
+        // Transitive chain: grpMid inherits from grpGrand (write two levels up).
         $this->setGroups($I, $this->grpMid, [$this->grpGrand]);
 
         // Set the authenticating subuser's viewer password (via its own session).
@@ -224,7 +224,7 @@ class WfsInheritanceApiCest
         return $I->grabResponse();
     }
 
-    // Best parent = read/write (from two groups, one read one read/write):
+    // Best parent = write (from two groups, one read one write):
     // both read and write succeed.
     public function shouldAllowReadAndWriteViaBestParentReadWrite(ApiTester $I)
     {
@@ -255,7 +255,7 @@ class WfsInheritanceApiCest
         $I->assertStringNotContainsString('totalInserted>1', $write);
     }
 
-    // Transitive/deep inheritance: authUser -> grpMid -> grpGrand (read/write).
+    // Transitive/deep inheritance: authUser -> grpMid -> grpGrand (write).
     // The privilege is on a grandparent, two levels up.
     public function shouldInheritReadWriteTransitivelyFromGrandparent(ApiTester $I)
     {

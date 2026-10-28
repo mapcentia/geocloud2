@@ -55,7 +55,7 @@ final class SnapshotAuthorizer
         $raw = $this->authorization->getGeometryColumns("$schema.$relation", 'privileges');
         $privileges = is_string($raw) ? (json_decode($raw, true) ?: []) : (is_array($raw) ? $raw : []);
         $privilege = $privileges === [] ? 'none' : $this->authorization->extractHighestPrivilege($privileges, $uid, $groups);
-        if ($privilege !== 'read' && $privilege !== 'read/write' && $privilege !== 'write') {
+        if (!in_array($privilege, ['read', 'write', 'all'], true)) {
             throw new GC2Exception("Insufficient privileges to read snapshots of $schema.$relation", 403, null, "INSUFFICIENT_PRIVILEGES");
         }
         if ($this->isGeofenced($uid, $groups, $schema, $relation)) {

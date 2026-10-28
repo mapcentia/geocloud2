@@ -321,7 +321,7 @@ class DatabaseManagementCest
     }
 
     // *************************************
-    // Start of testing read/write access
+    // Start of testing write access
     // *************************************
 
     public function shouldSetTheAuthenticationLevelToWrite(ApiTester $I)
@@ -795,7 +795,7 @@ class DatabaseManagementCest
         $I->sendPUT('/controllers/layer/privileges', json_encode([
             'data' => [
                 "subuser" => $this->subUserId,
-                "privileges" => "read/write",
+                "privileges" => "write",
                 "_key_" => "public.parkeringsomraade.the_geom",
             ],
         ]));
@@ -981,7 +981,7 @@ class DatabaseManagementCest
         ]);
     }
     // *************************************
-    // End of testing read/write access
+    // End of testing write access
     // *************************************
 
 }

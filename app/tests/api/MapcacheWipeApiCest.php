@@ -135,7 +135,7 @@ class MapcacheWipeApiCest
 
     /**
      * requireWrite() grants the tile-cache delete to a sub-user whose layer
-     * privilege is `read/write`. That branch was unreachable until
+     * privilege is `write`. That branch was unreachable until
      * Model::getGeometryColumns($layer, 'privileges') started returning the
      * privileges JSON (added for the snapshot read API): it returned null for
      * every field it did not know, so the privileges array was always empty
@@ -170,7 +170,7 @@ class MapcacheWipeApiCest
         @unlink($this->mapcacheDir() . 'sqlite/' . $this->userId . '/' . $this->tileset . '.sqlite3');
 
         // Granted through the legacy layer controller, which is the path that
-        // stores the "read/write" vocabulary requireWrite() matches (the v4
+        // stores the "write" vocabulary requireWrite() matches (the v4
         // privileges API's Choice list is none/read/write).
         $grant = function (string $privilege) use ($I, $subUserId) {
             $I->deleteHeader('Authorization');
@@ -189,7 +189,7 @@ class MapcacheWipeApiCest
         $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
         $I->seeResponseContainsJson(['errorCode' => 'INSUFFICIENT_PRIVILEGES']);
 
-        $grant('read/write');
+        $grant('write');
         $I->haveHttpHeader('Authorization', 'Bearer ' . $subToken);
         $I->sendDELETE('/api/v4/mapcache/database/' . $this->userId . '/tileset/' . $this->tileset);
         $I->seeResponseCodeIs(HttpCode::OK);

@@ -484,7 +484,7 @@ class TileseederV4ApiCest
     /**
      * Spec §7 wants extent_layer to be "a relation the caller may read", and only
      * the tileset was ever authorized. seed_run.php opens the OGR datasource as
-     * the configured Postgres superuser, so a sub-user with read/write on one
+     * the configured Postgres superuser, so a sub-user with write on one
      * tileset could name any relation in the database as its extent source and
      * read that relation's bbox back out of the tiles it got.
      *
@@ -496,7 +496,7 @@ class TileseederV4ApiCest
      */
     public function shouldRefuseAnExtentLayerTheSubUserCannotRead(ApiTester $I)
     {
-        $this->grant($I, $this->schema . '.roads.the_geom', 'read/write');
+        $this->grant($I, $this->schema . '.roads.the_geom', 'write');
 
         // Seeding the tileset itself: allowed, with no extent layer involved.
         $this->asSub($I);
@@ -521,7 +521,7 @@ class TileseederV4ApiCest
             'the refusal must point at the extent layer, not at the tileset');
 
         // Granted read on the extent layer, the same request goes through: read is
-        // enough, the privilege vocabulary being none / read / read/write.
+        // enough, the privilege vocabulary being none / read / write.
         $this->grant($I, $this->schema . '.boundary.the_geom', 'read');
         $this->asSub($I);
         $I->stopFollowingRedirects();
@@ -589,7 +589,7 @@ class TileseederV4ApiCest
 
     /**
      * Grants the sub-user a privilege on one layer. Through the legacy layer
-     * controller, because that is the path that stores the "read/write"
+     * controller, because that is the path that stores the "write"
      * vocabulary the privilege check matches (the v4 privileges API's Choice
      * list is none/read/write) — the same recipe MapcacheWipeApiCest uses.
      */

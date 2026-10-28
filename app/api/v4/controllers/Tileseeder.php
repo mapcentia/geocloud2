@@ -143,7 +143,7 @@ class Tileseeder extends AbstractApi
             $this->requireWrite((string)$job['tileset']);
             // Spec §7: the extent layer must be a relation the caller may read.
             // seed_run.php opens the OGR datasource as the configured Postgres
-            // superuser, so without this a sub-user with read/write on one
+            // superuser, so without this a sub-user with write on one
             // tileset could derive the seeded extent from any relation in the
             // database and read its bbox back out of the tile set it got.
             // Existence is already proven by SeedCommand::validate() above.
@@ -270,20 +270,20 @@ class Tileseeder extends AbstractApi
      */
     private function requireWrite(string $tileset): void
     {
-        $this->requirePrivilege($tileset, ['read/write'], 'Insufficient privileges to seed this tileset');
+        $this->requirePrivilege($tileset, ['write', 'all'], 'Insufficient privileges to seed this tileset');
     }
 
     /**
      * Read (or better) on a relation the request only reads: the extent layer.
      * Same machinery as requireWrite(), one rank lower — the privilege vocabulary
-     * is none / read / read/write, so 'read' alone must be accepted here or an
+     * is none / read / write / all, so 'read' alone must be accepted here or an
      * extent layer a sub-user can legitimately read would be refused.
      *
      * @throws GC2Exception|\Throwable
      */
     private function requireRead(string $relation): void
     {
-        $this->requirePrivilege($relation, ['read', 'read/write'],
+        $this->requirePrivilege($relation, ['read', 'write', 'all'],
             'Insufficient privileges to read this extent layer');
     }
 
