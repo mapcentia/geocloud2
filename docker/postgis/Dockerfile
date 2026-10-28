@@ -2,8 +2,9 @@ ARG PHP_VERSION=8.4
 ARG POSTGRES_VERSION=17
 # 2 => PostGIS 2.5, 3 => PostGIS 3.x
 ARG POSTGIS_VERSION=3
-# PostgreSQL 11 is EOL. PostGIS 2.5 for PG11 only exists for bullseye (in the PGDG
-# archive). bookworm has PG11 with PostGIS 3 only, and buster has no PHP 8.4.
+# Supported combinations are checked below; see PG_VERSIONS.md. In short: PostGIS 2.5
+# needs PG11-13 on bullseye, PG11 with PostGIS 3 needs bullseye/bookworm, and PG18
+# needs bookworm/trixie. buster has no PHP 8.4.
 ARG DEBIAN_CODENAME=trixie
 
 FROM debian:${DEBIAN_CODENAME}-slim
@@ -22,9 +23,12 @@ ENV POSTGIS_VERSION=${POSTGIS_VERSION}
 # Add PGDG (PostgreSQL) and Sury (PHP) repos. Releases dropped from apt.postgresql.org
 # live on apt-archive.postgresql.org, and old packages like PostGIS 2.5 in <codename>-pgdg-archive.
 RUN set -eux; \
-    case "${POSTGIS_VERSION}:${DEBIAN_CODENAME}" in \
-        2:bullseye|3:bullseye|3:bookworm) ;; \
-        *) echo "POSTGIS_VERSION=${POSTGIS_VERSION} is not supported on ${DEBIAN_CODENAME} (2: bullseye, 3: bullseye/bookworm)"; exit 1 ;; \
+    case "${POSTGIS_VERSION}:${POSTGRES_VERSION}:${DEBIAN_CODENAME}" in \
+        2:1[123]:bullseye) ;; \
+        3:11:bullseye|3:11:bookworm) ;; \
+        3:1[2-7]:bullseye|3:1[2-7]:bookworm|3:1[2-7]:trixie) ;; \
+        3:18:bookworm|3:18:trixie) ;; \
+        *) echo "PostgreSQL ${POSTGRES_VERSION} with POSTGIS_VERSION=${POSTGIS_VERSION} is not supported on ${DEBIAN_CODENAME}. See PG_VERSIONS.md"; exit 1 ;; \
     esac; \
     # bullseye is past LTS; its packages have moved to archive.debian.org
     if [ "${DEBIAN_CODENAME}" = "bullseye" ]; then \
@@ -60,6 +64,7 @@ RUN set -eux; \
     && pg_createcluster ${POSTGRES_VERSION} main \
     && (odbcinst -q -d -n FreeTDS >/dev/null 2>&1 || odbcinst -i -d -f /usr/share/tdsodbc/odbcinst.ini) \
     && rm -rf /var/lib/apt/lists/*
+
 
 # Install msodbcsql17 and msodbcsql18
 RUN curl -sSL -O https://packages.microsoft.com/config/debian/$(. /etc/os-release && echo $VERSION_ID)/packages-microsoft-prod.deb \
@@ -115,20 +120,6 @@ RUN chown postgres:postgres /etc/pgbouncer/userlist.txt
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=2 \
     CMD psql -U postgres -t -c select || exit 1
-
-# Install gc2-cli
-# The .deb is zstd compressed, which dpkg on bullseye can't read, so repack it as xz there.
-RUN set -eux; \
-    wget https://gc2-cli.s3.eu-west-1.amazonaws.com/versions/2025.4.0/d3a2e2c/apt/gc2_2025.4.0.d3a2e2c-1_amd64.deb -O /tmp/gc2.deb; \
-    if ! dpkg-deb --info /tmp/gc2.deb >/dev/null 2>&1; then \
-        apt-get update && apt-get install -y --no-install-recommends zstd xz-utils binutils; \
-        mkdir /tmp/gc2deb && cd /tmp/gc2deb && ar x /tmp/gc2.deb; \
-        for t in control data; do zstd -d --rm $t.tar.zst && xz $t.tar; done; \
-        rm /tmp/gc2.deb && ar rc /tmp/gc2.deb debian-binary control.tar.xz data.tar.xz; \
-        cd / && rm -rf /tmp/gc2deb /var/lib/apt/lists/*; \
-    fi; \
-    dpkg -i /tmp/gc2.deb; \
-    rm /tmp/gc2.deb
 
 # Add Supervisor config and run the deamon
 ADD conf/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf

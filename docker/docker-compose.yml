@@ -131,15 +131,15 @@ services:
         limits:
           cpus: '8'
   postgis:
-    image: mapcentia/postgis:pg11-postgis2-php8.4-bullseye-1
+    image: mapcentia/postgis:pg17-postgis3-php8.4-trixie-1
     build:
       context: ./postgis
       dockerfile: Dockerfile
       args:
         - PHP_VERSION=8.4
-        - POSTGRES_VERSION=11
-        - POSTGIS_VERSION=2
-        - DEBIAN_CODENAME=bullseye
+        - POSTGRES_VERSION=17
+        - POSTGIS_VERSION=3
+        - DEBIAN_CODENAME=trixie
     environment:
       - GC2_PASSWORD=1234
       - GC2_USER=gc2
