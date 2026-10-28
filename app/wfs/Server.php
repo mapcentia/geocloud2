@@ -87,6 +87,12 @@ final class Server
         $model = $ctx->model();
         foreach ($req->typeNames as $tn) {
             $row = $model->getGeometryColumns("{$ctx->schema}.$tn", '*');
+            if ($row === null) {
+                throw new OwsException(
+                    'Layer does not exist',
+                    attributes: ['exceptionCode' => 'InvalidParameterValue', 'locator' => 'typename']
+                );
+            }
             if (empty($row['enableows'])) {
                 throw new OwsException(
                     'Layer is not enabled',

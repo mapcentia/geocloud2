@@ -253,6 +253,7 @@ class Feature extends AbstractApi
     #[OA\RequestBody(description: 'GeoJSON Feature or FeatureCollection.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Feature"))]
     #[OA\Response(response: 201, description: 'Created. Location header points at the new feature(s).')]
     #[OA\Response(response: 400, description: 'Bad request')]
+    #[OA\Response(response: 403, description: 'The layer is not editable (LAYER_NOT_EDITABLE)')]
     #[AcceptableContentTypes(['application/json', 'application/geo+json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
     public function post_index(): Response
@@ -312,6 +313,7 @@ class Feature extends AbstractApi
     #[OA\RequestBody(description: 'GeoJSON Feature or FeatureCollection.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Feature"))]
     #[OA\Response(response: 303, description: 'Updated. Location header points at the feature(s).')]
     #[OA\Response(response: 400, description: 'Bad request')]
+    #[OA\Response(response: 403, description: 'The layer is not editable (LAYER_NOT_EDITABLE)')]
     #[OA\Response(response: 404, description: 'Feature not found')]
     #[AcceptableContentTypes(['application/json', 'application/geo+json'])]
     #[AcceptableAccepts(['application/json', '*/*'])]
@@ -386,6 +388,7 @@ class Feature extends AbstractApi
     #[OA\Parameter(name: 'table', description: 'Table name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\Parameter(name: 'feature', description: 'Primary key value, or a comma-separated list of values (e.g. 1,2,3)', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: '1,2')]
     #[OA\Response(response: 204, description: 'Deleted')]
+    #[OA\Response(response: 403, description: 'The layer is not editable (LAYER_NOT_EDITABLE)')]
     #[OA\Response(response: 404, description: 'No features found')]
     public function delete_index(): Response
     {
@@ -533,11 +536,14 @@ class Feature extends AbstractApi
     private function mapOwsException(OwsException $e): GC2Exception
     {
         $message = $e->getMessage();
-        if (str_contains($message, "Relation doesn't exist")) {
+        if (str_contains($message, "Relation doesn't exist") || str_contains($message, 'Layer does not exist')) {
             return new GC2Exception("Table not found", 404, $e, "TABLE_NOT_FOUND");
         }
         if (str_contains($message, 'Layer is not enabled')) {
             return new GC2Exception("WFS is not enabled for the layer", 400, $e, "WFS_NOT_ENABLED");
+        }
+        if (str_contains($message, 'Layer is not editable')) {
+            return new GC2Exception("The layer is not editable", 403, $e, "LAYER_NOT_EDITABLE");
         }
         return new GC2Exception($message, 400, $e, "WFS_TRANSACTION_ERROR");
     }

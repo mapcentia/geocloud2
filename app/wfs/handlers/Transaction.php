@@ -15,6 +15,7 @@ use app\controllers\Tilecache;
 use app\exceptions\OwsException;
 use app\inc\BasicAuth;
 use app\inc\Input;
+use app\inc\Model;
 use app\inc\TableWalkerRelation;
 use app\inc\TableWalkerRule;
 use app\inc\UserFilter;
@@ -70,6 +71,23 @@ final class Transaction implements HandlerInterface
         $writer->writeXmlProlog();
         $writer->write($this->renderTransactionResponse($results, $req->version));
         $writer->bufferFlush();
+    }
+
+    /**
+     * A layer with the "Editable" switch (settings.geometry_columns_join.editable)
+     * off refuses WFS-T. Skipping it silently made the transaction report success
+     * while nothing was saved (issue #171).
+     *
+     * @throws OwsException
+     */
+    private function assertEditable(Model $model, string $typeName): void
+    {
+        if (!$model->getGeometryColumns("{$this->ctx->schema}.{$typeName}", 'editable')) {
+            throw new OwsException(
+                'Layer is not editable',
+                attributes: ['exceptionCode' => 'OperationNotSupported', 'locator' => $typeName]
+            );
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -132,56 +150,54 @@ final class Transaction implements HandlerInterface
                     }
                 }
 
+                $this->assertEditable($model, $typeName);
+
                 // Build INSERT SQL
                 $tableSrid = $model->getGeometryColumns("{$this->ctx->schema}.{$typeName}", 'srid');
                 [$fields, $values, $gc2WorkflowFlag] = $this->buildInsertFieldsValues(
                     $feature, $primary, $gmlId, $globalSrsName, $tableSrid, $tableObj, $role, $req->version
                 );
 
-                if ($model->getGeometryColumns("{$this->ctx->schema}.{$typeName}", 'editable')) {
-                    Tilecache::bust("{$this->ctx->schema}.{$typeName}", $this->ctx->connection);
-                    $sql = $this->composeInsertSql($typeName, $fields, $values, $primary['attname'], $gc2WorkflowFlag, $tableObj, $layerModel);
-                    $stmt = $model->prepare($sql);
-                    $model->execute($stmt);
-                    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-                    $newId = $row[$primary['attname']] ?? $row['gid'] ?? null;
+                Tilecache::bust("{$this->ctx->schema}.{$typeName}", $this->ctx->connection);
+                $sql = $this->composeInsertSql($typeName, $fields, $values, $primary['attname'], $gc2WorkflowFlag, $tableObj, $layerModel);
+                $stmt = $model->prepare($sql);
+                $model->execute($stmt);
+                $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+                $newId = $row[$primary['attname']] ?? $row['gid'] ?? null;
 
-                    // Geofence post-check (savepoint-safe inside outer transaction)
-                    $userFilter = new UserFilter($this->ctx->geofenceUser ?? $this->ctx->user, 'wfs', 'insert', '*', $this->ctx->schema, $typeName);
-                    $geofence = new Geofence($userFilter, $this->ctx->connection);
-                    $authResult = $geofence->authorize($rules);
-                    if (($authResult['access'] ?? '') === Geofence::LIMIT_ACCESS) {
-                        $countSql = "SELECT count(*) FROM \"{$this->ctx->schema}\".\"{$typeName}\""
-                            . " WHERE \"{$primary['attname']}\"=" . $model->quote((string)$newId)
-                            . " AND ({$authResult['filters']['filter']})";
-                        $cs = $model->prepare($countSql);
-                        $model->execute($cs);
-                        if ((int)$cs->fetchColumn() === 0) {
-                            throw new OwsException('Geofence violation');
-                        }
-                    }
-
-                    $results['inserted'][] = [
-                        'handle' => $handle,
-                        'fid'    => "{$typeName}.{$newId}",
-                    ];
-
-                    if (isset($row['gc2_workflow'])) {
-                        $results['workflow'][] = [
-                            'schema'      => $this->ctx->schema,
-                            'table'       => $typeName,
-                            'gid'         => $row['gid'],
-                            'user'        => $user,
-                            'status'      => $row['gc2_status'],
-                            'workflow'    => $row['gc2_workflow'],
-                            'roles'       => $row['roles'],
-                            'version_gid' => $row['gc2_version_gid'],
-                            'operation'   => 'insert',
-                        ];
+                // Geofence post-check (savepoint-safe inside outer transaction)
+                $userFilter = new UserFilter($this->ctx->geofenceUser ?? $this->ctx->user, 'wfs', 'insert', '*', $this->ctx->schema, $typeName);
+                $geofence = new Geofence($userFilter, $this->ctx->connection);
+                $authResult = $geofence->authorize($rules);
+                if (($authResult['access'] ?? '') === Geofence::LIMIT_ACCESS) {
+                    $countSql = "SELECT count(*) FROM \"{$this->ctx->schema}\".\"{$typeName}\""
+                        . " WHERE \"{$primary['attname']}\"=" . $model->quote((string)$newId)
+                        . " AND ({$authResult['filters']['filter']})";
+                    $cs = $model->prepare($countSql);
+                    $model->execute($cs);
+                    if ((int)$cs->fetchColumn() === 0) {
+                        throw new OwsException('Geofence violation');
                     }
                 }
-                // If not editable — legacy ignores and notes in $notEditable but does not throw until after loops
-                // We replicate by skipping silently (editable check done per-SQL loop in legacy)
+
+                $results['inserted'][] = [
+                    'handle' => $handle,
+                    'fid'    => "{$typeName}.{$newId}",
+                ];
+
+                if (isset($row['gc2_workflow'])) {
+                    $results['workflow'][] = [
+                        'schema'      => $this->ctx->schema,
+                        'table'       => $typeName,
+                        'gid'         => $row['gid'],
+                        'user'        => $user,
+                        'status'      => $row['gc2_status'],
+                        'workflow'    => $row['gc2_workflow'],
+                        'roles'       => $row['roles'],
+                        'version_gid' => $row['gc2_version_gid'],
+                        'operation'   => 'insert',
+                    ];
+                }
             }
         }
     }
@@ -261,9 +277,7 @@ final class Transaction implements HandlerInterface
                 }
             }
 
-            if (!$model->getGeometryColumns("{$this->ctx->schema}.{$typeName}", 'editable')) {
-                continue; // skip non-editable, legacy silently records in $notEditable
-            }
+            $this->assertEditable($model, $typeName);
 
             Tilecache::bust("{$this->ctx->schema}.{$typeName}", $this->ctx->connection);
             $tableSrid = $model->getGeometryColumns("{$this->ctx->schema}.{$typeName}", 'srid');
@@ -459,9 +473,7 @@ final class Transaction implements HandlerInterface
                 }
             }
 
-            if (!$model->getGeometryColumns("{$this->ctx->schema}.{$typeName}", 'editable')) {
-                continue; // skip non-editable
-            }
+            $this->assertEditable($model, $typeName);
 
             Tilecache::bust("{$this->ctx->schema}.{$typeName}", $this->ctx->connection);
             $where = WfsFilter::explode($hey['Filter'], null, null, $primary['attname']);

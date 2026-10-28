@@ -28,7 +28,8 @@ final class Problem
         if (str_starts_with($m, 'DENY')) {
             return new GC2Exception('Access denied by rule', 403, $e, 'FORBIDDEN');
         }
-        if (str_contains($m, "Relation doesn't exist") || str_contains($m, 'Layer is not enabled')) {
+        if (str_contains($m, "Relation doesn't exist") || str_contains($m, 'Layer does not exist')
+            || str_contains($m, 'Layer is not enabled')) {
             return new GC2Exception('Collection not found', 404, $e, 'COLLECTION_NOT_FOUND');
         }
         if ($e instanceof OwsException || $e instanceof ServiceException) {

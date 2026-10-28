@@ -44,6 +44,13 @@ class ProblemTest extends Unit
         $this->assertSame('COLLECTION_NOT_FOUND', $g->getErrorCode());
     }
 
+    public function testLayerDoesNotExistIsCollectionNotFound(): void
+    {
+        $g = Problem::toGc2(new OwsException('Layer does not exist'));
+        $this->assertSame(404, $g->getCode());
+        $this->assertSame('COLLECTION_NOT_FOUND', $g->getErrorCode());
+    }
+
     public function testOtherOwsExceptionIsOgcError(): void
     {
         $g = Problem::toGc2(new OwsException('bad'));
