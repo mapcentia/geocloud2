@@ -45,7 +45,18 @@ final readonly class Request
     /** @internal */
     private static function fromGet(\app\wfs\Context $ctx): self
     {
-        $h = array_change_key_case($_GET ?? [], CASE_UPPER);
+        return self::fromQuery($ctx, $_GET ?? []);
+    }
+
+    /**
+     * A GET request from its key/value parameters, for callers that drive the engine
+     * in process instead of over HTTP (the v2 feature API).
+     *
+     * @param array<string, string> $params
+     */
+    public static function fromQuery(\app\wfs\Context $ctx, array $params): self
+    {
+        $h = array_change_key_case($params, CASE_UPPER);
         $typeRaw = $h['TYPENAME'] ?? null;
         $typeNames = $typeRaw ? explode(',', \app\wfs\helpers\NameSpaces::dropAllNameSpaces($typeRaw)) : null;
         $properties = !empty($h['PROPERTYNAME']) ? explode(',', \app\wfs\helpers\NameSpaces::dropAllNameSpaces($h['PROPERTYNAME'])) : null;

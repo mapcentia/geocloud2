@@ -8,6 +8,8 @@
 
 namespace app\api\v2;
 
+use app\conf\App;
+use app\inc\Connection;
 use app\inc\Controller;
 use app\inc\Input;
 use app\inc\Route;
@@ -20,21 +22,33 @@ use app\models\Database;
 use app\models\Layer;
 use Error;
 use Exception;
+use app\wfs\Context;
+use app\wfs\Request as WfsRequest;
+use app\wfs\Server;
+use app\wfs\output\ExceptionReport;
+use app\wfs\output\GmlWriter;
 use geoPHP;
-use GuzzleHttp\Client;
-use GuzzleHttp\Cookie\CookieJar;
-use GuzzleHttp\Exception\GuzzleException;
 use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Throwable;
 use XML_Unserializer;
+use function app\wfs\authorizeLayers;
 
 include_once(__DIR__ . "../../../vendor/phayes/geophp/geoPHP.inc");
 include_once(__DIR__ . "../../../libs/PEAR/XML/Unserializer.php");
 include_once(__DIR__ . "../../../libs/PEAR/XML/Serializer.php");
+// The legacy WFS bootstrap, for its per-layer authorizeLayers()
+include_once(__DIR__ . "/../../wfs/server.php");
 
 
 /**
  * Class Feature
+ *
+ * Drives the in-process WFS engine (app\wfs\Server) the way the v4 Feature API does,
+ * instead of requesting http://localhost/wfs/... over Guzzle. The engine gets the
+ * identity that internal HTTP request had: the session it carried (none for reads),
+ * no Basic credentials, and localhost as the client address.
+ *
  * @package app\api\v2
  */
 class Feature extends Controller
@@ -42,7 +56,6 @@ class Feature extends Controller
     private string $transactionHeader;
     private GeometryFactory $geometryfactory;
     private ?string $sourceSrid;
-    private string $wfsUrl;
     private string $db;
     private string $schema;
     private string $table;
@@ -50,7 +63,8 @@ class Feature extends Controller
     private mixed $field;
     private ?string $key;
     private ?string $user;
-    private Client $client;
+    /** The exception the last WFS dispatch rendered as a report, if any */
+    private ?Throwable $wfsError = null;
 
     /**
      * Feature constructor.
@@ -61,12 +75,7 @@ class Feature extends Controller
 
         parent::__construct();
 
-        $this->client = new Client([
-            'timeout' => 100.0,
-        ]);
-
         // Set properties
-        $this->wfsUrl = "http://localhost/wfs/%s/%s/%s";
         $this->sourceSrid = Route::getParam("srid");
         $this->db = Database::getDb();
         $this->schema = explode(".", Route::getParam("layer"))[0];
@@ -104,19 +113,13 @@ class Feature extends Controller
             'typeHints' => false
         ));
 
-        $url = sprintf($this->wfsUrl, $this->user, $this->schema, $this->sourceSrid);
-
-        // GET the transaction
-        try {
-            $res = $this->client->get($url . "?service=WFS&version=1.1.0&request=GetFeature&typeName={$this->table}&FEATUREID={$this->table}.{$this->key}");
-        } catch (GuzzleException $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 500;
-            return $response;
+        // The GET carried no session
+        $ctx = $this->wfsContext($this->db);
+        if ($this->wouldChallenge($ctx, ['Read/write'])) {
+            return $this->challengeResponse();
         }
-
-        $xml = (string)$res->getBody();
+        parse_str("service=WFS&version=1.1.0&request=GetFeature&typeName={$this->table}&FEATUREID={$this->table}.{$this->key}", $query);
+        $xml = $this->dispatch($ctx, fn(): WfsRequest => WfsRequest::fromQuery($ctx, $query));
 
         // Unserialize the transaction response
         $status = $unserializer->unserialize($xml);
@@ -136,7 +139,7 @@ class Feature extends Controller
         if (isset($arr["ows:Exception"])) {
             $response['success'] = false;
             $response['message'] = $arr;
-            $response['code'] = "500";
+            $response['code'] = $this->wfsErrorCode() ?? "500";
             return $response;
         }
 
@@ -179,7 +182,6 @@ class Feature extends Controller
 
     /**
      * @return array
-     * @throws GuzzleException
      * @throws PhpfastcacheInvalidArgumentException
      * @throws \JsonException
      */
@@ -243,7 +245,6 @@ class Feature extends Controller
 
     /**
      * @return array
-     * @throws GuzzleException
      * @throws \JsonException
      * @throws PhpfastcacheInvalidArgumentException
      */
@@ -323,7 +324,6 @@ class Feature extends Controller
 
     /**
      * @return array
-     * @throws GuzzleException
      */
     public function delete_index(): array
     {
@@ -344,7 +344,6 @@ class Feature extends Controller
     /**
      * @param string $xml
      * @return array
-     * @throws GuzzleException
      * @throws PhpfastcacheInvalidArgumentException
      */
     private function commit(string $xml): array
@@ -370,8 +369,8 @@ class Feature extends Controller
             'typeHints' => false,
         ));
 
-        $url = sprintf($this->wfsUrl, $this->user, $this->schema, $this->sourceSrid);
-
+        // The transaction runs in the caller's session, or in a new one for the
+        // API key's user
         if (empty(Input::getCookies()["PHPSESSID"])) {
             Session::start();
             Session::set("auth", true);
@@ -379,24 +378,14 @@ class Feature extends Controller
             Session::set("parentdb", $db);
             Session::set("subuser", !empty($user));
             Session::write();
-            $id = Session::getId();
         } else {
-            $id = Input::getCookies()["PHPSESSID"];
+            Session::start();
         }
-        // POST the transaction
-        try {
-            $res = $this->client->post($url, ['body' => $xml, 'cookies' => CookieJar::fromArray([
-                "PHPSESSID" => $id,
-                "XDEBUG_SESSION" => "XDEBUG_ECLIPSE"
-            ], 'localhost')]);
-        } catch (Exception $e) {
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
-            $response['code'] = 500;
-            return $response;
+        $ctx = $this->wfsContext(Session::getUser() ?? $this->db);
+        if ($this->wouldChallenge($ctx, ['Write', 'Read/write'])) {
+            return $this->challengeResponse();
         }
-
-        $transactionResponse = (string)$res->getBody();
+        $transactionResponse = $this->dispatch($ctx, fn(): WfsRequest => WfsRequest::fromHttp($ctx, $xml));
 
         // Unserialize the transaction response
         $status = $unserializer->unserialize($transactionResponse);
@@ -416,12 +405,137 @@ class Feature extends Controller
         if (isset($arr["ows:Exception"])) {
             $response['success'] = false;
             $response['message'] = $arr;
-            $response['code'] = "500";
+            $response['code'] = $this->wfsErrorCode() ?? "500";
             return $response;
         }
 
         $response['success'] = true;
         $response['message'] = $arr;
         return $response;
+    }
+
+    /**
+     * The WFS context the internal request to /wfs/<user>/<schema>/<srid> had: the
+     * database and schema from the layer, and the request came from localhost.
+     */
+    private function wfsContext(string $user): Context
+    {
+        $trusted = false;
+        foreach ((App::$param['trustedAddresses'] ?? []) as $address) {
+            if (Util::ipInRange('127.0.0.1', $address) && getenv('MODE_ENV') !== 'test') {
+                $trusted = true;
+                break;
+            }
+        }
+        return new Context(
+            connection: new Connection(database: $this->db, schema: $this->schema),
+            database: $this->db,
+            schema: $this->schema,
+            user: $user,
+            userGroup: null,
+            parentUser: $user == $this->db,
+            trusted: $trusted,
+            host: Util::host(),
+            thePath: Util::thePath(),
+            startTime: microtime(true),
+            srs: ($this->sourceSrid !== null && $this->sourceSrid !== '') ? (int)$this->sourceSrid : null,
+        );
+    }
+
+    /**
+     * BasicAuth::authenticate() meets a request without a login with a 401 challenge
+     * and die(). Over HTTP that ended only the internal request; in process it would
+     * end this one, so the case is detected up front. Mirrors the layer checks of
+     * authorizeLayers() (reads) and the Transaction handler (writes).
+     *
+     * @param list<string> $levels authentication levels that make the engine authenticate
+     */
+    private function wouldChallenge(Context $ctx, array $levels): bool
+    {
+        if ($ctx->trusted || (Session::isAuth() && ($_SESSION['parentdb'] ?? null) == $this->db)) {
+            return false;
+        }
+        $auth = $ctx->model()->getGeometryColumns("$this->schema.$this->table", 'authentication');
+        return in_array($auth, $levels, true);
+    }
+
+    /**
+     * The answer when the engine would have challenged for a login.
+     */
+    private function challengeResponse(): array
+    {
+        return [
+            'success' => false,
+            'message' => 'Attempt to login using Basic Auth was cancelled',
+            'code' => 401,
+        ];
+    }
+
+    /**
+     * HTTP status for the exception the engine reported, or null for the generic 500.
+     */
+    private function wfsErrorCode(): ?int
+    {
+        $e = $this->wfsError;
+        if ($e === null) {
+            return null;
+        }
+        // BasicAuth: "Insufficient privileges to layer: ..."
+        if ($e->getCode() === 403) {
+            return 403;
+        }
+        $message = $e->getMessage();
+        return match (true) {
+            str_contains($message, 'Layer is not editable'),
+            str_contains($message, "You don't have a role in the workflow") => 403,
+            str_contains($message, 'Layer does not exist'),
+            str_contains($message, "Relation doesn't exist") => 404,
+            default => null,
+        };
+    }
+
+    /**
+     * Runs a WFS request on the in-process engine and returns the XML the legacy /wfs
+     * route would have answered, exception reports included.
+     *
+     * @param callable(): WfsRequest $request parsed inside the guard, as /wfs did
+     */
+    private function dispatch(Context $ctx, callable $request): string
+    {
+        // The legacy WFS route ran without a time limit
+        set_time_limit(0);
+        $writer = new GmlWriter(
+            gmlNameSpace: $this->schema,
+            gmlNameSpaceUri: str_replace('https://', 'http://', "$ctx->host/$this->db/$this->schema"),
+            suppressFlush: true,
+        );
+        $captured = '';
+        ob_start(function (string $chunk) use (&$captured): string {
+            $captured .= $chunk;
+            return '';
+        }, 0);
+        // The internal request carried no Basic credentials
+        $authUser = $_SERVER['PHP_AUTH_USER'] ?? null;
+        $authPw = $_SERVER['PHP_AUTH_PW'] ?? null;
+        unset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']);
+        $req = null;
+        try {
+            $req = $request();
+            authorizeLayers($ctx, $req);
+            new Server($ctx)->dispatch($req, $writer);
+            $writer->writeMemoryFooter();
+        } catch (Throwable $e) {
+            $this->wfsError = $e;
+            ExceptionReport::render($e, $req?->version ?? '1.1.0', $writer);
+        } finally {
+            if ($authUser !== null) {
+                $_SERVER['PHP_AUTH_USER'] = $authUser;
+            }
+            if ($authPw !== null) {
+                $_SERVER['PHP_AUTH_PW'] = $authPw;
+            }
+            ob_end_flush();
+        }
+        return $captured;
     }
 }

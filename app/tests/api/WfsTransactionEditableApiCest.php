@@ -224,7 +224,8 @@ class WfsTransactionEditableApiCest
             ]],
         ]));
         $I->deleteHeader('GC2-API-KEY');
-        $I->seeResponseContainsJson(['success' => false]);
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+        $I->seeResponseContainsJson(['success' => false, 'code' => 403]);
         $I->assertStringContainsString('Layer is not editable', $I->grabResponse());
         $I->assertSame(['first'], $this->names($I));
     }
