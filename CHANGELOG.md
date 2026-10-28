@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [UNRELEASED]
+### Added
+- `App.php` setting `dontStripMetaInSnapShots` keeps the full state in Vidi snapshot lists, for old Vidi versions that read it from there.
+- The postgis Docker image builds with a chosen PostgreSQL, PostGIS (2 or 3) and Debian release (`POSTGRES_VERSION`, `POSTGIS_VERSION`, `DEBIAN_CODENAME`); `docker/postgis/PG_VERSIONS.md` lists the combinations.
+
+### Changed
+- The v2 feature API runs the WFS engine in process instead of over HTTP, and answers `401`/`403`/`404` instead of `500` for missing login, refused edits and unknown layers.
+- Insufficient layer privileges answer `403`.
+
+### Fixed
+- Layer privileges are `none`/`read`/`write`/`all`; `read/write` was a mistake and is removed. Tileseeder and snapshots follow suit.
+- WFS-T on a layer with **Editable** off now fails with "Layer is not editable" instead of reporting success and saving nothing (#171). The v4 feature API answers `403 LAYER_NOT_EDITABLE`.
+- A WFS request for a layer that does not exist says "Layer does not exist", not "Layer is not enabled".
+- Prepared statements with a trailing semicolon.
+- `POSTGRES_PORT` falls back to `5432` when unset.
+- PHP upload progress is disabled (CVE-2926-109618).
+
 ## [2026.10.6] - 2026-23-10
 ### Fixed
 - Regression: Without extracting the mime-type in SQL API with `convertDataUrlsToHttp`, Vidi can't decide widget. Was removed in the first place for optimization reasons.2026
