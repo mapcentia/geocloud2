@@ -84,7 +84,7 @@ final class BasicAuth
                 $isOwner = $authorization->isOwner($this->user, $userGroupFullChain, $schema);
                 $insufficient = ($privilege === "none" || ($privilege === "read" && $isTransaction));
                 if ($insufficient && !$isOwner) {
-                    throw new ServiceException("You don't have privileges to this layer. Please contact the database owner, which can grant you privileges.");
+                    throw new ServiceException("Insufficient privileges to layer: $layerName", 403);
                 }
             }
         }

@@ -152,7 +152,7 @@ final class Mapcache extends AbstractApi
                         $url .= '?' . $_SERVER['QUERY_STRING'];
                     }
                     $this->proxy($url);
-                } catch (GC2Exception $e) {
+                } catch (GC2Exception|ServiceException $e) {
                     // Set the status via the status-line header (the dispatcher already queued a 200,
                     // and http_response_code() does not reliably override it after disableOb()).
                     $code = $e->getCode() >= 400 ? $e->getCode() : 403;
