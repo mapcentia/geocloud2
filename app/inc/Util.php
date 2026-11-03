@@ -266,6 +266,45 @@ class Util
         return false;
     }
 
+    /**
+     * Whether a line ogr2ogr printed means the import failed, as opposed to a
+     * diagnostic GDAL recovered from on its own.
+     *
+     * ogr2ogr can exit 0 having imported nothing, so app/scripts/get.php reads
+     * its output as well as its exit code. "Contains ERROR" is too blunt a rule
+     * on its own: GDAL reports some conditions at ERROR level and then carries
+     * on, and a job whose data loaded correctly must not be failed for one of
+     * those. Every known-recoverable line is listed below with the reason it is
+     * recoverable; anything else that says ERROR or FAILURE is fatal.
+     *
+     * @param string $line one element of the $out array exec() filled
+     */
+    public static function ogrLineIsFatal(string $line): bool
+    {
+        if (!str_contains($line, "ERROR") && !str_contains($line, "FAILURE")) {
+            return false;
+        }
+        // ogr2ogr is only ever handed a local file by get.php (the job's data is
+        // downloaded first), so an HTTP error from it is always a schema or
+        // xlink lookup against the source server -- DOWNLOAD_SCHEMA=YES asking
+        // for a DescribeFeatureType. GDAL then derives the schema from the data.
+        // Any status, not just the 404 this rule used to name: Horsens' WFS
+        // answers 503, and a 500 or 403 leaves the import just as intact.
+        if (preg_match('/^ERROR \d+: HTTP error code : \d+/', $line) === 1) {
+            return false;
+        }
+        // A legacy GML srsName, e.g. srsName="http://www.opengis.net/gml/srs/epsg.xml#25832".
+        // GDAL 3.12 refuses to dereference the URL and says so at ERROR level,
+        // where 3.9.2 said nothing; it then reads the EPSG code off the end of
+        // the URL and gets the SRS right either way. buildOgr2ogrCmd() also
+        // forces -a_srs EPSG:<the job's srid>, so the source's own srsName does
+        // not decide the outcome.
+        if (preg_match('/^ERROR \d+: Cannot import .* due to ALLOW_NETWORK_ACCESS=NO/', $line) === 1) {
+            return false;
+        }
+        return true;
+    }
+
     public static function microtime_float(): float
     {
         list($usec, $sec) = explode(" ", microtime());

@@ -636,9 +636,11 @@ function fetchPart(string $label, string $requestUrl): array
         $pass = false;
     }
 
-    // The GMLAS driver sometimes throws a 404 error, so we can't stop on this kind of error
+    // ogr2ogr can exit 0 having imported nothing, so its output is read too.
+    // Util::ogrLineIsFatal() knows which of GDAL's ERROR-level lines it goes on
+    // to recover from -- the GMLAS driver's schema lookups among them.
     foreach ($out as $line) {
-        if (str_contains($line, "FAILURE") || (str_contains($line, "ERROR") && $line != "ERROR 1: HTTP error code : 404")) {
+        if (Util::ogrLineIsFatal($line)) {
             $pass = false;
             break;
         }
@@ -1347,7 +1349,7 @@ if ($err) {
 
 } else {
     foreach ($out as $line) {
-        if (strpos($line, "FAILURE") !== false || (strpos($line, "ERROR") !== false && $line != "ERROR 1: HTTP error code : 404")) {
+        if (Util::ogrLineIsFatal($line)) {
             print_r($out);
             $lastError = "ogr2ogr reported an error: " . implode(" | ", $out);
             cleanUp();
