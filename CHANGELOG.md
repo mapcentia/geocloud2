@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [UNRELEASED]
+## [2026.11.0] - 2026-3-11
 ### Added
 - `App.php` setting `dontStripMetaInSnapShots` keeps the full state in Vidi snapshot lists, for old Vidi versions that read it from there.
 - The postgis Docker image builds with a chosen PostgreSQL, PostGIS (2 or 3) and Debian release (`POSTGRES_VERSION`, `POSTGIS_VERSION`, `DEBIAN_CODENAME`); `docker/postgis/PG_VERSIONS.md` lists the combinations.
@@ -21,6 +21,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - Prepared statements with a trailing semicolon.
 - `POSTGRES_PORT` falls back to `5432` when unset.
 - PHP upload progress is disabled (CVE-2926-109618).
+- Scheduler: do not fail a job on a GDAL error it recovered from.
 
 ## [2026.10.6] - 2026-23-10
 ### Fixed
