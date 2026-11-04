@@ -35,6 +35,8 @@ Hver udgivelse (= ét git-tag) skal have en committet, valideret SBOM under
          --tag YYYY.MINOR.PATCH --image mapcentia/gc2:php8.4-trixie-N \
          --grype /sti/til/grype
 
+   Fx: python3 sbom/generate.py --syft /usr/local/bin/syft --grype /usr/local/bin/grype --tag 2026.11.0 --image mapcentia/gc2:php8.4-trixie-2
+5. 
    Med `--grype` scannes image-SBOM'en (`gc2-image.cdx.json`); resultatet
    skrives til `sbom/<tag>/vulns.cdx.json` (CycloneDX med `vulnerabilities`),
    og grype-version + DB-status optages i `release.json`.
