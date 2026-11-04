@@ -105,7 +105,7 @@ elasticsearch.init = function (record) {
         {
             restful: true,
             api: {
-                read: '/controllers/layer/elasticsearch/' + record.get("f_table_schema") + '.' + record.get("f_table_name"),
+                read:   '/controllers/layer/elasticsearch/' + record.get("f_table_schema") + '.' + record.get("f_table_name") + '/' + record.get("_key_"),
                 update: '/controllers/layer/elasticsearch/' + record.get("f_table_schema") + '.' + record.get("f_table_name") + '/' + record.get("_key_")
             },
             listeners: {

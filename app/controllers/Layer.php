@@ -109,7 +109,7 @@ class Layer extends Controller
     public function get_elasticsearch(): array
     {
         $response = $this->auth($this->rel, array("read" => true, "write" => true, "all" => true));
-        return !$response['success'] ? $response : $this->layer->getElasticsearchMapping($this->rel);
+        return !$response['success'] ? $response : $this->layer->getElasticsearchMapping(Input::getPath()->part(5));
     }
 
     /**

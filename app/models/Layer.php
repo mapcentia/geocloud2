@@ -548,7 +548,7 @@ class Layer extends Table
             $arr = $this->array_push_assoc($arr, "id", $key);
             $arr = $this->array_push_assoc($arr, "column", $key);
             $arr = $this->array_push_assoc($arr, "elasticsearchtype", $elasticsearchArr[$key]->elasticsearchtype ?? $esType["type"]);
-            $arr = $this->array_push_assoc($arr, "format", $elasticsearchArr[$key]->format ?? (!empty($esType["format"]) ? $esType["format"] : ""));
+            $arr = $this->array_push_assoc($arr, "format", $elasticsearchArr[$key]->format ?? $esType["format"] ?? "");
             $arr = $this->array_push_assoc($arr, "index", $elasticsearchArr[$key]->index);
             $arr = $this->array_push_assoc($arr, "analyzer", $elasticsearchArr[$key]->analyzer ?? null);
             $arr = $this->array_push_assoc($arr, "index_analyzer", $elasticsearchArr[$key]->index_analyzer ?? null);
