@@ -93,7 +93,7 @@ abstract class Cache
         } else {
             throw new GC2Exception('Cache type must be either redis or redisCluster', 500, null, 'CACHE_ERROR');
         }
-        Globals::$cacheTtl = !empty(App::$param["appCache"]["ttl"]) ? App::$param["appCache"]["ttl"] : Globals::$cacheTtl;
+        Globals::$cacheTtl = !empty(App::$param["appCache"]["ttl"]) ? (int)ceil(App::$param["appCache"]["ttl"]) : Globals::$cacheTtl;
     }
 
     /**
