@@ -168,7 +168,7 @@ class Legend extends Controller
         if (is_array($this->legendArr)) {
             foreach ($this->legendArr as $key => $layer) {
                 {
-                    if (is_array($layer['classes'])) {
+                    if (isset($layer['classes']) && is_array($layer['classes'])) {
                         foreach ($layer['classes'] as $class) {
                             if (!empty($class['ms_name'])) {
                                 $classes[] = array(
