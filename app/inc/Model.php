@@ -719,7 +719,7 @@ class Model
                 }
                 $tmpArr = array(
                     "type" => $row['udt_name'],
-                    "comment" => $comments[$column],
+                    "comment" => $comments[$column] ?? null,
                     // Derived
                     "num" => $row["ordinal_position"],
                     "full_type" => $row['full_type'],
