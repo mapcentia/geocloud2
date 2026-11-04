@@ -22,7 +22,23 @@ class App
         "databaseTemplate" => "template_geocloud",
 
         "SqlApiSettings" => [
-            "statement_timeout" => 120
+            "statement_timeout" => 120,
+            // Rows the SQL API pulls from its server-side cursor per round trip.
+            // Each FETCH costs the database ~7-11 us of CPU on its own, so 1 made
+            // fetch overhead 87% of the database's CPU on a 200k-row geometry
+            // export. Raising it above 100 gains almost nothing and costs process
+            // RSS: a batch lives in libpq's buffer, outside PHP's memory_limit, and
+            // rows can be large (33 kB each for dagi sogne -> +37 MB at 1000).
+            // Default 100, clamped to 1..10000.
+            "fetchSize" => 100,
+        ],
+
+        // Legacy WFS (/wfs/{database}/{schema}).
+        "wfsSettings" => [
+            // As SqlApiSettings.fetchSize, for GetFeature's cursor. Separate because
+            // WFS rows carry full GML geometry and are typically much larger than a
+            // SQL API row, so the two want different batch sizes.
+            "fetchSize" => 100,
         ],
 
         "sessionHandler" => [

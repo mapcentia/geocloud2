@@ -17,6 +17,7 @@ use app\models\Database;
 use app\models\Table;
 use Error;
 use Exception;
+use Generator;
 use PDO;
 use PDOException;
 use PDOStatement;
@@ -110,6 +111,46 @@ class Model
                 break;
         }
         return $row ?: null;
+    }
+
+    /**
+     * Every row of an open server-side cursor, one batch per round trip.
+     *
+     * $statement is a prepared `FETCH <n> FROM <cursor>` against a cursor the caller
+     * has already declared inside a transaction. Re-executing it advances the cursor
+     * by n and returns those n rows, so the statement has to be drained before it is
+     * executed again — the reason this lives in one place rather than at each call
+     * site. The idiom it replaces,
+     *
+     *     while ($this->execute($stmt) && $row = $this->fetchRow($stmt)) { … }
+     *
+     * re-executed on every iteration and read a single row from the batch. That was
+     * correct only while n was 1; at any larger n it returns every nth row and drops
+     * the rest, with no error anywhere. Callers choose n for the cost they are
+     * willing to pay: a FETCH costs the database 7-11 us of CPU on its own, while the
+     * batch is materialised in libpq's result buffer, which is outside PHP's
+     * memory_limit and therefore shows up as process RSS rather than as an error.
+     *
+     * Exhaustion is decided by a batch that yields nothing rather than by a short
+     * batch, so it does not rely on FETCH never returning fewer rows than asked for
+     * mid-cursor. The cost is one extra empty FETCH per cursor.
+     *
+     * @return Generator<int, array<string, mixed>>
+     * @throws Throwable from execute(), which rolls back before it rethrows
+     */
+    public function cursorRows(PDOStatement $statement): Generator
+    {
+        while (true) {
+            $this->execute($statement);
+            $yielded = 0;
+            while ($row = $this->fetchRow($statement)) {
+                $yielded++;
+                yield $row;
+            }
+            if ($yielded === 0) {
+                return;
+            }
+        }
     }
 
     /**

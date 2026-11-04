@@ -9,6 +9,7 @@
  */
 namespace app\wfs\handlers;
 
+use app\conf\App;
 use app\exceptions\OwsException;
 use app\inc\TableWalkerRule;
 use app\inc\WfsFilter;
@@ -474,8 +475,21 @@ final class GetFeature implements HandlerInterface
                     );
                 }
 
-                $fetch = $postgisObject->prepare('FETCH 1 FROM curs');
-                while ($fetch->execute() && $row = $fetch->fetch(\PDO::FETCH_ASSOC)) {
+                // Rows per round trip. One FETCH costs the database 7-11 us of CPU
+                // before a row is looked at, so the overhead grows with the feature
+                // count: invisible on a few hundred features, the larger part of the
+                // request's database time on a big GetFeature. 100 is the default
+                // rather than something larger because a batch is materialised in
+                // libpq's result buffer -- outside PHP's memory_limit, so it grows
+                // RSS silently -- and WFS rows carry full GML geometry, which for
+                // administrative polygons runs to tens of kB each.
+                $fetchSize = (int)(App::$param['wfsSettings']['fetchSize'] ?? 100);
+                $fetchSize = max(1, min($fetchSize, 10000));
+                $fetch = $postgisObject->prepare("FETCH $fetchSize FROM curs");
+                // Model::cursorRows() drains each batch before re-executing the
+                // FETCH. Reading one row per execute() would advance the cursor by
+                // $fetchSize and keep only the first of them.
+                foreach ($postgisObject->cursorRows($fetch) as $row) {
                     $writer->writeFeature($row, $table, $state['tableObj'], $req, $this->ctx);
                 }
 

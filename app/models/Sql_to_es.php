@@ -139,7 +139,15 @@ class Sql_to_es extends Model
 
             $this->prepare("DECLARE curs CURSOR FOR {$sql}")->execute();
 
-            $innerStatement = $this->prepare("FETCH 1 FROM curs");
+            // Rows per round trip. A FETCH costs the database 7-11 us of CPU on its
+            // own, and this loop walks a whole relation, so one row per round trip
+            // made fetch overhead the bulk of the indexing run's database time.
+            // Shares the SQL API's setting rather than adding a third knob: the rows
+            // are the same shape (GeoJSON geometry out of a view) read through the
+            // same model-level cursor.
+            $fetchSize = (int)(App::$param["SqlApiSettings"]["fetchSize"] ?? 100);
+            $fetchSize = max(1, min($fetchSize, 10000));
+            $innerStatement = $this->prepare("FETCH $fetchSize FROM curs");
 
         } catch (PDOException $e) {
             $response['success'] = false;
@@ -150,7 +158,9 @@ class Sql_to_es extends Model
 
         try {
 
-            while ($innerStatement->execute() && $row = $this->fetchRow($innerStatement, "assoc")) {
+            // Model::cursorRows() drains each batch before re-executing the FETCH;
+            // reading one row per execute() would keep only the first of every batch.
+            foreach ($this->cursorRows($innerStatement) as $row) {
                 $arr = [];
                 $geometries = [];
                 foreach ($row as $key => $value) {
