@@ -40,31 +40,31 @@ class Baselayerjs extends Controller
             header("Content-Type: application/javascript");
             echo "window.gc2Options = " . json_encode($overallSettings["gc2Options"], JSON_UNESCAPED_SLASHES) . ";\n";
 
-            if ($overallSettings['bingApiKey']) {
+            if (!empty($overallSettings['bingApiKey'])) {
                 echo "window.bingApiKey = '" . $overallSettings['bingApiKey'] . "';\n";
             }
 
-            if ($overallSettings['googleApiKey']) {
+            if (!empty($overallSettings['googleApiKey'])) {
                 echo "window.googleApiKey = '" . $overallSettings['googleApiKey'] . "';\n";
             }
 
-            if ($overallSettings['digitalGlobeKey']) {
+            if (!empty($overallSettings['digitalGlobeKey'])) {
                 echo "window.digitalGlobeKey = '" . $overallSettings['digitalGlobeKey'] . "';\n";
             }
 
-            if ($overallSettings['setBaseLayers']) {
+            if (!empty($overallSettings['setBaseLayers'])) {
                 echo "window.setBaseLayers = " . json_encode($overallSettings['setBaseLayers'], JSON_UNESCAPED_SLASHES) . ";\n";
             }
 
-            if ($overallSettings['setBaseLayersCollector']) {
+            if (!empty($overallSettings['setBaseLayersCollector'])) {
                 echo "window.setBaseLayersCollector = " . json_encode($overallSettings['setBaseLayersCollector'], JSON_UNESCAPED_SLASHES) . ";\n";
             }
 
-            if ($overallSettings['mapAttribution']) {
+            if (!empty($overallSettings['mapAttribution'])) {
                 echo "window.mapAttribution = '" . $overallSettings['mapAttribution'] . "';\n";
             }
 
-            if ($overallSettings['gc2Al']) {
+            if (!empty($overallSettings['gc2Al'])) {
                 echo "window.gc2Al='" . $overallSettings['gc2Al'] . "'\n";
             }
         }
