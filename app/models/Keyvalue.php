@@ -256,7 +256,7 @@ class Keyvalue extends Model
         }
         // HACK get rid of unnecessary meta in Vidi snapshots
         if (isset($urlVars["like"]) && $urlVars["like"] == "state_snapshot_%" && empty(App::$param['dontStripMetaInSnapShots'])) {
-            if (!empty($response["data"][0]) && !is_array($response["data"][0])) {
+            if (isset($response["data"][0]) && !is_array($response["data"][0])) {
                 $parsed = !empty($response["data"]["value"]) ? json_decode($response["data"]["value"], true) : [];
                 unset($parsed["snapshot"]);
                 if ($parsed)
