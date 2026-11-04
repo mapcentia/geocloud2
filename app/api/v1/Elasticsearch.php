@@ -165,7 +165,7 @@ class Elasticsearch extends Controller
     {
         $response = [];
         $get = Input::get();
-        if (App::$param["useKeyForSearch"] == true) {
+        if (!empty(App::$param["useKeyForSearch"])) {
             if ($response = ($this->checkAuth(Input::getPath()->part(5), $get['key']))) {
                 return $response;
             }

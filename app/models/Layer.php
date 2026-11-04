@@ -319,7 +319,8 @@ class Layer extends Table
                                 if ($props == null && !empty($val["properties"])) {
                                     $props = json_decode(str_replace("'", "\"", $val["properties"]));
                                 }
-                                if ($val["properties"] == "*") {
+                                // An entry need not carry "properties" at all.
+                                if (($val["properties"] ?? null) == "*") {
                                     $restrictions[$k] = "*";
                                 } elseif (is_object($props) || is_array($props)) {
                                     $restrictions[$k] = $props;
@@ -425,23 +426,25 @@ class Layer extends Table
                 $fields = $this->getMetaData($rel, false, $restriction, $restrictions, null, true, $lookupForeignTables);
 
                 foreach ($fields as $key => $field) {
+                    $conf = $fieldConf[$key] ?? [];
                     // If column comment is empty, we output from field conf
                     if (empty($field['comment'])) {
-                        $fields[$key]['comment'] = $fieldConf[$key]['desc'];
+                        $fields[$key]['comment'] = $conf['desc'] ?? null;
                     }
-                    $fields[$key]['alias'] = $fieldConf[$key]['alias'];
-                    $fields[$key]['queryable'] = (bool)$fieldConf[$key]['querable'];
-                    $fields[$key]['sort_id'] = $fieldConf[$key]['sort_id'];
-                    $fields[$key]['desc'] = $fieldConf[$key]['desc'];
-                    $fields[$key]['properties'] = !empty($fieldConf[$key]['properties']) ? json_decode($fieldConf[$key]['properties'], true) : null;
+                    $fields[$key]['alias'] = $conf['alias'] ?? null;
+                    $fields[$key]['queryable'] = (bool)($conf['querable'] ?? false);
+                    $fields[$key]['sort_id'] = $conf['sort_id'] ?? null;
+                    $fields[$key]['desc'] = $conf['desc'] ?? null;
+                    $fields[$key]['properties'] = !empty($conf['properties']) ? json_decode($conf['properties'], true) : null;
                     // restriction ??
                 }
 
                 // Sort fields
                 uksort($fields, function ($a, $b) use ($fieldConf) {
                     if (isset($fieldConf[$a]) && isset($fieldConf[$b])) {
-                        $sortIdA = (int)$fieldConf[$a]['sort_id'];
-                        $sortIdB = (int)$fieldConf[$b]['sort_id'];
+                        // An entry can exist without sort_id; (int)null is 0 either way.
+                        $sortIdA = (int)($fieldConf[$a]['sort_id'] ?? 0);
+                        $sortIdB = (int)($fieldConf[$b]['sort_id'] ?? 0);
                         return $sortIdA - $sortIdB;
                     }
                     return 0;
