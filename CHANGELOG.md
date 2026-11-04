@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.11.1] - 2026-4-11
+### Fixed
+- Read server-side cursors in batches instead of a row per round trip to minimize fetch overhead. Default batch size is 100 rows. Can be set with SqlApiSettings.fetchSize and is clamped to 1..10000.
+
 ## [2026.11.0] - 2026-3-11
 ### Added
 - `App.php` setting `dontStripMetaInSnapShots` keeps the full state in Vidi snapshot lists, for old Vidi versions that read it from there.
@@ -25,7 +29,7 @@ and this project adheres to [CalVer](https://calver.org/).
 
 ## [2026.10.6] - 2026-23-10
 ### Fixed
-- Regression: Without extracting the mime-type in SQL API with `convertDataUrlsToHttp`, Vidi can't decide widget. Was removed in the first place for optimization reasons.2026
+- Regression: Without extracting the mime-type in SQL API with `convertDataUrlsToHttp`, Vidi can't decide widget. Was removed in the first place for optimization reasons.
 
 ## [2026.10.5] - 2026-9-10
 ### Fixed
