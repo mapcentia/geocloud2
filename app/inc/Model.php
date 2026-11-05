@@ -756,9 +756,9 @@ class Model
                 // Get type and srid of geometry
                 if ($row["udt_name"] == "geometry") {
                     preg_match("/[A-Z]\w+/", $row["full_type"], $matches);
-                    $arr[$row["column_name"]]["geom_type"] = $matches[0];
+                    $arr[$row["column_name"]]["geom_type"] = $matches[0] ?? null;
                     preg_match("/[0-9]+/", $row["full_type"], $matches);
-                    $arr[$row["column_name"]]["srid"] = $matches[0];
+                    $arr[$row["column_name"]]["srid"] = $matches[0] ?? null;
                 }
             }
             $CachedString->set($arr)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
