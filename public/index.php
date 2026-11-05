@@ -114,7 +114,15 @@ Cache::setInstance();
 function setHeaders(): void
 {
     ob_start();
-    // TODO tjek header is set
+    // Legacy WFS/WMS/OWS is served from the block below, outside $handler(), and
+    // this script then runs on to $handler() anyway -- which calls setHeaders()
+    // again. By then GmlWriter has streamed and flushed the response, so the
+    // headers are long committed and every header() below is five warnings in the
+    // error log per request, with no other effect. Setting them is only possible,
+    // and only means anything, before the first byte goes out.
+    if (headers_sent()) {
+        return;
+    }
     // Write Access-Control-Allow-Origin if origin is white listed
     $http_origin = $_SERVER['HTTP_ORIGIN'] ?? null;
     if (isset(App::$param["AccessControlAllowOrigin"]) && in_array($http_origin, App::$param["AccessControlAllowOrigin"])) {
@@ -137,8 +145,10 @@ App::$param['host'] = App::$param['host'] ?? App::$param['protocol'] . "://" . $
 App::$param['userHostName'] = App::$param['userHostName'] ?? App::$param['host'];
 
 // Handle OWS outside handler function
+$owsServed = false;
 try {
     if (Input::getPath()->part(1) == "wfs") {
+        $owsServed = true;
         setHeaders();
         if (!empty(Input::getCookies()["PHPSESSID"])) {
             Session::start();
@@ -155,6 +165,7 @@ try {
         include_once("app/wfs/server.php");
         \app\wfs\bootstrap_legacy_wfs($db, $user, $parentUser);
     } elseif (Input::getPath()->part(1) == "wms" || Input::getPath()->part(1) == "ows") {
+        $owsServed = true;
         setHeaders();
         if (!empty(Input::getCookies()["PHPSESSID"])) { // Do not start session if no cookie is set
             Session::start();
@@ -168,6 +179,24 @@ try {
     header('Content-Type:text/xml; charset=UTF-8', TRUE);
     echo $exception->getReport();
     flush();
+}
+
+// A legacy WFS/WMS/OWS request is completely served above: the response has been
+// streamed and flushed. Everything below -- reflecting over 60 v4 controller
+// classes to collect their routes, globbing the extension and auth route files,
+// $handler() -- then runs against a response that is already on the wire. It
+// cannot change it (Route::miss() and the v4 branch both check headers_sent())
+// and it cannot set a header (see setHeaders()); it only costs time. Measured on
+// the dev container (Apache + opcache) with a legacy GetFeature of 2 features, 100
+// requests per arm, interleaved: median 49 ms with this tail, 38 ms without.
+//
+// Not under FrankenPHP worker mode: there this file's top level runs once, at
+// worker start-up, and has to reach the frankenphp_handle_request() loop at the
+// bottom or no worker ever starts. (Legacy OWS is not served from inside that
+// loop at all, so it only works under a per-request SAPI in the first place --
+// a separate limitation, not something this guard introduces.)
+if ($owsServed && !function_exists('frankenphp_handle_request')) {
+    return;
 }
 
 // Collect all Route2 routes

@@ -81,7 +81,9 @@ function authorizeLayers(\app\wfs\Context $ctx, WfsRequest $req): void
     }
     $model = $ctx->model();
     $isTransaction = $req->operation === 'TRANSACTION';
-    foreach ($req->typeNames as $layer) {
+    // typeNames is null on operations that name no layer (GetCapabilities), and
+    // those have nothing to authorize.
+    foreach ($req->typeNames ?? [] as $layer) {
         $rel = "$ctx->schema." . tableOf($layer);
         $auth = $model->getGeometryColumns($rel, 'authentication');
         if ($auth === 'Read/write' || !empty(Input::getAuthUser())) {
