@@ -170,6 +170,25 @@ class App
             "maxJobs" => 20,
             // Minimum seconds between two runs of the same job (0 = off); a run inside the window is recorded as skipped.
             "minInterval" => 0,
+
+            // The two switches below turn parts of the scheduler's automatic WFS
+            // 2.0.0 paging off for every job in every database, without editing the
+            // job rows -- a way to get failing WFS 2.0.0 imports running again.
+            // Both are off switches, not defaults: true leaves each job in charge,
+            // false overrides it. See app/inc/WfsPaging.php and get.php.
+
+            // false: never send sortBy. A job that already set use_sortby false
+            // stays off whichever way this is set.
+            "useSortBy" => true,
+
+            // false: no startIndex/count paging at all. The job then fetches the
+            // whole GetFeature response in one request and ogr2ogr reads it with
+            // GDAL's GML driver instead of GMLAS, which is what a WFS 1.x job has
+            // always done, and the run report's downloadType becomes URL.
+            // Careful: a WFS with a hard feature limit answers with that many
+            // features and no more, so the job succeeds with truncated data. Paging
+            // is what guarantees the whole relation.
+            "useCount" => true,
         ),
 
         // Allowed origins for CORS

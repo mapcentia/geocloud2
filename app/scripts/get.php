@@ -86,7 +86,14 @@ $downloadSchema = $options["downloadSchema"];
 $snapshotAfterImport = $options["snapshot"] ?? null;
 // jobs.use_sortby: false for a WFS that rejects sortBy. Absent (a manual run of
 // this script, or a job row from before the column) keeps sorting on.
-$useSortBy = filter_var($options["useSortBy"] ?? true, FILTER_VALIDATE_BOOLEAN);
+// gc2scheduler.useSortBy in App.php is ANDed in, so an installation can take
+// sorting away from every job without editing the job rows one by one; it can
+// only switch sorting off, never back on for a job that is off.
+$useSortBy = WfsPaging::sortByEnabled(filter_var($options["useSortBy"] ?? true, FILTER_VALIDATE_BOOLEAN));
+// gc2scheduler.useCount in App.php, server-wide and with no per-job counterpart:
+// false means no job uses startIndex/count paging at all. Read here rather than
+// in Job::buildGetCmd so a manual run of this script obeys it too.
+$useCount = WfsPaging::countEnabled();
 // Per-job snapshot formats (base64 encoded JSON list, see Job::buildGetCmd).
 // Absent (or unusable) means the server default, SnapshotFormat::defaults().
 $snapshotFormats = null;
@@ -263,7 +270,14 @@ if (sizeof(explode("|http", $url)) > 1) {
     // because its server rejects the parameter). Grid ("|") jobs and WFS 1.x
     // keep their existing paths; an explicit startIndex means the caller pages.
     $wfsPaging = null;
-    if (!$getFunction && ($wfsPaging = WfsPaging::detect($url, $useSortBy)) !== null) {
+    if (!$getFunction && !$useCount) {
+        // Say it in the run log: with paging off the job takes the unpaged path
+        // below, the report's downloadType becomes URL instead of GMLAS/GML, and
+        // a server with a feature limit answers with that many features and no
+        // more -- a job that looks like it succeeded with truncated data.
+        print "\nInfo: WFS startIndex/count paging is turned off for this server (gc2scheduler.useCount). Fetching the whole response in one request and reading it with the GML driver, as a WFS 1.x job does.";
+    }
+    if (!$getFunction && ($wfsPaging = WfsPaging::detect($url, $useSortBy, $useCount)) !== null) {
         print "\nInfo: WFS 2.0.0 GetFeature detected. Using startIndex/count paging (count={$wfsPaging->pageSize}).";
         $getFunction = "getCmdWfsPaging";
     }
@@ -1008,7 +1022,7 @@ function getCmdWfsPaging(): void
     print "\nInfo: Start WFS paged download (count={$wfsPaging->pageSize})...";
 
     if (!$wfsPaging->useSortBy) {
-        print "\nInfo: sortBy is turned off for this job. Paging with startIndex/count only; the server must page in a stable order.";
+        print "\nInfo: sortBy is turned off (jobs.use_sortby or gc2scheduler.useSortBy). Paging with startIndex/count only; the server must page in a stable order.";
     } elseif ($wfsPaging->sortBy !== null) {
         print "\nInfo: sortBy from URL: {$wfsPaging->sortBy}";
     } else {

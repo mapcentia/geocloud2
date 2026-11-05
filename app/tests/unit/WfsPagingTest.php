@@ -5,6 +5,7 @@
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  */
 
+use app\conf\App;
 use app\inc\WfsPaging;
 use Codeception\Test\Unit;
 
@@ -18,6 +19,31 @@ class WfsPagingTest extends Unit
     protected UnitTester $tester;
 
     private const string URL = 'https://wfs.example.com/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=topp:states';
+
+    /** @var array<mixed>|null */
+    private ?array $savedScheduler = null;
+
+    protected function _before(): void
+    {
+        $this->savedScheduler = App::$param['gc2scheduler'] ?? null;
+    }
+
+    protected function _after(): void
+    {
+        if ($this->savedScheduler === null) {
+            unset(App::$param['gc2scheduler']);
+        } else {
+            App::$param['gc2scheduler'] = $this->savedScheduler;
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $settings
+     */
+    private function scheduler(array $settings): void
+    {
+        App::$param['gc2scheduler'] = $settings;
+    }
 
     public function testDetectsWfs200GetFeature(): void
     {
@@ -168,5 +194,59 @@ XML;
             'https://wfs.example.com/geoserver/wfs?service=WFS&version=2.0.0&request=DescribeFeatureType&typeNames=topp%3Astates',
             $p->describeFeatureTypeUrl()
         );
+    }
+
+    /**
+     * gc2scheduler.useCount false makes every plain WFS 2.0.0 job fall back to
+     * the unpaged path (get.php getCmd), which reads the whole GetFeature
+     * response with GDAL's GML driver as a WFS 1.x job does.
+     */
+    public function testPagingCanBeTurnedOffServerWide(): void
+    {
+        $this->assertNull(WfsPaging::detect(self::URL, useCount: false));
+        // Turning paging off does not depend on, or change, the sortBy flag.
+        $this->assertNull(WfsPaging::detect(self::URL, useSortBy: false, useCount: false));
+        $this->assertNull(WfsPaging::detect(self::URL . '&count=500', useCount: false), 'a count in the job URL is not paging either');
+        // The default is unchanged: paging on.
+        $this->assertNotNull(WfsPaging::detect(self::URL));
+        $this->assertNotNull(WfsPaging::detect(self::URL, useCount: true));
+    }
+
+    public function testCountEnabledReadsTheServerSetting(): void
+    {
+        $this->scheduler([]);
+        $this->assertTrue(WfsPaging::countEnabled(), 'absent means on');
+
+        $this->scheduler(['useCount' => false]);
+        $this->assertFalse(WfsPaging::countEnabled());
+
+        $this->scheduler(['useCount' => true]);
+        $this->assertTrue(WfsPaging::countEnabled());
+
+        // App.php is hand-edited, so a string or 0 must work like a bool.
+        $this->scheduler(['useCount' => 'false']);
+        $this->assertFalse(WfsPaging::countEnabled());
+        $this->scheduler(['useCount' => 0]);
+        $this->assertFalse(WfsPaging::countEnabled());
+    }
+
+    /**
+     * The server-wide switch is an off switch: it may turn sorting off for a
+     * job that wanted it, but it may never turn it on for a job that set
+     * use_sortby false because its server rejects the parameter.
+     */
+    public function testSortByEnabledIsJobAndServerTogether(): void
+    {
+        $this->scheduler([]);
+        $this->assertTrue(WfsPaging::sortByEnabled(true), 'absent server setting leaves the job in charge');
+        $this->assertFalse(WfsPaging::sortByEnabled(false));
+
+        $this->scheduler(['useSortBy' => false]);
+        $this->assertFalse(WfsPaging::sortByEnabled(true), 'server-wide off beats a job that wanted sorting');
+        $this->assertFalse(WfsPaging::sortByEnabled(false));
+
+        $this->scheduler(['useSortBy' => true]);
+        $this->assertTrue(WfsPaging::sortByEnabled(true));
+        $this->assertFalse(WfsPaging::sortByEnabled(false), 'a server-wide true must not override a job that is off');
     }
 }

@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [Unreleased]
+### Added
+- Two `App.php` switches under `gc2scheduler` turn parts of the scheduler's automatic WFS 2.0.0 paging off for every job in every database, without editing the job rows: `useSortBy` (never send `sortBy`) and `useCount` (no `startIndex`/`count` paging at all). Both default to `true`. They are off switches, not defaults — a server-wide `true` never overrides a job that set `use_sortby` false. With `useCount` false a job fetches the whole GetFeature response in one request and ogr2ogr reads it with GDAL's GML driver instead of GMLAS, as a WFS 1.x job does, and the run report's `downloadType` becomes `Url`. One thing to know before using it: a WFS with a hard feature limit answers with that many features and no more, so the job succeeds with truncated data. Paging is what guarantees the whole relation.
+
 ## [2026.11.1] - 2026-4-11
 ### Fixed
 - Read server-side cursors in batches instead of a row per round trip to minimize fetch overhead. Default batch size is 100 rows. Can be set with SqlApiSettings.fetchSize and is clamped to 1..10000.

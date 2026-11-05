@@ -8,6 +8,7 @@
 
 namespace app\inc;
 
+use app\conf\App;
 use DOMDocument;
 
 /**
@@ -45,15 +46,46 @@ final class WfsPaging
     }
 
     /**
+     * Server-wide gc2scheduler.useCount: false means no job pages at all.
+     * There is no per-job counterpart -- unlike sortBy, paging is either on
+     * for this installation or off for it.
+     */
+    public static function countEnabled(): bool
+    {
+        return filter_var(App::$param['gc2scheduler']['useCount'] ?? true, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * The effective sortBy flag for a job: the job's own jobs.use_sortby AND
+     * the server-wide gc2scheduler.useSortBy.
+     *
+     * The server setting is an off switch, not a default. It can take sorting
+     * away from a job that wanted it, but a server-wide true must never give
+     * it back to a job that set use_sortby false because its WFS rejects the
+     * parameter -- that job would start failing again.
+     */
+    public static function sortByEnabled(bool $jobFlag = true): bool
+    {
+        return $jobFlag && filter_var(App::$param['gc2scheduler']['useSortBy'] ?? true, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
      * Returns paging for a plain WFS 2.0.0 GetFeature URL, null for anything
      * else (grid notation, other versions/requests, explicit startIndex).
      *
      * $useSortBy false (jobs.use_sortby, --useSortBy 0) is for a server that
      * rejects sortBy: the parameter is then left out of every page URL, even
      * if the job URL asked for it.
+     *
+     * $useCount false (gc2scheduler.useCount) turns paging off altogether, so
+     * the caller takes the unpaged path: one GetFeature request read with
+     * GDAL's GML driver, which is what a WFS 1.x job has always done.
      */
-    public static function detect(string $url, bool $useSortBy = true): ?self
+    public static function detect(string $url, bool $useSortBy = true, bool $useCount = true): ?self
     {
+        if (!$useCount) {
+            return null;
+        }
         if (count(explode('|http', $url)) > 1) {
             return null;
         }
