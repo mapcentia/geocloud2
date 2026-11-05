@@ -5,12 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [Unreleased]
+## [2026.11.2] - 2026-5-12
 ### Changed
 - The scheduler reads GML from a WFS with the GDAL open option `SWAP_COORDINATES=NO` (`app/inc/OgrGml.php`) instead of rewriting every `srsName` in the downloaded file to the short `EPSG:<code>` form with a perl pass. Same result for every `srsName` spelling, verified form by form in `GmlAxisOrderTest` against the real GDAL. Two differences: the option also applies to the unpaged import, which the perl pass never reached, so a paged and an unpaged run of the same source now land the same coordinates — before, a URN `srsName` in a lat/lon-ordered CRS (`EPSG:4326`, `EPSG:4258`) came in mirrored on the unpaged path. And the legacy `.../gml/srs/epsg.xml#<code>` spelling now reaches GDAL unrewritten, so GDAL logs `Cannot import ... due to ALLOW_NETWORK_ACCESS=NO`, reads the code off the end of the URL and gets the CRS right anyway; `Util::ogrLineIsFatal()` is what keeps that from failing the job. Projected CRSs such as `EPSG:25832` are unaffected throughout.
 
 ### Added
 - Two `App.php` switches under `gc2scheduler` turn parts of the scheduler's automatic WFS 2.0.0 paging off for every job in every database, without editing the job rows: `useSortBy` (never send `sortBy`) and `useCount` (no `startIndex`/`count` paging at all). Both default to `true`. They are off switches, not defaults — a server-wide `true` never overrides a job that set `use_sortby` false. With `useCount` false a job fetches the whole GetFeature response in one request and ogr2ogr reads it with GDAL's GML driver instead of GMLAS, as a WFS 1.x job does, and the run report's `downloadType` becomes `Url`. One thing to know before using it: a WFS with a hard feature limit answers with that many features and no more, so the job succeeds with truncated data. Paging is what guarantees the whole relation.
+
+### Fixed
+- Graceful handling of empty values throughout the app.
 
 ## [2026.11.1] - 2026-4-11
 ### Fixed
