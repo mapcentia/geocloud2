@@ -14,6 +14,7 @@ include_once(__DIR__ . "/../vendor/autoload.php");
 use app\conf\App;
 use app\conf\Connection;
 use app\inc\Cache;
+use app\inc\OgrGml;
 use app\inc\SchedulerLock;
 use app\inc\Util;
 use app\inc\WfsPaging;
@@ -499,6 +500,9 @@ function getCmd(): void
 
     $extraArgs = [
         "-oo " . escapeshellarg("DOWNLOAD_SCHEMA=" . ($downloadSchema && !$contentIsCsv ? "YES" : "NO")),
+        // Harmless on the CSV and JSON sources this function also handles: an
+        // open option a driver does not declare is ignored.
+        ...OgrGml::openOptionArgs(),
     ];
     if ($isCsv) {
         $extraArgs[] = "-oo " . escapeshellarg("X_POSSIBLE_NAMES=lon*,Lon*,x,X");
@@ -580,46 +584,11 @@ function fetchPart(string $label, string $requestUrl): array
 
     $gmlPath = $tmpDir . $gmlName;
 
-    // SRS normalizer
-    $logNormalizeCount = true;
-
-    $perlExpr = $logNormalizeCount ? <<<'PERL'
-        BEGIN { $c = 0; }
-        $c += s{
-          (srsName=")
-          (?:
-            https?://www\.opengis\.net/gml/srs/epsg\.xml\#(\d+)
-          | https?://www\.opengis\.net/def/crs/EPSG/0/(\d+)/?
-          | urn:ogc:def:crs:EPSG::(\d+)
-          )
-          (")
-        }{
-          $1 . "EPSG:" . ($2 // $3 // $4) . $5
-        }gex;
-        END { print STDERR "SRS normalized: $c\n"; }
-        PERL
-        : <<<'PERL'
-        $c += s{
-          (srsName=")
-          (?:
-            https?://www\.opengis\.net/gml/srs/epsg\.xml\#(\d+)
-          | https?://www\.opengis\.net/def/crs/EPSG/0/(\d+)/?
-          | urn:ogc:def:crs:EPSG::(\d+)
-          )
-          (")
-        }{
-          $1 . "EPSG:" . ($2 // $3 // $4) . $5
-        }gex;
-        PERL;
-
-    // Normalize SRS in-place
-    $normalizeCmd = "perl -i -0777 -pe " . escapeshellarg($perlExpr) . " " . escapeshellarg($gmlPath);
-    exec($normalizeCmd . ' 2>&1');
-
     // Build final cmd
     if ($downloadSchema) {
         $extraArgs = [
             "-oo " . escapeshellarg("CONFIG_FILE=" . App::$param['path'] . "app/scripts/gmlasconf.xml"),
+            ...OgrGml::openOptionArgs(),
         ];
         $cmd = buildOgr2ogrCmd(
             encoding: $encoding,
@@ -642,6 +611,7 @@ function fetchPart(string $label, string $requestUrl): array
             inputPath: escapeshellarg($gmlPath),
             type: $type,
             preserveFid: true,
+            extraArgs: OgrGml::openOptionArgs(),
         );
     }
 
