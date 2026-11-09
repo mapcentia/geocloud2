@@ -239,6 +239,9 @@ class Geofence extends Model
      */
     private function fillPlaceholders(string $str): string
     {
+        if (empty($this->userFilter->userName) || $this->userFilter->userName == '*') {
+            return $str;
+        }
         $user = new UserModel($this->userFilter->userName, $this->postgisdb);
         try {
             $userData = (array)$user->getData()['data']['properties'];
