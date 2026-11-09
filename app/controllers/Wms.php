@@ -90,8 +90,7 @@ class Wms extends Controller
             $request = Input::get(null, true);
             $xml = new SimpleXMLElement($request);
             $this->service = strtolower((string)$xml['service']);
-            $namespace = $xml->getNamespaces(true);
-            $queries = $xml->children($namespace['wfs'])->Query;
+            $queries = $xml->children()->Query;
             foreach ($queries as $query) {
                 if (!empty($query->attributes()['typeName'][0])) {
                     $typeName = (string)$query->attributes()['typeName'][0];
