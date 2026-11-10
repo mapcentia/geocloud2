@@ -89,6 +89,10 @@ class Qgisfile extends Model
           <projectcrs>
             %13$s
           </projectcrs>
+          <!-- QGIS Server 4 resolves WMS LAYERS through the layer tree; without it GetMap is LayerNotDefined -->
+          <layer-tree-group>
+            <layer-tree-layer id="%1$s.%2$s" name="%1$s.%2$s" checked="Qt::Checked" expanded="1" providerKey="postgres"/>
+          </layer-tree-group>
           <projectlayers>
             <maplayer type="vector" geometry="%3$s" wkbType="%3$s" labelsEnabled="1" minScale="1000000000">
               <id>%1$s.%2$s</id>
@@ -118,7 +122,11 @@ class Qgisfile extends Model
             'POLYGON', 'MULTIPOLYGON' => 'Polygon',
             'LINESTRING', 'MULTILINESTRING' => 'Line',
         };
-        $result = sprintf($qgs, $schema, $rel, $type, $this->connection->database, $this->connection->host, $this->connection->port, $pkey, $cols['srid'], $cols['f_geometry_column'], $innerQml, $this->connection->user, $this->connection->password, $this->spatialRefSys("3857"), $this->spatialRefSys($cols['srid']));
+        $encodedUser = htmlspecialchars($this->connection->user, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        $encodedSchema = htmlspecialchars($schema, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        $encodedRel = htmlspecialchars($rel, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        $encodedPassword = htmlspecialchars($this->connection->password, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        $result = sprintf($qgs, $encodedSchema, $encodedRel, $type, $this->connection->database, $this->connection->host, $this->connection->port, $pkey, $cols['srid'], $cols['f_geometry_column'], $innerQml, $encodedUser, $encodedPassword, $this->spatialRefSys("3857"), $this->spatialRefSys($cols['srid']));
         return $this->writeQgisfile($result, $rel, $cols['f_geometry_column']);
     }
 }
