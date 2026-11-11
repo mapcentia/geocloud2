@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.11.4] - 2026-11-11
+### Added
+- Port of /api/v2/configuration to v4 so the GC2 App can manage Vidi configurations with its OAuth token while Vidi keeps fetching published ones anonymously.
+- A "Try the new GC2 App" button to Dashboard. The GC2 App must be installed and configured for this to work.
+
 ## [2026.11.3] - 2026-5-11
 ### Fixed
 - QGIS: Add layer tree and escape project XML
