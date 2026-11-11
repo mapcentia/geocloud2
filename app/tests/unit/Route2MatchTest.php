@@ -138,4 +138,15 @@ class Route2MatchTest extends Unit
     public const string TABLE_ROUTE = self::TABLE;
     public const string COLUMN_ROUTE = self::COLUMN;
     public const string SCHEMA_ROUTE = self::SCHEMA;
+
+    public function testPublicConfigurationRouteKeepsJsonSuffix(): void
+    {
+        $match = Route2::matchSignature('api/v4/configurations/database/{database}/[key]', 'api/v4/configurations/database/mydb/configuration_a_1.json');
+        $this->assertSame(['database' => 'mydb', 'key' => 'configuration_a_1.json'], $match['params']);
+    }
+
+    public function testManagementConfigurationRouteDoesNotMatchPublicUrl(): void
+    {
+        $this->assertNull(Route2::matchSignature('api/v4/configurations/[key]', 'api/v4/configurations/database/mydb'));
+    }
 }
