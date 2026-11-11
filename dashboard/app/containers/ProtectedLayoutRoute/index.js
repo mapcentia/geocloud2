@@ -69,6 +69,13 @@ class ProtectedLayout extends React.Component {
                                     </Grid>
                                     <Grid item>
                                         <div style={{display: `inline-block`, paddingRight: `20px`}}>
+                                            <StyledExternalLink href="/app">
+                                                <Button color="inherit" variant="outlined">
+                                                    <FormattedMessage id="Try the new GC2 App"/>
+                                                </Button>
+                                            </StyledExternalLink>
+                                        </div>
+                                        <div style={{display: `inline-block`, paddingRight: `20px`}}>
                                             {userButton}
                                         </div>
                                         <div style={{display: `inline-block`, paddingRight: `20px`}}>
