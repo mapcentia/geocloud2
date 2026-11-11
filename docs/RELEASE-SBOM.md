@@ -59,6 +59,40 @@ Hver udgivelse (= ét git-tag) skal have en committet, valideret SBOM under
        git add sbom/<tag>
        git commit -m "chore(sbom): release SBOM for YYYY.MINOR.PATCH"
 
+## Gentag scanningen af en ældre udgivelse
+
+`sbom/<tag>/vulns.cdx.json` er et øjebliksbillede: fundene er dem, grypes
+database kendte på scanningsdagen (`generated_at` og DB-status står i
+`release.json`). En sårbarhed, der offentliggøres bagefter, kommer aldrig ind
+i den fil, heller ikke selv om udgivelsen indeholder den sårbare version.
+`triage.py` læser kun filen og henter intet nyt.
+
+Komponentlisten (`gc2-image.cdx.json`) ændrer sig ikke, så den kan scannes
+igen når som helst, uden image og uden syft:
+
+1. Opdatér databasen og se, hvornår den er bygget:
+
+       grype db update
+       grype db status
+
+2. Scan image-SBOM'en, og skriv resultatet **uden for** `sbom/<tag>/`:
+
+       grype sbom:sbom/<tag>/gc2-image.cdx.json -o cyclonedx-json > /tmp/vulns-<tag>-rescan.cdx.json
+
+3. Triagér den nye fil:
+
+       python3 sbom/triage.py /tmp/vulns-<tag>-rescan.cdx.json
+
+Overskriv ikke den committede `vulns.cdx.json`. Den hører sammen med
+`release.json` og `sha256sums.txt` og dokumenterer, hvad der var kendt ved
+udgivelsen.
+
+Gør det, når en alvorlig sårbarhed bliver offentliggjort, og ellers jævnligt
+for de udgivelser, der stadig er i drift. Eksempel: PHP2Shell
+(CVE-2026-109618/-109619) blev offentliggjort 21. oktober 2026. Scanningen af
+2026.9.1 fra 24. september viser den ikke, men en ny scanning af samme SBOM
+viser den på alle `php8.4-*`-pakker (8.4.25) og i CISA KEV.
+
 ## Fremtid
 
 - GitHub Actions på `push: tags` der installerer pinnet syft/grype og kalder
