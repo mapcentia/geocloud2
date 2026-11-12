@@ -45,7 +45,7 @@ class SqlNoToken extends AbstractApi
      */
     #[OA\Post(path: '/api/v4/sql/database/{database}', operationId: 'postSqlNoToken', description: "Run SQL statements without a token.", tags: ['Sql'])]
     #[OA\Parameter(name: 'database', description: 'Database name to use.', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'mydb')]
-    #[OA\RequestBody(description: 'SQL statement(s) to run.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Sql"))]
+    #[OA\RequestBody(description: 'SQL statement(s) to run.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/SqlRequest"))]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\MediaType('application/json'))]
     #[OA\Response(response: 500, description: 'Internal error. Most likely an SQL error.')]
     #[AcceptableContentTypes(['application/json'])]
