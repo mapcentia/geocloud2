@@ -17,8 +17,10 @@ use app\inc\Model;
 use app\inc\TableWalkerRelation;
 use DateInterval;
 use DateTimeImmutable;
+use Generator;
 use PDO;
 use PDOException;
+use PDOStatement;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
 use PhpOffice\PhpSpreadsheet\Reader\Exception;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -271,7 +273,13 @@ class Sql extends Model
             }
         }
         $fieldsStr = implode(",", $fieldsArr);
-        $sql = "SELECT $fieldsStr FROM ($q) AS foo LIMIT $limit";
+        // No LIMIT here. The row cap is enforced where the rows are read
+        // (cappedRows), because a LIMIT around the caller's SELECT tells the planner
+        // that only a fraction of the rows is wanted, and it then plans the caller's
+        // joins for a fast first row instead of for the whole result. With a
+        // set-returning function inflating the row estimate that picked a nested
+        // loop without an index: 108 s against 65 ms for 16,000 rows.
+        $sql = "SELECT $fieldsStr FROM ($q) AS foo";
         // Settings from App.php
         // SET LOCAL keeps the override scoped to the current transaction. A plain
         // SET would persist on the backend after COMMIT and — under PgBouncer
@@ -283,6 +291,10 @@ class Sql extends Model
         }
         $this->execQuery("SET LOCAL statement_timeout = " . (App::$param["SqlApiSettings"]["statement_timeout"] ?? "60000"));
         $this->execQuery("SET LOCAL idle_in_transaction_session_timeout = 300000");
+        // A cursor is planned for fetching cursor_tuple_fraction of its rows, 10% by
+        // default. This API reads the whole result up to the row cap, so plan for
+        // that. Needed together with dropping the LIMIT; either alone is not enough.
+        $this->execQuery("SET LOCAL cursor_tuple_fraction = 1.0");
         if ($clientEncoding) {
             $this->execQuery("set client_encoding='$clientEncoding'");
         }
@@ -320,7 +332,7 @@ class Sql extends Model
             // ==============
 
             $features = [];
-            foreach ($this->cursorRows($innerStatement) as $row) {
+            foreach ($this->cappedRows($innerStatement, (int)$limit) as $row) {
                 $arr = [];
                 foreach ($row as $key => $rowValue) {
                     $nativePgType = $columnTypes[$key];
@@ -362,7 +374,7 @@ class Sql extends Model
             $columnsForGrid = [];
             $features = [];
 
-            foreach ($this->cursorRows($innerStatement) as $row) {
+            foreach ($this->cappedRows($innerStatement, (int)$limit) as $row) {
                 $arr = array();
                 foreach ($row as $key => $rowValue) {
                     $nativePgType = $columnTypes[$key];
@@ -415,7 +427,7 @@ class Sql extends Model
             $json = "";
             $bulkSize = 1000;
             $geometries = null;
-            foreach ($this->cursorRows($innerStatement) as $row) {
+            foreach ($this->cappedRows($innerStatement, (int)$limit) as $row) {
                 $arr = [];
                 foreach ($row as $key => $value) {
                     if ($columnTypes[$key] == "geometry" && $value !== null) {
@@ -470,7 +482,7 @@ class Sql extends Model
                     $fieldConf = json_decode($this->getGeometryColumns($aliasesFrom, "fieldconf"));
                 }
             }
-            foreach ($this->cursorRows($innerStatement) as $row) {
+            foreach ($this->cappedRows($innerStatement, (int)$limit) as $row) {
                 $arr = array();
                 $fields = array();
                 foreach ($row as $key => $value) {
@@ -538,7 +550,7 @@ class Sql extends Model
                 }
             }
 
-            foreach ($this->cursorRows($innerStatement) as $row) {
+            foreach ($this->cappedRows($innerStatement, (int)$limit) as $row) {
                 $arr = [];
                 $fields = [];
                 foreach ($row as $key => $value) {
@@ -727,6 +739,29 @@ class Sql extends Model
     {
         $array[$key] = $value;
         return $array;
+    }
+
+    /**
+     * The rows of the open cursor, at most $limit of them.
+     *
+     * This is the SQL API's row cap. It stops reading instead of putting a LIMIT in
+     * the statement, so the cap cannot influence the query plan.
+     *
+     * @return Generator<int, array<string, mixed>>
+     * @throws \Throwable
+     */
+    private function cappedRows(PDOStatement $statement, int $limit): Generator
+    {
+        if ($limit < 1) {
+            return;
+        }
+        $count = 0;
+        foreach ($this->cursorRows($statement) as $row) {
+            yield $row;
+            if (++$count >= $limit) {
+                return;
+            }
+        }
     }
 
     /**
