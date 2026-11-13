@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.11.5] - 2026-13-11
+### CHANGED
+- The SQL API ran the caller's SELECT as a subquery under a LIMIT, inside a cursor. Both tell the planner that only a fraction of the rows will be read (the LIMIT relative to the estimated row count, the cursor through
+  cursor_tuple_fraction = 0.1), so the caller's joins were planned for a fast first row. With a set-returning function inflating the estimate that chose a nested loop with a join filter and no index: 108 s for
+  16,000 rows that the raw SELECT returns in 65 ms.
+
 ## [2026.11.4] - 2026-11-11
 ### Added
 - Port of /api/v2/configuration to v4 so the GC2 App can manage Vidi configurations with its OAuth token while Vidi keeps fetching published ones anonymously.
