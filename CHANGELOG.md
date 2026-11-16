@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.11.6] - 2026-16-11
+### Added
+- The Docker image builds the GC2 App into the image.
+- `App.php` setting `redirectUriHosts`: extra hosts a `redirect_uri` may point to.
+
+### Changed
+- `redirect_uri` in sign-up, sign-out and social login must be a path on the server, on the server's own host or `sessionDomain`, listed in `redirectUriHosts`, or registered on an OAuth client. Sign-up and social login refuse anything else; sign-out falls back to `/`.
+- The OAuth `device_code` is now 64 hex characters.
+
+### Fixed
+- OAuth device flow: `/device` kept sending a signed-in user back to sign-in, and an approved code never gave the device a token.
+- Social login is offered on `/device` when `socialSignup` is on.
+
 ## [2026.11.5] - 2026-13-11
 ### CHANGED
 - The SQL API ran the caller's SELECT as a subquery under a LIMIT, inside a cursor. Both tell the planner that only a fraction of the rows will be read (the LIMIT relative to the estimated row count, the cursor through
