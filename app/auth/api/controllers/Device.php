@@ -40,7 +40,7 @@ class Device extends AbstractApi
         echo $this->twig->render('header.html.twig');
         $backend = Session::isAuth() ? 'device' : 'signin';
 
-        echo "<main class='form-signin w-100 m-auto'>";
+        echo "<main class='form-signin w-100 m-auto flex-grow-1'>";
         // Tell the sign-in form it serves the device flow: whether to offer social
         // login (the server-wide setting, as /auth uses without a parentdb), and
         // that a social login must come back here rather than to /auth.
