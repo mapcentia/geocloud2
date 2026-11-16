@@ -371,6 +371,16 @@ ENTRYPOINT ["/entrypoint.sh"]
 # Symlink Dashboard
 RUN ln -s /var/www/geocloud2/dashboard/build/ /var/www/geocloud2/public/dashboard
 
+# Install GC2-app
+ENV VITE_GC2_CLIENT_ID=gc2-cli
+ENV VITE_GC2_HOST="https://localhost:8080"
+ENV VITE_BASE_PATH="/app/"
+ENV VITE_CLIENT_FIRST_ENABLED=true
+
+RUN	git clone https://github.com/mapcentia/gc2-app.git --branch main &&\
+    ln -s /var/www/geocloud2/gc2-app/dist/ /var/www/geocloud2/public/app
+
+
 #  CVE-2926-109618/619
 RUN echo "session.upload_progress.enabled = Off" >> /etc/php/${PHP_VERSION}/fpm/php.ini
 
@@ -436,6 +446,11 @@ COPY conf/gc2/Connection.php /var/www/geocloud2/app/conf/
 
 # Build dashboard
 RUN cd dashboard \
+    && npm install \
+    && npm run build
+
+# Build GC2-app
+RUN cd gc2-app \
     && npm install \
     && npm run build
 
