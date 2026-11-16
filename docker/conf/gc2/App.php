@@ -196,6 +196,11 @@ class App
             "*"
         ],
 
+        // Extra hosts a sign-in may send the browser on to (redirect_uri), besides
+        // this server's own host, hosts under sessionDomain and the redirect URIs
+        // registered on the OAuth client. Host names only, e.g. "app.example.com".
+        "redirectUriHosts" => [],
+
         // Meta properties
         "vidiUrl" => "http://127.0.0.1:3000",
 

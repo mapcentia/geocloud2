@@ -11,6 +11,7 @@ use app\api\v4\AbstractApi;
 use app\api\v4\Responses\Response;
 use app\conf\App;
 use app\inc\Connection;
+use app\inc\RedirectUri;
 use app\inc\Route2;
 use app\inc\Session as HttpSession;
 use app\models\Database;
@@ -70,6 +71,17 @@ abstract class AbstractSocialLogin extends AbstractApi
      */
     public function get_start(): Response
     {
+        // Checked before anything else, and before the session keeps it: the
+        // callback sends the browser to this address once the user is signed in.
+        // 'signin' and 'device' never use it (see returnLocation).
+        $redirectUri = $_GET['redirect_uri'] ?? null;
+        $action = $_GET['action'] ?? null;
+        if (!empty($redirectUri) && !in_array($action, ['signin', 'device'], true)
+            && !RedirectUri::check($redirectUri, $_GET['parentdb'] ?? null, $_GET['client_id'] ?? null)) {
+            echo 'redirect_uri is not allowed';
+            return $this->emptyResponse();
+        }
+
         $cfg = $this->config();
         if ($cfg === null) {
             echo htmlspecialchars($this->providerLabel() . ' OAuth is not configured on the server');

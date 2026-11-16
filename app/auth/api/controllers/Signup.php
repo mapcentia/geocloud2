@@ -19,6 +19,7 @@ use app\inc\Jwt;
 use app\inc\Route2;
 use app\inc\Session;
 use app\models\Client;
+use app\inc\RedirectUri;
 use app\models\Database;
 use app\models\Session as SessionModel;
 use app\models\User;
@@ -38,6 +39,10 @@ class Signup extends AbstractApi
 
     public function get_index(): Response
     {
+        // The address the browser is sent to once the user has signed up.
+        if (!empty($_GET['redirect_uri']) && !RedirectUri::check($_GET['redirect_uri'], $_GET['parentdb'] ?? null, $_GET['client_id'] ?? null)) {
+            return $this->error('invalid_request', 'redirect_uri is not allowed');
+        }
         $socialSignup = !empty(App::$param['socialSignup']);
         if (!empty($_GET['parentdb'])) {
             $requiredParams = ['client_id', 'parentdb'];
@@ -84,6 +89,12 @@ class Signup extends AbstractApi
 
     public function post_index(): Response
     {
+        // Checked on the post too: this is the request that redirects, and its
+        // redirect_uri is a form field the page does not control.
+        if (!empty($_POST['redirect_uri']) && !RedirectUri::check(urldecode($_POST['redirect_uri']), $_POST['parentdb'] ?? null, $_POST['client_id'] ?? null)) {
+            echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'redirect_uri is not allowed']) . "</div>";
+            return $this->emptyResponse();
+        }
         $userObj = new User();
         if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password']) && empty($_POST['tf_code'])) {
 

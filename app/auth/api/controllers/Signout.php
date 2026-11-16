@@ -16,7 +16,9 @@ use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
 use app\inc\Connection;
 use app\inc\Input;
+use app\inc\RedirectUri;
 use app\inc\Route2;
+use app\inc\Session;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
@@ -32,11 +34,18 @@ class Signout extends AbstractApi
 
     public function get_index(): Response
     {
-        (new \app\models\Session())->stop();
         $encoded = Input::get('redirect_uri');
         // Default to the app root so a sign-out without redirect_uri still redirects
         // cleanly instead of passing null to redirectResponse().
         $r = $encoded ? urldecode($encoded) : '/';
+        // Sign-out has no client in its request, so any redirect URI registered on
+        // a client in the signed-in user's database counts. Looked up before the
+        // session is destroyed; an unknown address falls back to the app root.
+        Session::start();
+        if ($r !== '/' && !RedirectUri::check($r, $_SESSION['parentdb'] ?? null, null)) {
+            $r = '/';
+        }
+        (new \app\models\Session())->stop();
         return $this->redirectResponse(location: $r);
     }
 
