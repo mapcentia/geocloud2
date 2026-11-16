@@ -192,7 +192,9 @@ abstract class Jwt
     public static function createDeviceAndUserCode(): array
     {
         $userCode = self::generateUserCode();
-        $deviceCode = uniqid();
+        // The device polls for its token with this code alone, so it has to be
+        // unguessable: 256 bits from the CSPRNG, not a time-based id.
+        $deviceCode = bin2hex(random_bytes(32));
         $CachedString = Cache::getItem($deviceCode);
         $CachedString->set($userCode)->expiresAfter(self::DEVICE_CODE_TTL);
         Cache::save($CachedString);
@@ -233,6 +235,11 @@ abstract class Jwt
      */
     public static function clearDeviceCode(string $deviceCode): void
     {
+        // The user code holds the approving user's session data, so it goes too.
+        $CachedString = Cache::getItem($deviceCode);
+        if ($CachedString != null && $CachedString->isHit() && is_string($CachedString->get())) {
+            Cache::deleteItem($CachedString->get());
+        }
         Cache::deleteItem($deviceCode);
     }
 

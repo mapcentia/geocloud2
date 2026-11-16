@@ -150,17 +150,33 @@ abstract class AbstractSocialLogin extends AbstractApi
             $this->establishSession($row);
 
             // Redirect back to /auth with original query, or to the original redirect_uri
-            $returnQuery = $_SESSION[$key . '_return_query'] ?? '';
-            if (($_SESSION[$key . '_action'] ?? null) === 'signin') {
-                $redirect = '/auth' . ($returnQuery ? ('?' . $returnQuery) : '');
-            } else {
-                $redirect = $_SESSION[$key . '_redirect_uri'] ?? '/auth';
-            }
-            return $this->redirectResponse(location: $redirect);
+            return $this->redirectResponse(location: self::returnLocation(
+                $_SESSION[$key . '_action'] ?? null,
+                $_SESSION[$key . '_return_query'] ?? '',
+                $_SESSION[$key . '_redirect_uri'] ?? null,
+            ));
         } catch (Exception $e) {
             echo htmlspecialchars($this->providerLabel()) . ' login failed: ' . htmlspecialchars($e->getMessage());
             return $this->emptyResponse();
         }
+    }
+
+    /**
+     * Where the browser goes once the provider has answered and the session is set.
+     *
+     * 'signin' came from /auth and returns there with its original query. 'device'
+     * came from the device flow's sign-in and returns to /device, where the user
+     * enters the code. Anything else keeps the redirect_uri it started with.
+     */
+    public static function returnLocation(?string $action, string $returnQuery, ?string $redirectUri): string
+    {
+        if ($action === 'device') {
+            return '/device';
+        }
+        if ($action === 'signin') {
+            return '/auth' . ($returnQuery ? ('?' . $returnQuery) : '');
+        }
+        return $redirectUri ?? '/auth';
     }
 
     protected function config(): ?array

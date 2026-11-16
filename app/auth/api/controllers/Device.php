@@ -12,6 +12,7 @@ use app\api\v4\AbstractApi;
 use app\api\v4\Controller;
 use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
+use app\conf\App;
 use app\inc\Cache;
 use app\inc\Connection;
 use app\inc\Jwt;
@@ -28,6 +29,10 @@ class Device extends AbstractApi
     public function __construct(private readonly Route2 $route, Connection $connection, private $twig = new Environment(new FilesystemLoader(__DIR__ . '/../templates')))
     {
         parent::__construct($connection);
+        // The /device dispatch does not start a session. Without one the page never
+        // sees the user as signed in, and approving a code would store an empty
+        // session against it.
+        Session::start();
     }
 
     public function get_index(): Response
@@ -36,7 +41,14 @@ class Device extends AbstractApi
         $backend = Session::isAuth() ? 'device' : 'signin';
 
         echo "<main class='form-signin w-100 m-auto'>";
-        echo "<div hx-trigger='load' hx-target='this' hx-post='/$backend'></div>";
+        // Tell the sign-in form it serves the device flow: whether to offer social
+        // login (the server-wide setting, as /auth uses without a parentdb), and
+        // that a social login must come back here rather than to /auth.
+        $hxVals = htmlspecialchars(json_encode([
+            'action' => 'device',
+            'social_signup' => !empty(App::$param['socialSignup']) ? 'true' : 'false',
+        ]), ENT_QUOTES);
+        echo "<div hx-trigger='load' hx-target='this' hx-post='/$backend' hx-vals='{$hxVals}'></div>";
         echo "<div id='alert'></div>";
         echo "</main>";
 
@@ -46,7 +58,12 @@ class Device extends AbstractApi
 
     public function post_index(): Response
     {
-        $code = $_POST['user-code'];
+        $code = $_POST['user-code'] ?? null;
+        // Only a signed-in user can approve a code; anyone else must not use it up.
+        if (!Session::isAuth()) {
+            echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Please sign in first']) . "</div>";
+            return $this->emptyResponse();
+        }
         $cachedString = Cache::getItem($code);
 
         if ($cachedString != null && $cachedString->isHit()) {
@@ -54,7 +71,6 @@ class Device extends AbstractApi
             if (!empty($val) && $val == 1) {
                 $cachedString->set($_SESSION)->expiresAfter(Jwt::DEVICE_CODE_TTL);
                 Cache::save($cachedString);
-                echo "<div id='alert' hx-swap-oob='true'>Device code found</div>";
                 echo "<div id='alert' hx-swap-oob='true'>" . $this->twig->render('error.html.twig', ['message' => 'Device code found']) . "</div>";
             } else {
                 echo $this->twig->render("device.html.twig");
