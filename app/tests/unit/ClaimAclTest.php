@@ -251,4 +251,51 @@ class ClaimAclTest extends Unit
         // Wildcards cannot be enumerated — not in results
         $this->assertArrayNotHasKey("any.table", $all);
     }
+
+    public function testSupersededKeyStillGivesMembership(): void
+    {
+        // Memberships are deliberately NOT subject to the claim-specificity filter:
+        // grants and memberships must be able to come from different rule sets.
+        // "groups->A->B" supersedes "groups->A" for grants, but both keys count as memberships.
+        $customMap = [
+            "groups->A" => [
+                "__read" => ["table1"],
+                "__membership" => ["group_a"],
+            ],
+            "groups->A->B" => [
+                "__read" => ["table2"],
+            ]
+        ];
+
+        $auth = new ClaimAcl($customMap);
+        $claims = (object)["groups" => ["A"]];
+
+        $this->assertFalse($auth->canReadTable($claims, "table1"), "groups->A is superseded for grants");
+
+        $keys = $auth->allMembershipKeys($claims);
+        $this->assertContains("groups->A", $keys, "Superseded key still gives membership");
+        $this->assertContains("groups->A->B", $keys);
+    }
+
+    public function testAllRulesWithoutRulesKey(): void
+    {
+        // Rule blocks without "__rules" contribute nothing (and raise no warning).
+        $customMap = [
+            "roles->plain" => [
+                "__write" => ["table1"],
+            ],
+            "roles->ruled" => [
+                "__write" => ["table2"],
+                "__rules" => [["filter" => "a=1"]],
+            ],
+        ];
+
+        $auth = new ClaimAcl($customMap);
+
+        $this->assertSame([], $auth->allRules((object)["roles" => ["plain"]]));
+        $this->assertSame(
+            [["filter" => "a=1"]],
+            $auth->allRules((object)["roles" => ["plain", "ruled"]])
+        );
+    }
 }

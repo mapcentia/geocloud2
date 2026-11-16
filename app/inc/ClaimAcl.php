@@ -315,6 +315,16 @@ final class ClaimAcl
         return $out;
     }
 
+    /**
+     * Return every rule key whose claim matches.
+     *
+     * Deliberately does NOT go through collectMatches(): memberships are not subject
+     * to the claim-specificity filter. Grants and memberships must be able to come
+     * from different rule sets, so "groups->A" still counts as a membership even when
+     * "groups->A->B" supersedes it for __read/__write/__rules.
+     *
+     * @return array<int, array{key: string, claim: string, matcher: string}>
+     */
     public function allMemberships(object $claims): array
     {
         $memberships = [];
@@ -379,7 +389,9 @@ final class ClaimAcl
         }
         $out = [];
         foreach ($matches as $m) {
-            foreach ($m['rules']['__rules'] as $op) {
+            $rules = $m['rules']['__rules'] ?? [];
+            if (!is_array($rules)) continue;
+            foreach ($rules as $op) {
                 $out[] = $op;
             }
         }
