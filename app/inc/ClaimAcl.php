@@ -122,7 +122,7 @@ final class ClaimAcl
             ];
         }
 
-        if (count($out) == 0) {
+        if (count($out) === 0 && isset($this->customMap['__default'])) {
             $out[] = [
                 'claimPath' => '__default',
                 'specificity' => 0,
