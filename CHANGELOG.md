@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.11.7] - 2026-18-11
+### Changed
+- `_full_type` property on meta-fields is added.
+
+### Fixed
+- Input schema validation in v4 APIs did not filter out keys starting with `_`.
+- (snapshots): update the STAC catalog incrementally on publish instead of rebuilding it from scratch.
+
 ## [2026.11.6] - 2026-16-11
 ### Added
 - The Docker image builds the GC2 App into the image.
