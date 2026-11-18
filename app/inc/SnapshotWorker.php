@@ -14,6 +14,7 @@ use app\inc\snapshot\SnapshotRef;
 use app\inc\snapshot\SnapshotStorage;
 use app\inc\snapshot\StacCatalogWriter;
 use app\models\Snapshot as SnapshotModel;
+use app\models\SnapshotCatalogRebuild;
 use RuntimeException;
 use Throwable;
 
@@ -179,14 +180,14 @@ class SnapshotWorker
             if ($superseded !== null) {
                 $this->deleteFilesOf($superseded, $ref);
             }
-            // The catalog describes what is published, so it is rebuilt after
+            // The catalog describes what is published, so it is updated after
             // the publish (and after the supersede cleanup) — and best effort:
             // a snapshot that is in the database and on disk has succeeded even
             // if its STAC documents could not be written.
             try {
-                $this->rebuildCatalog();
+                $this->updateCatalog($schema, $relation, $ref->snapshotDate);
             } catch (Throwable $e) {
-                error_log("snapshot $uuid: catalog rebuild failed: " . $e->getMessage());
+                error_log("snapshot $uuid: catalog update failed: " . $e->getMessage());
             }
             return 'succeeded';
         } catch (Throwable $e) {
@@ -268,14 +269,80 @@ class SnapshotWorker
     }
 
     /**
+     * Runs queued full rewrites of this database's STAC catalog
+     * (settings.snapshot_catalog_rebuilds, POST
+     * /api/v4/snapshots/catalog/rebuilds).
+     *
+     * @return int Number of rebuilds run.
+     */
+    public function processCatalogRebuilds(int $limit = 1): int
+    {
+        $rebuilds = new SnapshotCatalogRebuild($this->connection);
+        $run = 0;
+        foreach ($rebuilds->claimPending($limit) as $row) {
+            try {
+                $result = $this->rebuildCatalog();
+                $failed = $result['failed'];
+                $rebuilds->finish(
+                    $row['uuid'],
+                    $failed === 0 ? 'succeeded' : 'failed',
+                    $result['documents'],
+                    $failed,
+                    $failed === 0 ? null : "$failed of {$result['documents']} catalog documents could not be written",
+                );
+            } catch (Throwable $e) {
+                $msg = preg_replace('/password=\S+/', 'password=***', $e->getMessage());
+                $rebuilds->finish($row['uuid'], 'failed', null, null, substr($msg, -2000));
+            }
+            $run++;
+        }
+        return $run;
+    }
+
+    /**
      * Rewrites the whole static STAC catalog of this database from
      * settings.snapshots: one catalog.json at the database root, one
-     * collection.json per relation and one item.json per snapshot, next to the
-     * Parquet files they describe.
+     * collection.json and latest.json per relation and one item.json per
+     * snapshot, next to the data files they describe.
      *
-     * Rebuilt in full rather than patched, so a publish, a supersede and a
-     * catalog written by an older version of this code all converge on the
+     * One storage write per document, so the cost grows with the catalog;
+     * that is why a publish does not do this (see updateCatalog()) and it is
+     * a queued job instead. It is the repair tool: a publish, a supersede and
+     * a catalog written by an older version of this code all converge on the
      * same documents.
+     *
+     * @return array{documents:int, failed:int}
+     */
+    public function rebuildCatalog(): array
+    {
+        return $this->writeCatalog(null);
+    }
+
+    /**
+     * Brings the catalog up to date after one publish by writing only the
+     * documents that publish can have changed: the snapshot's own item.json,
+     * its relation's collection.json and latest.json, and catalog.json (a
+     * first snapshot adds a child link). Items do not link to their siblings,
+     * so the relation's other items are still correct.
+     *
+     * A fixed handful of writes, however large the catalog is. Documents of
+     * other relations are deliberately left alone; a catalog that has drifted
+     * is repaired with a full rebuild.
+     */
+    private function updateCatalog(string $schema, string $relation, string $snapshotDate): void
+    {
+        $dir = "schema=$schema/relation=$relation";
+        $this->writeCatalog([
+            "$dir/_gc2_snapshot_date=$snapshotDate/item.json",
+            "$dir/collection.json",
+            "$dir/latest.json",
+            'catalog.json',
+        ]);
+    }
+
+    /**
+     * Builds every catalog document from settings.snapshots (in memory, one
+     * query) and writes them all, or only those at the paths in $only.
      *
      * catalog.json is written last (build() orders it that way): it is the
      * entry point, so a reader must not be able to follow a child link to a
@@ -283,8 +350,11 @@ class SnapshotWorker
      * written does not stop the others — a partial catalog is more useful than
      * a stale one — so each failure is logged and the round ends with a
      * summary.
+     *
+     * @param array<int, string>|null $only Paths relative to the database root.
+     * @return array{documents:int, failed:int}
      */
-    private function rebuildCatalog(): void
+    private function writeCatalog(?array $only): array
     {
         $rows = $this->snapshot->listAllPublished();
         $relations = [];
@@ -293,6 +363,10 @@ class SnapshotWorker
         }
         $documents = new StacCatalogWriter($this->connection->database)
             ->build($rows, $this->snapshot->relationMeta(array_keys($relations)));
+        if ($only !== null) {
+            // array_intersect_key() keeps build()'s order: catalog.json last.
+            $documents = array_intersect_key($documents, array_flip($only));
+        }
 
         $failed = 0;
         foreach ($documents as $path => $document) {
@@ -306,6 +380,7 @@ class SnapshotWorker
         if ($failed > 0) {
             error_log("snapshot catalog: " . (count($documents) - $failed) . " of " . count($documents) . " documents written for {$this->connection->database}, $failed failed");
         }
+        return ['documents' => count($documents), 'failed' => $failed];
     }
 
     /**

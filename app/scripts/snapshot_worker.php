@@ -70,6 +70,18 @@ foreach ($dbs as $db) {
     } catch (Throwable $e) {
         // Databases without settings.snapshots (or transient errors) are
         // skipped silently; this worker is best-effort per run.
+    }
+    try {
+        // Queued full rewrites of the STAC catalog, after the snapshots so the
+        // rewrite describes what was just published. Its own try: a database
+        // that has not been migrated to the rebuild queue yet still gets its
+        // snapshots.
+        $rebuilt = new SnapshotWorker($connection, $storage, $tmpDir)->processCatalogRebuilds();
+        if ($rebuilt > 0) {
+            echo "$db: catalog rebuilds=$rebuilt\n";
+        }
+    } catch (Throwable $e) {
+        // As above.
     } finally {
         // Release this database's PDO connection; the cache is per process.
         Model::disconnect($connection);

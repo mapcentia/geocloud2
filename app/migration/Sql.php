@@ -439,6 +439,23 @@ SQL;
         $sqls[] = "ALTER TABLE settings.snapshots DROP CONSTRAINT snapshots_status_check";
         $sqls[] = "ALTER TABLE settings.snapshots ADD CONSTRAINT snapshots_status_check CHECK (status IN ('pending', 'running', 'succeeded', 'failed', 'superseded'))";
         $sqls[] = "CREATE UNIQUE INDEX snapshots_published_unique_idx ON settings.snapshots (schema_name, relation_name, snapshot_date) WHERE status = 'succeeded'";
+        // Requests to rewrite a database's whole STAC catalog (POST
+        // /api/v4/snapshots/catalog/rebuilds). A publish only writes the
+        // documents of the relation it touched, so the full rewrite is a job
+        // of its own; the table is its queue, claimed by snapshot_worker.php.
+        $sqls[] = "CREATE TABLE IF NOT EXISTS settings.snapshot_catalog_rebuilds
+                    (
+                      uuid             UUID                      NOT NULL  DEFAULT uuid_generate_v4()  PRIMARY KEY,
+                      status           CHARACTER VARYING(32)     NOT NULL  DEFAULT 'pending',
+                      documents        INTEGER,
+                      failed_documents INTEGER,
+                      error            TEXT,
+                      username         CHARACTER VARYING(255),
+                      created          TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT now(),
+                      started          TIMESTAMP WITH TIME ZONE,
+                      finished         TIMESTAMP WITH TIME ZONE,
+                      CHECK (status IN ('pending', 'running', 'succeeded', 'failed'))
+                    )";
 
         // A relation abstract holds a real description — the Danish grunddata in
         // the "dk" database run to ~800 characters — which the original

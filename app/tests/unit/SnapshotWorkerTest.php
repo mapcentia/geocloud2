@@ -11,6 +11,7 @@ use app\inc\snapshot\LocalSnapshotStorage;
 use app\inc\snapshot\SnapshotRef;
 use app\inc\SnapshotWorker;
 use app\models\Snapshot;
+use app\models\SnapshotCatalogRebuild;
 use Codeception\Test\Unit;
 
 /**
@@ -288,6 +289,83 @@ class SnapshotWorkerTest extends Unit
         $collection = $this->json($this->catalogDir() . 'schema=snap/relation=plain/collection.json');
         $this->assertSame([[-180, -90, 180, 90]], $collection['extent']['spatial']['bbox']);
         $this->assertSame('snap.plain', $collection['title'], 'a relation without layer metadata is titled by its name');
+    }
+
+    /**
+     * A publish costs a fixed handful of catalog writes: its own item, its
+     * relation's collection and latest pointer, and catalog.json. Documents of
+     * other relations are not rewritten, however many there are.
+     */
+    public function testPublishWritesOnlyItsOwnRelationsCatalogDocuments(): void
+    {
+        $this->snapshot()->create('snap', 'plain', null, self::$database, ['parquet']);
+        $this->assertSame(1, $this->worker()->processPending(5)['succeeded']);
+        $other = $this->catalogDir() . 'schema=snap/relation=plain/collection.json';
+        $this->assertFileExists($other);
+        file_put_contents($other, '{"sentinel":true}');
+
+        $uuid = $this->snapshot()->create('snap', 'points', null, self::$database, ['parquet']);
+        $this->assertSame(1, $this->worker()->processPending(5)['succeeded']);
+        $day = $this->snapshot()->get($uuid)['data']['snapshot_date'];
+
+        $this->assertSame(['sentinel' => true], $this->json($other), 'another relation\'s documents are left alone');
+        $dir = $this->catalogDir() . 'schema=snap/relation=points/';
+        $this->assertFileExists($dir . "_gc2_snapshot_date=$day/item.json");
+        $this->assertFileExists($dir . 'collection.json');
+        $this->assertFileExists($dir . 'latest.json');
+        $hrefs = array_column($this->json($this->catalogDir() . 'catalog.json')['links'], 'href');
+        $this->assertContains('./schema=snap/relation=points/collection.json', $hrefs);
+        $this->assertContains('./schema=snap/relation=plain/collection.json', $hrefs, 'catalog.json still lists every relation');
+    }
+
+    /**
+     * The full rewrite is a queued job: it restores every document, including
+     * those a publish no longer touches, and records how many it wrote.
+     */
+    public function testQueuedCatalogRebuildRewritesEveryDocument(): void
+    {
+        $this->snapshot()->create('snap', 'plain', null, self::$database, ['parquet']);
+        $this->snapshot()->create('snap', 'points', null, self::$database, ['parquet']);
+        $this->assertSame(2, $this->worker()->processPending(5)['succeeded']);
+        $collection = $this->catalogDir() . 'schema=snap/relation=plain/collection.json';
+        file_put_contents($collection, '{"sentinel":true}');
+        unlink($this->catalogDir() . 'catalog.json');
+
+        $rebuilds = new SnapshotCatalogRebuild(new Connection(database: self::$database));
+        $this->assertSame(0, $this->worker()->processCatalogRebuilds(), 'nothing queued is a no-op');
+        $id = $rebuilds->create(self::$database);
+        $this->assertSame($id, $rebuilds->activeId());
+        $this->assertSame('pending', $rebuilds->get($id)['status']);
+
+        $this->assertSame(1, $this->worker()->processCatalogRebuilds());
+
+        $row = $rebuilds->get($id);
+        $this->assertSame('succeeded', $row['status'], 'error: ' . ($row['error'] ?? ''));
+        $this->assertSame(0, (int)$row['failed_documents']);
+        $published = count($this->snapshot()->listAllPublished());
+        $relations = count(array_unique(array_map(fn($r) => $r['schema_name'] . '.' . $r['relation_name'], $this->snapshot()->listAllPublished())));
+        $this->assertSame($published + 2 * $relations + 1, (int)$row['documents'], 'one item per snapshot, collection + latest per relation, one catalog');
+        $this->assertNotNull($row['started']);
+        $this->assertNotNull($row['finished']);
+        $this->assertNull($rebuilds->activeId(), 'a finished rebuild is no longer active');
+
+        $this->assertSame('Collection', $this->json($collection)['type'], 'the overwritten collection is restored');
+        $this->assertSame('Catalog', $this->json($this->catalogDir() . 'catalog.json')['type']);
+        $this->assertSame(0, $this->worker()->processCatalogRebuilds(), 'a finished rebuild is not run again');
+    }
+
+    public function testUnknownCatalogRebuildIdIs404(): void
+    {
+        $rebuilds = new SnapshotCatalogRebuild(new Connection(database: self::$database));
+        foreach (['00000000-0000-0000-0000-000000000000', 'not-a-uuid'] as $id) {
+            try {
+                $rebuilds->get($id);
+                $this->fail('expected a 404');
+            } catch (\app\exceptions\GC2Exception $e) {
+                $this->assertSame(404, $e->getCode());
+                $this->assertSame('CATALOG_REBUILD_NOT_FOUND', $e->getErrorCode());
+            }
+        }
     }
 
     public function testFailedRunWritesNoCatalog(): void
