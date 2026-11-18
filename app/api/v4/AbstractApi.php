@@ -349,13 +349,12 @@ abstract class AbstractApi implements ApiInterface
 
     static private function removeUnderscoreKeys(array $array): array
     {
-        $filteredArray = [];
         foreach ($array as $key => $value) {
-            if ($key !='propeties' || !is_string($key) || !str_starts_with($key, '_')) {
+            if (!is_string($key) || !str_starts_with($key, '_')) {
                 $filteredArray[$key] = is_array($value) ? self::removeUnderscoreKeys($value) : $value;
             }
         }
-        return $filteredArray;
+        return $filteredArray ?? $array;
     }
 
     /**
