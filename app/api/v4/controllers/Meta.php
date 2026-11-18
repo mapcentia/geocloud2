@@ -27,6 +27,7 @@ use OpenApi\Annotations\OpenApi;
 use OpenApi\Attributes as OA;
 use Override;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
+use Phpfastcache\Exceptions\PhpfastcacheLogicException;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Validator\Constraints as Assert;
 use Throwable;
@@ -81,7 +82,7 @@ class Meta extends AbstractApi
 {
     private const array PRIVATE_PROPERTIES = ['character_maximum_length',
         'numeric_precision', 'numeric_scale', 'max_bytes', 'is_unique',
-        'default_value', 'type', 'is_nullable', 'restriction'];
+        'default_value', 'type', 'full_type', 'is_nullable', 'restriction'];
 
     private const array PUBLIC_PROPERTIES = ['alias', 'queryable', 'sort_id', 'properties', 'desc'];
 
@@ -97,6 +98,7 @@ class Meta extends AbstractApi
      * @return Response
      * @throws GC2Exception
      * @throws PhpfastcacheInvalidArgumentException
+     * @throws PhpfastcacheLogicException
      */
     #[OA\Get(path: '/api/v4/meta/{query}', operationId: 'getMetaData', summary: 'Get relation metadata', security: [['bearerAuth' => []]], tags: ['Metadata'])]
     #[OA\Parameter(name: 'query', description: 'Schema-qualified relation name, schema name, or tag (tag:name). Comma-separated values are supported.', in: 'path', required: false, schema: new OA\Schema(type: 'string'))]
