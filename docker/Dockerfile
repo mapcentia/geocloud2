@@ -319,6 +319,7 @@ RUN cat <<EOF > /run-fpm.sh
 rm -f /var/run/php-fpm.sock
 exec /usr/sbin/php-fpm${PHP_VERSION}
 EOF
+
 RUN chmod +x /run-fpm.sh
 
 RUN a2disconf other-vhosts-access-log
