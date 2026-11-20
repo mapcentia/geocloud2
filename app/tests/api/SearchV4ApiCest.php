@@ -182,6 +182,59 @@ class SearchV4ApiCest
         $I->seeResponseCodeIs(HttpCode::OK);
     }
 
+    /**
+     * Per-field mapping (as in v2): a custom analyzer defined in /search/settings and assigned
+     * to one column through the Meta API's `elasticsearch` block is used by the index build.
+     * An edge-ngram analyzer makes the prefix 'Fin' match 'Findme'; the default text analyzer
+     * would not.
+     */
+    public function shouldUsePerFieldAnalyzerFromMeta(ApiTester $I)
+    {
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+
+        $I->sendPUT('/api/v4/search/settings', json_encode(['analysis' => [
+            'analyzer' => [
+                'prefix_index' => ['type' => 'custom', 'tokenizer' => 'standard', 'filter' => ['lowercase', 'prefix_ngram']],
+                'prefix_search' => ['type' => 'custom', 'tokenizer' => 'standard', 'filter' => ['lowercase']],
+            ],
+            'filter' => ['prefix_ngram' => ['type' => 'edge_ngram', 'min_gram' => 1, 'max_gram' => 20]],
+        ]]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+
+        // Control: with the derived mapping alone, the prefix does not match.
+        $I->sendPUT('/api/v4/schemas/' . $this->schemaName . '/tables/poi/search');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->sendPOST('/api/v4/schemas/' . $this->schemaName . '/tables/poi/search',
+            json_encode(['query' => ['match' => ['properties.name' => 'Fin']]]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $data = json_decode($I->grabResponse(), true);
+        $I->assertEquals(0, $data['hits']['total']['value'] ?? -1);
+
+        $rel = $this->schemaName . '.poi';
+        $I->stopFollowingRedirects();
+        $I->sendPATCH('/api/v4/meta', json_encode(['relations' => [$rel => ['elasticsearch' => [
+            'name' => [
+                'column' => 'name', 'id' => 'name', 'elasticsearchtype' => 'text',
+                'analyzer' => 'prefix_index', 'search_analyzer' => 'prefix_search',
+            ],
+        ]]]]));
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $I->startFollowingRedirects();
+
+        $I->sendPUT('/api/v4/schemas/' . $this->schemaName . '/tables/poi/search');
+        $I->seeResponseCodeIs(HttpCode::OK);
+
+        $I->sendPOST('/api/v4/schemas/' . $this->schemaName . '/tables/poi/search',
+            json_encode(['query' => ['match' => ['properties.name' => 'Fin']]]));
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $data = json_decode($I->grabResponse(), true);
+        $I->assertGreaterThanOrEqual(1, $data['hits']['total']['value'] ?? 0);
+
+        $I->sendDELETE('/api/v4/schemas/' . $this->schemaName . '/tables/poi/search');
+        $I->seeResponseCodeIs(HttpCode::OK);
+    }
+
     public function shouldForbidSubUserBuild(ApiTester $I)
     {
         // Uses the 'public' schema (not $this->schemaName): a sub user is rejected before
@@ -193,5 +246,81 @@ class SearchV4ApiCest
         $I->sendPUT('/api/v4/schemas/public/tables/search_v4_sub_test/search');
         $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
         $I->seeResponseContainsJson(['errorCode' => 'NOT_OWNER']);
+    }
+
+    /**
+     * Sub-user search: needs a read privilege, and a matching geofence deny/limit rule refuses it
+     * (the index holds every row and cannot apply the rule's filter), like snapshots. An `allow`
+     * rule does not. No index is built for the table, so a request that passes authorization
+     * answers 404 INDEX_NOT_FOUND.
+     */
+    public function shouldAuthorizeSubUserSearch(ApiTester $I)
+    {
+        $url = '/api/v4/schemas/public/tables/search_v4_sub_test/search';
+        $asOwner = function () use ($I) {
+            $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
+            $I->haveHttpHeader('Content-Type', 'application/json');
+        };
+        $asSub = function () use ($I) {
+            $I->haveHttpHeader('Authorization', 'Bearer ' . $this->subUserToken);
+            $I->haveHttpHeader('Content-Type', 'application/json');
+        };
+
+        $asSub();
+        $I->sendGET($url . '?q=*');
+        $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+        $I->seeResponseContainsJson(['errorCode' => 'INSUFFICIENT_PRIVILEGES']);
+
+        $asOwner();
+        $I->sendPATCH('/api/v4/schemas/public/tables/search_v4_sub_test/privileges', json_encode(['subuser' => $this->subUserId, 'privilege' => 'read']));
+        $I->seeResponseCodeIsSuccessful();
+
+        $asSub();
+        $I->sendGET($url . '?q=*');
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        $I->seeResponseContainsJson(['errorCode' => 'INDEX_NOT_FOUND']);
+
+        foreach (['limit' => ['filter' => "name = 'x'"], 'deny' => []] as $access => $extra) {
+            $asOwner();
+            $I->sendPOST('/api/v4/rules', json_encode(array_merge([
+                'username' => $this->subUserId, 'service' => 'sql', 'request' => 'select', 'access' => $access,
+                'schema' => 'public', 'table' => 'search_v4_sub_test',
+            ], $extra)));
+            $I->seeResponseCodeIs(HttpCode::CREATED);
+            $ruleId = basename($I->grabHttpHeader('Location'));
+
+            $asSub();
+            $I->sendGET($url . '?q=*');
+            $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+            $I->seeResponseContainsJson(['errorCode' => 'GEOFENCE_RULES_APPLY']);
+            $I->sendPOST($url, json_encode(['query' => ['match_all' => new stdClass()]]));
+            $I->seeResponseCodeIs(HttpCode::FORBIDDEN);
+            $I->seeResponseContainsJson(['errorCode' => 'GEOFENCE_RULES_APPLY']);
+
+            // The owner is never geofenced.
+            $asOwner();
+            $I->sendGET($url . '?q=*');
+            $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+
+            $I->sendDELETE('/api/v4/rules/' . $ruleId);
+            $I->seeResponseCodeIsSuccessful();
+        }
+
+        $asOwner();
+        $I->sendPOST('/api/v4/rules', json_encode([
+            'username' => $this->subUserId, 'service' => 'sql', 'request' => 'select', 'access' => 'allow',
+            'schema' => 'public', 'table' => 'search_v4_sub_test',
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $ruleId = basename($I->grabHttpHeader('Location'));
+
+        $asSub();
+        $I->sendGET($url . '?q=*');
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        $I->seeResponseContainsJson(['errorCode' => 'INDEX_NOT_FOUND']);
+
+        $asOwner();
+        $I->sendDELETE('/api/v4/rules/' . $ruleId);
+        $I->seeResponseCodeIsSuccessful();
     }
 }

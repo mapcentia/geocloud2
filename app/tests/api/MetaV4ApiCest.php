@@ -95,4 +95,28 @@ class MetaV4ApiCest
             'gid' => ['elasticsearchtype' => 'integer'],
         ]]]]);
     }
+
+    /**
+     * PATCH elasticsearch: {} clears the per-column mapping; a JSON list is still rejected.
+     */
+    public function shouldClearElasticsearchMappingWithEmptyObject(ApiTester $I)
+    {
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->token);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $rel = $this->schemaName . '.poi';
+
+        $I->stopFollowingRedirects();
+        $I->sendPATCH('/api/v4/meta', json_encode(['relations' => [$rel => ['elasticsearch' => ['x']]]]));
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+
+        $I->sendPATCH('/api/v4/meta', '{"relations": {"' . $rel . '": {"elasticsearch": {}}}}');
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $I->startFollowingRedirects();
+
+        $I->sendGET('/api/v4/meta/' . $rel);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $data = json_decode($I->grabResponse(), true);
+        $I->assertArrayHasKey($rel, $data['relations']);
+        $I->assertArrayNotHasKey('elasticsearch', $data['relations'][$rel]);
+    }
 }
