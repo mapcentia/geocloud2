@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.11.8] - 2026-20-11
+### Changed
+- `redirectUriHosts` is now check when signing with username/email. No need to register `redirect_uri` on the client.
+
 ## [2026.11.7] - 2026-18-11
 ### Changed
 - `_full_type` property on meta-fields is added.
