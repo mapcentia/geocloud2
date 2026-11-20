@@ -14,6 +14,7 @@ use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
 use app\conf\App;
 use app\inc\Connection;
+use app\inc\RedirectUri;
 use app\inc\Route2;
 use app\inc\Session;
 use app\models\Client;
@@ -61,7 +62,7 @@ class Auth extends AbstractApi
             }
 
             $uris = $clientData[0]['redirect_uri'];
-            if (!empty($_GET['redirect_uri']) && !in_array($_GET['redirect_uri'], $uris, true)) {
+            if (!empty($_GET['redirect_uri']) && !RedirectUri::check($_GET['redirect_uri'],  $_SESSION['parentdb'] ?? null, $_GET['client_id'] ?? null)) {
                 $error = "invalid_client";
                 $errorDesc = "Client with identifier '{$_GET['client_id']}' is not registered with redirect uri: {$_GET['redirect_uri']} ";
                 return $this->error($error, $errorDesc);
@@ -82,7 +83,7 @@ class Auth extends AbstractApi
             $code = $_GET['response_type'] == 'code';
             $codeChallenge = $_GET['code_challenge'] ?? null;
             $codeChallengeMethod = $_GET['code_challenge_method'] ?? null;
-            $data = (new SessionModel())->createOAuthResponse($_SESSION['parentdb'], $_SESSION['screen_name'], !$_SESSION['subuser'], $code, $_SESSION['usergroup'], $codeChallenge, $codeChallengeMethod, $_SESSION['properties'], $_SESSION['email']);
+            $data = new SessionModel()->createOAuthResponse($_SESSION['parentdb'], $_SESSION['screen_name'], !$_SESSION['subuser'], $code, $_SESSION['usergroup'], $codeChallenge, $codeChallengeMethod, $_SESSION['properties'], $_SESSION['email']);
             $params = [];
             if ($code) {
                 $params['code'] = $data['code'];
