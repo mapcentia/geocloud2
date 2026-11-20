@@ -701,7 +701,7 @@ class Model
                         }
                     }
                 } elseif ($restriction && isset($restrictions[$row["column_name"]]) && $restrictions[$row["column_name"]] == "*" && $getEnums) {
-                    $t = new Table($table);
+                    $t = new Table(table: $table, connection: $this->connection);
                     foreach ($t->getGroupByAsArray($column)["data"] as $value) {
                         $foreignValues[] = ["value" => $value, "alias" => (string)$value];
                     }
