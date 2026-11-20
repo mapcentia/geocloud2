@@ -65,7 +65,8 @@ WARNING: No locale has been set for the GC2
 ****************************************************"
     fi
 
-    # Create template database and run latest migrations
+    # Create the template database. GC2 migrations are not run here; the GC2
+    # application applies them (app/migration/run.php).
     echo "Creating GC2 template database and user $GC2_USER"
     psql postgres -U postgres -c "CREATE USER $GC2_USER WITH SUPERUSER CREATEROLE CREATEDB PASSWORD '$GC2_PASSWORD'" &&
       createdb template_geocloud -T template0 --encoding UTF-8 --locale $locale &&
@@ -108,16 +109,6 @@ WARNING: No locale has been set for the GC2
                 extra character varying(255)
             );" &&
 
-      # Pull from GitHub and run database migration
-      # The migration connects to this container's own database, so default the
-      # POSTGRES_* variables GC2 reads to the local cluster and the GC2 user.
-      cd /var/www/geocloud2 && git config pull.rebase false && git pull &&
-      POSTGRES_HOST=${POSTGRES_HOST:-127.0.0.1} \
-      POSTGRES_PORT=${POSTGRES_PORT:-5432} \
-      POSTGRES_USER=${POSTGRES_USER:-$GC2_USER} \
-      POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-$GC2_PASSWORD} \
-      POSTGRES_DB=${POSTGRES_DB:-postgres} \
-      php /var/www/geocloud2/app/migration/run.php &&
       pg_ctlcluster "$POSTGRES_VERSION" main stop ||
       {
         # Stop the init server, or supervisord's postgres fails on postmaster.pid

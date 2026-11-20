@@ -136,7 +136,6 @@ services:
       context: ./postgis
       dockerfile: Dockerfile
       args:
-        - PHP_VERSION=8.4
         - POSTGRES_VERSION=17
         - POSTGIS_VERSION=3
         - DEBIAN_CODENAME=trixie

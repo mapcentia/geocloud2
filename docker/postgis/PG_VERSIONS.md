@@ -29,7 +29,7 @@ De andre kombinationer er udledt af pakkerne.
 | PG 13–17 | 3.5.2 | 3.6.4 | 3.6.4 |
 | PG 18 | ✗ | 3.6.4 | 3.6.4 |
 | pgRouting | 3.5–3.8 | 3.5–4.0.1 | 3.6.3–4.0.1 |
-| PHP 8.4, MS ODBC 17/18 | ✓ | ✓ | ✓ |
+| MS ODBC 17/18 | ✓ | ✓ | ✓ |
 | Debian-support | Udløbet (archive.debian.org) | Aktiv | Aktiv |
 
 ogr_fdw 1.1.9 findes til alle kombinationerne.
