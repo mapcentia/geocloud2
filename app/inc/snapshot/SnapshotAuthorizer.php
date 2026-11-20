@@ -27,6 +27,9 @@ use app\models\Rule;
  * cannot carry a row filter, so serving it would hand that user the rows
  * their SQL/OWS access is filtered away from. A matching `allow` rule changes
  * nothing about what the user may read and is not a reason to refuse.
+ *
+ * The same holds for any whole-relation read that cannot apply a row filter,
+ * e.g. the v4 Search API's OpenSearch index, which uses this class as well.
  */
 final class SnapshotAuthorizer
 {
@@ -39,9 +42,10 @@ final class SnapshotAuthorizer
 
     /**
      * @param array<string,mixed> $jwtData the "data" part of the JWT (uid, superUser, userGroup)
+     * @param string $subject what is being read, for the error messages ("snapshots", "the search index")
      * @throws GC2Exception 403 INSUFFICIENT_PRIVILEGES or 403 GEOFENCE_RULES_APPLY
      */
-    public function assertCanRead(array $jwtData, string $schema, string $relation): void
+    public function assertCanRead(array $jwtData, string $schema, string $relation, string $subject = 'snapshots'): void
     {
         if (!empty($jwtData['superUser'])) {
             return;
@@ -56,10 +60,10 @@ final class SnapshotAuthorizer
         $privileges = is_string($raw) ? (json_decode($raw, true) ?: []) : (is_array($raw) ? $raw : []);
         $privilege = $privileges === [] ? 'none' : $this->authorization->extractHighestPrivilege($privileges, $uid, $groups);
         if (!in_array($privilege, ['read', 'write', 'all'], true)) {
-            throw new GC2Exception("Insufficient privileges to read snapshots of $schema.$relation", 403, null, "INSUFFICIENT_PRIVILEGES");
+            throw new GC2Exception("Insufficient privileges to read $subject of $schema.$relation", 403, null, "INSUFFICIENT_PRIVILEGES");
         }
         if ($this->isGeofenced($uid, $groups, $schema, $relation)) {
-            throw new GC2Exception("Geofence rules apply to $schema.$relation; snapshots are not available to this user", 403, null, "GEOFENCE_RULES_APPLY");
+            throw new GC2Exception("Geofence rules apply to $schema.$relation; $subject not available to this user", 403, null, "GEOFENCE_RULES_APPLY");
         }
     }
 

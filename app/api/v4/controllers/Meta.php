@@ -30,6 +30,7 @@ use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Phpfastcache\Exceptions\PhpfastcacheLogicException;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 use Throwable;
 
 
@@ -68,7 +69,25 @@ use Throwable;
                             type: 'object'
                         )
                     ),
-                    new OA\Property(property: 'elasticsearch', description: 'Per-column Elasticsearch/OpenSearch mapping config (elasticsearchtype/analyzer/search_analyzer per column). Consumed when the Search API (re)builds the index.', type: 'object'),
+                    new OA\Property(
+                        property: 'elasticsearch',
+                        description: 'Per-column OpenSearch mapping overrides, keyed by column name. Consumed when the Search API (PUT /api/v4/schemas/{schema}/tables/{table}/search) (re)builds the index: each column gets the mapping derived from its PostgreSQL type, and the members given here override or extend it. Columns not listed keep the derived mapping. Any other OpenSearch field-mapping parameter (normalizer, doc_values, copy_to, ...) is passed through as well. Analyzers must exist in the database analysis settings (PUT /api/v4/search/settings). A PATCH replaces the whole block for the relation; an empty object {} clears it.',
+                        type: 'object',
+                        additionalProperties: new OA\AdditionalProperties(
+                            properties: [
+                                new OA\Property(property: 'elasticsearchtype', description: 'OpenSearch field type. Defaults to the type derived from the column.', type: 'string', example: 'text'),
+                                new OA\Property(property: 'analyzer', description: 'Index-time (and default search-time) analyzer.', type: 'string', example: 'auto_complete_analyzer'),
+                                new OA\Property(property: 'search_analyzer', description: 'Search-time analyzer.', type: 'string', example: 'auto_complete_search_analyzer'),
+                                new OA\Property(property: 'index', description: 'Whether the field is indexed (searchable).', type: 'boolean', example: true),
+                                new OA\Property(property: 'format', description: 'Date format (date fields).', type: 'string', example: 'yyyy-MM-dd'),
+                                new OA\Property(property: 'null_value', description: 'Value indexed in place of null.'),
+                                new OA\Property(property: 'fielddata', description: 'Enable fielddata on a text field (sorting/aggregation).', type: 'boolean'),
+                                new OA\Property(property: 'fields', description: "Multi-fields. Text fields get {\"keyword\": {\"type\": \"keyword\", \"ignore_above\": 256}} unless this is set.", type: 'object'),
+                            ],
+                            type: 'object'
+                        ),
+                        example: ['name' => ['elasticsearchtype' => 'text', 'analyzer' => 'auto_complete_analyzer', 'search_analyzer' => 'auto_complete_search_analyzer']]
+                    ),
                 ],
                 type: 'object'
             ))
@@ -242,6 +261,10 @@ class Meta extends AbstractApi
                 $out[$rowKey] = $row[$inputKey];
             }
         }
+        // An empty elasticsearch object clears the per-column overrides (stored as NULL, not "[]").
+        if (array_key_exists('elasticsearch', $out) && $out['elasticsearch'] === []) {
+            $out['elasticsearch'] = null;
+        }
 
         return $out;
     }
@@ -292,7 +315,15 @@ class Meta extends AbstractApi
                                 'sort_id' => new Assert\Optional(new Assert\Type('integer')),
                                 'tags' => new Assert\Optional(new Assert\Type('list', 'This value should be of type list.')),
                                 'properties' => new Assert\Optional(new Assert\Type('associative_array', 'This value should be of type object.')),
-                                'elasticsearch' => new Assert\Optional(new Assert\Type('associative_array', 'This value should be of type object.')),
+                                // An object keyed by column. {} (decoded to []) is allowed and clears the block.
+                                'elasticsearch' => new Assert\Optional([
+                                    new Assert\Type('array', 'This value should be of type object.'),
+                                    new Assert\Callback(static function (mixed $value, ExecutionContextInterface $context): void {
+                                        if (is_array($value) && $value !== [] && array_is_list($value)) {
+                                            $context->buildViolation('This value should be of type object.')->addViolation();
+                                        }
+                                    }),
+                                ]),
                                 'fields' => new Assert\Optional([
                                     new Assert\Type('array'),
                                     new Assert\All([

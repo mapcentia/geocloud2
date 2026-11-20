@@ -17,6 +17,7 @@ use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
 use app\inc\Route2;
+use app\inc\snapshot\SnapshotAuthorizer;
 use app\opensearch\Client;
 use app\opensearch\OpenSearchException;
 use OpenApi\Attributes as OA;
@@ -28,6 +29,9 @@ use OpenApi\Attributes as OA;
  * PUT (re)builds the index from the relation and DELETE drops it (database owner only).
  * Documents are indexed GeoJSON-like, so attribute fields are addressed as `properties.<column>`;
  * text columns also get a `properties.<column>.keyword` multi-field.
+ * The mapping is derived from the column types; per-column overrides (type, analyzer,
+ * search_analyzer, fields, ...) are set in the relation's `elasticsearch` metadata via
+ * PATCH /api/v4/meta, and custom analyzers are defined in PUT /api/v4/search/settings.
  */
 #[OA\Schema(
     schema: "SearchQuery",
@@ -143,7 +147,7 @@ class Search extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/search', operationId: 'search', description: "Search the relation's OpenSearch index. The query string is passed to OpenSearch _search (URI search) unaltered, so any _search URI parameter works; the common ones are listed. A JSON body, if sent, takes precedence over the query string. Sub users need read access to the relation.", tags: ['Search'])]
+    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/search', operationId: 'search', description: "Search the relation's OpenSearch index. The query string is passed to OpenSearch _search (URI search) unaltered, so any _search URI parameter works; the common ones are listed. A JSON body, if sent, takes precedence over the query string. Sub users need a read privilege on the relation and are refused if a geofence deny or limit rule matches them, since the index cannot apply row filters.", tags: ['Search'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table or view name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\Parameter(name: 'q', description: "Lucene query string. Attribute fields are addressed as 'properties.<column>'.", in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'properties.name:Findme')]
@@ -155,10 +159,11 @@ class Search extends AbstractApi
     #[OA\Parameter(name: 'df', description: "Default field for 'q' when no field prefix is given.", in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'properties.name')]
     #[OA\Response(response: 200, description: 'OpenSearch response', content: new OA\JsonContent(ref: "#/components/schemas/SearchResult"))]
     #[OA\Response(response: 400, description: 'Invalid query (SEARCH_ERROR)')]
-    #[OA\Response(response: 403, description: 'No read access to the relation')]
+    #[OA\Response(response: 403, description: 'No read privilege on the relation (INSUFFICIENT_PRIVILEGES), or a geofence deny/limit rule matches the caller (GEOFENCE_RULES_APPLY)')]
     #[OA\Response(response: 404, description: 'Relation not found, or no search index has been built for it (INDEX_NOT_FOUND)')]
     public function get_index(): Response
     {
+        $this->assertCanSearch();
         $query = Input::getBody() ?: (Input::getQueryString() ?: '');
         return $this->runSearch($query, (bool)Input::getBody());
     }
@@ -166,18 +171,32 @@ class Search extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/search', operationId: 'searchPost', description: "Search the relation's OpenSearch index with a query DSL body. The body is passed to OpenSearch _search unaltered. Sub users need read access to the relation.", tags: ['Search'])]
+    #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/search', operationId: 'searchPost', description: "Search the relation's OpenSearch index with a query DSL body. The body is passed to OpenSearch _search unaltered. Sub users need a read privilege on the relation and are refused if a geofence deny or limit rule matches them, since the index cannot apply row filters.", tags: ['Search'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table or view name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\RequestBody(description: 'OpenSearch query DSL.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/SearchQuery"))]
     #[AcceptableContentTypes(['application/json'])]
     #[OA\Response(response: 200, description: 'OpenSearch response', content: new OA\JsonContent(ref: "#/components/schemas/SearchResult"))]
     #[OA\Response(response: 400, description: 'Invalid query (SEARCH_ERROR)')]
-    #[OA\Response(response: 403, description: 'No read access to the relation')]
+    #[OA\Response(response: 403, description: 'No read privilege on the relation (INSUFFICIENT_PRIVILEGES), or a geofence deny/limit rule matches the caller (GEOFENCE_RULES_APPLY)')]
     #[OA\Response(response: 404, description: 'Relation not found, or no search index has been built for it (INDEX_NOT_FOUND)')]
     public function post_index(): Response
     {
+        $this->assertCanSearch();
         return $this->runSearch((string)Input::getBody(), true);
+    }
+
+    /**
+     * Sub users need a read privilege on the relation, and are refused when a
+     * geofence deny/limit rule matches them: the index holds every row and
+     * OpenSearch cannot apply the rule's row filter (same policy as snapshots).
+     *
+     * @throws GC2Exception 403 INSUFFICIENT_PRIVILEGES or 403 GEOFENCE_RULES_APPLY
+     */
+    private function assertCanSearch(): void
+    {
+        new SnapshotAuthorizer($this->connection)
+            ->assertCanRead($this->route->jwt['data'], $this->schemaName, $this->tableName, 'the search index');
     }
 
     /**
@@ -200,7 +219,7 @@ class Search extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Put(path: '/api/v4/schemas/{schema}/tables/{table}/search', operationId: 'buildSearchIndex', description: "(Re)build the OpenSearch index from the table/view: drops any existing index, creates it with the database's analysis settings (see /api/v4/search/settings) and a mapping derived from the columns, bulk indexes all rows and refreshes the index so it is searchable immediately. The relation must have a primary key. No request body. Database owner only.", tags: ['Search'])]
+    #[OA\Put(path: '/api/v4/schemas/{schema}/tables/{table}/search', operationId: 'buildSearchIndex', description: "(Re)build the OpenSearch index from the table/view: drops any existing index, creates it with the database's analysis settings (see /api/v4/search/settings) and a mapping derived from the columns, with per-column overrides (type, analyzer, search_analyzer, ...) taken from the relation's 'elasticsearch' metadata (PATCH /api/v4/meta), bulk indexes all rows and refreshes the index so it is searchable immediately. The relation must have a primary key. No request body. Database owner only.", tags: ['Search'])]
     #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
     #[OA\Parameter(name: 'table', description: 'Table or view name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
     #[OA\Response(response: 200, description: 'Index built', content: new OA\JsonContent(ref: "#/components/schemas/SearchIndexBuildResult"))]
