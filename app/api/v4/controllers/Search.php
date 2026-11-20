@@ -21,6 +21,78 @@ use app\opensearch\Client;
 use app\opensearch\OpenSearchException;
 use OpenApi\Attributes as OA;
 
+/**
+ * v4 Search API: full-text search on a table/view through its OpenSearch index.
+ *
+ * GET/POST search the index (sub users allowed, subject to the schema/relation read check),
+ * PUT (re)builds the index from the relation and DELETE drops it (database owner only).
+ * Documents are indexed GeoJSON-like, so attribute fields are addressed as `properties.<column>`;
+ * text columns also get a `properties.<column>.keyword` multi-field.
+ */
+#[OA\Schema(
+    schema: "SearchQuery",
+    description: "An OpenSearch query DSL body. Passed to OpenSearch _search unaltered, so any _search body is accepted; the common members are listed here.",
+    properties: [
+        new OA\Property(property: "query", title: "Query", description: "OpenSearch query DSL. Attribute fields are addressed as 'properties.<column>'.", type: "object", example: ["match" => ["properties.name" => "Findme"]]),
+        new OA\Property(property: "size", title: "Size", description: "Max number of hits to return.", type: "integer", default: 10, example: 20),
+        new OA\Property(property: "from", title: "From", description: "Offset of the first hit (paging).", type: "integer", default: 0, example: 0),
+        new OA\Property(property: "sort", title: "Sort", description: "Sort clauses.", type: "array", items: new OA\Items(), example: [["properties.name.keyword" => "asc"]]),
+        new OA\Property(property: "_source", title: "Source filter", description: "Restrict the returned _source fields, or false to omit _source.", oneOf: [new OA\Schema(type: "boolean"), new OA\Schema(type: "array", items: new OA\Items(type: "string"))], example: ["properties.name"]),
+        new OA\Property(property: "aggs", title: "Aggregations", description: "OpenSearch aggregations.", type: "object"),
+        new OA\Property(property: "highlight", title: "Highlight", description: "OpenSearch highlighting.", type: "object"),
+    ],
+    type: "object",
+    additionalProperties: true
+)]
+#[OA\Schema(
+    schema: "SearchResult",
+    description: "The OpenSearch _search response, returned unaltered.",
+    properties: [
+        new OA\Property(property: "took", title: "Took", description: "Search time in milliseconds.", type: "integer", example: 3),
+        new OA\Property(property: "timed_out", title: "Timed out", type: "boolean", example: false),
+        new OA\Property(property: "_shards", title: "Shards", type: "object"),
+        new OA\Property(
+            property: "hits",
+            title: "Hits",
+            properties: [
+                new OA\Property(property: "total", type: "object", properties: [
+                    new OA\Property(property: "value", type: "integer", example: 1),
+                    new OA\Property(property: "relation", type: "string", example: "eq"),
+                ]),
+                new OA\Property(property: "max_score", type: ["number", "null"], example: 0.2876821),
+                new OA\Property(property: "hits", description: "The matching documents. _source holds the GeoJSON-like document with 'properties' and 'geometry'.", type: "array", items: new OA\Items(properties: [
+                    new OA\Property(property: "_index", type: "string", example: "mydb_my_schema_my_table"),
+                    new OA\Property(property: "_id", type: "string", example: "1"),
+                    new OA\Property(property: "_score", type: ["number", "null"], example: 0.2876821),
+                    new OA\Property(property: "_source", type: "object"),
+                ], type: "object")),
+            ],
+            type: "object"
+        ),
+        new OA\Property(property: "aggregations", title: "Aggregations", description: "Present when the query has aggs.", type: "object"),
+    ],
+    type: "object"
+)]
+#[OA\Schema(
+    schema: "SearchIndexBuildResult",
+    description: "Result of (re)building a search index.",
+    properties: [
+        new OA\Property(property: "index", title: "Index", description: "OpenSearch index name: <database>_<schema>_<table>.", type: "string", example: "mydb_my_schema_my_table"),
+        new OA\Property(property: "message", title: "Message", description: "Indexing summary.", type: ["string", "null"], example: "Indexed 42 documents"),
+        new OA\Property(property: "errors", title: "Errors", description: "True if OpenSearch reported errors for some documents.", type: "boolean", example: false),
+        new OA\Property(property: "errors_in", title: "Errors in", description: "Per-document bulk indexing errors.", type: "array", items: new OA\Items(type: "object")),
+    ],
+    type: "object"
+)]
+#[OA\Schema(
+    schema: "SearchIndexDropResult",
+    description: "Result of dropping a search index.",
+    properties: [
+        new OA\Property(property: "index", title: "Index", description: "OpenSearch index name.", type: "string", example: "mydb_my_schema_my_table"),
+        new OA\Property(property: "dropped", title: "Dropped", type: "boolean", example: true),
+    ],
+    type: "object"
+)]
 #[AcceptableMethods(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'])]
 #[Controller(route: 'api/v4/schemas/{schema}/tables/{table}/search', scope: Scope::SUB_USER_ALLOWED)]
 class Search extends AbstractApi
@@ -71,8 +143,20 @@ class Search extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/search', operationId: 'search', description: "Search the table's OpenSearch index. Query string or body is passed to OpenSearch _search unaltered.", tags: ['Search'])]
-    #[OA\Response(response: 200, description: 'OpenSearch response')]
+    #[OA\Get(path: '/api/v4/schemas/{schema}/tables/{table}/search', operationId: 'search', description: "Search the relation's OpenSearch index. The query string is passed to OpenSearch _search (URI search) unaltered, so any _search URI parameter works; the common ones are listed. A JSON body, if sent, takes precedence over the query string. Sub users need read access to the relation.", tags: ['Search'])]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table or view name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
+    #[OA\Parameter(name: 'q', description: "Lucene query string. Attribute fields are addressed as 'properties.<column>'.", in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'properties.name:Findme')]
+    #[OA\Parameter(name: 'size', description: 'Max number of hits to return.', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 10), example: 20)]
+    #[OA\Parameter(name: 'from', description: 'Offset of the first hit (paging).', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 0), example: 0)]
+    #[OA\Parameter(name: 'sort', description: "Comma-separated '<field>:<asc|desc>' pairs.", in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'properties.name.keyword:asc')]
+    #[OA\Parameter(name: '_source', description: 'Comma-separated list of _source fields to return, or false to omit _source.', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'properties.name')]
+    #[OA\Parameter(name: 'default_operator', description: "Default operator for 'q'.", in: 'query', required: false, schema: new OA\Schema(type: 'string', default: 'OR', enum: ['AND', 'OR']), example: 'AND')]
+    #[OA\Parameter(name: 'df', description: "Default field for 'q' when no field prefix is given.", in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'properties.name')]
+    #[OA\Response(response: 200, description: 'OpenSearch response', content: new OA\JsonContent(ref: "#/components/schemas/SearchResult"))]
+    #[OA\Response(response: 400, description: 'Invalid query (SEARCH_ERROR)')]
+    #[OA\Response(response: 403, description: 'No read access to the relation')]
+    #[OA\Response(response: 404, description: 'Relation not found, or no search index has been built for it (INDEX_NOT_FOUND)')]
     public function get_index(): Response
     {
         $query = Input::getBody() ?: (Input::getQueryString() ?: '');
@@ -82,9 +166,15 @@ class Search extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/search', operationId: 'searchPost', description: "Search with an OpenSearch query DSL body.", tags: ['Search'])]
+    #[OA\Post(path: '/api/v4/schemas/{schema}/tables/{table}/search', operationId: 'searchPost', description: "Search the relation's OpenSearch index with a query DSL body. The body is passed to OpenSearch _search unaltered. Sub users need read access to the relation.", tags: ['Search'])]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table or view name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
+    #[OA\RequestBody(description: 'OpenSearch query DSL.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/SearchQuery"))]
     #[AcceptableContentTypes(['application/json'])]
-    #[OA\Response(response: 200, description: 'OpenSearch response')]
+    #[OA\Response(response: 200, description: 'OpenSearch response', content: new OA\JsonContent(ref: "#/components/schemas/SearchResult"))]
+    #[OA\Response(response: 400, description: 'Invalid query (SEARCH_ERROR)')]
+    #[OA\Response(response: 403, description: 'No read access to the relation')]
+    #[OA\Response(response: 404, description: 'Relation not found, or no search index has been built for it (INDEX_NOT_FOUND)')]
     public function post_index(): Response
     {
         return $this->runSearch((string)Input::getBody(), true);
@@ -110,8 +200,13 @@ class Search extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Put(path: '/api/v4/schemas/{schema}/tables/{table}/search', operationId: 'buildSearchIndex', description: "(Re)build the OpenSearch index from the table/view. Owner/superuser only.", tags: ['Search'])]
-    #[OA\Response(response: 200, description: 'Index built')]
+    #[OA\Put(path: '/api/v4/schemas/{schema}/tables/{table}/search', operationId: 'buildSearchIndex', description: "(Re)build the OpenSearch index from the table/view: drops any existing index, creates it with the database's analysis settings (see /api/v4/search/settings) and a mapping derived from the columns, bulk indexes all rows and refreshes the index so it is searchable immediately. The relation must have a primary key. No request body. Database owner only.", tags: ['Search'])]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table or view name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
+    #[OA\Response(response: 200, description: 'Index built', content: new OA\JsonContent(ref: "#/components/schemas/SearchIndexBuildResult"))]
+    #[OA\Response(response: 400, description: 'The relation has no primary key, or OpenSearch rejected the index (INDEX_BUILD_ERROR)')]
+    #[OA\Response(response: 403, description: 'Caller is not the database owner (NOT_OWNER)')]
+    #[OA\Response(response: 404, description: 'Relation not found')]
     public function put_index(): Response
     {
         $this->assertOwner();
@@ -168,8 +263,12 @@ class Search extends AbstractApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/search', operationId: 'dropSearchIndex', description: "Drop the OpenSearch index. Owner/superuser only.", tags: ['Search'])]
-    #[OA\Response(response: 200, description: 'Index dropped')]
+    #[OA\Delete(path: '/api/v4/schemas/{schema}/tables/{table}/search', operationId: 'dropSearchIndex', description: "Drop the relation's OpenSearch index. The table itself is not touched. Database owner only.", tags: ['Search'])]
+    #[OA\Parameter(name: 'schema', description: 'Schema name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema')]
+    #[OA\Parameter(name: 'table', description: 'Table or view name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_table')]
+    #[OA\Response(response: 200, description: 'Index dropped', content: new OA\JsonContent(ref: "#/components/schemas/SearchIndexDropResult"))]
+    #[OA\Response(response: 403, description: 'Caller is not the database owner (NOT_OWNER)')]
+    #[OA\Response(response: 404, description: 'Relation or index not found (INDEX_DROP_ERROR)')]
     public function delete_index(): Response
     {
         $this->assertOwner();
