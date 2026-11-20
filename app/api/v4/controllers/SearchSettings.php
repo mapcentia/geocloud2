@@ -34,6 +34,24 @@ use OpenApi\Attributes as OA;
  *
  * @package app\api\v4
  */
+#[OA\Schema(
+    schema: "SearchSettings",
+    description: "Per-database OpenSearch analysis settings, used as settings.analysis when a search index is built.",
+    required: ["analysis"],
+    properties: [
+        new OA\Property(
+            property: "analysis",
+            title: "Analysis",
+            description: "An OpenSearch index settings.analysis block (analyzer, tokenizer, filter, char_filter, normalizer). Replaces the default block wholesale.",
+            type: "object",
+            example: [
+                "analyzer" => ["my_analyzer" => ["type" => "custom", "tokenizer" => "standard", "filter" => ["lowercase", "my_syn"]]],
+                "filter" => ["my_syn" => ["type" => "synonym", "synonyms" => ["vej, road"]]],
+            ]
+        ),
+    ],
+    type: "object"
+)]
 #[AcceptableMethods(['GET', 'PUT', 'HEAD', 'OPTIONS'])]
 #[Controller(route: 'api/v4/search/settings', scope: Scope::SUB_USER_ALLOWED)]
 class SearchSettings extends AbstractApi
@@ -59,7 +77,8 @@ class SearchSettings extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Get(path: '/api/v4/search/settings', operationId: 'getSearchSettings', description: "Get the per-database OpenSearch analysis block (the default when none is set).", tags: ['Search'])]
-    #[OA\Response(response: 200, description: 'The analysis block')]
+    #[OA\Response(response: 200, description: 'The analysis block', content: new OA\JsonContent(ref: "#/components/schemas/SearchSettings"))]
+    #[OA\Response(response: 403, description: 'Caller is not the database owner (NOT_OWNER)')]
     public function get_index(): Response
     {
         $this->assertOwner();
@@ -71,8 +90,11 @@ class SearchSettings extends AbstractApi
      * @throws GC2Exception
      */
     #[OA\Put(path: '/api/v4/search/settings', operationId: 'putSearchSettings', description: "Set the per-database OpenSearch analysis block. Applies to indexes built after this call.", tags: ['Search'])]
+    #[OA\RequestBody(description: 'The analysis block to store.', required: true, content: new OA\JsonContent(ref: "#/components/schemas/SearchSettings"))]
     #[AcceptableContentTypes(['application/json'])]
-    #[OA\Response(response: 200, description: 'Saved')]
+    #[OA\Response(response: 200, description: 'Saved. Echoes the stored analysis block.', content: new OA\JsonContent(ref: "#/components/schemas/SearchSettings"))]
+    #[OA\Response(response: 400, description: "Body is not an object with an 'analysis' object (INVALID_DATA)")]
+    #[OA\Response(response: 403, description: 'Caller is not the database owner (NOT_OWNER)')]
     public function put_index(): Response
     {
         $this->assertOwner();
