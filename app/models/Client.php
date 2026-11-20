@@ -39,7 +39,7 @@ class Client extends Model
         $this->execute($res, $params);
         $data = $this->fetchAll($res, 'assoc');
         $data = array_map(function ($datum) {
-            $datum['redirect_uri'] = json_decode($datum['redirect_uri']);
+            $datum['redirect_uri'] = !empty($datum['redirect_uri']) ? json_decode($datum['redirect_uri']) : null;
             return $datum;
         }, $data);
         if (sizeof($data) == 0) {
