@@ -45,7 +45,7 @@ class Signin extends AbstractApi
     public function post_index(): Response
     {
         $userObj = new User();
-        if ($_POST['database'] && $_POST['user'] && $_POST['password'] && !$_POST['tf_code']) {
+        if ($_POST['database'] && $_POST['user'] && $_POST['password'] && empty($_POST['tf_code'])) {
             try {
                 $res = $userObj->getDatabasesForUser($_POST['user']);
                 // Check if user/password is correct
