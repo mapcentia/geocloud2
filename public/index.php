@@ -608,7 +608,8 @@ $handler = static function () use ($routes) {
     } catch (PDOException $exception) {
         $response["success"] = false;
         $response["message"] = $exception->getMessage();
-        $response["code"] = $exception->getCode();
+        $response["code"] = 400; // We assume it's a bad request
+        $response["sel_code"] = $exception->getCode();
         if (getenv('MODE_ENV') == 'dev') {
             $response["file"] = $exception->getFile();
             $response["line"] = $exception->getLine();
