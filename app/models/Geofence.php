@@ -1,7 +1,7 @@
 <?php
 /**
  * @author     Martin Høgh <mh@mapcentia.com>
- * @copyright  2013-2024 MapCentia ApS
+ * @copyright  2013-2026 MapCentia ApS
  * @license    http://www.gnu.org/licenses/#AGPL  GNU AFFERO GENERAL PUBLIC LICENSE 3
  *
  */
@@ -18,6 +18,7 @@ use Exception;
 use sad_spirit\pg_builder\Statement;
 use sad_spirit\pg_builder\StatementFactory;
 use sad_spirit\pg_wrapper\converters\DefaultTypeConverterFactory;
+use Throwable;
 
 
 /**
@@ -30,10 +31,6 @@ class Geofence extends Model
     public const string DENY_ACCESS = "deny";
     public const string LIMIT_ACCESS = "limit";
 
-    /**
-     * Geofencing constructor.
-     * @param UserFilter|null $userFilter
-     */
     public function __construct(private readonly ?UserFilter $userFilter = null, ?Connection $connection = null)
     {
         parent::__construct(connection: $connection);
@@ -80,6 +77,7 @@ class Geofence extends Model
      * @return true
      * @throws GC2Exception
      * @throws Exception
+     * @throws Throwable
      */
     public function postProcessQuery(Statement $statement, array $rules, ?array $params = null, ?array $typeHints = null): true
     {
@@ -144,7 +142,7 @@ class Geofence extends Model
     /**
      * @param int|null $id
      * @return array
-     * @throws GC2Exception
+     * @throws Throwable
      */
     public function get(?int $id): array
     {
@@ -163,6 +161,7 @@ class Geofence extends Model
     /**
      * @param array $data
      * @return array
+     * @throws Throwable
      */
     public function create(array $data): array
     {
@@ -191,9 +190,11 @@ class Geofence extends Model
     }
 
     /**
+     * @param string $id
      * @param array $data
-     * @return void
+     * @return int
      * @throws GC2Exception
+     * @throws Throwable
      */
     public function update(string $id, array $data): int
     {
@@ -213,7 +214,7 @@ class Geofence extends Model
         $setsStr = implode(",", $sets);
         $sql = "update settings.geofence set $setsStr where id=:id returning *";
         $res = $this->prepare($sql);
-        $this->execute($res, [...$data, "id" => $id]);;
+        $this->execute($res, [...$data, "id" => $id]);
         if ($res->rowCount() == 0) {
             throw new GC2Exception("No rule with id", 404, null, 'RULE_NOT_FOUND');
         }
@@ -223,7 +224,7 @@ class Geofence extends Model
     /**
      * @param int $id
      * @return void
-     * @throws GC2Exception
+     * @throws GC2Exception|Throwable
      */
     public function delete(int $id): void
     {
@@ -236,6 +237,10 @@ class Geofence extends Model
     }
 
     /**
+     * Replaces placeholder tokens in the given string with corresponding user property values.
+     *
+     * @param string $str
+     * @return string
      */
     private function fillPlaceholders(string $str): string
     {
