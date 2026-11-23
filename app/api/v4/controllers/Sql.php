@@ -267,6 +267,7 @@ class Sql extends AbstractApi
 
     /**
      * @throws GC2Exception
+     * @throws Throwable
      */
     private function runStatement(array $query, string $user, bool $isSuperUser, ?array $userGroup): ?array
     {
