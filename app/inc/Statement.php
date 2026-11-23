@@ -15,6 +15,7 @@ use app\models\Rule;
 use app\models\Sql;
 use Exception;
 use sad_spirit\pg_builder\StatementFactory;
+use Throwable;
 
 class Statement
 {
@@ -38,9 +39,10 @@ class Statement
      * @param Sql $api An instance of the Sql class for database interactions.
      * @param mixed $query The input parameters, typically in JSON format.
      * @param bool $subuser Optional. Indicates whether the user is a subuser. Defaults to false.
-     * @param string|null $userGroup
+     * @param array|null $userGroup
      * @return array|null The processed response, including additional metadata such as cache information and memory usage.
      * @throws GC2Exception
+     * @throws Throwable
      */
     public function run(string $user, Sql $api, array $query, bool $subuser, ?array $userGroup): ?array
     {
@@ -94,10 +96,10 @@ class Statement
      *
      * @throws Exception If there is an error during the authorization, rule application, or query execution.
      * @throws GC2Exception If the SQL statement type is not recognized.
+     * @throws Throwable
      */
     private function process(?string $clientEncoding = null, ?array $typeHints = null, ?array $typeFormats = null): array
     {
-        $response = [];
         $authResponse = [];
         $rule = new Rule(connection: $this->sql->connection);
         $walkerRelation = new TableWalkerRelation();
@@ -142,16 +144,7 @@ class Statement
             $auth = $geofence->authorize($rules);
             $finaleStatement = $factory->createFromAST($select, true)->getSql();
             if (!empty($auth["access"]) && $auth["access"] == Geofence::LIMIT_ACCESS) {
-                try {
-                    $geofence->postProcessQuery($select, $rules, $this->params['params'], $typeHints);
-                } catch (Exception $e) {
-                    $response["code"] = 401;
-                    $response["success"] = false;
-                    $response["message"] = $e->getMessage();
-                    $response["statement"] = $finaleStatement;
-                    $response["filters"] = $auth["filters"];
-                    return $response;
-                }
+                $geofence->postProcessQuery($select, $rules, $this->params['params'], $typeHints);
             }
             $response = $this->sql->transaction($finaleStatement, $this->params['params'] ?? null, $this->params['type_hints'] ?? null, $this->convertReturning, $this->params['type_formats'] ?? null);
             $response["filters"] = $auth["filters"];
