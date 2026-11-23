@@ -144,7 +144,7 @@ class Statement
             $auth = $geofence->authorize($rules);
             $finaleStatement = $factory->createFromAST($select, true)->getSql();
             if (!empty($auth["access"]) && $auth["access"] == Geofence::LIMIT_ACCESS) {
-                $geofence->postProcessQuery($select, $rules, $this->params['params'], $typeHints);
+                $geofence->postProcessQuery($select, $rules, $this->params['params'] ?? [], $typeHints);
             }
             $response = $this->sql->transaction($finaleStatement, $this->params['params'] ?? null, $this->params['type_hints'] ?? null, $this->convertReturning, $this->params['type_formats'] ?? null);
             $response["filters"] = $auth["filters"];
