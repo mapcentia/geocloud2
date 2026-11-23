@@ -609,7 +609,7 @@ $handler = static function () use ($routes) {
         $response["success"] = false;
         $response["message"] = $exception->getMessage();
         $response["code"] = 400; // We assume it's a bad request
-        $response["sel_code"] = $exception->getCode();
+        $response["sql_state"] = $exception->getCode();
         if (getenv('MODE_ENV') == 'dev') {
             $response["file"] = $exception->getFile();
             $response["line"] = $exception->getLine();
