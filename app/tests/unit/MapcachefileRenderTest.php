@@ -381,4 +381,22 @@ class MapcachefileRenderTest extends Unit
         $this->assertSame('sqlite', Mapcachefile::tilesetCache('mbtiles', 'dar.adresse.json'));
         $this->assertSame('disk', Mapcachefile::tilesetCache('disk', 'dar.adresse.mvt'));
     }
+
+    /**
+     * A class-less vector layer draws nothing, but MapServer runs its query
+     * anyway, so it is left out of a schema's merged image source.
+     */
+    public function testAClassLessVectorLayerDrawsNothingInAnImage(): void
+    {
+        $class = json_encode([['name' => 'a', 'sortid' => 10]]);
+        $this->assertTrue(Mapcachefile::drawsInImage(['class' => $class, 'type' => 'MULTIPOLYGON']));
+        foreach ([null, '', '[]', 'null', 'not json'] as $none) {
+            $this->assertFalse(Mapcachefile::drawsInImage(['class' => $none, 'type' => 'MULTIPOINT']),
+                'no classes: ' . var_export($none, true));
+        }
+        // Rasters and WMS-backed layers draw without a class
+        $this->assertTrue(Mapcachefile::drawsInImage(['class' => null, 'type' => 'RASTER']));
+        $this->assertTrue(Mapcachefile::drawsInImage(['class' => '[]', 'wmssource' => 'http://example.com/wms?layers=a']));
+        $this->assertTrue(Mapcachefile::drawsInImage(['class' => '[]', 'bitmapsource' => 'ortho.tif']));
+    }
 }

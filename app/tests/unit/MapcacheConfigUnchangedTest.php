@@ -26,6 +26,11 @@ use Codeception\Test\Unit;
  * means before THAT change, not before schema tile settings — recapture from the
  * commit that introduced the ORDER BY, or later.
  *
+ * It moved a second time when class-less vector layers were left out of the merged
+ * image source (Mapcachefile::drawsInImage()): they drew nothing and cost a query
+ * per tile. The committed fixture predates that, so it still lists them and has to
+ * be recaptured, by the rule below, from that commit or later.
+ *
  * The fixture is a snapshot of whatever mydb contained when it was captured, so
  * adding or removing a layer or schema in mydb fails this test for a reason that
  * has nothing to do with the code. **Do not simply recapture it from the current

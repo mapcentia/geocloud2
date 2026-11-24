@@ -84,6 +84,27 @@ class Mapcachefile extends Model
     }
 
     /**
+     * Whether a layer draws anything in a WMS image: a raster or WMS-backed
+     * layer always does, a PostGIS vector layer only when it has a class.
+     *
+     * MapServer still runs the query of a class-less layer before drawing
+     * nothing, so in a schema's merged image tileset such a layer cost a full
+     * bbox query on every tile (measured: 0.3-0.9 s per metatile for layers
+     * that contributed no pixel). The vector tilesets are another matter: a
+     * class-less layer's features are in an MVT tile all the same.
+     *
+     * @param array<string, mixed> $row A settings.getColumns() row.
+     */
+    public static function drawsInImage(array $row): bool
+    {
+        if (!empty($row['wmssource']) || !empty($row['bitmapsource']) || ($row['type'] ?? null) === 'RASTER') {
+            return true;
+        }
+        $classes = !empty($row['class']) ? json_decode((string)$row['class'], true) : null;
+        return is_array($classes) && $classes !== [];
+    }
+
+    /**
      * The cache a vector tileset (<name>.mvt, <name>.json) gets when its layer
      * or schema names $cache.
      *
@@ -428,6 +449,8 @@ class Mapcachefile extends Model
         }
 
         $layersPerSchema = [];
+        // The same, without the layers that draw nothing in an image
+        $imageLayersPerSchema = [];
         $seen = [];
         $result = $this->getLayerRows();
         while ($row = $this->fetchRow($result)) {
@@ -436,6 +459,9 @@ class Mapcachefile extends Model
             }
             $table = $row['f_table_schema'] . '.' . $row['f_table_name'];
             $layersPerSchema[$row['f_table_schema']][] = $table;
+            if (self::drawsInImage($row)) {
+                $imageLayersPerSchema[$row['f_table_schema']][] = $table;
+            }
             if (in_array($table, $seen)) {
                 continue;
             }
@@ -489,7 +515,10 @@ class Mapcachefile extends Model
                 ? $this->mapserverUrl($schema, 'wms')
                 : App::$param['mapCache']['wmsHost'] . "/cgi-bin/qgis_mapserv.fcgi?map=/var/www/geocloud2/app/wms/qgsfiles/parsed_"
                 . App::$param['useQgisForMergedLayers'][$schema] . "&transparent=true";
-            $s .= self::renderWmsSource($schema, 'image/png', implode(',', $layers), $schemaUrl);
+            // A schema in which no layer draws keeps the full list: an empty
+            // LAYERS is not a request MapServer answers.
+            $imageLayers = $imageLayersPerSchema[$schema] ?? $layers;
+            $s .= self::renderWmsSource($schema, 'image/png', implode(',', $imageLayers), $schemaUrl);
             $s .= self::renderTileset($schema, $schema, $cache, $gridNames, $set['imageFormat'], $set['expires'],
                 metaSize: $set['metaSize'], metaBuffer: $set['metaBuffer'], autoExpire: $set['autoExpire'],
                 title: $set['title'], abstract: $set['abstract']);
