@@ -142,6 +142,19 @@ class SchemaTileSettingsV4ApiCest
             '_stored must carry only what was actually set');
     }
 
+    public function shouldAcceptTheMbtilesBackend(ApiTester $I): void
+    {
+        $this->asSuper($I);
+        $I->sendPATCH('/api/v4/schemas/' . $this->schema . '/tile', json_encode(['cache' => 'mbtiles']));
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $I->sendGET('/api/v4/schemas/' . $this->schema . '/tile');
+        $I->assertSame('mbtiles', json_decode($I->grabResponse(), true)['cache']);
+
+        // Back to what the following tests expect
+        $I->sendPATCH('/api/v4/schemas/' . $this->schema . '/tile', json_encode(['cache' => 'disk']));
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+    }
+
     public function shouldRemoveOneKeyWithAnExplicitNull(ApiTester $I): void
     {
         $this->asSuper($I);

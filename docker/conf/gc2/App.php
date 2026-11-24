@@ -108,7 +108,9 @@ class App
             // WMS backend for MapCache. Define gc2core host seen from MapCache container.
             "wmsHost" => "http://gc2core:80",
 
-            // Type of cache back-end. "disk" or "sqlite"
+            // Default cache back-end: "sqlite", "disk", "mbtiles", "memcache" or "s3".
+            // A layer or a schema can name another one. "mbtiles" writes one file
+            // per tileset and grid: app/wms/mapcache/mbtiles/<db>/<tileset>/<grid>.mbtiles
             "type" => "disk",
         ],
 

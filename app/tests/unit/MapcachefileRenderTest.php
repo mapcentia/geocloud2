@@ -333,4 +333,33 @@ class MapcachefileRenderTest extends Unit
         $this->assertSame(60, $set['expires']);
         $this->assertNull($set['autoExpire']);
     }
+
+    public function testSchemaSettingsAcceptMbtiles(): void
+    {
+        $set = Mapcachefile::schemaSettings(['def' => json_encode(['cache' => 'mbtiles'])], 'sqlite', 'dagi');
+        $this->assertSame('mbtiles', $set['cache']);
+        $this->assertSame('mbtiles', Mapcachefile::layerSettings(
+            ['def' => json_encode(['cache' => 'mbtiles']), 'f_table_title' => '', 'f_table_name' => 't', 'f_table_abstract' => null], 'sqlite')['cache']);
+    }
+
+    /**
+     * The mbtiles cache is defined only when something uses it, so an install
+     * that does not gets the document it always got. One file per tileset and
+     * grid, because an MBTiles file holds a single tileset in a single grid.
+     */
+    public function testTheMbtilesCacheIsDefinedOnlyWhenUsed(): void
+    {
+        include_once '/var/www/geocloud2/app/conf/App.php';
+        $before = \app\conf\App::$param['mapCache']['type'] ?? null;
+        try {
+            \app\conf\App::$param['mapCache']['type'] = 'mbtiles';
+            $xml = (new Mapcachefile(new \app\inc\Connection(database: 'mydb')))->generate();
+            $this->assertStringContainsString('<cache name="mbtiles" type="mbtiles">', $xml);
+            $this->assertMatchesRegularExpression(
+                '#<dbfile>[^<]*app/wms/mapcache/mbtiles/mydb/\{tileset\}/\{grid\}\.mbtiles</dbfile>#', $xml);
+            $this->assertStringStartsWith('<mapcache>', $xml, 'the header must still come first');
+        } finally {
+            \app\conf\App::$param['mapCache']['type'] = $before;
+        }
+    }
 }

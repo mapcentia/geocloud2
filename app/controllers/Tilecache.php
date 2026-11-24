@@ -107,6 +107,34 @@ class Tilecache extends Controller
                 $response['message'] = "Tile cache deleted.";
                 break;
 
+            case "mbtiles":
+                if (Input::getPath()->part(4) === "schema") {
+                    $response = $this->isOwner();
+                    if (!$response['success']) {
+                        return $response;
+                    }
+                    $schema = (string)Input::getPath()->part(5);
+                    $tilesets = [$schema, $schema . ".mvt"];
+                } else {
+                    $parts = explode(".", Input::getPath()->part(4));
+                    $layer = $parts[0] . "." . $parts[1];
+                    $response = $this->auth(Input::getPath()->part(4), array("all" => true, "write" => true));
+                    if (!$response['success']) {
+                        return $response;
+                    }
+                    $tilesets = self::layerTilesets($layer);
+                }
+                $res = self::emptyMbtiles(Connection::$param["postgisdb"], $tilesets);
+                if (!$res["success"]) {
+                    $response['success'] = false;
+                    $response['message'] = $res["message"];
+                    $response['code'] = '403';
+                    return $response;
+                }
+                $response['success'] = true;
+                $response['message'] = "Tile cache deleted.";
+                break;
+
             case "bdb";
                 $dba = dba_open(App::$param['path'] . "app/wms/mapcache/bdb/" . Connection::$param["postgisdb"] . "/" . "feature.polygon/bdb_feature.polygon.db", "c", "db4");
 
@@ -191,6 +219,18 @@ class Tilecache extends Controller
                 $dir = App::$param['path'] . "app/wms/mapcache/disk/" . $db . "/" . $layerName;
                 $res = self::unlinkTiles($dir, $layerName, $connection);
                 break;
+            case "mbtiles":
+                // A bare name is a merged per-schema tileset: no .json, and no lock
+                if (!str_contains($layerName, '.')) {
+                    $res = self::emptyMbtiles($db, [$layerName, $layerName . ".mvt"]);
+                    break;
+                }
+                $layer = $connection ? new \app\models\Layer(connection: $connection) : new \app\models\Layer();
+                $meta = $layer->getAll($db, true, $layerName, false, true);
+                $res = !empty($meta["data"][0]["def"]->lock)
+                    ? ['success' => false, 'message' => "The layer is locked in the tile cache. Unlock it in the Tile cache settings."]
+                    : self::emptyMbtiles($db, self::layerTilesets($layerName));
+                break;
         }
 
         if (!$res["success"]) {
@@ -202,6 +242,34 @@ class Tilecache extends Controller
         $response['success'] = true;
         $response['message'] = "Tile cache deleted.";
         return $response;
+    }
+
+    /**
+     * The tilesets MapCache keeps for one layer: the image one and the two vector ones.
+     *
+     * @return array<int, string>
+     */
+    private static function layerTilesets(string $layer): array
+    {
+        return [$layer, $layer . ".mvt", $layer . ".json"];
+    }
+
+    /**
+     * Empties the MBTiles files of the given tilesets (see app\inc\MbtilesCache).
+     *
+     * @param array<int, string> $tilesets
+     * @return array<string, mixed>
+     */
+    private static function emptyMbtiles(string $db, array $tilesets): array
+    {
+        try {
+            foreach ($tilesets as $tileset) {
+                \app\inc\MbtilesCache::emptyTileset($db, $tileset);
+            }
+        } catch (\RuntimeException $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+        return ['success' => true];
     }
 
     /**

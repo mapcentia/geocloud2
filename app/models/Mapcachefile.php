@@ -84,7 +84,7 @@ class Mapcachefile extends Model
     }
 
     /** The cache backends a schema may name. */
-    public const SCHEMA_CACHES = ['sqlite', 'disk', 'memcache', 's3'];
+    public const SCHEMA_CACHES = ['sqlite', 'disk', 'mbtiles', 'memcache', 's3'];
     /** Formats the <schema> tileset can be given. */
     public const SCHEMA_IMAGE_FORMATS = ['PNG', 'jpeg_low', 'jpeg_medium', 'jpeg_high'];
     /**
@@ -275,7 +275,12 @@ class Mapcachefile extends Model
         return $s;
     }
 
-    private function renderHeader(): string
+    /**
+     * @param bool $mbtiles Whether to define the "mbtiles" cache. It is only
+     *        defined when a tileset uses it, so the config of an install that
+     *        does not is byte for byte what it was before the backend existed.
+     */
+    private function renderHeader(bool $mbtiles = false): string
     {
         $db = $this->connection->database;
         $path = App::$param['mapCache']['path'] ?? App::$param['path'];
@@ -302,6 +307,13 @@ class Mapcachefile extends Model
         $s .= "    <symlink_blank/>\n";
         $s .= "    <creation_retry>3</creation_retry>\n";
         $s .= "  </cache>\n";
+        if ($mbtiles) {
+            // One file per tileset and grid: an MBTiles file holds a single
+            // tileset in a single grid. Layout: see app\inc\MbtilesCache.
+            $s .= "  <cache name=\"mbtiles\" type=\"mbtiles\">\n";
+            $s .= "    <dbfile>{$path}app/wms/mapcache/mbtiles/$db/{tileset}/{grid}.mbtiles</dbfile>\n";
+            $s .= "  </cache>\n";
+        }
         $s .= self::renderS3Cache('s3', $db, perTileSet: true);
         $s .= "  <cache name=\"memcache\" type=\"memcache\">\n";
         $s .= "    <server>\n";
@@ -386,7 +398,10 @@ class Mapcachefile extends Model
         $gridNames = array_keys($grids);
         $schemaSettingRows = (new SchemaSettings(connection: $this->connection))->all();
 
-        $s = $this->renderHeader();
+        // The header is rendered last: whether it defines the mbtiles cache
+        // depends on the default and on the tilesets below.
+        $usesMbtiles = $defaultCache === 'mbtiles';
+        $s = '';
         foreach ($grids as $grid) {
             $s .= $grid . "\n";
         }
@@ -406,6 +421,7 @@ class Mapcachefile extends Model
             $seen[] = $table;
             $set = self::layerSettings($row, $defaultCache);
             $cache = $set['cache'];
+            $usesMbtiles = $usesMbtiles || $cache === 'mbtiles';
 
             $s .= "\n  <!-- $table -->\n";
 
@@ -443,6 +459,7 @@ class Mapcachefile extends Model
             $s .= "\n  <!-- $schema -->\n";
             $set = self::schemaSettings($schemaSettingRows[$schema] ?? null, $defaultCache, $schema);
             $cache = $set['cache'];
+            $usesMbtiles = $usesMbtiles || $cache === 'mbtiles';
             if ($cache == 's3' && $set['s3TileSet']) {
                 $cache = "s3_" . $schema;
                 $s .= self::renderS3Cache($cache, $set['s3TileSet'], perTileSet: false);
@@ -463,7 +480,7 @@ class Mapcachefile extends Model
         }
 
         $s .= $this->renderFooter();
-        return $s;
+        return $this->renderHeader($usesMbtiles) . $s;
     }
 
     /**

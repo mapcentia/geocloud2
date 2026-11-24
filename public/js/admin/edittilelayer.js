@@ -118,6 +118,9 @@ tileLayer.init = function (record) {
                             name: 'SQLite',
                             value: 'sqlite'
                         }, {
+                            name: 'MBTiles',
+                            value: 'mbtiles'
+                        }, {
                             name: 'S3',
                             value: 's3'
                         }, {

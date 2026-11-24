@@ -17,6 +17,7 @@ use app\api\v4\Scope;
 use app\conf\App;
 use app\exceptions\GC2Exception;
 use app\exceptions\ServiceException;
+use app\inc\MbtilesCache;
 use app\inc\BasicAuth;
 use app\inc\Connection;
 use app\inc\Input;
@@ -36,7 +37,7 @@ use Override;
 
 /**
  * Deletes a MapCache tileset's cached tiles. Deletion is delegated to `mapcache_seed -m delete`,
- * which understands every configured cache backend (disk, sqlite, bdb, s3, memcache) and supports
+ * which understands every configured cache backend (disk, sqlite, mbtiles, bdb, s3, memcache) and supports
  * scoped invalidation by extent and zoom range. Because a full-tileset delete over a large cache
  * can take a long time, the seed process is launched detached in the background and tracked in
  * settings.seed_jobs (the same table the tile seeder uses); the request returns 202 Accepted with
@@ -66,7 +67,7 @@ final class MapcacheTileset extends AbstractApi
         $this->resource = 'mapcache';
     }
 
-    #[OA\Delete(path: '/api/v4/mapcache/database/{database}/tileset/{tileset}', operationId: 'deleteMapcacheTileset', description: "Delete a MapCache tileset's cached tiles — a layer's tileset, or the merged per-schema one (a bare schema name). A FULL delete (no bbox/zoom) wipes the backend store directly — synchronous for sqlite/bdb (200), background for disk (202); s3/memcache are not supported for a full delete (400 — use a scoped delete or TTL/lifecycle). A SCOPED delete (bbox and/or zoom) runs mapcache_seed -m delete as a background job (202). Requires write/owner authorization.", tags: ['Mapcache'])]
+    #[OA\Delete(path: '/api/v4/mapcache/database/{database}/tileset/{tileset}', operationId: 'deleteMapcacheTileset', description: "Delete a MapCache tileset's cached tiles — a layer's tileset, or the merged per-schema one (a bare schema name). A FULL delete (no bbox/zoom) wipes the backend store directly — synchronous for sqlite/mbtiles/bdb (200), background for disk (202); s3/memcache are not supported for a full delete (400 — use a scoped delete or TTL/lifecycle). A SCOPED delete (bbox and/or zoom) runs mapcache_seed -m delete as a background job (202). Requires write/owner authorization.", tags: ['Mapcache'])]
     #[OA\Parameter(name: 'database', description: 'Database name', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_database')]
     #[OA\Parameter(name: 'tileset', description: 'Tileset name: a layer\'s "schema.table" (vector variants "schema.table.mvt"/".json"), or a bare "schema" for the merged per-schema tileset drawn from every layer in that schema ("schema.mvt" for its vector variant). Clearing a merged schema tileset is reserved for the database super user, because no single layer\'s privileges govern it; an unknown schema answers 404.', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema.roads')]
     #[OA\Parameter(name: 'bbox', description: 'Optional extent to delete (triggers a scoped mapcache_seed delete): minx,miny,maxx,maxy in the grid SRS.', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: '890000,7260000,1730000,7870000')]
@@ -223,6 +224,7 @@ final class MapcacheTileset extends AbstractApi
         return match ($cache) {
             'sqlite' => $this->wipeSqlite($base . 'sqlite/' . $database . '/' . $tileset . '.sqlite3', $tileset),
             'disk' => $this->wipeDiskDir($base . 'disk/' . $database . '/' . $tileset, $tileset),
+            'mbtiles' => $this->wipeMbtiles($database, $tileset),
             'bdb' => $this->wipeDir($base . 'bdb/' . $database . '/' . $tileset, $tileset, 'bdb'),
             's3', 'memcache' => throw new GC2Exception(
                 "Full delete is not supported for the '$cache' cache backend. Use a scoped delete "
@@ -260,6 +262,21 @@ final class MapcacheTileset extends AbstractApi
             }
         }
         return $this->completed('sqlite', $tileset, $removed);
+    }
+
+    /**
+     * Empties the tileset's MBTiles files, one per grid, in place — for the same reason as
+     * wipeSqlite(): MapCache keeps the files open and would not recreate an unlinked one.
+     *
+     * @throws GC2Exception
+     */
+    private function wipeMbtiles(string $database, string $tileset): Response
+    {
+        try {
+            return $this->completed('mbtiles', $tileset, MbtilesCache::emptyTileset($database, $tileset));
+        } catch (\RuntimeException $e) {
+            throw new GC2Exception('Could not empty the MBTiles tile cache: ' . $e->getMessage(), 500, null, 'CACHE_WIPE_FAILED');
+        }
     }
 
     /**

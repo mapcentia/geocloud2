@@ -101,6 +101,74 @@ class MapcacheWipeApiCest
     }
 
     // disk: the tileset directory is removed (renamed instantly, deleted in the background) → 202.
+    // mbtiles end to end: MapCache accepts the generated config, renders a tile and stores it in
+    // the tileset's own file for the grid.
+    public function mbtilesCacheStoresTheTilesMapCacheServes(ApiTester $I)
+    {
+        $this->setCache($I, 'mbtiles');
+        // What the cron job does every minute: publish the changed config to Apache.
+        exec('php -f /var/www/geocloud2/app/scripts/mapcache_conf.php 2>&1', $out);
+        $file = $this->mapcacheDir() . 'mbtiles/' . $this->userId . '/' . $this->tileset . '/g20.mbtiles';
+
+        // Apache reloads gracefully, so the first requests may still see the old config.
+        $code = null;
+        for ($i = 0; $i < 20 && !is_file($file); $i++) {
+            $ch = curl_init('http://localhost/api/v4/mapcache/database/' . $this->userId . '/wmts/1.0.0/' . $this->tileset . '/default/g20/8/136/78.png');
+            curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $this->token]]);
+            curl_exec($ch);
+            $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            if (!is_file($file)) {
+                usleep(500000);
+            }
+        }
+        $I->assertFileExists($file, "no MBTiles file after a tile request (last status $code); mapcache_conf said: " . implode(' ', $out));
+        $I->assertSame(200, $code);
+        $pdo = new PDO('sqlite:' . $file);
+        $I->assertGreaterThan(0, (int)$pdo->query('SELECT count(*) FROM tiles')->fetchColumn());
+        $pdo = null;
+
+        // And the wipe empties what MapCache wrote
+        $this->del($I);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertSame('mbtiles', json_decode($I->grabResponse(), true)['backend']);
+        $I->assertSame(0, (int)(new PDO('sqlite:' . $file))->query('SELECT count(*) FROM tiles')->fetchColumn());
+    }
+
+    // mbtiles: one file per grid in the tileset's directory; every one is emptied in place.
+    public function fullMbtilesWipeEmptiesEveryGridInPlace(ApiTester $I)
+    {
+        $this->setCache($I, 'mbtiles');
+        $dir = $this->mapcacheDir() . 'mbtiles/' . $this->userId . '/' . $this->tileset;
+        @mkdir($dir, 0777, true);
+        $files = [$dir . '/g20.mbtiles', $dir . '/25832.mbtiles'];
+        foreach ($files as $file) {
+            @unlink($file);
+            // The schema MapCache creates for an mbtiles cache
+            $pdo = new PDO('sqlite:' . $file);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $pdo->exec('CREATE TABLE images(tile_id text, tile_data blob, primary key(tile_id))');
+            $pdo->exec('CREATE TABLE map(zoom_level integer, tile_column integer, tile_row integer, tile_id text, primary key(tile_row,tile_column,zoom_level))');
+            $pdo->exec('CREATE VIEW tiles AS SELECT map.zoom_level, map.tile_column, map.tile_row, images.tile_data FROM map JOIN images ON images.tile_id = map.tile_id');
+            $pdo->exec("INSERT INTO images VALUES('a', x'00')");
+            $pdo->exec("INSERT INTO map VALUES(0, 0, 0, 'a')");
+            $pdo = null;
+        }
+        exec('chown -R www-data:www-data ' . escapeshellarg($this->mapcacheDir() . 'mbtiles/' . $this->userId));
+
+        $this->del($I);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $data = json_decode($I->grabResponse(), true);
+        $I->assertSame('mbtiles', $data['backend']);
+        $I->assertSame('wipe', $data['mode']);
+        $I->assertSame(2, $data['removed']);
+        foreach ($files as $file) {
+            $I->assertFileExists($file);
+            $check = new PDO('sqlite:' . $file);
+            $I->assertSame(0, (int)$check->query('SELECT count(*) FROM tiles')->fetchColumn());
+            $I->assertSame(0, (int)$check->query('SELECT count(*) FROM images')->fetchColumn());
+        }
+    }
+
     public function fullDiskWipeIsBackground(ApiTester $I)
     {
         $this->setCache($I, 'disk');
