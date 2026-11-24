@@ -49,6 +49,12 @@ services:
     env_file: conn.env
     extra_hosts:
       - host.docker.internal:host-gateway
+    # Let outgoing connections reuse sockets in TIME_WAIT. The cron workers open
+    # a connection to every database every minute; with thousands of databases
+    # that fills the ephemeral port range, and MapServer's connections then fail
+    # at random ("Database connection failed"), which MapCache stores as tiles.
+    sysctls:
+      - net.ipv4.tcp_tw_reuse=1
   gc2core_frankenphp:
     image: centia-io:http
     privileged: true
