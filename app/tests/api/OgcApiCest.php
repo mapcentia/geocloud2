@@ -81,7 +81,8 @@ class OgcApiCest
         $this->subToken = json_decode($I->grabResponse())->access_token;
 
         // Workflow table: one feature inserted BEFORE workflow is enabled (addWorkflow sets it to
-        // gc2_status = 3, published) and one AFTER by the parent, who has no role (status NULL, unpublished).
+        // gc2_status = 3, published) and one AFTER, which is then made a draft (gc2_status = 1). The
+        // parent has no workflow role, and an insert by a user without a role is published at once.
         $this->bearer($I, $this->token);
         $I->sendPOST('/api/v4/schemas/' . $this->schemaName . '/tables', json_encode(['name' => 'wf', 'columns' => [
             ['name' => 'gid', 'type' => 'serial'], ['name' => 'name', 'type' => 'varchar'], ['name' => 'the_geom', 'type' => 'geometry(Point,4326)'],
@@ -113,6 +114,10 @@ class OgcApiCest
         $this->bearer($I, $this->token);
         $I->sendPOST('/api/v4/schemas/' . $this->schemaName . '/tables/wf/features', json_encode(['type' => 'Feature', 'properties' => ['name' => 'draft'], 'geometry' => ['type' => 'Point', 'coordinates' => [9.1, 56.1]]]));
         $I->seeResponseCodeIs(HttpCode::CREATED);
+        if ($this->workflowEnabled) {
+            $I->sendPOST('/api/v4/sql', json_encode(['q' => 'UPDATE ' . $this->schemaName . ".wf SET gc2_status = 1 WHERE name = 'draft'"]));
+            $I->seeResponseCodeIs(HttpCode::OK);
+        }
         $I->deleteHeader('Authorization');
     }
 

@@ -377,7 +377,7 @@ final class Transaction implements HandlerInterface
             if ($tableObj->workflow) {
                 $roleObj = $layerModel->getRole($this->ctx->schema, $typeName);
                 $rolesHstore = $this->rolesToHstore($roleObj['data'] ?? []);
-                $sql .= ",gc2_version_gid,gc2_status,gc2_workflow,{$rolesHstore} as roles";
+                $sql .= ",{$this->versionGidColumn($tableObj)},gc2_status,gc2_workflow,{$rolesHstore} as roles";
             }
 
             // Geofence sandbox via savepoint (worker-safe, savepoint nests inside outer tx)
@@ -520,7 +520,7 @@ final class Transaction implements HandlerInterface
                 if ($tableObj->workflow) {
                     $roleObj = $layerModel->getRole($this->ctx->schema, $typeName);
                     $rolesHstore = $this->rolesToHstore($roleObj['data'] ?? []);
-                    $sql .= ",gc2_version_gid,gc2_status,gc2_workflow,{$rolesHstore} as roles";
+                    $sql .= ",{$this->versionGidColumn($tableObj)},gc2_status,gc2_workflow,{$rolesHstore} as roles";
                 }
             } else {
                 $sql = "DELETE FROM \"{$this->ctx->schema}\".\"{$typeName}\" WHERE {$where} RETURNING \"{$primary['attname']}\" as gid";
@@ -580,7 +580,7 @@ final class Transaction implements HandlerInterface
     {
         foreach ($results['workflow'] ?? [] as $w) {
             $sql = "INSERT INTO settings.workflow (f_schema_name, f_table_name, gid, status, gc2_user, roles, workflow, version_gid, operation)"
-                . " VALUES('{$w['schema']}','{$w['table']}',{$w['gid']},{$w['status']},'{$w['user']}','{$w['roles']}'::hstore,'{$w['workflow']}'::hstore,{$w['version_gid']},'{$w['operation']}')";
+                . " VALUES('{$w['schema']}','{$w['table']}',{$w['gid']},{$w['status']},'{$w['user']}','{$w['roles']}'::hstore,'{$w['workflow']}'::hstore," . ($w['version_gid'] ?? 'NULL') . ",'{$w['operation']}')";
             $model = $this->ctx->model();
             $stmt = $model->prepare($sql);
             $model->execute($stmt);
@@ -816,10 +816,23 @@ final class Transaction implements HandlerInterface
         if ($gc2WorkflowFlag) {
             $roleObj = $layerModel->getRole($this->ctx->schema, $typeName);
             $rolesHstore = $this->rolesToHstore($roleObj['data'] ?? []);
-            $sql .= ",gc2_version_gid,gc2_status,gc2_workflow,{$rolesHstore} as roles";
+            $sql .= ",{$this->versionGidColumn($tableObj)},gc2_status,gc2_workflow,{$rolesHstore} as roles";
         }
 
         return $sql;
+    }
+
+    /**
+     * The RETURNING expression for a workflow row's version id.
+     *
+     * Workflow (gc2_status) and versioning (gc2_version_gid) are switched on
+     * separately, so a workflow table need not have the version column. Naming
+     * it regardless made every write to such a table fail with "column
+     * gc2_version_gid does not exist". Without versioning the id is NULL.
+     */
+    private function versionGidColumn(TableModel $tableObj): string
+    {
+        return $tableObj->versioning ? 'gc2_version_gid' : 'NULL::integer AS gc2_version_gid';
     }
 
     /**

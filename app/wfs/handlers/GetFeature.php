@@ -260,20 +260,19 @@ final class GetFeature implements HandlerInterface
 
         // Workflow filter
         if ($tableObj->workflow && !$this->ctx->parentUser) {
-            $layerObj = new Layer();
+            $layerObj = new Layer(connection: $this->ctx->connection);
             $roleObj  = $layerObj->getRole($postgisschema, $table);
             $role     = $roleObj['data'][$this->ctx->user] ?? null;
-            switch ($role) {
-                case 'author':
-                    $from .= " AND (gc2_status = 3 OR gc2_workflow @> 'author => {$this->ctx->user}')";
-                    break;
-                case 'publisher':
-                case 'reviewer':
-                    // No additional filtering
-                    break;
-                default:
-                    $from .= ' AND (gc2_status = 3)';
-                    break;
+            $workflowFilter = match ($role) {
+                'author' => "(gc2_status = 3 OR gc2_workflow @> 'author => {$this->ctx->user}')",
+                // No additional filtering
+                'publisher', 'reviewer' => null,
+                default => '(gc2_status = 3)',
+            };
+            if ($workflowFilter !== null) {
+                // Without versioning and without a request filter there is no
+                // WHERE yet; a bare AND made the statement a syntax error.
+                $from .= ($wheresFlag ? ' AND ' : ' WHERE ') . $workflowFilter;
             }
         }
 
