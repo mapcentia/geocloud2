@@ -127,6 +127,15 @@ class MapcacheWipeApiCest
         $I->assertGreaterThan(0, (int)$pdo->query('SELECT count(*) FROM tiles')->fetchColumn());
         $pdo = null;
 
+        // A vector tile of the same layer is served too. MapCache's mbtiles cache cannot hold one
+        // ("unrecognized image format"), so the .mvt tileset is kept in sqlite.
+        $ch = curl_init('http://localhost/api/v4/mapcache/database/' . $this->userId . '/gmaps/' . $this->tileset . '.mvt@g20/8/136/78.mvt');
+        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $this->token]]);
+        $body = curl_exec($ch);
+        $I->assertSame(200, curl_getinfo($ch, CURLINFO_HTTP_CODE), 'vector tile: ' . substr((string)$body, 0, 300));
+        $I->assertFileExists($this->mapcacheDir() . 'sqlite/' . $this->userId . '/' . $this->tileset . '.mvt.sqlite3');
+        $I->assertDirectoryDoesNotExist($this->mapcacheDir() . 'mbtiles/' . $this->userId . '/' . $this->tileset . '.mvt');
+
         // And the wipe empties what MapCache wrote
         $this->del($I);
         $I->seeResponseCodeIs(HttpCode::OK);
@@ -153,6 +162,9 @@ class MapcacheWipeApiCest
             $pdo->exec("INSERT INTO map VALUES(0, 0, 0, 'a')");
             $pdo = null;
         }
+        // mkdir may just have created mbtiles/ itself, as root; MapCache must be able to add
+        // the directories of other databases to it.
+        exec('chown www-data:www-data ' . escapeshellarg($this->mapcacheDir() . 'mbtiles'));
         exec('chown -R www-data:www-data ' . escapeshellarg($this->mapcacheDir() . 'mbtiles/' . $this->userId));
 
         $this->del($I);

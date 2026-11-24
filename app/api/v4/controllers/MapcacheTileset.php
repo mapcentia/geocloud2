@@ -220,6 +220,8 @@ final class MapcacheTileset extends AbstractApi
         $cache = $isSchemaTileset
             ? Tilecache::cacheBackendFor($layer, new Connection(database: $database))
             : $this->cacheType($database, $layer);
+        // A vector tileset of an mbtiles layer or schema is kept in sqlite
+        $cache = \app\models\Mapcachefile::tilesetCache($cache, $tileset);
         $base = App::$param['path'] . 'app/wms/mapcache/';
         return match ($cache) {
             'sqlite' => $this->wipeSqlite($base . 'sqlite/' . $database . '/' . $tileset . '.sqlite3', $tileset),

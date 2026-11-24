@@ -22,6 +22,10 @@ use RuntimeException;
  *
  *   app/wms/mapcache/mbtiles/<database>/<tileset>/<grid>.mbtiles
  *
+ * Only image tilesets: MapCache decodes a tile as an image before storing it,
+ * so the vector tilesets (.mvt, .json) of an mbtiles layer or schema are kept
+ * in sqlite (Mapcachefile::vectorCache()).
+ *
  * A directory per tileset rather than a "<tileset>.<grid>.mbtiles" name,
  * because tileset names contain dots (schema.table, schema.table.mvt) and a
  * name pattern for one tileset would also match another's files.

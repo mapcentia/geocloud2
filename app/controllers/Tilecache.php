@@ -186,13 +186,13 @@ class Tilecache extends Controller
         if (!str_contains($base, '.')) {
             $row = (new \app\models\SchemaSettings(connection: $connection))->get($base);
             $def = $row && $row['def'] ? json_decode($row['def']) : null;
-            return !empty($def->cache) ? (string)$def->cache : $default;
+            return \app\models\Mapcachefile::tilesetCache(!empty($def->cache) ? (string)$def->cache : $default, $tilesetName);
         }
 
         $db = $connection ? $connection->database : Database::getDb();
         $layer = $connection ? new \app\models\Layer(connection: $connection) : new \app\models\Layer();
         $meta = $layer->getAll($db, true, $tilesetName, false, true);
-        return $meta["data"][0]["def"]->cache ?? $default;
+        return \app\models\Mapcachefile::tilesetCache($meta["data"][0]["def"]->cache ?? $default, $tilesetName);
     }
 
     /**
@@ -255,7 +255,10 @@ class Tilecache extends Controller
     }
 
     /**
-     * Empties the MBTiles files of the given tilesets (see app\inc\MbtilesCache).
+     * Empties the given tilesets of an mbtiles layer or schema: the image tileset's MBTiles
+     * files (see app\inc\MbtilesCache), and the sqlite file a vector tileset is kept in
+     * instead (see Mapcachefile::vectorCache()). Emptied in place, not unlinked, because
+     * MapCache keeps the files open.
      *
      * @param array<int, string> $tilesets
      * @return array<string, mixed>
@@ -264,7 +267,24 @@ class Tilecache extends Controller
     {
         try {
             foreach ($tilesets as $tileset) {
-                \app\inc\MbtilesCache::emptyTileset($db, $tileset);
+                if (\app\models\Mapcachefile::tilesetCache('mbtiles', $tileset) === 'mbtiles') {
+                    \app\inc\MbtilesCache::emptyTileset($db, $tileset);
+                    continue;
+                }
+                $file = App::$param['path'] . "app/wms/mapcache/sqlite/" . $db . "/" . $tileset . ".sqlite3";
+                if (is_file($file)) {
+                    $pdo = new \PDO('sqlite:' . $file);
+                    $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+                    $pdo->setAttribute(\PDO::ATTR_TIMEOUT, 5);
+                    try {
+                        $pdo->exec('DELETE FROM tiles');
+                    } catch (\PDOException $e) {
+                        // A file without the table has never cached anything
+                        if (!str_contains($e->getMessage(), 'no such table')) {
+                            throw new \RuntimeException('Could not empty ' . basename($file) . ': ' . $e->getMessage(), 0, $e);
+                        }
+                    }
+                }
             }
         } catch (\RuntimeException $e) {
             return ['success' => false, 'message' => $e->getMessage()];

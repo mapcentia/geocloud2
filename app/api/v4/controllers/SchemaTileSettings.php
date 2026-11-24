@@ -47,7 +47,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     schema: 'SchemaTileSettingsInput',
     description: 'The PATCH body. Every field is optional; an explicit null removes that setting and returns it to its fallback. Unknown fields are rejected.',
     properties: [
-        new OA\Property(property: 'cache', description: 'Cache backend. "mbtiles" stores one MBTiles file per grid.', type: 'string', enum: ['sqlite', 'disk', 'mbtiles', 'memcache', 's3'], nullable: true),
+        new OA\Property(property: 'cache', description: 'Cache backend. "mbtiles" stores the image tileset as one MBTiles file per grid; the .mvt tileset then stays in sqlite, because an MBTiles cache only holds images.', type: 'string', enum: ['sqlite', 'disk', 'mbtiles', 'memcache', 's3'], nullable: true),
         new OA\Property(property: 'format', description: "The image tileset's format — PNG or a jpeg_* quality. The .mvt tileset is always MVT, which is its only possible value, so there is nothing to configure there and 'MVT' is not accepted here; the response reports it as the read-only vector_format. 'JSON' is not accepted either, because no merged .json tileset exists.", type: 'string', enum: ['PNG', 'jpeg_low', 'jpeg_medium', 'jpeg_high'], nullable: true),
         new OA\Property(property: 'ttl', description: 'Seconds a tile stays valid (mapcache expires). Any positive value is accepted and then floored at 30 when the config is generated, so 5 behaves as 30. Defaults to 60.', type: 'integer', nullable: true, minimum: 1, example: 86400),
         new OA\Property(property: 'auto_expire', description: 'Seconds after which an existing tile is refreshed on next access.', type: 'integer', nullable: true, minimum: 1, example: 3600),

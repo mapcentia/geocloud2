@@ -362,4 +362,23 @@ class MapcachefileRenderTest extends Unit
             \app\conf\App::$param['mapCache']['type'] = $before;
         }
     }
+
+    /**
+     * MapCache's mbtiles cache decodes each tile as an image, so MVT and JSON
+     * tiles failed with "unrecognized image format". Vector tilesets of an
+     * mbtiles layer or schema stay in sqlite.
+     */
+    public function testVectorTilesetsOfAnMbtilesCacheStayInSqlite(): void
+    {
+        $this->assertSame('sqlite', Mapcachefile::vectorCache('mbtiles'));
+        foreach (['sqlite', 'disk', 's3', 'memcache'] as $other) {
+            $this->assertSame($other, Mapcachefile::vectorCache($other));
+        }
+        $this->assertSame('mbtiles', Mapcachefile::tilesetCache('mbtiles', 'geodanmark'));
+        $this->assertSame('mbtiles', Mapcachefile::tilesetCache('mbtiles', 'dar.adresse'));
+        $this->assertSame('sqlite', Mapcachefile::tilesetCache('mbtiles', 'geodanmark.mvt'));
+        $this->assertSame('sqlite', Mapcachefile::tilesetCache('mbtiles', 'dar.adresse.mvt'));
+        $this->assertSame('sqlite', Mapcachefile::tilesetCache('mbtiles', 'dar.adresse.json'));
+        $this->assertSame('disk', Mapcachefile::tilesetCache('disk', 'dar.adresse.mvt'));
+    }
 }

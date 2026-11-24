@@ -111,6 +111,7 @@ class App
             // Default cache back-end: "sqlite", "disk", "mbtiles", "memcache" or "s3".
             // A layer or a schema can name another one. "mbtiles" writes one file
             // per tileset and grid: app/wms/mapcache/mbtiles/<db>/<tileset>/<grid>.mbtiles
+            // It only holds image tiles; the vector tilesets (.mvt, .json) stay in sqlite.
             "type" => "disk",
         ],
 

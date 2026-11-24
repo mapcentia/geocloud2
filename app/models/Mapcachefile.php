@@ -83,6 +83,27 @@ class Mapcachefile extends Model
         ];
     }
 
+    /**
+     * The cache a vector tileset (<name>.mvt, <name>.json) gets when its layer
+     * or schema names $cache.
+     *
+     * MapCache's mbtiles cache decodes every tile as an image before storing
+     * it, to find blank ones, so it cannot hold MVT or JSON: every request for
+     * such a tile failed with "mapcache_imageio_decode: unrecognized image
+     * format". With mbtiles the vector tilesets therefore stay in sqlite, and
+     * only the image tileset becomes MBTiles files.
+     */
+    public static function vectorCache(string $cache): string
+    {
+        return $cache === 'mbtiles' ? 'sqlite' : $cache;
+    }
+
+    /** The cache of one tileset by name, given what its layer or schema names. */
+    public static function tilesetCache(string $cache, string $tileset): string
+    {
+        return preg_match('/\.(mvt|json)$/', $tileset) ? self::vectorCache($cache) : $cache;
+    }
+
     /** The cache backends a schema may name. */
     public const SCHEMA_CACHES = ['sqlite', 'disk', 'mbtiles', 'memcache', 's3'];
     /** Formats the <schema> tileset can be given. */
@@ -441,7 +462,7 @@ class Mapcachefile extends Model
                 title: $set['title'], abstract: $set['abstract'], wgs84bbox: $wgs84bbox);
 
             // MVT and JSON tiles come from the schema's WFS mapfile. The
-            $vectorCache =  $set['cache'];
+            $vectorCache = self::vectorCache($set['cache']);
             foreach ([['mvt', 'MVT', $mvtEnabled], ['json', 'JSON', $jsonEnabled]] as [$ext, $format, $enabled]) {
                 if (!$enabled) {
                     continue;
@@ -474,7 +495,7 @@ class Mapcachefile extends Model
                 title: $set['title'], abstract: $set['abstract']);
             if ($mvtEnabled) {
                 $s .= self::renderWmsSource("$schema.mvt", 'mvt', implode(',', $layers), $this->mapserverUrl($schema, 'wfs'));
-                $s .= self::renderTileset("$schema.mvt", "$schema.mvt", $cache, $gridNames, $set['vectorFormat'], $set['expires'],
+                $s .= self::renderTileset("$schema.mvt", "$schema.mvt", self::vectorCache($cache), $gridNames, $set['vectorFormat'], $set['expires'],
                     autoExpire: $set['autoExpire'], title: $set['title'], abstract: $set['abstract']);
             }
         }
