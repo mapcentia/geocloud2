@@ -125,7 +125,10 @@ class RelationSnapshotV4ApiCest
 
         // Run the worker inline for this database (the container has no snapshot
         // cron); the batch size is raised so one run drains all three rows.
-        $out = shell_exec('GC2_SNAPSHOT_BATCH=3 php -f /var/www/geocloud2/app/scripts/snapshot_worker.php ' . escapeshellarg($this->userId) . ' 2>&1');
+        // As www-data, like the cron job: with local storage the web server
+        // must be able to read what the worker wrote.
+        $asWebUser = function_exists('posix_geteuid') && posix_geteuid() === 0 ? 'sudo -u www-data ' : '';
+        $out = shell_exec($asWebUser . 'env GC2_SNAPSHOT_BATCH=3 php -f /var/www/geocloud2/app/scripts/snapshot_worker.php ' . escapeshellarg($this->userId) . ' 2>&1');
         $I->assertStringContainsString('ok=3', (string)$out, "worker output: $out");
 
         $I->sendGET('/api/v4/snapshots/' . $id);

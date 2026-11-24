@@ -7,6 +7,7 @@
 
 use app\inc\Connection;
 use app\models\Mapcachefile;
+use Codeception\Attribute\Group;
 use Codeception\Test\Unit;
 
 /**
@@ -48,6 +49,8 @@ class MapcacheLayerOrderTest extends Unit
         return explode(',', $m[1]);
     }
 
+    // Reads layers that only exist in the developer's own mydb; docker/test/run.sh skips the group.
+    #[Group('dev-data')]
     public function testTheMergedSourceDrawsLowSortIdFirst(): void
     {
         $xml = (new Mapcachefile(new Connection(database: 'mydb')))->generate();

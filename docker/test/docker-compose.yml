@@ -1,0 +1,73 @@
+# Throw-away environment for the Codeception suites. Started and removed by
+# docker/test/run.sh; see docker/test/README.md.
+#
+# Nothing here is shared with the dev environment: own compose project and
+# network, no published ports, no named volumes. The checkout is mounted
+# read-only under a tmpfs overlay (entrypoint.sh).
+
+services:
+  postgres:
+    # Its entrypoint creates template_geocloud, mapcentia and gc2scheduler on
+    # an empty cluster -- the same bootstrap as a fresh installation.
+    image: ${GC2_TEST_POSTGIS_IMAGE:-mapcentia/postgis:pg17-postgis3-php8.4-trixie-1}
+    environment:
+      GC2_USER: gc2
+      GC2_PASSWORD: ${GC2_TEST_PG_PASSWORD:?set by run.sh}
+    healthcheck:
+      # The entrypoint starts PostgreSQL once to initialise it and stops it
+      # again; only when supervisord is PID 1 is the server the lasting one.
+      test: ["CMD-SHELL", "[ \"$$(cat /proc/1/comm)\" = supervisord ] && psql -U postgres -d gc2scheduler -Atc 'select 1'"]
+      interval: 2s
+      timeout: 5s
+      retries: 90
+
+  redis:
+    image: redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  # For the search tests (SearchV4ApiCest); esHost in App.php points here
+  opensearch:
+    image: ${GC2_TEST_OPENSEARCH_IMAGE:-opensearchproject/opensearch:3}
+    environment:
+      discovery.type: single-node
+      DISABLE_SECURITY_PLUGIN: "true"
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      OPENSEARCH_JAVA_OPTS: -Xms512m -Xmx512m
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:9200/_cluster/health >/dev/null"]
+      interval: 3s
+      timeout: 5s
+      retries: 60
+
+  gc2:
+    image: ${GC2_TEST_IMAGE:-dev}
+    # Needed for the overlay mount in entrypoint.sh and, as in the dev and
+    # production services, for the function runner's sandbox (unshare).
+    privileged: true
+    entrypoint: ["/src/docker/test/entrypoint.sh"]
+    command: ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: postgres
+      POSTGRES_USER: gc2
+      POSTGRES_PASSWORD: ${GC2_TEST_PG_PASSWORD:?set by run.sh}
+      POSTGRES_PGBOUNCER: "false"
+      MODE_ENV: dev
+    volumes:
+      # entrypoint.sh lays a writable tmpfs overlay over this
+      - ../../:/src:ro
+      - ../../app/tests/_output:/test-output
+    tmpfs:
+      - /overlay:exec

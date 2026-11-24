@@ -8,6 +8,7 @@
 use app\inc\Connection;
 use app\models\Mapcachefile;
 use app\models\SchemaSettings;
+use Codeception\Attribute\Group;
 use Codeception\Test\Unit;
 
 /**
@@ -44,6 +45,8 @@ class MapcacheConfigUnchangedTest extends Unit
 {
     protected UnitTester $tester;
 
+    // Reads layers that only exist in the developer's own mydb; docker/test/run.sh skips the group.
+    #[Group('dev-data')]
     public function testAnInstallWithNoSchemaSettingsGeneratesTheSameDocument(): void
     {
         $fixture = codecept_data_dir('mapcache_mydb_before.xml');

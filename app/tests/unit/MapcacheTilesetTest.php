@@ -7,6 +7,7 @@
 
 use app\api\v4\controllers\Mapcache;
 use app\inc\Connection;
+use Codeception\Attribute\Group;
 use Codeception\Test\Unit;
 
 class MapcacheTilesetTest extends Unit
@@ -142,6 +143,8 @@ class MapcacheTilesetTest extends Unit
      * contains it, answered 200. Keeping the dotless name without expanding it
      * turns the merged tileset into a way around per-layer authorization.
      */
+    // Reads layers that only exist in the developer's own mydb; docker/test/run.sh skips the group.
+    #[Group('dev-data')]
     public function testSchemaLayersListsTheSchemasOwsLayers(): void
     {
         $layers = Mapcache::schemaLayers('dagi', new Connection(database: 'mydb'));
