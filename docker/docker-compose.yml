@@ -115,10 +115,29 @@ services:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
   postgres:
     image: postgis/postgis:16-3.4
+    # Sized for a development machine with plenty of RAM (62 GB) and SSD storage;
+    # scale shared_buffers and effective_cache_size with the host. The image's
+    # defaults (128 MB shared_buffers, 4 MB work_mem) are far too small for the
+    # national datasets that are tiled from here.
     command:
       - postgres
       - -c
       - random_page_cost=1.1
+      - -c
+      - shared_buffers=8GB
+      - -c
+      - effective_cache_size=32GB
+      - -c
+      - work_mem=32MB
+      - -c
+      - maintenance_work_mem=2GB
+      - -c
+      - effective_io_concurrency=200
+      # Tile queries are short; compiling them costs more than it saves.
+      - -c
+      - jit=off
+      - -c
+      - max_wal_size=8GB
     shm_size: 2gb
     container_name: postgres
     restart: unless-stopped
