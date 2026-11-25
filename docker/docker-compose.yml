@@ -144,6 +144,22 @@ services:
       - jit=off
       - -c
       - max_wal_size=8GB
+      # Background workers, to match the CPU limit below (16 of the host's 24 cores).
+      # A tile query rarely runs in parallel; this is for imports, index builds
+      # and the occasional large scan.
+      - -c
+      - max_worker_processes=16
+      - -c
+      - max_parallel_workers=16
+      - -c
+      - max_parallel_workers_per_gather=4
+      - -c
+      - max_parallel_maintenance_workers=4
+      # Each MapServer and PHP process holds its own connection, and the cron
+      # workers add theirs every minute; the image's 100 leaves little room when
+      # tiles are seeded on many threads.
+      - -c
+      - max_connections=300
     shm_size: 2gb
     container_name: postgres
     restart: unless-stopped
@@ -158,7 +174,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '8'
+          cpus: '16'
   postgis:
     image: mapcentia/postgis:pg17-postgis3-php8.4-trixie-1
     build:

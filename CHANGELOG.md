@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [2026.11.9] - 2026-25-11
+### Added
+- MBTiles as a MapCache cache backend. `mbtiles` can be the install default (`mapCache.type`), a layer's `cache` or a schema's (`PATCH /api/v4/schemas/{schema}/tile`). Every tileset gets one file per grid: `app/wms/mapcache/mbtiles/<db>/<tileset>/<grid>.mbtiles`. It holds the image tileset only; the vector tilesets (`.mvt`, `.json`) of such a layer or schema stay in sqlite, because MapCache's MBTiles cache only stores images. A full delete of the tileset empties the files in place and reports the tiles removed.
+- `docker/test/run.sh` runs the unit and api suites in throw-away containers (PostGIS, Redis, OpenSearch and GC2) and removes them again. See `docker/test/README.md`.
+- The `elasticsearch` block of a relation's Meta (per-field mapping: `type`, `analyzer`, `search_analyzer`, ...) is documented in OpenAPI, and `PATCH /api/v4/meta` accepts `"elasticsearch": {}` to clear it.
+
+### Changed
+- The v4 Search API enforces layer privileges and geofence rules for sub-users: `403 INSUFFICIENT_PRIVILEGES` without read privilege on the relation, and `403 GEOFENCE_RULES_APPLY` when a deny or limit rule matches. Before, a sub-user could search any indexed table in a schema they could reach.
+- A database error in the API is answered with `400` instead of the SQLSTATE as HTTP status. The SQLSTATE is in the new `sql_state` field of the error body.
+- A schema's merged image tileset leaves out vector layers without classes. MapServer ran their query and drew nothing, on every tile. The `.mvt` tileset still has every layer. This changes the generated MapCache config of an install that has class-less layers.
+
+### Fixed
+- WFS on a table with workflow but without versioning: every insert, update and delete failed with `column "gc2_version_gid" does not exist`, and a sub-user's read failed with `500`.
+- A geofence rule that could not be applied to a statement was reported as a `401` result instead of an error, and a statement without parameters failed in the geofence step.
+- Restricted enum values of a column were read on the default connection instead of the request's.
+
 ## [2026.11.8] - 2026-20-11
 ### Changed
 - `redirectUriHosts` is now check when signing with username/email. No need to register `redirect_uri` on the client.
