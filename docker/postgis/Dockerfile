@@ -96,6 +96,11 @@ VOLUME  ["/var/www/geocloud2", "/etc/postgresql", "/var/log", "/var/lib/postgres
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+# Upgrades PostGIS and pgRouting in every database after a move to a newer image:
+#   docker exec <container> upgrade-extensions.sh
+COPY upgrade-extensions.sh /usr/local/bin/upgrade-extensions.sh
+RUN chmod +x /usr/local/bin/upgrade-extensions.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 COPY conf/pgbouncer/pgbouncer.ini /etc/pgbouncer/pgbouncer.ini

@@ -66,3 +66,36 @@ kombinationen ikke kan installeres. Ændrer du tabellerne, skal tjekket også re
 
 Testet: PG11 med PostGIS 2 (bullseye), PG11 med PostGIS 3 (bookworm) og PG17 med
 PostGIS 3 (trixie).
+
+## Skift af en eksisterende klynge til et nyere image
+
+En klynge kan flyttes til et nyere image med samme PostgreSQL-hovedversion ved at
+starte det nye image på det samme datavolume. `entrypoint.sh` overtager selv
+klyngens bruger-id'er (de skifter mellem Debian-versioner).
+
+Det nye image har nyere biblioteker, men hver database beholder SQL-definitionerne
+fra den version, den blev oprettet med. Kør derfor én gang efter skiftet:
+
+```bash
+docker exec <postgis-container> upgrade-extensions.sh
+```
+
+Scriptet gennemløber alle databaser, også skabelonerne, og kører
+`postgis_extensions_upgrade()` og `ALTER EXTENSION pgrouting UPDATE`, hvor
+udvidelserne er installeret. PostGIS virker også før opgraderingen, men pgRouting
+gør ikke: alle `pgr_*`-funktioner fejler med
+`could not access file "$libdir/libpgrouting-3.4"`, indtil den er opdateret.
+Scriptet kan køres igen når som helst.
+
+Kør scriptet og ikke `SELECT postgis_extensions_upgrade()` direkte. I en
+GC2-database fejler det direkte kald med
+`cannot drop view raster_columns because other objects depend on it`, fordi
+`settings.geometry_columns_view` læser fra `raster_columns`, som
+raster-opgraderingen sletter og genskaber. Scriptet fjerner de afhængige views,
+opgraderer og opretter dem igen med samme definition, ejer, rettigheder og
+kommentar, i én transaktion pr. database. Et afhængigt materialiseret view, eller
+et view med egne triggere eller regler, håndteres ikke: databasen springes over
+uændret med en besked om, hvilket view der skal fjernes først.
+
+Testet fra `mapcentia/postgis:15` (PostGIS 3.3.2, pgRouting 3.4.2) til
+`pg15-postgis3-bookworm` (PostGIS 3.7.0, pgRouting 4.0.2).
