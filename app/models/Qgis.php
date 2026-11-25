@@ -94,6 +94,9 @@ class Qgis extends Model
             // Fallback: return original if split failed
             return $xml;
         }
+        // QGIS Server reads layers as MapServer does: through the MapServer
+        // connection when one is set, else the normal one.
+        $ms = \app\inc\MapServerConnection::resolve(new \app\inc\Connection());
         foreach ($lines as $i => $line) {
             // Cheap containment check to avoid regex work unless needed
             if (
@@ -103,10 +106,10 @@ class Qgis extends Model
                 str_contains($line, 'host') &&
                 str_contains($line, 'dbname')
             ) {
-                $line = preg_replace("/port='?[0-9]*'?/", "port=" . Connection::$param["postgisport"], $line);
-                $line = preg_replace("/user=\'?[^\s\\\\]*\'?/", "user=" . Connection::$param["postgisuser"], $line);
-                $line = preg_replace("/password=\'?[^\s\\\\]*\'?/", "password=" . Connection::$param["postgispw"], $line);
-                $line = preg_replace("/host=\'?[^\s\\\\]*\'?/", "host=" . Connection::$param["postgishost"], $line);
+                $line = preg_replace("/port='?[0-9]*'?/", "port=" . $ms->port, $line);
+                $line = preg_replace("/user=\'?[^\s\\\\]*\'?/", "user=" . $ms->user, $line);
+                $line = preg_replace("/password=\'?[^\s\\\\]*\'?/", "password=" . $ms->password, $line);
+                $line = preg_replace("/host=\'?[^\s\\\\]*\'?/", "host=" . $ms->host, $line);
                 $line = preg_replace("/dbname=\'?[^\s\\\\]*\'?/", "dbname=" . Database::getDb(), $line);
                 $lines[$i] = $line;
             }

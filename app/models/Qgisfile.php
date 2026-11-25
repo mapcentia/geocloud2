@@ -122,11 +122,14 @@ class Qgisfile extends Model
             'POLYGON', 'MULTIPOLYGON' => 'Polygon',
             'LINESTRING', 'MULTILINESTRING' => 'Line',
         };
-        $encodedUser = htmlspecialchars($this->connection->user, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        // QGIS Server reads layers as MapServer does: through the MapServer
+        // connection when one is set, else the normal one.
+        $ms = \app\inc\MapServerConnection::resolve($this->connection);
+        $encodedUser = htmlspecialchars($ms->user, ENT_XML1 | ENT_QUOTES, 'UTF-8');
         $encodedSchema = htmlspecialchars($schema, ENT_XML1 | ENT_QUOTES, 'UTF-8');
         $encodedRel = htmlspecialchars($rel, ENT_XML1 | ENT_QUOTES, 'UTF-8');
-        $encodedPassword = htmlspecialchars($this->connection->password, ENT_XML1 | ENT_QUOTES, 'UTF-8');
-        $result = sprintf($qgs, $encodedSchema, $encodedRel, $type, $this->connection->database, $this->connection->host, $this->connection->port, $pkey, $cols['srid'], $cols['f_geometry_column'], $innerQml, $encodedUser, $encodedPassword, $this->spatialRefSys("3857"), $this->spatialRefSys($cols['srid']));
+        $encodedPassword = htmlspecialchars((string)$ms->password, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        $result = sprintf($qgs, $encodedSchema, $encodedRel, $type, $ms->database, $ms->host, $ms->port, $pkey, $cols['srid'], $cols['f_geometry_column'], $innerQml, $encodedUser, $encodedPassword, $this->spatialRefSys("3857"), $this->spatialRefSys($cols['srid']));
         return $this->writeQgisfile($result, $rel, $cols['f_geometry_column']);
     }
 }

@@ -98,7 +98,9 @@ class Processqgis extends Controller
                     // Check if layer is versioned and if so, add a WHERE clause.
                     $where = $this->layer->doesColumnExist("$schema.$table", "gc2_version_gid")["exists"] ? "gc2_version_end_date IS NULL" : "";
 
-                    $PGDataSource = "dbname=$db host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " sslmode=disable key='$pkey' srid=$srid type=$type table=\"$schema\".\"$table\" ($f_geometry_column) sql=$where";
+                    // QGIS Server reads layers as MapServer does: through the MapServer connection when one is set.
+                    $ms = \app\inc\MapServerConnection::resolve(new \app\inc\Connection());
+                    $PGDataSource = "dbname=$db host=" . $ms->host . " port=" . $ms->port . " user=" . $ms->user . " password=" . $ms->password . " sslmode=disable key='$pkey' srid=$srid type=$type table=\"$schema\".\"$table\" ($f_geometry_column) sql=$where";
 
                     preg_match("/table=\S*/", $dataSource, $matches);
                     $maplayer->datasource = $PGDataSource;
@@ -148,7 +150,9 @@ class Processqgis extends Controller
                     // Check if layer is versioned and if so, add a WHERE clause.
                     $where = $this->layer->doesColumnExist("$schema.$table", "gc2_version_gid")["exists"] ? "gc2_version_end_date IS NULL" : "";
 
-                    $PGDataSource = "dbname=$db host=" . Connection::$param["postgishost"] . " port=" . Connection::$param["postgisport"] . " user=" . Connection::$param["postgisuser"] . " password=" . Connection::$param["postgispw"] . " sslmode=disable key='$pkey' srid=$srid type=$type table=\"$schema\".\"$table\" ($f_geometry_column) sql=$where";
+                    // QGIS Server reads layers as MapServer does: through the MapServer connection when one is set.
+                    $ms = \app\inc\MapServerConnection::resolve(new \app\inc\Connection());
+                    $PGDataSource = "dbname=$db host=" . $ms->host . " port=" . $ms->port . " user=" . $ms->user . " password=" . $ms->password . " sslmode=disable key='$pkey' srid=$srid type=$type table=\"$schema\".\"$table\" ($f_geometry_column) sql=$where";
 
                     $maplayer->srs->spatialrefsys = "";
                     $maplayer->srs->spatialrefsys->proj4 = $proj4text;

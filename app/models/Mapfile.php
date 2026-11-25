@@ -9,6 +9,7 @@ namespace app\models;
 
 use app\conf\App;
 use app\conf\Connection;
+use app\inc\MapServerConnection;
 use app\inc\Model;
 use app\inc\Util;
 use PDOException;
@@ -19,7 +20,8 @@ use Psr\Cache\InvalidArgumentException;
 class Mapfile extends Model
 {
     private array $bbox;
-    private string $mapServerHost;
+    /** Where MapServer connects to read layers; may differ from GC2's own connection. */
+    private MapServerConnection $mapServer;
 
     /**
      * @throws PhpfastcacheInvalidArgumentException|InvalidArgumentException
@@ -27,7 +29,7 @@ class Mapfile extends Model
     function __construct(?\app\inc\Connection $connection = null)
     {
         parent::__construct(connection: $connection);
-        $this->mapServerHost = Connection::$param['mapserverhost'] ?? $this->connection->host;
+        $this->mapServer = MapServerConnection::resolve($this->connection);
         $settings = new Setting(connection: $connection);
         $extents = $settings->get()["data"]->extents ?? null;
         $schema = $this->connection->schema;
@@ -205,14 +207,14 @@ class Mapfile extends Model
 
     public function renderPostgisConnection(): string
     {
-        $s = "user=" . $this->connection->user;
-        $s .= " dbname=" . $this->connection->database;
-        $s .= " host=" . $this->mapServerHost;
-        $s .= " port=" . $this->connection->port;
-        if ($this->connection->password) {
-            $s .= " password=" . $this->connection->password;
+        $s = "user=" . $this->mapServer->user;
+        $s .= " dbname=" . $this->mapServer->database;
+        $s .= " host=" . $this->mapServer->host;
+        $s .= " port=" . $this->mapServer->port;
+        if ($this->mapServer->password) {
+            $s .= " password=" . $this->mapServer->password;
         }
-        if (!$this->connection->pgbouncer) {
+        if (!$this->mapServer->pgbouncer) {
             $s .= " options='-c client_encoding=UTF8'";
         }
         return $s;
@@ -704,8 +706,7 @@ SYMBOLS;
                     if (!empty($layerArr['data'][0]['label_no_clip'])) $s .= "PROCESSING \"LABEL_NO_CLIP=True\"\n";
                     if (!empty($layerArr['data'][0]['polyline_no_clip'])) $s .= "PROCESSING \"POLYLINE_NO_CLIP=True\"\n";
                 } else {
-                    $host = $this->mapServerHost;
-                    $s .= "DATA \"PG:host=$host port={$this->connection->port} dbname='{$this->connection->database}' user='{$this->connection->user}' password='{$this->connection->password}'\n";
+                    $s .= "DATA \"PG:host={$this->mapServer->host} port={$this->mapServer->port} dbname='{$this->mapServer->database}' user='{$this->mapServer->user}' password='{$this->mapServer->password}'\n";
                     $s .= "\t\t\t    schema='{$row['f_table_schema']}' table='{$row['f_table_name']}' mode='2'\"\n";
                     $s .= "PROCESSING \"CLOSE_CONNECTION=ALWAYS\" \n";
                 }

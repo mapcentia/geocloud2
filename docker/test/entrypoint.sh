@@ -40,6 +40,12 @@ class Connection
         "postgisuser" => "$POSTGRES_USER",
         "postgispw" => "$POSTGRES_PASSWORD",
         "pgbouncer" => false,
+        // MapServer reads layers through the PgBouncer of the postgres
+        // container, so the suites exercise a separate MapServer connection.
+        "mapserver" => [
+            "port" => "$MAPSERVER_POSTGRES_PORT",
+            "pgbouncer" => true,
+        ],
     ];
 }
 PHP

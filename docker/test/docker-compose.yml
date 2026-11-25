@@ -64,6 +64,8 @@ services:
       POSTGRES_USER: gc2
       POSTGRES_PASSWORD: ${GC2_TEST_PG_PASSWORD:?set by run.sh}
       POSTGRES_PGBOUNCER: "false"
+      # The PgBouncer that the postgres image runs next to PostgreSQL
+      MAPSERVER_POSTGRES_PORT: "6432"
       MODE_ENV: dev
     volumes:
       # entrypoint.sh lays a writable tmpfs overlay over this

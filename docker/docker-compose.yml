@@ -47,6 +47,12 @@ services:
     expose:
       - 9000
     env_file: conn.env
+    environment:
+      # MapServer and QGIS Server read layers through PgBouncer; GC2 itself
+      # keeps the direct connection of conn.env. Remove these three to go back.
+      MAPSERVER_POSTGRES_HOST: pgbouncer
+      MAPSERVER_POSTGRES_PORT: "6432"
+      MAPSERVER_POSTGRES_PGBOUNCER: "true"
     extra_hosts:
       - host.docker.internal:host-gateway
     # Let outgoing connections reuse sockets in TIME_WAIT. The cron workers open
@@ -109,6 +115,27 @@ services:
       - internal
     expose:
       - 8090
+  # Connection pooler for MapServer and QGIS Server (docker/pgbouncer/entrypoint.sh).
+  # The postgis image is only used for its pgbouncer binary.
+  pgbouncer:
+    image: mapcentia/postgis:pg17-postgis3-php8.4-trixie-1
+    restart: unless-stopped
+    user: postgres
+    entrypoint: ["/pgbouncer-entrypoint.sh"]
+    env_file: conn.env
+    volumes:
+      - ./pgbouncer/entrypoint.sh:/pgbouncer-entrypoint.sh:ro
+    # The image's own check asks PostgreSQL, which does not run here
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-p", "6432"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default
+      - internal
+    expose:
+      - 6432
   redis:
     image: redis
     restart: unless-stopped
