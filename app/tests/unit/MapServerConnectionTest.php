@@ -18,7 +18,7 @@ class MapServerConnectionTest extends Unit
 {
     protected UnitTester $tester;
     private const array ENV = ['MAPSERVER_POSTGRES_HOST', 'MAPSERVER_POSTGRES_PORT', 'MAPSERVER_POSTGRES_USER',
-        'MAPSERVER_POSTGRES_PASSWORD', 'MAPSERVER_POSTGRES_PGBOUNCER'];
+        'MAPSERVER_POSTGRES_PASSWORD', 'MAPSERVER_POSTGRES_PGBOUNCER', 'MAPSERVER_POSTGRES_PERSISTENT'];
     /** @var array<string, mixed> */
     private array $paramBefore;
     /** @var array<string, string|false> */
@@ -122,6 +122,45 @@ class MapServerConnectionTest extends Unit
         $this->assertSame('old-style-host', MapServerConnection::resolve($this->normal())->host);
         Conf::$param['mapserver'] = ['host' => 'new-style-host'];
         $this->assertSame('new-style-host', MapServerConnection::resolve($this->normal())->host);
+    }
+
+    /**
+     * Persistent connections (CLOSE_CONNECTION=DEFER) pin a connection per
+     * MapServer process and database, which only a transaction pooler makes
+     * free. So they follow the MapServer connection's own "pgbouncer" setting
+     * and nothing else, unless set explicitly.
+     */
+    public function testPersistentFollowsTheMapServerPgbouncerSetting(): void
+    {
+        $this->assertFalse(MapServerConnection::resolve($this->normal())->persistent);
+        $this->assertFalse(MapServerConnection::resolve($this->normal(pgbouncer: true))->persistent,
+            'a pooled normal connection must not change the mapfiles of an existing install');
+
+        Conf::$param['mapserver'] = ['host' => 'replica'];
+        $this->assertFalse(MapServerConnection::resolve($this->normal())->persistent, 'a replica is not a pooler');
+
+        Conf::$param['mapserver'] = ['host' => 'pgbouncer', 'pgbouncer' => true];
+        $this->assertTrue(MapServerConnection::resolve($this->normal())->persistent);
+
+        Conf::$param['mapserver'] = ['host' => 'pgbouncer', 'pgbouncer' => true, 'persistent' => false];
+        $this->assertFalse(MapServerConnection::resolve($this->normal())->persistent, 'a session-mode pooler can opt out');
+
+        Conf::$param['mapserver'] = ['host' => 'replica', 'persistent' => true];
+        $this->assertTrue(MapServerConnection::resolve($this->normal())->persistent, 'and a direct connection can opt in');
+
+        unset(Conf::$param['mapserver']);
+        putenv('MAPSERVER_POSTGRES_PGBOUNCER=true');
+        $this->assertTrue(MapServerConnection::resolve($this->normal())->persistent);
+        putenv('MAPSERVER_POSTGRES_PERSISTENT=false');
+        $this->assertFalse(MapServerConnection::resolve($this->normal())->persistent);
+    }
+
+    public function testTheMapfileKeepsTheConnectionOpenOnlyWhenPersistent(): void
+    {
+        $this->assertSame('', $this->mapfile($this->normal())->renderConnectionProcessing(),
+            'nothing is added to the mapfile of an install without a persistent MapServer connection');
+        Conf::$param['mapserver'] = ['host' => 'pgbouncer', 'port' => '6432', 'pgbouncer' => true];
+        $this->assertSame("PROCESSING \"CLOSE_CONNECTION=DEFER\"\n", $this->mapfile($this->normal())->renderConnectionProcessing());
     }
 
     /**

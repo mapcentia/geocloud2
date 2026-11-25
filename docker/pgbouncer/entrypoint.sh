@@ -4,9 +4,15 @@
 # service of docker/docker-compose.yml). GC2 points them here with
 # MAPSERVER_POSTGRES_HOST/PORT; see docker/conf/gc2/Connection.php.
 #
-# MapServer opens a connection for every layer of every map request. A real
-# PostgreSQL connection costs a process and an authentication each time;
-# PgBouncer keeps server connections open and hands them out.
+# Without a pooler MapServer opens a connection for every layer of every map
+# request, and a real PostgreSQL connection costs a process and an
+# authentication each time. With this one the MapServer processes keep their
+# connections open and PgBouncer shares a small number of server connections
+# between them.
+#
+# Restart the web server (the MapServer processes) when this container is
+# restarted: each process otherwise fails one request on its dead connection
+# before it reconnects.
 #
 # The config is written from the environment, so no password is kept in a file
 # in the repository: POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER and
@@ -30,12 +36,13 @@ unix_socket_dir =
 auth_type = scram-sha-256
 auth_file = $dir/userlist.txt
 
-; Session pooling: a client keeps one server connection for as long as it is
-; connected, so everything a direct connection can do still works. The gain is
-; the cheap connect, which is what MapServer needs. Do not point GC2's own
-; connection here in transaction mode: the scheduler's advisory locks need
-; real sessions.
-pool_mode = ${PGBOUNCER_POOL_MODE:-session}
+; Transaction pooling: a server connection is only borrowed while a query
+; runs. MapServer processes keep their client connection open between requests
+; (CLOSE_CONNECTION=DEFER in the mapfiles), one per database they draw from, and
+; in session mode each of those would pin a server connection.
+; Do not point GC2's own connection here: the scheduler's advisory locks need
+; real sessions, and it refuses to run through a transaction pooler.
+pool_mode = ${PGBOUNCER_POOL_MODE:-transaction}
 server_reset_query = DISCARD ALL
 
 ; Server connections per database and user. Keep

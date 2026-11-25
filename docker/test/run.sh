@@ -62,6 +62,13 @@ echo "== Starting clean containers (project $project)"
 # Leftovers of an interrupted run
 compose down -v --remove-orphans >/dev/null 2>&1
 compose up -d --wait postgres redis opensearch || fail_env "PostgreSQL, Redis or OpenSearch did not start"
+
+# MapServer goes through the postgres image's PgBouncer and keeps its
+# connections open (see docker/conf/gc2/Connection.php). That wants transaction
+# pooling; the image is configured for session pooling.
+compose exec -T postgres sh -c "sed -i 's/^pool_mode = .*/pool_mode = transaction/' /etc/pgbouncer/pgbouncer.ini && pkill -HUP pgbouncer" \
+    || fail_env "could not switch PgBouncer to transaction pooling"
+
 compose up -d gc2 || fail_env "the GC2 container did not start"
 
 echo "== Waiting for the web server"

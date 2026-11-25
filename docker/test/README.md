@@ -32,8 +32,9 @@ could not be started. Reports of failed tests are in `app/tests/_output`.
   overrides in `docker/test/App.php` — not the local `app/conf/App.php`. A
   setting the tests need goes into `docker/test/App.php`; no secrets there.
 - MapServer reads layers through the PgBouncer of the postgres container
-  (port 6432) while GC2 itself connects to PostgreSQL directly, so the suites
-  cover a separate MapServer connection.
+  (port 6432, switched to transaction pooling by `run.sh`) with persistent
+  connections, while GC2 itself connects to PostgreSQL directly. The suites
+  therefore cover a separate MapServer connection.
 - The PostgreSQL password is generated for each run. `entrypoint.sh` writes it
   to the container's `Connection.php`, because cron jobs and
   `sudo -u www-data` do not inherit the container's environment.

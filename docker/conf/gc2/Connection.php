@@ -27,6 +27,13 @@ namespace app\conf;
  * MAPSERVER_POSTGRES_USER=
  * MAPSERVER_POSTGRES_PASSWORD=
  * MAPSERVER_POSTGRES_PGBOUNCER=true   (the target is a PgBouncer)
+ * MAPSERVER_POSTGRES_PERSISTENT=       (MapServer processes keep their connection
+ *                                      open; defaults to on with PGBOUNCER=true)
+ *
+ * With a persistent connection every MapServer process holds one connection per
+ * database it draws from. Run the PgBouncer in transaction mode, where that is
+ * free; behind a session-mode pooler or straight to PostgreSQL, set
+ * PERSISTENT=false unless (FastCGI processes) x (databases) fits in the pool.
  *
  * Existing mapfiles and QGIS project files keep the connection they were written
  * with until they are regenerated. GC2's own connection must stay a direct one: the scheduler

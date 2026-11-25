@@ -220,6 +220,17 @@ class Mapfile extends Model
         return $s;
     }
 
+    /**
+     * The PROCESSING line that makes a MapServer process keep its database
+     * connection between requests, when the MapServer connection is persistent
+     * (see MapServerConnection). Empty otherwise, so the mapfile of an install
+     * without one is unchanged.
+     */
+    public function renderConnectionProcessing(): string
+    {
+        return $this->mapServer->persistent ? "PROCESSING \"CLOSE_CONNECTION=DEFER\"\n" : '';
+    }
+
     public function renderDataLine(array $row, array $layerData): string
     {
         return "DATA \"" . strtolower($row['f_geometry_column']) . " FROM (SELECT \\\"{$layerData['selectStr']}\\\" FROM ({$layerData['dataSql']} /*FILTER_{$layerData['layerName']}*/) as bar) as foo USING UNIQUE {$layerData['primeryKey']['attname']} USING srid={$row['srid']}\"";
@@ -703,6 +714,7 @@ SYMBOLS;
                     $s .= $this->renderDataLine($row, $layerData) . "\n";
                     $s .= "CONNECTIONTYPE POSTGIS\n";
                     $s .= "CONNECTION \"{$this->renderPostgisConnection()}\"\n";
+                    $s .= $this->renderConnectionProcessing();
                     if (!empty($layerArr['data'][0]['label_no_clip'])) $s .= "PROCESSING \"LABEL_NO_CLIP=True\"\n";
                     if (!empty($layerArr['data'][0]['polyline_no_clip'])) $s .= "PROCESSING \"POLYLINE_NO_CLIP=True\"\n";
                 } else {
@@ -870,6 +882,7 @@ SYMBOLS;
             $s .= $this->renderDataLine($row, $layerData) . "\n";
             $s .= "CONNECTIONTYPE POSTGIS\n";
             $s .= "CONNECTION \"{$this->renderPostgisConnection()}\"\n";
+            $s .= $this->renderConnectionProcessing();
             $s .= "TYPE {$type}\n";
 
             // METADATA
