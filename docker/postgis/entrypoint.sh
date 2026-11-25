@@ -54,6 +54,30 @@ adopt_cluster_owner() {
       # chown drops setuid/setgid bits
       if [ ! -L "$f" ]; then chmod "$mode" "$f"; fi
     done
+  # The walk above stays on the image's own filesystem (-xdev), and the config,
+  # log and pgbouncer directories are volumes too. When only the data volume
+  # comes from the old image, those are fresh copies from this one and still
+  # carry the ids postgres had here, so pg_ctlcluster refused to start: "Config
+  # owner (messagebus:997) and data owner (postgres:101) do not match".
+  # Everything in these directories is postgres's, so its old ids are simply
+  # replaced -- no swap. A volume that came along from the old image has no such
+  # files and is left as it is. The data directory is deliberately not walked.
+  local d root_dev
+  root_dev=$(stat -c %d /)
+  for d in /etc/postgresql /var/log/postgresql /var/run/postgresql /etc/pgbouncer; do
+    [ -e "$d" ] || continue
+    [ "$(stat -c %d "$d")" != "$root_dev" ] || continue
+    find "$d" -xdev \( -uid "$old_uid" -o -gid "$old_gid" \) -print0 2>/dev/null |
+      while IFS= read -r -d '' f; do
+        u=$(stat -c %u "$f")
+        g=$(stat -c %g "$f")
+        mode=$(stat -c %a "$f")
+        if [ "$u" = "$old_uid" ]; then u=$new_uid; fi
+        if [ "$g" = "$old_gid" ]; then g=$new_gid; fi
+        chown -h "$u:$g" "$f"
+        if [ ! -L "$f" ]; then chmod "$mode" "$f"; fi
+      done
+  done
   return 0
 }
 
@@ -176,7 +200,14 @@ ERROR:   GC2 initialisation failed. See the output above.
         exit 1
       }
 
-    #Add gc2 user to pgbouncer user list
+  fi
+
+  # Make sure the GC2 user is in PgBouncer's user list. On every start, not only
+  # the first: /etc/pgbouncer is a volume of its own, so a cluster that is
+  # brought along on its data volume alone meets an empty list, and every login
+  # through PgBouncer failed with "password authentication failed".
+  if [ -n "$GC2_USER" ] && [ -n "$GC2_PASSWORD" ] &&
+    ! grep -q "^\"$GC2_USER\" " /etc/pgbouncer/userlist.txt 2>/dev/null; then
     echo "\"$GC2_USER\" \"$GC2_PASSWORD\"" >>/etc/pgbouncer/userlist.txt
   fi
 fi
