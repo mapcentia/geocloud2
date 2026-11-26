@@ -399,4 +399,22 @@ class MapcachefileRenderTest extends Unit
         $this->assertTrue(Mapcachefile::drawsInImage(['class' => '[]', 'wmssource' => 'http://example.com/wms?layers=a']));
         $this->assertTrue(Mapcachefile::drawsInImage(['class' => '[]', 'bitmapsource' => 'ortho.tif']));
     }
+
+    /**
+     * A table without a geometry column is registered as <table>.gc2_non_postgis
+     * with no srid, and Mapfile::prepareLayerData() leaves such a row out of the
+     * mapfiles. Named in a source all the same, it made MapServer answer the whole
+     * LAYERS list with LayerNotDefined: one such table blanked the schema's merged
+     * tileset (measured on mydb/geodanmark with a table "readme").
+     */
+    public function testALayerTheMapfileLeavesOutGetsNoTileset(): void
+    {
+        $this->assertTrue(Mapcachefile::isInMapfile(['f_geometry_column' => 'the_geom', 'srid' => 25832]));
+        $this->assertTrue(Mapcachefile::isInMapfile(['f_geometry_column' => 'the_geom', 'srid' => '4326']));
+        foreach ([null, '', 0, '0', 1, -1] as $srid) {
+            $this->assertFalse(Mapcachefile::isInMapfile(['f_geometry_column' => 'gc2_non_postgis', 'srid' => $srid]),
+                'srid: ' . var_export($srid, true));
+        }
+        $this->assertFalse(Mapcachefile::isInMapfile(['f_geometry_column' => 'gc2_non_postgis']));
+    }
 }

@@ -84,6 +84,24 @@ class Mapcachefile extends Model
     }
 
     /**
+     * Whether the schema's mapfiles define this layer, i.e. whether MapServer
+     * can answer a request that names it.
+     *
+     * Mapfile::prepareLayerData() leaves out a row without a real srid, which
+     * is every table without a geometry column (<table>.gc2_non_postgis). Such
+     * a layer must not get a source here either: MapServer answers a LAYERS
+     * list that names one unknown layer with LayerNotDefined for the whole
+     * request, so a single non-spatial table in a schema turned every tile of
+     * that schema's merged tilesets into an error document.
+     *
+     * @param array<string, mixed> $row A settings.getColumns() row.
+     */
+    public static function isInMapfile(array $row): bool
+    {
+        return (int)($row['srid'] ?? 0) > 1;
+    }
+
+    /**
      * Whether a layer draws anything in a WMS image: a raster or WMS-backed
      * layer always does, a PostGIS vector layer only when it has a class.
      *
@@ -454,7 +472,7 @@ class Mapcachefile extends Model
         $seen = [];
         $result = $this->getLayerRows();
         while ($row = $this->fetchRow($result)) {
-            if ($row['f_table_schema'] == 'sqlapi' || !$row['enableows']) {
+            if ($row['f_table_schema'] == 'sqlapi' || !$row['enableows'] || !self::isInMapfile($row)) {
                 continue;
             }
             $table = $row['f_table_schema'] . '.' . $row['f_table_name'];
