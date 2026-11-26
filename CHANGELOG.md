@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
-## [2026.11.10] - 2026-25-11
+## [2026.11.10] - 2026-26-11
 ### Added
 - MapServer and QGIS Server can read layers through a database connection of their own, for example a PgBouncer or a read replica, while GC2 itself keeps the normal one. Set `"mapserver" => ["host", "port", "user", "password", "pgbouncer"]` in `app/conf/Connection.php`, or `MAPSERVER_POSTGRES_HOST`, `_PORT`, `_USER`, `_PASSWORD` and `_PGBOUNCER` in the environment. Every setting falls back on its own to the normal connection, so with none set nothing changes. The older `mapserverhost` still works. Existing mapfiles and QGIS project files keep the connection they were written with until they are regenerated.
 - With a MapServer connection marked `pgbouncer`, the mapfiles get `PROCESSING "CLOSE_CONNECTION=DEFER"`, so a MapServer process keeps its connection open instead of connecting for every layer of every request. Measured on a tileset of 50 layers with 12 requests at a time: 23 tiles/s direct, 82 through PgBouncer and 267 with the connection kept. `"persistent"` (`MAPSERVER_POSTGRES_PERSISTENT`) switches it on or off regardless. Run the PgBouncer in transaction mode: a kept connection is held per MapServer process and database, which a session-mode pooler or PostgreSQL itself has to have room for. When the pooler is restarted, restart the web server too; each MapServer process otherwise fails one request before it reconnects.
