@@ -129,7 +129,7 @@ class MetaSettingsV4ApiCest
         }
         $I->assertTrue($rel['enable_ows']);
         $I->assertTrue($rel['editable']);
-        foreach (['note', 'meta_url', 'legend_url', 'wms_source', 'bitmap_source', 'filter', 'trigger_table'] as $text) {
+        foreach (['note', 'meta_url', 'legend_url', 'wms_source', 'bitmap_source', 'trigger_table'] as $text) {
             $I->assertArrayHasKey($text, $rel);
             $I->assertNull($rel[$text], $text);
         }
@@ -213,7 +213,7 @@ class MetaSettingsV4ApiCest
         $I->assertSame('Checked by Ann', $rel['note']);
         $I->assertArrayHasKey('enable_ows', $rel);
         $I->assertArrayHasKey('authentication', $rel);
-        foreach (['wms_source', 'wms_client_epsgs', 'bitmap_source', 'filter', 'trigger_table'] as $ownerOnly) {
+        foreach (['wms_source', 'wms_client_epsgs', 'bitmap_source', 'trigger_table'] as $ownerOnly) {
             $I->assertArrayNotHasKey($ownerOnly, $rel, $ownerOnly);
         }
     }
@@ -253,6 +253,13 @@ class MetaSettingsV4ApiCest
         foreach (['linkprefix', 'linksuffix', 'querable'] as $stored) {
             $I->assertArrayNotHasKey($stored, $rel['fields']['name'], $stored);
         }
+        // The layer filter of the settings row is not used any more and is not part of the API.
+        // (A column still has its own "filter" setting.)
+        $I->assertArrayNotHasKey('filter', $rel);
+        $this->patch($I, ['filter' => "kind = 'a'"]);
+        $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        $I->assertArrayHasKey('filter', $rel['fields']['name']);
+
         foreach ([['skipconflict' => true], ['enableows' => true], ['wmssource' => 'https://example.com/'],
                      ['fields' => ['name' => ['linkprefix' => 'x']]]] as $body) {
             $this->patch($I, $body);

@@ -68,7 +68,6 @@ use Throwable;
                     new OA\Property(property: 'wms_source', description: "URL of an external WMS (or a QGIS Server project) that draws the layer instead of MapServer with the layer's classes. Returned to and set by the database owner only. A layer's own QML is switched with `use_qml` on the layer resource, which manages this value.", type: ['string', 'null'], example: 'https://wms.example.com/ows?layers=roads&format=image/png'),
                     new OA\Property(property: 'wms_client_epsgs', description: 'Space separated EPSG codes the external WMS in `wms_source` is offered in. Owner only.', type: ['string', 'null'], example: 'EPSG:4326 EPSG:25832'),
                     new OA\Property(property: 'bitmap_source', description: 'Path or connection of a raster source for the layer. Owner only.', type: ['string', 'null']),
-                    new OA\Property(property: 'filter', description: 'MapServer FILTER expression applied to the layer when it is drawn. Owner only.', type: ['string', 'null'], example: "type = 'motorway'"),
                     new OA\Property(property: 'trigger_table', description: 'Relation whose changes should clear the tile cache of this layer. Owner only.', type: ['string', 'null'], example: 'my_schema.roads_raw'),
                     new OA\Property(
                         property: 'fields',
@@ -176,10 +175,10 @@ class Meta extends AbstractApi
     public const array SETTING_TEXTS = [
         'note' => 'note', 'meta_url' => 'meta_url', 'legend_url' => 'legend_url', 'feature_id' => 'featureid',
         'wms_source' => 'wmssource', 'wms_client_epsgs' => 'wmsclientepsgs', 'bitmap_source' => 'bitmapsource',
-        'filter' => 'filter', 'trigger_table' => 'triggertable',
+        'trigger_table' => 'triggertable',
     ];
-    /** Where a layer's data comes from and how it is filtered: read by the database owner only. */
-    public const array OWNER_ONLY_SETTINGS = ['wms_source', 'wms_client_epsgs', 'bitmap_source', 'filter', 'trigger_table'];
+    /** Where a layer's data comes from: read by the database owner only. */
+    public const array OWNER_ONLY_SETTINGS = ['wms_source', 'wms_client_epsgs', 'bitmap_source', 'trigger_table'];
     public const array AUTHENTICATION_LEVELS = ['Write', 'Read/write', 'None'];
 
     public function __construct(public readonly Route2 $route, Connection $connection)
