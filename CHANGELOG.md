@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [CalVer](https://calver.org/).
 
+## [Unreleased]
+### Added
+- `GET /api/v4/symbols` lists the built-in MapServer symbols a style's `symbol` can name (triangle, circle, square, star, hatch1, dashed1, arrow, arrow2, continue and the line symbols), each with `type`, `filled`, `points` and, where it has one, `anchorpoint`, so a client can offer them and draw a preview. `GET /api/v4/symbols/{name}` takes one name or a comma separated list. Sub-users may read it. `symbol` on a style is still a free value: an image URL or a `[column]` reference work as before.
+
+### Changed
+- The symbol definitions in a generated mapfile are written from the same list the new endpoint serves. The symbols are the same; the text differs in spacing and keyword case, so a regenerated mapfile shows a diff there.
+
 ## [2026.11.10] - 2026-26-11
 ### Added
 - MapServer and QGIS Server can read layers through a database connection of their own, for example a PgBouncer or a read replica, while GC2 itself keeps the normal one. Set `"mapserver" => ["host", "port", "user", "password", "pgbouncer"]` in `app/conf/Connection.php`, or `MAPSERVER_POSTGRES_HOST`, `_PORT`, `_USER`, `_PASSWORD` and `_PGBOUNCER` in the environment. Every setting falls back on its own to the normal connection, so with none set nothing changes. The older `mapserverhost` still works. Existing mapfiles and QGIS project files keep the connection they were written with until they are regenerated.
