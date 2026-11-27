@@ -32,7 +32,7 @@ use Override;
 #[OA\Info(version: '1.0.0', title: 'GC2 API', contact: new OA\Contact(email: 'mh@mapcentia.com'))]
 #[AcceptableMethods(['POST', 'HEAD', 'OPTIONS'])]
 #[Controller(route: 'api/v4/sql/database/{database}', scope: Scope::PUBLIC)]
-class SqlNoToken extends AbstractApi
+class SqlPublic extends AbstractApi
 {
     public function __construct(public readonly Route2 $route, Connection $connection)
     {
