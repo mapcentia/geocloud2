@@ -6,6 +6,40 @@ class SourceResolverTest extends Unit
 {
     protected UnitTester $tester;
 
+    public function testPickWmssourceSkipsTheNonSpatialRow(): void
+    {
+        $qgs = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=/data/projects/my.qgs&LAYERS=x";
+        // Ordered by _key_, the non-spatial row comes before "the_geom"
+        $rows = [
+            ['_key_' => 's.t.gc2_non_postgis', 'wmssource' => null],
+            ['_key_' => 's.t.the_geom', 'wmssource' => $qgs],
+        ];
+        $this->assertSame($qgs, SourceResolver::pickWmssource($rows));
+        // ... also when the geometry row sorts first
+        $this->assertSame($qgs, SourceResolver::pickWmssource([
+            ['_key_' => 's.t.a_geom', 'wmssource' => $qgs],
+            ['_key_' => 's.t.gc2_non_postgis', 'wmssource' => null],
+        ]));
+    }
+
+    public function testPickWmssourceKeepsFormerChoiceOtherwise(): void
+    {
+        // An ordinary layer: no source
+        $this->assertNull(SourceResolver::pickWmssource([
+            ['_key_' => 's.t.gc2_non_postgis', 'wmssource' => null],
+            ['_key_' => 's.t.the_geom', 'wmssource' => null],
+        ]));
+        // Two geometry columns: the first by _key_, as before
+        $this->assertSame('a', SourceResolver::pickWmssource([
+            ['_key_' => 's.t.geom_a', 'wmssource' => 'a'],
+            ['_key_' => 's.t.geom_b', 'wmssource' => 'b'],
+        ]));
+        // A table registered without geometry only
+        $this->assertSame('x', SourceResolver::pickWmssource([['_key_' => 's.t.gc2_non_postgis', 'wmssource' => 'x']]));
+        // Unknown layer
+        $this->assertNull(SourceResolver::pickWmssource([]));
+    }
+
     public function testParseQgsPathExtractsMapParam(): void
     {
         $conn = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=/data/projects/my.qgs&LAYERS=x";

@@ -12,6 +12,9 @@ and this project adheres to [CalVer](https://calver.org/).
 ### Changed
 - The symbol definitions in a generated mapfile are written from the same list the new endpoint serves. The symbols are the same; the text differs in spacing and keyword case, so a regenerated mapfile shows a diff there.
 
+### Fixed
+- A layer served by QGIS Server or an external WMS was treated as an ordinary MapServer layer in the v4 OWS endpoint when its table also had a non-spatial settings row (`<schema>.<table>.gc2_non_postgis`): that row was read instead of the geometry column's, and it has no source.
+
 ## [2026.11.10] - 2026-26-11
 ### Added
 - MapServer and QGIS Server can read layers through a database connection of their own, for example a PgBouncer or a read replica, while GC2 itself keeps the normal one. Set `"mapserver" => ["host", "port", "user", "password", "pgbouncer"]` in `app/conf/Connection.php`, or `MAPSERVER_POSTGRES_HOST`, `_PORT`, `_USER`, `_PASSWORD` and `_PGBOUNCER` in the environment. Every setting falls back on its own to the normal connection, so with none set nothing changes. The older `mapserverhost` still works. Existing mapfiles and QGIS project files keep the connection they were written with until they are regenerated.

@@ -31,15 +31,34 @@ final class SourceResolver
             $table = $bits[1] ?? $bits[0];
             // Match on the schema/table segments explicitly (not a LIKE pattern) so
             // "_" and "%" in a schema/table name aren't treated as SQL wildcards.
-            $sql = "SELECT wmssource FROM settings.geometry_columns_join
+            $sql = "SELECT _key_, wmssource FROM settings.geometry_columns_join
                     WHERE split_part(_key_, '.', 1) = :schema AND split_part(_key_, '.', 2) = :table
-                    ORDER BY _key_ LIMIT 1";
+                    ORDER BY _key_";
             $res = $model->prepare($sql);
             $model->execute($res, ['schema' => $schema, 'table' => $table]);
-            $row = $model->fetchRow($res);
-            $map[$layer] = $row['wmssource'] ?? null;
+            $map[$layer] = self::pickWmssource($model->fetchAll($res));
         }
         return new self($map);
+    }
+
+    /**
+     * The wmssource of the settings row a layer is served from, given all rows of its table
+     * ordered by _key_. A table can have a row for a non-spatial registration
+     * ("schema.table.gc2_non_postgis") next to the row of its geometry column; that row has no
+     * source and sorts before most geometry column names, so taking simply the first row made a
+     * QGIS or external WMS layer look like an ordinary one. The first geometry row wins; the
+     * non-spatial row only counts when it is the only one.
+     *
+     * @param list<array{_key_: string, wmssource: ?string}> $rows
+     */
+    public static function pickWmssource(array $rows): ?string
+    {
+        foreach ($rows as $row) {
+            if (!str_ends_with((string)($row['_key_'] ?? ''), '.gc2_non_postgis')) {
+                return $row['wmssource'] ?? null;
+            }
+        }
+        return $rows[0]['wmssource'] ?? null;
     }
 
     public function qgsFilePath(): ?string
