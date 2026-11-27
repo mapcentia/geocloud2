@@ -512,6 +512,11 @@ SQL;
                       def     JSONB,
                       created TIMESTAMP WITH TIME ZONE  NOT NULL  DEFAULT now()
                     )";
+        // hstore belongs where the other extensions are. In a schema outside the search path
+        // (it ended up in "settings" in databases made from the template) the type and its
+        // functions and operators cannot be found by name, and versioned workflow
+        // (gc2_workflow, settings.workflow) does not work. Relocating keeps columns and data.
+        $sqls[] = "ALTER EXTENSION hstore SET SCHEMA public";
         include 'Views1.php';
         return $sqls;
     }

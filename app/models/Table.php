@@ -1009,6 +1009,48 @@ class Table extends Model
     }
 
     /**
+     * Removes versioning for good: the ended versions are deleted first, so the table is left
+     * with one row per feature (the current one). removeVersioning() only drops the columns,
+     * which turns every old version into a live duplicate row.
+     *
+     * @return int the number of old versions deleted
+     */
+    public function removeVersioningAndHistory(): int
+    {
+        $this->clearCacheOnSchemaChanges();
+        $deleted = 0;
+        $name = $this->doubleQuoteQualifiedName($this->table);
+        $this->withTransaction(function () use (&$deleted, $name) {
+            $res = $this->prepare("DELETE FROM $name WHERE gc2_version_end_date IS NOT NULL");
+            $this->execute($res);
+            $deleted = $res->rowCount();
+            foreach (['gc2_version_gid', 'gc2_version_start_date', 'gc2_version_end_date', 'gc2_version_uuid', 'gc2_version_user'] as $column) {
+                $this->execute($this->prepare("ALTER TABLE $name DROP COLUMN $column"));
+            }
+        });
+        $this->clearCacheOnSchemaChanges();
+        return $deleted;
+    }
+
+    /**
+     * Removes workflow from the table: the status and signature columns and the table's
+     * entries in the workflow log. Every row counts as an ordinary row afterwards, whatever
+     * status it had.
+     */
+    public function removeWorkflow(): void
+    {
+        $this->clearCacheOnSchemaChanges();
+        $name = $this->doubleQuoteQualifiedName($this->table);
+        $this->withTransaction(function () use ($name) {
+            $this->execute($this->prepare("ALTER TABLE $name DROP COLUMN gc2_status"));
+            $this->execute($this->prepare("ALTER TABLE $name DROP COLUMN gc2_workflow"));
+            $res = $this->prepare("DELETE FROM settings.workflow WHERE f_schema_name = :schema AND f_table_name = :table");
+            $this->execute($res, ['schema' => $this->schema, 'table' => $this->tableWithOutSchema]);
+        });
+        $this->clearCacheOnSchemaChanges();
+    }
+
+    /**
      * Creates a geometry table
      * @param string $table
      * @param string|null $type

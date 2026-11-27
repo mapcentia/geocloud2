@@ -44,6 +44,8 @@ use Symfony\Component\Validator\Constraints as Assert;
             type: "string",
             example: "my-column",
         ),
+        new OA\Property(property: "versioning", description: "Whether the table is versioned. Set with PATCH (database owner only).", type: "boolean", example: false),
+        new OA\Property(property: "workflow", description: "Whether the table has workflow. Set with PATCH (database owner only); needs versioning.", type: "boolean", example: false),
         new OA\Property(property: "_type", description: "Read-only. TABLE, VIEW or MATERIALIZED VIEW.", type: "string", readOnly: true, example: "TABLE"),
         new OA\Property(property: "_events", description: "Read-only. Whether realtime change events are enabled on the table.", type: "boolean", readOnly: true, example: false),
         new OA\Property(property: "_column_count", description: "Read-only. Number of columns. Always present, also with namesOnly=true, so a listing can show sizes without loading every column.", type: "integer", readOnly: true, example: 7),
@@ -211,6 +213,8 @@ class Table extends AbstractApi
                 properties: [
                     new OA\Property(property: "name", description: "New name of table", type: "string", example: "my_table_with_new_name"),
                     new OA\Property(property: "schema", description: "Target schema to move the table to.", type: "string", example: "my_other_schema"),
+                    new OA\Property(property: "versioning", description: "Enable or disable versioning (database owner only). Enabling adds the gc2_version_* columns; from then on edits through WFS-T and the Feature API keep the previous state as an ended version. Disabling deletes all ended versions and removes the columns: the history is lost. Refused with 409 WORKFLOW_ENABLED while the table has workflow, unless workflow is disabled in the same request.", type: "boolean", example: true),
+                    new OA\Property(property: "workflow", description: "Enable or disable workflow (database owner only). Needs versioning (409 VERSIONING_REQUIRED; both can be enabled in one request). Enabling adds gc2_status and gc2_workflow and marks existing rows as published. Disabling removes them and the table's workflow log; every row is an ordinary row afterwards, whatever status it had.", type: "boolean", example: false),
                     new OA\Property(
                         property: "comment",
                         title: "Comment",
@@ -264,7 +268,54 @@ class Table extends AbstractApi
         $schema = $data->schema ?? $this->schema[0];
         $baseUrl = "/api/v4/schemas/$schema/tables/";
         $list = count($r) > 0 ? $r : $this->unQualifiedName;
+        if (property_exists($data, 'versioning') || property_exists($data, 'workflow')) {
+            foreach ($list as $name) {
+                $this->setVersioningAndWorkflow("$schema.$name", $data->versioning ?? null, $data->workflow ?? null);
+            }
+        }
         return $this->patchResponse($baseUrl, $list);
+    }
+
+    /**
+     * Switches versioning and workflow on a table. Workflow builds on versioning, so the order
+     * is versioning on, workflow on, workflow off, versioning off, and a request that would
+     * leave workflow without versioning is refused before anything is changed.
+     *
+     * @throws GC2Exception
+     */
+    private function setVersioningAndWorkflow(string $rel, ?bool $versioning, ?bool $workflow): void
+    {
+        if (empty($this->route->jwt['data']['superUser'])) {
+            throw new GC2Exception("Only the database owner can change versioning and workflow", 403, null, 'SUPER_USER_ONLY');
+        }
+        $table = new TableModel(table: $rel, lookupForeignTables: false, connection: $this->connection);
+        if ($table->relType !== 'TABLE') {
+            throw new GC2Exception("Versioning and workflow need a table; $rel is not one", 409, null, 'NOT_A_TABLE');
+        }
+        $wantVersioning = $versioning ?? $table->versioning;
+        $wantWorkflow = $workflow ?? $table->workflow;
+        if ($wantWorkflow && !$wantVersioning) {
+            throw $workflow === true
+                ? new GC2Exception("Workflow needs versioning. Enable versioning too", 409, null, 'VERSIONING_REQUIRED')
+                : new GC2Exception("The table has workflow, which needs versioning. Disable workflow too", 409, null, 'WORKFLOW_ENABLED');
+        }
+        if ($wantVersioning && !$table->versioning) {
+            $table->addVersioning();
+        }
+        if ($wantWorkflow && !$table->workflow) {
+            $res = $table->prepare("SELECT to_regtype('hstore') IS NOT NULL AS found");
+            $table->execute($res);
+            if (empty($table->fetchRow($res)['found'])) {
+                throw new GC2Exception("The hstore extension is not available to this database. Run the database migration", 501, null, 'HSTORE_NOT_AVAILABLE');
+            }
+            $table->addWorkflow();
+        }
+        if (!$wantWorkflow && $table->workflow) {
+            $table->removeWorkflow();
+        }
+        if (!$wantVersioning && $table->versioning) {
+            $table->removeVersioningAndHistory();
+        }
     }
 
     /**
@@ -478,6 +529,8 @@ class Table extends AbstractApi
         $response['comment'] = $table->getComment();
         $response['indices'] = Index::getIndices($table);
         $response['constraints'] = Constraint::getConstraints($table);
+        $response['versioning'] = (bool)$table->versioning;
+        $response['workflow'] = (bool)$table->workflow;
         $response['_type'] = $table->relType;
         $response['_events'] = $table->isNotifyTriggerInstalled();
         $response['_column_count'] = count($response['columns']);
@@ -489,6 +542,8 @@ class Table extends AbstractApi
             'indices' => "/api/v4/schemas/$table->schema/tables/$table->tableWithOutSchema/indices",
             'constraints' => "/api/v4/schemas/$table->schema/tables/$table->tableWithOutSchema/constraints",
             'privileges' => "/api/v4/schemas/$table->schema/tables/$table->tableWithOutSchema/privileges",
+            'workflow_roles' => "/api/v4/schemas/$table->schema/tables/$table->tableWithOutSchema/workflow-roles",
+            'workflow_items' => "/api/v4/schemas/$table->schema/tables/$table->tableWithOutSchema/workflow-items",
         ];
         return $self->runPostExtension('processGetTable', $table, $response);
     }
@@ -563,6 +618,8 @@ class Table extends AbstractApi
             $collection->fields['emit_events'] = new Assert\Optional(
                 new Assert\Type('boolean')
             );
+            $collection->fields['versioning'] = new Assert\Optional(new Assert\Type('boolean'));
+            $collection->fields['workflow'] = new Assert\Optional(new Assert\Type('boolean'));
             $collection->fields['schema'] = new Assert\Optional([
                     new Assert\Type('string'),
                     new Assert\NotBlank()
