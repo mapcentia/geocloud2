@@ -88,7 +88,11 @@ class Geofence extends Model
         }
         $this->withRollback(function () use ($statement, $params, $typeHints, $filters) {
             $factory = new StatementFactory(PDOCompatible: true);
-            $statement->returning[0] = "*";
+            // The check reads the changed rows back as a table, so the statement must return
+            // each column once. Replacing only the first RETURNING item left the caller's other
+            // items next to "*" (a workflow table also returns gc2_version_gid, gc2_status, ...),
+            // and the same column twice cannot be made into a table.
+            $statement->returning->replace('*');
             $str1 = $factory->createFromAST($statement, true)->getSql();
             $createSql = "create temporary table foo on commit drop as with updated_rows as ($str1) select * from updated_rows";
             $insertSql = "with updated_rows as ($str1) insert into foo select * from updated_rows";

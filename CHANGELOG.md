@@ -18,6 +18,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - The symbol definitions in a generated mapfile are written from the same list the new endpoint serves. The symbols are the same; the text differs in spacing and keyword case, so a regenerated mapfile shows a diff there.
 
 ### Fixed
+- An edit that a LIMIT rule applies to failed with `column ... specified more than once` when the statement returned more than one column: every insert, update and delete through WFS-T and the Feature API on a table with workflow, and SQL API statements with a `RETURNING` list.
 - Workflow did not work in a database where the `hstore` extension is installed in the `settings` schema, which is the case for databases made from the template: enabling it failed, and so did edits and reads of a workflow table. The migration moves the extension to `public`. Run it before using workflow.
 - A layer drawn with a QML failed in the v4 OWS endpoint with `Filter could not be applied` when a filter applied to the request (a LIMIT rule, `FILTERS`, a versioned table or labels switched off) and its table had a settings row keyed without a geometry column.
 - A layer update did not clear cached legends, so a legend could show the old classes after the layer was switched to a QML or its title changed.

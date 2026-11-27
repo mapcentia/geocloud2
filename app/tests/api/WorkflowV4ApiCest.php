@@ -419,6 +419,34 @@ class WorkflowV4ApiCest
         $I->assertTrue($table['workflow']);
     }
 
+    // A LIMIT rule makes the server check the changed rows before it lets an edit through. On a
+    // workflow table the edit also returns the workflow columns, and the check must cope with that.
+    public function anEditOnAWorkflowTablePassesALimitRule(ApiTester $I)
+    {
+        $this->as($I);
+        $I->stopFollowingRedirects();
+        $I->sendPOST('/api/v4/rules', json_encode([
+            'username' => '*', 'service' => '*', 'request' => '*', 'access' => 'limit', 'filter' => '1=1',
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $ruleId = basename($I->grabHttpHeader('Location'));
+
+        $I->sendPATCH($this->tableUri() . '/features/' . $this->ownerFeature, json_encode([
+            'type' => 'Feature', 'properties' => ['name' => 'after'],
+            'geometry' => ['type' => 'Point', 'coordinates' => [9.6, 55.8]],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $I->sendPOST($this->tableUri() . '/features', $this->feature('limited'));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $inserted = basename(json_decode($I->grabResponse(), true)[0]['_links']['self']);
+        $I->sendDELETE($this->tableUri() . '/features/' . $inserted);
+        $I->seeResponseCodeIsSuccessful();
+
+        $this->as($I);
+        $I->sendDELETE('/api/v4/rules/' . $ruleId);
+        $I->seeResponseCodeIsSuccessful();
+    }
+
     public function unknownTableIsNotFound(ApiTester $I)
     {
         $this->as($I);
