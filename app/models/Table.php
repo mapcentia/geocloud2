@@ -260,14 +260,13 @@ class Table extends Model
             $whereClause = $this->postgisschema;
         }
 
+        $order = "ORDER BY sort_id" . ((App::$param["reverseLayerOrder"]) ? " DESC" : " ASC");
         if ($whereClause) {
-            $sql = "SELECT * FROM settings.getColumns('f_table_schema=''$whereClause''','raster_columns.r_table_schema=''$whereClause''') ORDER BY sort_id";
+            $schemaLit = self::sqlLiteral($whereClause);
+            $result = $this->selectColumnsWhere("f_table_schema=$schemaLit", "raster_columns.r_table_schema=$schemaLit", $order);
         } else {
-            $sql = "SELECT * FROM settings.getColumns('1=1','1=1') ORDER BY sort_id";
-
+            $result = $this->selectColumnsWhere('1=1', '1=1', $order);
         }
-        $sql .= (App::$param["reverseLayerOrder"]) ? " DESC" : " ASC";
-        $result = $this->execQuery($sql);
 
         // Check if VIEW
         $sql = "SELECT schemaname,viewname,definition FROM pg_views WHERE schemaname = :sSchema";

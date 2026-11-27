@@ -60,8 +60,8 @@ class Mapfile extends Model
      */
     public function getOwsLayerRows(): PDOStatement
     {
-        $sql = "SELECT * FROM settings.getColumns('f_table_schema=''{$this->connection->schema}'' AND enableows=true','raster_columns.r_table_schema=''{$this->connection->schema}'' AND enableows=true') ORDER BY sort_id";
-        return $this->execQuery($sql);
+        $schemaLit = self::sqlLiteral((string)$this->connection->schema);
+        return $this->selectColumnsWhere("f_table_schema=$schemaLit AND enableows=true", "raster_columns.r_table_schema=$schemaLit AND enableows=true", "ORDER BY sort_id");
     }
 
     /**

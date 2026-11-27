@@ -253,10 +253,13 @@ final class GetCapabilities implements HandlerInterface
             $writer->writeTag("close", null, "Operations", null, false);
         }
 
-        $sql = "SELECT * from settings.getColumns('f_table_schema=''{$postgisschema}'' AND enableows=true','raster_columns.r_table_schema=''{$postgisschema}'' AND enableows=true') order by sort_id";
-
+        $schemaLit = \app\inc\Model::sqlLiteral((string)$postgisschema);
         try {
-            $result = $postgisObject->execQuery($sql);
+            $result = $postgisObject->selectColumnsWhere(
+                "f_table_schema=$schemaLit AND enableows=true",
+                "raster_columns.r_table_schema=$schemaLit AND enableows=true",
+                "order by sort_id"
+            );
         } catch (PDOException $e) {
             throw new OwsException($e->getMessage(), 'NoApplicableCode');
         }

@@ -16,6 +16,7 @@ and this project adheres to [CalVer](https://calver.org/).
 ### Fixed
 - A layer drawn with a QML failed in the v4 OWS endpoint with `Filter could not be applied` when a filter applied to the request (a LIMIT rule, `FILTERS`, a versioned table or labels switched off) and its table had a settings row keyed without a geometry column.
 - A layer update did not clear cached legends, so a legend could show the old classes after the layer was switched to a QML or its title changed.
+- Schema, layer, type and tag names from a request are passed to the layer settings lookups as values. This covers the v4 OWS, WFS and MapCache endpoints and the legacy meta, WMS and WFS endpoints.
 - An unknown database in the path of the v4 OGC API is answered with `404 DATABASE_NOT_FOUND` instead of `400` with the database driver's message. The v4 OWS and WFS endpoints, which report errors as XML, say `Database not found` instead of that message.
 - A layer served by QGIS Server or an external WMS was treated as an ordinary MapServer layer in the v4 OWS endpoint when its table also had a non-spatial settings row (`<schema>.<table>.gc2_non_postgis`): that row was read instead of the geometry column's, and it has no source.
 

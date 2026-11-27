@@ -223,38 +223,49 @@ class Layer extends Table
                 }
             }
 
+            // settings.getColumns() runs its two arguments as SQL conditions. They are passed as
+            // bound parameters, and every name from the query goes in as a quoted literal.
             $where = $auth ?
-                "(authentication<>''foo'' OR authentication is NULL)" :
-                "(authentication=''Write'' OR authentication=''None'')";
+                "(authentication<>'foo' OR authentication is NULL)" :
+                "(authentication='Write' OR authentication='None')";
             $case = "CASE WHEN ((layergroup = '' OR layergroup IS NULL) AND baselayer != true) THEN 9999999 else sort_id END";
+            $params = [];
+            $call = function (string $g, string $r) use (&$params, $case): string {
+                $n = count($params) / 2;
+                $params["g$n"] = $g;
+                $params["r$n"] = $r;
+                return "(SELECT *, ($case) as sort FROM settings.getColumns(:g$n, :r$n))";
+            };
 
             if (sizeof($schemata) > 0) {
-                $schemaStr = "''" . implode("'',''", $schemata) . "''";
-                $sqls[] = "(SELECT *, ($case) as sort FROM settings.getColumns('f_table_schema in ($schemaStr) AND $where','raster_columns.r_table_schema in ($schemaStr) AND $where'))";
+                $schemaStr = implode(",", array_map([self::class, 'sqlLiteral'], $schemata));
+                $sqls[] = $call("f_table_schema in ($schemaStr) AND $where", "raster_columns.r_table_schema in ($schemaStr) AND $where");
             }
 
             if (sizeof($layers) > 0) {
                 foreach ($layers as $layer) {
                     $split = explode(".", $layer);
-                    $sqls[] = "(SELECT *, ($case) as sort FROM settings.getColumns('f_table_schema = ''$split[0]'' AND f_table_name = ''$split[1]'' AND $where','raster_columns.r_table_schema = ''$split[0]'' AND raster_columns.r_table_name = ''$split[1]'' AND $where'))";
+                    $s0 = self::sqlLiteral($split[0]);
+                    $s1 = self::sqlLiteral($split[1]);
+                    $sqls[] = $call("f_table_schema = $s0 AND f_table_name = $s1 AND $where", "raster_columns.r_table_schema = $s0 AND raster_columns.r_table_name = $s1 AND $where");
                 }
             }
 
             if (sizeof($tags) > 0) {
                 foreach ($tags as $tag) {
-                    $tag = urldecode($tag);
-                    $sqls[] = "(SELECT *, ($case) as sort FROM settings.getColumns('tags ? ''$tag'' AND $where','tags ? ''$tag'' AND $where'))";
+                    $tagLit = self::sqlLiteral(urldecode($tag));
+                    $sqls[] = $call("tags ? $tagLit AND $where", "tags ? $tagLit AND $where");
                 }
             }
 
             if (sizeof($schemata) == 0 && sizeof($layers) == 0 && sizeof($tags) == 0) {
-                $sqls[] = "(SELECT *, ($case) as sort FROM settings.getColumns('$where','$where'))";
+                $sqls[] = $call($where, $where);
             }
 
             $sql = implode(" UNION ALL ", $sqls);
 
             $res = $this->prepare($sql);
-            $this->execute($res);
+            $this->execute($res, $params);
 
             // Check if Es is online
             // =====================
@@ -634,12 +645,11 @@ class Layer extends Table
         if (is_numeric(mb_substr($newName, 0, 1, 'utf-8'))) {
             $newName = "_" . $newName;
         }
-        $whereClauseG = "f_table_schema=''$split[0]'' AND f_table_name=''$split[1]''";
-        $whereClauseR = "r_table_schema=''$split[0]'' AND r_table_name=''$split[1]''";
-        $query = "SELECT * FROM settings.getColumns('$whereClauseG','$whereClauseR') ORDER BY sort_id";
-        $res = $this->prepare($query);
+        $s0 = self::sqlLiteral($split[0]);
+        $s1 = self::sqlLiteral($split[1]);
+        $res = $this->prepare("SELECT * FROM settings.getColumns(:g, :r) ORDER BY sort_id");
         try {
-            $this->execute($res);
+            $this->execute($res, ['g' => "f_table_schema=$s0 AND f_table_name=$s1", 'r' => "r_table_schema=$s0 AND r_table_name=$s1"]);
             while ($row = $this->fetchRow($res)) {
                 $query = "UPDATE settings.geometry_columns_join SET _key_ = '{$row['f_table_schema']}.$newName.{$row['f_geometry_column']}' WHERE _key_ ='{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}'";
                 $resUpdate = $this->prepare($query);
@@ -678,11 +688,9 @@ class Layer extends Table
         $this->clearCacheOnSchemaChanges();
         foreach ($tables as $table) {
             $bits = explode(".", $table);
-            $whereClauseG = "f_table_schema=''$bits[0]'' AND f_table_name=''$bits[1]''";
-            $whereClauseR = "r_table_schema=''$bits[0]'' AND r_table_name=''$bits[1]''";
-            $query = "SELECT * FROM settings.getColumns('$whereClauseG','$whereClauseR') ORDER BY sort_id";
-            $res = $this->prepare($query);
-            $this->execute($res);
+            $s0 = self::sqlLiteral($bits[0]);
+            $s1 = self::sqlLiteral($bits[1]);
+            $res = $this->selectColumnsWhere("f_table_schema=$s0 AND f_table_name=$s1", "r_table_schema=$s0 AND r_table_name=$s1", "ORDER BY sort_id");
             while ($row = $this->fetchRow($res)) {
                 // First, delete keys from destination schema if they exist
                 $query = "DELETE FROM settings.geometry_columns_join WHERE _key_ = '$schema.$bits[1].{$row['f_geometry_column']}'";

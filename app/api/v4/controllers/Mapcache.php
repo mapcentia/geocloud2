@@ -308,10 +308,12 @@ final class Mapcache extends AbstractApi
         }
 
         $model = new Model(connection: $connection);
-        $filter = "f_table_schema = '" . $schema . "' AND f_table_name NOTNULL AND f_geometry_column NOTNULL";
-        $rasterFilter = "r_table_schema = '" . $schema . "' AND r_table_name NOTNULL AND r_raster_column NOTNULL";
-        $res = $model->execQuery("SELECT f_table_schema, f_table_name, enableows FROM settings.getColumns("
-            . "'" . str_replace("'", "''", $filter) . "', '" . str_replace("'", "''", $rasterFilter) . "')");
+        $schemaLit = Model::sqlLiteral($schema);
+        $res = $model->selectColumnsWhere(
+            "f_table_schema = $schemaLit AND f_table_name NOTNULL AND f_geometry_column NOTNULL",
+            "r_table_schema = $schemaLit AND r_table_name NOTNULL AND r_raster_column NOTNULL",
+            select: 'f_table_schema, f_table_name, enableows'
+        );
         $layers = [];
         foreach ($model->fetchAll($res, 'assoc') as $row) {
             if (!($row['enableows'] ?? true)) {

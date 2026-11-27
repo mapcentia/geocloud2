@@ -98,9 +98,12 @@ final class DescribeFeatureType implements HandlerInterface
             $writer->writeTag("open", "xsd", "sequence", null, false);
             $atts = [];
 
-            $sql = "SELECT * FROM settings.getColumns('f_table_name=''{$table}'' AND f_table_schema=''{$postgisschema}''',
-                    'raster_columns.r_table_name=''{$table}'' AND raster_columns.r_table_schema=''{$postgisschema}''')";
-            $fieldConfRow = $postgisObject->fetchRow($postgisObject->execQuery($sql));
+            $tableLit = \app\inc\Model::sqlLiteral((string)$table);
+            $schemaLit = \app\inc\Model::sqlLiteral((string)$postgisschema);
+            $fieldConfRow = $postgisObject->fetchRow($postgisObject->selectColumnsWhere(
+                "f_table_name=$tableLit AND f_table_schema=$schemaLit",
+                "raster_columns.r_table_name=$tableLit AND raster_columns.r_table_schema=$schemaLit"
+            ));
             $fieldConf = json_decode($fieldConfRow['fieldconf']);
             $fieldConfArr = json_decode($fieldConfRow['fieldconf'], true);
 
@@ -138,9 +141,10 @@ final class DescribeFeatureType implements HandlerInterface
                 $atts["maxOccurs"] = "1";
 
                 if ($tableObj->metaData[$atts["name"]]['type'] == "geometry") {
-                    $sql = "SELECT * FROM settings.getColumns('f_table_name=''{$table}'' AND f_table_schema=''{$postgisschema}'' AND f_geometry_column=''{$atts["name"]}''',
-                    'raster_columns.r_table_name=''{$table}'' AND raster_columns.r_table_schema=''{$postgisschema}''')";
-                    $typeRow = $postgisObject->fetchRow($postgisObject->execQuery($sql));
+                    $typeRow = $postgisObject->fetchRow($postgisObject->selectColumnsWhere(
+                        "f_table_name=$tableLit AND f_table_schema=$schemaLit AND f_geometry_column=" . \app\inc\Model::sqlLiteral((string)$atts["name"]),
+                        "raster_columns.r_table_name=$tableLit AND raster_columns.r_table_schema=$schemaLit"
+                    ));
                     $def = json_decode($typeRow['def']);
                     if ($def->geotype && $def->geotype !== "Default") {
                         if ($def->geotype == "LINE") {

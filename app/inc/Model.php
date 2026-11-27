@@ -213,8 +213,9 @@ class Model
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
         } else {
-            $query = "SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = '" . $this->doubleQuoteQualifiedName($table) . "'::REGCLASS AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey) AND indisprimary";
-            $result = $this->execQuery($query);
+            $query = "SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = (:rel)::REGCLASS AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey) AND indisprimary";
+            $result = $this->prepare($query);
+            $this->execute($result, ['rel' => $this->doubleQuoteQualifiedName($table)]);
             try {
                 if (!is_array($row = $this->fetchRow($result))) { // If $table is view we bet on there is a gid field
                     $response = array("attname" => "gid");
@@ -236,8 +237,9 @@ class Model
      */
     public function hasPrimeryKey(string $table): ?bool
     {
-        $query = "SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = '" . $this->doubleQuoteQualifiedName($table) . "'::REGCLASS AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey) AND indisprimary";
-        $result = $this->execQuery($query);
+        $query = "SELECT pg_attribute.attname, format_type(pg_attribute.atttypid, pg_attribute.atttypmod) FROM pg_index, pg_class, pg_attribute WHERE pg_class.oid = (:rel)::REGCLASS AND indrelid = pg_class.oid AND pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey) AND indisprimary";
+        $result = $this->prepare($query);
+        $this->execute($result, ['rel' => $this->doubleQuoteQualifiedName($table)]);
         $row = $this->fetchRow($result);
         if (!is_array($row)) {
             return false;
@@ -879,6 +881,33 @@ class Model
     }
 
     /**
+     * A value as a single-quoted SQL literal, for the places where a condition has to be
+     * handed over as text (settings.getColumns() takes SQL conditions as arguments). Use bound
+     * parameters wherever a statement can take them.
+     */
+    public static function sqlLiteral(string $value): string
+    {
+        if (str_contains($value, "\0")) {
+            throw new GC2Exception("Invalid value", 400, null, 'INVALID_REQUEST');
+        }
+        return "'" . str_replace("'", "''", $value) . "'";
+    }
+
+    /**
+     * Runs settings.getColumns() with its two SQL conditions (geometry and raster side) passed
+     * as bound parameters. Build the conditions with sqlLiteral() for every value.
+     *
+     * @param string $select the select list, a trusted constant
+     * @param string $suffix trusted SQL after the call (ORDER BY ...)
+     */
+    public function selectColumnsWhere(string $g, string $r, string $suffix = '', string $select = '*'): PDOStatement
+    {
+        $res = $this->prepare("SELECT $select FROM settings.getColumns(:g, :r) $suffix");
+        $this->execute($res, ['g' => $g, 'r' => $r]);
+        return $res;
+    }
+
+    /**
      * Quotes a string for use in a database query.
      *
      * @param string $str The string to be quoted.
@@ -1073,9 +1102,9 @@ class Model
         } else {
             $bits = explode(".", $table);
             // Check if table
-            $sql = "SELECT count(*) AS count FROM pg_tables WHERE schemaname = '$bits[0]' AND tablename='$bits[1]'";
+            $sql = "SELECT count(*) AS count FROM pg_tables WHERE schemaname = :s AND tablename = :t";
             $res = $this->prepare($sql);
-            $this->execute($res);
+            $this->execute($res, ['s' => $bits[0], 't' => $bits[1] ?? '']);
             $row = $this->fetchRow($res);
             if ($row["count"] > 0) {
                 $response['data'] = "TABLE";
@@ -1086,9 +1115,9 @@ class Model
 
             }
             // Check if view
-            $sql = "SELECT count(*) AS count FROM pg_views WHERE schemaname = '$bits[0]' AND viewname='$bits[1]'";
+            $sql = "SELECT count(*) AS count FROM pg_views WHERE schemaname = :s AND viewname = :t";
             $res = $this->prepare($sql);
-            $this->execute($res);
+            $this->execute($res, ['s' => $bits[0], 't' => $bits[1] ?? '']);
             $row = $this->fetchRow($res);
             if ($row["count"] > 0) {
                 $response['data'] = "VIEW";
@@ -1098,9 +1127,9 @@ class Model
                 return $response;
             }
             // Check if materialized view
-            $sql = "SELECT count(*) AS count FROM pg_matviews WHERE schemaname = '$bits[0]' AND matviewname='$bits[1]'";
+            $sql = "SELECT count(*) AS count FROM pg_matviews WHERE schemaname = :s AND matviewname = :t";
             $res = $this->prepare($sql);
-            $this->execute($res);
+            $this->execute($res, ['s' => $bits[0], 't' => $bits[1] ?? '']);
             $row = $this->fetchRow($res);
             if ($row["count"] > 0) {
                 $response['data'] = "MATERIALIZED VIEW";
@@ -1110,9 +1139,9 @@ class Model
                 return $response;
             }
             // Check if FOREIGN TABLE
-            $sql = "SELECT COUNT(*) FROM pg_catalog.pg_foreign_table ft JOIN pg_catalog.pg_class c ON ft.ftrelid = c.oid JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid WHERE n.nspname = '$bits[0]' AND c.relname = '$bits[1]'";
+            $sql = "SELECT COUNT(*) FROM pg_catalog.pg_foreign_table ft JOIN pg_catalog.pg_class c ON ft.ftrelid = c.oid JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid WHERE n.nspname = :s AND c.relname = :t";
             $res = $this->prepare($sql);
-            $this->execute($res);
+            $this->execute($res, ['s' => $bits[0], 't' => $bits[1] ?? '']);
             $row = $this->fetchRow($res);
             if ($row["count"] > 0) {
                 $response['data'] = "FOREIGN TABLE";
@@ -1170,9 +1199,12 @@ class Model
         } else {
             $response = [];
             $bits = explode(".", $table);
-            $sql = "SELECT true AS exists FROM pg_attribute WHERE attrelid = '\"$bits[0]\".\"$bits[1]\"'::regclass AND attname = '$column' AND NOT attisdropped";
+            $sql = "SELECT true AS exists FROM pg_attribute WHERE attrelid = (:rel)::regclass AND attname = :col AND NOT attisdropped";
             $res = $this->prepare($sql);
-            $this->execute($res);
+            $this->execute($res, [
+                'rel' => '"' . str_replace('"', '""', $bits[0]) . '"."' . str_replace('"', '""', $bits[1] ?? '') . '"',
+                'col' => $column,
+            ]);
             $row = $this->fetchRow($res);
             $response['success'] = true;
             $response['exists'] = isset($row["exists"]);
@@ -1348,9 +1380,15 @@ class Model
         if ($CachedString != null && $CachedString->isHit()) {
             return $CachedString->get();
         } else {
-            $sql = "SELECT * FROM settings.getColumns('f_table_schema = ''$schema'' AND f_table_name = ''$table''','raster_columns.r_table_schema = ''$schema'' AND raster_columns.r_table_name = ''$table''')";
-            $res = $this->prepare($sql);
-            $this->execute($res);
+            // settings.getColumns() runs its two arguments as SQL conditions, so the names go
+            // in as quoted literals and the conditions themselves as bound parameters.
+            $s = self::sqlLiteral($schema);
+            $t = self::sqlLiteral($table);
+            $res = $this->prepare("SELECT * FROM settings.getColumns(:g, :r)");
+            $this->execute($res, [
+                'g' => "f_table_schema = $s AND f_table_name = $t",
+                'r' => "raster_columns.r_table_schema = $s AND raster_columns.r_table_name = $t",
+            ]);
             $rows = $this->fetchAll($res);
             $CachedString->set($rows)->expiresAfter(Globals::$cacheTtl);//in seconds, also accepts Datetime
             Cache::save($CachedString);

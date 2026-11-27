@@ -194,6 +194,28 @@ class OwsNoTokenApiCest
         $this->deleteRule($I, $id);
     }
 
+    // Layer and schema names from the request are data, whatever characters they contain
+    public function shouldTreatAQuoteInALayerNameAsPartOfTheName(ApiTester $I)
+    {
+        $I->deleteHeader('Authorization');
+        $I->sendGET($this->endpoint() . '?' . $this->getMapQs($this->schemaName . ".ro%27ads"));
+        $I->assertStringNotContainsStringIgnoringCase('syntax error', $I->grabResponse());
+
+        $I->sendGET('/api/v4/ows/schema/' . $this->schemaName . "%27x/database/" . $this->userId
+            . '?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0');
+        $I->assertStringNotContainsStringIgnoringCase('syntax error', $I->grabResponse());
+
+        // The legacy meta API takes schemas, layers and tags the same way
+        foreach ([$this->schemaName . ".ro%27ads", $this->schemaName . "%27x", "tag:a%27b"] as $query) {
+            $I->sendGET('/api/v1/meta/' . $this->userId . '/' . $query);
+            $I->assertStringNotContainsStringIgnoringCase('syntax error', $I->grabResponse());
+        }
+        // ... and still finds a real layer
+        $I->sendGET('/api/v1/meta/' . $this->userId . '/' . $this->schemaName . '.roads');
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $I->assertCount(1, json_decode($I->grabResponse(), true)['data']);
+    }
+
     public function shouldChangeLayerToReadWrite(ApiTester $I)
     {
         // The SQL API denies writes to system relations (settings.*), so use the

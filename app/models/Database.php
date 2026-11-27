@@ -338,11 +338,8 @@ class Database extends Model
         $newName = self::toAscii($name, array(), "_");
         $this->connect();
         $this->withTransaction(function () use ($schema, $newName) {
-            $whereClauseG = "f_table_schema=''$schema''";
-            $whereClauseR = "r_table_schema=''$schema''";
-            $query = "SELECT * FROM settings.getColumns('$whereClauseG','$whereClauseR') ORDER BY sort_id";
-            $res = $this->prepare($query);
-            $this->execute($res);
+            $schemaLit = self::sqlLiteral($schema);
+            $res = $this->selectColumnsWhere("f_table_schema=$schemaLit", "r_table_schema=$schemaLit", "ORDER BY sort_id");
             while ($row = $this->fetchRow($res)) {
                 $query = "UPDATE settings.geometry_columns_join SET _key_ = '$newName.{$row['f_table_name']}.{$row['f_geometry_column']}' WHERE _key_ ='{$row['f_table_schema']}.{$row['f_table_name']}.{$row['f_geometry_column']}'";
                 $resUpdate = $this->prepare($query);

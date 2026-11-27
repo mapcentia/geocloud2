@@ -351,4 +351,17 @@ class WfsNoTokenApiCest
         $I->assertStringContainsString('Database not found', $body);
         $I->assertStringNotContainsString('SQLSTATE', $body);
     }
+
+    // Type and schema names from the request are data, whatever characters they contain
+    public function shouldTreatAQuoteInATypeNameAsPartOfTheName(ApiTester $I)
+    {
+        $I->deleteHeader('Authorization');
+        $base = '/api/v4/wfs/schema/' . $this->schemaName . '/database/' . $this->userId . '/srs/4326?SERVICE=WFS&VERSION=1.1.0';
+        foreach (['&REQUEST=GetFeature&TYPENAME=' . $this->schemaName . '.x%27y', '&REQUEST=DescribeFeatureType&TYPENAME=' . $this->schemaName . '.x%27y'] as $qs) {
+            $I->sendGET($base . $qs);
+            $I->assertStringNotContainsStringIgnoringCase('syntax error', $I->grabResponse());
+        }
+        $I->sendGET('/api/v4/wfs/schema/' . $this->schemaName . '%27x/database/' . $this->userId . '/srs/4326?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetCapabilities');
+        $I->assertStringNotContainsStringIgnoringCase('syntax error', $I->grabResponse());
+    }
 }

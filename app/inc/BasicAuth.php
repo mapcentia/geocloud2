@@ -69,11 +69,15 @@ final class BasicAuth
         if ($this->isSubuser && $this->user != $schema) {
             $schema = $split[0];
             $table = $split[1];
-            $sql = "SELECT * FROM settings.getColumns('f_table_schema = ''$schema'' AND f_table_name = ''$table''', 'r_table_schema = ''$schema'' AND r_table_name = ''$table''')";
+            $s = Model::sqlLiteral($schema);
+            $t = Model::sqlLiteral($table);
             $postgisObject = new Model(connection: $this->connection);
-            $res = $postgisObject->prepare($sql);
+            $res = $postgisObject->prepare("SELECT * FROM settings.getColumns(:g, :r)");
             try {
-                $postgisObject->execute($res);
+                $postgisObject->execute($res, [
+                    'g' => "f_table_schema = $s AND f_table_name = $t",
+                    'r' => "r_table_schema = $s AND r_table_name = $t",
+                ]);
             } catch (PDOException $e) {
                 throw new ServiceException($e->getMessage());
             }
