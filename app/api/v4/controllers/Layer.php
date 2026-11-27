@@ -25,6 +25,7 @@ use app\models\Layer as LayerModel;
 use app\models\Table as TableModel;
 use app\models\Tile as TileModel;
 use Exception;
+use app\models\LayerQml;
 use Override;
 use OpenApi\Attributes as OA;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -62,6 +63,8 @@ use Symfony\Component\Validator\Constraints as Assert;
             new OA\Property(property: "polyline_no_clip", title: "No clipping of polylines", description: "Skips clipping of shapes when rendering styled (dashed/symbolised) lines (MapServer PROCESSING \"POLYLINE_NO_CLIP=True\"), avoiding style discontinuities and edge effects across tiled requests.", type: "boolean", example: false),
         ], type: "object"),
         new OA\Property(property: "classes", title: "Classes", description: "Classes with styles and labels.", type: "array", items: new OA\Items(ref: "#/components/schemas/LayerClass")),
+        new OA\Property(property: "qml", title: "QML", description: "The layer's QGIS style (the XML text of a .qml file), or null when it has none. Storing a QML does not by itself change how the layer is drawn; `use_qml` does. PATCH only, and only by the database owner. Must be well-formed XML; null removes it (and switches `use_qml` off).", type: ["string", "null"], example: "<qgis styleCategories=\"Symbology\"><renderer-v2 type=\"singleSymbol\"/></qgis>"),
+        new OA\Property(property: "use_qml", title: "Use QML", description: "Whether the layer is drawn by QGIS Server with its QML (true) or by MapServer with its classes (false). Switching does not remove the QML or the classes. true needs a stored `qml` (400 QML_MISSING), a point, line or polygon layer (400 QML_UNSUPPORTED_GEOMETRY), and a layer that is not drawn from an external source (409 EXTERNAL_SOURCE). While true, the layer's classes, styles and labels are not used and its legend is one picture from QGIS. PATCH only, and only by the database owner.", type: "boolean", example: false),
     ],
     type: "object"
 )]
@@ -94,7 +97,7 @@ class Layer extends AbstractLayerApi
             'name' => $key,
             'properties' => $properties,
             'classes' => $classification->getAllWithIds(),
-        ];
+        ] + new LayerQml(connection: $this->connection)->read($key);
     }
 
     /**
@@ -174,7 +177,7 @@ class Layer extends AbstractLayerApi
     /**
      * @throws GC2Exception
      */
-    #[OA\Patch(path: '/api/v4/layers/{layer}', operationId: 'patchLayer', description: "Update layer properties (key-merge on the def JSON).", tags: ['Layer'])]
+    #[OA\Patch(path: '/api/v4/layers/{layer}', operationId: 'patchLayer', description: "Update layer properties (key-merge on the def JSON), and/or the layer's QML and whether it is used.", tags: ['Layer'])]
     #[OA\Parameter(name: 'layer', description: 'Layer key: schema.table.geometry_column', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'my_schema.my_table.the_geom')]
     #[OA\RequestBody(description: 'Layer properties', required: true, content: new OA\JsonContent(ref: "#/components/schemas/Layer"))]
     #[OA\Response(response: 303, description: 'Layer updated')]
@@ -187,6 +190,14 @@ class Layer extends AbstractLayerApi
         $data = json_decode(Input::getBody(), true);
         if (isset($data['properties'])) {
             new TileModel(table: $this->layerKey, connection: $this->connection)->update((object)$data['properties']);
+        }
+        $hasQml = array_key_exists('qml', $data);
+        if ($hasQml || isset($data['use_qml'])) {
+            // A QML becomes part of a QGIS project on the server, so it is the owner's to set
+            if (empty($this->route->jwt['data']['superUser'])) {
+                throw new GC2Exception("Only the database owner can change a layer's QML", 403, null, 'SUPER_USER_ONLY');
+            }
+            new LayerQml(connection: $this->connection)->update($this->layerKey, $hasQml, $data['qml'] ?? null, $data['use_qml'] ?? null);
         }
         $this->writeMapFiles();
         // Only rewrite the (whole-database, expensive) MapCache config when a caching-relevant
@@ -233,6 +244,10 @@ class Layer extends AbstractLayerApi
                 new Assert\Type('array'),
                 new Assert\All([LayerClass::getAssert()]),
             ]);
+        }
+        if (Input::getMethod() == 'patch') {
+            $collection->fields['qml'] = new Assert\Optional([new Assert\Type(['string', 'null'])]);
+            $collection->fields['use_qml'] = new Assert\Optional([new Assert\Type('bool')]);
         }
         $collection->fields['properties'] = new Assert\Optional([
             new Assert\Collection(array_map(fn($k) => new Assert\Optional(), array_flip(TileModel::DEF_KEYS))),
