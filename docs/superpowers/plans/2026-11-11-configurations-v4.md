@@ -243,11 +243,11 @@ Run: `… codecept run api ConfigurationV4ApiCest`. Expected: the new tests FAIL
 
 - [ ] **Step 4: Implement the controller.**
   - `#[AcceptableMethods(['GET','HEAD','OPTIONS'])]`, `#[Controller(route: 'api/v4/configurations/database/{database}/[key]', scope: Scope::PUBLIC)]`, `#[AcceptableAccepts(['application/json', '*/*'])]`.
-  - Constructor as `SqlNoToken`. In `get_index`, set `$this->connection->database = $this->route->getParam('database')` **before** constructing the model with `$this->connection`. Never read `$this->route->jwt`.
+  - Constructor as `SqlPublic`. In `get_index`, set `$this->connection->database = $this->route->getParam('database')` **before** constructing the model with `$this->connection`. Never read `$this->route->jwt`.
   - Key handling: if the key ends in `.json`, strip it and set a flag; then `ConfigurationModel::assertKey` (a comma fails the pattern, which gives the 400).
   - No key → `getResponse($model->list(true))`. Key → `$model->get($key, true)`; with the flag return `new StreamedResponse('application/json', fn() => print($c['body']), 200, ['Content-Disposition' => "attachment; filename=$key.json"])`, else `getResponse([$c], single: true)`.
   - Unknown database: catch the connection failure raised on first query for a database that does not exist and rethrow `GC2Exception('Database not found', 404, null, 'DATABASE_NOT_FOUND')`. Find the exact exception by running the unknown-database test once and reading `docker logs docker-dev-1`; catch only that case (SQLSTATE `3D000`), not every `PDOException`.
-  - `validate()` only validates the key as above; `post_index`/`patch_index`/`delete_index`/`put_index` are empty stubs as in `SqlNoToken`.
+  - `validate()` only validates the key as above; `post_index`/`patch_index`/`delete_index`/`put_index` are empty stubs as in `SqlPublic`.
   - OA: `#[OA\Get(path: '/api/v4/configurations/database/{database}/{key}', operationId: 'getPublicConfiguration', …)]`, no `security`, describe the `.json` form in the `key` parameter description, 200 as `oneOf` object/array, 404 documented.
 
 - [ ] **Step 5: Run the Cest**
