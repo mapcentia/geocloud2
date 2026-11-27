@@ -53,6 +53,7 @@ class MetaPublic extends AbstractApi
      * @throws PhpfastcacheLogicException
      */
     #[OA\Get(path: '/api/v4/meta/database/{database}/{query}', operationId: 'getMetaDataPublic', summary: 'Get relation metadata without a token', tags: ['Metadata'])]
+    #[OA\Parameter(name: 'database', description: 'Database name to use.', in: 'path', required: false, schema: new OA\Schema(type: 'string'), example: 'mydb')]
     #[OA\Parameter(name: 'query', description: 'Schema-qualified relation name, schema name, or tag (tag:name). Comma-separated values are supported.', in: 'path', required: false, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'noRestriction', description: 'Leaves out column restrictions on the returned metadata. Restrictions can be quite extensive.', in: 'query', required: false, schema: new OA\Schema(type: 'boolean'), example: true)]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Meta"))]
