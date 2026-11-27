@@ -209,6 +209,16 @@ class LegendV4ApiCest
         }
     }
 
+    public function shouldReturn404ForAnUnknownDatabase(ApiTester $I)
+    {
+        $this->anonymous($I);
+        $I->sendGET('/api/v4/legends/database/no_such_database_' . $this->ts . '/public.x');
+        $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+        $I->seeResponseContainsJson(['success' => false, 'errorCode' => 'DATABASE_NOT_FOUND', 'message' => 'Database not found']);
+        // Not the driver's message, which names the database server
+        $I->assertStringNotContainsString('SQLSTATE', $I->grabResponse());
+    }
+
     public function shouldPickUpAChangedClass(ApiTester $I)
     {
         // The legend is cached per layer; a class change must not leave the old one standing

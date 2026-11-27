@@ -657,4 +657,19 @@ class OgcNoTokenApiCest
         $I->assertSame('hidden', json_decode($I->grabResponse(), true)['features'][0]['properties']['name']);
         $I->deleteHeader('Authorization');
     }
+
+    // An unknown database in the path is a missing resource, reported without the database
+    // driver's message
+    public function shouldReturn404ForAnUnknownDatabase(ApiTester $I)
+    {
+        $I->deleteHeader('Authorization');
+        $I->haveHttpHeader('Accept', 'application/json');
+        $base = '/api/v4/ogc/database/no_such_database_' . time();
+        foreach (['/collections', '/collections/public.x', '/collections/public.x/items', '/collections/public.x/map'] as $path) {
+            $I->sendGET($base . $path);
+            $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
+            $I->seeResponseContainsJson(['success' => false, 'errorCode' => 'DATABASE_NOT_FOUND']);
+            $I->assertStringNotContainsString('SQLSTATE', $I->grabResponse());
+        }
+    }
 }

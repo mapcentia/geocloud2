@@ -14,6 +14,7 @@ use app\api\v4\Responses\StreamedResponse;
 use app\api\v4\Scope;
 use app\exceptions\ServiceException;
 use app\inc\Connection;
+use app\inc\DatabaseNotFound;
 use app\inc\PublicIdentity;
 use app\inc\Route2;
 use app\inc\Util;
@@ -79,8 +80,8 @@ final class Ows extends AbstractApi
             callback: function () {
                 Util::disableOb();
                 $tmp = null;
+                $database = (string)$this->route->getParam('database');
                 try {
-                    $database = (string)$this->route->getParam('database');
                     $schema = (string)$this->route->getParam('schema');
                     // The route is PUBLIC, so the dispatcher has not enforced the token — a presented
                     // Bearer token is validated here (and must match the database in the path).
@@ -99,7 +100,7 @@ final class Ows extends AbstractApi
                     error_log((string) $e);
                     // Pre-stream errors render as an OGC ServiceException report.
                     // Don't leak internals (filesystem paths, TypeErrors, etc.) to clients.
-                    $msg = $e->getMessage();
+                    $msg = DatabaseNotFound::translate($e, $database)->getMessage();
                     if (!headers_sent()) {
                         header('Content-Type: text/xml');
                         echo new ServiceException($msg)->getReport();

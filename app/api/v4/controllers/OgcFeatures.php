@@ -17,6 +17,7 @@ use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\exceptions\OwsException;
 use app\inc\Connection;
+use app\inc\DatabaseNotFound;
 use app\inc\Model;
 use app\inc\PublicIdentity;
 use app\inc\Route2;
@@ -33,6 +34,7 @@ use app\wfs\Request as WfsRequest;
 use app\wfs\Server;
 use OpenApi\Attributes as OA;
 use Throwable;
+use PDOException;
 
 /**
  * OGC API Features Part 1 (Core) + Part 2 (CRS), read-only. Items are produced by the in-process
@@ -89,24 +91,28 @@ final class OgcFeatures extends AbstractApi
     public function get_index(): Response
     {
         $database = (string)$this->route->getParam('database');
-        $collectionId = (string)$this->route->getParam('collection');
-        $fid = $this->route->getParam('feature');
-        $id = PublicIdentity::resolve($database);
-        $base = Links::base($database);
-        $collections = new Collections($id, $base);
-        $row = $collections->get($collectionId);
-        if (($row['type'] ?? null) === 'RASTER') {
-            throw new GC2Exception("Collection $collectionId has no items", 400, null, 'NO_ITEMS');
+        try {
+            $collectionId = (string)$this->route->getParam('collection');
+            $fid = $this->route->getParam('feature');
+            $id = PublicIdentity::resolve($database);
+            $base = Links::base($database);
+            $collections = new Collections($id, $base);
+            $row = $collections->get($collectionId);
+            if (($row['type'] ?? null) === 'RASTER') {
+                throw new GC2Exception("Collection $collectionId has no items", 400, null, 'NO_ITEMS');
+            }
+            $schema = $row['f_table_schema'];
+            $table = $row['f_table_name'];
+            $allowedCrs = Collections::crsList((int)$row['srid']);
+            new LayerGate($id)->authorizeRead(["$schema.$table"]);
+            $versioned = !empty(new Model(connection: $id->connection)->doesColumnExist("$schema.$table", 'gc2_version_gid')['exists']);
+            $collHref = Links::collection($base, $collectionId);
+            return $fid === null || $fid === ''
+                ? $this->items($id, $collHref, $schema, $table, $allowedCrs, $versioned)
+                : $this->item($id, $collHref, $schema, $table, $allowedCrs, $versioned, $fid);
+        } catch (PDOException $e) {
+            throw DatabaseNotFound::translate($e, $database);
         }
-        $schema = $row['f_table_schema'];
-        $table = $row['f_table_name'];
-        $allowedCrs = Collections::crsList((int)$row['srid']);
-        new LayerGate($id)->authorizeRead(["$schema.$table"]);
-        $versioned = !empty(new Model(connection: $id->connection)->doesColumnExist("$schema.$table", 'gc2_version_gid')['exists']);
-        $collHref = Links::collection($base, $collectionId);
-        return $fid === null || $fid === ''
-            ? $this->items($id, $collHref, $schema, $table, $allowedCrs, $versioned)
-            : $this->item($id, $collHref, $schema, $table, $allowedCrs, $versioned, $fid);
     }
 
     private function items(PublicIdentity $id, string $collHref, string $schema, string $table, array $allowedCrs, bool $versioned): StreamedResponse

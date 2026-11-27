@@ -16,11 +16,13 @@ use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
+use app\inc\DatabaseNotFound;
 use app\inc\PublicIdentity;
 use app\inc\Route2;
 use app\ows\Legend as LegendService;
 use OpenApi\Attributes as OA;
 use Override;
+use PDOException;
 
 /**
  * Legends of layers: title and classes, each class with a PNG icon drawn by MapServer.
@@ -75,15 +77,20 @@ class Legend extends AbstractApi
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: "#/components/schemas/Legend")))]
     #[OA\Response(response: 400, description: 'Malformed layer list (INVALID_REQUEST)')]
     #[OA\Response(response: 401, description: 'The token is not valid for this database, or the Basic credentials are wrong')]
+    #[OA\Response(response: 404, description: 'The database does not exist (DATABASE_NOT_FOUND)')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
     public function get_index(): Response
     {
         $database = (string)$this->route->getParam('database');
         $names = LegendService::parseNames((string)$this->route->getParam('layers'));
-        // The route is PUBLIC, so a presented Bearer token is validated here
-        $id = PublicIdentity::resolve($database);
-        return $this->getResponse(new LegendService($id)->forLayers($names));
+        try {
+            // The route is PUBLIC, so a presented Bearer token is validated here
+            $id = PublicIdentity::resolve($database);
+            return $this->getResponse(new LegendService($id)->forLayers($names));
+        } catch (PDOException $e) {
+            throw DatabaseNotFound::translate($e, $database);
+        }
     }
 
     #[Override]

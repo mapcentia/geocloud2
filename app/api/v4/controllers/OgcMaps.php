@@ -15,6 +15,7 @@ use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
+use app\inc\DatabaseNotFound;
 use app\inc\PublicIdentity;
 use app\inc\Route2;
 use app\ogc\Collections;
@@ -22,6 +23,7 @@ use app\ogc\Links;
 use app\ogc\MapParams;
 use app\ogc\MapRenderer;
 use OpenApi\Attributes as OA;
+use PDOException;
 
 /**
  * OGC API Maps Part 1 (Core) for one collection, rendered through the WMS backend (see MapRenderer).
@@ -66,12 +68,16 @@ final class OgcMaps extends AbstractApi
     public function get_index(): Response
     {
         $database = (string)$this->route->getParam('database');
-        $collectionId = (string)$this->route->getParam('collection');
-        $id = PublicIdentity::resolve($database);
-        $collections = new Collections($id, Links::base($database));
-        $row = $collections->get($collectionId);
-        $p = MapParams::fromQuery($_GET, Collections::crsList(isset($row['srid']) ? (int)$row['srid'] : null), false);
-        return new MapRenderer($id)->render($row['f_table_schema'], [$row['f_table_name']], $p, $collections->extentBbox($row));
+        try {
+            $collectionId = (string)$this->route->getParam('collection');
+            $id = PublicIdentity::resolve($database);
+            $collections = new Collections($id, Links::base($database));
+            $row = $collections->get($collectionId);
+            $p = MapParams::fromQuery($_GET, Collections::crsList(isset($row['srid']) ? (int)$row['srid'] : null), false);
+            return new MapRenderer($id)->render($row['f_table_schema'], [$row['f_table_name']], $p, $collections->extentBbox($row));
+        } catch (PDOException $e) {
+            throw DatabaseNotFound::translate($e, $database);
+        }
     }
 
     // Read-only; rejected upstream by AcceptableMethods.

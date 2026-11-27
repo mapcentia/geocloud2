@@ -15,6 +15,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - The symbol definitions in a generated mapfile are written from the same list the new endpoint serves. The symbols are the same; the text differs in spacing and keyword case, so a regenerated mapfile shows a diff there.
 
 ### Fixed
+- An unknown database in the path of the v4 OGC API is answered with `404 DATABASE_NOT_FOUND` instead of `400` with the database driver's message. The v4 OWS and WFS endpoints, which report errors as XML, say `Database not found` instead of that message.
 - A layer served by QGIS Server or an external WMS was treated as an ordinary MapServer layer in the v4 OWS endpoint when its table also had a non-spatial settings row (`<schema>.<table>.gc2_non_postgis`): that row was read instead of the geometry column's, and it has no source.
 
 ## [2026.11.10] - 2026-26-11

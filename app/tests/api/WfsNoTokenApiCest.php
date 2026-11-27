@@ -340,4 +340,15 @@ class WfsNoTokenApiCest
         $I->seeHttpHeader('Access-Control-Allow-Methods');
         $I->deleteHeader('Access-Control-Request-Method');
     }
+
+    // An unknown database in the path is reported as such, not with the database driver's message
+    public function shouldNotExposeTheDriverMessageForAnUnknownDatabase(ApiTester $I)
+    {
+        $I->deleteHeader('Authorization');
+        $I->sendGET('/api/v4/wfs/schema/public/database/no_such_database_' . time()
+            . '/srs/4326?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&TYPENAME=public.x');
+        $body = $I->grabResponse();
+        $I->assertStringContainsString('Database not found', $body);
+        $I->assertStringNotContainsString('SQLSTATE', $body);
+    }
 }

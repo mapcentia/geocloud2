@@ -13,6 +13,7 @@ use app\api\v4\Responses\StreamedResponse;
 use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
+use app\inc\DatabaseNotFound;
 use app\inc\PublicIdentity;
 use app\inc\Route2;
 use app\inc\Util;
@@ -122,7 +123,7 @@ final class Wfs extends AbstractApi
                     // Catch all so auth/DB/protocol errors render as OWS exception
                     // reports instead of bubbling up as 500. Matches legacy
                     // server.php's broader catch.
-                    ExceptionReport::render($e, $req?->version ?? '1.1.0', $writer);
+                    ExceptionReport::render(DatabaseNotFound::translate($e, (string)$this->route->getParam('database')), $req?->version ?? '1.1.0', $writer);
                 }
             },
         );

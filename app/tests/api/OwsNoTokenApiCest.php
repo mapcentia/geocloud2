@@ -327,4 +327,15 @@ class OwsNoTokenApiCest
         $I->seeResponseCodeIs(HttpCode::OK);
         $I->assertStringNotContainsStringIgnoringCase('privileges', $I->grabResponse());
     }
+
+    // An unknown database in the path is reported as such, not with the database driver's message
+    public function shouldNotExposeTheDriverMessageForAnUnknownDatabase(ApiTester $I)
+    {
+        $I->deleteHeader('Authorization');
+        $I->sendGET('/api/v4/ows/schema/public/database/no_such_database_' . $this->date->getTimestamp()
+            . '?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0');
+        $body = $I->grabResponse();
+        $I->assertStringContainsString('Database not found', $body);
+        $I->assertStringNotContainsString('SQLSTATE', $body);
+    }
 }

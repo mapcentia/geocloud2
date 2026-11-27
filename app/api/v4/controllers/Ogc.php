@@ -16,6 +16,7 @@ use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
+use app\inc\DatabaseNotFound;
 use app\inc\PublicIdentity;
 use app\inc\Route2;
 use app\inc\Util;
@@ -26,6 +27,7 @@ use app\ogc\MapParams;
 use app\ogc\MapRenderer;
 use app\ogc\Params;
 use OpenApi\Attributes as OA;
+use PDOException;
 
 /**
  * OGC API landing page, conformance and collections for one database, plus the dataset-level
@@ -106,18 +108,22 @@ final class Ogc extends AbstractApi
     public function get_index(): Response
     {
         $database = (string)$this->route->getParam('database');
-        $p1 = $this->route->getParam('p1');
-        $p2 = $this->route->getParam('p2');
-        $id = PublicIdentity::resolve($database);
-        $base = Links::base($database);
-        return match (true) {
-            $p1 === null || $p1 === ''            => $this->landing($database, $base),
-            $p1 === 'conformance' && $p2 === null => $this->conformance(),
-            $p1 === 'collections' && $p2 === null => $this->collections($id, $base),
-            $p1 === 'collections'                 => $this->collection($id, $base, $p2),
-            $p1 === 'map' && $p2 === null         => $this->map($id, $base),
-            default => throw new GC2Exception('Not found', 404, null, 'NOT_FOUND'),
-        };
+        try {
+            $p1 = $this->route->getParam('p1');
+            $p2 = $this->route->getParam('p2');
+            $id = PublicIdentity::resolve($database);
+            $base = Links::base($database);
+            return match (true) {
+                $p1 === null || $p1 === ''            => $this->landing($database, $base),
+                $p1 === 'conformance' && $p2 === null => $this->conformance(),
+                $p1 === 'collections' && $p2 === null => $this->collections($id, $base),
+                $p1 === 'collections'                 => $this->collection($id, $base, $p2),
+                $p1 === 'map' && $p2 === null         => $this->map($id, $base),
+                default => throw new GC2Exception('Not found', 404, null, 'NOT_FOUND'),
+            };
+        } catch (PDOException $e) {
+            throw DatabaseNotFound::translate($e, $database);
+        }
     }
 
     private function landing(string $database, string $base): Response
