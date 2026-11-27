@@ -13,10 +13,8 @@ use app\api\v4\AcceptableAccepts;
 use app\api\v4\AcceptableMethods;
 use app\api\v4\Controller;
 use app\api\v4\Responses\GetResponse;
-use app\api\v4\Responses\NoContentResponse;
 use app\api\v4\Responses\Response;
 use app\api\v4\Scope;
-use app\conf\App;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
 use app\inc\Input;
@@ -73,6 +71,7 @@ use Throwable;
                         property: 'elasticsearch',
                         description: 'Per-column OpenSearch mapping overrides, keyed by column name. Consumed when the Search API (PUT /api/v4/schemas/{schema}/tables/{table}/search) (re)builds the index: each column gets the mapping derived from its PostgreSQL type, and the members given here override or extend it. Columns not listed keep the derived mapping. Any other OpenSearch field-mapping parameter (normalizer, doc_values, copy_to, ...) is passed through as well. Analyzers must exist in the database analysis settings (PUT /api/v4/search/settings). A PATCH replaces the whole block for the relation; an empty object {} clears it.',
                         type: 'object',
+                        example: ['name' => ['elasticsearchtype' => 'text', 'analyzer' => 'auto_complete_analyzer', 'search_analyzer' => 'auto_complete_search_analyzer']],
                         additionalProperties: new OA\AdditionalProperties(
                             properties: [
                                 new OA\Property(property: 'elasticsearchtype', description: 'OpenSearch field type. Defaults to the type derived from the column.', type: 'string', example: 'text'),
@@ -85,8 +84,7 @@ use Throwable;
                                 new OA\Property(property: 'fields', description: "Multi-fields. Text fields get {\"keyword\": {\"type\": \"keyword\", \"ignore_above\": 256}} unless this is set.", type: 'object'),
                             ],
                             type: 'object'
-                        ),
-                        example: ['name' => ['elasticsearchtype' => 'text', 'analyzer' => 'auto_complete_analyzer', 'search_analyzer' => 'auto_complete_search_analyzer']]
+                        )
                     ),
                 ],
                 type: 'object'
