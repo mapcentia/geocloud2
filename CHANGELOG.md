@@ -9,6 +9,8 @@ and this project adheres to [CalVer](https://calver.org/).
 ### Added
 - `GET /api/v4/symbols` lists the built-in MapServer symbols a style's `symbol` can name (triangle, circle, square, star, hatch1, dashed1, arrow, arrow2, continue and the line symbols), each with `type`, `filled`, `points` and, where it has one, `anchorpoint`, so a client can offer them and draw a preview. `GET /api/v4/symbols/{name}` takes one name or a comma separated list. Sub-users may read it. `symbol` on a style is still a free value: an image URL or a `[column]` reference work as before.
 
+- `GET /api/v4/legends/database/{database}/{layers}` returns the legends of one or more layers as JSON: per layer its title and named classes, each with expression and a base64 PNG icon. It replaces `/api/v1/legend/json`, which stays as it is. Access follows the layer: with a Bearer token or HTTP Basic the caller gets the layers they may read, without credentials the layers that are open to all, and a layer without access is left out of the result instead of failing the request. Geofence rules do not affect legends. The icons are drawn by MapServer on the node `mapServer.host` points at, not with PHP MapScript, so it works with MapServer on another node. Icons are 18×12 pixels (v1: 17×17).
+
 ### Changed
 - The symbol definitions in a generated mapfile are written from the same list the new endpoint serves. The symbols are the same; the text differs in spacing and keyword case, so a regenerated mapfile shows a diff there.
 

@@ -7,6 +7,7 @@
 
 namespace app\ows;
 
+use app\exceptions\GC2Exception;
 use app\inc\BasicAuth;
 use app\inc\Cache;
 use app\inc\Input;
@@ -38,6 +39,41 @@ final class LayerGate
     public function authorizeRead(array $rels): void
     {
         $this->authorize($rels, false);
+    }
+
+    /**
+     * Whether this identity may read the layer, answered as a boolean: never throws for a
+     * missing privilege and never challenges with HTTP Basic. For callers that leave a layer
+     * out instead of failing the request (the legend API).
+     *
+     * A layer below 'Read/write' is readable by anyone. A 'Read/write' layer needs a token or
+     * verified Basic identity with read privilege; the owner always has it. A relation that is
+     * not a registered layer is not readable. Geofence rules are not consulted.
+     *
+     * @param string $rel "schema.table"
+     */
+    public function canRead(string $rel): bool
+    {
+        $auth = new Model(connection: $this->id->connection)->getGeometryColumns($rel, 'authentication');
+        if (empty($auth)) {
+            return false;
+        }
+        if ($this->id->trusted || $auth !== 'Read/write') {
+            return true;
+        }
+        if ($this->id->anonymous) {
+            return false;
+        }
+        try {
+            new Authorization(connection: $this->id->connection)->check(
+                relName: $rel, transaction: false, isAuth: true,
+                subUser: $this->id->parentUser ? null : $this->id->user,
+                userGroup: $this->id->userGroup, rels: []
+            );
+        } catch (GC2Exception) {
+            return false;
+        }
+        return true;
     }
 
     /** @param list<string> $rels "schema.table" */

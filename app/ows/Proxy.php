@@ -16,8 +16,26 @@ final class Proxy
     private $qgis;
 
     public function __construct(private readonly Context $ctx) {
-        $this->mapserv = (App::$param['mapServer']['host'] ?? 'http://127.0.0.1') . '/cgi-bin/mapserv.fcgi';
-        $this->qgis = (App::$param['mapServer']['host'] ?? 'http://127.0.0.1') . '/cgi-bin/qgis_mapserv.fcgi';
+        $this->mapserv = self::mapservUrl();
+        $this->qgis = self::qgisUrl();
+    }
+
+    /** MapServer CGI on the node App.php `mapServer.host` points at (this node by default). */
+    public static function mapservUrl(): string
+    {
+        return (App::$param['mapServer']['host'] ?? 'http://127.0.0.1') . '/cgi-bin/mapserv.fcgi';
+    }
+
+    /** QGIS Server CGI on the same node as MapServer. */
+    public static function qgisUrl(): string
+    {
+        return (App::$param['mapServer']['host'] ?? 'http://127.0.0.1') . '/cgi-bin/qgis_mapserv.fcgi';
+    }
+
+    /** Path of a schema's WMS mapfile as the MapServer node sees it. */
+    public static function wmsMapfilePath(string $database, string $schema): string
+    {
+        return self::mapfilesDir() . "{$database}_{$schema}_wms.map";
     }
 
     private function mapfileName(Request $req): string
@@ -28,7 +46,7 @@ final class Proxy
         };
     }
 
-    private function mapfilesDir(): string
+    private static function mapfilesDir(): string
     {
 //        return rtrim(App::$param['path'], '/') . '/app/wms/mapfiles/';
         return '/var/www/geocloud2/app/wms/mapfiles/';
@@ -43,7 +61,7 @@ final class Proxy
         // POST (WFS-T XML): always MapServer against the static/tmp mapfile, patched
         // only for rule-derived filters. Never QGS, external WMS, labels, or query string.
         if ($req->method === 'POST') {
-            $path = $this->mapfilesDir() . $this->mapfileName($req);
+            $path = self::mapfilesDir() . $this->mapfileName($req);
             if (!empty($filters)) {
                 $content = file_get_contents($path);
                 $patched = MapfilePatcher::patchMapfileContent($content, $filters, false, $req->layers);
@@ -76,7 +94,7 @@ final class Proxy
                 $tmp = new MapfilePatcher()->writeTmp($qgs, $patched);
                 return [$this->qgis . "?map=$tmp&{$req->queryString}", $tmp];
             }
-            $path = $this->mapfilesDir() . $this->mapfileName($req);
+            $path = self::mapfilesDir() . $this->mapfileName($req);
             $content = file_get_contents($path);
             $patched = MapfilePatcher::patchMapfileContent($content, $filters, $req->disableLabels, $req->layers);
             $tmp = new MapfilePatcher()->writeTmp($path, $patched);
@@ -93,7 +111,7 @@ final class Proxy
             return [$this->externalWmsUrl($source, $req), null];
         }
 
-        $path = $this->mapfilesDir() . $this->mapfileName($req);
+        $path = self::mapfilesDir() . $this->mapfileName($req);
         return [$this->mapserv . "?map=$path&{$req->queryString}", null];
     }
 
