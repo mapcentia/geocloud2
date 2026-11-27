@@ -304,6 +304,7 @@ class WorkflowV4ApiCest
     {
         $item = $this->items($I, 'reviewer')[0];
         $I->assertSame((int)$this->draft, $item['gid']);
+        $I->assertSame([$this->schemaName, 'poi'], [$item['schema'], $item['table']]);
         $I->assertSame(1, $item['status']);
         $I->assertSame('drafted', $item['status_name']);
         $I->assertSame('insert', $item['operation']);
@@ -372,6 +373,95 @@ class WorkflowV4ApiCest
         $this->approve($I, 'reviewer', '999999');
         $I->seeResponseCodeIs(HttpCode::NOT_FOUND);
         $I->seeResponseContainsJson(['errorCode' => 'FEATURE_NOT_FOUND']);
+    }
+
+    /** The workflow log as [[table, operation, status], ...] in the order returned. */
+    private function log(ApiTester $I, ?string $who, string $query = ''): array
+    {
+        $this->as($I, $who);
+        $I->sendGET('/api/v4/workflow-log' . $query);
+        $I->seeResponseCodeIs(HttpCode::OK);
+        $entries = json_decode($I->grabResponse(), true);
+        $I->assertTrue(array_is_list($entries), 'the log is a bare JSON array');
+        return array_map(fn($e) => [$e['table'], $e['operation'], $e['status']], $entries);
+    }
+
+    // The log for a "Workflow" view: every step, across tables, as it was logged. poi has a draft
+    // that was reviewed; a second table gets a draft too.
+    public function theLogShowsEveryStepAcrossTables(ApiTester $I)
+    {
+        $uri = '/api/v4/schemas/' . $this->schemaName . '/tables/poi2';
+        $this->as($I);
+        $I->stopFollowingRedirects();
+        $I->sendPOST('/api/v4/schemas/' . $this->schemaName . '/tables', json_encode([
+            'name' => 'poi2',
+            'columns' => [
+                ['name' => 'gid', 'type' => 'serial'],
+                ['name' => 'name', 'type' => 'varchar'],
+                ['name' => 'the_geom', 'type' => 'geometry(Point,4326)'],
+            ],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $I->sendPOST($uri . '/constraints', json_encode(['constraint' => 'primary', 'columns' => ['gid']]));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $I->sendPATCH($uri, json_encode(['versioning' => true, 'workflow' => true]));
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $I->sendPATCH($uri . '/privileges', json_encode(array_map(
+            fn($s) => ['subuser' => $s['id'], 'privilege' => 'write'], array_values($this->sub)
+        )));
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $I->sendPATCH($uri . '/workflow-roles', json_encode([
+            ['subuser' => $this->sub['author']['id'], 'role' => 'author'],
+            ['subuser' => $this->sub['reviewer']['id'], 'role' => 'publisher'],
+        ]));
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+
+        $this->as($I, 'author');
+        $I->stopFollowingRedirects();
+        $I->sendPOST($uri . '/features', $this->feature('draft2'));
+        $I->seeResponseCodeIs(HttpCode::CREATED);
+        $draft2 = basename(json_decode($I->grabResponse(), true)[0]['_links']['self']);
+
+        // Every step, newest first: not one line per feature
+        $steps = [['poi2', 'insert', 1], ['poi', 'update', 2], ['poi', 'insert', 1]];
+        $I->assertSame($steps, $this->log($I, null));
+        $I->assertSame($steps, $this->log($I, 'reviewer'), 'a sub-user reads the tables they have a role on');
+        $I->assertSame($steps, $this->log($I, 'author'));
+        $I->assertSame([], $this->log($I, 'bystander'), 'no role anywhere: empty, not an error');
+
+        $I->assertSame($steps, $this->log($I, null, '?schema=' . $this->schemaName));
+        $I->assertSame([], $this->log($I, null, '?schema=public'));
+        $I->assertSame([$steps[0]], $this->log($I, null, '?limit=1'));
+        $I->assertSame([$steps[1], $steps[2]], $this->log($I, null, '?offset=1'));
+        foreach (['?schema=a%27b', '?limit=0', '?limit=x', '?offset=-1'] as $bad) {
+            $this->as($I);
+            $I->sendGET('/api/v4/workflow-log' . $bad);
+            $I->seeResponseCodeIs(HttpCode::BAD_REQUEST);
+        }
+
+        // An entry as it is in the log, with the address of its feature
+        $this->as($I, 'reviewer');
+        $I->sendGET('/api/v4/workflow-log');
+        $entry = json_decode($I->grabResponse(), true)[0];
+        $I->assertSame(
+            ['id', 'schema', 'table', 'gid', 'version_gid', 'status', 'status_name', 'operation', 'user', 'author', 'reviewer', 'publisher', 'created', 'roles'],
+            array_keys($entry)
+        );
+        $I->assertIsInt($entry['id']);
+        $I->assertSame([$this->schemaName, 'poi2', (int)$draft2], [$entry['schema'], $entry['table'], $entry['gid']]);
+        $I->assertSame($this->sub['author']['id'], $entry['user']);
+        $I->assertSame($this->sub['author']['id'], $entry['author']);
+        $I->assertNull($entry['publisher']);
+        $I->assertSame('publisher', $entry['roles'][$this->sub['reviewer']['id']], 'the roles on the table at the time');
+
+        // "Touch": send the entry's feature on in the flow. The reviewer of poi is publisher here.
+        $I->stopFollowingRedirects();
+        $I->sendPATCH('/api/v4/schemas/' . $entry['schema'] . '/tables/' . $entry['table'] . '/workflow-items/' . $entry['gid']);
+        $I->seeResponseCodeIs(HttpCode::SEE_OTHER);
+        $I->assertSame(array_merge([['poi2', 'update', 3]], $steps), $this->log($I, null), 'the step is a new entry');
+        $this->as($I);
+        $I->sendGET('/api/v4/workflow-log?limit=1');
+        $I->assertSame($this->sub['reviewer']['id'], json_decode($I->grabResponse(), true)[0]['publisher']);
     }
 
     public function theOwnerPublishes(ApiTester $I)

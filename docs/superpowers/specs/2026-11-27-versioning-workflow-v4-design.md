@@ -69,6 +69,27 @@ authenticated user of the database may read them. Stored in the existing
   and sub-users with a role; others get `403 NO_WORKFLOW_ROLE`. These routes
   therefore do not go through `initiate()`.
 
+### The log across tables
+
+`GET /api/v4/workflow-log` (added after the first round, for the app's
+Workflow tab). The user's requirement: show the content of `settings.workflow`,
+and let someone further on in the flow "touch" an entry to send its feature on.
+
+- Returns the log rows as they are, newest first, across tables: `id`,
+  `schema`, `table`, `gid`, `version_gid`, `status`, `status_name`,
+  `operation`, `user`, `author`, `reviewer`, `publisher`, `created`, `roles`
+  (the roles on the table when the step was made). Every step is a row; it is
+  not reduced to one line per feature and not filtered by what is pending.
+- The owner reads the whole log; a sub-user the entries of tables they have a
+  role on; without any role the answer is an empty array.
+- `schema` filters; `limit` (default 100, max 1000) and `offset` page.
+- "Touch" is the existing approval step, addressed with the entry's `schema`,
+  `table` and `gid`: `PATCH .../tables/{table}/workflow-items/{gid}`. It
+  approves the feature as it is now, whichever of its entries was touched.
+- A first version of this endpoint returned one item per feature, filtered to
+  what the caller could move forward. The user asked for the plain log instead.
+- The migration adds an index on the log (schema, table, version, created).
+
 ### Decisions that differ from the legacy GUI
 
 - The owner can approve, as publisher. Legacy refused a user without a role.
@@ -93,5 +114,4 @@ the tests); `mydb` is left for the migration run.
 ## Not covered
 
 - Rejecting or sending a feature back a step (the legacy GUI has no such step).
-- A schema-wide work list: the list is per table.
 - Deletes under workflow are listed with `all=true` but cannot be approved.

@@ -107,12 +107,7 @@ class WorkflowItems extends Model
     public function items(string $schema, string $table, ?string $pendingFor = null, ?array $gids = null): array
     {
         $params = ['schema' => $schema, 'table' => $table];
-        $where = [];
-        if ($pendingFor !== null) {
-            // A deleted feature has no current version left to sign
-            $where[] = "status < :level AND operation <> 'delete'";
-            $params['level'] = self::LEVEL[$pendingFor] ?? 0;
-        }
+        $where = ['f_schema_name = :schema AND f_table_name = :table'];
         if ($gids !== null) {
             $marks = [];
             foreach (array_values($gids) as $i => $gid) {
@@ -121,32 +116,111 @@ class WorkflowItems extends Model
             }
             $where[] = 'gid IN (' . implode(',', $marks) . ')';
         }
+        $items = $this->latest(implode(' AND ', $where), $params);
+        return $pendingFor === null ? $items : array_values(array_filter($items, fn($item) => self::isPending($item, $pendingFor)));
+    }
+
+    /**
+     * The workflow log as it is: every logged step (settings.workflow), newest first. For the
+     * owner the whole log, for a sub-user the entries of the tables they have a role on.
+     *
+     * @param ?string $schema only tables of this schema
+     * @return list<array<string, mixed>>
+     */
+    public function log(string $user, bool $owner, ?string $schema = null, int $limit = 100, int $offset = 0): array
+    {
+        $params = [];
+        $where = [];
+        if (!$owner) {
+            $res = $this->prepare("SELECT DISTINCT split_part(_key_, '.', 1) AS s, split_part(_key_, '.', 2) AS t, roles ->> :u AS role
+                                   FROM settings.geometry_columns_join WHERE roles ->> :u2 IS NOT NULL");
+            $this->execute($res, ['u' => $user, 'u2' => $user]);
+            $marks = [];
+            while ($row = $this->fetchRow($res)) {
+                if (!isset(self::LEVEL[$row['role']])) {
+                    continue;
+                }
+                $n = count($marks);
+                $marks[] = "(:s$n, :t$n)";
+                $params["s$n"] = $row['s'];
+                $params["t$n"] = $row['t'];
+            }
+            if (!$marks) {
+                return [];
+            }
+            $where[] = '(f_schema_name, f_table_name) IN (' . implode(',', $marks) . ')';
+        }
+        if ($schema !== null) {
+            $where[] = 'f_schema_name = :schema';
+            $params['schema'] = $schema;
+        }
+        $sql = "SELECT id, f_schema_name, f_table_name, gid, version_gid, status, operation, gc2_user, created,
+                       workflow -> 'author' AS author, workflow -> 'reviewer' AS reviewer, workflow -> 'publisher' AS publisher,
+                       hstore_to_json(roles) AS roles
+                FROM settings.workflow" . ($where ? ' WHERE ' . implode(' AND ', $where) : '') . "
+                ORDER BY created DESC, id DESC LIMIT " . max(1, min(1000, $limit)) . " OFFSET " . max(0, $offset);
+        $res = $this->prepare($sql);
+        $this->execute($res, $params);
+        $entries = [];
+        while ($row = $this->fetchRow($res)) {
+            $entries[] = ['id' => (int)$row['id']] + self::present($row)
+                + ['roles' => (object)(json_decode((string)$row['roles'], true) ?: [])];
+        }
+        return $entries;
+    }
+
+    /**
+     * Whether a role can still move the item forward. A deleted feature has no current version
+     * left to sign.
+     */
+    public static function isPending(array $item, string $role): bool
+    {
+        return isset(self::LEVEL[$role]) && $item['status'] < self::LEVEL[$role] && $item['operation'] !== 'delete';
+    }
+
+    /**
+     * The latest log entry of each feature among the entries that match.
+     *
+     * @param string $where trusted SQL with named placeholders
+     * @return list<array<string, mixed>>
+     */
+    private function latest(string $where, array $params): array
+    {
         $sql = "SELECT * FROM (
-                    SELECT DISTINCT ON (version_gid) gid, version_gid, status, operation, gc2_user, created,
+                    SELECT DISTINCT ON (f_schema_name, f_table_name, version_gid)
+                           f_schema_name, f_table_name, gid, version_gid, status, operation, gc2_user, created, id,
                            workflow -> 'author' AS author, workflow -> 'reviewer' AS reviewer, workflow -> 'publisher' AS publisher
                     FROM settings.workflow
-                    WHERE f_schema_name = :schema AND f_table_name = :table
-                    ORDER BY version_gid, created DESC, id DESC
-                ) AS latest" . ($where ? ' WHERE ' . implode(' AND ', $where) : '') . " ORDER BY created DESC, gid DESC";
+                    WHERE $where
+                    ORDER BY f_schema_name, f_table_name, version_gid, created DESC, id DESC
+                ) AS latest ORDER BY created DESC, id DESC";
         $res = $this->prepare($sql);
         $this->execute($res, $params);
         $items = [];
-        while ($row = $this->fetchRow($res, 'assoc')) {
-            $status = (int)$row['status'];
-            $items[] = [
-                'gid' => (int)$row['gid'],
-                'version_gid' => (int)$row['version_gid'],
-                'status' => $status,
-                'status_name' => self::STATUS_NAMES[$status] ?? null,
-                'operation' => $row['operation'],
-                'user' => $row['gc2_user'],
-                'author' => $row['author'],
-                'reviewer' => $row['reviewer'],
-                'publisher' => $row['publisher'],
-                'created' => $row['created'],
-            ];
+        while ($row = $this->fetchRow($res)) {
+            $items[] = self::present($row);
         }
         return $items;
+    }
+
+    /** One log row as the API shows it. */
+    private static function present(array $row): array
+    {
+        $status = (int)$row['status'];
+        return [
+            'schema' => $row['f_schema_name'],
+            'table' => $row['f_table_name'],
+            'gid' => (int)$row['gid'],
+            'version_gid' => (int)$row['version_gid'],
+            'status' => $status,
+            'status_name' => self::STATUS_NAMES[$status] ?? null,
+            'operation' => $row['operation'],
+            'user' => $row['gc2_user'],
+            'author' => $row['author'],
+            'reviewer' => $row['reviewer'],
+            'publisher' => $row['publisher'],
+            'created' => $row['created'],
+        ];
     }
 
     /**

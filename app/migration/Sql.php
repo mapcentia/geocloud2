@@ -517,6 +517,9 @@ SQL;
         // functions and operators cannot be found by name, and versioned workflow
         // (gc2_workflow, settings.workflow) does not work. Relocating keeps columns and data.
         $sqls[] = "ALTER EXTENSION hstore SET SCHEMA public";
+        // The workflow lists pick the latest entry per feature; without an index every list
+        // read the whole log.
+        $sqls[] = "CREATE INDEX IF NOT EXISTS workflow_table_version_idx ON settings.workflow (f_schema_name, f_table_name, version_gid, created DESC)";
         include 'Views1.php';
         return $sqls;
     }

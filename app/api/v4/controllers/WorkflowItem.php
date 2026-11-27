@@ -36,8 +36,10 @@ use Override;
 #[OA\Schema(
     schema: "WorkflowItem",
     description: "Where one feature stands in the workflow of its table: its latest logged step.",
-    required: ["gid", "version_gid", "status", "status_name", "operation", "user", "author", "reviewer", "publisher", "created"],
+    required: ["schema", "table", "gid", "version_gid", "status", "status_name", "operation", "user", "author", "reviewer", "publisher", "created"],
     properties: [
+        new OA\Property(property: "schema", description: "Schema of the feature's table.", type: "string", example: "my_schema"),
+        new OA\Property(property: "table", description: "The feature's table. With `schema` and `gid` it addresses the item: PATCH /api/v4/schemas/{schema}/tables/{table}/workflow-items/{gid} approves it.", type: "string", example: "my_table"),
         new OA\Property(property: "gid", description: "The feature's primary key value. The id of the item in the path.", type: "integer", example: 42),
         new OA\Property(property: "version_gid", description: "The feature's version id (gc2_version_gid), the same across all versions of the feature.", type: "integer", example: 17),
         new OA\Property(property: "status", description: "1 drafted, 2 reviewed, 3 published.", type: "integer", enum: [1, 2, 3], example: 1),
