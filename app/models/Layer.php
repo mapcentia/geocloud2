@@ -28,6 +28,12 @@ use Throwable;
  */
 class Layer extends Table
 {
+    /** Column settings in fieldconf that are on/off. "querable" is handled on its own (exposed as queryable). */
+    public const array FIELD_FLAGS = ['mouseover', 'searchable', 'filter', 'not_exportable', 'autocomplete', 'conflict', 'link', 'ignore', 'image'];
+
+    /** Column settings in fieldconf that are text. */
+    public const array FIELD_TEXTS = ['content', 'linkprefix', 'linksuffix', 'template'];
+
     function __construct(public ?Connection $connection = null)
     {
         parent::__construct(table: "settings.geometry_columns_view", connection: $this->connection);
@@ -176,7 +182,7 @@ class Layer extends Table
      * @throws PDOException                     If an error occurs during database interaction.
      * @throws PhpfastcacheLogicException       If an issue arises when handling cached responses.
      */
-    public function getAll(string $db, ?bool $auth, ?string $query = null, ?bool $includeExtent = false, ?bool $parse = false, ?bool $es = false, ?bool $lookupForeignTables = true, ?array $jwt = null, bool $restriction = true): array
+    public function getAll(string $db, ?bool $auth, ?string $query = null, ?bool $includeExtent = false, ?bool $parse = false, ?bool $es = false, ?bool $lookupForeignTables = true, ?array $jwt = null, bool $restriction = true, bool $includeIgnored = false): array
     {
         // If user is signed in with another user than the requested,
         // when consider the user as not signed in.
@@ -185,7 +191,7 @@ class Layer extends Table
         }
 
         $cacheType = "meta";
-        $cacheId = $this->postgisdb . "_" . Session::getUser() . "_" . $cacheType . "_" . md5($query . "_" . "(int)$auth" . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es) . "_" . ($restriction ? 'restriction' : 'notRestriction');
+        $cacheId = $this->postgisdb . "_" . Session::getUser() . "_" . $cacheType . "_" . md5($query . "_" . "(int)$auth" . "_" . (int)$includeExtent . "_" . (int)$parse . "_" . (int)$es) . "_" . ($restriction ? 'restriction' : 'notRestriction') . ($includeIgnored ? '_withIgnored' : '');
 
         $CachedString = Cache::getItem($cacheId);
 
@@ -450,6 +456,13 @@ class Layer extends Table
                     $fields[$key]['sort_id'] = $conf['sort_id'] ?? null;
                     $fields[$key]['desc'] = $conf['desc'] ?? null;
                     $fields[$key]['properties'] = !empty($conf['properties']) ? json_decode($conf['properties'], true) : null;
+                    // The rest of the column settings (the old GUI's structure editor)
+                    foreach (self::FIELD_FLAGS as $flag) {
+                        $fields[$key][$flag] = !empty($conf[$flag]);
+                    }
+                    foreach (self::FIELD_TEXTS as $text) {
+                        $fields[$key][$text] = isset($conf[$text]) && $conf[$text] !== '' ? (string)$conf[$text] : null;
+                    }
                     // restriction ??
                 }
 
@@ -463,13 +476,16 @@ class Layer extends Table
                     }
                     return 0;
                 });
-                // Filter out ignored fields
-                $fields = array_filter($fields, function ($item, $key) use (&$fieldConf) {
-                    if (empty($fieldConf[$key]['ignore'])) {
-                        return true;
-                    }
-                    return false;
-                }, ARRAY_FILTER_USE_BOTH);
+                // Filter out ignored fields. A caller that manages the settings asks to keep them:
+                // a column that is left out here could never have its "ignore" switched off again.
+                if (!$includeIgnored) {
+                    $fields = array_filter($fields, function ($item, $key) use (&$fieldConf) {
+                        if (empty($fieldConf[$key]['ignore'])) {
+                            return true;
+                        }
+                        return false;
+                    }, ARRAY_FILTER_USE_BOTH);
+                }
                 $arr = $this->array_push_assoc($arr, "fields", $fields);
 
                 // References

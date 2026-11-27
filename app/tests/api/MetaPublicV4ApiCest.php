@@ -122,7 +122,7 @@ class MetaPublicV4ApiCest
         $I->assertContains('public-tag', $rel['tags']);
         $I->assertArrayHasKey('name', $rel['fields']);
         // Nothing about who may do what, or where the layer is drawn from
-        foreach (['privileges', 'roles', 'wmssource', 'qml'] as $internal) {
+        foreach (['privileges', 'roles', 'wms_source', 'wmssource', 'qml'] as $internal) {
             $I->assertArrayNotHasKey($internal, $rel);
         }
     }
@@ -134,8 +134,17 @@ class MetaPublicV4ApiCest
         $I->sendGET('/api/v4/meta/' . $this->open());
         $I->seeResponseCodeIs(HttpCode::OK);
         $withToken = json_decode($I->grabResponse(), true)['relations'][$this->open()];
-        $I->assertSame(array_keys($withToken), array_keys($public));
+        // Everything the public route gives is on the token route under the same name ...
+        $I->assertSame([], array_values(array_diff(array_keys($public), array_keys($withToken))));
         $I->assertSame($withToken['fields'], $public['fields']);
+        // ... and what only the token route has is the relation's settings
+        $onlyWithToken = array_values(array_diff(array_keys($withToken), array_keys($public)));
+        $I->assertContains('authentication', $onlyWithToken);
+        $I->assertContains('enable_ows', $onlyWithToken);
+        $I->assertContains('wms_source', $onlyWithToken);
+        foreach ($onlyWithToken as $key) {
+            $I->assertArrayNotHasKey($key, $public);
+        }
     }
 
     public function shouldTakeASchemaAListATagAndNothing(ApiTester $I)
