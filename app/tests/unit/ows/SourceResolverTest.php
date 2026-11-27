@@ -22,6 +22,23 @@ class SourceResolverTest extends Unit
         ]));
     }
 
+    public function testPickWmssourceSkipsTheRowKeyedWithoutAColumn(): void
+    {
+        $qgs = "http://127.0.0.1/cgi-bin/qgis_mapserv.fcgi?map=/data/projects/my.qgs&LAYERS=x";
+        // "s.t" sorts before "s.t.the_geom"
+        $this->assertSame($qgs, SourceResolver::pickWmssource([
+            ['_key_' => 's.t', 'wmssource' => null],
+            ['_key_' => 's.t.the_geom', 'wmssource' => $qgs],
+        ]));
+        $this->assertSame($qgs, SourceResolver::pickWmssource([
+            ['_key_' => 's.t', 'wmssource' => ''],
+            ['_key_' => 's.t.gc2_non_postgis', 'wmssource' => null],
+            ['_key_' => 's.t.the_geom', 'wmssource' => $qgs],
+        ]));
+        // Only such a row: it is all there is
+        $this->assertSame('x', SourceResolver::pickWmssource([['_key_' => 's.t', 'wmssource' => 'x']]));
+    }
+
     public function testPickWmssourceKeepsFormerChoiceOtherwise(): void
     {
         // An ordinary layer: no source

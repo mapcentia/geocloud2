@@ -8,13 +8,14 @@ and this project adheres to [CalVer](https://calver.org/).
 ## [Unreleased]
 ### Added
 - `GET /api/v4/symbols` lists the built-in MapServer symbols a style's `symbol` can name (triangle, circle, square, star, hatch1, dashed1, arrow, arrow2, continue and the line symbols), each with `type`, `filled`, `points` and, where it has one, `anchorpoint`, so a client can offer them and draw a preview. `GET /api/v4/symbols/{name}` takes one name or a comma separated list. Sub-users may read it. `symbol` on a style is still a free value: an image URL or a `[column]` reference work as before.
-
 - `GET /api/v4/legends/database/{database}/{layers}` returns the legends of one or more layers as JSON: per layer its title and named classes, each with expression and a base64 PNG icon. It replaces `/api/v1/legend/json`, which stays as it is. Access follows the layer: with a Bearer token or HTTP Basic the caller gets the layers they may read, without credentials the layers that are open to all, and a layer without access is left out of the result instead of failing the request. Geofence rules do not affect legends. The icons are drawn by MapServer on the node `mapServer.host` points at, not with PHP MapScript, so it works with MapServer on another node. Icons are 18×12 pixels (v1: 17×17).
 
 ### Changed
 - The symbol definitions in a generated mapfile are written from the same list the new endpoint serves. The symbols are the same; the text differs in spacing and keyword case, so a regenerated mapfile shows a diff there.
 
 ### Fixed
+- A layer drawn with a QML failed in the v4 OWS endpoint with `Filter could not be applied` when a filter applied to the request (a LIMIT rule, `FILTERS`, a versioned table or labels switched off) and its table had a settings row keyed without a geometry column.
+- A layer update did not clear cached legends, so a legend could show the old classes after the layer was switched to a QML or its title changed.
 - An unknown database in the path of the v4 OGC API is answered with `404 DATABASE_NOT_FOUND` instead of `400` with the database driver's message. The v4 OWS and WFS endpoints, which report errors as XML, say `Database not found` instead of that message.
 - A layer served by QGIS Server or an external WMS was treated as an ordinary MapServer layer in the v4 OWS endpoint when its table also had a non-spatial settings row (`<schema>.<table>.gc2_non_postgis`): that row was read instead of the geometry column's, and it has no source.
 

@@ -43,18 +43,20 @@ final class SourceResolver
 
     /**
      * The wmssource of the settings row a layer is served from, given all rows of its table
-     * ordered by _key_. A table can have a row for a non-spatial registration
-     * ("schema.table.gc2_non_postgis") next to the row of its geometry column; that row has no
-     * source and sorts before most geometry column names, so taking simply the first row made a
-     * QGIS or external WMS layer look like an ordinary one. The first geometry row wins; the
-     * non-spatial row only counts when it is the only one.
+     * ordered by _key_. Next to the row of its geometry column ("schema.table.the_geom") a table
+     * can have rows that are not a layer: one keyed without a column ("schema.table") and one for
+     * a non-spatial registration ("schema.table.gc2_non_postgis"). They have no source and sort
+     * before the geometry row, so taking simply the first row made a QGIS or external WMS layer
+     * look like an ordinary one. The first geometry row wins; another row only counts when the
+     * table has no geometry row.
      *
      * @param list<array{_key_: string, wmssource: ?string}> $rows
      */
     public static function pickWmssource(array $rows): ?string
     {
         foreach ($rows as $row) {
-            if (!str_ends_with((string)($row['_key_'] ?? ''), '.gc2_non_postgis')) {
+            $column = explode('.', (string)($row['_key_'] ?? ''))[2] ?? '';
+            if ($column !== '' && $column !== 'gc2_non_postgis') {
                 return $row['wmssource'] ?? null;
             }
         }

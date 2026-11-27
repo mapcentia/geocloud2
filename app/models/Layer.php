@@ -48,6 +48,9 @@ class Layer extends Table
             // that tileset for up to the cache's lifetime without its privileges
             // being checked.
             $this->postgisdb . '_mapcacheSchemaLayers_*',
+            // Legends (v1 and v4) are cached per layer. A layer update can change what a
+            // legend shows: classes, title, or the switch to a QGIS/external WMS source.
+            $this->postgisdb . '*_legend_*',
         ];
         Cache::deleteByPatterns($patterns);
     }
