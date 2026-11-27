@@ -14,6 +14,7 @@ and this project adheres to [CalVer](https://calver.org/).
 - `GET`/`PATCH /api/v4/schemas/{schema}/tables/{table}/workflow-roles` reads and sets the workflow role (author, reviewer, publisher, none) of sub-users on a table.
 - `GET /api/v4/workflow-log` returns the workflow log across tables, newest first: every step logged by an edit or an approval, with the schema, table and id of its feature. The database owner reads the whole log, a sub-user the tables they have a role on. `schema`, `limit` (default 100) and `offset` narrow it.
 - `GET /api/v4/schemas/{schema}/tables/{table}/workflow-items` lists what is waiting for the caller in the workflow (`all=true` for everything), and `PATCH .../workflow-items/{gid}` approves: it signs the feature with the caller's role and moves it to that role's status. The database owner approves as publisher.
+- `GET /api/v4/meta/database/{database}/{query}` reads relation metadata without a token, in the same shape as `GET /api/v4/meta/{query}`. It returns the relations that are readable without credentials; a `Read/write` relation is left out. An unknown database is `404 DATABASE_NOT_FOUND`.
 
 ### Changed
 - The symbol definitions in a generated mapfile are written from the same list the new endpoint serves. The symbols are the same; the text differs in spacing and keyword case, so a regenerated mapfile shows a diff there.

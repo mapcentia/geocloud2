@@ -18,6 +18,7 @@ use app\api\v4\Scope;
 use app\conf\App;
 use app\exceptions\GC2Exception;
 use app\inc\Connection;
+use app\inc\DatabaseNotFound;
 use app\inc\Input;
 use app\inc\Jwt;
 use app\inc\Route2;
@@ -25,6 +26,7 @@ use app\models\Layer;
 use OpenApi\Annotations\OpenApi;
 use OpenApi\Attributes as OA;
 use Override;
+use PDOException;
 use Phpfastcache\Exceptions\PhpfastcacheInvalidArgumentException;
 use Phpfastcache\Exceptions\PhpfastcacheLogicException;
 use Psr\Cache\InvalidArgumentException;
@@ -57,6 +59,7 @@ class MetaPublic extends AbstractApi
     #[OA\Parameter(name: 'query', description: 'Schema-qualified relation name, schema name, or tag (tag:name). Comma-separated values are supported.', in: 'path', required: false, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'noRestriction', description: 'Leaves out column restrictions on the returned metadata. Restrictions can be quite extensive.', in: 'query', required: false, schema: new OA\Schema(type: 'boolean'), example: true)]
     #[OA\Response(response: 200, description: 'Ok', content: new OA\JsonContent(ref: "#/components/schemas/Meta"))]
+    #[OA\Response(response: 404, description: 'The database does not exist (DATABASE_NOT_FOUND)')]
     #[AcceptableAccepts(['application/json', '*/*'])]
     #[Override]
     public function get_index(): Response
@@ -69,14 +72,19 @@ class MetaPublic extends AbstractApi
         } else {
             $restriction = false;
         }
-        $res = $layers->getAll(
-            db:$db,
-            auth: false,
-            query: $this->route->getParam("query"),
-            parse: true,
-            lookupForeignTables: false,
-            restriction: $restriction,
-        );
+        try {
+            $res = $layers->getAll(
+                db:$db,
+                auth: false,
+                query: $this->route->getParam("query"),
+                parse: true,
+                lookupForeignTables: false,
+                restriction: $restriction,
+            );
+        } catch (PDOException $e) {
+            // The database comes from the URL: an unknown one is a missing resource (404)
+            throw DatabaseNotFound::translate($e, (string)$db);
+        }
         $rows = $res["data"];
         $r = Meta::processRows($rows);
         return new GetResponse(data: ['relations' => $r]);
