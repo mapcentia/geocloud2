@@ -563,6 +563,7 @@ class User extends Model
             if (!$defaultUser) {
                 throw new GC2Exception("No default user found", 404, null, "NO_DEFAULT_USER_FOUND");
             }
+            $defaultUser['usergroup'] = $defaultUser['usergroup'] ? json_decode($defaultUser['usergroup'], true) : [];
             $CachedString->set($defaultUser)->expiresAfter(Globals::$cacheTtl);
             Cache::save($CachedString);
             return $defaultUser;
